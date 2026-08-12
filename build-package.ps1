@@ -55,6 +55,10 @@ foreach ($scriptName in $scriptNames) {
     Copy-Item -LiteralPath (Join-Path $sourceDir "$scriptName.psc") -Destination $packageSources
 }
 
+# Ship the project overview and permission terms with every archive.
+Copy-Item -LiteralPath (Join-Path $projectRoot "README.md") -Destination $stageDir
+Copy-Item -LiteralPath (Join-Path $projectRoot "LICENSE") -Destination $stageDir
+
 # Include the xEdit-created plugin and its Start Game Enabled quest index.
 if (Test-Path -LiteralPath $pluginPath) {
     Copy-Item -LiteralPath $pluginPath -Destination $stageDir
