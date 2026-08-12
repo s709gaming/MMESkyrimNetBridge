@@ -1,0 +1,28 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "release-msvc",
+      "displayName": "MMEAlert Test - Release (MSVC)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/native-release",
+      "toolchainFile": "${sourceDir}/extern/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "release-msvc",
+      "configurePreset": "release-msvc",
+      "targets": ["MMEAlertTest"]
+    }
+  ]
+}

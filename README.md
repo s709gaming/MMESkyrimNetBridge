@@ -3,6 +3,7 @@
 MMEAlert is an add-on for **Milk Mod Economy (MME)** that listens for MME actor events and is intended to bridge those events to **SkyrimNet**.
 
 ## Current status
+NOT FULLY FUNCTIONAL, DEVELOPMENT IN PROGRESS
 
 The minimal Papyrus test implementation is working in-game. It currently:
 
@@ -80,11 +81,13 @@ Update `$gameRoot` in `build-package.ps1` if Skyrim is installed elsewhere.
 ## Project files
 
 - `MMEAlert.esp` — ESL-flagged plugin containing the startup quest.
-- `MMEDebug.psc` — debug quest listener for MME start/end events.
-- `MMEAlertLeakEffect.psc` — debug Active Magic Effect listener for milk leaks.
+- `Source/Scripts/MMEDebug.psc` — debug quest listener for MME start/end events.
+- `Source/Scripts/MMEAlertLeakEffect.psc` — debug Active Magic Effect listener for milk leaks.
+- `src/Plugin.cpp` — minimal native CommonLibSSE-NG/SKSE load test.
 - `SEQ/MMEAlert.seq` — startup quest registration data.
 - `build-package.ps1` — compiler and packaging script.
 - `build-package.bat` — double-clickable build launcher.
+- `build-native-test.ps1` — builds the native SKSE test DLL and its Vortex archive.
 
 ## License
 

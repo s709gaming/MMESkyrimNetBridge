@@ -1,0 +1,6 @@
+/build/
+/dist/
+/Scripts/
+/extern/vcpkg/
+/extern/CommonLibSSE-NG/
+/vcpkg_installed/
