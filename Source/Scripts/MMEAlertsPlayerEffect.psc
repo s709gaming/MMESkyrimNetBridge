@@ -8,7 +8,9 @@ Function Refresh(String reason)
 EndFunction
 
 Event OnEffectStart(Actor target, Actor caster)
-    Refresh("monitor start")
+    If target == Game.GetPlayer()
+        Refresh("monitor start")
+    EndIf
 EndEvent
 
 Event OnPlayerLoadGame()

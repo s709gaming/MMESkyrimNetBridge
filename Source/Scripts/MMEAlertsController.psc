@@ -1,7 +1,7 @@
 Scriptname MMEAlertsController extends Quest
 
-; Nearby discovery remains stateless. One small StorageUtil integer on each actor
-; remembers the previous capacity band so a real 50% crossing can be recognized.
+String SettingsFile = "/MMEAlerts/Settings"
+String StateKey = "MMEAlerts.CapacityState"
 
 Event OnInit()
     InitializeController()
@@ -9,41 +9,51 @@ EndEvent
 
 Function InitializeController()
     UnregisterForUpdate()
-    UnregisterForModEvent("MME_MilkCycleComplete")
-    RegisterForModEvent("MME_MilkCycleComplete", "OnMMEMilkCycleComplete")
-
     Spell monitorAbility = Game.GetFormFromFile(0x000805, "MMEAlert.esp") as Spell
-    If monitorAbility != None && !Game.GetPlayer().HasSpell(monitorAbility)
-        Game.GetPlayer().AddSpell(monitorAbility, False)
+    If monitorAbility != None
+        ; Recreate the active effect once when its drink-tracker implementation
+        ; changes. Existing saves otherwise keep the pre-tracker effect instance.
+        If JsonUtil.GetIntValue(SettingsFile, "playerDrinkMonitorVersion", 0) < 11
+            If Game.GetPlayer().HasSpell(monitorAbility)
+                Game.GetPlayer().RemoveSpell(monitorAbility)
+            EndIf
+            Game.GetPlayer().AddSpell(monitorAbility, False)
+            JsonUtil.SetIntValue(SettingsFile, "playerDrinkMonitorVersion", 11)
+            JsonUtil.Save(SettingsFile, False)
+        ElseIf !Game.GetPlayer().HasSpell(monitorAbility)
+            Game.GetPlayer().AddSpell(monitorAbility, False)
+        EndIf
     EndIf
-    Debug.Trace("[MMEAlert] controller ready; capacity threshold detection disabled")
+    UpdatePolling()
 EndFunction
 
 Function UpdatePolling()
-    ; Production capacity polling is deliberately disabled.
     UnregisterForUpdate()
+    If JsonUtil.GetIntValue(SettingsFile, "enableCapacityPolling", 1) == 1
+        RegisterForSingleUpdate(JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 5.0))
+    EndIf
 EndFunction
 
+Event OnUpdate()
+    If JsonUtil.GetIntValue(SettingsFile, "enableCapacityPolling", 1) != 1
+        Return
+    EndIf
+    ScanNearbyMilkMaids()
+    RegisterForSingleUpdate(JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 5.0))
+EndEvent
+
 Function RefreshCapacity(String reason = "event")
-    ; Placeholder retained so the player monitor remains safe to compile.
-    Debug.Trace("[MMEAlert] ignored capacity refresh while detector is disabled: " + reason)
+    ScanNearbyMilkMaids()
 EndFunction
 
 Bool Function IsMMEMilkMaid(Actor candidate)
     If candidate == None || candidate.IsDead() || candidate.IsDisabled()
         Return False
     EndIf
-
-    ; MME_Storage.initializeActor creates this key during enrollment, including
-    ; for level-zero Maids, and deregisterActor removes it during Maid removal.
     Return StorageUtil.HasFloatValue(candidate, "MME.MilkMaid.Level")
 EndFunction
 
-String Function GetDebugActorName(Actor candidate)
-    If candidate == None
-        Return "<invalid actor>"
-    EndIf
-
+String Function GetActorName(Actor candidate)
     String actorName = candidate.GetDisplayName()
     If actorName == ""
         ActorBase baseActor = candidate.GetLeveledActorBase()
@@ -52,7 +62,7 @@ String Function GetDebugActorName(Actor candidate)
         EndIf
     EndIf
     If actorName == ""
-        actorName = "<unnamed actor " + candidate + ">"
+        actorName = "This Milk Maid"
     EndIf
     Return actorName
 EndFunction
@@ -61,33 +71,58 @@ String Function EvaluateMilkMaid(Actor candidate)
     If !IsMMEMilkMaid(candidate)
         Return ""
     EndIf
-
     Float maximum = MME_Storage.getMilkMaximum(candidate)
     If maximum <= 0.0
-        Return ""
+        Return GetActorName(candidate) + ": invalid maximum"
     EndIf
-
     Float current = MME_Storage.getMilkCurrent(candidate)
-    String capacity = "below 50%"
     If current >= maximum
-        capacity = "full (100%)"
+        Return GetActorName(candidate) + ": full (100% or above)"
     ElseIf current >= maximum * 0.5
-        capacity = "50% or above"
+        Return GetActorName(candidate) + ": 50% or above"
     EndIf
-    Return GetDebugActorName(candidate) + ": " + capacity
+    Return GetActorName(candidate) + ": below 50%"
 EndFunction
 
-Bool Function UpdateCapacityState(Actor candidate)
-    If !IsMMEMilkMaid(candidate)
-        StorageUtil.UnsetIntValue(candidate, "MMEAlerts.CapacityState")
-        Return False
+Function ShowDebugCapacitySnapshot()
+    Actor playerActor = Game.GetPlayer()
+    String report = EvaluateMilkMaid(playerActor)
+    Cell currentCell = playerActor.GetParentCell()
+    If currentCell != None
+        Int count = currentCell.GetNumRefs(43)
+        Int i = 0
+        While i < count
+            Actor candidate = currentCell.GetNthRef(i, 43) as Actor
+            If candidate != None && candidate != playerActor && candidate.Is3DLoaded() && playerActor.GetDistance(candidate) <= 2000.0
+                String result = EvaluateMilkMaid(candidate)
+                If result != ""
+                    If report != ""
+                        report = report + " | "
+                    EndIf
+                    report = report + result
+                EndIf
+            EndIf
+            i += 1
+        EndWhile
     EndIf
+    If report == ""
+        Debug.Notification("MME Alerts DEBUG - no evaluable Milk Maids nearby.")
+    Else
+        Debug.Notification("MME Alerts DEBUG - " + report)
+    EndIf
+EndFunction
 
+; Returns 0 for no crossing, 1 for crossing 50%, and 2 for crossing 100%.
+; First observation establishes a baseline and never produces a reaction.
+Int Function UpdateCapacityState(Actor candidate)
+    If !IsMMEMilkMaid(candidate)
+        StorageUtil.UnsetIntValue(candidate, StateKey)
+        Return 0
+    EndIf
     Float maximum = MME_Storage.getMilkMaximum(candidate)
     If maximum <= 0.0
-        Return False
+        Return 0
     EndIf
-
     Float current = MME_Storage.getMilkCurrent(candidate)
     Int currentState = 0
     If current >= maximum
@@ -95,100 +130,91 @@ Bool Function UpdateCapacityState(Actor candidate)
     ElseIf current >= maximum * 0.5
         currentState = 1
     EndIf
-
-    Int previousState = StorageUtil.GetIntValue(candidate, "MMEAlerts.CapacityState", -1)
-    StorageUtil.SetIntValue(candidate, "MMEAlerts.CapacityState", currentState)
-
-    ; First sighting is a silent baseline. Any later jump from below half to at
-    ; least half is a crossing, including a large jump directly to full.
-    Return previousState == 0 && currentState >= 1
+    Int previousState = StorageUtil.GetIntValue(candidate, StateKey, -1)
+    StorageUtil.SetIntValue(candidate, StateKey, currentState)
+    If previousState < 0
+        Return 0
+    ElseIf previousState < 2 && currentState == 2
+        Return 2
+    ElseIf previousState == 0 && currentState == 1
+        Return 1
+    EndIf
+    Return 0
 EndFunction
 
-Function PlayHalfCapacityReaction(Actor sourceActor)
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableReactionSounds", 1) != 1
+Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactionKinds)
+    If candidate == None || !candidate.Is3DLoaded() || !IsMMEMilkMaid(candidate)
         Return
     EndIf
-
-    ; SSEEdit-built Voice Slot 01 mild pool: 16 randomized WAV files.
-    ; This must be the SOUN marker, not its linked SNDR descriptor.
-    Sound reaction = Game.GetFormFromFile(0x000854, "MMEAlert.esp") as Sound
-    If reaction == None
-        Debug.Trace("[MMEAlert] 50% crossing detected, but mild sound marker 000854 did not resolve")
+    Int crossing = UpdateCapacityState(candidate)
+    If crossing == 0
         Return
     EndIf
-
-    Int instance = reaction.Play(sourceActor)
-    If instance > 0
-        Sound.SetInstanceVolume(instance, JsonUtil.GetFloatValue("/MMEAlerts/Settings", "reactionSoundVolume", 100.0) / 100.0)
-    Else
-        Debug.Trace("[MMEAlert] mild pool 50% Sound.Play returned " + instance)
+    Int slot = reactionKinds.Find(0)
+    If slot >= 0
+        reactionActors[slot] = candidate
+        reactionKinds[slot] = crossing
     EndIf
-EndFunction
-
-Function ShowDebugCapacitySnapshot()
-    ; One stateless batch: recognize, evaluate, report, then forget everything.
-    Actor playerActor = Game.GetPlayer()
-    String report = ""
-    String crossingReport = ""
-    Actor soundActor = None
-
-    String playerResult = EvaluateMilkMaid(playerActor)
-    If playerResult != ""
-        report = playerResult
-        If UpdateCapacityState(playerActor)
-            crossingReport = GetDebugActorName(playerActor)
-            soundActor = playerActor
+    If JsonUtil.GetIntValue(SettingsFile, "enableCapacityNotifications", 1) == 1
+        If crossing == 2
+            Debug.Notification(GetActorName(candidate) + " is completely milky and teetering on a boobgasm!")
+        Else
+            Debug.Notification(GetActorName(candidate) + " is now half-milky and building nicely!")
         EndIf
-    Else
-        StorageUtil.UnsetIntValue(playerActor, "MMEAlerts.CapacityState")
     EndIf
+EndFunction
 
+Function ScanNearbyMilkMaids()
+    Actor playerActor = Game.GetPlayer()
+    Actor[] reactionActors = new Actor[128]
+    Int[] reactionKinds = new Int[128]
+    ProcessActor(playerActor, reactionActors, reactionKinds)
     Cell currentCell = playerActor.GetParentCell()
     If currentCell != None
-        ; SKSE form type 43 is Actor. Current-cell enumeration is sufficient for
-        ; this recognition test and avoids touching MME's unreliable quest array.
         Int count = currentCell.GetNumRefs(43)
         Int i = 0
         While i < count
             Actor candidate = currentCell.GetNthRef(i, 43) as Actor
             If candidate != None && candidate != playerActor && candidate.Is3DLoaded() && playerActor.GetDistance(candidate) <= 2000.0
-                If IsMMEMilkMaid(candidate)
-                    String result = EvaluateMilkMaid(candidate)
-                    If result != ""
-                        If report != ""
-                            report = report + " | "
-                        EndIf
-                        report = report + result
-                        If UpdateCapacityState(candidate)
-                            If crossingReport != ""
-                                crossingReport = crossingReport + ", "
-                            EndIf
-                            crossingReport = crossingReport + GetDebugActorName(candidate)
-                            If soundActor == None
-                                soundActor = candidate
-                            EndIf
-                        EndIf
-                    EndIf
-                Else
-                    StorageUtil.UnsetIntValue(candidate, "MMEAlerts.CapacityState")
-                EndIf
+                ProcessActor(candidate, reactionActors, reactionKinds)
             EndIf
             i += 1
         EndWhile
     EndIf
 
-    If report == ""
-        Debug.Notification("MME Alerts DEBUG - no evaluable Milk Maids nearby.")
-    Else
-        Debug.Notification("MME Alerts DEBUG - " + report)
-    EndIf
-
-    If crossingReport != "" && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableCapacityReactions", 1) == 1
-        Debug.Notification("MME Alerts - " + crossingReport + " crossed 50% milk capacity.")
-        PlayHalfCapacityReaction(soundActor)
+    ; One sound per scan. A full crossing has priority over a half crossing.
+    Actor soundActor = None
+    Int soundKind = 0
+    Int j = 0
+    While j < reactionKinds.Length
+        If reactionKinds[j] > soundKind
+            soundKind = reactionKinds[j]
+            soundActor = reactionActors[j]
+        EndIf
+        j += 1
+    EndWhile
+    If soundActor != None && JsonUtil.GetIntValue(SettingsFile, "enableCapacityReactions", 1) == 1
+        PlayCapacityReaction(soundActor, soundKind)
     EndIf
 EndFunction
 
-Event OnMMEMilkCycleComplete(String eventName, String stringArg, Float numberArg, Form sender)
-    Debug.Trace("[MMEAlert] received MME_MilkCycleComplete; stateless debug evaluation remains timer-driven")
-EndEvent
+Function PlayCapacityReaction(Actor sourceActor, Int crossing)
+    If JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1) != 1
+        Return
+    EndIf
+    Int localFormID = 0x000855 ; Medium SOUN marker
+    If crossing == 2
+        localFormID = 0x000856 ; Hot SOUN marker
+    EndIf
+    Sound reaction = Game.GetFormFromFile(localFormID, "MMEAlert.esp") as Sound
+    If reaction == None
+        Debug.Trace("[MMEAlert] capacity sound marker did not resolve: " + localFormID)
+        Return
+    EndIf
+    Int instance = reaction.Play(sourceActor)
+    If instance > 0
+        Sound.SetInstanceVolume(instance, JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0) / 100.0)
+    Else
+        Debug.Trace("[MMEAlert] capacity Sound.Play returned " + instance)
+    EndIf
+EndFunction

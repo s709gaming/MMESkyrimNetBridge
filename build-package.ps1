@@ -16,7 +16,7 @@ $stageDir = Join-Path $distDir "MMEAlert"
 $zipPath = Join-Path $distDir "MMEAlert.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $gameRoot "Data\SEQ\MMEAlert.seq"
-$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults")
+$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults")
 
 # Fail early with a useful explanation if the local toolchain is incomplete.
 if (!(Test-Path -LiteralPath $compiler)) {
@@ -67,6 +67,11 @@ if (Test-Path -LiteralPath $testSoundRoot) {
 # Ship the project overview and permission terms with every archive.
 Copy-Item -LiteralPath (Join-Path $projectRoot "README.md") -Destination $stageDir
 Copy-Item -LiteralPath (Join-Path $projectRoot "LICENSE") -Destination $stageDir
+
+$spidConfig = Join-Path $projectRoot "MMEAlert_DISTR.ini"
+If (Test-Path -LiteralPath $spidConfig) {
+    Copy-Item -LiteralPath $spidConfig -Destination $stageDir
+}
 
 # Include the xEdit-created plugin and its Start Game Enabled quest index.
 if (Test-Path -LiteralPath $pluginPath) {
