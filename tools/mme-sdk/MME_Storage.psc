@@ -1,0 +1,7 @@
+Scriptname MME_Storage Hidden
+Float Function getMilkCurrent(Actor akActor) Global
+    Return 0.0
+EndFunction
+Float Function getMilkMaximum(Actor akActor) Global
+    Return 0.0
+EndFunction

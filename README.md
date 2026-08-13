@@ -2,6 +2,8 @@
 
 MMEAlert is an add-on for **Milk Mod Economy (MME)** intended to bridge MME actor information and events to **SkyrimNet**.
 
+Current test dependencies are Milk Mod Economy, SkyUI, PapyrusUtil, and JContainers. SkyUI supplies the MCM, while JContainers stores this mod's settings in its own JSON file.
+
 > **Development status:** incomplete and not ready as a functional SkyrimNet bridge.
 
 ## Current progress
@@ -17,6 +19,12 @@ Working debug behavior:
 - The actor supplied by MME is identified by name.
 - Debug information is displayed as an in-game notification.
 - The same information is written to the Papyrus log.
+- A separate SkyUI MCM named `MME Alerts` stores its settings in `SKSE/Plugins/StorageUtilData/MMEAlerts/Settings.json`.
+- Capacity refreshes run after load, location change, waiting, and sleeping through a permanent invisible player monitor.
+- Optional polling is disabled by default; when enabled its interval is configurable from 5–30 seconds (default 15).
+- First observation establishes a baseline; crossing into 50–99% or 100%+ produces one notification and spatial sound.
+- Nearby NPCs must be loaded, alive, enabled, and within 2,000 game units. The player is always eligible when registered as a Milk Maid.
+- `MMEDebug.psc` is diagnostics-only. Its MCM toggle plays the Mild test sound every five seconds until disabled.
 
 The minimal native CommonLibSSE-NG test DLL also builds and loads successfully through SKSE on Skyrim runtime `1.6.1170`. It currently writes only a native test log and is not connected to MME, Papyrus, or SkyrimNet.
 
@@ -30,9 +38,9 @@ The following features are planned or experimental and should not be considered 
 - Refreshing actor state after cell, location, load, or fast-travel events.
 - A stable public data format or API.
 - Production configuration, error recovery, and compatibility handling.
-- Confirmed milk-leak detection in the distributed plugin.
+- Grouped simultaneous capacity reactions and sound overlap management.
 
-`MMEAlertLeakEffect.psc` contains experimental leak start/end debug logic, but the script is not yet attached to the appropriate MME Magic Effect record in the distributed ESP. Its notifications therefore do not currently fire.
+The earlier magic-effect leak hook was removed because it was not reliable in testing. Full capacity is now detected from MME's stored milk values instead.
 
 ## Confirmed debug output
 

@@ -1,74 +1,55 @@
 Scriptname MMEDebug extends Quest
 
-; Debug-only MME event listener. Attach to a running quest.
+String SettingsFile = "/MMEAlerts/Settings"
 
-; Register the listener when its quest first initializes.
 Event OnInit()
-    RegisterMilkEvents()
+    UpdateDebugLoop()
 EndEvent
 
-; Restore the registrations whenever the quest is reset.
-Event OnReset()
-    RegisterMilkEvents()
-EndEvent
-
-; Subscribe this quest to MME's milking start and completion events.
-Function RegisterMilkEvents()
-    RegisterForModEvent("MilkQuest.StartMilkingMachine", "OnMilkStart")
-    RegisterForModEvent("MME_MilkingDone", "OnMilkEnd")
-
-    ; Confirm in-game that the debug listener initialized successfully.
-    ShowMessage("ready")
+Function UpdateDebugLoop()
+    UnregisterForUpdate()
+    If JsonUtil.GetIntValue(SettingsFile, "enableDebugSoundLoop", 0) == 1
+        RegisterForSingleUpdate(5.0)
+        Debug.Trace("[MMEAlert Debug] five-second notification loop enabled")
+    EndIf
 EndFunction
 
-; Report the actor supplied by MME when a milking session begins.
-Event OnMilkStart(Form actorForm, Int mpas, Int milkingType)
-    ; MME sends a generic Form, so convert it to an Actor before using it.
-    Actor akActor = actorForm as Actor
-
-    ; Stop safely if the event did not contain a valid actor reference.
-    If akActor == None
-        ShowMessage("START: <invalid actor>")
+Function TestReactionSound()
+    ; Papyrus plays a SOUN marker. 000854 links to the randomized Mild SNDR pool.
+    Sound testSound = Game.GetFormFromFile(0x000854, "MMEAlert.esp") as Sound
+    If testSound == None
+        Debug.Notification("MME Alerts SOUND TEST - marker 000854 lookup failed.")
+        Debug.Trace("[MMEAlert Sound Test] Game.GetFormFromFile returned None for MMEAlert.esp 000854")
         Return
     EndIf
 
-    ; Show the resolved actor name in-game and in the Papyrus log.
-    ShowMessage("START: " + GetActorName(akActor))
-EndEvent
-
-; Report the actor and bottle count when a milking session completes.
-Event OnMilkEnd(Form actorForm, Int bottles, Int boobgasmCount, Int cumCount)
-    ; MME sends a generic Form, so convert it to an Actor before using it.
-    Actor akActor = actorForm as Actor
-
-    ; Stop safely if the event did not contain a valid actor reference.
-    If akActor == None
-        ShowMessage("END: <invalid actor>")
+    Int instance = testSound.Play(Game.GetPlayer())
+    If instance <= 0
+        Debug.Notification("MME Alerts SOUND TEST - pool resolved, but Sound.Play failed: " + instance)
+        Debug.Trace("[MMEAlert Sound Test] pool resolved; Sound.Play returned " + instance)
         Return
     EndIf
 
-    ; Show who finished milking and how many bottles MME reported.
-    ShowMessage("END: " + GetActorName(akActor) + " (" + bottles + " bottles)")
+    Float volume = JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0)
+    Sound.SetInstanceVolume(instance, volume / 100.0)
+    Debug.Notification("MME Alerts SOUND TEST - playback started. Instance " + instance + ", volume " + volume + "%.")
+    Debug.Trace("[MMEAlert Sound Test] playback started; instance=" + instance + ", volume=" + volume)
+EndFunction
+
+Event OnUpdate()
+    If JsonUtil.GetIntValue(SettingsFile, "enableDebugSoundLoop", 0) != 1
+        Return
+    EndIf
+
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller != None
+        controller.ShowDebugCapacitySnapshot()
+    Else
+        Debug.Notification("MME Alerts DEBUG - capacity controller was not found.")
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "enableDebugSoundTest", 0) == 1
+        TestReactionSound()
+    EndIf
+    Debug.Trace("[MMEAlert Debug] diagnostic notification fired")
+    RegisterForSingleUpdate(5.0)
 EndEvent
-
-; Convert an Actor reference into safe, readable debug text.
-String Function GetActorName(Actor akActor)
-    ; Protect callers that pass an empty actor reference.
-    If akActor == None
-        Return "<None>"
-    EndIf
-
-    ; Read the actor's display name and provide a fallback when it is blank.
-    String actorName = akActor.GetName()
-    If actorName == ""
-        Return "<Unnamed>"
-    EndIf
-
-    Return actorName
-EndFunction
-
-; Send the same identified MMEAlert message to the HUD and Papyrus log.
-Function ShowMessage(String text)
-    Debug.Notification("MMEAlert - " + text)
-    Debug.Trace("[MMEAlert] " + text)
-EndFunction

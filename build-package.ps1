@@ -7,6 +7,8 @@ $compiler = Join-Path $gameRoot "Papyrus Compiler\PapyrusCompiler.exe"
 $flags = Join-Path $gameRoot "Data\Source\Scripts\TESV_Papyrus_Flags.flg"
 $skseSource = Join-Path $gameRoot "Data\Scripts\Source"
 $vanillaSource = Join-Path $gameRoot "Data\Source\Scripts"
+$skyUiSdkSource = Join-Path $projectRoot "tools\skyui-sdk"
+$mmeSdkSource = Join-Path $projectRoot "tools\mme-sdk"
 $sourceDir = Join-Path $projectRoot "Source\Scripts"
 $compiledDir = Join-Path $projectRoot "Scripts"
 $distDir = Join-Path $projectRoot "dist"
@@ -14,7 +16,7 @@ $stageDir = Join-Path $distDir "MMEAlert"
 $zipPath = Join-Path $distDir "MMEAlert.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $gameRoot "Data\SEQ\MMEAlert.seq"
-$scriptNames = @("MMEDebug", "MMEAlertLeakEffect")
+$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults")
 
 # Fail early with a useful explanation if the local toolchain is incomplete.
 if (!(Test-Path -LiteralPath $compiler)) {
@@ -32,7 +34,7 @@ foreach ($scriptName in $scriptNames) {
 
 # Compile the debug scripts against the installed SKSE and Skyrim sources.
 New-Item -ItemType Directory -Force -Path $compiledDir | Out-Null
-$imports = "$sourceDir;$skseSource;$vanillaSource"
+$imports = "$sourceDir;$skyUiSdkSource;$mmeSdkSource;$skseSource;$vanillaSource"
 foreach ($scriptName in $scriptNames) {
     Write-Host "Compiling $scriptName.psc..." -ForegroundColor Cyan
     & $compiler "$scriptName.psc" "-f=$flags" "-i=$imports" "-o=$compiledDir"
@@ -47,12 +49,19 @@ if (Test-Path -LiteralPath $stageDir) {
 }
 $packageScripts = Join-Path $stageDir "Scripts"
 $packageSources = Join-Path $stageDir "Source\Scripts"
-New-Item -ItemType Directory -Force -Path $packageScripts, $packageSources | Out-Null
+$packageSounds = Join-Path $stageDir "Sound\fx\MMESkyrimNetBridge"
+New-Item -ItemType Directory -Force -Path $packageScripts, $packageSources, $packageSounds | Out-Null
 
 # Copy only the two debug scripts needed by this test mod.
 foreach ($scriptName in $scriptNames) {
     Copy-Item -LiteralPath (Join-Path $compiledDir "$scriptName.pex") -Destination $packageScripts
     Copy-Item -LiteralPath (Join-Path $sourceDir "$scriptName.psc") -Destination $packageSources
+}
+
+# Package the SSEEdit-built randomized voice pools and the two legacy test files.
+$testSoundRoot = Join-Path $projectRoot "assets\sounds"
+if (Test-Path -LiteralPath $testSoundRoot) {
+    Get-ChildItem -LiteralPath $testSoundRoot | Copy-Item -Destination $packageSounds -Recurse
 }
 
 # Ship the project overview and permission terms with every archive.
