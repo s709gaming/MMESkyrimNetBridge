@@ -12,7 +12,7 @@ EndFunction
 ; Raises arousal through SLA's public event without creating a script dependency.
 Function ApplyMilkDrinkArousal(Actor drinker, Form drinkItem) Global
     String settingsFile = GetSettingsFile()
-    Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableArousalDiagnostic", 1) == 1
+    Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableArousalDiagnostic", 0) == 1
     If drinker == None || drinker != Game.GetPlayer()
         Report(diagnostic, "skipped: drinker is not the player")
         Return

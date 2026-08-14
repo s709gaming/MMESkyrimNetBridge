@@ -9,7 +9,7 @@ Function Fragment_0(ObjectReference akSpeakerRef)
 EndFunction
 
 Function TestDialogueTarget(Actor target)
-    Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 1) == 1
+    Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
     If target == None
         Report(diagnostic, "target detection failed (speaker is not an Actor)")
         Return
@@ -134,7 +134,9 @@ Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedItem, 
         Report(diagnostic, GetActorName(target) + " consumed " + selectedItem.GetName() + " | player " + giverBefore + " -> " + giver.GetItemCount(selectedItem) + " | native potion processed")
     EndIf
 
+    Bool animationStarted = StartDrinkAnimation(target, diagnostic)
     ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
+    FinishDrinkAnimation(target, animationStarted, diagnostic)
 EndFunction
 
 ; Stage four applies only our modular extension effects. Native MME potion effects have
@@ -176,6 +178,59 @@ Function ApplyExtensionEffects(Actor target, Form selectedItem, String selectedT
     EndIf
 
     Report(diagnostic, "effects " + GetActorName(target) + " | milk " + milkBefore + " -> " + milkAfter + " (+" + milkAdded + ") | arousal " + arousalResult + " | moan " + moanResultText)
+EndFunction
+
+; Starts MME's visible Lactacid reaction as soon as consumption is confirmed.
+Bool Function StartDrinkAnimation(Actor target, Bool diagnostic)
+    If JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0) != 1
+        Report(diagnostic, "animation disabled")
+        Return False
+    EndIf
+    If target == None
+        Report(diagnostic, "animation skipped: target missing")
+        Return False
+    EndIf
+
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None || milkController.MilkMaid.Find(target) == -1
+        Report(diagnostic, "animation skipped: target is no longer an MME Milkmaid")
+        Return False
+    EndIf
+    If target.IsDead() || target.IsDisabled() || !target.Is3DLoaded()
+        Report(diagnostic, "animation skipped: target unavailable")
+        Return False
+    EndIf
+    If target.IsInCombat()
+        Report(diagnostic, "animation skipped: target is in combat")
+        Return False
+    EndIf
+    If target.IsOnMount()
+        Report(diagnostic, "animation skipped: target is mounted")
+        Return False
+    EndIf
+    Int sitState = target.GetSitState()
+    If sitState > 0 && sitState <= 3
+        Report(diagnostic, "animation skipped: target is sitting")
+        Return False
+    EndIf
+
+    Debug.SendAnimationEvent(target, "ZaZAPCHorFd")
+    Report(diagnostic, "animation started for " + GetActorName(target) + " (5 seconds)")
+    Return True
+EndFunction
+
+; Milk/arousal processing includes up to 0.25 seconds of the five-second hold.
+Function FinishDrinkAnimation(Actor target, Bool animationStarted, Bool diagnostic)
+    If !animationStarted
+        Return
+    EndIf
+    Utility.Wait(4.75)
+    If target != None && !target.IsDead() && target.Is3DLoaded()
+        Debug.SendAnimationEvent(target, "IdleForceDefaultState")
+        Report(diagnostic, "animation finished for " + GetActorName(target))
+    Else
+        Report(diagnostic, "animation ended while target was unavailable")
+    EndIf
 EndFunction
 
 Int Function GetOwnedCount(Actor owner, Form item) Global

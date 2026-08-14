@@ -23,17 +23,20 @@ Int milkDrinkArousalOption
 Int milkDrinkArousalAmountOption
 Int arousalDiagnosticOption
 Int dialogueDiagnosticOption
+Int npcDrinkAnimationOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 30
+    Return 34
 EndFunction
 
 Function SetPageNames()
     Pages = new String[5]
     Pages[0] = "General"
     Pages[1] = "Milk Drinking"
-    Pages[2] = "Arousal"
+    ; Build this at runtime to prevent Papyrus's case-insensitive string table
+    ; from reusing the lowercase arousal token found in integration symbols.
+    Pages[2] = "A" + "rousal "
     Pages[3] = "Skyrim.Net"
     Pages[4] = "Debug"
 EndFunction
@@ -106,8 +109,22 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetDiagnostic", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkArousal", 1)
         JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 5.0)
-        JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 1)
-        JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Applies quieter release defaults once without overriding later player choices.
+    If JsonUtil.GetIntValue(SettingsFile, "quietDiagnosticsMigration32", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "quietDiagnosticsMigration32", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "npcDrinkAnimationMigration31", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 1)
+        JsonUtil.SetIntValue(SettingsFile, "npcDrinkAnimationMigration31", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "dialogueDiagnosticMigration30", 0) == 0
@@ -231,15 +248,18 @@ Event OnPageReset(String page)
     milkDrinkArousalAmountOption = -1
     arousalDiagnosticOption = -1
     dialogueDiagnosticOption = -1
+    npcDrinkAnimationOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
         milkmaidLevelBonusOption = AddToggleOption("MME Level Bonus", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1) == 1)
         flatMilkBonusOption = AddSliderOption("Flat Milk Bonus", JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 4.0), "+{1} milk")
         lactacidMultiplierOption = AddSliderOption("Lactacid Multiplier", JsonUtil.GetFloatValue(SettingsFile, "lactacidFlatMultiplier", 2.0), "x{1}")
+        AddHeaderOption("NPC Dialogue")
+        npcDrinkAnimationOption = AddToggleOption("NPC Milk-Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0) == 1)
         Return
     EndIf
-    If page == "Arousal"
+    If page == "A" + "rousal "
         Bool arousalAvailable = MMEArousalBridge.IsAvailable()
         Int arousalFlags = OPTION_FLAG_DISABLED
         If arousalAvailable
@@ -269,9 +289,9 @@ Event OnPageReset(String page)
         AddHeaderOption("Skyrim.Net Diagnostics")
         skyrimNetDiagnosticOption = AddToggleOption("Skyrim.Net Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDiagnostic", 1) == 1)
         AddHeaderOption("Arousal Diagnostics")
-        arousalDiagnosticOption = AddToggleOption("Milk Arousal Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 1) == 1)
+        arousalDiagnosticOption = AddToggleOption("Milk Arousal Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 0) == 1)
         AddHeaderOption("Dialogue Diagnostics")
-        dialogueDiagnosticOption = AddToggleOption("NPC Dialogue Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 1) == 1)
+        dialogueDiagnosticOption = AddToggleOption("NPC Dialogue Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1)
         Return
     EndIf
     AddHeaderOption("Sounds")
@@ -313,6 +333,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Add this much milk per MME or regular milk drink.")
     ElseIf option == lactacidMultiplierOption
         SetInfoText("Multiply Lactacid's Flat Bonus from 0 to 2. MME Level Bonus is separate.")
+    ElseIf option == npcDrinkAnimationOption
+        SetInfoText("Play a five-second reaction animation after a Milkmaid drinks through dialogue.")
     ElseIf option == debugMilkingEventsOption
         SetInfoText("Report each detected milking start and end.")
     ElseIf option == debugMilkReportOption
@@ -394,12 +416,16 @@ Event OnOptionSelect(Int option)
         SetToggleOptionValue(option, value == 1)
         ForcePageReset()
     ElseIf option == arousalDiagnosticOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 1)
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == dialogueDiagnosticOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 1)
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == npcDrinkAnimationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", value)
         SetToggleOptionValue(option, value == 1)
     EndIf
     JsonUtil.Save(SettingsFile, False)
