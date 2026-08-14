@@ -12,11 +12,14 @@ $mmeSdkSource = Join-Path $projectRoot "tools\mme-sdk"
 $sourceDir = Join-Path $projectRoot "Source\Scripts"
 $compiledDir = Join-Path $projectRoot "Scripts"
 $distDir = Join-Path $projectRoot "dist"
-$stageDir = Join-Path $distDir "MMEAlert"
-$zipPath = Join-Path $distDir "MMEAlert.zip"
+$stageDir = Join-Path $distDir "MME Extensions"
+$zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $gameRoot "Data\SEQ\MMEAlert.seq"
-$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults")
+$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMENPCDialog")
+
+# The SkyrimNet bridge uses SkyrimNet's Papyrus API; the native load-test DLL is
+# still excluded from this package.
 
 # Fail early with a useful explanation if the local toolchain is incomplete.
 if (!(Test-Path -LiteralPath $compiler)) {
@@ -52,10 +55,18 @@ $packageSources = Join-Path $stageDir "Source\Scripts"
 $packageSounds = Join-Path $stageDir "Sound\fx\MMESkyrimNetBridge"
 New-Item -ItemType Directory -Force -Path $packageScripts, $packageSources, $packageSounds | Out-Null
 
-# Copy only the two debug scripts needed by this test mod.
+# Copy the active compiled scripts and matching sources.
 foreach ($scriptName in $scriptNames) {
     Copy-Item -LiteralPath (Join-Path $compiledDir "$scriptName.pex") -Destination $packageScripts
     Copy-Item -LiteralPath (Join-Path $sourceDir "$scriptName.psc") -Destination $packageSources
+}
+
+# Install the editable SkyrimNet message configuration at PapyrusUtil's JSON path.
+$skyrimNetConfig = Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\SkyrimNet.json"
+if (Test-Path -LiteralPath $skyrimNetConfig) {
+    $packageConfig = Join-Path $stageDir "SKSE\Plugins\StorageUtilData\MMEAlerts"
+    New-Item -ItemType Directory -Force -Path $packageConfig | Out-Null
+    Copy-Item -LiteralPath $skyrimNetConfig -Destination $packageConfig
 }
 
 # Package the SSEEdit-built randomized voice pools and the two legacy test files.
@@ -77,7 +88,7 @@ If (Test-Path -LiteralPath $spidConfig) {
 if (Test-Path -LiteralPath $pluginPath) {
     Copy-Item -LiteralPath $pluginPath -Destination $stageDir
 } else {
-    Write-Warning "MMEAlert.esp is not present yet. Building a scripts-only package."
+    Write-Warning "MMEAlert.esp is not present yet. Building a scripts-only MME Extensions package."
 }
 
 if (Test-Path -LiteralPath $seqPath) {

@@ -1,5 +1,8 @@
 $ErrorActionPreference = "Stop"
 
+# Builds the optional native add-on separately from MMEAlert.zip. CommonLibSSE-NG
+# is a build dependency; the eventual SkyrimNet API will be resolved at runtime.
+
 # Use the Visual Studio installation that provides MSVC, CMake, and Ninja.
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $vsRoot = "E:\Visual Studio"

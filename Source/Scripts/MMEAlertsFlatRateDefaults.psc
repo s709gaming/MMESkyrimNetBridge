@@ -5,12 +5,14 @@ Scriptname MMEAlertsFlatRateDefaults extends Quest
 Bool defaultsApplied = False
 Int defaultsVersion = 0
 
+; Quest startup applies the development-only MME tuning once per save.
 Event OnInit()
     ApplyDefaults()
 EndEvent
 
+; Updates MME's controller properties; requires the MME_MilkQUEST quest.
 Function ApplyDefaults()
-    If defaultsVersion >= 2
+    If defaultsVersion >= 3
         Return
     EndIf
 
@@ -29,9 +31,13 @@ Function ApplyDefaults()
     milkController.BoobIncr = 0.20
     milkController.BoobPerLvl = 0.20
     milkController.GushPct = 100
+    If milkController.MilkQC != None
+        milkController.MilkQC.Debug_enabled = 1
+    Else
+        Debug.Trace("[MMEAlert Defaults] MME condition controller was not found; debug was not enabled")
+    EndIf
 
     defaultsApplied = True
-    defaultsVersion = 2
-    Debug.Notification("MME Alerts TEST - flat-rate MME defaults applied once.")
-    Debug.Trace("[MMEAlert Defaults] fixed=True, gen=.30, prod=100, belly=False, boobMax=0, increments=.2, gush=100")
+    defaultsVersion = 3
+    Debug.Trace("[MMEAlert Defaults] fixed=True, gen=.30, prod=100, belly=False, boobMax=0, increments=.2, gush=100, debug=1")
 EndFunction

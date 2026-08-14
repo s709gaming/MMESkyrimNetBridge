@@ -4,6 +4,7 @@ String SettingsFile = "/MMEAlerts/Settings"
 Float lastDrinkTime = -10.0
 Form lastDrinkItem = None
 
+; Handles alias equip events; currently only the player alias is supported.
 Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
     Actor drinker = GetActorReference()
     If drinker == None || akBaseObject == None
@@ -32,7 +33,7 @@ Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
     HandleDrinkDetected(drinker, akBaseObject, drinkKind)
 EndEvent
 
-; 0 = unsupported, 1 = milk, 2 = Lactacid.
+; Classifies drinks: 0 unsupported, 1 MME milk, 2 Lactacid, 3 HearthFires milk.
 Int Function GetSupportedDrinkKind(Form item)
     Form lactacid = Game.GetFormFromFile(0x0343F2, "MilkModNEW.esp")
     If item == lactacid
@@ -40,7 +41,7 @@ Int Function GetSupportedDrinkKind(Form item)
     EndIf
     Form hearthfireMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
     If item == hearthfireMilk
-        Return 1
+        Return 3
     EndIf
     FormList mmeMilks = Game.GetFormFromFile(0x05C81C, "MilkModNEW.esp") as FormList
     If mmeMilks != None && mmeMilks.HasForm(item)
@@ -49,6 +50,7 @@ Int Function GetSupportedDrinkKind(Form item)
     Return 0
 EndFunction
 
+; Limits reactions to the player until broad NPC/SPID monitoring is validated.
 Bool Function IsEligibleDrinker(Actor drinker)
     Actor playerActor = Game.GetPlayer()
     If drinker == playerActor
@@ -66,6 +68,7 @@ Bool Function IsEligibleDrinker(Actor drinker)
     Return False
 EndFunction
 
+; Produces safe display text for event notifications and future bridge payloads.
 String Function GetActorName(Actor actorRef)
     String result = actorRef.GetDisplayName()
     If result == ""
@@ -80,38 +83,27 @@ String Function GetActorName(Actor actorRef)
     Return result
 EndFunction
 
+; Centralizes drink publication, sound playback, and optional debug output.
 Function HandleDrinkDetected(Actor drinker, Form drinkItem, Int drinkKind)
-    ; This is the single expansion point for future milk-gain behavior.
-    PublishDrinkEvent(drinker, drinkItem, drinkKind)
-    PlayDrinkReaction(drinker)
-    If JsonUtil.GetIntValue(SettingsFile, "enableDrinkDetectionDebug", 1) == 1
+    Bool addMilkDebug = JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1
+    If addMilkDebug
         String itemName = drinkItem.GetName()
         If itemName == ""
-            itemName = "<unnamed milk item>"
+            itemName = "<unnamed>"
         EndIf
-        Debug.Notification("MME Alerts DRINK - " + GetActorName(drinker) + " drank " + itemName + ".")
+        Debug.Notification("Milk Debug: detected " + itemName + " [form " + drinkItem.GetFormID() + ", kind " + drinkKind + "]")
     EndIf
+    ; Keep the proven reaction path first so an optional gameplay integration
+    ; cannot prevent the consumption sound from running.
+    MMEMilkDrinkEffects.PlayDrinkReaction(drinker, JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1)
+    ; MME milk and regular milk use the normal formula; Lactacid uses 2x flat.
+    MMEMilkBoost.ApplyMilkDrinkBonus(drinker, drinkKind)
+    MMEArousalBridge.ApplyMilkDrinkArousal(drinker, drinkItem)
+    MMEAlertsSkyrimNet.SendMilkDrink(drinker, drinkItem)
+    PublishDrinkEvent(drinker, drinkItem, drinkKind)
 EndFunction
 
-Function PlayDrinkReaction(Actor drinker)
-    If JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1) != 1
-        Return
-    EndIf
-    ; Mild randomized SOUN pool for both milk and Lactacid consumption.
-    Sound reaction = Game.GetFormFromFile(0x000854, "MMEAlert.esp") as Sound
-    If reaction == None
-        Debug.Trace("[MMEAlert Drink] mild sound marker 000854 did not resolve")
-        Return
-    EndIf
-    Int instance = reaction.Play(drinker)
-    If instance > 0
-        Float volume = JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0)
-        Sound.SetInstanceVolume(instance, volume / 100.0)
-    Else
-        Debug.Trace("[MMEAlert Drink] mild Sound.Play returned " + instance)
-    EndIf
-EndFunction
-
+; Broadcasts a normalized drink event for future native/SkyrimNet consumers.
 Function PublishDrinkEvent(Actor drinker, Form drinkItem, Int drinkKind)
     Int handle = ModEvent.Create("MMEAlerts_DrinkDetected")
     If handle

@@ -1,0 +1,2 @@
+Scriptname MilkQUEST_Conditions extends Quest Conditional
+Int Property Debug_enabled Auto Conditional

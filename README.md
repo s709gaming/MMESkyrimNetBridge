@@ -1,154 +1,56 @@
-# MMEAlert
+# MME Extensions
 
-MMEAlert is an add-on for **Milk Mod Economy (MME)** intended to bridge MME actor information and events to **SkyrimNet**.
+MME Extensions is a development add-on for **Milk Mod Economy (MME)**.
 
-Current test dependencies are Milk Mod Economy, SkyUI, PapyrusUtil, and JContainers. SkyUI supplies the MCM, while JContainers stores this mod's settings in its own JSON file.
+## What this build does
 
-> **Development status:** incomplete and not ready as a functional SkyrimNet bridge.
+- Plays configurable moans when milking starts or ends, when a Milkmaid becomes full, and when milk is drunk.
+- Gives the player configurable milk bonuses for drinking MME milk or regular milk.
+- Supports an optional Milkmaid-level bonus and a configurable Lactacid multiplier.
+- Can raise the drinker's arousal when SexLab Aroused is installed.
+- Reports player milk drinking and milking events to Skyrim.Net when it is installed.
+- Adds this dialogue choice to MME's existing **Hey, there** dialogue:
+  **Drink this, it will make you milky!**
+- The dialogue works only on a valid MME Milkmaid. It gives her one supported milk from the player's inventory, makes her consume it, and applies supported milk, Lactacid, arousal, and moan effects.
+- Provides optional MCM diagnostics for testing each feature.
 
-## Current progress
+Milk selection priority for NPC dialogue is:
 
-Only the diagnostic/debug functionality has been demonstrated in-game so far.
+1. Lactacid
+2. Normal milk
+3. Racial milk
+4. Supernatural milk
 
-Working debug behavior:
+Only one item is used per dialogue interaction. MME's normal milk-capacity limits are respected.
 
-- The startup quest loads and identifies itself with an `MMEAlert - ready` notification.
-- Milk/full-status debug reporting works in the current test setup.
-- MME milking-start events are detected.
-- MME milking-completion events are detected.
-- The actor supplied by MME is identified by name.
-- Debug information is displayed as an in-game notification.
-- The same information is written to the Papyrus log.
-- A separate SkyUI MCM named `MME Alerts` stores its settings in `SKSE/Plugins/StorageUtilData/MMEAlerts/Settings.json`.
-- Capacity refreshes run after load, location change, waiting, and sleeping through a permanent invisible player monitor.
-- Optional polling is disabled by default; when enabled its interval is configurable from 5–30 seconds (default 15).
-- First observation establishes a baseline; crossing into 50–99% or 100%+ produces one notification and spatial sound.
-- Nearby NPCs must be loaded, alive, enabled, and within 2,000 game units. The player is always eligible when registered as a Milk Maid.
-- `MMEDebug.psc` is diagnostics-only. Its MCM toggle plays the Mild test sound every five seconds until disabled.
+## Requirements
 
-The minimal native CommonLibSSE-NG test DLL also builds and loads successfully through SKSE on Skyrim runtime `1.6.1170`. It currently writes only a native test log and is not connected to MME, Papyrus, or SkyrimNet.
+- Skyrim Special Edition through SKSE
+- Milk Mod Economy
+- SkyUI
+- PapyrusUtil
+- JContainers
 
-## Not implemented
+Skyrim.Net and SexLab Aroused are optional. Their related features turn off when the required mod is unavailable.
 
-The following features are planned or experimental and should not be considered functional:
+## Development status
 
-- Communication with SkyrimNet.
-- Transfer of MME actor state from Papyrus to the native SKSE DLL.
-- Nearby milkmaid discovery and fullness refresh.
-- Refreshing actor state after cell, location, load, or fast-travel events.
-- A stable public data format or API.
-- Production configuration, error recovery, and compatibility handling.
-- Grouped simultaneous capacity reactions and sound overlap management.
+This is a test build. Player drinking and the Milkmaid dialogue path are working in current testing. NPC dialogue consumption does not send an NPC Skyrim.Net event yet.
 
-The earlier magic-effect leak hook was removed because it was not reliable in testing. Full capacity is now detected from MME's stored milk values instead.
+## Build and install
 
-## Confirmed debug output
+Run `build-package.bat`. Install the generated file:
 
 ```text
-MMEAlert - ready
-MMEAlert - START: Actor Name
-MMEAlert - END: Actor Name (3 bottles)
+dist\MME Extensions.zip
 ```
 
-Milk/full-status output is diagnostic and may change as the MME data adapter is developed.
+Enable `MMEAlert.esp`, deploy the mod, and launch Skyrim through SKSE.
 
-## Installation for testing
+## Debugging
 
-1. Build or install `MMEAlert.zip` with Vortex or another Skyrim Special Edition mod manager.
-2. Enable `MMEAlert.esp`.
-3. Deploy the mod.
-4. Launch Skyrim through SKSE.
-
-Milk Mod Economy and its required dependencies must already be installed for MME events to occur.
-
-This package is intended for development testing. Do not treat the current release as a working SkyrimNet integration.
-
-## Papyrus logging
-
-Enable Papyrus logging in `Documents\My Games\Skyrim Special Edition\Skyrim.ini`:
-
-```ini
-[Papyrus]
-bEnableLogging=1
-bEnableTrace=1
-bLoadDebugInformation=1
-```
-
-Papyrus output is written to:
-
-```text
-Documents\My Games\Skyrim Special Edition\Logs\Script\Papyrus.0.log
-```
-
-Search for `[MMEAlert]`.
-
-## Native SKSE load test
-
-The separate native test plugin writes:
-
-```text
-Documents\My Games\Skyrim Special Edition\SKSE\MMEAlertTest.log
-```
-
-Expected output:
-
-```text
-MMEAlertTest loaded successfully through CommonLibSSE-NG
-Runtime version: 1-6-1170-0
-```
-
-This proves that the C++/CommonLibSSE-NG DLL can be built and loaded. It does not prove that the planned bridge works.
-
-## Building the Papyrus test package
-
-Double-click `build-package.bat`, or run:
-
-```powershell
-.\build-package.ps1
-```
-
-The output is:
-
-```text
-dist\MMEAlert.zip
-```
-
-The script currently expects Skyrim Special Edition at:
-
-```text
-E:\Steam\steamapps\common\Skyrim Special Edition
-```
-
-Update `$gameRoot` in `build-package.ps1` if Skyrim is installed elsewhere.
-
-## Building the native test
-
-Double-click `build-native-test.bat`, or run:
-
-```powershell
-.\build-native-test.ps1
-```
-
-The native test archive is written to:
-
-```text
-dist\MMEAlertNativeTest.zip
-```
-
-The current native builder depends on the local `extern/CommonLibSSE-NG` and `extern/vcpkg` directories. Those dependency directories are intentionally excluded from Git.
-
-## Important project files
-
-- `MMEAlert.esp` - ESL-flagged plugin containing the startup debug quest.
-- `Source/Scripts/MMEDebug.psc` - working debug listener for MME milking start/end events.
-- `Source/Scripts/MMEAlertLeakEffect.psc` - experimental leak-effect listener that is not yet wired into the ESP.
-- `src/Plugin.cpp` - minimal native CommonLibSSE-NG/SKSE load test.
-- `CMakeLists.txt` and `CMakePresets.json` - native build configuration.
-- `build-package.ps1` - Papyrus compilation and package builder.
-- `build-native-test.ps1` - native DLL and test-package builder.
+Useful diagnostics can be enabled on the MCM **Debug** page. Messages also appear in the Papyrus log when logging is enabled.
 
 ## License
 
-This project is released under the [MIT License](LICENSE). Anyone may use, copy, modify, redistribute, sublicense, sell, or incorporate it into another project under the terms of that license.
-
-Milk Mod Economy, Skyrim, SKSE, SkyrimNet, and their respective names and assets belong to their respective authors and owners. MMEAlert is an independent add-on and is not an official release of those projects.
+This project is released under the [MIT License](LICENSE). MME Extensions is an independent add-on and is not an official Milk Mod Economy, Skyrim, SKSE, SexLab Aroused, or Skyrim.Net release.

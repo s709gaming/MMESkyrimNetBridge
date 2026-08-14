@@ -5,3 +5,11 @@ EndFunction
 Float Function getMilkMaximum(Actor akActor) Global
     Return 0.0
 EndFunction
+Int Function getMaidLevel(Actor akActor) Global
+    Return 0
+EndFunction
+Float Function getLactacidCurrent(Actor akActor) Global
+    Return 0.0
+EndFunction
+Function changeMilkCurrent(Actor akActor, Float Delta, Bool enforceMaxValue) Global
+EndFunction

@@ -5,10 +5,12 @@ Scriptname MMEAlertsQuickTest extends Quest
 Bool testSetupApplied = False
 Bool milkVarietyGranted = False
 
+; Quest startup invokes the temporary test-fixture setup.
 Event OnInit()
     ApplyTestSetup()
 EndEvent
 
+; Enrolls and provisions the player for repeatable MME development tests.
 Function ApplyTestSetup()
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     Potion lactacid = Game.GetFormFromFile(0x0343F2, "MilkModNEW.esp") as Potion
@@ -71,10 +73,10 @@ Function ApplyTestSetup()
     GrantMilkVariety(playerActor, regularMilk, succubusMilk, werewolfMilk, vampireMilk)
 
     testSetupApplied = True
-    Debug.Notification("MME Alerts TEST - player enrolled; mastery 10; test spells and Lactacid added.")
     Debug.Trace("[MMEAlert Test] player maid, mastery=10, test spells added, debug enabled, Lactacid=10")
 EndFunction
 
+; Grants test drinks once per save; requires the relevant optional forms to exist.
 Function GrantMilkVariety(Actor playerActor, Potion regularMilk, Potion succubusMilk, Potion werewolfMilk, Potion vampireMilk)
     If milkVarietyGranted
         Return
@@ -92,6 +94,5 @@ Function GrantMilkVariety(Actor playerActor, Potion regularMilk, Potion succubus
         playerActor.AddItem(vampireMilk, 3, False)
     EndIf
     milkVarietyGranted = True
-    Debug.Notification("MME Alerts TEST - regular, Succubus, Werewolf, and Vampire milk added.")
     Debug.Trace("[MMEAlert Test] granted three each: regular, Succubus, Werewolf, and Vampire milk")
 EndFunction

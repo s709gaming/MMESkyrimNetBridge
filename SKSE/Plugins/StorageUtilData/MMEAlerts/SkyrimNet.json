@@ -1,0 +1,8 @@
+{
+  "initialized": 1,
+  "enabled": 1,
+  "startMessage": "{actor} is milking herself and is feeling orgasmic!",
+  "endMessage": "{actor} has finished milking, utterly satisfied.",
+  "drinkMessage": "{actor} just drank {item}.",
+  "drinkTtlMs": 90000
+}
