@@ -8,7 +8,7 @@
   "configurePresets": [
     {
       "name": "release-msvc",
-      "displayName": "MMEAlert Test - Release (MSVC)",
+      "displayName": "MME Extensions - Release (MSVC)",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/native-release",
       "toolchainFile": "${sourceDir}/extern/vcpkg/scripts/buildsystems/vcpkg.cmake",
@@ -22,7 +22,7 @@
     {
       "name": "release-msvc",
       "configurePreset": "release-msvc",
-      "targets": ["MMEAlertTest"]
+      "targets": ["MMEExtensions"]
     }
   ]
 }

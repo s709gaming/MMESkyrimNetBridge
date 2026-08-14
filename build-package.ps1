@@ -18,8 +18,7 @@ $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $gameRoot "Data\SEQ\MMEAlert.seq"
 $scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMENPCDialog")
 
-# The SkyrimNet bridge uses SkyrimNet's Papyrus API; the native load-test DLL is
-# still excluded from this package.
+$nativeDll = Join-Path $projectRoot "build\native-release\package\SKSE\Plugins\MMEExtensions.dll"
 
 # Fail early with a useful explanation if the local toolchain is incomplete.
 if (!(Test-Path -LiteralPath $compiler)) {
@@ -53,13 +52,20 @@ if (Test-Path -LiteralPath $stageDir) {
 $packageScripts = Join-Path $stageDir "Scripts"
 $packageSources = Join-Path $stageDir "Source\Scripts"
 $packageSounds = Join-Path $stageDir "Sound\fx\MMESkyrimNetBridge"
-New-Item -ItemType Directory -Force -Path $packageScripts, $packageSources, $packageSounds | Out-Null
+$packageSKSEPlugins = Join-Path $stageDir "SKSE\Plugins"
+New-Item -ItemType Directory -Force -Path $packageScripts, $packageSources, $packageSounds, $packageSKSEPlugins | Out-Null
 
 # Copy the active compiled scripts and matching sources.
 foreach ($scriptName in $scriptNames) {
     Copy-Item -LiteralPath (Join-Path $compiledDir "$scriptName.pex") -Destination $packageScripts
     Copy-Item -LiteralPath (Join-Path $sourceDir "$scriptName.psc") -Destination $packageSources
 }
+
+# The lifecycle feature requires the CommonLibSSE-NG bridge built for 1.6.1170.
+if (!(Test-Path -LiteralPath $nativeDll)) {
+    throw "Native lifecycle DLL missing. Run build-native-test.ps1 first: $nativeDll"
+}
+Copy-Item -LiteralPath $nativeDll -Destination $packageSKSEPlugins
 
 # Install the editable SkyrimNet message configuration at PapyrusUtil's JSON path.
 $skyrimNetConfig = Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\SkyrimNet.json"

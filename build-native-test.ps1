@@ -35,11 +35,11 @@ try {
     & $cmake --build --preset release-msvc
     if ($LASTEXITCODE -ne 0) { throw "Native plugin build failed" }
 
-    $dll = Join-Path $projectRoot "build\native-release\package\SKSE\Plugins\MMEAlertTest.dll"
+    $dll = Join-Path $projectRoot "build\native-release\package\SKSE\Plugins\MMEExtensions.dll"
     if (!(Test-Path -LiteralPath $dll)) { throw "Build completed without producing $dll" }
 
     # Create a Vortex-ready archive with SKSE/Plugins at its root.
-    $zip = Join-Path $projectRoot "dist\MMEAlertNativeTest.zip"
+    $zip = Join-Path $projectRoot "dist\MMEExtensionsNative.zip"
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $zip) | Out-Null
     if (Test-Path -LiteralPath $zip) {
         Remove-Item -LiteralPath $zip -Force

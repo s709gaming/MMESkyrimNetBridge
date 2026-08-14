@@ -9,9 +9,12 @@ MME Extensions is a development add-on for **Milk Mod Economy (MME)**.
 - Supports an optional Milkmaid-level bonus and a configurable Lactacid multiplier.
 - Can raise the drinker's arousal when SexLab Aroused is installed.
 - Reports player milk drinking and milking events to Skyrim.Net when it is installed.
+- Uses a lightweight CommonLibSSE-NG bridge to detect waiting, sleeping, location changes, and save loading. These events refresh nearby Milkmaid capacity state without relying on Papyrus polling.
+- Can optionally poll nearby loaded Milkmaids for half-full and full capacity reactions.
 - Adds this dialogue choice to MME's existing **Hey, there** dialogue:
   **Drink this, it will make you milky!**
 - The dialogue works only on a valid MME Milkmaid. It gives her one supported milk from the player's inventory, makes her consume it, and applies supported milk, Lactacid, arousal, and moan effects.
+- Can optionally play MME's Milkmaid reaction animation after dialogue milk effects finish.
 - Provides optional MCM diagnostics for testing each feature.
 
 Milk selection priority for NPC dialogue is:
@@ -30,12 +33,15 @@ Only one item is used per dialogue interaction. MME's normal milk-capacity limit
 - SkyUI
 - PapyrusUtil
 - JContainers
+- Skyrim runtime 1.6.1170 for the included native lifecycle DLL
 
 Skyrim.Net and SexLab Aroused are optional. Their related features turn off when the required mod is unavailable.
 
+SPID is not currently required or active. Its packaged distribution rule remains disabled for possible future NPC monitoring.
+
 ## Development status
 
-This is a test build. Player drinking and the Milkmaid dialogue path are working in current testing. NPC dialogue consumption does not send an NPC Skyrim.Net event yet.
+This is a test build. Player drinking, native lifecycle detection, and the Milkmaid dialogue path are working in current testing. NPC dialogue consumption does not send an NPC Skyrim.Net event yet.
 
 ## Build and install
 
@@ -49,7 +55,7 @@ Enable `MMEAlert.esp`, deploy the mod, and launch Skyrim through SKSE.
 
 ## Debugging
 
-Useful diagnostics can be enabled on the MCM **Debug** page. Messages also appear in the Papyrus log when logging is enabled.
+Useful diagnostics can be enabled on the MCM **Debug** page. **Location Wait Load** reports native lifecycle events and nearby Milkmaid status. Papyrus messages appear in the Papyrus log when logging is enabled; native lifecycle events are written to `MMEExtensions.log` in the SKSE log folder.
 
 ## License
 

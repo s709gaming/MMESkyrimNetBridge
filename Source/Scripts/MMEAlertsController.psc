@@ -13,17 +13,19 @@ EndEvent
 ; Restores event registrations and abilities; called at startup and after load.
 Function InitializeController()
     RegisterMilkingEvents()
+    UnregisterForModEvent("MMEExtensions_Lifecycle")
+    RegisterForModEvent("MMEExtensions_Lifecycle", "OnNativeLifecycle")
     UnregisterForUpdate()
     Spell monitorAbility = Game.GetFormFromFile(0x000805, "MMEAlert.esp") as Spell
     If monitorAbility != None
         ; Recreate the active effect once when its drink-tracker implementation
         ; changes. Existing saves otherwise keep the pre-tracker effect instance.
-        If JsonUtil.GetIntValue(SettingsFile, "playerDrinkMonitorVersion", 0) < 11
+        If JsonUtil.GetIntValue(SettingsFile, "playerDrinkMonitorVersion", 0) < 12
             If Game.GetPlayer().HasSpell(monitorAbility)
                 Game.GetPlayer().RemoveSpell(monitorAbility)
             EndIf
             Game.GetPlayer().AddSpell(monitorAbility, False)
-            JsonUtil.SetIntValue(SettingsFile, "playerDrinkMonitorVersion", 11)
+            JsonUtil.SetIntValue(SettingsFile, "playerDrinkMonitorVersion", 12)
             JsonUtil.Save(SettingsFile, False)
         ElseIf !Game.GetPlayer().HasSpell(monitorAbility)
             Game.GetPlayer().AddSpell(monitorAbility, False)
@@ -31,6 +33,16 @@ Function InitializeController()
     EndIf
     UpdatePolling()
 EndFunction
+
+; Receives low-cost lifecycle signals from the optional CommonLibSSE-NG DLL.
+Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form sender)
+    RefreshCapacity(reason)
+    If JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0) == 1
+        Debug.Notification("MME Extensions: detected " + reason)
+        Debug.Trace("[MME Extensions Lifecycle] detected " + reason)
+        ShowDebugCapacitySnapshot()
+    EndIf
+EndEvent
 
 ; Subscribes to MME's global events; requires PapyrusUtil ModEvent support.
 Function RegisterMilkingEvents()

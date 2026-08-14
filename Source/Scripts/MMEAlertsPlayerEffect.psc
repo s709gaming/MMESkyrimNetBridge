@@ -33,20 +33,4 @@ Event OnPlayerLoadGame()
     If quickTest != None
         quickTest.ApplyTestSetup()
     EndIf
-    Refresh("load")
-EndEvent
-
-; Refresh capacity baselines when the player enters another location.
-Event OnLocationChange(Location oldLocation, Location newLocation)
-    Refresh("location")
-EndEvent
-
-; Refresh capacity after waiting because MME may update milk during time skips.
-Event OnWaitStop()
-    Refresh("wait")
-EndEvent
-
-; Refresh capacity after sleeping because MME may update milk during time skips.
-Event OnSleepStop(Bool interrupted)
-    Refresh("sleep")
 EndEvent

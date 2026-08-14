@@ -24,10 +24,11 @@ Int milkDrinkArousalAmountOption
 Int arousalDiagnosticOption
 Int dialogueDiagnosticOption
 Int npcDrinkAnimationOption
+Int lifecycleDiagnosticOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 34
+    Return 38
 EndFunction
 
 Function SetPageNames()
@@ -112,6 +113,12 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "lifecycleDiagnosticMigration35", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "lifecycleDiagnosticMigration35", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
     ; Applies quieter release defaults once without overriding later player choices.
@@ -249,6 +256,7 @@ Event OnPageReset(String page)
     arousalDiagnosticOption = -1
     dialogueDiagnosticOption = -1
     npcDrinkAnimationOption = -1
+    lifecycleDiagnosticOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -283,6 +291,7 @@ Event OnPageReset(String page)
     EndIf
     If page == "Debug"
         AddHeaderOption("Development Diagnostics")
+        lifecycleDiagnosticOption = AddToggleOption("Location Wait Load", JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0) == 1)
         debugMilkingEventsOption = AddToggleOption("Report Milking Start/End", JsonUtil.GetIntValue(SettingsFile, "enableMilkingEventDebug", 1) == 1)
         debugMilkReportOption = AddToggleOption("Milk Status Every 5 Seconds", JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0) == 1)
         addMilkDebugOption = AddToggleOption("Milk Drinking Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1)
@@ -337,6 +346,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Play a five-second reaction animation after a Milkmaid drinks through dialogue.")
     ElseIf option == debugMilkingEventsOption
         SetInfoText("Report each detected milking start and end.")
+    ElseIf option == lifecycleDiagnosticOption
+        SetInfoText("Report native wait, sleep, location, and load events with nearby Milkmaid status.")
     ElseIf option == debugMilkReportOption
         SetInfoText("Report nearby Milkmaid capacity every five seconds.")
     ElseIf option == addMilkDebugOption
@@ -397,6 +408,10 @@ Event OnOptionSelect(Int option)
     ElseIf option == debugMilkingEventsOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkingEventDebug", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkingEventDebug", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == lifecycleDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableLifecycleDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == milkmaidLevelBonusOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1)
