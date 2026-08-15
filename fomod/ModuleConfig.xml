@@ -10,7 +10,6 @@
     <file source="MMEAlert.esp" destination="MMEAlert.esp" priority="0" />
     <file source="MMEAlert_DISTR.ini" destination="MMEAlert_DISTR.ini" priority="0" />
     <file source="README.md" destination="README.md" priority="0" />
-    <file source="LICENSE" destination="LICENSE" priority="0" />
   </requiredInstallFiles>
   <installSteps order="Explicit">
     <installStep name="MME Gameplay Defaults">

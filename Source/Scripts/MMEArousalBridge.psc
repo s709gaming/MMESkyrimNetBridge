@@ -37,7 +37,7 @@ Bool Function ApplyMilkDrinkArousalForActor(Actor drinker, Form drinkItem, Bool 
         Return False
     EndIf
 
-    Float configuredAmount = JsonUtil.GetFloatValue(settingsFile, "milkDrinkArousal", 5.0)
+    Float configuredAmount = JsonUtil.GetFloatValue(settingsFile, "milkDrinkArousal", 10.0)
     If configuredAmount < 0.0
         configuredAmount = 0.0
     ElseIf configuredAmount > 100.0

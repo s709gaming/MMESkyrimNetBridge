@@ -26,7 +26,7 @@ Float Function ApplyMilkDrinkBonusForActor(Actor drinker, Int drinkKind, Bool sh
         Return 0.0
     EndIf
 
-    Float flatBonus = JsonUtil.GetFloatValue(settingsFile, "flatMilkBonus", 4.0)
+    Float flatBonus = JsonUtil.GetFloatValue(settingsFile, "flatMilkBonus", 1.0)
     Float milkAdded = flatBonus
     Int maidLevel = MME_Storage.getMaidLevel(drinker)
     Float levelBonus = 0.0

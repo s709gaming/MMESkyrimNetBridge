@@ -120,7 +120,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableDrinkTrackerDiagnostics", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkingEventDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "flatMilkBonus", 4.0)
+        JsonUtil.SetFloatValue(SettingsFile, "flatMilkBonus", 1.0)
         JsonUtil.SetIntValue(SettingsFile, "enableAddMilkDebug", 0)
         JsonUtil.SetFloatValue(SettingsFile, "lactacidFlatMultiplier", 2.0)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetDiagnostic", 0)
@@ -142,7 +142,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkArousal", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 5.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 10.0)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
@@ -311,14 +311,14 @@ Function EnsureDefaults()
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "arousalIntegrationMigration27", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkArousal", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 5.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 10.0)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 1)
         JsonUtil.SetIntValue(SettingsFile, "arousalIntegrationMigration27", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "milkBoostMigration16", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "flatMilkBonus", 4.0)
+        JsonUtil.SetFloatValue(SettingsFile, "flatMilkBonus", 1.0)
         JsonUtil.SetIntValue(SettingsFile, "milkBoostMigration16", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
@@ -476,7 +476,7 @@ Event OnPageReset(String page)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
         milkmaidLevelBonusOption = AddToggleOption("MME Level Bonus", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1) == 1)
-        flatMilkBonusOption = AddSliderOption("Flat Milk Bonus", JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 4.0), "+{1} milk")
+        flatMilkBonusOption = AddSliderOption("Flat Milk Bonus", JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 1.0), "+{1} milk")
         lactacidMultiplierOption = AddSliderOption("Lactacid Multiplier", JsonUtil.GetFloatValue(SettingsFile, "lactacidFlatMultiplier", 2.0), "x{1}")
         AddHeaderOption("NPC Milk Drinking")
         npcMilkEffectsOption = AddToggleOption("NPC Milk Effects", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1) == 1)
@@ -497,7 +497,7 @@ Event OnPageReset(String page)
         If JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkArousal", 1) != 1
             arousalFlags = OPTION_FLAG_DISABLED
         EndIf
-        milkDrinkArousalAmountOption = AddSliderOption("Arousal Per Milk", JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 5.0), "+{0}", arousalFlags)
+        milkDrinkArousalAmountOption = AddSliderOption("Arousal Per Milk", JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 10.0), "+{0}", arousalFlags)
         Return
     EndIf
     If page == "Skyrim.Net"
@@ -792,8 +792,8 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(15.0, 300.0)
         SetSliderDialogInterval(15.0)
     ElseIf option == flatMilkBonusOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 4.0))
-        SetSliderDialogDefaultValue(4.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 1.0))
+        SetSliderDialogDefaultValue(1.0)
         SetSliderDialogRange(0.0, 10.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == lactacidMultiplierOption
@@ -802,8 +802,8 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(0.0, 2.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == milkDrinkArousalAmountOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 5.0))
-        SetSliderDialogDefaultValue(5.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 10.0))
+        SetSliderDialogDefaultValue(10.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == milkFullNarrationCooldownOption

@@ -95,9 +95,9 @@ if (Test-Path -LiteralPath $testSoundRoot) {
     Get-ChildItem -LiteralPath $testSoundRoot | Copy-Item -Destination $packageSounds -Recurse
 }
 
-# Ship the project overview and permission terms with every archive.
+# Ship the project overview. Keep the generically named LICENSE file out of the
+# game Data package because unrelated mods commonly use the same root filename.
 Copy-Item -LiteralPath (Join-Path $projectRoot "README.md") -Destination $stageDir
-Copy-Item -LiteralPath (Join-Path $projectRoot "LICENSE") -Destination $stageDir
 
 $spidConfig = Join-Path $projectRoot "MMEAlert_DISTR.ini"
 If (Test-Path -LiteralPath $spidConfig) {
