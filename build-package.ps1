@@ -55,6 +55,12 @@ $packageSounds = Join-Path $stageDir "Sound\fx\MMESkyrimNetBridge"
 $packageSKSEPlugins = Join-Path $stageDir "SKSE\Plugins"
 New-Item -ItemType Directory -Force -Path $packageScripts, $packageSources, $packageSounds, $packageSKSEPlugins | Out-Null
 
+# Include the simple FOMOD choice for the optional personal MME defaults profile.
+$fomodSource = Join-Path $projectRoot "fomod"
+If (Test-Path -LiteralPath $fomodSource) {
+    Copy-Item -LiteralPath $fomodSource -Destination $stageDir -Recurse
+}
+
 # Copy the active compiled scripts and matching sources.
 foreach ($scriptName in $scriptNames) {
     Copy-Item -LiteralPath (Join-Path $compiledDir "$scriptName.pex") -Destination $packageScripts

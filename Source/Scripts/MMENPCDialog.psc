@@ -10,9 +10,14 @@ EndFunction
 
 Function TestDialogueTarget(Actor target)
     Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
+    GiveMilkToTarget(target, diagnostic)
+EndFunction
+
+; Shared entry point for dialogue fragments and optional Skyrim.Net actions.
+Bool Function GiveMilkToTarget(Actor target, Bool diagnostic = False) Global
     If target == None
         Report(diagnostic, "target detection failed (speaker is not an Actor)")
-        Return
+        Return False
     EndIf
 
     String targetName = GetActorName(target)
@@ -21,24 +26,24 @@ Function TestDialogueTarget(Actor target)
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None
         Report(diagnostic, "validation failed: MME controller not found")
-        Return
+        Return False
     EndIf
 
     Bool isMilkmaid = milkController.MilkMaid.Find(target) != -1
     If !isMilkmaid
         Report(diagnostic, targetName + " is not an MME Milkmaid; request rejected")
-        Return
+        Return False
     EndIf
 
     Report(diagnostic, targetName + " is an MME Milkmaid; validation passed")
-    TestInventorySelection(Game.GetPlayer(), target, milkController, diagnostic)
+    Return TestInventorySelection(Game.GetPlayer(), target, milkController, diagnostic)
 EndFunction
 
 ; Selects one supported milk, then hands it to the validated NPC for native consumption.
-Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkController, Bool diagnostic)
+Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkController, Bool diagnostic) Global
     If giver == None
         Report(diagnostic, "inventory test failed: giver not found")
-        Return
+        Return False
     EndIf
 
     Form lactacid = milkController.MME_Util_Potions.GetAt(0)
@@ -72,32 +77,32 @@ Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkControl
 
     If selectedItem == None
         Report(diagnostic, "no supported milk found; inventory unchanged")
-        Return
+        Return False
     EndIf
     String itemName = selectedItem.GetName()
     If itemName == ""
         itemName = "<unnamed milk>"
     EndIf
     Report(diagnostic, "selected " + selectedType + ": " + itemName + " [form " + selectedItem.GetFormID() + "]")
-    ProcessNativeConsumption(giver, target, selectedItem, selectedType, milkController, diagnostic)
+    Return ProcessNativeConsumption(giver, target, selectedItem, selectedType, milkController, diagnostic)
 EndFunction
 
 ; Stage three transfers exactly one item and verifies that EquipItem consumed it.
-Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedItem, String selectedType, MilkQUEST milkController, Bool diagnostic)
+Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedItem, String selectedType, MilkQUEST milkController, Bool diagnostic) Global
     If giver == None || target == None || selectedItem == None
         Report(diagnostic, "transfer failed: missing giver, target, or item")
-        Return
+        Return False
     EndIf
     If milkController.MilkMaid.Find(target) == -1
         Report(diagnostic, "transfer rejected: target is no longer an MME Milkmaid")
-        Return
+        Return False
     EndIf
 
     Int giverBefore = giver.GetItemCount(selectedItem)
     Int targetBefore = target.GetItemCount(selectedItem)
     If giverBefore < 1
         Report(diagnostic, "transfer failed: selected item is no longer in player inventory")
-        Return
+        Return False
     EndIf
 
     Float lactacidBefore = MME_Storage.getLactacidCurrent(target)
@@ -112,10 +117,14 @@ Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedItem, 
             target.RemoveItem(selectedItem, 1, True, giver)
         EndIf
         Report(diagnostic, "transfer failed; rollback attempted | player " + giverBefore + " -> " + giver.GetItemCount(selectedItem) + " | target " + targetBefore + " -> " + target.GetItemCount(selectedItem))
-        Return
+        Return False
     EndIf
 
     Report(diagnostic, "transferred one " + selectedType + " milk to " + GetActorName(target) + "; native consume attempted")
+    ; The native equip observer will see this consumption. Mark it so the already
+    ; tested dialogue pipeline remains the sole owner of these extension effects.
+    StorageUtil.SetFloatValue(target, "MMEExtensions.NPCDrink.SuppressTime", Utility.GetCurrentRealTime())
+    StorageUtil.SetIntValue(target, "MMEExtensions.NPCDrink.SuppressForm", selectedItem.GetFormID())
     target.EquipItem(selectedItem, False, True)
     Utility.Wait(0.5)
 
@@ -124,7 +133,7 @@ Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedItem, 
         ; The item is still present, so return the transferred copy to the giver.
         target.RemoveItem(selectedItem, 1, True, giver)
         Report(diagnostic, "consume failed; item returned | player " + giverBefore + " -> " + giver.GetItemCount(selectedItem))
-        Return
+        Return False
     EndIf
 
     Float lactacidAfter = MME_Storage.getLactacidCurrent(target)
@@ -137,11 +146,12 @@ Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedItem, 
     Bool animationStarted = StartDrinkAnimation(target, diagnostic)
     ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
     FinishDrinkAnimation(target, animationStarted, diagnostic)
+    Return True
 EndFunction
 
 ; Stage four applies only our modular extension effects. Native MME potion effects have
 ; already run, and Skyrim.Net is intentionally excluded from NPC dialogue consumption.
-Function ApplyExtensionEffects(Actor target, Form selectedItem, String selectedType, Bool diagnostic)
+Function ApplyExtensionEffects(Actor target, Form selectedItem, String selectedType, Bool diagnostic) Global
     If target == None || selectedItem == None
         Report(diagnostic, "effects failed: missing target or consumed item")
         Return
@@ -167,7 +177,7 @@ Function ApplyExtensionEffects(Actor target, Form selectedItem, String selectedT
     String arousalResult = "off/unavailable"
     If arousalSent
         arousalResult = arousalBefore + " -> " + arousalAfter
-    ElseIf MMEArousalBridge.IsAvailable() && JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkArousal", 1) == 1
+    ElseIf MMEArousalBridge.IsAvailable() && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkDrinkArousal", 1) == 1
         arousalResult = "not applied"
     EndIf
     String moanResultText = "off"
@@ -181,8 +191,8 @@ Function ApplyExtensionEffects(Actor target, Form selectedItem, String selectedT
 EndFunction
 
 ; Starts MME's visible Lactacid reaction as soon as consumption is confirmed.
-Bool Function StartDrinkAnimation(Actor target, Bool diagnostic)
-    If JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0) != 1
+Bool Function StartDrinkAnimation(Actor target, Bool diagnostic) Global
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableNPCDrinkAnimation", 0) != 1
         Report(diagnostic, "animation disabled")
         Return False
     EndIf
@@ -220,7 +230,7 @@ Bool Function StartDrinkAnimation(Actor target, Bool diagnostic)
 EndFunction
 
 ; Milk/arousal processing includes up to 0.25 seconds of the five-second hold.
-Function FinishDrinkAnimation(Actor target, Bool animationStarted, Bool diagnostic)
+Function FinishDrinkAnimation(Actor target, Bool animationStarted, Bool diagnostic) Global
     If !animationStarted
         Return
     EndIf

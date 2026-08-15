@@ -6,6 +6,8 @@ FormList Property MME_Milk_Race Auto
 FormList Property MME_Milk_Special Auto
 FormList Property MME_Util_Potions Auto
 Bool Property FixedMilkGen Auto
+Bool Property MaidLvlCap Auto
+Int Property TimesMilkedMult Auto
 Float Property MilkGenValue Auto
 Float Property MilkProdMod Auto
 Bool Property BellyScale Auto

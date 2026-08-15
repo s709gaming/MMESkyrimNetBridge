@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
+  <moduleName>MME Extensions</moduleName>
+  <requiredInstallFiles>
+    <folder source="Scripts" destination="Scripts" priority="0" />
+    <folder source="Source" destination="Source" priority="0" />
+    <folder source="SKSE" destination="SKSE" priority="0" />
+    <folder source="Sound" destination="Sound" priority="0" />
+    <folder source="SEQ" destination="SEQ" priority="0" />
+    <file source="MMEAlert.esp" destination="MMEAlert.esp" priority="0" />
+    <file source="MMEAlert_DISTR.ini" destination="MMEAlert_DISTR.ini" priority="0" />
+    <file source="README.md" destination="README.md" priority="0" />
+    <file source="LICENSE" destination="LICENSE" priority="0" />
+  </requiredInstallFiles>
+  <installSteps order="Explicit">
+    <installStep name="MME Gameplay Defaults">
+      <optionalFileGroups order="Explicit">
+        <group name="Choose whether to preload MME MCM values" type="SelectExactlyOne">
+          <plugins order="Explicit">
+            <plugin name="Recommended MME MCM Defaults">
+              <description>Preloads the author's preferred MME MCM values. These remain ordinary in-game settings and can be changed at any time.
+
+Enables natural milk production without mandatory Lactacid, roughly daily milking cycles, Novice progression, 3BA-friendly breast scaling, and 100% gush chance to avoid extra milking delay.
+
+Recommended and fully reversible through the MCM.</description>
+              <files>
+                <file source="fomod\choices\recommended\Installer.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\Installer.json" priority="0" />
+              </files>
+              <typeDescriptor>
+                <type name="Recommended" />
+              </typeDescriptor>
+            </plugin>
+            <plugin name="Keep MME Defaults">
+              <description>Does not preload any MME MCM values. MME retains its existing settings.</description>
+              <files>
+                <file source="fomod\choices\standard\Installer.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\Installer.json" priority="0" />
+              </files>
+              <typeDescriptor>
+                <type name="Optional" />
+              </typeDescriptor>
+            </plugin>
+          </plugins>
+        </group>
+      </optionalFileGroups>
+    </installStep>
+  </installSteps>
+</config>

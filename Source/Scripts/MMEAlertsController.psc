@@ -19,7 +19,6 @@ EndEvent
 Function InitializeController()
     RegisterMilkingEvents()
     MMEAlertsSkyrimNet.RegisterPromptDecorator()
-    MMEAlertsSkyrimNet.RegisterVoiceMilkingAction()
     UnregisterForModEvent("MMEExtensions_Lifecycle")
     RegisterForModEvent("MMEExtensions_Lifecycle", "OnNativeLifecycle")
     UnregisterForModEvent("MMEExtensions_MMEEffectApplied")
@@ -431,13 +430,17 @@ Int Function UpdateCapacityState(Actor candidate)
 EndFunction
 
 ; Evaluates one actor and queues a threshold reaction for the current scan.
-Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactionKinds)
+Int Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactionKinds, Bool processLocalReactions = True)
     If candidate == None || !candidate.Is3DLoaded() || !IsMMEMilkMaid(candidate)
-        Return
+        Return 0
     EndIf
     Int crossing = UpdateCapacityState(candidate)
     If crossing == 0
-        Return
+        Return 0
+    EndIf
+    MMEAlertsSkyrimNet.SendCapacityMilestone(candidate, crossing)
+    If !processLocalReactions
+        Return crossing
     EndIf
     Int slot = reactionKinds.Find(0)
     If slot >= 0
@@ -451,6 +454,7 @@ Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactionKin
             Debug.Notification(GetActorName(candidate) + " is now half-milky and building nicely!")
         EndIf
     EndIf
+    Return crossing
 EndFunction
 
 ; Scans the current cell and selects one highest-priority capacity sound.
@@ -471,11 +475,15 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     ; MME validation and all capacity behavior remain in ProcessActor below.
     String milkStatuses = ""
     Int milkmaidCount = 0
+    Bool fullMilestoneDetected = False
     Int i = 0
     While i < nearbyActors.Length
         Actor candidate = nearbyActors[i]
-        If processReactions
-            ProcessActor(candidate, reactionActors, reactionKinds)
+        If processReactions || publishSkyrimNet
+            Int crossing = ProcessActor(candidate, reactionActors, reactionKinds, processReactions)
+            If crossing == 2
+                fullMilestoneDetected = True
+            EndIf
         EndIf
         String status = EvaluateMilkMaidFlavor(candidate)
         If status != ""
@@ -489,6 +497,9 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     EndWhile
     If publishSkyrimNet
         MMEAlertsSkyrimNet.SendNearbyMilkStatuses(Game.GetPlayer(), milkStatuses, nearbyActors.Length, milkmaidCount)
+    EndIf
+    If fullMilestoneDetected
+        MMEAlertsSkyrimNet.NarrateMilkFull()
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0) == 1
         Debug.Notification("Native Scan active: " + nearbyActors.Length + " nearby actors")
@@ -521,7 +532,7 @@ String Function EvaluateMilkMaidFlavor(Actor candidate)
     EndIf
     Float current = MME_Storage.getMilkCurrent(candidate)
     If current >= maximum
-        Return GetActorName(candidate) + " is completely full, swollen and on the brink of a boobgasm!"
+        Return GetActorName(candidate) + " is completely full, deliciously heavy and savoring the pleasure near a boobgasm."
     ElseIf current >= maximum * 0.5
         Return GetActorName(candidate) + " is over half full, feeling heavier and warm."
     EndIf

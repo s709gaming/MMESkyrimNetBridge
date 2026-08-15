@@ -10,6 +10,7 @@
 #include <RE/T/TESActorLocationChangeEvent.h>
 #include <RE/T/TESLoadGameEvent.h>
 #include <RE/T/TESMagicEffectApplyEvent.h>
+#include <RE/T/TESEquipEvent.h>
 #include <RE/T/TESSleepStopEvent.h>
 #include <RE/T/TESWaitStopEvent.h>
 
@@ -21,6 +22,7 @@ namespace
 {
     constexpr auto kLifecycleEvent = "MMEExtensions_Lifecycle";
     constexpr auto kMMEEffectEvent = "MMEExtensions_MMEEffectApplied";
+    constexpr auto kNPCPotionEvent = "MMEExtensions_NPCPotionConsumed";
 
     std::vector<RE::Actor*> GetNearbyActors(RE::StaticFunctionTag*, float radius)
     {
@@ -95,12 +97,30 @@ namespace
         SKSE::log::info("MME magic effect sent: target {:08X}, effect {:06X}", target->GetFormID(), effect->GetLocalFormID());
     }
 
+    void SendNPCPotionEvent(RE::Actor* actor, RE::TESForm* potion)
+    {
+        auto* source = SKSE::GetModCallbackEventSource();
+        auto* sourceFile = potion ? potion->GetFile(0) : nullptr;
+        if (!source || !actor || !potion || !sourceFile) {
+            return;
+        }
+        SKSE::ModCallbackEvent event{
+            RE::BSFixedString(kNPCPotionEvent),
+            RE::BSFixedString(sourceFile->GetFilename()),
+            static_cast<float>(potion->GetLocalFormID()),
+            actor
+        };
+        source->SendEvent(&event);
+        SKSE::log::info("NPC potion equip sent: actor {:08X}, {}:{:06X}", actor->GetFormID(), sourceFile->GetFilename(), potion->GetLocalFormID());
+    }
+
     class LifecycleEventSink final :
         public RE::BSTEventSink<RE::TESWaitStopEvent>,
         public RE::BSTEventSink<RE::TESSleepStopEvent>,
         public RE::BSTEventSink<RE::TESActorLocationChangeEvent>,
         public RE::BSTEventSink<RE::TESLoadGameEvent>,
-        public RE::BSTEventSink<RE::TESMagicEffectApplyEvent>
+        public RE::BSTEventSink<RE::TESMagicEffectApplyEvent>,
+        public RE::BSTEventSink<RE::TESEquipEvent>
     {
     public:
         static LifecycleEventSink* GetSingleton()
@@ -117,6 +137,7 @@ namespace
             holder->AddEventSink<RE::TESActorLocationChangeEvent>(this);
             holder->AddEventSink<RE::TESLoadGameEvent>(this);
             holder->AddEventSink<RE::TESMagicEffectApplyEvent>(this);
+            holder->AddEventSink<RE::TESEquipEvent>(this);
             SKSE::log::info("Lifecycle event sinks registered");
         }
 
@@ -163,6 +184,21 @@ namespace
             auto* sourceFile = effect ? effect->GetFile(0) : nullptr;
             if (sourceFile && _stricmp(sourceFile->GetFilename().data(), "MilkModNEW.esp") == 0) {
                 SendMMEEffectEvent(event->target.get(), effect);
+            }
+            return RE::BSEventNotifyControl::kContinue;
+        }
+
+        RE::BSEventNotifyControl ProcessEvent(
+            const RE::TESEquipEvent* event,
+            RE::BSTEventSource<RE::TESEquipEvent>*) override
+        {
+            if (!event || !event->equipped || !event->actor || event->actor.get() == RE::PlayerCharacter::GetSingleton()) {
+                return RE::BSEventNotifyControl::kContinue;
+            }
+            auto* actor = event->actor->As<RE::Actor>();
+            auto* item = RE::TESForm::LookupByID(event->baseObject);
+            if (actor && item && item->GetFormType() == RE::FormType::AlchemyItem) {
+                SendNPCPotionEvent(actor, item);
             }
             return RE::BSEventNotifyControl::kContinue;
         }

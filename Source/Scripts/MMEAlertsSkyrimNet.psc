@@ -25,62 +25,13 @@ Function RegisterPromptDecorator() Global
     Debug.Trace("[MMEAlert SkyrimNet] Milkmaid prompt decorator registration result " + result)
 EndFunction
 
-; Registers a non-destructive first-stage conversational action.
-Function RegisterVoiceMilkingAction() Global
-    If !IsAvailable()
-        Return
-    EndIf
-    Int result = SkyrimNetApi.RegisterAction("StartMilkingSelf", "Start milking yourself only when the player clearly asks or encourages you to milk yourself.", "MMEAlertsSkyrimNet", "VoiceMilkingIsEligible", "MMEAlertsSkyrimNet", "VoiceMilkingTestExecute", "", "PAPYRUS", 1, "")
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 1) == 1
-        Debug.Notification("Voice Milking: action registration returned [" + result + "]")
-    EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Voice Milking action registration result " + result)
-EndFunction
-
-; SkyrimNet calls this while preparing actions for each conversational actor.
-Bool Function VoiceMilkingIsEligible(Actor candidate) Global
-    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 1) == 1
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilking", 1) != 1
+; Uses MME's authoritative runtime list rather than an inferred StorageUtil value.
+Bool Function IsRealMMEMilkmaid(Actor candidate) Global
+    If candidate == None
         Return False
     EndIf
-    If candidate == None || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
-        Return False
-    EndIf
-    String actorName = candidate.GetDisplayName()
-    If !StorageUtil.HasFloatValue(candidate, "MME.MilkMaid.Level")
-        If diagnostic
-            Debug.Notification("Voice Milking: " + actorName + " rejected - not an MME Milkmaid")
-        EndIf
-        Return False
-    EndIf
-    If StorageUtil.GetIntValue(candidate, "MMEAlerts.IsMilking", 0) == 1
-        If diagnostic
-            Debug.Notification("Voice Milking: " + actorName + " rejected - already milking")
-        EndIf
-        Return False
-    EndIf
-    If diagnostic
-        Debug.Notification("Voice Milking: " + actorName + " eligible")
-    EndIf
-    Return True
-EndFunction
-
-; Stage one deliberately validates selection without changing gameplay state.
-Function VoiceMilkingTestExecute(Actor candidate) Global
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilking", 1) != 1
-        Return
-    EndIf
-    If candidate == None || !StorageUtil.HasFloatValue(candidate, "MME.MilkMaid.Level")
-        If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 1) == 1
-            Debug.Notification("Voice Milking: execution blocked - invalid target")
-        EndIf
-        Return
-    EndIf
-    String actorName = candidate.GetDisplayName()
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 1) == 1
-        Debug.Notification("Voice Milking: selected " + actorName + " - test passed; no milking started")
-    EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Voice Milking stage-one execution selected " + actorName)
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Return milkController != None && milkController.MilkMaid.Find(candidate) != -1
 EndFunction
 
 ; Returns an explicit string gate because prompt values may not preserve Papyrus numeric types.
@@ -88,7 +39,7 @@ String Function MilkmaidPromptDebug(Actor milkMaid) Global
     If milkMaid == None
         Return ""
     EndIf
-    If !StorageUtil.HasFloatValue(milkMaid, "MME.MilkMaid.Level")
+    If !IsRealMMEMilkmaid(milkMaid)
         Return ""
     EndIf
 
@@ -112,6 +63,104 @@ EndFunction
 
 Function SendMilkingEnd(Actor milkMaid) Global
     SendMilkingEvent(milkMaid, "endMessage")
+EndFunction
+
+; Publishes actor-specific capacity crossings for two minutes without forcing dialogue.
+Function SendCapacityMilestone(Actor milkMaid, Int crossing) Global
+    String settingsFile = "/MMEAlerts/SkyrimNet"
+    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetStatusDiagnostic", 0) == 1
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkStatuses", 1) != 1
+        Return
+    EndIf
+    If !IsAvailable() || milkMaid == None || JsonUtil.GetIntValue(settingsFile, "enabled", 1) != 1
+        If diagnostic
+            Debug.Notification("Skyrim.Net Milestone: skipped - integration or actor unavailable")
+        EndIf
+        Return
+    EndIf
+
+    String actorName = milkMaid.GetDisplayName()
+    If actorName == ""
+        actorName = "The Milk Maid"
+    EndIf
+    String eventType = "milk_half_full"
+    String tag = "[half full]"
+    String content = tag + " " + actorName + " is halfway full of milk, pleasantly heavy and getting excited."
+    If crossing == 2
+        eventType = "milk_full"
+        tag = "[milk full]"
+        content = tag + " " + actorName + " is completely full of milk, deliciously swollen and savoring the ultimate pleasure."
+    EndIf
+
+    String actorUuid = SkyrimNetApi.GetEntityUUID(milkMaid)
+    If actorUuid == ""
+        actorUuid = "form_" + milkMaid.GetFormID()
+    EndIf
+    String eventId = eventType + "_" + actorUuid
+    Int ttlMs = JsonUtil.GetIntValue(settingsFile, "capacityMilestoneTtlMs", 120000)
+    Int result = SkyrimNetApi.RegisterShortLivedEvent(eventId, eventType, content, "{}", ttlMs, milkMaid, None)
+    If diagnostic
+        If result == 0
+            Debug.Notification("Skyrim.Net Milestone: " + tag + " accepted | " + actorName + " | 120s")
+        Else
+            Debug.Notification("Skyrim.Net Milestone: " + tag + " rejected [" + result + "]")
+        EndIf
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] Capacity milestone " + eventType + " result " + result + " | " + actorName + " | " + content)
+EndFunction
+
+; Makes at most one token-using narration request for a completed scan's full crossings.
+Function NarrateMilkFull() Global
+    String settingsFile = "/MMEAlerts/Settings"
+    Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableMilkFullNarrationDiagnostic", 0) == 1
+    If diagnostic
+        Debug.Notification("Milk Full Narration: trigger detected")
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enableMilkFullNarration", 1) != 1
+        If diagnostic
+            Debug.Notification("Milk Full Narration: skipped - feature disabled")
+        EndIf
+        Return
+    EndIf
+    If !IsAvailable()
+        If diagnostic
+            Debug.Notification("Milk Full Narration: failed - Skyrim.Net not detected")
+        EndIf
+        Return
+    EndIf
+
+    Float cooldown = JsonUtil.GetFloatValue(settingsFile, "milkFullNarrationCooldown", 60.0)
+    Float now = Utility.GetCurrentRealTime()
+    Float last = JsonUtil.GetFloatValue(settingsFile, "lastMilkFullNarrationRealTime", -1.0)
+    ; GetCurrentRealTime restarts with Skyrim, so discard a timestamp from an older session.
+    If last > now
+        last = -1.0
+    EndIf
+    If last >= 0.0 && now - last < cooldown
+        If diagnostic
+            Int remaining = (cooldown - (now - last)) as Int
+            Debug.Notification("Milk Full Narration: skipped - cooldown " + remaining + "s")
+        EndIf
+        Return
+    EndIf
+
+    String content = "One or more nearby Milk Maids are completely full and savoring the ultimate pleasure near a boobgasm. React briefly and naturally; fullness may be enjoyed without needing immediate milking."
+    If diagnostic
+        Debug.Notification("Milk Full Narration: sending general Milk Maid situation")
+    EndIf
+    Int result = SkyrimNetApi.DirectNarration(content, None, None)
+    If result == 0
+        JsonUtil.SetFloatValue(settingsFile, "lastMilkFullNarrationRealTime", now)
+        JsonUtil.Save(settingsFile, False)
+        If diagnostic
+            Debug.Notification("Milk Full Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
+        EndIf
+    Else
+        If diagnostic
+            Debug.Notification("Milk Full Narration: rejected [" + result + "]")
+        EndIf
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] Milk Full DirectNarration result " + result + " | cooldown " + cooldown + " | " + content)
 EndFunction
 
 ; Publishes one replaceable five-minute summary from the existing capacity scan.
@@ -388,9 +437,9 @@ Function SendMilkingEvent(Actor milkMaid, String messageKey) Global
         actorName = "The Milk Maid"
     EndIf
 
-    String defaultMessage = "{actor} is milking herself and is feeling orgasmic!"
+    String defaultMessage = "{actor} has started milking herself, eagerly releasing the pressure."
     If messageKey == "endMessage"
-        defaultMessage = "{actor} has finished milking, utterly satisfied."
+        defaultMessage = "{actor} finished milking and is empty again, deeply relieved and completely satisfied."
     EndIf
     String template = JsonUtil.GetStringValue(settingsFile, messageKey, defaultMessage)
     If template == ""
