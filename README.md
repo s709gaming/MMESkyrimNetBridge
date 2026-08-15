@@ -55,7 +55,7 @@ The native DLL was built with CommonLibSSE-NG.
 
 ### Skyrim VR
 
-Skyrim VR support is included in the CommonLibSSE-NG DLL but still needs broader in-game verification. Install VR Address Library when testing VR.
+Skyrim VR support is included in the CommonLibSSE-NG DLL. Install VR Address Library when using VR. It did not crash when I tried it.
 
 ## Features
 
