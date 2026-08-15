@@ -95,7 +95,7 @@ Diagnostics for Developers
 Independent debug toggles keep notifications focused on the feature being tested.
 Papyrus details can be written to the normal Papyrus log.
 Native bridge details are written to MMEExtensions.log in the SKSE log directory.
-Development-only Quick Test provisioning remains available in test builds.
+The former Quick Test helper is inert in release builds and grants no consumables.
 Installation
 Install all required dependencies.
 Install MME Extensions.zip with Vortex or Mod Organizer 2.
@@ -131,7 +131,7 @@ MMEMilkBoost.psc — shared milk-bonus calculation and MME capacity-safe applica
 MMEArousalBridge.psc — optional SexLab Aroused/OSLAroused detection and arousal updates without a hard script dependency.
 MMENPCDialog.psc — Milkmaid-only dialogue validation, inventory priority, transfer, consumption, extension effects, and optional animation.
 MMEAlertsFlatRateDefaults.psc — optional FOMOD-selected MME MCM preset; captures values so its changes can be reversed.
-MMEAlertsQuickTest.psc — temporary test-item provisioning for development builds.
+MMEAlertsQuickTest.psc — inert compatibility placeholder for the former development item helper; retained because the ESP and older saves may reference it.
 MMEDebug.psc — passive debug helper retained for focused troubleshooting.
 MMEExtensionsNative.psc — Papyrus declaration for the DLL’s native nearby-actor function.
 MMESkyrimNetVoiceControls.psc — archived experimental actions; deliberately excluded from release compilation.
