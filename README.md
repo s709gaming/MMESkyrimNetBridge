@@ -1,3 +1,4 @@
+
 # MME Extensions
 Loverslab Download page: https://www.loverslab.com/files/file/50820-mme-milk-mod-economy-extensions/
 A modular reaction add-on for **Milk Mod Economy**.
@@ -12,6 +13,8 @@ Depending on your settings, the mod can:
 - Alert Skyrim.Net so nearby characters can react.
 
 **Everything is modular. Enable only the features you want through the MCM.**
+
+<img width="1164" height="864" alt="main menu" src="https://github.com/user-attachments/assets/0b3a32d7-574c-4b9f-b147-98260b94ceff" />
 
 > [!IMPORTANT]
 > Skyrim.Net is completely optional. When enabled, characters will talk about Milkmaids and female anatomy much more often.
@@ -112,6 +115,10 @@ When installed, MME Extensions can:
 - Apply an MCM-adjustable narration cooldown.
 - Add Milkmaid context only to confirmed MME Milkmaids through a short `.prompt` file.
 - Control each Skyrim.Net feature separately through the MCM.
+
+   <img width="204" height="130" alt="milk drink tracking" src="https://github.com/user-attachments/assets/dd8d34be-e61f-4e3a-81a7-0bbe9668879f" />
+<img width="516" height="213" alt="Recent event" src="https://github.com/user-attachments/assets/8d96ce51-eada-4a42-b1f7-1f65e85f6f0c" />
+
 
 ### Optional MME Settings
 
