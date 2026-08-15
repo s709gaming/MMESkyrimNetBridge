@@ -1,5 +1,5 @@
 # MME Extensions
-
+Loverslab Download page: https://www.loverslab.com/files/file/50820-mme-milk-mod-economy-extensions/
 A modular reaction add-on for **Milk Mod Economy**.
 
 MME Extensions makes Milkmaid gameplay feel sillier and more responsive by reacting to drinking milk, filling up, leaking, milking, and other important MME events.
