@@ -155,11 +155,13 @@ Choosing **Keep MME Defaults** leaves MME’s settings unchanged.
 
 > [!WARNING]
 > This is a late alpha release. Expect bugs and do not risk an important save.
+> This mod does not alter the original Milk Mod Economy.
+> All or some of this mod's features can be disabled mid game via MCM.
+
 
 - Core features work in isolated testing.
 - Broader load-order testing is still needed.
 - Skyrim VR support is included but still requires broader verification.
-- SPID is not required or active. It was only explored during development.
 
 ## Diagnostics
 
