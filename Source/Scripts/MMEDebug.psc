@@ -2,30 +2,21 @@ Scriptname MMEDebug extends Quest
 
 String SettingsFile = "/MMEAlerts/Settings"
 
-; Quest startup synchronizes the optional repeating capacity report.
+; Quest startup delegates timing to the shared controller scheduler.
 Event OnInit()
     UpdateDebugLoop()
 EndEvent
 
-; Arms a five-second update only for the explicitly enabled capacity diagnostic.
+; Both scripts share one quest form, so only the controller may own update registration.
 Function UpdateDebugLoop()
-    UnregisterForUpdate()
-    If JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0) == 1
-        RegisterForSingleUpdate(5.0)
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller != None
+        controller.UpdatePolling()
     EndIf
 EndFunction
 
-; Emits one capacity snapshot, then reschedules while the toggle remains enabled.
+; Update events are delivered to every script on the quest; remain passive here.
 Event OnUpdate()
-    If JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0) == 1
-        MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
-        If controller != None
-            controller.ShowDebugCapacitySnapshot()
-        Else
-            Debug.Notification("MME Alerts DEBUG - capacity controller was not found.")
-        EndIf
-    EndIf
-    UpdateDebugLoop()
 EndEvent
 
 ; SOUND DEBUG (disabled). Retained at the end for future troubleshooting.

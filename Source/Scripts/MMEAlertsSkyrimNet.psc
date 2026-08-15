@@ -25,6 +25,64 @@ Function RegisterPromptDecorator() Global
     Debug.Trace("[MMEAlert SkyrimNet] Milkmaid prompt decorator registration result " + result)
 EndFunction
 
+; Registers a non-destructive first-stage conversational action.
+Function RegisterVoiceMilkingAction() Global
+    If !IsAvailable()
+        Return
+    EndIf
+    Int result = SkyrimNetApi.RegisterAction("StartMilkingSelf", "Start milking yourself only when the player clearly asks or encourages you to milk yourself.", "MMEAlertsSkyrimNet", "VoiceMilkingIsEligible", "MMEAlertsSkyrimNet", "VoiceMilkingTestExecute", "", "PAPYRUS", 1, "")
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 1) == 1
+        Debug.Notification("Voice Milking: action registration returned [" + result + "]")
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] Voice Milking action registration result " + result)
+EndFunction
+
+; SkyrimNet calls this while preparing actions for each conversational actor.
+Bool Function VoiceMilkingIsEligible(Actor candidate) Global
+    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 1) == 1
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilking", 1) != 1
+        Return False
+    EndIf
+    If candidate == None || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
+        Return False
+    EndIf
+    String actorName = candidate.GetDisplayName()
+    If !StorageUtil.HasFloatValue(candidate, "MME.MilkMaid.Level")
+        If diagnostic
+            Debug.Notification("Voice Milking: " + actorName + " rejected - not an MME Milkmaid")
+        EndIf
+        Return False
+    EndIf
+    If StorageUtil.GetIntValue(candidate, "MMEAlerts.IsMilking", 0) == 1
+        If diagnostic
+            Debug.Notification("Voice Milking: " + actorName + " rejected - already milking")
+        EndIf
+        Return False
+    EndIf
+    If diagnostic
+        Debug.Notification("Voice Milking: " + actorName + " eligible")
+    EndIf
+    Return True
+EndFunction
+
+; Stage one deliberately validates selection without changing gameplay state.
+Function VoiceMilkingTestExecute(Actor candidate) Global
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilking", 1) != 1
+        Return
+    EndIf
+    If candidate == None || !StorageUtil.HasFloatValue(candidate, "MME.MilkMaid.Level")
+        If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 1) == 1
+            Debug.Notification("Voice Milking: execution blocked - invalid target")
+        EndIf
+        Return
+    EndIf
+    String actorName = candidate.GetDisplayName()
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 1) == 1
+        Debug.Notification("Voice Milking: selected " + actorName + " - test passed; no milking started")
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] Voice Milking stage-one execution selected " + actorName)
+EndFunction
+
 ; Returns an explicit string gate because prompt values may not preserve Papyrus numeric types.
 String Function MilkmaidPromptDebug(Actor milkMaid) Global
     If milkMaid == None

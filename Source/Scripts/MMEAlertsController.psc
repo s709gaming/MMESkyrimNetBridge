@@ -8,6 +8,7 @@ String PendingMilkmaidKey = "MMEExtensions.PendingMilkmaid"
 Float NearbyRange = 2000.0
 Float NextCapacityUpdate = 0.0
 Float NextSkyrimNetUpdate = 0.0
+Float NextDebugUpdate = 0.0
 
 ; Quest startup registers MME events and initializes the player monitor/poller.
 Event OnInit()
@@ -18,6 +19,7 @@ EndEvent
 Function InitializeController()
     RegisterMilkingEvents()
     MMEAlertsSkyrimNet.RegisterPromptDecorator()
+    MMEAlertsSkyrimNet.RegisterVoiceMilkingAction()
     UnregisterForModEvent("MMEExtensions_Lifecycle")
     RegisterForModEvent("MMEExtensions_Lifecycle", "OnNativeLifecycle")
     UnregisterForModEvent("MMEExtensions_MMEEffectApplied")
@@ -273,6 +275,11 @@ Function UpdatePolling()
     Else
         NextSkyrimNetUpdate = 0.0
     EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0) == 1
+        NextDebugUpdate = now + 5.0
+    Else
+        NextDebugUpdate = 0.0
+    EndIf
     ScheduleNextUpdate()
 EndFunction
 
@@ -284,6 +291,9 @@ Function ScheduleNextUpdate()
     EndIf
     If NextSkyrimNetUpdate > 0.0 && (delay <= 0.0 || NextSkyrimNetUpdate - now < delay)
         delay = NextSkyrimNetUpdate - now
+    EndIf
+    If NextDebugUpdate > 0.0 && (delay <= 0.0 || NextDebugUpdate - now < delay)
+        delay = NextDebugUpdate - now
     EndIf
     If delay > 0.0
         If delay < 1.0
@@ -298,6 +308,7 @@ Event OnUpdate()
     Float now = Utility.GetCurrentRealTime()
     Bool capacityDue = NextCapacityUpdate > 0.0 && now >= NextCapacityUpdate
     Bool skyrimNetDue = NextSkyrimNetUpdate > 0.0 && now >= NextSkyrimNetUpdate
+    Bool debugDue = NextDebugUpdate > 0.0 && now >= NextDebugUpdate
     If capacityDue || skyrimNetDue
         ScanNearbyMilkMaids(skyrimNetDue, capacityDue)
     EndIf
@@ -306,6 +317,10 @@ Event OnUpdate()
     EndIf
     If skyrimNetDue
         NextSkyrimNetUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
+    EndIf
+    If debugDue
+        ShowDebugCapacitySnapshot()
+        NextDebugUpdate = now + 5.0
     EndIf
     ScheduleNextUpdate()
 EndEvent
