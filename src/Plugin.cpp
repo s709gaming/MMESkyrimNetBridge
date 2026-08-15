@@ -1,17 +1,64 @@
 #include <SKSE/SKSE.h>
 
 #include <RE/P/PlayerCharacter.h>
+#include <RE/P/ProcessLists.h>
+#include <RE/P/PackUnpackImpl.h>
+#include <RE/N/NativeFunction.h>
 #include <RE/S/ScriptEventSourceHolder.h>
+#include <RE/T/TESFile.h>
+#include <RE/T/TESForm.h>
 #include <RE/T/TESActorLocationChangeEvent.h>
 #include <RE/T/TESLoadGameEvent.h>
+#include <RE/T/TESMagicEffectApplyEvent.h>
 #include <RE/T/TESSleepStopEvent.h>
 #include <RE/T/TESWaitStopEvent.h>
 
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include <unordered_set>
+
 namespace
 {
     constexpr auto kLifecycleEvent = "MMEExtensions_Lifecycle";
+    constexpr auto kMMEEffectEvent = "MMEExtensions_MMEEffectApplied";
+
+    std::vector<RE::Actor*> GetNearbyActors(RE::StaticFunctionTag*, float radius)
+    {
+        std::vector<RE::Actor*> result;
+        auto* player = RE::PlayerCharacter::GetSingleton();
+        auto* processLists = RE::ProcessLists::GetSingleton();
+        if (!player || !processLists) {
+            return result;
+        }
+
+        result.push_back(player);
+        const auto playerPosition = player->GetPosition();
+        const auto radiusSquared = radius * radius;
+        const auto* playerCell = player->GetParentCell();
+        std::unordered_set<RE::FormID> seen{ player->GetFormID() };
+
+        processLists->ForAllActors([&](RE::Actor* actor) {
+            if (!actor || actor == player || !actor->Is3DLoaded() || actor->GetParentCell() != playerCell) {
+                return RE::BSContainer::ForEachResult::kContinue;
+            }
+            const auto delta = actor->GetPosition() - playerPosition;
+            if (delta.SqrLength() > radiusSquared || !seen.insert(actor->GetFormID()).second) {
+                return RE::BSContainer::ForEachResult::kContinue;
+            }
+            result.push_back(actor);
+            return RE::BSContainer::ForEachResult::kContinue;
+        });
+
+        SKSE::log::info("Native nearby scan returned {} actors within {:.0f} units", result.size(), radius);
+        return result;
+    }
+
+    bool RegisterPapyrus(RE::BSScript::IVirtualMachine* vm)
+    {
+        vm->RegisterFunction("GetNearbyActors", "MMEExtensionsNative", GetNearbyActors);
+        SKSE::log::info("Native Papyrus scanner registered");
+        return true;
+    }
 
     void SendLifecycleEvent(const char* reason)
     {
@@ -31,11 +78,29 @@ namespace
         SKSE::log::info("Lifecycle event sent: {}", reason);
     }
 
+    void SendMMEEffectEvent(RE::TESObjectREFR* target, RE::TESForm* effect)
+    {
+        auto* source = SKSE::GetModCallbackEventSource();
+        if (!source || !target || !effect) {
+            return;
+        }
+
+        SKSE::ModCallbackEvent event{
+            RE::BSFixedString(kMMEEffectEvent),
+            RE::BSFixedString("MilkModNEW.esp"),
+            static_cast<float>(effect->GetLocalFormID()),
+            target
+        };
+        source->SendEvent(&event);
+        SKSE::log::info("MME magic effect sent: target {:08X}, effect {:06X}", target->GetFormID(), effect->GetLocalFormID());
+    }
+
     class LifecycleEventSink final :
         public RE::BSTEventSink<RE::TESWaitStopEvent>,
         public RE::BSTEventSink<RE::TESSleepStopEvent>,
         public RE::BSTEventSink<RE::TESActorLocationChangeEvent>,
-        public RE::BSTEventSink<RE::TESLoadGameEvent>
+        public RE::BSTEventSink<RE::TESLoadGameEvent>,
+        public RE::BSTEventSink<RE::TESMagicEffectApplyEvent>
     {
     public:
         static LifecycleEventSink* GetSingleton()
@@ -51,6 +116,7 @@ namespace
             holder->AddEventSink<RE::TESSleepStopEvent>(this);
             holder->AddEventSink<RE::TESActorLocationChangeEvent>(this);
             holder->AddEventSink<RE::TESLoadGameEvent>(this);
+            holder->AddEventSink<RE::TESMagicEffectApplyEvent>(this);
             SKSE::log::info("Lifecycle event sinks registered");
         }
 
@@ -82,6 +148,22 @@ namespace
             const RE::TESLoadGameEvent*, RE::BSTEventSource<RE::TESLoadGameEvent>*) override
         {
             SendLifecycleEvent("load");
+            return RE::BSEventNotifyControl::kContinue;
+        }
+
+        RE::BSEventNotifyControl ProcessEvent(
+            const RE::TESMagicEffectApplyEvent* event,
+            RE::BSTEventSource<RE::TESMagicEffectApplyEvent>*) override
+        {
+            if (!event || !event->target) {
+                return RE::BSEventNotifyControl::kContinue;
+            }
+
+            auto* effect = RE::TESForm::LookupByID(event->magicEffect);
+            auto* sourceFile = effect ? effect->GetFile(0) : nullptr;
+            if (sourceFile && _stricmp(sourceFile->GetFilename().data(), "MilkModNEW.esp") == 0) {
+                SendMMEEffectEvent(event->target.get(), effect);
+            }
             return RE::BSEventNotifyControl::kContinue;
         }
     };
@@ -117,6 +199,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     SKSE::Init(skse);
 
     SKSE::GetMessagingInterface()->RegisterListener(OnSKSEMessage);
+    SKSE::GetPapyrusInterface()->Register(RegisterPapyrus);
     SKSE::log::info("MME Extensions native bridge loaded");
     SKSE::log::info("Runtime version: {}", skse->RuntimeVersion().string());
     return true;

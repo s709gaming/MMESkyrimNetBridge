@@ -16,7 +16,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $gameRoot "Data\SEQ\MMEAlert.seq"
-$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMENPCDialog")
+$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMENPCDialog", "MMEExtensionsNative")
 
 $nativeDll = Join-Path $projectRoot "build\native-release\package\SKSE\Plugins\MMEExtensions.dll"
 
@@ -61,9 +61,9 @@ foreach ($scriptName in $scriptNames) {
     Copy-Item -LiteralPath (Join-Path $sourceDir "$scriptName.psc") -Destination $packageSources
 }
 
-# The lifecycle feature requires the CommonLibSSE-NG bridge built for 1.6.1170.
+# The lifecycle feature requires the CommonLibSSE-NG SE/AE/VR bridge.
 if (!(Test-Path -LiteralPath $nativeDll)) {
-    throw "Native lifecycle DLL missing. Run build-native-test.ps1 first: $nativeDll"
+    throw "Native lifecycle DLL missing. Run build-native.ps1 first: $nativeDll"
 }
 Copy-Item -LiteralPath $nativeDll -Destination $packageSKSEPlugins
 
@@ -73,6 +73,14 @@ if (Test-Path -LiteralPath $skyrimNetConfig) {
     $packageConfig = Join-Path $stageDir "SKSE\Plugins\StorageUtilData\MMEAlerts"
     New-Item -ItemType Directory -Force -Path $packageConfig | Out-Null
     Copy-Item -LiteralPath $skyrimNetConfig -Destination $packageConfig
+}
+
+# Install the additive actor-bio prompt without replacing any SkyrimNet-owned template.
+$milkmaidPrompt = Join-Path $projectRoot "SkyrimNetPrompts\0260_mme_extensions_milkmaid.prompt"
+if (Test-Path -LiteralPath $milkmaidPrompt) {
+    $promptDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\prompts\submodules\character_bio"
+    New-Item -ItemType Directory -Force -Path $promptDestination | Out-Null
+    Copy-Item -LiteralPath $milkmaidPrompt -Destination $promptDestination
 }
 
 # Package the SSEEdit-built randomized voice pools and the two legacy test files.

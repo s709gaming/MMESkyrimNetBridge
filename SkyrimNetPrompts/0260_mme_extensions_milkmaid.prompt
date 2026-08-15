@@ -1,0 +1,20 @@
+{% if render_mode == "full" or render_mode == "thoughts" or render_mode == "transform" or render_mode == "dialogue_target" or render_mode == "target" %}
+{% if isValidActor(actorUUID) %}
+{% set is_milkmaid = mme_milkmaid_prompt_debug(actorUUID) %}
+{% if is_milkmaid == "true" %}
+## Milkmaid State
+
+{{ decnpc(actorUUID).name }} is a Milk Maid: an adult woman transformed by Lactacid.
+
+Use a suggestive, playful, positive tone when relevant.
+
+Her body produces and stores breast milk.
+
+Her comically huge tits grow heavier as she fills. Heavier tits feel nice and sexy.
+
+The weight, bounce, pressure, and sensitivity of her milk-heavy tits feel erotically pleasurable.
+
+Fullness feels like the brink of a boobgasm. Milking brings orgasmic relief.
+{% endif %}
+{% endif %}
+{% endif %}

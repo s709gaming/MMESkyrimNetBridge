@@ -26,16 +26,6 @@ Function ApplyTestSetup()
     EndIf
 
     Actor playerActor = Game.GetPlayer()
-    If milkController.MilkMaid.Find(playerActor) < 0
-        milkController.AssignSlot(playerActor)
-    EndIf
-
-    If milkController.MilkMaid.Find(playerActor) < 0
-        Debug.Notification("MME Alerts TEST - MME could not make the player a Milk Maid.")
-        Debug.Trace("[MMEAlert Test] AssignSlot did not enroll the player")
-        Return
-    EndIf
-
     StorageUtil.SetFloatValue(None, "MME.Progression.Level", 10.0)
 
     If milkController.MME_MakeMilkmaid_Spell != None && !playerActor.HasSpell(milkController.MME_MakeMilkmaid_Spell)
@@ -61,7 +51,7 @@ Function ApplyTestSetup()
 
     If testSetupApplied
         GrantMilkVariety(playerActor, regularMilk, succubusMilk, werewolfMilk, vampireMilk)
-        Debug.Trace("[MMEAlert Test] enrollment, mastery, spells, and debug verified; consumables were already granted")
+        Debug.Trace("[MMEAlert Test] spells and debug verified; automatic Milkmaid enrollment is disabled")
         Return
     EndIf
 
@@ -73,7 +63,7 @@ Function ApplyTestSetup()
     GrantMilkVariety(playerActor, regularMilk, succubusMilk, werewolfMilk, vampireMilk)
 
     testSetupApplied = True
-    Debug.Trace("[MMEAlert Test] player maid, mastery=10, test spells added, debug enabled, Lactacid=10")
+    Debug.Trace("[MMEAlert Test] test spells, debug, and Lactacid added; automatic Milkmaid enrollment is disabled")
 EndFunction
 
 ; Grants test drinks once per save; requires the relevant optional forms to exist.

@@ -13,7 +13,11 @@ Int milkmaidLevelBonusOption
 Int flatMilkBonusOption
 Int addMilkDebugOption
 Int lactacidMultiplierOption
-Int skyrimNetDiagnosticOption
+Int skyrimNetDrinkDiagnosticOption
+Int skyrimNetMilkingDiagnosticOption
+Int skyrimNetCreationDiagnosticOption
+Int skyrimNetStatusDiagnosticOption
+Int skyrimNetPromptDiagnosticOption
 Int drinkMoansOption
 Int fullnessMoansOption
 Int milkingMoansOption
@@ -25,10 +29,17 @@ Int arousalDiagnosticOption
 Int dialogueDiagnosticOption
 Int npcDrinkAnimationOption
 Int lifecycleDiagnosticOption
+Int milkmaidCreationDiagnosticOption
+Int nativeScanDiagnosticOption
+Int skyrimNetMilkStatusesOption
+Int skyrimNetMilkDrinksOption
+Int skyrimNetMilkingEventsOption
+Int skyrimNetMilkmaidCreatedOption
+Int skyrimNetStatusIntervalOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 38
+    Return 46
 EndFunction
 
 Function SetPageNames()
@@ -97,7 +108,7 @@ Function EnsureDefaults()
         JsonUtil.SetFloatValue(SettingsFile, "reactionSoundVolume", 100.0)
         JsonUtil.SetIntValue(SettingsFile, "enableCapacityReactions", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableCapacityPolling", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "pollingInterval", 5.0)
+        JsonUtil.SetFloatValue(SettingsFile, "pollingInterval", 15.0)
         JsonUtil.SetIntValue(SettingsFile, "enableCapacityNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableDebugMilkReport", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDrinkDetectionDebug", 1)
@@ -107,18 +118,82 @@ Function EnsureDefaults()
         JsonUtil.SetFloatValue(SettingsFile, "flatMilkBonus", 4.0)
         JsonUtil.SetIntValue(SettingsFile, "enableAddMilkDebug", 0)
         JsonUtil.SetFloatValue(SettingsFile, "lactacidFlatMultiplier", 2.0)
-        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetDiagnostic", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetCreationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkDrinks", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkArousal", 1)
         JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 5.0)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0)
         JsonUtil.Save(SettingsFile, False)
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "lifecycleDiagnosticMigration35", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "lifecycleDiagnosticMigration35", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "milkmaidCreationDiagnosticMigration39", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 1)
+        JsonUtil.SetIntValue(SettingsFile, "milkmaidCreationDiagnosticMigration39", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "nativeScanDiagnosticMigration40", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNativeScanDiagnostic", 1)
+        JsonUtil.SetIntValue(SettingsFile, "nativeScanDiagnosticMigration40", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "nativeScanProductionMigration41", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "nativeScanProductionMigration41", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Test-build defaults for the first combined nearby-status verification.
+    If JsonUtil.GetIntValue(SettingsFile, "skyrimNetMilkStatusesMigration42", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableCapacityPolling", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "pollingInterval", 15.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetDiagnostic", 1)
+        JsonUtil.SetIntValue(SettingsFile, "skyrimNetMilkStatusesMigration42", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "splitSkyrimNetDiagnosticsMigration43", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetCreationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "splitSkyrimNetDiagnosticsMigration43", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "skyrimNetTrackingTogglesMigration44", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkDrinks", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1)
+        JsonUtil.SetIntValue(SettingsFile, "skyrimNetTrackingTogglesMigration44", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "skyrimNetPromptDiagnosticMigration45", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 1)
+        JsonUtil.SetIntValue(SettingsFile, "skyrimNetPromptDiagnosticMigration45", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "skyrimNetStatusTimerMigration46", 0) == 0
+        JsonUtil.SetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
+        JsonUtil.SetIntValue(SettingsFile, "skyrimNetStatusTimerMigration46", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
     ; Applies quieter release defaults once without overriding later player choices.
@@ -245,7 +320,11 @@ Event OnPageReset(String page)
     flatMilkBonusOption = -1
     addMilkDebugOption = -1
     lactacidMultiplierOption = -1
-    skyrimNetDiagnosticOption = -1
+    skyrimNetDrinkDiagnosticOption = -1
+    skyrimNetMilkingDiagnosticOption = -1
+    skyrimNetCreationDiagnosticOption = -1
+    skyrimNetStatusDiagnosticOption = -1
+    skyrimNetPromptDiagnosticOption = -1
     drinkMoansOption = -1
     fullnessMoansOption = -1
     milkingMoansOption = -1
@@ -257,6 +336,13 @@ Event OnPageReset(String page)
     dialogueDiagnosticOption = -1
     npcDrinkAnimationOption = -1
     lifecycleDiagnosticOption = -1
+    milkmaidCreationDiagnosticOption = -1
+    nativeScanDiagnosticOption = -1
+    skyrimNetMilkStatusesOption = -1
+    skyrimNetMilkDrinksOption = -1
+    skyrimNetMilkingEventsOption = -1
+    skyrimNetMilkmaidCreatedOption = -1
+    skyrimNetStatusIntervalOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -287,16 +373,28 @@ Event OnPageReset(String page)
         AddHeaderOption("Integration Status")
         skyrimNetStatusOption = AddToggleOption("Skyrim.Net Detected", MMEAlertsSkyrimNet.IsAvailable(), OPTION_FLAG_DISABLED)
         AddHeaderOption("Event Tracking")
+        skyrimNetMilkDrinksOption = AddToggleOption("Track Milk Drinks", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkDrinks", 1) == 1)
+        skyrimNetMilkingEventsOption = AddToggleOption("Track Milking Start/End", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", 1) == 1)
+        skyrimNetMilkmaidCreatedOption = AddToggleOption("Track New Milkmaids", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1) == 1)
+        skyrimNetMilkStatusesOption = AddToggleOption("Track Nearby Milk Statuses", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1)
+        skyrimNetStatusIntervalOption = AddSliderOption("Milk Status Interval", JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0), "{0} seconds")
         Return
     EndIf
     If page == "Debug"
         AddHeaderOption("Development Diagnostics")
         lifecycleDiagnosticOption = AddToggleOption("Location Wait Load", JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0) == 1)
+        milkmaidCreationDiagnosticOption = AddToggleOption("Milkmaid Creation Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 1) == 1)
+        nativeScanDiagnosticOption = AddToggleOption("Native Actor Scan Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0) == 1)
         debugMilkingEventsOption = AddToggleOption("Report Milking Start/End", JsonUtil.GetIntValue(SettingsFile, "enableMilkingEventDebug", 1) == 1)
         debugMilkReportOption = AddToggleOption("Milk Status Every 5 Seconds", JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0) == 1)
         addMilkDebugOption = AddToggleOption("Milk Drinking Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1)
+        SetCursorPosition(1)
         AddHeaderOption("Skyrim.Net Diagnostics")
-        skyrimNetDiagnosticOption = AddToggleOption("Skyrim.Net Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDiagnostic", 1) == 1)
+        skyrimNetDrinkDiagnosticOption = AddToggleOption("Milk Drink Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0) == 1)
+        skyrimNetMilkingDiagnosticOption = AddToggleOption("Milking Start/End Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingDiagnostic", 0) == 1)
+        skyrimNetCreationDiagnosticOption = AddToggleOption("New Milkmaid Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetCreationDiagnostic", 0) == 1)
+        skyrimNetStatusDiagnosticOption = AddToggleOption("Nearby Milk Status Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", 0) == 1)
+        skyrimNetPromptDiagnosticOption = AddToggleOption("Milkmaid Bio Prompt", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 1) == 1)
         AddHeaderOption("Arousal Diagnostics")
         arousalDiagnosticOption = AddToggleOption("Milk Arousal Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 0) == 1)
         AddHeaderOption("Dialogue Diagnostics")
@@ -312,7 +410,7 @@ Event OnPageReset(String page)
     AddHeaderOption("Capacity Tracker")
     capacityOption = AddToggleOption("Enable 50% Capacity Reactions", JsonUtil.GetIntValue(SettingsFile, "enableCapacityReactions", 1) == 1)
     pollingOption = AddToggleOption("Enable Capacity Polling", JsonUtil.GetIntValue(SettingsFile, "enableCapacityPolling", 1) == 1)
-    pollingIntervalOption = AddSliderOption("Capacity Polling Interval", JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 5.0), "{0} seconds")
+    pollingIntervalOption = AddSliderOption("Capacity Polling Interval", JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 15.0), "{0} seconds")
     notificationOption = AddToggleOption("Enable Capacity Notifications", JsonUtil.GetIntValue(SettingsFile, "enableCapacityNotifications", 1) == 1)
 EndEvent
 
@@ -348,14 +446,36 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report each detected milking start and end.")
     ElseIf option == lifecycleDiagnosticOption
         SetInfoText("Report native wait, sleep, location, and load events with nearby Milkmaid status.")
+    ElseIf option == milkmaidCreationDiagnosticOption
+        SetInfoText("Report MME creation effects and confirmed new Milkmaids.")
+    ElseIf option == nativeScanDiagnosticOption
+        SetInfoText("Report native nearby actor counts and scanner failures.")
     ElseIf option == debugMilkReportOption
         SetInfoText("Report nearby Milkmaid capacity every five seconds.")
     ElseIf option == addMilkDebugOption
         SetInfoText("Report drink detection, sound, bonus math, and MME add results.")
-    ElseIf option == skyrimNetDiagnosticOption
-        SetInfoText("Report SkyrimNet version, player UUID, event text, and API result.")
+    ElseIf option == skyrimNetDrinkDiagnosticOption
+        SetInfoText("Report SkyrimNet milk-drink payloads and API results.")
+    ElseIf option == skyrimNetMilkingDiagnosticOption
+        SetInfoText("Report SkyrimNet milking start/end payloads and API results.")
+    ElseIf option == skyrimNetCreationDiagnosticOption
+        SetInfoText("Report SkyrimNet new-Milkmaid schema, payload, and API results.")
+    ElseIf option == skyrimNetStatusDiagnosticOption
+        SetInfoText("Report SkyrimNet nearby Milkmaid status updates and failures.")
+    ElseIf option == skyrimNetPromptDiagnosticOption
+        SetInfoText("Report when SkyrimNet renders the optional Milkmaid bio prompt for an actor.")
     ElseIf option == skyrimNetStatusOption
         SetInfoText("Read-only. Enabled when SkyrimNet.esp is active in the load order.")
+    ElseIf option == skyrimNetMilkStatusesOption
+        SetInfoText("Send nearby Milkmaid states to Skyrim.Net only when one is nearby.")
+    ElseIf option == skyrimNetStatusIntervalOption
+        SetInfoText("Set both the Skyrim.Net status refresh interval and event lifetime.")
+    ElseIf option == skyrimNetMilkDrinksOption
+        SetInfoText("Send recognized player milk drinks to SkyrimNet.")
+    ElseIf option == skyrimNetMilkingEventsOption
+        SetInfoText("Send nearby Milkmaid milking start and end events to SkyrimNet.")
+    ElseIf option == skyrimNetMilkmaidCreatedOption
+        SetInfoText("Record confirmed new Milkmaids in SkyrimNet event history.")
     ElseIf option == arousalStatusOption
         SetInfoText("Read-only. Enabled when SexLabAroused.esm is active.")
     ElseIf option == milkDrinkArousalOption
@@ -413,6 +533,14 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableLifecycleDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == milkmaidCreationDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == nativeScanDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNativeScanDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
     ElseIf option == milkmaidLevelBonusOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidLevelBonus", value)
@@ -421,9 +549,42 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableAddMilkDebug", value)
         SetToggleOptionValue(option, value == 1)
-    ElseIf option == skyrimNetDiagnosticOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDiagnostic", 1)
-        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetDiagnostic", value)
+    ElseIf option == skyrimNetDrinkDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == skyrimNetMilkingDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == skyrimNetCreationDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetCreationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetCreationDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == skyrimNetStatusDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == skyrimNetPromptDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == skyrimNetMilkStatusesOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", value)
+        SetToggleOptionValue(option, value == 1)
+        (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
+    ElseIf option == skyrimNetMilkDrinksOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkDrinks", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkDrinks", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == skyrimNetMilkingEventsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == skyrimNetMilkmaidCreatedOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == milkDrinkArousalOption && MMEArousalBridge.IsAvailable()
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkArousal", 1)
@@ -454,10 +615,15 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == pollingIntervalOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 5.0))
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 15.0))
         SetSliderDialogDefaultValue(5.0)
         SetSliderDialogRange(3.0, 30.0)
         SetSliderDialogInterval(1.0)
+    ElseIf option == skyrimNetStatusIntervalOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0))
+        SetSliderDialogDefaultValue(15.0)
+        SetSliderDialogRange(15.0, 300.0)
+        SetSliderDialogInterval(15.0)
     ElseIf option == flatMilkBonusOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 4.0))
         SetSliderDialogDefaultValue(4.0)
@@ -484,6 +650,11 @@ Event OnOptionSliderAccept(Int option, Float value)
         SetSliderOptionValue(option, value, "{0}%")
     ElseIf option == pollingIntervalOption
         JsonUtil.SetFloatValue(SettingsFile, "pollingInterval", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+        (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
+    ElseIf option == skyrimNetStatusIntervalOption
+        JsonUtil.SetFloatValue(SettingsFile, "skyrimNetStatusInterval", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
         (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()

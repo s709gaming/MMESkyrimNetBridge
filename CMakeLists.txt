@@ -14,20 +14,20 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # This native bridge targets desktop Skyrim SE/AE, not Skyrim VR.
 set(ENABLE_SKYRIM_SE ON CACHE BOOL "" FORCE)
 set(ENABLE_SKYRIM_AE ON CACHE BOOL "" FORCE)
-set(ENABLE_SKYRIM_VR OFF CACHE BOOL "" FORCE)
+set(ENABLE_SKYRIM_VR ON CACHE BOOL "" FORCE)
 set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
 # Build the pinned local CommonLibSSE-NG checkout and expose its plugin helper.
 add_subdirectory(extern/CommonLibSSE-NG EXCLUDE_FROM_ALL)
 include(extern/CommonLibSSE-NG/cmake/CommonLibSSE.cmake)
 
-# A fixed compatible runtime avoids requiring Address Library.
+# One Address Library-based NG DLL supports SE, AE, and VR runtimes.
 add_commonlibsse_plugin(
     MMEExtensions
     NAME "MMEExtensions"
     AUTHOR "MMEAlert contributors"
     VERSION ${PROJECT_VERSION}
-    COMPATIBLE_RUNTIMES 1.6.1170.0
+    USE_ADDRESS_LIBRARY
     SOURCES src/Plugin.cpp
 )
 

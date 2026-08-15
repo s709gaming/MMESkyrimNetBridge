@@ -1,7 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-# Builds the optional native add-on separately from MMEAlert.zip. CommonLibSSE-NG
-# is a build dependency; the eventual SkyrimNet API will be resolved at runtime.
+# Builds the CommonLibSSE-NG lifecycle DLL used by the complete mod package.
 
 # Use the Visual Studio installation that provides MSVC, CMake, and Ninja.
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -38,22 +37,10 @@ try {
     $dll = Join-Path $projectRoot "build\native-release\package\SKSE\Plugins\MMEExtensions.dll"
     if (!(Test-Path -LiteralPath $dll)) { throw "Build completed without producing $dll" }
 
-    # Create a Vortex-ready archive with SKSE/Plugins at its root.
-    $zip = Join-Path $projectRoot "dist\MMEExtensionsNative.zip"
-    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $zip) | Out-Null
-    if (Test-Path -LiteralPath $zip) {
-        Remove-Item -LiteralPath $zip -Force
-    }
-    Compress-Archive `
-        -Path (Join-Path $projectRoot "build\native-release\package\*") `
-        -DestinationPath $zip `
-        -CompressionLevel Optimal
-
     Write-Host ""
-    Write-Host "Native test plugin built successfully:" -ForegroundColor Green
+    Write-Host "Native plugin built successfully:" -ForegroundColor Green
     Write-Host $dll
-    Write-Host "Vortex package:"
-    Write-Host $zip
+    Write-Host "Run build-package.bat to create the complete mod archive."
 } finally {
     Pop-Location
 }
