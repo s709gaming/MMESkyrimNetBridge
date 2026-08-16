@@ -216,6 +216,45 @@ They use short prompts to reduce unnecessary token usage.
 
 ---
 
+# ⭐ Recommended Skyrim.Net Add-ons
+
+These are **not required** for MME Extensions, but can greatly expand the AI side of the mod.
+
+## SeverActions
+
+https://github.com/Severause/SeverActions
+
+Recommended for broader conversation-driven Skyrim.Net gameplay actions.
+
+SeverActions gives the AI many more ways to physically interact with the game world instead of only talking about doing things.
+
+For MME Extensions, it can be particularly useful for interactions such as naturally convincing a Milk Maid to **drink milk through conversation**, rather than relying only on the normal **"Hey, there"** dialogue.
+
+Check the Skyrim.Net Discord for current setup information and compatible versions.
+
+## SkyrimNet_SexLab
+
+https://github.com/GoodProvider/SkyrimNet_SexLab
+
+Recommended for richer AI interaction around intimate SexLab scenes.
+
+MME Extensions already provides its own Milk Maid self-milking and breastfeeding / milk-sharing actions.
+
+A dedicated Skyrim.Net SexLab integration can improve the surrounding experience with features such as:
+
+- Scene-aware AI context.
+- Narration during intimate scenes.
+- Additional SexLab gameplay actions.
+- Better AI reactions before, during, and after scenes.
+
+This can make an MME-triggered intimate scene feel like part of the ongoing Skyrim.Net conversation instead of simply starting an animation and leaving the AI behind.
+
+Check the Skyrim.Net Discord for the latest compatible SexLab integration and setup information.
+
+**Neither SeverActions nor SkyrimNet_SexLab is required for MME Extensions.**
+
+---
+
 # 🔥 Intended World Setting
 
 Milk acts as an **aphrodisiac for Milk Maids** and encourages their bodies to produce even more milk.
