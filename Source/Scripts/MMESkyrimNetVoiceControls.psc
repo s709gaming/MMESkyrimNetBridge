@@ -1,19 +1,95 @@
-; ARCHIVED: conversational actions are intentionally excluded from release builds.
-; Skyrim.Net/LLM world-context choices made both experimental actions unreliable.
 Scriptname MMESkyrimNetVoiceControls Hidden
 
-String SettingsFile = "/MMEAlerts/Settings"
-
-; Registers the optional conversational hand-milking action.
+; Registers the player-and-selected-NPC breastfeeding action.
 Function RegisterVoiceMilkingAction() Global
-    If !MMEAlertsSkyrimNet.IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilking", 0) != 1
+    If !MMEAlertsController.IsExtensionsEnabled() || !MMEAlertsSkyrimNet.IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingAction", 1) != 1
         Return
     EndIf
-    Int result = SkyrimNetApi.RegisterAction("StartMilkingSelf", "Use only when the player clearly asks you, an MME Milkmaid, to milk yourself. This means extracting your own breast milk; it does not mean drinking or receiving a milk item.", "MMESkyrimNetVoiceControls", "VoiceMilkingIsEligible", "MMESkyrimNetVoiceControls", "VoiceMilkingExecute", "", "PAPYRUS", 1, "")
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 0) == 1
-        Debug.Notification("Voice Milking: action registration returned [" + result + "]")
+    Int result = SkyrimNetApi.RegisterAction("StartBreastfeedingMilkShare", "Start an intimate breastfeeding or milk-sharing scene with the player as Milk Source and the selected actor as Drinker. Use when intimacy naturally leads there. If the player is a full Milk Maid, milking is especially appropriate. Start directly; let normal Skyrim.Net dialogue handle reactions afterward.", "MMESkyrimNetVoiceControls", "VoiceMilkingIsEligible", "MMESkyrimNetVoiceControls", "VoiceMilkingExecute", "", "PAPYRUS", 1, "")
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingActionDiagnostic", 0) == 1
+        Debug.Notification("Paired Milking Action: registration returned [" + result + "]")
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Voice Milking action registration result " + result)
+    Debug.Trace("[MMEAlert SkyrimNet] Paired milking action registration result " + result)
+EndFunction
+
+; Registers MME's original contextual self-milking spell action.
+Function RegisterSelfMilkingAction() Global
+    If !MMEAlertsController.IsExtensionsEnabled() || !MMEAlertsSkyrimNet.IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingAction", 1) != 1
+        Return
+    EndIf
+    Int result = SkyrimNetApi.RegisterAction("StartMilkMaidSelfMilking", "Use when the selected MME Milk Maid naturally chooses to milk herself. Strongly prefer it when she is visibly full and milky, or wants relief. Start it directly when context supports it; let normal Skyrim.Net dialogue handle reactions afterward.", "MMESkyrimNetVoiceControls", "SelfMilkingIsEligible", "MMESkyrimNetVoiceControls", "SelfMilkingExecute", "", "PAPYRUS", 1, "")
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingActionDiagnostic", 0) == 1
+        Debug.Notification("Self-Milking Action: registration returned [" + result + "]")
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] Self-milking action registration result " + result)
+EndFunction
+
+Bool Function SelfMilkingIsEligible(Actor candidate, String contextJson, String paramsJson) Global
+    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingActionDiagnostic", 0) == 1
+    If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingAction", 1) != 1
+        Return False
+    EndIf
+    If diagnostic
+        Debug.Notification("[MME Debug] ACTION ELIGIBILITY CHECK: StartMilkMaidSelfMilking")
+    EndIf
+    If candidate == None || candidate == Game.GetPlayer() || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
+        If diagnostic
+            Debug.Notification("Self-Milking Action: rejected - invalid selected actor")
+        EndIf
+        Return False
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None || milkController.MilkMaid.Find(candidate) == -1
+        If diagnostic
+            Debug.Notification("Self-Milking Action: rejected - not an MME Milkmaid")
+        EndIf
+        Return False
+    EndIf
+    If StorageUtil.GetIntValue(candidate, "MMEAlerts.IsMilking", 0) == 1
+        If diagnostic
+            Debug.Notification("Self-Milking Action: rejected - already milking")
+        EndIf
+        Return False
+    EndIf
+    If diagnostic
+        Debug.Notification("Self-Milking Action: eligible | milk " + MME_Storage.getMilkCurrent(candidate))
+    EndIf
+    Return True
+EndFunction
+
+Function SelfMilkingExecute(Actor candidate, String contextJson, String paramsJson) Global
+    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingActionDiagnostic", 0) == 1
+    If diagnostic
+        Debug.Notification("[MME Debug] LLM ACTION RECEIVED: StartMilkMaidSelfMilking")
+    EndIf
+    If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingAction", 1) != 1
+        If diagnostic
+            Debug.Notification("[MME Debug] FAILED: self-milking action disabled")
+        EndIf
+        Return
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If candidate == None || milkController == None || milkController.MilkMaid.Find(candidate) == -1 || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
+        If diagnostic
+            Debug.Notification("Self-Milking Action: execution rejected - invalid target")
+        EndIf
+        Return
+    EndIf
+    If StorageUtil.GetIntValue(candidate, "MMEAlerts.IsMilking", 0) == 1
+        If diagnostic
+            Debug.Notification("Self-Milking Action: execution rejected - already milking")
+        EndIf
+        Return
+    EndIf
+    If diagnostic
+        Debug.Notification("[MME Debug] Actor resolved: " + candidate.GetDisplayName())
+        Debug.Notification("[MME Debug] Calling MME MilkSelf")
+    EndIf
+    milkController.MilkSelf.Cast(candidate)
+    If diagnostic
+        Debug.Notification("[MME Debug] MME MilkSelf cast requested")
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] Self-milking action cast MME MilkSelf on " + candidate)
 EndFunction
 
 ; Registers the opt-in action that reuses the tested NPC dialogue pipeline.
@@ -74,61 +150,97 @@ Function VoiceGiveMilkExecute(Actor candidate) Global
 EndFunction
 
 ; SkyrimNet calls this while preparing actions for each conversational actor.
-Bool Function VoiceMilkingIsEligible(Actor candidate) Global
-    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 0) == 1
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilking", 0) != 1
+Bool Function VoiceMilkingIsEligible(Actor candidate, String contextJson, String paramsJson) Global
+    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingActionDiagnostic", 0) == 1
+    If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingAction", 1) != 1
         Return False
     EndIf
-    If candidate == None || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
-        Return False
+    If diagnostic
+        Debug.Notification("[MME Debug] ACTION ELIGIBILITY CHECK: StartBreastfeedingMilkShare")
     EndIf
-    String actorName = candidate.GetDisplayName()
-    If !MMEAlertsSkyrimNet.IsRealMMEMilkmaid(candidate)
+    If candidate == None || candidate == Game.GetPlayer() || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
         If diagnostic
-            Debug.Notification("Voice Milking: " + actorName + " rejected - not an MME Milkmaid")
+            Debug.Notification("Milking Action: rejected - invalid selected actor")
         EndIf
         Return False
     EndIf
-    If StorageUtil.GetIntValue(candidate, "MMEAlerts.IsMilking", 0) == 1
+    String actorName = candidate.GetDisplayName()
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None || milkController.SexLab == None
         If diagnostic
-            Debug.Notification("Voice Milking: " + actorName + " rejected - already milking")
+            Debug.Notification("Milking Action: " + actorName + " rejected - MME or SexLab unavailable")
+        EndIf
+        Return False
+    EndIf
+    If milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar") == None || milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding") == None
+        If diagnostic
+            Debug.Notification("Milking Action: " + actorName + " rejected - MME breastfeeding animations unavailable")
         EndIf
         Return False
     EndIf
     If diagnostic
-        Debug.Notification("Voice Milking: " + actorName + " eligible")
+        Debug.Notification("Milking Action: source Player | drinker " + actorName)
     EndIf
     Return True
 EndFunction
 
-; Revalidates the selected actor, then lets MME enforce milk and equipment rules.
-Function VoiceMilkingExecute(Actor candidate) Global
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilking", 0) != 1
+; Starts MME's registered breastfeeding animation with the player as source.
+Function VoiceMilkingExecute(Actor candidate, String contextJson, String paramsJson) Global
+    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingActionDiagnostic", 0) == 1
+    If diagnostic
+        Debug.Notification("[MME Debug] LLM ACTION RECEIVED: StartBreastfeedingMilkShare")
+    EndIf
+    If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingAction", 1) != 1
+        If diagnostic
+            Debug.Notification("[MME Debug] FAILED: paired milking action disabled")
+        EndIf
         Return
     EndIf
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If candidate == None || milkController == None || milkController.MilkMaid.Find(candidate) == -1
-        If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 0) == 1
-            Debug.Notification("Voice Milking: execution blocked - invalid target")
+    Actor playerActor = Game.GetPlayer()
+    If candidate == None || playerActor == None || candidate == playerActor || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
+        If diagnostic
+            Debug.Notification("Milking Action: execution rejected - invalid actors")
         EndIf
         Return
     EndIf
     String actorName = candidate.GetDisplayName()
-    If candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
-        If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 0) == 1
-            Debug.Notification("Voice Milking: execution blocked - " + actorName + " unavailable")
+    If actorName == ""
+        actorName = "selected actor"
+    EndIf
+    If milkController == None || milkController.SexLab == None
+        If diagnostic
+            Debug.Notification("Milking Action: execution rejected - MME or SexLab unavailable")
         EndIf
         Return
     EndIf
-    If StorageUtil.GetIntValue(candidate, "MMEAlerts.IsMilking", 0) == 1
-        If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 0) == 1
-            Debug.Notification("Voice Milking: execution blocked - " + actorName + " already milking")
+    sslBaseAnimation[] animations = new sslBaseAnimation[1]
+    If candidate.GetLeveledActorBase().GetSex() == 0
+        animations[0] = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar")
+    Else
+        animations[0] = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding")
+    EndIf
+    If animations[0] == None
+        If diagnostic
+            Debug.Notification("Milking Action: execution rejected - selected animation unavailable")
         EndIf
         Return
     EndIf
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceMilkingDiagnostic", 0) == 1
-        Debug.Notification("Voice Milking: selected " + actorName + " - MME Milk Self cast requested")
+    Actor[] sceneActors = new Actor[2]
+    sceneActors[0] = playerActor
+    sceneActors[1] = candidate
+    If diagnostic
+        Debug.Notification("[MME Debug] Source: Player | Drinker: " + actorName)
+        Debug.Notification("[MME Debug] Actor references resolved")
+        Debug.Notification("[MME Debug] Calling MME scene")
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Voice Milking casting MME MilkSelf on " + actorName)
-    milkController.MilkSelf.Cast(candidate)
+    Int sceneId = milkController.SexLab.StartSex(sceneActors, animations)
+    If diagnostic
+        If sceneId >= 0
+            Debug.Notification("[MME Debug] SexLab scene request sent [" + sceneId + "]")
+        Else
+            Debug.Notification("[MME Debug] FAILED: SexLab rejected [" + sceneId + "]")
+        EndIf
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] Milking action StartSex result " + sceneId + " | provider " + actorName)
 EndFunction

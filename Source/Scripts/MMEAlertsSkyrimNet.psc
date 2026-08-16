@@ -312,6 +312,18 @@ Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem) Global
         EndIf
         Return
     EndIf
+    Int chance = JsonUtil.GetIntValue(settingsFile, "playerDrinkNarrationChance", 25)
+    If chance < 0
+        chance = 0
+    ElseIf chance > 100
+        chance = 100
+    EndIf
+    If chance == 0 || Utility.RandomInt(1, 100) > chance
+        If diagnostic
+            Debug.Notification("Player Drink Narration: skipped - chance " + chance + "%")
+        EndIf
+        Return
+    EndIf
     If !IsAvailable()
         If diagnostic
             Debug.Notification("Player Drink Narration: skipped - Skyrim.Net unavailable")
@@ -349,6 +361,64 @@ Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem) Global
         Debug.Notification("Player Drink Narration: rejected [" + result + "]")
     EndIf
     Debug.Trace("[MMEAlert SkyrimNet] Player drink DirectNarration result " + result + " | " + content)
+EndFunction
+
+; Requests one narration after the controller confirms a new Milk Maid transition.
+Function NarrateMilkmaidCreated(Actor milkMaid) Global
+    If !IsExtensionsEnabled() || milkMaid == None
+        Return
+    EndIf
+    String settingsFile = "/MMEAlerts/Settings"
+    Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableMilkmaidCreatedNarrationDiagnostic", 0) == 1
+    String actorName = milkMaid.GetDisplayName()
+    If actorName == ""
+        actorName = "A Milk Maid"
+    EndIf
+    If diagnostic
+        Debug.Notification("New Milk Maid Narration: creation detected | " + actorName)
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enableMilkmaidCreatedNarration", 1) != 1
+        If diagnostic
+            Debug.Notification("New Milk Maid Narration: skipped - feature disabled")
+        EndIf
+        Return
+    EndIf
+    If !IsAvailable()
+        If diagnostic
+            Debug.Notification("New Milk Maid Narration: skipped - Skyrim.Net unavailable")
+        EndIf
+        Return
+    EndIf
+
+    Float cooldown = JsonUtil.GetFloatValue(settingsFile, "milkmaidCreatedNarrationCooldown", 60.0)
+    Float now = Utility.GetCurrentRealTime()
+    Float last = JsonUtil.GetFloatValue(settingsFile, "lastMilkmaidCreatedNarrationRealTime", -1.0)
+    If last > now
+        last = -1.0
+    EndIf
+    If last >= 0.0 && now - last < cooldown
+        If diagnostic
+            Int remaining = (cooldown - (now - last)) as Int
+            Debug.Notification("New Milk Maid Narration: skipped - cooldown " + remaining + "s")
+        EndIf
+        Return
+    EndIf
+
+    String content = actorName + " has just become a Milk Maid. Her body can now produce and store milk, and her breasts are beginning to feel pleasantly sensitive. React briefly and naturally."
+    If diagnostic
+        Debug.Notification("New Milk Maid Narration: sending")
+    EndIf
+    Int result = SkyrimNetApi.DirectNarration(content, None, None)
+    If result == 0
+        JsonUtil.SetFloatValue(settingsFile, "lastMilkmaidCreatedNarrationRealTime", now)
+        JsonUtil.Save(settingsFile, False)
+        If diagnostic
+            Debug.Notification("New Milk Maid Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
+        EndIf
+    ElseIf diagnostic
+        Debug.Notification("New Milk Maid Narration: rejected [" + result + "]")
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] New Milk Maid DirectNarration result " + result + " | " + content)
 EndFunction
 
 ; Publishes one replaceable five-minute summary from the existing capacity scan.

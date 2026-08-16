@@ -1,4 +1,5 @@
 Scriptname MilkQUEST extends Quest
+SexLabFramework Property SexLab Auto
 Actor[] Property MilkMaid Auto
 MilkQUEST_Conditions Property MilkQC Auto
 FormList Property MME_Milk_Basic Auto

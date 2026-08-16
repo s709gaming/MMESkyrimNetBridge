@@ -54,11 +54,19 @@ Int npcDrinkNarrationDiagnosticOption
 Int playerDrinkNarrationOption
 Int playerDrinkNarrationCooldownOption
 Int playerDrinkNarrationDiagnosticOption
+Int playerDrinkNarrationChanceOption
+Int milkmaidCreatedNarrationOption
+Int milkmaidCreatedNarrationCooldownOption
+Int milkmaidCreatedNarrationDiagnosticOption
+Int selfMilkingActionOption
+Int pairedMilkingActionOption
+Int selfMilkingActionDiagnosticOption
+Int pairedMilkingActionDiagnosticOption
 Int masterEnableOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 61
+    Return 64
 EndFunction
 
 Function SetPageNames()
@@ -146,8 +154,10 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1)
         JsonUtil.SetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
-        JsonUtil.SetIntValue(SettingsFile, "enableVoiceMilking", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableVoiceMilkingDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingAction", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableVoiceGiveMilk", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableVoiceGiveMilkDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkFullNarration", 1)
@@ -175,7 +185,11 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0)
         JsonUtil.SetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0)
+        JsonUtil.SetIntValue(SettingsFile, "playerDrinkNarrationChance", 25)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidCreatedNarration", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "milkmaidCreatedNarrationCooldown", 60.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidCreatedNarrationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0)
@@ -493,6 +507,22 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "playerDrinkFeaturesMigration61", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "milkingActionsMigration63", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingAction", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "milkingActionsMigration63", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "milkmaidNarrationMigration64", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "playerDrinkNarrationChance", 25)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidCreatedNarration", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "milkmaidCreatedNarrationCooldown", 60.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidCreatedNarrationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "milkmaidNarrationMigration64", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 ; Renders the selected SkyUI page from persisted JContainers settings.
@@ -551,6 +581,14 @@ Event OnPageReset(String page)
     playerDrinkNarrationOption = -1
     playerDrinkNarrationCooldownOption = -1
     playerDrinkNarrationDiagnosticOption = -1
+    playerDrinkNarrationChanceOption = -1
+    milkmaidCreatedNarrationOption = -1
+    milkmaidCreatedNarrationCooldownOption = -1
+    milkmaidCreatedNarrationDiagnosticOption = -1
+    selfMilkingActionOption = -1
+    pairedMilkingActionOption = -1
+    selfMilkingActionDiagnosticOption = -1
+    pairedMilkingActionDiagnosticOption = -1
     masterEnableOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
@@ -592,6 +630,9 @@ Event OnPageReset(String page)
         skyrimNetMilkmaidCreatedOption = AddToggleOption("Track New Milkmaids", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1) == 1)
         skyrimNetMilkStatusesOption = AddToggleOption("Track Nearby Milk Statuses", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1)
         skyrimNetStatusIntervalOption = AddSliderOption("Milk Status Interval", JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0), "{0} seconds")
+        AddHeaderOption("Actions")
+        selfMilkingActionOption = AddToggleOption("Allow Self-Milking Action", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingAction", 1) == 1)
+        pairedMilkingActionOption = AddToggleOption("Allow Paired Milking Action", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) == 1)
         AddHeaderOption("AI Reactions")
         milkFullNarrationOption = AddToggleOption("Narrate Milk Full", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarration", 1) == 1)
         Int narrationFlags = OPTION_FLAG_NONE
@@ -611,6 +652,13 @@ Event OnPageReset(String page)
             narrationFlags = OPTION_FLAG_DISABLED
         EndIf
         playerDrinkNarrationCooldownOption = AddSliderOption("Player Drink Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
+        playerDrinkNarrationChanceOption = AddSliderOption("Player Drink Narration Chance", JsonUtil.GetIntValue(SettingsFile, "playerDrinkNarrationChance", 25), "{0}%", narrationFlags)
+        milkmaidCreatedNarrationOption = AddToggleOption("New Milk Maid Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarration", 1) == 1)
+        narrationFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarration", 1) != 1
+            narrationFlags = OPTION_FLAG_DISABLED
+        EndIf
+        milkmaidCreatedNarrationCooldownOption = AddSliderOption("New Milk Maid Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "milkmaidCreatedNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
         npcDrinkNarrationOption = AddToggleOption("NPC Drink Narration", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarration", 1) == 1)
         narrationFlags = OPTION_FLAG_NONE
         If JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarration", 1) != 1
@@ -632,6 +680,8 @@ Event OnPageReset(String page)
         npcMilkConsumptionDiagnosticOption = AddToggleOption("NPC Milk Consumption", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0) == 1)
         npcDrinkNotificationsDiagnosticOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1)
         playerDrinkNotificationsDiagnosticOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0) == 1)
+        selfMilkingActionDiagnosticOption = AddToggleOption("Self-Milking Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0) == 1)
+        pairedMilkingActionDiagnosticOption = AddToggleOption("Paired Milking Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0) == 1)
         SetCursorPosition(1)
         AddHeaderOption("Skyrim.Net Diagnostics")
         skyrimNetDrinkDiagnosticOption = AddToggleOption("Milk Drink Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0) == 1)
@@ -642,6 +692,7 @@ Event OnPageReset(String page)
         milkFullNarrationDiagnosticOption = AddToggleOption("Milk Full Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarrationDiagnostic", 0) == 1)
         milkHalfFullNarrationDiagnosticOption = AddToggleOption("Half-Full Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarrationDiagnostic", 0) == 1)
         playerDrinkNarrationDiagnosticOption = AddToggleOption("Player Drink Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", 0) == 1)
+        milkmaidCreatedNarrationDiagnosticOption = AddToggleOption("New Milk Maid Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarrationDiagnostic", 0) == 1)
         npcDrinkNarrationDiagnosticOption = AddToggleOption("NPC Drink Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarrationDiagnostic", 0) == 1)
         AddHeaderOption("Arousal Diagnostics")
         arousalDiagnosticOption = AddToggleOption("Milk Arousal Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 0) == 1)
@@ -698,6 +749,10 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Show a notification after an NPC Milkmaid drinks recognized milk.")
     ElseIf option == playerDrinkNotificationsOption
         SetInfoText("Show a notification after you drink recognized milk.")
+    ElseIf option == selfMilkingActionOption
+        SetInfoText("Allow Skyrim.Net to start self-milking for a selected Milk Maid.")
+    ElseIf option == pairedMilkingActionOption
+        SetInfoText("Allow Skyrim.Net to start a milk-sharing scene with the selected source and the player.")
     ElseIf option == npcMilkConsumptionDiagnosticOption
         SetInfoText("Report native NPC milk detection, Milkmaid validation, duplicates, and applied effects.")
     ElseIf option == npcDrinkNotificationsDiagnosticOption
@@ -746,10 +801,22 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Ask Skyrim.Net for one immediate reaction after you drink recognized milk. Uses LLM tokens.")
     ElseIf option == playerDrinkNarrationCooldownOption
         SetInfoText("Set the global real-time delay between token-using player drink narrations.")
+    ElseIf option == playerDrinkNarrationChanceOption
+        SetInfoText("Set the chance that an eligible player drink requests narration after normal drink tracking.")
     ElseIf option == playerDrinkNarrationDiagnosticOption
         SetInfoText("Report player drink narration detection, cooldowns, and API results.")
+    ElseIf option == milkmaidCreatedNarrationOption
+        SetInfoText("Ask Skyrim.Net for one immediate reaction when an actor becomes a new Milk Maid. Uses LLM tokens.")
+    ElseIf option == milkmaidCreatedNarrationCooldownOption
+        SetInfoText("Set the global real-time delay between token-using new-Milk-Maid narrations.")
+    ElseIf option == milkmaidCreatedNarrationDiagnosticOption
+        SetInfoText("Report new-Milk-Maid narration detection, cooldowns, and API results.")
     ElseIf option == playerDrinkNotificationsDiagnosticOption
         SetInfoText("Report player drink notification skips and the effective milk and arousal results shown.")
+    ElseIf option == selfMilkingActionDiagnosticOption
+        SetInfoText("Report self-milking action registration, Milk Maid checks, and spell requests.")
+    ElseIf option == pairedMilkingActionDiagnosticOption
+        SetInfoText("Report paired milking action registration, actor selection, dependency checks, and scene results.")
     ElseIf option == npcDrinkNarrationOption
         SetInfoText("Ask Skyrim.Net for one immediate reaction when an NPC Milkmaid drinks supported milk. Uses LLM tokens.")
     ElseIf option == npcDrinkNarrationCooldownOption
@@ -850,9 +917,18 @@ Event OnOptionSelect(Int option)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarration", value)
         SetToggleOptionValue(option, value == 1)
         ForcePageReset()
+    ElseIf option == milkmaidCreatedNarrationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidCreatedNarration", value)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
     ElseIf option == playerDrinkNarrationDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == milkmaidCreatedNarrationDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarrationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidCreatedNarrationDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == npcDrinkNarrationOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarration", 1)
@@ -895,6 +971,24 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotifications", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == selfMilkingActionOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingAction", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingAction", value)
+        SetToggleOptionValue(option, value == 1)
+        If value == 1
+            MMESkyrimNetVoiceControls.RegisterSelfMilkingAction()
+        ElseIf MMEAlertsSkyrimNet.IsAvailable()
+            SkyrimNetApi.UnregisterAction("StartMilkMaidSelfMilking")
+        EndIf
+    ElseIf option == pairedMilkingActionOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", value)
+        SetToggleOptionValue(option, value == 1)
+        If value == 1
+            MMESkyrimNetVoiceControls.RegisterVoiceMilkingAction()
+        ElseIf MMEAlertsSkyrimNet.IsAvailable()
+            SkyrimNetApi.UnregisterAction("StartBreastfeedingMilkShare")
+        EndIf
     ElseIf option == npcMilkConsumptionDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", value)
@@ -906,6 +1000,14 @@ Event OnOptionSelect(Int option)
     ElseIf option == playerDrinkNotificationsDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == selfMilkingActionDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == pairedMilkingActionDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == skyrimNetDrinkDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0)
@@ -1012,6 +1114,16 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(60.0)
         SetSliderDialogRange(10.0, 3600.0)
         SetSliderDialogInterval(10.0)
+    ElseIf option == playerDrinkNarrationChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "playerDrinkNarrationChance", 25))
+        SetSliderDialogDefaultValue(25.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+    ElseIf option == milkmaidCreatedNarrationCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkmaidCreatedNarrationCooldown", 60.0))
+        SetSliderDialogDefaultValue(60.0)
+        SetSliderDialogRange(10.0, 3600.0)
+        SetSliderDialogInterval(10.0)
     ElseIf option == npcDrinkNarrationCooldownOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "npcDrinkNarrationCooldown", 60.0))
         SetSliderDialogDefaultValue(60.0)
@@ -1058,6 +1170,14 @@ Event OnOptionSliderAccept(Int option, Float value)
         SetSliderOptionValue(option, value, "{0} seconds")
     ElseIf option == playerDrinkNarrationCooldownOption
         JsonUtil.SetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == playerDrinkNarrationChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "playerDrinkNarrationChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+    ElseIf option == milkmaidCreatedNarrationCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "milkmaidCreatedNarrationCooldown", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
     ElseIf option == npcDrinkNarrationCooldownOption

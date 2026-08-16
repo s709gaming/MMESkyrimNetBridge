@@ -27,6 +27,8 @@ Function InitializeController()
     EndIf
     RegisterMilkingEvents()
     MMEAlertsSkyrimNet.RegisterPromptDecorator()
+    MMESkyrimNetVoiceControls.RegisterVoiceMilkingAction()
+    MMESkyrimNetVoiceControls.RegisterSelfMilkingAction()
     UnregisterForModEvent("MMEExtensions_Lifecycle")
     RegisterForModEvent("MMEExtensions_Lifecycle", "OnNativeLifecycle")
     UnregisterForModEvent("MMEExtensions_MMEEffectApplied")
@@ -62,6 +64,12 @@ Function DisableController()
     UnregisterForModEvent("MilkQuest.StartMilkingMachine")
     UnregisterForModEvent("MilkQuest.StopMilkingMachine")
     UnregisterForModEvent("MME_MilkingDone")
+    If MMEAlertsSkyrimNet.IsAvailable()
+        SkyrimNetApi.UnregisterAction("StartBreastfeedingScene")
+        SkyrimNetApi.UnregisterAction("StartSelfMilking")
+        SkyrimNetApi.UnregisterAction("StartBreastfeedingMilkShare")
+        SkyrimNetApi.UnregisterAction("StartMilkMaidSelfMilking")
+    EndIf
     NextCapacityUpdate = 0.0
     NextSkyrimNetUpdate = 0.0
     NextDebugUpdate = 0.0
@@ -168,6 +176,7 @@ Function CheckMilkmaidCreation(Actor candidate, String source)
         Debug.Notification("MME Extensions - " + GetActorName(candidate) + " is a new Milkmaid!")
     EndIf
     MMEAlertsSkyrimNet.SendMilkmaidCreated(candidate)
+    MMEAlertsSkyrimNet.NarrateMilkmaidCreated(candidate)
     Int handle = ModEvent.Create("MMEExtensions_MilkmaidCreated")
     If handle
         ModEvent.PushForm(handle, candidate)

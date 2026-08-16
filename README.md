@@ -1,129 +1,273 @@
-
 # MME Extensions
-Loverslab Download page: https://www.loverslab.com/files/file/50820-mme-milk-mod-economy-extensions/
 
-A modular reaction add-on for **Milk Mod Economy**.
+LoversLab Download Page:  
+https://www.loverslab.com/files/file/50820-mme-milk-mod-economy-extensions/
 
-MME Extensions makes Milkmaid gameplay feel sillier and more responsive by reacting to drinking milk, filling up, leaking, milking, and other important MME events.
+**A modular reaction and gameplay expansion for Milk Mod Economy.**
 
-Depending on your settings, the mod can:
+**Every feature can be DISABLED or ADJUSTED through the MCM.**
 
-- Play suggestive sound effects.
-- Show in-game notifications.
-- Apply milk and arousal effects.
-- Alert Skyrim.Net so nearby characters can react.
+MME Extensions makes Milk Maid gameplay more reactive, lewd, and alive.
 
-**Everything is modular. Enable only the features you want through the MCM.**
+**Drink milk. Get milkier. Get hornier. Moan about it. Fill up. Leak. Get milked. Let nearby characters notice.**
 
-<img width="1164" height="864" alt="main menu" src="https://github.com/user-attachments/assets/0b3a32d7-574c-4b9f-b147-98260b94ceff" />
+With **Skyrim.Net**, those reactions can go even further. The AI can understand Milk Maid status, react to important MME events, and even turn natural conversation into actual milking gameplay.
 
 > [!IMPORTANT]
-> Skyrim.Net is completely optional. When enabled, characters will talk about Milkmaids and female anatomy much more often.
+> **Skyrim.Net is completely optional.**
+> Sounds, notifications, milk effects, dialogue, and other core features work without it.
+
+<img width="1164" height="864" alt="main menu" src="https://github.com/user-attachments/assets/0b3a32d7-574c-4b9f-b147-98260b94ceff" />
 
 ## Quick Overview
 
 | | |
 |---|---|
-| **Release status** | Late alpha |
+| **Release status** | Beta 0.2.0 |
 | **Main requirement** | Milk Mod Economy |
 | **Skyrim.Net** | Optional |
 | **Arousal integration** | Optional |
 | **Skyrim VR** | Included but experimental |
 | **Configuration** | Modular MCM options |
 
-## Intended World Setting
+---
 
-Milk acts as an aphrodisiac for Milkmaids and makes them produce even more milk.
+# 🥛 Major Features
 
-The growing weight, fullness, movement, and pressure are pleasurable and desirable. Milkmaids should react positively—and erotically—to filling up, leaking milk, drinking milk, and being milked.
+## 🗣️ Skyrim.Net Gameplay Actions
 
-These reactions are the intended tone of the mod and its default messages.
+Skyrim.Net can do more than simply talk about milking.
 
-## Requirements
+Natural conversation can now lead into **actual MME gameplay actions**.
 
-### Required
+### Milk Maid Self-Milking
 
-- Skyrim Special Edition or Anniversary Edition with SKSE
-- Milk Mod Economy and all its requirements
-- SkyUI
-- PapyrusUtil
-- JContainers
-- Address Library for SKSE Plugins
+An appropriate Milk Maid can decide to **milk herself for relief** when the situation naturally calls for it.
 
-### Optional
+A very full and milky Milk Maid is given context encouraging the AI to strongly consider milking when appropriate.
 
-- **Skyrim.Net** — required only for Skyrim.Net reactions and context
-- **SexLab Aroused or OSLAroused** — required only for arousal effects
+### Breastfeeding / Milk Sharing
 
-The native DLL was built with CommonLibSSE-NG.
+Conversation can naturally lead to the player **sharing milk through MME's breastfeeding SexLab scene**.
 
-### Skyrim VR
+Instead of characters agreeing to something and then doing nothing:
 
-Skyrim VR support is included in the CommonLibSSE-NG DLL. Install VR Address Library when using VR. It did not crash when I tried it.
+**Conversation → Skyrim.Net action → MME scene**
 
-## Features
+These gameplay actions are optional and can be disabled through the MCM.
 
-### Milk Event Reactions
+---
 
-MME Extensions watches for important Milk Mod Economy events:
+## 🥛 Drink ANY Milk
 
-- Someone becomes a new Milkmaid.
-- The player or an NPC drinks supported milk.
-- A Milkmaid reaches half-full capacity.
-- A Milkmaid reaches full capacity and begins leaking.
-- Milking starts.
-- Milking ends.
+If the player or an NPC Milk Maid drinks supported milk:
 
-Depending on the event and your MCM settings, the mod can play a sound, show a notification, or alert Skyrim.Net.
+- **Her tits get BIGGER** by increasing her current milk level.
+- **Optional: She gets HORNIER** through SexLab Aroused or OSLAroused.
+- **She can moan with pleasure** when reaction sounds are enabled.
+- An in-game notification can tell you what she drank.
+- Skyrim.Net can immediately recognize and react to the drink.
+- Optional forced narration lets nearby characters react immediately.
 
-Each reaction type can be enabled or disabled separately.
+Supported drinks include:
 
-### Milk Drinking Effects
+- Lactacid
+- Normal milk
+- Racial milk
+- Supernatural milk
 
-- Detects supported milk consumed by the player or NPCs without a polling loop.
-- Applies NPC effects only to valid MME Milkmaids.
-- Supports Lactacid, normal milk, racial milk, and supernatural milk.
-- Adds a configurable flat milk bonus.
-- Can optionally add half the drinker’s Milkmaid level to her milk level.
-- Gives Lactacid its own configurable multiplier.
-- Uses MME’s existing milk functions and respects normal capacity limits.
-- Can optionally raise arousal through SexLab Aroused or OSLAroused.
+Milk gain is configurable through the MCM.
 
-### Milkmaid Dialogue
+You can optionally add **half of the Milk Maid's level** to the amount gained from drinking.
 
-Adds the following choice beneath MME’s existing **Hey, there** dialogue:
+Lactacid also has its own adjustable multiplier.
+
+MME Extensions uses MME's existing milk functions and respects normal capacity limits.
+
+---
+
+## 🥛 Give Milk to Other Milk Maids
+
+MME's existing **"Hey, there"** dialogue receives a new choice:
 
 > **Drink this, it will make you milky!**
 
-This option:
+When talking to a valid Milk Maid, MME Extensions automatically selects a supported drink from your inventory.
 
-- Appears only when speaking to a valid MME Milkmaid.
-- Transfers and processes one supported milk item from the player.
-- Prioritizes Lactacid, normal milk, racial milk, then supernatural milk.
-- Can optionally play MME’s Milkmaid reaction animation afterward.
+Priority:
 
-### Skyrim.Net Integration
+**Lactacid → Normal Milk → Racial Milk → Supernatural Milk**
 
-Skyrim.Net is completely optional. Its features automatically disable themselves when Skyrim.Net is unavailable.
+The NPC actually consumes the drink and receives the same enabled:
 
-When installed, MME Extensions can:
+- Milk gain.
+- Arousal gain.
+- Reaction sounds.
+- Notifications.
+- Skyrim.Net reactions.
 
-- Publish Milkmaid events as short-lived context.
-- Report the exact type of milk consumed.
-- Send summaries of nearby Milkmaid fullness.
-- Use an MCM-adjustable interval for nearby summaries.
-- Request narration when a nearby Milkmaid first becomes full.
-- Apply an MCM-adjustable narration cooldown.
-- Add Milkmaid context only to confirmed MME Milkmaids through a short `.prompt` file.
-- Control each Skyrim.Net feature separately through the MCM.
+An optional MME drinking animation can play afterward.
 
-   <img width="204" height="130" alt="milk drink tracking" src="https://github.com/user-attachments/assets/dd8d34be-e61f-4e3a-81a7-0bbe9668879f" />
+---
+
+# 💦 Milk Fullness Reactions
+
+Milk Maids react as their breasts fill.
+
+MME Extensions recognizes important capacity thresholds and can trigger both local and Skyrim.Net reactions.
+
+## 50% Full
+
+When a Milk Maid reaches half capacity:
+
+- Gentle reaction/moan.
+- Optional in-game notification.
+- Skyrim.Net receives updated context.
+- Optional forced Skyrim.Net narration lets nearby characters react immediately.
+
+## 100% FULL
+
+When a Milk Maid becomes completely full:
+
+- Stronger reaction/moan.
+- Optional in-game notification.
+- Skyrim.Net receives a more urgent and suggestive description.
+- Optional forced narration lets nearby characters immediately react.
+- MME continues to handle its normal full/leaking behavior.
+
+The system reacts to the **threshold crossing**, rather than repeatedly triggering because someone remains full.
+
+Narration cooldowns are adjustable to prevent repetitive dialogue and unnecessary token usage.
+
+**Waiting in-game is an easy way to quickly test fullness reactions.**
+
+---
+
+# 🍼 New Milk Maid Reactions
+
+Becoming a Milk Maid is now treated as an important event.
+
+When someone becomes a new Milk Maid:
+
+- Local reactions can occur.
+- Skyrim.Net receives the event.
+- Optional forced narration allows nearby characters to immediately acknowledge her new condition.
+
+MME still owns the actual creation and management of Milk Maids.
+
+---
+
+# 🤖 Skyrim.Net Integration
+
+Skyrim.Net support is one of the largest parts of MME Extensions, but remains completely optional.
+
+When installed, Skyrim.Net can understand:
+
+- Who nearby is a Milk Maid.
+- Current Milk Maid fullness.
+- Who just drank milk.
+- What kind of milk she drank.
+- Who recently became a Milk Maid.
+- Half-full and completely-full events.
+- Milking events.
+- Milk leaking.
+- Other important MME events.
+
+It can also optionally **act on this information** through the self-milking and milk-sharing gameplay actions.
+
+## Nearby Milk Maid Context
+
+Nearby Milk Maids are summarized as:
+
+- **Less than 50% full**
+- **More than 50% full**
+- **100% full**
+
+For example:
+
+> **Hulda is less than half full and feeling pleasantly tingly.**
+>
+> **Jenassa is more than half full, her breasts growing heavy and hot.**
+>
+> **Saadia is completely full, leaking and desperate.**
+
+These are sent as temporary **Short-Lived Events** rather than permanently accumulating in Skyrim.Net's context.
+
+The update interval can be adjusted through the MCM.
+
+<img width="204" height="130" alt="milk drink tracking" src="https://github.com/user-attachments/assets/dd8d34be-e61f-4e3a-81a7-0bbe9668879f" />
+
 <img width="516" height="213" alt="Recent event" src="https://github.com/user-attachments/assets/8d96ce51-eada-4a42-b1f7-1f65e85f6f0c" />
 
+## Forced Skyrim.Net Reactions
 
-### Optional MME Settings
+Important events can optionally request an immediate Skyrim.Net narration.
 
-The FOMOD can preload the author’s preferred MME settings. These remain normal MME settings and can be changed at any time.
+Currently supported:
+
+- Milk Maid reaches **50% full**.
+- Milk Maid reaches **100% full**.
+- Someone becomes a **new Milk Maid**.
+- A Milk Maid **drinks supported milk**.
+
+These features have independent MCM controls and cooldowns where appropriate.
+
+They use short prompts to reduce unnecessary token usage.
+
+---
+
+# 🔥 Intended World Setting
+
+Milk acts as an **aphrodisiac for Milk Maids** and encourages their bodies to produce even more milk.
+
+As a Milk Maid fills:
+
+- Her breasts become heavier.
+- Pressure increases.
+- Movement and bouncing become more noticeable.
+- Sensitivity increases.
+- These sensations are pleasurable and desirable.
+
+Milk Maids should generally react positively and erotically to:
+
+- Drinking milk.
+- Filling up.
+- Becoming heavy with milk.
+- Leaking.
+- Being milked.
+
+These reactions are the intended tone of the mod and its default messages.
+
+---
+
+# 🎛️ Modular MCM
+
+Almost every major feature has its own controls.
+
+This includes:
+
+- Reaction sounds.
+- Milk drinking effects.
+- Milk gain.
+- Lactacid multiplier.
+- Arousal gain.
+- NPC drinking notifications.
+- Capacity reactions.
+- Skyrim.Net status updates.
+- Forced narrations.
+- Narration cooldowns and chances.
+- Skyrim.Net gameplay actions.
+- Feature-specific diagnostics.
+
+**Enable only the features you want.**
+
+---
+
+# ⚙️ Optional MME Settings
+
+The FOMOD can optionally preload my preferred Milk Mod Economy settings.
+
+These remain normal MME settings and can be changed afterward through MME's own MCM.
 
 The recommended profile provides:
 
@@ -131,114 +275,236 @@ The recommended profile provides:
 - Roughly daily milking cycles.
 - Novice progression.
 - 3BA-friendly breast scaling.
-- A 100% gush chance to avoid extra milking delay.
+- 100% gush chance to avoid additional milking delay.
 
-Choosing **Keep MME Defaults** leaves MME’s settings unchanged.
+The installer offers three startup profiles:
 
-### Efficient Native Support
+### Easy MCM Defaults + Free milk on start
 
-- Uses a CommonLibSSE-NG bridge for wait, sleep, location-change, magic-effect, and NPC potion events.
-- Uses native nearby-actor discovery followed by authoritative MME validation in Papyrus.
-- Avoids broad Papyrus actor scanning and unnecessary polling where native events are available.
-- Provides adjustable polling only where it is still needed.
+Applies the recommended MME settings and grants a small one-time supply of milk for quick testing.
 
-## Installation
+### Easy MCM Defaults + No milk on start
 
-1. Install all required dependencies.
-2. Install `MME Extensions.zip` with Vortex or Mod Organizer 2.
-3. Select your preferred MME defaults during the FOMOD installation.
-4. Enable `MMEAlert.esp`.
-5. Deploy or sort your load order.
-6. Start Skyrim through SKSE.
+Applies the same recommended settings without starter milk.
 
-## Compatibility and Status
+### Keep original MME Defaults + No milk on start
+
+Leaves MME's original settings and starter behavior unchanged.
+
+---
+
+# 📦 Requirements
+
+## Required
+
+- Skyrim Special Edition or Anniversary Edition with SKSE
+- **Milk Mod Economy and all of its requirements**
+- Address Library for SKSE Plugins
+
+**Make sure Milk Mod Economy works correctly before installing MME Extensions.**
+
+## Optional
+
+- **Skyrim.Net**
+  - Required only for AI context, forced narration, AI reactions, and Skyrim.Net gameplay actions.
+
+- **SexLab Aroused or OSLAroused**
+  - Required only for optional arousal effects.
+
+The native DLL was built with CommonLibSSE-NG.
+
+---
+
+# 🥽 Skyrim VR
+
+Skyrim VR support is included in the CommonLibSSE-NG DLL.
+
+Install the appropriate **VR Address Library** when using Skyrim VR.
+
+VR support remains experimental and needs broader testing.
+
+---
+
+# 📥 Installation
+
+1. Install Milk Mod Economy and verify that it works.
+2. Install its required dependencies.
+3. Install `MME Extensions.zip` through Vortex or Mod Organizer 2.
+4. Choose your preferred MME settings during the FOMOD installation.
+5. Enable `MMEAlert.esp`.
+6. Deploy or sort your load order.
+7. Start Skyrim through SKSE.
+
+---
+
+# 🧪 Beta Status
+
+**MME Extensions 0.2.0 is now in Beta.**
+
+The intended major feature set is substantially complete.
+
+Development is now primarily focused on:
+
+- Longer gameplay testing.
+- Bug fixes.
+- Compatibility.
+- Skyrim VR testing.
+- Skyrim.Net reliability.
+- Balance and polish.
+
+Small features may still appear during testing, but major new systems are not currently planned.
 
 > [!WARNING]
-> This is a late alpha release. Expect bugs and do not risk an important save.
-> This mod does not alter the original Milk Mod Economy.
-> All or some of this mod's features can be disabled mid game via MCM.
+> This is still a Beta.
+> Keep backups and avoid risking an important save until the mod receives broader testing.
 
+MME Extensions does **not overwrite the original Milk Mod Economy files**.
 
-- Core features work in isolated testing.
-- Broader load-order testing is still needed.
-- Skyrim VR support is included but still requires broader verification.
+Most features can be disabled mid-game through the MCM.
 
-## Diagnostics
+---
 
-- Independent debug toggles keep notifications focused on the feature being tested.
-- Papyrus details can be written to the normal Papyrus log.
-- Native bridge details are written to `MMEExtensions.log` in the SKSE log directory.
-- The former Quick Test helper is inert in release builds and grants no consumables.
+# 🛠️ Diagnostics
+
+Major systems include focused optional diagnostics.
+
+Depending on the feature, debug output can report:
+
+- Event detected.
+- Actor recognized.
+- Milk Maid validation.
+- Drink detected.
+- Exact milk consumed.
+- Skyrim.Net availability.
+- Narration requested.
+- LLM gameplay action received.
+- Actor references resolved.
+- MME/SexLab scene request attempted.
+- Failure or skip reason.
+
+Debug toggles are normally OFF and can be enabled only when needed.
+
+Papyrus details can be written to the normal Papyrus log.
+
+Native bridge details are written to:
+
+`MMEExtensions.log`
+
+inside the SKSE log directory.
+
+---
 
 <details>
-<summary><strong>Developer Notes</strong></summary>
+<summary><strong>Developer / Technical Notes</strong></summary>
 
-### General Architecture
+## General Architecture
 
 The ESP owns the startup quest, aliases, dialogue records, sound forms, and script properties.
 
-Papyrus handles MME-facing rules and configurable gameplay. The CommonLibSSE-NG DLL supplies low-cost engine events and nearby-actor discovery.
+Papyrus handles MME-facing rules and configurable gameplay.
 
-Skyrim.Net integration is isolated behind availability checks, so the rest of the mod continues working without Skyrim.Net.
+The CommonLibSSE-NG DLL provides low-cost engine events and nearby actor discovery.
 
-### Typical Flow
+Skyrim.Net integration is isolated behind availability checks so the rest of the mod continues working without Skyrim.Net.
 
-1. A native event, MME ModEvent, alias event, or dialogue fragment detects an action.
-2. Papyrus validates the actor and form against MME.
-3. A focused helper applies the enabled sound, milk, arousal, or dialogue behavior.
-4. The Skyrim.Net bridge publishes enabled context separately.
+## Efficient Native Support
+
+The native bridge supports:
+
+- Wait events.
+- Sleep events.
+- Location changes.
+- Magic-effect events.
+- NPC potion consumption.
+- Nearby actor discovery.
+
+Nearby actors are discovered natively and then authoritatively validated against MME through Papyrus.
+
+This avoids broad Papyrus actor scanning where native events are available.
+
+Polling remains available only where useful, with an adjustable interval.
+
+## Typical Flow
+
+1. A native event, MME ModEvent, alias event, dialogue fragment, or Skyrim.Net action detects something.
+2. Papyrus validates the actor/form where necessary.
+3. A focused helper applies enabled gameplay behavior.
+4. Skyrim.Net integration separately publishes enabled context or narration.
 5. Feature-specific diagnostics report the decision path when requested.
 
-### Papyrus Script Legend
+## Papyrus Script Legend
 
-- `MMEAlertsController.psc` — startup, MME event registration, capacity scheduling, nearby Milkmaid validation, creation detection, and milking events
-- `MMEAlertsMCM.psc` — MCM pages, settings, defaults, migrations, tooltips, and diagnostics
-- `MMEAlertsPlayerEffect.psc` — restores the controller after startup and save loading
-- `MMEAlertsSkyrimNet.psc` — Skyrim.Net checks, prompts, events, nearby summaries, and narration
-- `MMEDrinkTracker.psc` — player and NPC milk-drinking detection
-- `MMEMilkDrinkEffects.psc` — shared drink reaction sounds
-- `MMEMilkBoost.psc` — shared milk-bonus calculation and capacity-safe application
-- `MMEArousalBridge.psc` — optional arousal-mod detection and updates
-- `MMENPCDialog.psc` — Milkmaid dialogue, inventory selection, consumption, effects, and animation
-- `MMEAlertsFlatRateDefaults.psc` — optional FOMOD-selected MME preset
-- `MMEAlertsQuickTest.psc` — inert compatibility placeholder retained for the ESP and older saves
-- `MMEDebug.psc` — passive troubleshooting helper
-- `MMEExtensionsNative.psc` — Papyrus declaration for the native nearby-actor function
-- `MMESkyrimNetVoiceControls.psc` — archived experimental actions excluded from release compilation
+- `MMEAlertsController.psc` — startup, MME events, capacity scheduling, nearby Milk Maid validation, creation detection, and milking events.
+- `MMEAlertsMCM.psc` — MCM pages, settings, defaults, migrations, tooltips, and diagnostics.
+- `MMEAlertsPlayerEffect.psc` — restores the controller after startup and save loading.
+- `MMEAlertsSkyrimNet.psc` — Skyrim.Net checks, prompts, events, nearby summaries, and forced narration.
+- `MMEDrinkTracker.psc` — player and NPC milk-drinking detection.
+- `MMEMilkDrinkEffects.psc` — shared drinking reaction sounds.
+- `MMEMilkBoost.psc` — milk-bonus calculation and capacity-safe application.
+- `MMEArousalBridge.psc` — optional arousal integration.
+- `MMENPCDialog.psc` — Milk Maid dialogue, inventory selection, consumption, effects, and animation.
+- `MMEAlertsFlatRateDefaults.psc` — optional FOMOD-selected MME preset.
+- `MMEAlertsQuickTest.psc` — compatibility/testing helper.
+- `MMEDebug.psc` — troubleshooting helper.
+- `MMEExtensionsNative.psc` — Papyrus declarations for native functions.
+- `MMESkyrimNetVoiceControls.psc` — Skyrim.Net self-milking and milk-sharing action bridge.
 
-### Native Code
+## Native Code
 
-- `src/Plugin.cpp` — publishes engine events to Papyrus and exposes nearby-actor discovery
-- `build-native.bat` / `build-native.ps1` — builds the native DLL
-- `build-package.bat` / `build-package.ps1` — compiles Papyrus and creates the distributable FOMOD
+- `src/Plugin.cpp` — publishes engine events to Papyrus and exposes nearby actor discovery.
+- `build-native.bat` / `build-native.ps1` — builds the native DLL.
+- `build-package.bat` / `build-package.ps1` — compiles Papyrus and creates the distributable FOMOD.
 
-### Data and Configuration
+## Data and Configuration
 
-- `MMEAlert.esp` — legacy plugin filename containing ME Extensions records
-- `SKSE/Plugins/StorageUtilData/MMEAlerts/SkyrimNet.json` — editable Skyrim.Net event messages
-- `SkyrimNetPrompts/0260_mme_extensions_milkmaid.prompt` — actor-specific Milkmaid context
-- `fomod/` — installer metadata and optional defaults
-- `assets/sounds/` — source reaction-sound pools
+- `MMEAlert.esp` — plugin containing MME Extensions records.
+- `SKSE/Plugins/StorageUtilData/MMEAlerts/SkyrimNet.json` — editable Skyrim.Net event messages.
+- `SkyrimNetPrompts/0260_mme_extensions_milkmaid.prompt` — actor-specific Milk Maid context.
+- `fomod/` — installer metadata and optional defaults.
+- `assets/sounds/` — reaction sound pools.
+- `tools/README.md` — archival xEdit/Pascal tooling guidance.
 
-### Build Notes
+## Build Notes
 
-1. Run `build-native.bat` only after changing the native C++ code or toolchain.
+1. Run `build-native.bat` only after changing native C++ code or the toolchain.
 2. Run `build-package.bat` for every distributable build.
-3. Install `dist/MME Extensions.zip` with a mod manager.
+3. Install `dist/MME Extensions.zip` using a mod manager.
 4. Do not install the staging directory directly.
 5. Confirm that General, Milk Drinking, Arousal, Skyrim.Net, and Debug pages appear in the MCM.
-6. Keep test-only helpers clearly identified or remove them before release.
+6. Remove or clearly identify test-only helpers before release.
 
 </details>
 
-## Credits
+# Source Code
+
+https://github.com/s709gaming/MMESkyrimNetBridge
+
+# Credits
 
 - **Ed86** — Milk Mod Economy
 - **MinLL and contributors** — Skyrim.Net
 - **CharmedBaryon and contributors** — CommonLibSSE-NG
 
-## License
+# License / Permissions
 
-Released under the [MIT License](LICENSE).
+Released under the MIT License.
+
+Open source. Do whatever you want with the mod within the license terms.
 
 MME Extensions is an independent add-on and is not an official Milk Mod Economy, Skyrim, SKSE, SexLab Aroused, OSLAroused, or Skyrim.Net release.
+
+# Changelog
+
+See the release notes/changelog for detailed version-to-version changes.
+
+## Version 0.2.0 Beta
+
+Major feature development is substantially complete.
+
+Focus has shifted toward longer testing, bug fixes, compatibility, balance, and polish.
+
+## Version 0.1.0 Alpha
+
+First public release.
+
+Core features worked during developer testing, but broader testing was still needed.

@@ -16,7 +16,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $gameRoot "Data\SEQ\MMEAlert.seq"
-$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMENPCDialog", "MMEExtensionsNative")
+$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMENPCDialog", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 
