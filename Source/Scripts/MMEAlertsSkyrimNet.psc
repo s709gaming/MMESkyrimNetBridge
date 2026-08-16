@@ -4,8 +4,15 @@ Bool Function IsAvailable() Global
     Return Game.GetModByName("SkyrimNet.esp") != 255
 EndFunction
 
+Bool Function IsExtensionsEnabled() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMMEExtensions", 1) == 1
+EndFunction
+
 ; Registers the callback used by the optional actor-specific Milkmaid bio prompt.
 Function RegisterPromptDecorator() Global
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 1) == 1
     If !IsAvailable()
         If diagnostic
@@ -36,6 +43,9 @@ EndFunction
 
 ; Returns an explicit string gate because prompt values may not preserve Papyrus numeric types.
 String Function MilkmaidPromptDebug(Actor milkMaid) Global
+    If !IsExtensionsEnabled()
+        Return ""
+    EndIf
     If milkMaid == None
         Return ""
     EndIf
@@ -67,6 +77,9 @@ EndFunction
 
 ; Publishes actor-specific capacity crossings for two minutes without forcing dialogue.
 Function SendCapacityMilestone(Actor milkMaid, Int crossing) Global
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     String settingsFile = "/MMEAlerts/SkyrimNet"
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetStatusDiagnostic", 0) == 1
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkStatuses", 1) != 1
@@ -111,6 +124,9 @@ EndFunction
 
 ; Makes at most one token-using narration request for a completed scan's full crossings.
 Function NarrateMilkFull() Global
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     String settingsFile = "/MMEAlerts/Settings"
     Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableMilkFullNarrationDiagnostic", 0) == 1
     If diagnostic
@@ -163,8 +179,183 @@ Function NarrateMilkFull() Global
     Debug.Trace("[MMEAlert SkyrimNet] Milk Full DirectNarration result " + result + " | cooldown " + cooldown + " | " + content)
 EndFunction
 
+; Makes at most one token-using narration request for a completed scan's half-full crossings.
+Function NarrateMilkHalfFull() Global
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
+    String settingsFile = "/MMEAlerts/Settings"
+    Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableMilkHalfFullNarrationDiagnostic", 0) == 1
+    If diagnostic
+        Debug.Notification("Half-Full Narration: crossing detected")
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enableMilkHalfFullNarration", 1) != 1
+        If diagnostic
+            Debug.Notification("Half-Full Narration: skipped - feature disabled")
+        EndIf
+        Return
+    EndIf
+    If !IsAvailable()
+        If diagnostic
+            Debug.Notification("Half-Full Narration: failed - Skyrim.Net not detected")
+        EndIf
+        Return
+    EndIf
+
+    Float cooldown = JsonUtil.GetFloatValue(settingsFile, "milkHalfFullNarrationCooldown", 60.0)
+    Float now = Utility.GetCurrentRealTime()
+    Float last = JsonUtil.GetFloatValue(settingsFile, "lastMilkHalfFullNarrationRealTime", -1.0)
+    If last > now
+        last = -1.0
+    EndIf
+    If last >= 0.0 && now - last < cooldown
+        If diagnostic
+            Int remaining = (cooldown - (now - last)) as Int
+            Debug.Notification("Half-Full Narration: skipped - cooldown " + remaining + "s")
+        EndIf
+        Return
+    EndIf
+
+    String content = "One or more nearby Milk Maids have become half full. Their breasts are getting pleasantly heavier and more sensitive. React briefly and naturally."
+    If diagnostic
+        Debug.Notification("Half-Full Narration: sending general Milk Maid situation")
+    EndIf
+    Int result = SkyrimNetApi.DirectNarration(content, None, None)
+    If result == 0
+        JsonUtil.SetFloatValue(settingsFile, "lastMilkHalfFullNarrationRealTime", now)
+        JsonUtil.Save(settingsFile, False)
+        If diagnostic
+            Debug.Notification("Half-Full Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
+        EndIf
+    ElseIf diagnostic
+        Debug.Notification("Half-Full Narration: rejected [" + result + "]")
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] Half-Full DirectNarration result " + result + " | cooldown " + cooldown + " | " + content)
+EndFunction
+
+; Requests one actor-specific narration after a verified NPC Milkmaid drink.
+Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False) Global
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
+    String settingsFile = "/MMEAlerts/Settings"
+    Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableNPCDrinkNarrationDiagnostic", 0) == 1
+    If drinker == None || drinker == Game.GetPlayer()
+        Return
+    EndIf
+
+    String actorName = drinker.GetDisplayName()
+    If actorName == ""
+        actorName = "The Milk Maid"
+    EndIf
+    If diagnostic
+        If dialogueDrink
+            Debug.Notification("NPC Drink Narration: dialogue drink detected | " + actorName)
+        Else
+            Debug.Notification("NPC Drink Narration: drink detected | " + actorName)
+        EndIf
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enableNPCDrinkNarration", 1) != 1
+        If diagnostic
+            Debug.Notification("NPC Drink Narration: skipped - narration disabled")
+        EndIf
+        Return
+    EndIf
+    If !IsAvailable()
+        If diagnostic
+            Debug.Notification("NPC Drink Narration: skipped - Skyrim.Net unavailable")
+        EndIf
+        Return
+    EndIf
+
+    Float cooldown = JsonUtil.GetFloatValue(settingsFile, "npcDrinkNarrationCooldown", 60.0)
+    Float now = Utility.GetCurrentRealTime()
+    Float last = JsonUtil.GetFloatValue(settingsFile, "lastNPCDrinkNarrationRealTime", -1.0)
+    If last > now
+        last = -1.0
+    EndIf
+    If last >= 0.0 && now - last < cooldown
+        If diagnostic
+            Int remaining = (cooldown - (now - last)) as Int
+            Debug.Notification("NPC Drink Narration: skipped - cooldown " + remaining + "s")
+        EndIf
+        Return
+    EndIf
+
+    String content = actorName + " just drank some milk. Her breasts are feeling heavier and more sensitive, and she's getting increasingly aroused and excited. React briefly and naturally."
+    Int result = SkyrimNetApi.DirectNarration(content, None, None)
+    If result == 0
+        JsonUtil.SetFloatValue(settingsFile, "lastNPCDrinkNarrationRealTime", now)
+        JsonUtil.Save(settingsFile, False)
+        If diagnostic
+            Debug.Notification("NPC Drink Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
+        EndIf
+    ElseIf diagnostic
+        Debug.Notification("NPC Drink Narration: rejected [" + result + "]")
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] NPC drink DirectNarration result " + result + " | " + actorName + " | " + content)
+EndFunction
+
+; Requests an opt-in narration after a confirmed player milk drink.
+Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem) Global
+    If !IsExtensionsEnabled() || drinker != Game.GetPlayer() || drinkItem == None
+        Return
+    EndIf
+    String settingsFile = "/MMEAlerts/Settings"
+    Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enablePlayerDrinkNarrationDiagnostic", 0) == 1
+    If diagnostic
+        Debug.Notification("Player Drink Narration: drink detected")
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enablePlayerDrinkNarration", 0) != 1
+        If diagnostic
+            Debug.Notification("Player Drink Narration: skipped - narration disabled")
+        EndIf
+        Return
+    EndIf
+    If !IsAvailable()
+        If diagnostic
+            Debug.Notification("Player Drink Narration: skipped - Skyrim.Net unavailable")
+        EndIf
+        Return
+    EndIf
+
+    Float cooldown = JsonUtil.GetFloatValue(settingsFile, "playerDrinkNarrationCooldown", 60.0)
+    Float now = Utility.GetCurrentRealTime()
+    Float last = JsonUtil.GetFloatValue(settingsFile, "lastPlayerDrinkNarrationRealTime", -1.0)
+    If last > now
+        last = -1.0
+    EndIf
+    If last >= 0.0 && now - last < cooldown
+        If diagnostic
+            Int remaining = (cooldown - (now - last)) as Int
+            Debug.Notification("Player Drink Narration: skipped - cooldown " + remaining + "s")
+        EndIf
+        Return
+    EndIf
+
+    String drinkName = drinkItem.GetName()
+    If drinkName == ""
+        drinkName = "some milk"
+    EndIf
+    String content = "The player just drank " + drinkName + ". They're feeling pleasantly heavier and more sensitive. React briefly and naturally."
+    Int result = SkyrimNetApi.DirectNarration(content, None, None)
+    If result == 0
+        JsonUtil.SetFloatValue(settingsFile, "lastPlayerDrinkNarrationRealTime", now)
+        JsonUtil.Save(settingsFile, False)
+        If diagnostic
+            Debug.Notification("Player Drink Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
+        EndIf
+    ElseIf diagnostic
+        Debug.Notification("Player Drink Narration: rejected [" + result + "]")
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] Player drink DirectNarration result " + result + " | " + content)
+EndFunction
+
 ; Publishes one replaceable five-minute summary from the existing capacity scan.
 Function SendNearbyMilkStatuses(Actor playerActor, String statuses, Int scannedCount, Int milkmaidCount) Global
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     String settingsFile = "/MMEAlerts/SkyrimNet"
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetStatusDiagnostic", 0) == 1
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkStatuses", 1) != 1
@@ -218,6 +409,9 @@ EndFunction
 
 ; Records a confirmed false-to-true Milkmaid transition in SkyrimNet history.
 Function SendMilkmaidCreated(Actor milkMaid) Global
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     String settingsFile = "/MMEAlerts/SkyrimNet"
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetCreationDiagnostic", 0) == 1
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkmaidCreated", 1) != 1
@@ -333,6 +527,9 @@ EndFunction
 
 ; Publishes the player's latest drink into scene context for ninety seconds.
 Function SendMilkDrink(Actor drinker, Form drinkItem) Global
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     String settingsFile = "/MMEAlerts/SkyrimNet"
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetDrinkDiagnostic", 0) == 1
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkDrinks", 1) != 1
@@ -396,6 +593,9 @@ Function SendMilkDrink(Actor drinker, Form drinkItem) Global
 EndFunction
 
 Function SendMilkingEvent(Actor milkMaid, String messageKey) Global
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkingDiagnostic", 0) == 1
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkingEvents", 1) != 1
         Return

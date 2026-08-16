@@ -15,6 +15,9 @@ EndFunction
 
 ; Shared entry point for dialogue fragments and optional Skyrim.Net actions.
 Bool Function GiveMilkToTarget(Actor target, Bool diagnostic = False) Global
+    If !MMEAlertsController.IsExtensionsEnabled()
+        Return False
+    EndIf
     If target == None
         Report(diagnostic, "target detection failed (speaker is not an Actor)")
         Return False
@@ -143,6 +146,7 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
         Report(diagnostic, GetActorName(target) + " consumed " + selectedItem.GetName() + " | player " + giverBefore + " -> " + giver.GetItemCount(selectedItem) + " | native potion processed")
     EndIf
 
+    MMEAlertsSkyrimNet.NarrateNPCMilkDrink(target, True)
     Bool animationStarted = StartDrinkAnimation(target, diagnostic)
     ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
     FinishDrinkAnimation(target, animationStarted, diagnostic)
@@ -174,6 +178,7 @@ Function ApplyExtensionEffects(Actor target, Form selectedItem, String selectedT
     Int arousalAfter = MMEArousalBridge.GetCurrentArousal(target)
 
     Int moanResult = MMEMilkDrinkEffects.PlayDrinkReaction(target, False)
+    MMEDrinkTracker.ShowNPCDrinkNotification(target, selectedItem, milkAdded, arousalSent)
     String arousalResult = "off/unavailable"
     If arousalSent
         arousalResult = arousalBefore + " -> " + arousalAfter

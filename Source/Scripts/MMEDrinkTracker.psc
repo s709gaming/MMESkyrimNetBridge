@@ -14,11 +14,16 @@ EndEvent
 
 Function RegisterNativeNPCDrink()
     UnregisterForModEvent("MMEExtensions_NPCPotionConsumed")
-    RegisterForModEvent("MMEExtensions_NPCPotionConsumed", "OnNativeNPCPotionConsumed")
+    If MMEAlertsController.IsExtensionsEnabled()
+        RegisterForModEvent("MMEExtensions_NPCPotionConsumed", "OnNativeNPCPotionConsumed")
+    EndIf
 EndFunction
 
 ; Handles alias equip events; currently only the player alias is supported.
 Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
+    If !MMEAlertsController.IsExtensionsEnabled()
+        Return
+    EndIf
     Actor drinker = GetActorReference()
     If drinker == None || akBaseObject == None
         Return
@@ -65,7 +70,7 @@ EndFunction
 
 ; Receives low-cost native potion-equip events and processes only supported NPC milk.
 Event OnNativeNPCPotionConsumed(String eventName, String pluginName, Float localFormID, Form sender)
-    If JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1) != 1
+    If !MMEAlertsController.IsExtensionsEnabled()
         Return
     EndIf
     Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0) == 1
@@ -114,6 +119,15 @@ Event OnNativeNPCPotionConsumed(String eventName, String pluginName, Float local
     StorageUtil.SetFloatValue(drinker, "MMEExtensions.NPCDrink.LastTime", now)
     StorageUtil.SetIntValue(drinker, "MMEExtensions.NPCDrink.LastForm", drinkItem.GetFormID())
 
+    MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker)
+    If JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1) != 1
+        If diagnostic
+            Debug.Notification("NPC Milk: effects disabled for " + actorName)
+        EndIf
+        ShowNPCDrinkNotification(drinker, drinkItem, 0.0, False)
+        Return
+    EndIf
+
     Float milkBefore = MME_Storage.getMilkCurrent(drinker)
     Float milkAdded = MMEMilkBoost.ApplyMilkDrinkBonusForActor(drinker, drinkKind, diagnostic)
     Float milkAfter = MME_Storage.getMilkCurrent(drinker)
@@ -121,6 +135,7 @@ Event OnNativeNPCPotionConsumed(String eventName, String pluginName, Float local
     Bool arousalSent = MMEArousalBridge.ApplyMilkDrinkArousalForActor(drinker, drinkItem, diagnostic)
     Int arousalAfter = MMEArousalBridge.GetCurrentArousal(drinker)
     MMEMilkDrinkEffects.PlayDrinkReaction(drinker, diagnostic)
+    ShowNPCDrinkNotification(drinker, drinkItem, milkAdded, arousalSent)
     If diagnostic
         String arousalResult = "off/unavailable"
         If arousalSent
@@ -130,6 +145,45 @@ Event OnNativeNPCPotionConsumed(String eventName, String pluginName, Float local
     EndIf
     Debug.Trace("[MMEAlert NPC Drink] processed " + actorName + " | " + pluginName + ":" + localFormID)
 EndEvent
+
+; Shows one concise result after a confirmed NPC drink and its extension effects.
+Function ShowNPCDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded, Bool arousalSent) Global
+    String configFile = "/MMEAlerts/Settings"
+    Bool diagnostic = JsonUtil.GetIntValue(configFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1
+    If JsonUtil.GetIntValue(configFile, "enableNPCDrinkNotifications", 1) != 1
+        If diagnostic
+            Debug.Notification("NPC Drink Notification: skipped - feature disabled")
+        EndIf
+        Return
+    EndIf
+    If drinker == None || drinkItem == None
+        If diagnostic
+            Debug.Notification("NPC Drink Notification: skipped - drinker or item missing")
+        EndIf
+        Return
+    EndIf
+
+    String actorName = drinker.GetDisplayName()
+    If actorName == ""
+        actorName = "A Milk Maid"
+    EndIf
+    String drinkName = drinkItem.GetName()
+    If drinkName == ""
+        drinkName = "some milk"
+    EndIf
+    String notificationText = actorName + " drank " + drinkName + "."
+    If milkAdded > 0.0 && arousalSent
+        notificationText = notificationText + " She's feeling hornier and heavier."
+    ElseIf milkAdded > 0.0
+        notificationText = notificationText + " She's feeling heavier."
+    ElseIf arousalSent
+        notificationText = notificationText + " She's feeling hornier."
+    EndIf
+    Debug.Notification(notificationText)
+    If diagnostic
+        Debug.Notification("NPC Drink Notification: shown | milk +" + milkAdded + " | arousal " + arousalSent)
+    EndIf
+EndFunction
 
 ; Limits reactions to the player until broad NPC/SPID monitoring is validated.
 Bool Function IsEligibleDrinker(Actor drinker)
@@ -178,10 +232,46 @@ Function HandleDrinkDetected(Actor drinker, Form drinkItem, Int drinkKind)
     ; cannot prevent the consumption sound from running.
     MMEMilkDrinkEffects.PlayDrinkReaction(drinker, JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1)
     ; MME milk and regular milk use the normal formula; Lactacid uses 2x flat.
-    MMEMilkBoost.ApplyMilkDrinkBonus(drinker, drinkKind)
-    MMEArousalBridge.ApplyMilkDrinkArousal(drinker, drinkItem)
+    Float milkAdded = MMEMilkBoost.ApplyMilkDrinkBonusForActor(drinker, drinkKind)
+    Bool arousalSent = MMEArousalBridge.ApplyMilkDrinkArousalForActor(drinker, drinkItem)
     MMEAlertsSkyrimNet.SendMilkDrink(drinker, drinkItem)
+    MMEAlertsSkyrimNet.NarratePlayerMilkDrink(drinker, drinkItem)
+    ShowPlayerDrinkNotification(drinker, drinkItem, milkAdded, arousalSent)
     PublishDrinkEvent(drinker, drinkItem, drinkKind)
+EndFunction
+
+Function ShowPlayerDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded, Bool arousalSent) Global
+    String configFile = "/MMEAlerts/Settings"
+    Bool diagnostic = JsonUtil.GetIntValue(configFile, "enablePlayerDrinkNotificationsDiagnostic", 0) == 1
+    If JsonUtil.GetIntValue(configFile, "enablePlayerDrinkNotifications", 1) != 1
+        If diagnostic
+            Debug.Notification("Player Drink Notification: skipped - feature disabled")
+        EndIf
+        Return
+    EndIf
+    If drinker == None || drinkItem == None
+        If diagnostic
+            Debug.Notification("Player Drink Notification: skipped - drinker or item missing")
+        EndIf
+        Return
+    EndIf
+
+    String drinkName = drinkItem.GetName()
+    If drinkName == ""
+        drinkName = "some milk"
+    EndIf
+    String notificationText = "You drank " + drinkName + "."
+    If milkAdded > 0.0 && arousalSent
+        notificationText = notificationText + " You're feeling hornier and heavier."
+    ElseIf milkAdded > 0.0
+        notificationText = notificationText + " You're feeling heavier."
+    ElseIf arousalSent
+        notificationText = notificationText + " You're feeling hornier."
+    EndIf
+    Debug.Notification(notificationText)
+    If diagnostic
+        Debug.Notification("Player Drink Notification: shown | milk +" + milkAdded + " | arousal " + arousalSent)
+    EndIf
 EndFunction
 
 ; Broadcasts a normalized drink event for future native/SkyrimNet consumers.

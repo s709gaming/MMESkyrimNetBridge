@@ -30,6 +30,10 @@ Int dialogueDiagnosticOption
 Int npcDrinkAnimationOption
 Int npcMilkEffectsOption
 Int npcMilkConsumptionDiagnosticOption
+Int npcDrinkNotificationsOption
+Int npcDrinkNotificationsDiagnosticOption
+Int playerDrinkNotificationsOption
+Int playerDrinkNotificationsDiagnosticOption
 Int lifecycleDiagnosticOption
 Int milkmaidCreationDiagnosticOption
 Int nativeScanDiagnosticOption
@@ -41,10 +45,20 @@ Int skyrimNetStatusIntervalOption
 Int milkFullNarrationOption
 Int milkFullNarrationCooldownOption
 Int milkFullNarrationDiagnosticOption
+Int milkHalfFullNarrationOption
+Int milkHalfFullNarrationCooldownOption
+Int milkHalfFullNarrationDiagnosticOption
+Int npcDrinkNarrationOption
+Int npcDrinkNarrationCooldownOption
+Int npcDrinkNarrationDiagnosticOption
+Int playerDrinkNarrationOption
+Int playerDrinkNarrationCooldownOption
+Int playerDrinkNarrationDiagnosticOption
+Int masterEnableOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 53
+    Return 61
 EndFunction
 
 Function SetPageNames()
@@ -106,6 +120,7 @@ EndFunction
 Function EnsureDefaults()
     If !JsonUtil.IsPendingSave(SettingsFile) && JsonUtil.GetIntValue(SettingsFile, "initialized", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "initialized", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMMEExtensions", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableReactionSounds", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableDrinkMoans", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableFullnessMoans", 1)
@@ -138,6 +153,12 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableMilkFullNarration", 1)
         JsonUtil.SetFloatValue(SettingsFile, "milkFullNarrationCooldown", 60.0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkFullNarrationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkHalfFullNarration", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "milkHalfFullNarrationCooldown", 60.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkHalfFullNarrationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNarration", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "npcDrinkNarrationCooldown", 60.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNarrationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkDrinks", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1)
@@ -148,6 +169,13 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkEffects", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0)
@@ -427,6 +455,44 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "npcMilkConsumptionMigration53", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "npcDrinkNarrationMigration54", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNarration", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "npcDrinkNarrationCooldown", 60.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNarrationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "npcDrinkNarrationMigration54", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "masterEnableMigration55", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableMMEExtensions", 1)
+        JsonUtil.SetIntValue(SettingsFile, "masterEnableMigration55", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "milkHalfFullNarrationMigration58", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkHalfFullNarration", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "milkHalfFullNarrationCooldown", 60.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkHalfFullNarrationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "milkHalfFullNarrationMigration58", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "npcDrinkNotificationsMigration59", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "npcDrinkNotificationsMigration59", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "npcDrinkNotificationsDiagnosticMigration60", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "npcDrinkNotificationsDiagnosticMigration60", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "playerDrinkFeaturesMigration61", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "playerDrinkFeaturesMigration61", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 ; Renders the selected SkyUI page from persisted JContainers settings.
@@ -461,6 +527,10 @@ Event OnPageReset(String page)
     npcDrinkAnimationOption = -1
     npcMilkEffectsOption = -1
     npcMilkConsumptionDiagnosticOption = -1
+    npcDrinkNotificationsOption = -1
+    npcDrinkNotificationsDiagnosticOption = -1
+    playerDrinkNotificationsOption = -1
+    playerDrinkNotificationsDiagnosticOption = -1
     lifecycleDiagnosticOption = -1
     milkmaidCreationDiagnosticOption = -1
     nativeScanDiagnosticOption = -1
@@ -472,6 +542,16 @@ Event OnPageReset(String page)
     milkFullNarrationOption = -1
     milkFullNarrationCooldownOption = -1
     milkFullNarrationDiagnosticOption = -1
+    milkHalfFullNarrationOption = -1
+    milkHalfFullNarrationCooldownOption = -1
+    milkHalfFullNarrationDiagnosticOption = -1
+    npcDrinkNarrationOption = -1
+    npcDrinkNarrationCooldownOption = -1
+    npcDrinkNarrationDiagnosticOption = -1
+    playerDrinkNarrationOption = -1
+    playerDrinkNarrationCooldownOption = -1
+    playerDrinkNarrationDiagnosticOption = -1
+    masterEnableOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -480,6 +560,9 @@ Event OnPageReset(String page)
         lactacidMultiplierOption = AddSliderOption("Lactacid Multiplier", JsonUtil.GetFloatValue(SettingsFile, "lactacidFlatMultiplier", 2.0), "x{1}")
         AddHeaderOption("NPC Milk Drinking")
         npcMilkEffectsOption = AddToggleOption("NPC Milk Effects", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1) == 1)
+        npcDrinkNotificationsOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1) == 1)
+        AddHeaderOption("Player Milk Drinking")
+        playerDrinkNotificationsOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1) == 1)
         AddHeaderOption("NPC Dialogue")
         npcDrinkAnimationOption = AddToggleOption("NPC Milk-Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0) == 1)
         Return
@@ -516,9 +599,29 @@ Event OnPageReset(String page)
             narrationFlags = OPTION_FLAG_DISABLED
         EndIf
         milkFullNarrationCooldownOption = AddSliderOption("Milk Full Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "milkFullNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
+        milkHalfFullNarrationOption = AddToggleOption("Half-Full Milk Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarration", 1) == 1)
+        narrationFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarration", 1) != 1
+            narrationFlags = OPTION_FLAG_DISABLED
+        EndIf
+        milkHalfFullNarrationCooldownOption = AddSliderOption("Half-Full Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "milkHalfFullNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
+        playerDrinkNarrationOption = AddToggleOption("Player Drink Narration", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0) == 1)
+        narrationFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0) != 1
+            narrationFlags = OPTION_FLAG_DISABLED
+        EndIf
+        playerDrinkNarrationCooldownOption = AddSliderOption("Player Drink Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
+        npcDrinkNarrationOption = AddToggleOption("NPC Drink Narration", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarration", 1) == 1)
+        narrationFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarration", 1) != 1
+            narrationFlags = OPTION_FLAG_DISABLED
+        EndIf
+        npcDrinkNarrationCooldownOption = AddSliderOption("NPC Drink Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "npcDrinkNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
         Return
     EndIf
     If page == "Debug"
+        AddHeaderOption("MME Extensions")
+        masterEnableOption = AddToggleOption("Enable MME Extensions", JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1) == 1)
         AddHeaderOption("Development Diagnostics")
         lifecycleDiagnosticOption = AddToggleOption("Location Wait Load", JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0) == 1)
         milkmaidCreationDiagnosticOption = AddToggleOption("Milkmaid Creation Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 1) == 1)
@@ -527,6 +630,8 @@ Event OnPageReset(String page)
         debugMilkReportOption = AddToggleOption("Milk Status Every 5 Seconds", JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0) == 1)
         addMilkDebugOption = AddToggleOption("Milk Drinking Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1)
         npcMilkConsumptionDiagnosticOption = AddToggleOption("NPC Milk Consumption", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0) == 1)
+        npcDrinkNotificationsDiagnosticOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1)
+        playerDrinkNotificationsDiagnosticOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0) == 1)
         SetCursorPosition(1)
         AddHeaderOption("Skyrim.Net Diagnostics")
         skyrimNetDrinkDiagnosticOption = AddToggleOption("Milk Drink Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0) == 1)
@@ -535,6 +640,9 @@ Event OnPageReset(String page)
         skyrimNetStatusDiagnosticOption = AddToggleOption("Nearby Milk Status Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", 0) == 1)
         skyrimNetPromptDiagnosticOption = AddToggleOption("Milkmaid Bio Prompt", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 1) == 1)
         milkFullNarrationDiagnosticOption = AddToggleOption("Milk Full Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarrationDiagnostic", 0) == 1)
+        milkHalfFullNarrationDiagnosticOption = AddToggleOption("Half-Full Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarrationDiagnostic", 0) == 1)
+        playerDrinkNarrationDiagnosticOption = AddToggleOption("Player Drink Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", 0) == 1)
+        npcDrinkNarrationDiagnosticOption = AddToggleOption("NPC Drink Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarrationDiagnostic", 0) == 1)
         AddHeaderOption("Arousal Diagnostics")
         arousalDiagnosticOption = AddToggleOption("Milk Arousal Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 0) == 1)
         AddHeaderOption("Dialogue Diagnostics")
@@ -556,7 +664,9 @@ EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
-    If option == soundsOption
+    If option == masterEnableOption
+        SetInfoText("Turn MME Extensions on or off.")
+    ElseIf option == soundsOption
         SetInfoText("Play reaction sounds for milking and milk drinking.")
     ElseIf option == volumeOption
         SetInfoText("Set the reaction sound volume.")
@@ -584,8 +694,14 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Play a five-second reaction animation after a Milkmaid drinks through dialogue.")
     ElseIf option == npcMilkEffectsOption
         SetInfoText("Apply milk, arousal, and moan effects when an MME Milkmaid consumes recognized milk.")
+    ElseIf option == npcDrinkNotificationsOption
+        SetInfoText("Show a notification after an NPC Milkmaid drinks recognized milk.")
+    ElseIf option == playerDrinkNotificationsOption
+        SetInfoText("Show a notification after you drink recognized milk.")
     ElseIf option == npcMilkConsumptionDiagnosticOption
         SetInfoText("Report native NPC milk detection, Milkmaid validation, duplicates, and applied effects.")
+    ElseIf option == npcDrinkNotificationsDiagnosticOption
+        SetInfoText("Report NPC drink notification skips and the effective milk and arousal results shown.")
     ElseIf option == debugMilkingEventsOption
         SetInfoText("Report each detected milking start and end.")
     ElseIf option == lifecycleDiagnosticOption
@@ -620,6 +736,26 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Set the global real-time delay between token-using milk-full narrations.")
     ElseIf option == milkFullNarrationDiagnosticOption
         SetInfoText("Report milk-full narration triggers, cooldowns, payload calls, and API results.")
+    ElseIf option == milkHalfFullNarrationOption
+        SetInfoText("Ask Skyrim.Net for one immediate Milk Maid reaction at half capacity. Uses LLM tokens.")
+    ElseIf option == milkHalfFullNarrationCooldownOption
+        SetInfoText("Set the global real-time delay between token-using half-full narrations.")
+    ElseIf option == milkHalfFullNarrationDiagnosticOption
+        SetInfoText("Report half-full narration triggers, cooldowns, payload calls, and API results.")
+    ElseIf option == playerDrinkNarrationOption
+        SetInfoText("Ask Skyrim.Net for one immediate reaction after you drink recognized milk. Uses LLM tokens.")
+    ElseIf option == playerDrinkNarrationCooldownOption
+        SetInfoText("Set the global real-time delay between token-using player drink narrations.")
+    ElseIf option == playerDrinkNarrationDiagnosticOption
+        SetInfoText("Report player drink narration detection, cooldowns, and API results.")
+    ElseIf option == playerDrinkNotificationsDiagnosticOption
+        SetInfoText("Report player drink notification skips and the effective milk and arousal results shown.")
+    ElseIf option == npcDrinkNarrationOption
+        SetInfoText("Ask Skyrim.Net for one immediate reaction when an NPC Milkmaid drinks supported milk. Uses LLM tokens.")
+    ElseIf option == npcDrinkNarrationCooldownOption
+        SetInfoText("Set the global real-time delay between token-using NPC drink narrations.")
+    ElseIf option == npcDrinkNarrationDiagnosticOption
+        SetInfoText("Report NPC drink detection, dialogue drinks, narration gates, cooldowns, and API results.")
     ElseIf option == skyrimNetMilkDrinksOption
         SetInfoText("Send recognized player milk drinks to SkyrimNet.")
     ElseIf option == skyrimNetMilkingEventsOption
@@ -641,7 +777,19 @@ EndEvent
 
 ; Persists toggle changes and refreshes only controllers affected by that option.
 Event OnOptionSelect(Int option)
-    If option == soundsOption
+    If option == masterEnableOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMMEExtensions", value)
+        SetToggleOptionValue(option, value == 1)
+        MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+        If controller != None
+            If value == 1
+                controller.InitializeController()
+            Else
+                controller.DisableController()
+            EndIf
+        EndIf
+    ElseIf option == soundsOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableReactionSounds", value)
         SetToggleOptionValue(option, value == 1)
@@ -688,6 +836,33 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarrationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkFullNarrationDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == milkHalfFullNarrationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkHalfFullNarration", value)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
+    ElseIf option == milkHalfFullNarrationDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarrationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkHalfFullNarrationDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == playerDrinkNarrationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarration", value)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
+    ElseIf option == playerDrinkNarrationDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == npcDrinkNarrationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNarration", value)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
+    ElseIf option == npcDrinkNarrationDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarrationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNarrationDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
     ElseIf option == lifecycleDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableLifecycleDiagnostic", value)
@@ -712,9 +887,25 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkEffects", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == npcDrinkNotificationsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNotifications", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == playerDrinkNotificationsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotifications", value)
+        SetToggleOptionValue(option, value == 1)
     ElseIf option == npcMilkConsumptionDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == npcDrinkNotificationsDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == playerDrinkNotificationsDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == skyrimNetDrinkDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0)
@@ -811,6 +1002,21 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(60.0)
         SetSliderDialogRange(10.0, 3600.0)
         SetSliderDialogInterval(10.0)
+    ElseIf option == milkHalfFullNarrationCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkHalfFullNarrationCooldown", 60.0))
+        SetSliderDialogDefaultValue(60.0)
+        SetSliderDialogRange(10.0, 3600.0)
+        SetSliderDialogInterval(10.0)
+    ElseIf option == playerDrinkNarrationCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0))
+        SetSliderDialogDefaultValue(60.0)
+        SetSliderDialogRange(10.0, 3600.0)
+        SetSliderDialogInterval(10.0)
+    ElseIf option == npcDrinkNarrationCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "npcDrinkNarrationCooldown", 60.0))
+        SetSliderDialogDefaultValue(60.0)
+        SetSliderDialogRange(10.0, 3600.0)
+        SetSliderDialogInterval(10.0)
     EndIf
 EndEvent
 
@@ -844,6 +1050,18 @@ Event OnOptionSliderAccept(Int option, Float value)
         SetSliderOptionValue(option, value, "+{0}")
     ElseIf option == milkFullNarrationCooldownOption
         JsonUtil.SetFloatValue(SettingsFile, "milkFullNarrationCooldown", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == milkHalfFullNarrationCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "milkHalfFullNarrationCooldown", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == playerDrinkNarrationCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == npcDrinkNarrationCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "npcDrinkNarrationCooldown", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
     EndIf

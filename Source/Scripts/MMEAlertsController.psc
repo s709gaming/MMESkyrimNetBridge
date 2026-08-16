@@ -10,6 +10,10 @@ Float NextCapacityUpdate = 0.0
 Float NextSkyrimNetUpdate = 0.0
 Float NextDebugUpdate = 0.0
 
+Bool Function IsExtensionsEnabled() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMMEExtensions", 1) == 1
+EndFunction
+
 ; Quest startup registers MME events and initializes the player monitor/poller.
 Event OnInit()
     InitializeController()
@@ -17,6 +21,10 @@ EndEvent
 
 ; Restores event registrations and abilities; called at startup and after load.
 Function InitializeController()
+    If !IsExtensionsEnabled()
+        DisableController()
+        Return
+    EndIf
     RegisterMilkingEvents()
     MMEAlertsSkyrimNet.RegisterPromptDecorator()
     UnregisterForModEvent("MMEExtensions_Lifecycle")
@@ -43,6 +51,20 @@ Function InitializeController()
     EndIf
     UpdatePolling()
     BaselineKnownMilkmaids()
+EndFunction
+
+; Stops scheduled work and event subscriptions without removing saved state.
+Function DisableController()
+    UnregisterForUpdate()
+    UnregisterForModEvent("MMEExtensions_Lifecycle")
+    UnregisterForModEvent("MMEExtensions_MMEEffectApplied")
+    UnregisterForModEvent("MME_AddMilkMaid")
+    UnregisterForModEvent("MilkQuest.StartMilkingMachine")
+    UnregisterForModEvent("MilkQuest.StopMilkingMachine")
+    UnregisterForModEvent("MME_MilkingDone")
+    NextCapacityUpdate = 0.0
+    NextSkyrimNetUpdate = 0.0
+    NextDebugUpdate = 0.0
 EndFunction
 
 ; Records Milkmaids already present when this version starts to avoid false creation reports.
@@ -93,6 +115,9 @@ EndFunction
 
 ; Receives filtered MME magic-effect applications from the CommonLib bridge.
 Event OnMMEEffectApplied(String eventName, String pluginName, Float localEffectForm, Form sender)
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     Actor candidate = sender as Actor
     If candidate == None || !IsMilkmaidCreationEffect(localEffectForm as Int)
         Return
@@ -102,6 +127,9 @@ EndEvent
 
 ; Adds coverage for third-party mods using MME's public creation request.
 Event OnMMEAddMilkmaidRequested(Form sender)
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     CheckMilkmaidCreation(sender as Actor, "MME_AddMilkMaid")
 EndEvent
 
@@ -149,6 +177,9 @@ EndFunction
 
 ; Receives low-cost lifecycle signals from the optional CommonLibSSE-NG DLL.
 Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form sender)
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     RefreshCapacity(reason)
     If JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0) == 1
         Debug.Notification("MME Extensions: detected " + reason)
@@ -179,6 +210,9 @@ EndFunction
 
 ; Handles MME's authoritative start broadcast and suppresses duplicate starts.
 Event OnMMEMilkingStart(Form actorForm, Int animationSpeed, Int milkingType)
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     Actor milkMaid = actorForm as Actor
     If !IsNearbyMilkMaid(milkMaid)
         Return
@@ -199,12 +233,18 @@ EndEvent
 
 ; Handles MME's animation-adjacent stop broadcast for timely ending audio.
 Event OnMMEMilkingStop(Form actorForm, Int animationSpeed, Int milkingType)
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     Actor milkMaid = actorForm as Actor
     FinishMilking(milkMaid)
 EndEvent
 
 ; Provides an authoritative completion fallback if the earlier stop was missed.
 Event OnMMEMilkingDone(Form actorForm, Int bottles, Int boobgasmCount, Int cumCount)
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     ; Completion is a fallback when MME's earlier stop event was missed. The
     ; per-actor state prevents the normal stop/done pair from playing twice.
     Actor milkMaid = actorForm as Actor
@@ -263,6 +303,12 @@ EndFunction
 ; Synchronizes optional capacity polling with its persisted MCM toggle.
 Function UpdatePolling()
     UnregisterForUpdate()
+    If !IsExtensionsEnabled()
+        NextCapacityUpdate = 0.0
+        NextSkyrimNetUpdate = 0.0
+        NextDebugUpdate = 0.0
+        Return
+    EndIf
     Float now = Utility.GetCurrentRealTime()
     If JsonUtil.GetIntValue(SettingsFile, "enableCapacityPolling", 1) == 1
         NextCapacityUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 15.0)
@@ -304,6 +350,9 @@ EndFunction
 
 ; Services independent local-capacity and SkyrimNet status schedules.
 Event OnUpdate()
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     Float now = Utility.GetCurrentRealTime()
     Bool capacityDue = NextCapacityUpdate > 0.0 && now >= NextCapacityUpdate
     Bool skyrimNetDue = NextSkyrimNetUpdate > 0.0 && now >= NextSkyrimNetUpdate
@@ -326,6 +375,9 @@ EndEvent
 
 ; Lets player lifecycle events request an immediate capacity rescan.
 Function RefreshCapacity(String reason = "event")
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
     ScanNearbyMilkMaids(False, True)
 EndFunction
 
@@ -475,6 +527,7 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     ; MME validation and all capacity behavior remain in ProcessActor below.
     String milkStatuses = ""
     Int milkmaidCount = 0
+    Bool halfFullMilestoneDetected = False
     Bool fullMilestoneDetected = False
     Int i = 0
     While i < nearbyActors.Length
@@ -483,6 +536,8 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
             Int crossing = ProcessActor(candidate, reactionActors, reactionKinds, processReactions)
             If crossing == 2
                 fullMilestoneDetected = True
+            ElseIf crossing == 1
+                halfFullMilestoneDetected = True
             EndIf
         EndIf
         String status = EvaluateMilkMaidFlavor(candidate)
@@ -500,6 +555,9 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     EndIf
     If fullMilestoneDetected
         MMEAlertsSkyrimNet.NarrateMilkFull()
+    EndIf
+    If halfFullMilestoneDetected
+        MMEAlertsSkyrimNet.NarrateMilkHalfFull()
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0) == 1
         Debug.Notification("Native Scan active: " + nearbyActors.Length + " nearby actors")
