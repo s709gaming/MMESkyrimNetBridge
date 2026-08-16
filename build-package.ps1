@@ -17,6 +17,8 @@ $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $gameRoot "Data\SEQ\MMEAlert.seq"
 $scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMENPCDialog", "MMEExtensionsNative")
+$quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
+$quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 
 $nativeDll = Join-Path $projectRoot "build\native-release\package\SKSE\Plugins\MMEExtensions.dll"
 
@@ -33,6 +35,9 @@ foreach ($scriptName in $scriptNames) {
         throw "Required source script not found: $sourcePath"
     }
 }
+if (!(Test-Path -LiteralPath (Join-Path $quickStartSourceDir "MMEAlertsQuickTest.psc"))) {
+    throw "QuickStart source script not found: $quickStartSourceDir\MMEAlertsQuickTest.psc"
+}
 
 # Compile the debug scripts against the installed SKSE and Skyrim sources.
 New-Item -ItemType Directory -Force -Path $compiledDir | Out-Null
@@ -45,6 +50,21 @@ foreach ($scriptName in $scriptNames) {
     }
 }
 
+# The base package is inert; compile the Recommended-only QuickStart override
+# into its FOMOD choice folder with the same script name.
+New-Item -ItemType Directory -Force -Path $quickStartOutputDir | Out-Null
+Push-Location $quickStartSourceDir
+try {
+    Write-Host "Compiling Recommended QuickStart override..." -ForegroundColor Cyan
+    & $compiler "MMEAlertsQuickTest.psc" "-f=$flags" "-i=$quickStartSourceDir;$imports" "-o=$quickStartOutputDir"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Compilation failed for Recommended QuickStart override"
+    }
+}
+finally {
+    Pop-Location
+}
+
 # Recreate a clean staging directory with Skyrim/Vortex-compatible paths.
 if (Test-Path -LiteralPath $stageDir) {
     Remove-Item -LiteralPath $stageDir -Recurse -Force
@@ -55,7 +75,7 @@ $packageSounds = Join-Path $stageDir "Sound\fx\MMESkyrimNetBridge"
 $packageSKSEPlugins = Join-Path $stageDir "SKSE\Plugins"
 New-Item -ItemType Directory -Force -Path $packageScripts, $packageSources, $packageSounds, $packageSKSEPlugins | Out-Null
 
-# Include the simple FOMOD choice for the optional personal MME defaults profile.
+# Include the FOMOD startup-profile choices and their Recommended QuickStart override.
 $fomodSource = Join-Path $projectRoot "fomod"
 If (Test-Path -LiteralPath $fomodSource) {
     Copy-Item -LiteralPath $fomodSource -Destination $stageDir -Recurse

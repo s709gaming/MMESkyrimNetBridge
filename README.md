@@ -131,7 +131,7 @@ MMEMilkBoost.psc — shared milk-bonus calculation and MME capacity-safe applica
 MMEArousalBridge.psc — optional SexLab Aroused/OSLAroused detection and arousal updates without a hard script dependency.
 MMENPCDialog.psc — Milkmaid-only dialogue validation, inventory priority, transfer, consumption, extension effects, and optional animation.
 MMEAlertsFlatRateDefaults.psc — optional FOMOD-selected MME MCM preset; captures values so its changes can be reversed.
-MMEAlertsQuickTest.psc — inert compatibility placeholder for the former development item helper; retained because the ESP and older saves may reference it.
+MMEAlertsQuickTest.psc — inert compatibility placeholder. The Recommended FOMOD startup profile replaces it with an isolated, once-per-save starter-milk helper.
 MMEDebug.psc — passive debug helper retained for focused troubleshooting.
 MMEExtensionsNative.psc — Papyrus declaration for the DLL’s native nearby-actor function.
 MMESkyrimNetVoiceControls.psc — archived experimental actions; deliberately excluded from release compilation.

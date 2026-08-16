@@ -12,25 +12,32 @@
     <file source="README.md" destination="README.md" priority="0" />
   </requiredInstallFiles>
   <installSteps order="Explicit">
-    <installStep name="MME Gameplay Defaults">
+    <installStep name="QuickStart and MME Defaults">
       <optionalFileGroups order="Explicit">
-        <group name="Choose whether to preload MME MCM values" type="SelectExactlyOne">
+        <group name="Choose a startup profile" type="SelectExactlyOne">
           <plugins order="Explicit">
-            <plugin name="Recommended MME MCM Defaults">
-              <description>Preloads the author's preferred MME MCM values. These remain ordinary in-game settings and can be changed at any time.
-
-Enables natural milk production without mandatory Lactacid, roughly daily milking cycles, Novice progression, 3BA-friendly breast scaling, and 100% gush chance to avoid extra milking delay.
-
-Recommended and fully reversible through the MCM.</description>
+            <plugin name="(Recommended) Easy MCM Defaults + Free milk on start">
+              <description>Applies the Easy MCM defaults and grants three Lactacid plus three of each starter milk once on a new save.</description>
               <files>
                 <file source="fomod\choices\recommended\Installer.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\Installer.json" priority="0" />
+                <file source="fomod\choices\recommended-quickstart\Scripts\MMEAlertsQuickTest.pex" destination="Scripts\MMEAlertsQuickTest.pex" priority="1" />
+                <file source="fomod\choices\recommended-quickstart\Source\Scripts\MMEAlertsQuickTest.psc" destination="Source\Scripts\MMEAlertsQuickTest.psc" priority="1" />
               </files>
               <typeDescriptor>
                 <type name="Recommended" />
               </typeDescriptor>
             </plugin>
-            <plugin name="Keep MME Defaults">
-              <description>Does not preload any MME MCM values. MME retains its existing settings.</description>
+            <plugin name="(Balanced) Easy MCM Defaults + No milk on start">
+              <description>Applies the Easy MCM defaults without granting starter milk items.</description>
+              <files>
+                <file source="fomod\choices\recommended\Installer.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\Installer.json" priority="0" />
+              </files>
+              <typeDescriptor>
+                <type name="Optional" />
+              </typeDescriptor>
+            </plugin>
+            <plugin name="(Vanilla) Keep original MME Defaults + No milk on start">
+              <description>Keeps MME's original defaults and does not grant starter milk items.</description>
               <files>
                 <file source="fomod\choices\standard\Installer.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\Installer.json" priority="0" />
               </files>
