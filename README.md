@@ -19,6 +19,7 @@ With **Skyrim.Net**, those reactions can go even further. The AI can understand 
 
 > [!IMPORTANT]
 > **Skyrim.Net is completely optional.**
+>
 > Sounds, notifications, milk effects, dialogue, animations, and other core features work without it.
 
 <img width="1164" height="864" alt="main menu" src="https://github.com/user-attachments/assets/0b3a32d7-574c-4b9f-b147-98260b94ceff" />
@@ -42,13 +43,13 @@ With **Skyrim.Net**, those reactions can go even further. The AI can understand 
 
 Skyrim.Net can do more than simply talk about milking.
 
-Natural conversation can now lead into **actual MME gameplay actions**.
+Natural conversation can lead into **actual MME gameplay actions**.
 
 ### Milk Maid Self-Milking
 
 An appropriate Milk Maid can decide to **milk herself for relief** when the situation naturally calls for it.
 
-A very full and milky Milk Maid is given context encouraging the AI to strongly consider milking when appropriate.
+A very full and milky Milk Maid is given context encouraging the AI to consider milking when appropriate.
 
 ### Breastfeeding / Milk Sharing
 
@@ -93,6 +94,14 @@ You can optionally add **half of the Milk Maid's level** to the amount gained fr
 Lactacid also has its own adjustable multiplier.
 
 MME Extensions increases current MME milk level and uses MME's existing milk functions and capacity limits.
+
+### Arousal Can Lead to More
+
+With optional arousal integration enabled, drinking milk can also feed into the **much larger Skyrim arousal ecosystem**.
+
+Other mods can use that rising arousal to trigger animations, encounters, events, AI behavior, and more.
+
+➡️ See the **[Full Requirements & Recommended Setup](REQUIREMENTS.md)** for examples.
 
 ---
 
@@ -241,7 +250,7 @@ https://github.com/Severause/SeverActions
 
 Recommended for broader conversation-driven Skyrim.Net gameplay actions.
 
-SeverActions gives the AI many more ways to physically interact with the game world instead of only talking about doing things.
+SeverActions gives the AI more ways to physically interact with the game world instead of only talking about doing things.
 
 For MME Extensions, it can be particularly useful for interactions such as naturally convincing a Milk Maid to **drink milk through conversation**, rather than relying only on the normal **"Hey, there"** dialogue.
 
@@ -364,7 +373,7 @@ Leaves MME's original settings and starter behavior unchanged.
 
 # 📥 Installation
 
-For the complete dependency list, Skyrim VR setup, BodySlide instructions, breast-scaling setup, and optional integrations:
+For the complete dependency list, Skyrim VR setup, BodySlide instructions, breast-scaling setup, optional integrations, and visual recommendations:
 
 ➡️ **[Full Requirements & Recommended Setup](REQUIREMENTS.md)**
 
@@ -399,6 +408,7 @@ Small features may still appear during testing.
 
 > [!WARNING]
 > This is still a Beta.
+>
 > Keep backups and avoid risking an important save until the mod receives broader testing.
 
 MME Extensions does **not overwrite the original Milk Mod Economy files**.
