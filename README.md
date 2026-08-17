@@ -66,27 +66,6 @@ Instead of characters agreeing to something and then doing nothing:
 
 These gameplay actions are optional and can be disabled through the MCM.
 
-### Skyrim.Net Developer Actions
-
-MME Extensions exposes gameplay actions that other Skyrim.Net setups can build around:
-
-- `StartMilkMaidSelfMilking`  
-  Starts MME self-milking for a valid Milk Maid.
-
-- `StartBreastfeedingMilkShare`  
-  Starts an MME breastfeeding / milk-sharing scene between two actors.
-
-- `GiveMilkToMilkmaid`  
-  Gives and consumes a supported milk item through the MME Extensions drinking pipeline.
-
-These can be useful when creating additional Skyrim.Net actions, prompts, or integrations.
-
-See:
-
-`Source/Scripts/MMESkyrimNetVoiceControls.psc`
-
-for the current implementation and validation.
-
 ---
 
 ## 🥛 Drink ANY Milk
@@ -136,8 +115,7 @@ The NPC actually consumes the drink and receives the same enabled:
 - Reaction sounds.
 - Notifications.
 - Skyrim.Net reactions.
-
-An optional MME drinking animation can play afterward.
+- Optional lewd reaction animation afterward.
 
 ---
 
@@ -153,7 +131,7 @@ When a Milk Maid reaches half capacity:
 
 - Gentle reaction/moan.
 - Optional in-game notification.
-- Optional short self-milking animation.
+- Optional short **breast-fondling animation**.
 - Skyrim.Net receives updated context.
 - Optional forced Skyrim.Net narration lets nearby characters react immediately.
 
@@ -163,14 +141,12 @@ When a Milk Maid becomes completely full:
 
 - Stronger reaction/moan.
 - Optional in-game notification.
-- Optional short self-milking animation.
+- Optional short **breast-fondling animation**.
 - Skyrim.Net receives a more urgent and suggestive description.
 - Optional forced narration lets nearby characters immediately react.
 - MME continues to handle its normal full/leaking behavior.
 
-The fullness animations use MME's existing standing milking animations without actually starting a milking session.
-
-The 50% and 100% animations can be enabled independently.
+The 50% and 100% reaction animations can be enabled independently.
 
 Animation duration can be adjusted through the **Animations MCM page** from **0 to 10 seconds**.
 
@@ -341,7 +317,7 @@ Controls include:
 - Lactacid multiplier.
 - Arousal gain.
 - NPC drinking notifications.
-- Milk-drinking animations.
+- Milk-drinking reaction animations.
 - 50% fullness animations.
 - 100% fullness animations.
 - Animation duration.
@@ -388,7 +364,7 @@ Leaves MME's original settings and starter behavior unchanged.
 
 # 📥 Installation
 
-For the complete dependency list, Skyrim VR setup, BodySlide instructions, and recommended breast-scaling setup:
+For the complete dependency list, Skyrim VR setup, BodySlide instructions, breast-scaling setup, and optional integrations:
 
 ➡️ **[Full Requirements & Recommended Setup](REQUIREMENTS.md)**
 
@@ -543,7 +519,33 @@ Polling remains available only where useful, with an adjustable interval.
 5. Confirm that General, Milk Drinking, Animations, Arousal, Skyrim.Net, and Debug pages appear in the MCM.
 6. Remove or clearly identify test-only helpers before release.
 
+## Skyrim.Net Developer Actions
+
+MME Extensions exposes gameplay actions that other Skyrim.Net mods and integrations can build around.
+
+### `StartMilkMaidSelfMilking`
+
+Starts MME self-milking for a valid Milk Maid.
+
+### `StartBreastfeedingMilkShare`
+
+Starts an MME breastfeeding / milk-sharing scene between two actors.
+
+### `GiveMilkToMilkmaid`
+
+Gives and consumes a supported milk item through the MME Extensions drinking pipeline.
+
+These can be useful when creating additional Skyrim.Net actions, prompts, or integrations.
+
+See:
+
+`Source/Scripts/MMESkyrimNetVoiceControls.psc`
+
+for the current implementation and validation.
+
 </details>
+
+---
 
 # Source Code
 
@@ -554,7 +556,6 @@ https://github.com/s709gaming/MMESkyrimNetBridge
 - **Ed86** - Milk Mod Economy
 - **MinLL and contributors** - Skyrim.Net
 - **CharmedBaryon and contributors** - CommonLibSSE-NG
-- **GoodProvider** - Skyrim.net Sexlab Integrations
 
 # License / Permissions
 
