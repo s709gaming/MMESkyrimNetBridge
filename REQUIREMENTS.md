@@ -200,7 +200,7 @@ Optional higher-detail replacer for many named NPCs.
 
 ## My Tasteful Body - CBBE 3BA BodySlide Preset
 
-https://www.nexusmods.com/skyrimspecialedition/mods/78210
+https://www.nexusmods.com/skyrimspecialedition/mods/67370
 
 **Highly optional.**
 
