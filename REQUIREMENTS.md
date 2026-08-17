@@ -1,6 +1,6 @@
 # Requirements & Recommended Setup
 
-This page covers the required and recommended setup for **MME Extensions**, including Milk Mod Economy, breast scaling, physics, visual mods, and Skyrim VR.
+This page covers the required and recommended setup for **MME Extensions**, including Milk Mod Economy, Skyrim VR, breast scaling, optional integrations, physics, and visual mods.
 
 ---
 
@@ -42,15 +42,27 @@ Required by Milk Mod Economy and its SexLab-based scenes.
 
 ---
 
+## Address Library for SKSE Plugins
+
+https://www.nexusmods.com/skyrimspecialedition/mods/32444
+
+Required by the MME Extensions CommonLibSSE-NG DLL.
+
+---
+
 ## Skyrim SE / AE
 
-Tested primarily on:
+Tested on:
 
 **Skyrim SE / AE 1.6.1170**
 
 ---
 
 # 2. Skyrim VR Requirements
+
+Tested on:
+
+**Skyrim VR 1.4.15**
 
 Skyrim VR requires a VR-compatible SexLab setup.
 
@@ -66,7 +78,7 @@ https://www.loverslab.com/topic/132489-skyrim-sexlab-and-vr/page/54/#findComment
 
 Do not simply install the normal SE / AE SexLab package for Skyrim VR.
 
-MME Extensions includes Skyrim VR support, but VR remains less extensively tested than SE / AE.
+MME Extensions supports Skyrim VR, but VR remains less extensively tested than SE / AE.
 
 ---
 
@@ -74,7 +86,7 @@ MME Extensions includes Skyrim VR support, but VR remains less extensively teste
 
 These are **not hard requirements for MME Extensions itself**.
 
-They are recommended if you want Milk Mod Economy's breast growth and scaling to look and behave properly with a modern body setup.
+They are recommended if you want Milk Mod Economy's breast growth and scaling to work well with a modern 3BA setup.
 
 ## CBBE
 
@@ -132,11 +144,75 @@ Useful for getting Milk Mod Economy breast growth working cleanly with a modern 
 
 ---
 
-# 4. Optional Physics / Visual Setup
+# 4. Optional Integrations
 
-None of the mods below are required for MME Extensions.
+None of these are required for the core MME Extensions features.
 
-They are examples of body, physics, clothing, NPC, and visual setups that work well with this type of mod.
+Install them only if you want the related functionality.
+
+## SexLab Aroused / OSLAroused
+
+Optional arousal integration.
+
+Use one compatible arousal framework if you want supported milk drinking and related events to increase arousal.
+
+Without an arousal framework, MME Extensions simply skips its optional arousal effects.
+
+---
+
+## Skyrim.Net
+
+https://github.com/MinLL/SkyrimNet-GamePlugin
+
+Optional AI integration.
+
+Skyrim.Net enables features such as:
+
+- Milk Maid context.
+- Fullness awareness.
+- Milk-drinking reactions.
+- Forced narration.
+- New Milk Maid reactions.
+- Conversation-driven gameplay actions.
+- Self-milking.
+- Breastfeeding / milk-sharing.
+
+MME Extensions' local sounds, notifications, milk effects, animations, and normal dialogue work without Skyrim.Net.
+
+---
+
+## SeverActions
+
+https://github.com/Severause/SeverActions
+
+Optional Skyrim.Net add-on.
+
+Adds broader conversation-driven gameplay actions and gives Skyrim.Net more ways to physically interact with the game world.
+
+Useful alongside MME Extensions, but not required.
+
+---
+
+## SkyrimNet_SexLab
+
+https://github.com/GoodProvider/SkyrimNet_SexLab
+
+Optional Skyrim.Net / SexLab integration.
+
+MME Extensions already includes its own:
+
+- Milk Maid self-milking action.
+- Breastfeeding / milk-sharing action.
+
+SkyrimNet_SexLab is **not required** for those features.
+
+It can still improve the surrounding SexLab experience with additional scene-aware context, narration, reactions, and actions.
+
+---
+
+# 5. Optional Physics
+
+These are not required by MME Extensions itself, but are commonly useful with 3BA.
 
 ## CBPC - Physics with Collisions
 
@@ -155,6 +231,14 @@ Provides SMP physics for supported bodies, clothing, hair, and other meshes.
 Depending on your setup, 3BA can use CBPC, FSMP, or a combination of both.
 
 ---
+
+# 6. Optional Personal Visual Setup
+
+The mods below are **NOT required** for MME Extensions.
+
+They are simply part of the more lewd / polished visual setup I personally use.
+
+I am including them because they may help users who want a similar look.
 
 ## Ghaans Revealing CBBE 3BBB Outfits
 
@@ -217,12 +301,18 @@ Useful if you want an exaggerated body shape where Milk Mod Economy's breast sca
 - Milk Mod Economy SE
 - Milk Mod Economy's own requirements
 - SexLab Framework
+- Address Library
 - SKSE
 - SkyUI
 - RaceMenu
 - XPMSSE
 - Compatible body / skeleton
 - FNIS, Nemesis, or Pandora
+
+## Skyrim VR
+
+- Skyrim VR 1.4.15 tested
+- VR-compatible SexLab setup required
 
 ## Recommended for Breast Scaling
 
@@ -232,10 +322,20 @@ Useful if you want an exaggerated body shape where Milk Mod Economy's breast sca
 - SLIF
 - Tullius 3BA / 3BBB BodyMorph configuration
 
-## Optional Physics / Visual Setup
+## Optional Integrations
+
+- SexLab Aroused / OSLAroused
+- Skyrim.Net
+- SeverActions
+- SkyrimNet_SexLab
+
+## Optional Physics
 
 - CBPC
 - FSMP
+
+## Optional Personal Visual Setup
+
 - Ghaans outfits
 - BD's armor replacer
 - Botox
@@ -244,4 +344,4 @@ Useful if you want an exaggerated body shape where Milk Mod Economy's breast sca
 
 If you only care about getting **MME Extensions working**, start with the hard requirements.
 
-The rest is primarily for improving breast scaling, physics, outfits, and character appearance.
+The rest adds breast scaling support, AI integration, physics, or optional visual improvements.
