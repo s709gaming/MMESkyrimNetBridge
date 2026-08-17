@@ -154,9 +154,28 @@ Install them only if you want the related functionality.
 
 Optional arousal integration.
 
-Use one compatible arousal framework if you want supported milk drinking and related events to increase arousal.
+MME Extensions can increase a Milk Maid's arousal from drinking milk and other supported events.
 
-Without an arousal framework, MME Extensions simply skips its optional arousal effects.
+This is more powerful than simply changing an arousal number. **Arousal is supported by a huge ecosystem of Skyrim mods**, so increasing it can naturally trigger or influence features created by many other mod authors.
+
+Depending on your setup, high arousal can lead to things such as:
+
+- **AI-driven events and reactions**  
+  https://discord.com/channels/1287232260617015336/1467570238546513940
+
+- **Arousal-triggered animations**  
+  https://www.nexusmods.com/skyrimspecialedition/mods/103427
+
+- **Non-AI arousal-triggered SexLab encounters**, such as Arousal Based Match Maker (ABMM)  
+  https://www.loverslab.com/files/file/8595-arousal-based-match-maker-abmm/
+
+These are only a few examples.
+
+The Skyrim arousal mod ecosystem is **far too large to document here**, and many other mods can react to SexLab Aroused / OSLAroused values in their own ways.
+
+MME Extensions simply provides the optional arousal increase. **What that arousal causes afterward depends on the other mods in your load order.**
+
+Without a compatible arousal framework, MME Extensions simply skips its optional arousal effects.
 
 ---
 
