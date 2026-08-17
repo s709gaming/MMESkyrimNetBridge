@@ -76,6 +76,7 @@ If the player or an NPC Milk Maid drinks supported milk:
 - **Her tits get BIGGER** by increasing her current milk level.
 - **Optional: She gets HORNIER** through SexLab Aroused or OSLAroused.
 - **She can moan with pleasure** when reaction sounds are enabled.
+- **NPCs falls on her knees fondling her chest** milk is just THAT good.
 - An in-game notification can tell you what she drank.
 - Skyrim.Net can immediately recognize and react to the drink.
 - Optional forced narration lets nearby characters react immediately.
