@@ -333,6 +333,10 @@ Useful if you want an exaggerated body shape where Milk Mod Economy's breast sca
 - Skyrim VR 1.4.15 tested
 - VR-compatible SexLab setup required
 
+## Skyrim VR Optionals (use your imagination) 
+- AI NPC TOUCH Reactions. https://github.com/Telord72612/VRTouchEvents
+- Aroused by Touch. https://www.nexusmods.com/skyrimspecialedition/mods/126800
+
 ## Recommended for Breast Scaling
 
 - CBBE
