@@ -131,16 +131,7 @@ SLIF can help coordinate and adjust scaling when Milk Mod Economy or multiple ot
 ## Tullius 3BA / 3BBB SLIF BodyMorph Setup
 
 Guide:
-
-https://gall.dcinside.com/mgallery/board/view/?id=tullius&no=54877
-
-BodyMorph preset:
-
-https://drive.google.com/open?id=1MSq1Y0kxjdOn0qIWgwy0D1vLDX_klGHf
-
-Community BodyMorph configuration designed around 3BBB / 3BA-style scaling.
-
-Useful for getting Milk Mod Economy breast growth working cleanly with a modern 3BA setup.
+https://www.loverslab.com/topic/133779-cbbe-3bbb-advanced/#findComment-2820451
 
 ---
 
