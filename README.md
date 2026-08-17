@@ -69,7 +69,7 @@ These gameplay actions are optional and can be disabled through the MCM.
 
 ---
 
-## 🥛 Drink ANY Milk
+## 🥛 Drink ANY Milk (now powerful aphrodisiacs)
 
 If the player or an NPC Milk Maid drinks supported milk:
 
