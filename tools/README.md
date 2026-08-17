@@ -9,6 +9,7 @@ The `.pas` files are retained for archival and reproducibility purposes. Run the
 These scripts modify plugin records:
 
 - `AddMMEExtensionsMilkDialogue.pas`
+- `AttachMMESkyrimNetVoiceControls.pas`
 - `CreateMMEAlertMinimalSounds.pas`
 - `CreateMMEAlertSoundMarkers.pas`
 - `CreateMMEAlertSoundPools.pas`
@@ -21,3 +22,7 @@ These scripts inspect records without intentionally changing them:
 - `InspectSkyrimNetPlayerAlias.pas`
 
 The PowerShell and batch files in this folder are developer maintenance helpers and are not included in the game package.
+
+## SDK Shims
+
+`mme-sdk` includes small declaration-only shims for external Papyrus APIs used by the action bridge. They keep release builds independent of unrelated optional source dependencies; Skyrim resolves the real MME and SexLab implementations at runtime.

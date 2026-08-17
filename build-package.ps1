@@ -109,6 +109,15 @@ if (Test-Path -LiteralPath $milkmaidPrompt) {
     Copy-Item -LiteralPath $milkmaidPrompt -Destination $promptDestination
 }
 
+# Skyrim.Net YAML maps its conversational speaker and dynamic target directly
+# to the two-actor milk-sharing bridge on MMEAlertDebugQuest.
+$milkShareAction = Join-Path $projectRoot "SkyrimNetActions\mme_breastfeeding_milk_share.yaml"
+if (Test-Path -LiteralPath $milkShareAction) {
+    $actionDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\config\actions"
+    New-Item -ItemType Directory -Force -Path $actionDestination | Out-Null
+    Copy-Item -LiteralPath $milkShareAction -Destination $actionDestination
+}
+
 # Package the SSEEdit-built randomized voice pools and the two legacy test files.
 $testSoundRoot = Join-Path $projectRoot "assets\sounds"
 if (Test-Path -LiteralPath $testSoundRoot) {

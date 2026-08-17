@@ -502,6 +502,7 @@ Polling remains available only where useful, with an adjustable interval.
 - `fomod/` — installer metadata and optional defaults.
 - `assets/sounds/` — reaction sound pools.
 - `tools/README.md` — archival xEdit/Pascal tooling guidance.
+- `tools/mme-sdk/` — minimal compile-time declarations for MME, SexLab, and SkyUI APIs; runtime calls resolve against installed mods
 
 ## Build Notes
 

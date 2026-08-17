@@ -28,6 +28,11 @@ Int milkDrinkArousalAmountOption
 Int arousalDiagnosticOption
 Int dialogueDiagnosticOption
 Int npcDrinkAnimationOption
+Int npcDrinkAnimationDurationOption
+Int halfFullSelfMilkAnimationOption
+Int fullSelfMilkAnimationOption
+Int fullnessSelfMilkAnimationDurationOption
+Int fullnessSelfMilkAnimationDiagnosticOption
 Int npcMilkEffectsOption
 Int npcMilkConsumptionDiagnosticOption
 Int npcDrinkNotificationsOption
@@ -66,18 +71,19 @@ Int masterEnableOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 64
+    Return 66
 EndFunction
 
 Function SetPageNames()
-    Pages = new String[5]
+    Pages = new String[6]
     Pages[0] = "General"
     Pages[1] = "Milk Drinking"
     ; Build this at runtime to prevent Papyrus's case-insensitive string table
     ; from reusing the lowercase arousal token found in integration symbols.
-    Pages[2] = "A" + "rousal "
-    Pages[3] = "Skyrim.Net"
-    Pages[4] = "Debug"
+    Pages[2] = "Animations"
+    Pages[3] = "A" + "rousal "
+    Pages[4] = "Skyrim.Net"
+    Pages[5] = "Debug"
 EndFunction
 
 ; Creates the MCM pages and initializes controllers on first registration.
@@ -177,6 +183,11 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "npcDrinkAnimationDuration", 3.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableHalfFullSelfMilkAnimation", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableFullSelfMilkAnimation", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "fullnessSelfMilkAnimationDuration", 3.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkEffects", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1)
@@ -523,6 +534,19 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "milkmaidNarrationMigration64", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "fullnessSelfMilkAnimationMigration65", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableHalfFullSelfMilkAnimation", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableFullSelfMilkAnimation", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "fullnessSelfMilkAnimationMigration65", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "animationDurationMigration66", 0) == 0
+        JsonUtil.SetFloatValue(SettingsFile, "npcDrinkAnimationDuration", 3.0)
+        JsonUtil.SetFloatValue(SettingsFile, "fullnessSelfMilkAnimationDuration", 3.0)
+        JsonUtil.SetIntValue(SettingsFile, "animationDurationMigration66", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 ; Renders the selected SkyUI page from persisted JContainers settings.
@@ -555,6 +579,11 @@ Event OnPageReset(String page)
     arousalDiagnosticOption = -1
     dialogueDiagnosticOption = -1
     npcDrinkAnimationOption = -1
+    npcDrinkAnimationDurationOption = -1
+    halfFullSelfMilkAnimationOption = -1
+    fullSelfMilkAnimationOption = -1
+    fullnessSelfMilkAnimationDurationOption = -1
+    fullnessSelfMilkAnimationDiagnosticOption = -1
     npcMilkEffectsOption = -1
     npcMilkConsumptionDiagnosticOption = -1
     npcDrinkNotificationsOption = -1
@@ -601,8 +630,16 @@ Event OnPageReset(String page)
         npcDrinkNotificationsOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1) == 1)
         AddHeaderOption("Player Milk Drinking")
         playerDrinkNotificationsOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1) == 1)
-        AddHeaderOption("NPC Dialogue")
+        Return
+    EndIf
+    If page == "Animations"
+        AddHeaderOption("Milk Drinking")
         npcDrinkAnimationOption = AddToggleOption("NPC Milk-Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0) == 1)
+        npcDrinkAnimationDurationOption = AddSliderOption("Milk-Drink Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "npcDrinkAnimationDuration", 3.0), "{0} seconds")
+        AddHeaderOption("Fullness Self-Milk")
+        halfFullSelfMilkAnimationOption = AddToggleOption("Half-Full Self-Milk Animation", JsonUtil.GetIntValue(SettingsFile, "enableHalfFullSelfMilkAnimation", 1) == 1)
+        fullSelfMilkAnimationOption = AddToggleOption("Full Self-Milk Animation", JsonUtil.GetIntValue(SettingsFile, "enableFullSelfMilkAnimation", 1) == 1)
+        fullnessSelfMilkAnimationDurationOption = AddSliderOption("Fullness Self-Milk Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "fullnessSelfMilkAnimationDuration", 3.0), "{0} seconds")
         Return
     EndIf
     If page == "A" + "rousal "
@@ -682,6 +719,7 @@ Event OnPageReset(String page)
         playerDrinkNotificationsDiagnosticOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0) == 1)
         selfMilkingActionDiagnosticOption = AddToggleOption("Self-Milking Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0) == 1)
         pairedMilkingActionDiagnosticOption = AddToggleOption("Paired Milking Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0) == 1)
+        fullnessSelfMilkAnimationDiagnosticOption = AddToggleOption("Fullness Self-Milk Animation", JsonUtil.GetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0) == 1)
         SetCursorPosition(1)
         AddHeaderOption("Skyrim.Net Diagnostics")
         skyrimNetDrinkDiagnosticOption = AddToggleOption("Milk Drink Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0) == 1)
@@ -742,7 +780,15 @@ Event OnOptionHighlight(Int option)
     ElseIf option == lactacidMultiplierOption
         SetInfoText("Multiply Lactacid's Flat Bonus from 0 to 2. MME Level Bonus is separate.")
     ElseIf option == npcDrinkAnimationOption
-        SetInfoText("Play a five-second reaction animation after a Milkmaid drinks through dialogue.")
+        SetInfoText("Play MME's original Lactacid/New Milkmaid reaction animation after a Milkmaid drinks through dialogue.")
+    ElseIf option == npcDrinkAnimationDurationOption
+        SetInfoText("Set how long the Milk-Drink Animation plays before the actor returns to idle.")
+    ElseIf option == halfFullSelfMilkAnimationOption
+        SetInfoText("Play MME's Self-Milk animation for about two seconds when a Milkmaid crosses 50% fullness.")
+    ElseIf option == fullSelfMilkAnimationOption
+        SetInfoText("Play MME's standing milking animation when a Milkmaid crosses 100% fullness, without triggering milking.")
+    ElseIf option == fullnessSelfMilkAnimationDurationOption
+        SetInfoText("Set how long both fullness self-milk animations play before the actor returns to idle.")
     ElseIf option == npcMilkEffectsOption
         SetInfoText("Apply milk, arousal, and moan effects when an MME Milkmaid consumes recognized milk.")
     ElseIf option == npcDrinkNotificationsOption
@@ -817,6 +863,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report self-milking action registration, Milk Maid checks, and spell requests.")
     ElseIf option == pairedMilkingActionDiagnosticOption
         SetInfoText("Report paired milking action registration, actor selection, dependency checks, and scene results.")
+    ElseIf option == fullnessSelfMilkAnimationDiagnosticOption
+        SetInfoText("Report the actor, fullness threshold, self-milk animation start, stop, and failure reasons.")
     ElseIf option == npcDrinkNarrationOption
         SetInfoText("Ask Skyrim.Net for one immediate reaction when an NPC Milkmaid drinks supported milk. Uses LLM tokens.")
     ElseIf option == npcDrinkNarrationCooldownOption
@@ -984,11 +1032,6 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", value)
         SetToggleOptionValue(option, value == 1)
-        If value == 1
-            MMESkyrimNetVoiceControls.RegisterVoiceMilkingAction()
-        ElseIf MMEAlertsSkyrimNet.IsAvailable()
-            SkyrimNetApi.UnregisterAction("StartBreastfeedingMilkShare")
-        EndIf
     ElseIf option == npcMilkConsumptionDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", value)
@@ -1063,6 +1106,18 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == halfFullSelfMilkAnimationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableHalfFullSelfMilkAnimation", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableHalfFullSelfMilkAnimation", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == fullSelfMilkAnimationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableFullSelfMilkAnimation", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableFullSelfMilkAnimation", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == fullnessSelfMilkAnimationDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
     EndIf
     JsonUtil.Save(SettingsFile, False)
 EndEvent
@@ -1129,6 +1184,16 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(60.0)
         SetSliderDialogRange(10.0, 3600.0)
         SetSliderDialogInterval(10.0)
+    ElseIf option == npcDrinkAnimationDurationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "npcDrinkAnimationDuration", 3.0))
+        SetSliderDialogDefaultValue(3.0)
+        SetSliderDialogRange(0.0, 10.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == fullnessSelfMilkAnimationDurationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "fullnessSelfMilkAnimationDuration", 3.0))
+        SetSliderDialogDefaultValue(3.0)
+        SetSliderDialogRange(0.0, 10.0)
+        SetSliderDialogInterval(1.0)
     EndIf
 EndEvent
 
@@ -1182,6 +1247,14 @@ Event OnOptionSliderAccept(Int option, Float value)
         SetSliderOptionValue(option, value, "{0} seconds")
     ElseIf option == npcDrinkNarrationCooldownOption
         JsonUtil.SetFloatValue(SettingsFile, "npcDrinkNarrationCooldown", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == npcDrinkAnimationDurationOption
+        JsonUtil.SetFloatValue(SettingsFile, "npcDrinkAnimationDuration", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == fullnessSelfMilkAnimationDurationOption
+        JsonUtil.SetFloatValue(SettingsFile, "fullnessSelfMilkAnimationDuration", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
     EndIf

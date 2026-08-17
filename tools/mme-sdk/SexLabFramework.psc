@@ -1,5 +1,6 @@
 Scriptname SexLabFramework extends Quest
 
+; Compile-time shim only. The installed SexLab framework provides the runtime API.
 sslAnimationSlots Property AnimSlots Auto
 
 Int Function StartSex(Actor[] positions, sslBaseAnimation[] animations, Actor victim = None, ObjectReference centerOn = None, Bool allowBed = True, String hook = "")

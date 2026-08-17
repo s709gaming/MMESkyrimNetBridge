@@ -27,7 +27,6 @@ Function InitializeController()
     EndIf
     RegisterMilkingEvents()
     MMEAlertsSkyrimNet.RegisterPromptDecorator()
-    MMESkyrimNetVoiceControls.RegisterVoiceMilkingAction()
     MMESkyrimNetVoiceControls.RegisterSelfMilkingAction()
     UnregisterForModEvent("MMEExtensions_Lifecycle")
     RegisterForModEvent("MMEExtensions_Lifecycle", "OnNativeLifecycle")
@@ -55,6 +54,12 @@ Function InitializeController()
     BaselineKnownMilkmaids()
 EndFunction
 
+; Skyrim.Net resolves quest action scripts from the existing quest instance.
+; Keep this entry point on the controller so upgrades work in established saves.
+Function StartBreastfeedingMilkShare(Actor milkSource, Actor target)
+    MMESkyrimNetVoiceControls.StartBreastfeedingMilkShare(milkSource, target)
+EndFunction
+
 ; Stops scheduled work and event subscriptions without removing saved state.
 Function DisableController()
     UnregisterForUpdate()
@@ -65,9 +70,7 @@ Function DisableController()
     UnregisterForModEvent("MilkQuest.StopMilkingMachine")
     UnregisterForModEvent("MME_MilkingDone")
     If MMEAlertsSkyrimNet.IsAvailable()
-        SkyrimNetApi.UnregisterAction("StartBreastfeedingScene")
         SkyrimNetApi.UnregisterAction("StartSelfMilking")
-        SkyrimNetApi.UnregisterAction("StartBreastfeedingMilkShare")
         SkyrimNetApi.UnregisterAction("StartMilkMaidSelfMilking")
     EndIf
     NextCapacityUpdate = 0.0
@@ -500,6 +503,7 @@ Int Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactio
         Return 0
     EndIf
     MMEAlertsSkyrimNet.SendCapacityMilestone(candidate, crossing)
+    MMESkyrimNetVoiceControls.PlayFullnessSelfMilkAnimation(candidate, crossing)
     If !processLocalReactions
         Return crossing
     EndIf

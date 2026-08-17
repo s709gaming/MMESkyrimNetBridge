@@ -230,16 +230,17 @@ Bool Function StartDrinkAnimation(Actor target, Bool diagnostic) Global
     EndIf
 
     Debug.SendAnimationEvent(target, "ZaZAPCHorFd")
-    Report(diagnostic, "animation started for " + GetActorName(target) + " (5 seconds)")
+    Float duration = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "npcDrinkAnimationDuration", 3.0)
+    Report(diagnostic, "animation started for " + GetActorName(target) + " (" + duration + " seconds)")
     Return True
 EndFunction
 
-; Milk/arousal processing includes up to 0.25 seconds of the five-second hold.
+; Holds MME's original Lactacid/New Milkmaid reaction for its configured duration.
 Function FinishDrinkAnimation(Actor target, Bool animationStarted, Bool diagnostic) Global
     If !animationStarted
         Return
     EndIf
-    Utility.Wait(4.75)
+    Utility.Wait(JsonUtil.GetFloatValue("/MMEAlerts/Settings", "npcDrinkAnimationDuration", 3.0))
     If target != None && !target.IsDead() && target.Is3DLoaded()
         Debug.SendAnimationEvent(target, "IdleForceDefaultState")
         Report(diagnostic, "animation finished for " + GetActorName(target))

@@ -1,0 +1,14 @@
+name: StartBreastfeedingMilkShare
+label: Breastfeeding milk share
+description: "Start an intimate breastfeeding or milk-sharing scene between [speaker] and [target]. Use when both characters naturally choose intimacy."
+questEditorId: MMEAlertDebugQuest
+scriptName: MMEAlertsController
+executionFunctionName: StartBreastfeedingMilkShare
+defaultPriority: 7
+parameterMapping:
+  - type: speaker
+    name: milkSource
+    description: first participant
+  - type: dynamic
+    name: target
+    description: second consenting participant

@@ -1,16 +1,4 @@
-Scriptname MMESkyrimNetVoiceControls Hidden
-
-; Registers the player-and-selected-NPC breastfeeding action.
-Function RegisterVoiceMilkingAction() Global
-    If !MMEAlertsController.IsExtensionsEnabled() || !MMEAlertsSkyrimNet.IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingAction", 1) != 1
-        Return
-    EndIf
-    Int result = SkyrimNetApi.RegisterAction("StartBreastfeedingMilkShare", "Start an intimate breastfeeding or milk-sharing scene with the player as Milk Source and the selected actor as Drinker. Use when intimacy naturally leads there. If the player is a full Milk Maid, milking is especially appropriate. Start directly; let normal Skyrim.Net dialogue handle reactions afterward.", "MMESkyrimNetVoiceControls", "VoiceMilkingIsEligible", "MMESkyrimNetVoiceControls", "VoiceMilkingExecute", "", "PAPYRUS", 1, "")
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingActionDiagnostic", 0) == 1
-        Debug.Notification("Paired Milking Action: registration returned [" + result + "]")
-    EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Paired milking action registration result " + result)
-EndFunction
+Scriptname MMESkyrimNetVoiceControls extends Quest Hidden
 
 ; Registers MME's original contextual self-milking spell action.
 Function RegisterSelfMilkingAction() Global
@@ -92,6 +80,78 @@ Function SelfMilkingExecute(Actor candidate, String contextJson, String paramsJs
     Debug.Trace("[MMEAlert SkyrimNet] Self-milking action cast MME MilkSelf on " + candidate)
 EndFunction
 
+; Plays MME's standing milking animation without starting a milking spell.
+Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
+    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableFullnessSelfMilkAnimationDiagnostic", 0) == 1
+    String threshold = "50%"
+    String setting = "enableHalfFullSelfMilkAnimation"
+    If crossing == 2
+        threshold = "100%"
+        setting = "enableFullSelfMilkAnimation"
+    ElseIf crossing != 1
+        If diagnostic
+            Debug.Notification("Fullness Self-Milk: failed - invalid threshold")
+        EndIf
+        Return
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", setting, 1) != 1
+        If diagnostic
+            Debug.Notification("Fullness Self-Milk: " + threshold + " disabled")
+        EndIf
+        Return
+    EndIf
+    If candidate == None || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
+        If diagnostic
+            Debug.Notification("Fullness Self-Milk: " + threshold + " failed - actor unavailable")
+        EndIf
+        Return
+    EndIf
+    If StorageUtil.GetIntValue(candidate, "MMEAlerts.IsMilking", 0) == 1
+        If diagnostic
+            Debug.Notification("Fullness Self-Milk: " + candidate.GetDisplayName() + " " + threshold + " skipped - already milking")
+        EndIf
+        Return
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None || milkController.MilkMaid.Find(candidate) == -1
+        If diagnostic
+            Debug.Notification("Fullness Self-Milk: " + threshold + " failed - MME Milkmaid unavailable")
+        EndIf
+        Return
+    EndIf
+    Int animationCount = JsonUtil.StringListCount("/MME/Strings", "standingmilkinganimations")
+    If animationCount <= 0
+        If diagnostic
+            Debug.Notification("Fullness Self-Milk: " + threshold + " failed - MME milking animation missing")
+        EndIf
+        Return
+    EndIf
+    String animationEvent = JsonUtil.StringListGet("/MME/Strings", "standingmilkinganimations", Utility.RandomInt(0, animationCount - 1))
+    If animationEvent == ""
+        If diagnostic
+            Debug.Notification("Fullness Self-Milk: " + threshold + " failed - MME milking animation empty")
+        EndIf
+        Return
+    EndIf
+    Float duration = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "fullnessSelfMilkAnimationDuration", 3.0)
+    If diagnostic
+        Debug.Notification("Fullness Self-Milk: " + candidate.GetDisplayName() + " crossed " + threshold + "; animation start (" + duration + " seconds)")
+    EndIf
+    Debug.SendAnimationEvent(candidate, animationEvent)
+    Utility.Wait(duration)
+    If candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
+        If diagnostic
+            Debug.Notification("Fullness Self-Milk: " + threshold + " stopped - actor unavailable")
+        EndIf
+        Return
+    EndIf
+    Debug.SendAnimationEvent(candidate, "IdleForceDefaultState")
+    If diagnostic
+        Debug.Notification("Fullness Self-Milk: " + candidate.GetDisplayName() + " crossed " + threshold + "; animation stop")
+    EndIf
+    Debug.Trace("[MMEAlert] Fullness milking animation completed | " + candidate + " | " + threshold)
+EndFunction
+
 ; Registers the opt-in action that reuses the tested NPC dialogue pipeline.
 Function RegisterGiveMilkAction() Global
     If !MMEAlertsSkyrimNet.IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceGiveMilk", 0) != 1
@@ -149,98 +209,69 @@ Function VoiceGiveMilkExecute(Actor candidate) Global
     Debug.Trace("[MMEAlert SkyrimNet] Give Milk action completed | success=" + success)
 EndFunction
 
-; SkyrimNet calls this while preparing actions for each conversational actor.
-Bool Function VoiceMilkingIsEligible(Actor candidate, String contextJson, String paramsJson) Global
+; Skyrim.Net resolves its conversational second actor through the target parameter.
+Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingActionDiagnostic", 0) == 1
-    If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingAction", 1) != 1
-        Return False
-    EndIf
-    If diagnostic
-        Debug.Notification("[MME Debug] ACTION ELIGIBILITY CHECK: StartBreastfeedingMilkShare")
-    EndIf
-    If candidate == None || candidate == Game.GetPlayer() || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
-        If diagnostic
-            Debug.Notification("Milking Action: rejected - invalid selected actor")
-        EndIf
-        Return False
-    EndIf
-    String actorName = candidate.GetDisplayName()
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None || milkController.SexLab == None
-        If diagnostic
-            Debug.Notification("Milking Action: " + actorName + " rejected - MME or SexLab unavailable")
-        EndIf
-        Return False
-    EndIf
-    If milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar") == None || milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding") == None
-        If diagnostic
-            Debug.Notification("Milking Action: " + actorName + " rejected - MME breastfeeding animations unavailable")
-        EndIf
-        Return False
-    EndIf
-    If diagnostic
-        Debug.Notification("Milking Action: source Player | drinker " + actorName)
-    EndIf
-    Return True
-EndFunction
-
-; Starts MME's registered breastfeeding animation with the player as source.
-Function VoiceMilkingExecute(Actor candidate, String contextJson, String paramsJson) Global
-    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingActionDiagnostic", 0) == 1
-    If diagnostic
-        Debug.Notification("[MME Debug] LLM ACTION RECEIVED: StartBreastfeedingMilkShare")
-    EndIf
     If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingAction", 1) != 1
         If diagnostic
             Debug.Notification("[MME Debug] FAILED: paired milking action disabled")
         EndIf
         Return
     EndIf
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    Actor playerActor = Game.GetPlayer()
-    If candidate == None || playerActor == None || candidate == playerActor || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
+    If diagnostic
+        Debug.Notification("[MME Debug] LLM ACTION RECEIVED: StartBreastfeedingMilkShare")
+    EndIf
+    Actor drinker = target
+    If milkSource == None || drinker == None
         If diagnostic
-            Debug.Notification("Milking Action: execution rejected - invalid actors")
+            Debug.Notification("[MME Debug] FAILED: actor could not resolve")
         EndIf
         Return
     EndIf
-    String actorName = candidate.GetDisplayName()
-    If actorName == ""
-        actorName = "selected actor"
+    If milkSource == drinker || milkSource.IsDead() || milkSource.IsDisabled() || !milkSource.Is3DLoaded() || drinker.IsDead() || drinker.IsDisabled() || !drinker.Is3DLoaded()
+        If diagnostic
+            Debug.Notification("[MME Debug] FAILED: actors must be different, alive, enabled, and loaded")
+        EndIf
+        Return
     EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None || milkController.SexLab == None
         If diagnostic
-            Debug.Notification("Milking Action: execution rejected - MME or SexLab unavailable")
+            Debug.Notification("[MME Debug] FAILED: MME or SexLab unavailable")
         EndIf
         Return
     EndIf
     sslBaseAnimation[] animations = new sslBaseAnimation[1]
-    If candidate.GetLeveledActorBase().GetSex() == 0
+    String animationName = "zjBreastFeeding"
+    If drinker.GetLeveledActorBase().GetSex() == 0
+        animationName = "zjBreastFeedingVar"
         animations[0] = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar")
     Else
         animations[0] = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding")
     EndIf
     If animations[0] == None
         If diagnostic
-            Debug.Notification("Milking Action: execution rejected - selected animation unavailable")
+            Debug.Notification("[MME Debug] FAILED: animation lookup missing " + animationName)
         EndIf
         Return
     EndIf
     Actor[] sceneActors = new Actor[2]
-    sceneActors[0] = playerActor
-    sceneActors[1] = candidate
+    sceneActors[0] = milkSource
+    sceneActors[1] = drinker
     If diagnostic
-        Debug.Notification("[MME Debug] Source: Player | Drinker: " + actorName)
+        Debug.Notification("[MME Debug] Actor A: " + milkSource.GetDisplayName() + " [" + milkSource.GetFormID() + "]")
+        Debug.Notification("[MME Debug] Actor B: " + drinker.GetDisplayName() + " [" + drinker.GetFormID() + "]")
         Debug.Notification("[MME Debug] Actor references resolved")
-        Debug.Notification("[MME Debug] Calling MME scene")
+        Debug.Notification("[MME Debug] Animation lookup: " + animationName)
+        Debug.Notification("[MME Debug] SexLab StartSex request")
     EndIf
     Int sceneId = milkController.SexLab.StartSex(sceneActors, animations)
     If diagnostic
         If sceneId >= 0
-            Debug.Notification("[MME Debug] SexLab scene request sent [" + sceneId + "]")
+            Debug.Notification("[MME Debug] SexLab thread result: " + sceneId)
         Else
             Debug.Notification("[MME Debug] FAILED: SexLab rejected [" + sceneId + "]")
         EndIf
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Milking action StartSex result " + sceneId + " | provider " + actorName)
+    Debug.Trace("[MMEAlert SkyrimNet] Milk-share StartSex result " + sceneId + " | source " + milkSource + " | drinker " + drinker)
 EndFunction
