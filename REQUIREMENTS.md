@@ -250,9 +250,9 @@ They are simply part of the more lewd / polished visual setup I personally use.
 
 I am including them because they may help users who want a similar look.
 
-## Ghaans Revealing CBBE 3BBB Outfits
+## Ghaans Revealing CBBE 3BBB Outfits (lewd)
 
-https://www.nexusmods.com/skyrimspecialedition/mods/39967
+https://www.nexusmods.com/skyrimspecialedition/mods/39187
 
 Optional 3BBB-compatible outfit replacer.
 
@@ -260,7 +260,7 @@ Build supported outfits in BodySlide if you want them to follow your body preset
 
 ---
 
-## BD's Armor and Clothes Replacer - CBBE 3BA
+## BD's Armor and Clothes Replacer - CBBE 3BA (Barkeeper Dress used in thumbnail)
 
 https://www.nexusmods.com/skyrimspecialedition/mods/32518
 
