@@ -19,6 +19,8 @@ $seqPath = Join-Path $gameRoot "Data\SEQ\MMEAlert.seq"
 $scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMENPCDialog", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
+$standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
+$standardDefaultsOutputDir = Join-Path $projectRoot "fomod\choices\standard\Scripts"
 
 $nativeDll = Join-Path $projectRoot "build\native-release\package\SKSE\Plugins\MMEExtensions.dll"
 
@@ -37,6 +39,9 @@ foreach ($scriptName in $scriptNames) {
 }
 if (!(Test-Path -LiteralPath (Join-Path $quickStartSourceDir "MMEAlertsQuickTest.psc"))) {
     throw "QuickStart source script not found: $quickStartSourceDir\MMEAlertsQuickTest.psc"
+}
+if (!(Test-Path -LiteralPath (Join-Path $standardDefaultsSourceDir "MMEAlertsFlatRateDefaults.psc"))) {
+    throw "Vanilla defaults source script not found: $standardDefaultsSourceDir\MMEAlertsFlatRateDefaults.psc"
 }
 
 # Compile the debug scripts against the installed SKSE and Skyrim sources.
@@ -59,6 +64,21 @@ try {
     & $compiler "MMEAlertsQuickTest.psc" "-f=$flags" "-i=$quickStartSourceDir;$imports" "-o=$quickStartOutputDir"
     if ($LASTEXITCODE -ne 0) {
         throw "Compilation failed for Recommended QuickStart override"
+    }
+}
+finally {
+    Pop-Location
+}
+
+# The Vanilla profile replaces the real defaults quest script with an inert
+# compatible implementation, so it can never change MME settings.
+New-Item -ItemType Directory -Force -Path $standardDefaultsOutputDir | Out-Null
+Push-Location $standardDefaultsSourceDir
+try {
+    Write-Host "Compiling Vanilla no-op defaults override..." -ForegroundColor Cyan
+    & $compiler "MMEAlertsFlatRateDefaults.psc" "-f=$flags" "-i=$standardDefaultsSourceDir;$imports" "-o=$standardDefaultsOutputDir"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Compilation failed for Vanilla defaults override"
     }
 }
 finally {

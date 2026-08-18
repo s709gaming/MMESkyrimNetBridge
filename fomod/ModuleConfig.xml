@@ -40,6 +40,8 @@
               <description>Keeps MME's original defaults and does not grant starter milk items.</description>
               <files>
                 <file source="fomod\choices\standard\Installer.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\Installer.json" priority="0" />
+                <file source="fomod\choices\standard\Scripts\MMEAlertsFlatRateDefaults.pex" destination="Scripts\MMEAlertsFlatRateDefaults.pex" priority="1" />
+                <file source="fomod\choices\standard\Source\Scripts\MMEAlertsFlatRateDefaults.psc" destination="Source\Scripts\MMEAlertsFlatRateDefaults.psc" priority="1" />
               </files>
               <typeDescriptor>
                 <type name="Optional" />

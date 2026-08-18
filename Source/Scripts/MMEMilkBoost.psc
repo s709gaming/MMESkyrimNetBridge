@@ -53,12 +53,14 @@ Float Function ApplyMilkDrinkBonusForActor(Actor drinker, Int drinkKind, Bool sh
     EndIf
 
     If milkAdded > 0.0
-        ; True asks MME to clamp the new value to its normal capacity limit.
+        ; MME's changeMilkCurrent boolean is a direct enforcement switch; it
+        ; does not read the MCM option itself. Mirror the current MME setting.
+        MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+        Bool enforceMilkLimit = milkController != None && milkController.BreastScaleLimit
         Float milkBefore = MME_Storage.getMilkCurrent(drinker)
-        MME_Storage.changeMilkCurrent(drinker, milkAdded, True)
+        MME_Storage.changeMilkCurrent(drinker, milkAdded, enforceMilkLimit)
         Float milkAfter = MME_Storage.getMilkCurrent(drinker)
         If milkAfter > milkBefore
-            MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
             If milkController != None
                 milkController.CurrentSize(drinker)
             EndIf
