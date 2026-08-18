@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
   <moduleName>MME Extensions</moduleName>
+
   <requiredInstallFiles>
     <folder source="Scripts" destination="Scripts" priority="0" />
     <folder source="Source" destination="Source" priority="0" />
@@ -11,13 +12,15 @@
     <file source="MMEAlert_DISTR.ini" destination="MMEAlert_DISTR.ini" priority="0" />
     <file source="README.md" destination="README.md" priority="0" />
   </requiredInstallFiles>
+
   <installSteps order="Explicit">
-    <installStep name="QuickStart and MME Defaults">
+    <installStep name="Quick Start and MME Defaults">
       <optionalFileGroups order="Explicit">
         <group name="Choose a startup profile" type="SelectExactlyOne">
           <plugins order="Explicit">
-            <plugin name="(Recommended) Easy MCM Defaults + Free milk on start">
-              <description>Applies the Easy MCM defaults and grants three Lactacid plus three of each starter milk once on a new save.</description>
+
+            <plugin name="(Quick Start) Convenience MCM Defaults + Free milk on start">
+              <description>Applies the Convenience MCM defaults once, then leaves your MME settings alone. Also grants three Lactacid plus three of each starter milk on a new save.</description>
               <files>
                 <file source="fomod\choices\recommended\Installer.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\Installer.json" priority="0" />
                 <file source="fomod\choices\recommended-quickstart\Scripts\MMEAlertsQuickTest.pex" destination="Scripts\MMEAlertsQuickTest.pex" priority="1" />
@@ -27,8 +30,9 @@
                 <type name="Recommended" />
               </typeDescriptor>
             </plugin>
-            <plugin name="(Balanced) Easy MCM Defaults + No milk on start">
-              <description>Applies the Easy MCM defaults without granting starter milk items.</description>
+
+            <plugin name="(Convenience) MCM Defaults + No milk on start">
+              <description>Applies the Convenience MCM defaults once, then leaves your MME settings alone. Does not grant starter milk items.</description>
               <files>
                 <file source="fomod\choices\recommended\Installer.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\Installer.json" priority="0" />
               </files>
@@ -36,8 +40,9 @@
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
-            <plugin name="(Vanilla) Keep original MME Defaults + No milk on start">
-              <description>Keeps MME's original defaults and does not grant starter milk items.</description>
+
+            <plugin name="(Vanilla) Do Not Change MME Settings + No milk on start">
+              <description>Does not change MME settings and does not grant starter milk items.</description>
               <files>
                 <file source="fomod\choices\standard\Installer.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\Installer.json" priority="0" />
                 <file source="fomod\choices\standard\Scripts\MMEAlertsFlatRateDefaults.pex" destination="Scripts\MMEAlertsFlatRateDefaults.pex" priority="1" />
@@ -47,6 +52,7 @@
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
+
           </plugins>
         </group>
       </optionalFileGroups>
