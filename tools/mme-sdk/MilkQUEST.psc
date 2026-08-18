@@ -20,5 +20,7 @@ Int Property GushPct Auto
 Spell Property MME_MakeMilkmaid_Spell Auto
 Spell Property MilkSelf Auto
 Spell Property MilkTarget Auto
+Function CurrentSize(Actor akActor)
+EndFunction
 Function AssignSlot(Actor akActor)
 EndFunction

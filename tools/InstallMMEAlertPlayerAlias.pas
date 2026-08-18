@@ -41,6 +41,50 @@ begin
   end;
 end;
 
+function FindAliasByID(aliases: IInterface; aliasID: Integer): IInterface;
+var i: Integer; aliasEntry: IInterface;
+begin
+  Result := nil;
+  if not Assigned(aliases) then
+    Exit;
+  for i := 0 to ElementCount(aliases) - 1 do begin
+    aliasEntry := ElementByIndex(aliases, i);
+    if GetElementNativeValues(aliasEntry, 'ALST - Reference Alias ID') = aliasID then begin
+      Result := aliasEntry;
+      Exit;
+    end;
+  end;
+end;
+
+function FindVmadAlias(vmadAliases, quest: IInterface; aliasID: Integer): IInterface;
+var i: Integer; aliasEntry: IInterface;
+begin
+  Result := nil;
+  if not Assigned(vmadAliases) then
+    Exit;
+  for i := 0 to ElementCount(vmadAliases) - 1 do begin
+    aliasEntry := ElementByIndex(vmadAliases, i);
+     if (GetElementNativeValues(aliasEntry, 'Object Union\Object v2\Alias') = aliasID) and
+       SameText(GetElementEditValues(aliasEntry, 'Object Union\Object v2\FormID'), Name(quest)) then begin
+      Result := aliasEntry;
+      Exit;
+    end;
+  end;
+end;
+
+function HasScript(scripts: IInterface; scriptName: string): Boolean;
+var i: Integer;
+begin
+  Result := False;
+  if not Assigned(scripts) then
+    Exit;
+  for i := 0 to ElementCount(scripts) - 1 do
+    if SameText(GetElementEditValues(ElementByIndex(scripts, i), 'ScriptName'), scriptName) then begin
+      Result := True;
+      Exit;
+    end;
+end;
+
 function Initialize: Integer;
 var targetQuest, sourceQuest, sourceAliases, sourceAlias, targetAliases,
     sourceVmadAliases, sourceVmadAlias, targetVmadAliases, newAlias,
@@ -63,12 +107,6 @@ begin
 
   targetAliases := ElementByPath(targetQuest, 'Aliases');
   targetVmadAliases := ElementByPath(targetQuest, 'VMAD\Aliases');
-  if (Assigned(targetAliases) and (ElementCount(targetAliases) > 0)) or
-     (Assigned(targetVmadAliases) and (ElementCount(targetVmadAliases) > 0)) then begin
-    AddMessage('ERROR: MMEAlertDebugQuest already has alias data. No changes made.');
-    Exit;
-  end;
-
   sourceAliases := ElementByPath(sourceQuest, 'Aliases');
   sourceVmadAliases := ElementByPath(sourceQuest, 'VMAD\Aliases');
   if not Assigned(sourceAliases) or (ElementCount(sourceAliases) = 0) or
@@ -80,22 +118,33 @@ begin
   if not Assigned(targetAliases) then targetAliases := Add(targetQuest, 'Aliases', True);
   if not Assigned(targetVmadAliases) then targetVmadAliases := Add(ElementBySignature(targetQuest, 'VMAD'), 'Aliases', True);
 
-  sourceAlias := ElementByIndex(sourceAliases, 0);
-  newAlias := ElementAssign(targetAliases, HighInteger, sourceAlias, False);
-  SetElementNativeValues(newAlias, 'ALST - Reference Alias ID', 1);
-  SetElementEditValues(newAlias, 'ALID - Alias Name', 'PlayerAlias');
-  SetElementNativeValues(targetQuest, 'ANAM - Next Alias ID', 2);
+  newAlias := FindAliasByID(targetAliases, 1);
+  if not Assigned(newAlias) then begin
+    sourceAlias := ElementByIndex(sourceAliases, 0);
+    newAlias := ElementAssign(targetAliases, HighInteger, sourceAlias, False);
+    SetElementNativeValues(newAlias, 'ALST - Reference Alias ID', 1);
+    SetElementEditValues(newAlias, 'ALID - Alias Name', 'PlayerAlias');
+    SetElementNativeValues(targetQuest, 'ANAM - Next Alias ID', 2);
+    AddMessage('MME Alerts player alias created.');
+  end else
+    AddMessage('MME Alerts player alias already present; repairing its script attachment.');
 
-  // Build the VMAD alias locally. Copying SkyrimNet's VMAD entry would also try
-  // to copy its quest link and script properties, causing an unwanted master.
-  newVmadAlias := ElementAssign(targetVmadAliases, HighInteger, nil, False);
-  SetElementEditValues(newVmadAlias, 'Object Union\Object v2\FormID', Name(targetQuest));
-  SetElementNativeValues(newVmadAlias, 'Object Union\Object v2\Alias', 1);
+  newVmadAlias := FindVmadAlias(targetVmadAliases, targetQuest, 1);
+  if not Assigned(newVmadAlias) then begin
+    // Build the VMAD alias locally. Copying SkyrimNet's VMAD entry would also try
+    // to copy its quest link and script properties, causing an unwanted master.
+    newVmadAlias := ElementAssign(targetVmadAliases, HighInteger, nil, False);
+    SetElementEditValues(newVmadAlias, 'Object Union\Object v2\FormID', Name(targetQuest));
+    SetElementNativeValues(newVmadAlias, 'Object Union\Object v2\Alias', 1);
+  end;
   scripts := ElementByPath(newVmadAlias, 'Alias Scripts');
-  scriptEntry := ElementAssign(scripts, HighInteger, nil, False);
-  SetElementEditValues(scriptEntry, 'ScriptName', 'MMEDrinkTracker');
+  if not HasScript(scripts, 'MMEDrinkTracker') then begin
+    scriptEntry := ElementAssign(scripts, HighInteger, nil, False);
+    SetElementEditValues(scriptEntry, 'ScriptName', 'MMEDrinkTracker');
+    AddMessage('MMEDrinkTracker attached to the player alias.');
+  end else
+    AddMessage('MMEDrinkTracker is already attached to the player alias.');
 
-  AddMessage('MME Alerts player alias installed.');
   AddMessage('Alias: ' + GetElementEditValues(newAlias, 'ALST - Reference Alias ID') + ' ' +
     GetElementEditValues(newAlias, 'ALID - Alias Name'));
   AddMessage('Unique actor: ' + GetElementEditValues(newAlias, 'ALUA - Unique Actor'));

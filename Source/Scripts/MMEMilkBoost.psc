@@ -57,6 +57,12 @@ Float Function ApplyMilkDrinkBonusForActor(Actor drinker, Int drinkKind, Bool sh
         Float milkBefore = MME_Storage.getMilkCurrent(drinker)
         MME_Storage.changeMilkCurrent(drinker, milkAdded, True)
         Float milkAfter = MME_Storage.getMilkCurrent(drinker)
+        If milkAfter > milkBefore
+            MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+            If milkController != None
+                milkController.CurrentSize(drinker)
+            EndIf
+        EndIf
         If showDebug
             Debug.Notification("Milk Debug: MME add called | " + milkBefore + " -> " + milkAfter + " (wanted +" + milkAdded + ")")
         EndIf
