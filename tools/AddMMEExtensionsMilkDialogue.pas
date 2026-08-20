@@ -14,7 +14,7 @@ unit UserScript;
     MilkModNEW.esp
     MMEAlert.esp
 
-  Safe to rerun: the script stops if MMEExt_DialogueDrinkMilk already exists.
+  Safe to rerun: an existing MMEExt_DialogueDrinkMilk INFO is updated in place.
 }
 
 const
@@ -23,6 +23,7 @@ const
   NewInfoEditorID = 'MMEExt_DialogueDrinkMilk';
   PlayerPrompt = 'Drink this, it will make you milky!';
   NPCResponse = 'Yes! I can''t wait to be nice and heavy!';
+  CopiedUnwantedResponse = 'I hope you will give me some good milking soon!';
 
 var
   TargetFile, MMEFile, SourceInfo: IInterface;
@@ -109,18 +110,53 @@ begin
   end;
 end;
 
-function SetFirstResponseText(aInfo: IInterface; aText: string): Boolean;
+function ConfigureResponses(aInfo: IInterface): Boolean;
 var
   responses, response: IInterface;
+  i, unwantedIndex, unwantedCount: Integer;
+  responseText: string;
 begin
   Result := False;
   responses := ElementByPath(aInfo, 'Responses');
   if not Assigned(responses) or (ElementCount(responses) = 0) then
     Exit;
 
+  AddMessage('INFO currently has ' + IntToStr(ElementCount(responses)) +
+    ' response(s).');
+  unwantedIndex := -1;
+  unwantedCount := 0;
+  for i := 0 to ElementCount(responses) - 1 do begin
+    response := ElementByIndex(responses, i);
+    responseText := GetElementEditValues(response, 'NAM1');
+    AddMessage('  Response ' + IntToStr(i) + ': ' + responseText);
+    if SameText(responseText, CopiedUnwantedResponse) then begin
+      unwantedIndex := i;
+      Inc(unwantedCount);
+    end;
+  end;
+
+  // The copied MME source has exactly two responses. A previously repaired
+  // INFO has one. Refuse any other shape instead of deleting by position.
+  if (ElementCount(responses) > 2) or (unwantedCount > 1) or
+     ((ElementCount(responses) = 2) and (unwantedCount <> 1)) then begin
+    AddMessage('ERROR: Response structure is ambiguous; no response was removed.');
+    Exit;
+  end;
+  if (ElementCount(responses) = 1) and (unwantedCount <> 0) then begin
+    AddMessage('ERROR: The only response is the unwanted copied line; aborting.');
+    Exit;
+  end;
+
+  if unwantedCount = 1 then begin
+    Remove(ElementByIndex(responses, unwantedIndex));
+    AddMessage('Removed copied response: ' + CopiedUnwantedResponse);
+  end;
+  if ElementCount(responses) <> 1 then
+    Exit;
+
   response := ElementByIndex(responses, 0);
-  SetElementEditValues(response, 'NAM1', aText);
-  Result := SameText(GetElementEditValues(response, 'NAM1'), aText);
+  SetElementEditValues(response, 'NAM1', NPCResponse);
+  Result := SameText(GetElementEditValues(response, 'NAM1'), NPCResponse);
 end;
 
 procedure ReplaceTreeValue(aElement: IInterface; aOldValue, aNewValue: string);
@@ -167,8 +203,10 @@ function Initialize: Integer;
 var
   existingInfo, newInfo, vmad: IInterface;
   actualPrompt, actualResponse: string;
+  createdInfo: Boolean;
 begin
   Result := 1;
+  createdInfo := False;
   TargetFile := FindFileByName(TargetPluginName);
   MMEFile := FindFileByName(MMEPluginName);
 
@@ -212,14 +250,16 @@ begin
       AddMessage('ERROR: xEdit could not copy the validated INFO as a new record.');
       Exit;
     end;
+    createdInfo := True;
   end;
 
   SetEditorID(newInfo, NewInfoEditorID);
   SetElementEditValues(newInfo, 'RNAM', PlayerPrompt);
 
-  if not SetFirstResponseText(newInfo, NPCResponse) then begin
-    AddMessage('ERROR: The copied INFO did not expose a writable first response.');
-    Remove(newInfo);
+  if not ConfigureResponses(newInfo) then begin
+    AddMessage('ERROR: The INFO responses could not be configured safely.');
+    if createdInfo then
+      Remove(newInfo);
     Exit;
   end;
 
@@ -235,6 +275,7 @@ begin
 
   if not SameText(actualPrompt, PlayerPrompt) or
      not SameText(actualResponse, NPCResponse) or
+     (ElementCount(ElementByPath(newInfo, 'Responses')) <> 1) or
      not TreeContains(ElementBySignature(newInfo, 'VMAD'), 'MMENPCDialog') then begin
     AddMessage('ERROR: Post-write validation failed.');
     Exit;
