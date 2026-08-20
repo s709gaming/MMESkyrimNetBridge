@@ -1,5 +1,17 @@
 Scriptname MMEOStimBreastfeeding extends TopicInfo Hidden
 
+Int ActiveThreadID = -1
+String ActiveSceneID = ""
+Actor ActiveMilkSource = None
+Spell ActivePassiveSpell = None
+Bool ActiveSession = False
+Bool ActiveOwnsThread = False
+Bool ActiveMMERequested = False
+Bool ActiveMMEStarted = False
+Bool ActiveMMECompleted = False
+Bool ActiveLaunching = False
+Bool ActiveDiagnostic = False
+
 ; MME Fragment_01 parity: the player drinks from the dialogue speaker.
 Function Fragment_PlayerDrinks(ObjectReference akSpeakerRef)
     StartBreastfeeding(akSpeakerRef as Actor, Game.GetPlayer())
@@ -18,9 +30,13 @@ Bool Function IsDialogueEnabled() Global
     Return MMEAlertsController.IsExtensionsEnabled() && IsOStimDetected() && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableOStimBreastfeeding", 0) == 1
 EndFunction
 
-Bool Function StartBreastfeeding(Actor milkSource, Actor drinker) Global
+Bool Function StartBreastfeeding(Actor milkSource, Actor drinker)
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableOStimDebug", 0) == 1
 
+    If ActiveSession
+        Report(diagnostic, "this OStim breastfeeding route is already active")
+        Return False
+    EndIf
     If !MMEAlertsController.IsExtensionsEnabled()
         Report(diagnostic, "MME Extensions is disabled")
         Return False
@@ -51,56 +67,260 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker) Global
         Report(diagnostic, GetActorName(milkSource) + " is not an MME Milk Maid")
         Return False
     EndIf
-    If milkController.BeingMilkedPassive != None && milkSource.HasSpell(milkController.BeingMilkedPassive)
+    ActorBase milkSourceBase = milkSource.GetLeveledActorBase()
+    If milkSourceBase == None || (milkSourceBase.GetSex() != 1 && !(milkSourceBase.GetSex() == 0 && milkController.MaleMaids))
+        Report(diagnostic, GetActorName(milkSource) + " is not eligible under MME's Milk Maid sex settings")
+        Return False
+    EndIf
+    If milkController.BeingMilkedPassive == None
+        Report(diagnostic, "MME passive-milking state spell is unavailable")
+        Return False
+    EndIf
+    If milkSource.HasSpell(milkController.BeingMilkedPassive)
         Report(diagnostic, GetActorName(milkSource) + " is already being milked")
         Return False
     EndIf
 
     Actor[] actors = new Actor[2]
+    ; OStim action actor 0 drinks from target 1. MME Mode 4 receives target 1.
     actors[0] = drinker
     actors[1] = milkSource
-    If !OActor.VerifyActors(actors)
-        Report(diagnostic, "OStim rejected one or both actors")
-        Return False
-    EndIf
-
-    String sceneID = OLibrary.GetRandomSceneWithActionForActorAndTarget(actors, 0, 1, "suckingnipples")
+    String sceneID = MMEOStimIntegration.FindSemanticScene(actors, 0, 1, "suckingnipples", diagnostic)
     If sceneID == ""
-        Report(diagnostic, "no compatible OStim suckingnipples scene found")
         Return False
     EndIf
 
-    Int builderID = OThreadBuilder.Create(actors)
-    If builderID < 0
-        Report(diagnostic, "OStim scene builder rejected the actors")
-        Return False
-    EndIf
-    OThreadBuilder.SetStartingAnimation(builderID, sceneID)
-    OThreadBuilder.NoFurniture(builderID)
-    Int threadID = OThreadBuilder.Start(builderID)
+    BeginSession(milkSource, milkController.BeingMilkedPassive, sceneID, diagnostic)
+    Int threadID = MMEOStimIntegration.StartManualScene(actors, sceneID, "MMEExtensions,Breastfeeding", diagnostic)
     If threadID < 0
-        OThreadBuilder.Cancel(builderID)
-        Report(diagnostic, "OStim scene start rejected for " + sceneID)
+        EndSession()
+        Return False
+    EndIf
+    ActiveThreadID = threadID
+
+    If !WaitForExpectedScene()
+        If ActiveOwnsThread
+            MMEOStimIntegration.StopThread(ActiveThreadID)
+        EndIf
+        Report(diagnostic, "OStim did not enter the selected breastfeeding scene")
+        EndSession()
         Return False
     EndIf
 
-    If !RequestMMEMilking(milkSource)
-        OThread.Stop(threadID)
-        Report(diagnostic, "MME milking event could not be sent; OStim scene stopped")
+    ; Match MME's original SexLab hook: breastfeeding side effects happen
+    ; immediately before the Mode 4 milking call.
+    If !StillOwnsThread()
+        RelinquishOwnership("OStim scene changed during breastfeeding startup")
+        EndSession()
         Return False
     EndIf
     ApplyMMEBreastfeedingParity(milkSource, drinker, milkController)
+    If !RequestMMEMilking(milkSource)
+        If StillOwnsThread()
+            MMEOStimIntegration.StopThread(ActiveThreadID)
+        EndIf
+        Report(diagnostic, "MME milking event could not be sent")
+        EndSession()
+        Return False
+    EndIf
+    ActiveMMERequested = True
 
-    Utility.Wait(0.5)
-    If milkController.BeingMilkedPassive != None && !milkSource.HasSpell(milkController.BeingMilkedPassive)
-        OThread.Stop(threadID)
-        Report(diagnostic, "MME milking request did not start; OStim scene stopped")
+    If !WaitForMMEStart()
+        If StillOwnsThread()
+            MMEOStimIntegration.StopThread(ActiveThreadID)
+        EndIf
+        Report(diagnostic, "MME milking did not become active (or ended during startup)")
+        EndSession()
         Return False
     EndIf
 
+    If ActiveMMECompleted
+        Report(diagnostic, "MME breastfeeding completed during startup")
+        EndSession()
+        Return True
+    EndIf
+
+    ActiveLaunching = False
+    ; MME has a few valid Mode 4 early exits that remove its passive spell but
+    ; return before MME_MilkingDone. This temporary watchdog is only active for
+    ; the interaction and supplies cleanup if either mod event is missed.
+    RegisterForSingleUpdate(1.0)
     Debug.Trace("[MME Extensions OStim] started " + sceneID + " | drinker=" + GetActorName(drinker) + " | milk source=" + GetActorName(milkSource) + " | thread=" + threadID)
     Return True
 EndFunction
+
+Function BeginSession(Actor milkSource, Spell passiveSpell, String sceneID, Bool diagnostic)
+    ActiveSession = True
+    ActiveOwnsThread = True
+    ActiveMMERequested = False
+    ActiveMMEStarted = False
+    ActiveMMECompleted = False
+    ActiveLaunching = True
+    ActiveDiagnostic = diagnostic
+    ; Every current dialogue route includes the player, whose OStim thread ID is
+    ; documented as 0. The builder's returned ID replaces this provisional ID.
+    ActiveThreadID = 0
+    ActiveSceneID = sceneID
+    ActiveMilkSource = milkSource
+    ActivePassiveSpell = passiveSpell
+    RegisterForModEvent("ostim_thread_scenechanged", "OnOStimThreadSceneChanged")
+    RegisterForModEvent("ostim_thread_end", "OnOStimThreadEnd")
+    ; Main-thread fallbacks retain compatibility with OStim versions predating
+    ; the thread-specific scene-change event.
+    RegisterForModEvent("ostim_scenechanged", "OnOStimSceneChanged")
+    RegisterForModEvent("ostim_end", "OnOStimEnd")
+    RegisterForModEvent("MME_MilkingDone", "OnMMEMilkingDone")
+EndFunction
+
+Function EndSession()
+    UnregisterForModEvent("ostim_thread_scenechanged")
+    UnregisterForModEvent("ostim_thread_end")
+    UnregisterForModEvent("ostim_scenechanged")
+    UnregisterForModEvent("ostim_end")
+    UnregisterForModEvent("MME_MilkingDone")
+    UnregisterForUpdate()
+    ActiveThreadID = -1
+    ActiveSceneID = ""
+    ActiveMilkSource = None
+    ActivePassiveSpell = None
+    ActiveSession = False
+    ActiveOwnsThread = False
+    ActiveMMERequested = False
+    ActiveMMEStarted = False
+    ActiveMMECompleted = False
+    ActiveLaunching = False
+    ActiveDiagnostic = False
+EndFunction
+
+Bool Function WaitForExpectedScene()
+    Int attempt = 0
+    While ActiveSession && ActiveOwnsThread && attempt < 20
+        If MMEOStimIntegration.IsThreadRunning(ActiveThreadID)
+            String currentScene = MMEOStimIntegration.GetThreadScene(ActiveThreadID)
+            If currentScene == ActiveSceneID && !MMEOStimIntegration.IsThreadInAutoMode(ActiveThreadID)
+                Return True
+            ElseIf currentScene != "" && currentScene != ActiveSceneID
+                RelinquishOwnership("OStim entered a different scene during startup: " + currentScene)
+                Return False
+            ElseIf currentScene == ActiveSceneID && MMEOStimIntegration.IsThreadInAutoMode(ActiveThreadID)
+                RelinquishOwnership("another integration enabled OStim auto mode during startup")
+                Return False
+            EndIf
+        EndIf
+        Utility.Wait(0.25)
+        attempt += 1
+    EndWhile
+    Return False
+EndFunction
+
+Bool Function WaitForMMEStart()
+    Int attempt = 0
+    While ActiveSession && attempt < 12
+        If ActiveMMECompleted
+            Return True
+        EndIf
+        If ActiveMilkSource != None && ActivePassiveSpell != None && ActiveMilkSource.HasSpell(ActivePassiveSpell)
+            ActiveMMEStarted = True
+            If !StillOwnsThread()
+                RelinquishOwnership("OStim breastfeeding ended or changed before MME startup completed")
+                Return False
+            EndIf
+            Return True
+        EndIf
+        Utility.Wait(0.25)
+        attempt += 1
+    EndWhile
+    Return ActiveMMECompleted
+EndFunction
+
+Bool Function StillOwnsThread()
+    If !ActiveSession || !ActiveOwnsThread
+        Return False
+    EndIf
+    Return MMEOStimIntegration.OwnsManualScene(ActiveThreadID, ActiveSceneID)
+EndFunction
+
+Function RelinquishOwnership(String reason)
+    If !ActiveSession
+        Return
+    EndIf
+    Bool wasOwned = ActiveOwnsThread
+    ActiveOwnsThread = False
+    If ActiveMilkSource != None && ActivePassiveSpell != None && ActiveMilkSource.HasSpell(ActivePassiveSpell)
+        ActiveMilkSource.RemoveSpell(ActivePassiveSpell)
+    EndIf
+    If wasOwned
+        Report(ActiveDiagnostic, reason + "; MME breastfeeding stopped and OStim thread left alone")
+    EndIf
+EndFunction
+
+Event OnOStimThreadSceneChanged(String eventName, String sceneID, Float threadID, Form sender)
+    If ActiveSession && threadID as Int == ActiveThreadID && sceneID != ActiveSceneID
+        RelinquishOwnership("OStim thread changed to " + sceneID)
+    EndIf
+EndEvent
+
+Event OnOStimSceneChanged(String eventName, String sceneID, Float numArg, Form sender)
+    If ActiveSession && ActiveThreadID == 0 && sceneID != ActiveSceneID
+        RelinquishOwnership("OStim player thread changed to " + sceneID)
+    EndIf
+EndEvent
+
+Event OnOStimThreadEnd(String eventName, String json, Float threadID, Form sender)
+    If ActiveSession && threadID as Int == ActiveThreadID
+        RelinquishOwnership("OStim breastfeeding thread ended")
+    EndIf
+EndEvent
+
+Event OnOStimEnd(String eventName, String json, Float numArg, Form sender)
+    If ActiveSession && ActiveThreadID == 0
+        RelinquishOwnership("OStim breastfeeding thread ended")
+    EndIf
+EndEvent
+
+Event OnMMEMilkingDone(Form actorForm, Int bottles, Int boobgasmCount, Int cumCount)
+    If !ActiveSession || !ActiveMMERequested || actorForm as Actor != ActiveMilkSource
+        Return
+    EndIf
+
+    ActiveMMECompleted = True
+    ActiveMMEStarted = False
+    If StillOwnsThread()
+        MMEOStimIntegration.StopThread(ActiveThreadID)
+        Debug.Trace("[MME Extensions OStim] MME breastfeeding completed; stopped owned OStim thread " + ActiveThreadID)
+    Else
+        ActiveOwnsThread = False
+        Debug.Trace("[MME Extensions OStim] MME breastfeeding completed after OStim ownership was relinquished")
+    EndIf
+
+    If !ActiveLaunching
+        EndSession()
+    EndIf
+EndEvent
+
+Event OnUpdate()
+    If !ActiveSession || ActiveLaunching
+        Return
+    EndIf
+
+    If ActiveMMEStarted && (ActiveMilkSource == None || ActivePassiveSpell == None || !ActiveMilkSource.HasSpell(ActivePassiveSpell))
+        If StillOwnsThread()
+            MMEOStimIntegration.StopThread(ActiveThreadID)
+            Debug.Trace("[MME Extensions OStim] MME passive state ended without a completion event; stopped owned OStim thread " + ActiveThreadID)
+        EndIf
+        EndSession()
+        Return
+    EndIf
+
+    If ActiveOwnsThread && !StillOwnsThread()
+        RelinquishOwnership("OStim breastfeeding scene ended, changed, or entered auto mode")
+    EndIf
+    If ActiveSession && ActiveOwnsThread && ActiveMMEStarted
+        RegisterForSingleUpdate(1.0)
+    Else
+        EndSession()
+    EndIf
+EndEvent
 
 Bool Function IsActorAvailable(Actor target) Global
     Return target != None && !target.IsDead() && !target.IsDisabled() && target.Is3DLoaded()
