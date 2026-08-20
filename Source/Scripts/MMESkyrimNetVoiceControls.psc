@@ -143,6 +143,12 @@ Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
         EndIf
         Return
     EndIf
+    If MMEAlertsController.IsFreeArmAnimationBlocked(candidate)
+        If diagnostic
+            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: arms restrained by Devious Devices")
+        EndIf
+        Return
+    EndIf
     Int animationCount = JsonUtil.StringListCount("/MME/Strings", "standingmilkinganimations")
     If animationCount <= 0
         If diagnostic

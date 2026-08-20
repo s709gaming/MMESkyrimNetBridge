@@ -115,6 +115,20 @@ Bool Function IsMilkmaidCreationPending(Actor candidate) Global
     Return candidate != None && StorageUtil.GetIntValue(candidate, "MMEExtensions.PendingMilkmaid", 0) == 1
 EndFunction
 
+; True when MME/DD reports the actor's arms restrained (armbinder/yoke), which
+; makes free-arm breast animations look wrong. The DD-disabled MME bridge
+; returns False for every check, so this is optional automatically.
+Bool Function IsFreeArmAnimationBlocked(Actor candidate) Global
+    If candidate == None
+        Return False
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None || milkController.DDi == None
+        Return False
+    EndIf
+    Return milkController.DDi.IsMilkingBlocked_Armbinder(candidate) || milkController.DDi.IsMilkingBlocked_Yoke(candidate)
+EndFunction
+
 ; Resolves MME's configured effects instead of relying on translated display names.
 Bool Function IsMilkmaidCreationEffect(Int localEffectID)
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST

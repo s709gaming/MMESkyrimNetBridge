@@ -4,3 +4,11 @@ Scriptname MME_DDi extends Quest Hidden
 Bool Function IsMilkingBlocked_Suit(Actor akActor)
     Return False
 EndFunction
+
+Bool Function IsMilkingBlocked_Armbinder(Actor akActor)
+    Return False
+EndFunction
+
+Bool Function IsMilkingBlocked_Yoke(Actor akActor)
+    Return False
+EndFunction

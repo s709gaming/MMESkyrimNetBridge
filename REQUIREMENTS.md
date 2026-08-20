@@ -256,7 +256,7 @@ https://www.loverslab.com/files/file/4310-elsie-lavache-for-mme/
 
 The male/futa-player version of the Elsie / Milk Maid quest setup.
 
-Adds Elsie as a follower along with quests, NPC behavior, autonomous breastfeeding, and other MME-related content.
+Adds Elsie as a follower along with quests, bimbo like NPC behavior, autonomous breastfeeding, and other MME-related content.
 
 **Warning:** Autonomous breastfeeding may cause issues if activated on followers.
 
@@ -270,7 +270,7 @@ Essentially the **female-player version of Elsie LaVache**, placing the player i
 
 If you like the idea behind Elsie but play a female character, this is generally the version to look at.
 
-**Warning:** Autonomous breastfeeding may cause issues if activated on followers.
+**Warning:** Autonomous breastfeeding may cause issues if activated on followers. May lack the quest that turns Maven into a busty cougar.
 
 ---
 
@@ -290,11 +290,11 @@ Recommended if you use Elsie with a modern 3BA setup.
 
 https://www.loverslab.com/topic/187761-being-a-cow-alternate-version/
 
-**Extreme content expansion.**
+**Extreme content.**
 
-Can gradually transform the player or followers into increasingly cow-like characters.
+Can gradually transform the player or followers into increasingly cow-like humanoid.
 
-It can fit an MME-heavy setup surprisingly well, and the transformation can be interpreted as something like a Daedric curse if you want it to fit Skyrim's world.
+VERY cow themed focused and the transformation can be interpreted as something like a Daedric curse if you want it to fit Skyrim's world.
 
 **Warning:** Very taste-dependent. It may require significant visual and MCM tweaking to disable transformations or features you do not want.
 

@@ -16,6 +16,10 @@ Bool Function StartDrinkAnimation(Actor target, String enableKey, String duratio
         Report(diagnostic, prefix + " animation skipped: not an established Milk Maid before drink")
         Return False
     EndIf
+    If MMEAlertsController.IsFreeArmAnimationBlocked(target)
+        Report(diagnostic, prefix + " animation skipped: arms restrained by Devious Devices")
+        Return False
+    EndIf
 
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None || milkController.MilkMaid.Find(target) == -1
