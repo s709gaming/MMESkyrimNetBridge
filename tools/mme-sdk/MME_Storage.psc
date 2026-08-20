@@ -13,3 +13,5 @@ Float Function getLactacidCurrent(Actor akActor) Global
 EndFunction
 Function changeMilkCurrent(Actor akActor, Float Delta, Bool enforceMaxValue) Global
 EndFunction
+Function setMilkCurrent(Actor akActor, Float Value, Bool enforceMaxValue) Global
+EndFunction

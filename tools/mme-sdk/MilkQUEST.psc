@@ -33,5 +33,12 @@ Spell Property MilkSelf Auto
 Spell Property MilkTarget Auto
 Function CurrentSize(Actor akActor)
 EndFunction
+Function AddMilkFx(Actor akActor, Int effectType)
+EndFunction
+Function AddLeak(Actor akActor)
+EndFunction
+Int Function PiercingCheck(Actor akActor)
+    Return 0
+EndFunction
 Function AssignSlot(Actor akActor)
 EndFunction

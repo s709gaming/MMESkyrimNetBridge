@@ -58,6 +58,15 @@ Float Function ApplyMilkDrinkBonusForActor(Actor drinker, Int drinkKind, Bool sh
         MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
         Bool enforceMilkLimit = milkController != None && milkController.BreastScaleLimit
         Float milkBefore = MME_Storage.getMilkCurrent(drinker)
+        If milkController != None
+            Float milkMaximum = MME_Storage.getMilkMaximum(drinker)
+            If milkMaximum > 0.0 && milkBefore + milkAdded > milkMaximum
+                ; Remember the attempted overflow before MME's enforcing
+                ; storage call clamps it, so the shared deferred pass can run
+                ; the leak branch that MilkCycle would normally run.
+                MMEArmorScript.MarkPlayerOverflowPending(drinker)
+            EndIf
+        EndIf
         MME_Storage.changeMilkCurrent(drinker, milkAdded, enforceMilkLimit)
         Float milkAfter = MME_Storage.getMilkCurrent(drinker)
         If milkAfter > milkBefore
