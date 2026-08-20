@@ -105,6 +105,16 @@ Function RememberMilkmaid(Actor candidate)
     EndIf
 EndFunction
 
+; True when the actor was already recorded as an established Milkmaid.
+Bool Function IsKnownMilkmaid(Actor candidate) Global
+    Return candidate != None && StorageUtil.GetIntValue(candidate, "MMEExtensions.KnownMilkmaid", 0) == 1
+EndFunction
+
+; True while a candidate conversion is still awaiting MME's Milkmaid state.
+Bool Function IsMilkmaidCreationPending(Actor candidate) Global
+    Return candidate != None && StorageUtil.GetIntValue(candidate, "MMEExtensions.PendingMilkmaid", 0) == 1
+EndFunction
+
 ; Resolves MME's configured effects instead of relying on translated display names.
 Bool Function IsMilkmaidCreationEffect(Int localEffectID)
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST

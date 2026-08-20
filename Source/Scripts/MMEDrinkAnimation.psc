@@ -2,7 +2,7 @@ Scriptname MMEDrinkAnimation Hidden
 
 ; Sends the shared milk-drink reaction animation when its toggle is enabled.
 ; Returns True when the animation event was sent to a valid actor.
-Bool Function StartDrinkAnimation(Actor target, String enableKey, String durationKey, String roleLabel, String drinkLabel, Bool diagnostic) Global
+Bool Function StartDrinkAnimation(Actor target, String enableKey, String durationKey, String roleLabel, String drinkLabel, Bool diagnostic, Bool wasEstablishedMilkmaid = True) Global
     String prefix = roleLabel + " (" + drinkLabel + ")"
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", enableKey, 0) != 1
         Report(diagnostic, prefix + " animation skipped: disabled")
@@ -10,6 +10,10 @@ Bool Function StartDrinkAnimation(Actor target, String enableKey, String duratio
     EndIf
     If target == None
         Report(diagnostic, prefix + " animation skipped: actor missing")
+        Return False
+    EndIf
+    If !wasEstablishedMilkmaid
+        Report(diagnostic, prefix + " animation skipped: not an established Milk Maid before drink")
         Return False
     EndIf
 

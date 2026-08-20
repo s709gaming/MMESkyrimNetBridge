@@ -79,13 +79,18 @@ Function HandleNativePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, S
     If IsDuplicateDrink(drinker, drinkItem, "MMEExtensions.PlayerDrink", 1.0)
         Return
     EndIf
+    ; Snapshot established-Milkmaid state before any effects run, because MME's
+    ; Lactacid conversion can add a brand-new Milk Maid during this drink. We
+    ; only want our ordinary fondle animation for actors who were already
+    ; established Milk Maids before this drink, never for a new conversion.
+    Bool wasKnownMilkmaid = MMEAlertsController.IsKnownMilkmaid(drinker)
     Float milkDelta = HandleDrinkDetected(drinker, drinkItem, drinkKind)
     Bool animDiagnostic = JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1
     String drinkLabel = drinkItem.GetName()
     If drinkLabel == ""
         drinkLabel = "<unnamed>"
     EndIf
-    Bool animationStarted = MMEDrinkAnimation.StartDrinkAnimation(drinker, "enablePlayerDrinkAnimation", "playerDrinkAnimationDuration", "PLAYER", drinkLabel, animDiagnostic)
+    Bool animationStarted = MMEDrinkAnimation.StartDrinkAnimation(drinker, "enablePlayerDrinkAnimation", "playerDrinkAnimationDuration", "PLAYER", drinkLabel, animDiagnostic, wasKnownMilkmaid)
     If animationStarted
         RegisterForSingleUpdate(JsonUtil.GetFloatValue(SettingsFile, "playerDrinkAnimationDuration", 3.0))
     EndIf
