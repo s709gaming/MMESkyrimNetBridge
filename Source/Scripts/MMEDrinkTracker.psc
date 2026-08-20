@@ -1,86 +1,110 @@
 Scriptname MMEDrinkTracker extends ReferenceAlias
 
 String SettingsFile = "/MMEAlerts/Settings"
-Float lastDrinkTime = -10.0
-Form lastDrinkItem = None
 
 Event OnInit()
-    RegisterNativeNPCDrink()
+    RegisterNativeDrink()
 EndEvent
 
 Event OnPlayerLoadGame()
-    RegisterNativeNPCDrink()
+    RegisterNativeDrink()
 EndEvent
 
-Function RegisterNativeNPCDrink()
-    UnregisterForModEvent("MMEExtensions_NPCPotionConsumed")
-    If MMEAlertsController.IsExtensionsEnabled()
-        RegisterForModEvent("MMEExtensions_NPCPotionConsumed", "OnNativeNPCPotionConsumed")
-    EndIf
+; Registers the native drink listener permanently. The master toggle is
+; enforced inside OnNativePotionConsumed, so re-enabling MME Extensions through
+; the MCM works immediately without waiting for another load.
+Function RegisterNativeDrink()
+    UnregisterForModEvent("MMEExtensions_PotionConsumed")
+    RegisterForModEvent("MMEExtensions_PotionConsumed", "OnNativePotionConsumed")
 EndFunction
 
-; Handles alias equip events; currently only the player alias is supported.
-Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
+; ---------------------------------------------------------------------------
+; Old player tracking through the ESP player alias. Kept as a temporary
+; rollback/reference path until CommonLib player tracking is fully verified.
+; ---------------------------------------------------------------------------
+;Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
+;    If !MMEAlertsController.IsExtensionsEnabled()
+;        Return
+;    EndIf
+;    Actor drinker = GetActorReference()
+;    If drinker == None || akBaseObject == None
+;        Return
+;    EndIf
+;    Int drinkKind = GetSupportedDrinkKind(akBaseObject)
+;    If drinkKind == 0
+;        Return
+;    EndIf
+;    If !IsEligibleDrinker(drinker)
+;        Return
+;    EndIf
+;    HandleDrinkDetected(drinker, akBaseObject, drinkKind)
+;EndEvent
+
+; Native CommonLib entry point for both player and NPC potion consumption.
+Event OnNativePotionConsumed(String eventName, String pluginName, Float localFormID, Form sender)
     If !MMEAlertsController.IsExtensionsEnabled()
         Return
     EndIf
-    Actor drinker = GetActorReference()
-    If drinker == None || akBaseObject == None
-        Return
-    EndIf
-
-    Int drinkKind = GetSupportedDrinkKind(akBaseObject)
-    If drinkKind == 0
-        ; Useful rejection diagnostic while the drink report toggle is enabled.
-        If (akBaseObject as Potion) != None && JsonUtil.GetIntValue(SettingsFile, "enableDrinkDetectionDebug", 1) == 1
-            Debug.Notification("MME Alerts DRINK TEST - potion equip received but unsupported: " + akBaseObject.GetName())
-        EndIf
-        Return
-    EndIf
-    If !IsEligibleDrinker(drinker)
-        Return
-    EndIf
-
-    ; Technical duplicate filter only: it is not a gameplay cooldown.
-    Float now = Utility.GetCurrentRealTime()
-    If lastDrinkItem == akBaseObject && now - lastDrinkTime < 1.0
-        Return
-    EndIf
-    lastDrinkItem = akBaseObject
-    lastDrinkTime = now
-    HandleDrinkDetected(drinker, akBaseObject, drinkKind)
-EndEvent
-
-; Classifies drinks: 0 unsupported, 1 MME milk, 2 Lactacid, 3 HearthFires milk.
-Int Function GetSupportedDrinkKind(Form item)
-    Form lactacid = Game.GetFormFromFile(0x0343F2, "MilkModNEW.esp")
-    If item == lactacid
-        Return 2
-    EndIf
-    Form hearthfireMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
-    If item == hearthfireMilk
-        Return 3
-    EndIf
-    FormList mmeMilks = Game.GetFormFromFile(0x05C81C, "MilkModNEW.esp") as FormList
-    If mmeMilks != None && mmeMilks.HasForm(item)
-        Return 1
-    EndIf
-    Return 0
-EndFunction
-
-; Receives low-cost native potion-equip events and processes only supported NPC milk.
-Event OnNativeNPCPotionConsumed(String eventName, String pluginName, Float localFormID, Form sender)
-    If !MMEAlertsController.IsExtensionsEnabled()
-        Return
-    EndIf
-    Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0) == 1
     Actor drinker = sender as Actor
-    If drinker == None || drinker == Game.GetPlayer() || drinker.IsDead() || drinker.IsDisabled()
+    If drinker == None
         Return
     EndIf
     Form drinkItem = Game.GetFormFromFile(localFormID as Int, pluginName)
     Int drinkKind = GetSupportedDrinkKind(drinkItem)
     If drinkKind == 0
+        Return
+    EndIf
+    If drinker == Game.GetPlayer()
+        HandleNativePlayerDrink(drinker, drinkItem, drinkKind, pluginName, localFormID)
+    Else
+        HandleNativeNPCDrink(drinker, drinkItem, drinkKind, pluginName, localFormID)
+    EndIf
+EndEvent
+
+; Returns True when this native event is a duplicate within the given window.
+Bool Function IsDuplicateDrink(Actor drinker, Form drinkItem, String keyPrefix, Float window)
+    Float now = Utility.GetCurrentRealTime()
+    Float lastTime = StorageUtil.GetFloatValue(drinker, keyPrefix + ".LastTime", -10.0)
+    Int lastForm = StorageUtil.GetIntValue(drinker, keyPrefix + ".LastForm", 0)
+    If lastForm == drinkItem.GetFormID() && now - lastTime < window
+        Return True
+    EndIf
+    StorageUtil.SetFloatValue(drinker, keyPrefix + ".LastTime", now)
+    StorageUtil.SetIntValue(drinker, keyPrefix + ".LastForm", drinkItem.GetFormID())
+    Return False
+EndFunction
+
+; Handles a supported player drink: effects, then the optional player animation.
+Function HandleNativePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, String pluginName, Float localFormID)
+    If IsDuplicateDrink(drinker, drinkItem, "MMEExtensions.PlayerDrink", 1.0)
+        Return
+    EndIf
+    Float milkDelta = HandleDrinkDetected(drinker, drinkItem, drinkKind)
+    Bool animDiagnostic = JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1
+    String drinkLabel = drinkItem.GetName()
+    If drinkLabel == ""
+        drinkLabel = "<unnamed>"
+    EndIf
+    Bool animationStarted = MMEDrinkAnimation.StartDrinkAnimation(drinker, "enablePlayerDrinkAnimation", "playerDrinkAnimationDuration", "PLAYER", drinkLabel, animDiagnostic)
+    If animationStarted
+        RegisterForSingleUpdate(JsonUtil.GetFloatValue(SettingsFile, "playerDrinkAnimationDuration", 3.0))
+    EndIf
+    ; Queue the deferred armor-overflow consequence only after a real milk gain.
+    If milkDelta > 0.0
+        MMEArmorScript.SchedulePlayerArmorCheck(drinker)
+    EndIf
+    Debug.Trace("[MMEAlert Player Drink] processed player | " + pluginName + ":" + localFormID)
+EndFunction
+
+; Resets a pending player drink animation.
+Event OnUpdate()
+    MMEDrinkAnimation.ResetAnimation(Game.GetPlayer(), "PLAYER", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1)
+EndEvent
+
+; Processes a supported NPC milk drink through the native event pipeline.
+Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, String pluginName, Float localFormID)
+    Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0) == 1
+    If drinker.IsDead() || drinker.IsDisabled()
         Return
     EndIf
     String actorName = GetActorName(drinker)
@@ -96,6 +120,8 @@ Event OnNativeNPCPotionConsumed(String eventName, String pluginName, Float local
         Return
     EndIf
 
+    ; Dialogue-driven NPC consumption suppresses the native event so the
+    ; dialogue pipeline remains the sole owner of those extension effects.
     Float now = Utility.GetCurrentRealTime()
     Float suppressTime = StorageUtil.GetFloatValue(drinker, "MMEExtensions.NPCDrink.SuppressTime", -10.0)
     Int suppressForm = StorageUtil.GetIntValue(drinker, "MMEExtensions.NPCDrink.SuppressForm", 0)
@@ -108,16 +134,12 @@ Event OnNativeNPCPotionConsumed(String eventName, String pluginName, Float local
         Return
     EndIf
 
-    Float lastTime = StorageUtil.GetFloatValue(drinker, "MMEExtensions.NPCDrink.LastTime", -10.0)
-    Int lastForm = StorageUtil.GetIntValue(drinker, "MMEExtensions.NPCDrink.LastForm", 0)
-    If lastForm == drinkItem.GetFormID() && now - lastTime < 1.0
+    If IsDuplicateDrink(drinker, drinkItem, "MMEExtensions.NPCDrink", 1.0)
         If diagnostic
             Debug.Notification("NPC Milk: duplicate native event suppressed")
         EndIf
         Return
     EndIf
-    StorageUtil.SetFloatValue(drinker, "MMEExtensions.NPCDrink.LastTime", now)
-    StorageUtil.SetIntValue(drinker, "MMEExtensions.NPCDrink.LastForm", drinkItem.GetFormID())
 
     MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker)
     If JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1) != 1
@@ -144,7 +166,26 @@ Event OnNativeNPCPotionConsumed(String eventName, String pluginName, Float local
         Debug.Notification("NPC Milk: applied to " + actorName + " | milk " + milkBefore + " -> " + milkAfter + " (+" + milkAdded + ") | arousal " + arousalResult)
     EndIf
     Debug.Trace("[MMEAlert NPC Drink] processed " + actorName + " | " + pluginName + ":" + localFormID)
-EndEvent
+EndFunction
+
+; Classifies drinks: 0 unsupported, 1 MME milk, 2 Lactacid, 3 HearthFires milk.
+Int Function GetSupportedDrinkKind(Form item)
+    Form lactacid = Game.GetFormFromFile(0x0343F2, "MilkModNEW.esp")
+    If item == lactacid
+        Return 2
+    EndIf
+    Form hearthfireMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
+    If item == hearthfireMilk
+        Return 3
+    EndIf
+    FormList mmeMilks = Game.GetFormFromFile(0x05C81C, "MilkModNEW.esp") as FormList
+    If mmeMilks != None && mmeMilks.HasForm(item)
+        Return 1
+    EndIf
+    Return 0
+EndFunction
+
+; NPC drink processing moved to HandleNativeNPCDrink above.
 
 ; Shows one concise result after a confirmed NPC drink and its extension effects.
 Function ShowNPCDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded, Bool arousalSent) Global
@@ -219,7 +260,8 @@ String Function GetActorName(Actor actorRef)
 EndFunction
 
 ; Centralizes drink publication, sound playback, and optional debug output.
-Function HandleDrinkDetected(Actor drinker, Form drinkItem, Int drinkKind)
+; Returns the actual milk delta applied, so callers can gate follow-up effects.
+Float Function HandleDrinkDetected(Actor drinker, Form drinkItem, Int drinkKind)
     Bool addMilkDebug = JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1
     If addMilkDebug
         String itemName = drinkItem.GetName()
@@ -238,6 +280,7 @@ Function HandleDrinkDetected(Actor drinker, Form drinkItem, Int drinkKind)
     MMEAlertsSkyrimNet.NarratePlayerMilkDrink(drinker, drinkItem)
     ShowPlayerDrinkNotification(drinker, drinkItem, milkAdded, arousalSent)
     PublishDrinkEvent(drinker, drinkItem, drinkKind)
+    Return milkAdded
 EndFunction
 
 Function ShowPlayerDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded, Bool arousalSent) Global

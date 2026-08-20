@@ -9,6 +9,7 @@ Float NearbyRange = 2000.0
 Float NextCapacityUpdate = 0.0
 Float NextSkyrimNetUpdate = 0.0
 Float NextDebugUpdate = 0.0
+Float NextArmorCheck = 0.0
 
 Bool Function IsExtensionsEnabled() Global
     Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMMEExtensions", 1) == 1
@@ -76,6 +77,7 @@ Function DisableController()
     NextCapacityUpdate = 0.0
     NextSkyrimNetUpdate = 0.0
     NextDebugUpdate = 0.0
+    NextArmorCheck = 0.0
 EndFunction
 
 ; Records Milkmaids already present when this version starts to avoid false creation reports.
@@ -340,6 +342,14 @@ Function UpdatePolling()
     ScheduleNextUpdate()
 EndFunction
 
+; Schedules the debounced player armor-overflow check three seconds from now.
+; Re-scheduling cancels the previous single update, so rapid successive drinks
+; collapse into one check timed after the most recent drink.
+Function RequestPlayerArmorCheck()
+    NextArmorCheck = Utility.GetCurrentRealTime() + 3.0
+    ScheduleNextUpdate()
+EndFunction
+
 Function ScheduleNextUpdate()
     Float now = Utility.GetCurrentRealTime()
     Float delay = 0.0
@@ -351,6 +361,9 @@ Function ScheduleNextUpdate()
     EndIf
     If NextDebugUpdate > 0.0 && (delay <= 0.0 || NextDebugUpdate - now < delay)
         delay = NextDebugUpdate - now
+    EndIf
+    If NextArmorCheck > 0.0 && (delay <= 0.0 || NextArmorCheck - now < delay)
+        delay = NextArmorCheck - now
     EndIf
     If delay > 0.0
         If delay < 1.0
@@ -381,6 +394,11 @@ Event OnUpdate()
     If debugDue
         ShowDebugCapacitySnapshot()
         NextDebugUpdate = now + 5.0
+    EndIf
+    Bool armorDue = NextArmorCheck > 0.0 && now >= NextArmorCheck
+    If armorDue
+        NextArmorCheck = 0.0
+        MMEArmorScript.CheckPlayerArmorNow(Game.GetPlayer())
     EndIf
     ScheduleNextUpdate()
 EndEvent

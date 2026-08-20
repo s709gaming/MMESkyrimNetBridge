@@ -1,6 +1,6 @@
 # Requirements & Recommended Setup
 
-This page covers the required and recommended setup for **MME Extensions**, including Milk Mod Economy, Skyrim VR, breast scaling, optional integrations, physics, and visual mods.
+This page covers the required and recommended setup for **MME Extensions**, including Milk Mod Economy, Skyrim VR, breast scaling, optional integrations, physics, visual mods, and other mods in the wider MME ecosystem.
 
 ---
 
@@ -220,7 +220,99 @@ It can still improve the surrounding SexLab experience with additional scene-awa
 
 ---
 
-# 5. Optional Physics
+# 5. MME Ecosystem & Content Suggestions
+
+None of these are required by **MME Extensions**.
+
+These are additional mods and community resources that can expand Milk Mod Economy or help build a larger MME-focused setup.
+
+Some are small additions while others substantially change gameplay. Read their requirements and compatibility notes before adding them to an existing save.
+
+## Breast Controls / Scaling for MME
+
+https://www.loverslab.com/topic/101166-milk-mod-economy-se/page/78/#comment-3791114
+
+Adds additional control over MME breast scaling.
+
+Useful if you want more control over how Milk Mod Economy interacts with your body setup.
+
+---
+
+## The LactTAT
+
+https://www.loverslab.com/files/file/18183-the-lacttat/
+
+A milk-themed curse that can randomly spike milk production.
+
+A relatively small addition if you want more unpredictable Milk Maid gameplay.
+
+---
+
+## Elsie LaVache for MME - SE
+
+https://www.loverslab.com/files/file/4310-elsie-lavache-for-mme/
+
+**Major content expansion.**
+
+The male/futa-player version of the Elsie / Milk Maid quest setup.
+
+Adds Elsie as a follower along with quests, NPC behavior, autonomous breastfeeding, and other MME-related content.
+
+**Warning:** Autonomous breastfeeding may cause issues if activated on followers.
+
+---
+
+## The Milk Maid - SE
+
+https://www.loverslab.com/files/file/10373-the-milk-maid/
+
+Essentially the **female-player version of Elsie LaVache**, placing the player into the Milk Maid role instead of using the male/futa-oriented setup.
+
+If you like the idea behind Elsie but play a female character, this is generally the version to look at.
+
+**Warning:** Autonomous breastfeeding may cause issues if activated on followers.
+
+---
+
+## Elsie LaVache - 3BA BodySlide
+
+https://www.loverslab.com/topic/199374-elsie-lavache-3ba-conversion/
+
+3BA BodySlide files for Elsie LaVache.
+
+This is a body conversion for the SE mod, not a separate gameplay version.
+
+Recommended if you use Elsie with a modern 3BA setup.
+
+---
+
+## Being a Cow - Alternate Version
+
+https://www.loverslab.com/topic/187761-being-a-cow-alternate-version/
+
+**Extreme content expansion.**
+
+Can gradually transform the player or followers into increasingly cow-like characters.
+
+It can fit an MME-heavy setup surprisingly well, and the transformation can be interpreted as something like a Daedric curse if you want it to fit Skyrim's world.
+
+**Warning:** Very taste-dependent. It may require significant visual and MCM tweaking to disable transformations or features you do not want.
+
+---
+
+## Milk Addict
+
+https://www.loverslab.com/topic/97335-milk-addict/page/22/#elControls_4259982_menu
+
+Adds a milk addiction system where Lactacid and milk can become increasingly difficult to resist.
+
+It can make Milk Mod Economy feel more mechanically connected to ordinary gameplay by giving the character a reason to keep seeking milk or Lactacid.
+
+**Warning:** I recommend disabling the armor-break system. The addiction can also become very intrusive without MCM tuning, so adjust the settings to taste. Check the thread for the SE version and relevant patches.
+
+---
+
+# 6. Optional Physics
 
 These are not required by MME Extensions itself, but are commonly useful with 3BA.
 
@@ -242,7 +334,7 @@ Depending on your setup, 3BA can use CBPC, FSMP, or a combination of both.
 
 ---
 
-# 6. Optional Personal Visual Setup
+# 7. Optional Personal Visual Setup
 
 The mods below are **NOT required** for MME Extensions.
 
@@ -324,9 +416,13 @@ Useful if you want an exaggerated body shape where Milk Mod Economy's breast sca
 - Skyrim VR 1.4.15 tested
 - VR-compatible SexLab setup required
 
-## Skyrim VR Optionals (use your imagination) 
-- AI NPC TOUCH Reactions. https://github.com/Telord72612/VRTouchEvents
-- Aroused by Touch. https://www.nexusmods.com/skyrimspecialedition/mods/126800
+## Skyrim VR Optionals (use your imagination)
+
+- AI NPC TOUCH Reactions  
+  https://github.com/Telord72612/VRTouchEvents
+
+- Aroused by Touch  
+  https://www.nexusmods.com/skyrimspecialedition/mods/126800
 
 ## Recommended for Breast Scaling
 
@@ -343,6 +439,16 @@ Useful if you want an exaggerated body shape where Milk Mod Economy's breast sca
 - SeverActions
 - SkyrimNet_SexLab
 
+## MME Ecosystem Suggestions
+
+- Breast Controls / Scaling for MME
+- The LactTAT
+- Elsie LaVache for MME - SE
+- The Milk Maid - SE
+- Elsie LaVache 3BA BodySlide
+- Being a Cow - Alternate Version
+- Milk Addict
+
 ## Optional Physics
 
 - CBPC
@@ -358,4 +464,4 @@ Useful if you want an exaggerated body shape where Milk Mod Economy's breast sca
 
 If you only care about getting **MME Extensions working**, start with the hard requirements.
 
-The rest adds breast scaling support, AI integration, physics, or optional visual improvements.
+The rest adds breast scaling support, AI integration, physics, additional MME gameplay, or optional visual improvements.

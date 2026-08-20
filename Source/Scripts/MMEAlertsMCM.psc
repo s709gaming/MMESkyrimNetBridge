@@ -29,9 +29,15 @@ Int arousalDiagnosticOption
 Int dialogueDiagnosticOption
 Int npcDrinkAnimationOption
 Int npcDrinkAnimationDurationOption
-Int halfFullSelfMilkAnimationOption
-Int fullSelfMilkAnimationOption
-Int fullnessSelfMilkAnimationDurationOption
+Int playerDrinkAnimationOption
+Int playerDrinkAnimationDurationOption
+Int milkDrinkAnimationDiagnosticOption
+Int playerHalfFullSelfMilkAnimationOption
+Int playerFullSelfMilkAnimationOption
+Int playerFullnessSelfMilkAnimationDurationOption
+Int npcHalfFullSelfMilkAnimationOption
+Int npcFullSelfMilkAnimationOption
+Int npcFullnessSelfMilkAnimationDurationOption
 Int fullnessSelfMilkAnimationDiagnosticOption
 Int npcMilkEffectsOption
 Int npcMilkConsumptionDiagnosticOption
@@ -39,6 +45,7 @@ Int npcDrinkNotificationsOption
 Int npcDrinkNotificationsDiagnosticOption
 Int playerDrinkNotificationsOption
 Int playerDrinkNotificationsDiagnosticOption
+Int armorOverflowDiagnosticOption
 Int lifecycleDiagnosticOption
 Int milkmaidCreationDiagnosticOption
 Int nativeScanDiagnosticOption
@@ -71,16 +78,18 @@ Int masterEnableOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 66
+    Return 69
 EndFunction
 
 Function SetPageNames()
     Pages = new String[6]
     Pages[0] = "General"
     Pages[1] = "Milk Drinking"
-    ; Build this at runtime to prevent Papyrus's case-insensitive string table
-    ; from reusing the lowercase arousal token found in integration symbols.
-    Pages[2] = "Animations"
+    ; Build these page names at runtime so Papyrus's case-insensitive string
+    ; table cannot reuse the lowercase "arousal"/"animations" tokens interned
+    ; by integration scripts. The trailing spaces keep the built names distinct
+    ; while rendering invisibly in the sidebar.
+    Pages[2] = "A" + "nimations "
     Pages[3] = "A" + "rousal "
     Pages[4] = "Skyrim.Net"
     Pages[5] = "Debug"
@@ -184,16 +193,26 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
         JsonUtil.SetFloatValue(SettingsFile, "npcDrinkAnimationDuration", 3.0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkAnimation", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "playerDrinkAnimationDuration", 3.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableHalfFullSelfMilkAnimation", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableFullSelfMilkAnimation", 1)
         JsonUtil.SetFloatValue(SettingsFile, "fullnessSelfMilkAnimationDuration", 3.0)
         JsonUtil.SetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerHalfFullSelfMilkAnimation", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerFullSelfMilkAnimation", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "playerFullnessSelfMilkAnimationDuration", 3.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCHalfFullSelfMilkAnimation", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCFullSelfMilkAnimation", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "npcFullnessSelfMilkAnimationDuration", 3.0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkEffects", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0)
         JsonUtil.SetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0)
         JsonUtil.SetIntValue(SettingsFile, "playerDrinkNarrationChance", 25)
@@ -547,6 +566,33 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "animationDurationMigration66", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds the separate player drink animation settings without touching the
+    ; existing NPC animation choice or duration.
+    If JsonUtil.GetIntValue(SettingsFile, "playerDrinkAnimationMigration67", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkAnimation", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "playerDrinkAnimationDuration", 3.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "playerDrinkAnimationMigration67", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Splits fullness animations into Player and NPC policies. The previous
+    ; shared values become the NPC policy, and the new Player policy starts off.
+    If JsonUtil.GetIntValue(SettingsFile, "fullnessAnimationSplit68", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCHalfFullSelfMilkAnimation", JsonUtil.GetIntValue(SettingsFile, "enableHalfFullSelfMilkAnimation", 1))
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCFullSelfMilkAnimation", JsonUtil.GetIntValue(SettingsFile, "enableFullSelfMilkAnimation", 1))
+        JsonUtil.SetFloatValue(SettingsFile, "npcFullnessSelfMilkAnimationDuration", JsonUtil.GetFloatValue(SettingsFile, "fullnessSelfMilkAnimationDuration", 3.0))
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerHalfFullSelfMilkAnimation", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerFullSelfMilkAnimation", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "playerFullnessSelfMilkAnimationDuration", 3.0)
+        JsonUtil.SetIntValue(SettingsFile, "fullnessAnimationSplit68", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Adds the optional armor-overflow diagnostic without touching other settings.
+    If JsonUtil.GetIntValue(SettingsFile, "armorOverflowDiagnosticMigration69", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "armorOverflowDiagnosticMigration69", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 ; Renders the selected SkyUI page from persisted JContainers settings.
@@ -580,9 +626,15 @@ Event OnPageReset(String page)
     dialogueDiagnosticOption = -1
     npcDrinkAnimationOption = -1
     npcDrinkAnimationDurationOption = -1
-    halfFullSelfMilkAnimationOption = -1
-    fullSelfMilkAnimationOption = -1
-    fullnessSelfMilkAnimationDurationOption = -1
+    playerDrinkAnimationOption = -1
+    playerDrinkAnimationDurationOption = -1
+    milkDrinkAnimationDiagnosticOption = -1
+    playerHalfFullSelfMilkAnimationOption = -1
+    playerFullSelfMilkAnimationOption = -1
+    playerFullnessSelfMilkAnimationDurationOption = -1
+    npcHalfFullSelfMilkAnimationOption = -1
+    npcFullSelfMilkAnimationOption = -1
+    npcFullnessSelfMilkAnimationDurationOption = -1
     fullnessSelfMilkAnimationDiagnosticOption = -1
     npcMilkEffectsOption = -1
     npcMilkConsumptionDiagnosticOption = -1
@@ -590,6 +642,7 @@ Event OnPageReset(String page)
     npcDrinkNotificationsDiagnosticOption = -1
     playerDrinkNotificationsOption = -1
     playerDrinkNotificationsDiagnosticOption = -1
+    armorOverflowDiagnosticOption = -1
     lifecycleDiagnosticOption = -1
     milkmaidCreationDiagnosticOption = -1
     nativeScanDiagnosticOption = -1
@@ -632,14 +685,21 @@ Event OnPageReset(String page)
         playerDrinkNotificationsOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1) == 1)
         Return
     EndIf
-    If page == "Animations"
-        AddHeaderOption("Milk Drinking")
+    If page == "A" + "nimations "
+        AddHeaderOption("Player Milk Drinking")
+        playerDrinkAnimationOption = AddToggleOption("Player Milk-Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkAnimation", 0) == 1)
+        playerDrinkAnimationDurationOption = AddSliderOption("Player Milk-Drink Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "playerDrinkAnimationDuration", 3.0), "{0} seconds")
+        AddHeaderOption("NPC Milk Drinking")
         npcDrinkAnimationOption = AddToggleOption("NPC Milk-Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0) == 1)
-        npcDrinkAnimationDurationOption = AddSliderOption("Milk-Drink Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "npcDrinkAnimationDuration", 3.0), "{0} seconds")
-        AddHeaderOption("Fullness Self-Milk")
-        halfFullSelfMilkAnimationOption = AddToggleOption("Half-Full Self-Milk Animation", JsonUtil.GetIntValue(SettingsFile, "enableHalfFullSelfMilkAnimation", 1) == 1)
-        fullSelfMilkAnimationOption = AddToggleOption("Full Self-Milk Animation", JsonUtil.GetIntValue(SettingsFile, "enableFullSelfMilkAnimation", 1) == 1)
-        fullnessSelfMilkAnimationDurationOption = AddSliderOption("Fullness Self-Milk Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "fullnessSelfMilkAnimationDuration", 3.0), "{0} seconds")
+        npcDrinkAnimationDurationOption = AddSliderOption("NPC Milk-Drink Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "npcDrinkAnimationDuration", 3.0), "{0} seconds")
+        AddHeaderOption("Player Fullness")
+        playerHalfFullSelfMilkAnimationOption = AddToggleOption("Player Half-Full Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerHalfFullSelfMilkAnimation", 0) == 1)
+        playerFullSelfMilkAnimationOption = AddToggleOption("Player Full Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerFullSelfMilkAnimation", 0) == 1)
+        playerFullnessSelfMilkAnimationDurationOption = AddSliderOption("Player Fullness Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "playerFullnessSelfMilkAnimationDuration", 3.0), "{0} seconds")
+        AddHeaderOption("NPC Fullness")
+        npcHalfFullSelfMilkAnimationOption = AddToggleOption("NPC Half-Full Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCHalfFullSelfMilkAnimation", 1) == 1)
+        npcFullSelfMilkAnimationOption = AddToggleOption("NPC Full Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCFullSelfMilkAnimation", 1) == 1)
+        npcFullnessSelfMilkAnimationDurationOption = AddSliderOption("NPC Fullness Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "npcFullnessSelfMilkAnimationDuration", 3.0), "{0} seconds")
         Return
     EndIf
     If page == "A" + "rousal "
@@ -707,21 +767,25 @@ Event OnPageReset(String page)
     If page == "Debug"
         AddHeaderOption("MME Extensions")
         masterEnableOption = AddToggleOption("Enable MME Extensions", JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1) == 1)
-        AddHeaderOption("Development Diagnostics")
+        AddHeaderOption("Core / Development")
         lifecycleDiagnosticOption = AddToggleOption("Location Wait Load", JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0) == 1)
         milkmaidCreationDiagnosticOption = AddToggleOption("Milkmaid Creation Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 1) == 1)
         nativeScanDiagnosticOption = AddToggleOption("Native Actor Scan Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0) == 1)
         debugMilkingEventsOption = AddToggleOption("Report Milking Start/End", JsonUtil.GetIntValue(SettingsFile, "enableMilkingEventDebug", 1) == 1)
         debugMilkReportOption = AddToggleOption("Milk Status Every 5 Seconds", JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0) == 1)
+        AddHeaderOption("Milk Drinking")
         addMilkDebugOption = AddToggleOption("Milk Drinking Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1)
         npcMilkConsumptionDiagnosticOption = AddToggleOption("NPC Milk Consumption", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0) == 1)
         npcDrinkNotificationsDiagnosticOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1)
         playerDrinkNotificationsDiagnosticOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0) == 1)
+        armorOverflowDiagnosticOption = AddToggleOption("Armor Overflow Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0) == 1)
+        AddHeaderOption("A" + "nimations ")
+        milkDrinkAnimationDiagnosticOption = AddToggleOption("Milk Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1)
+        fullnessSelfMilkAnimationDiagnosticOption = AddToggleOption("Fullness Animation", JsonUtil.GetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0) == 1)
         selfMilkingActionDiagnosticOption = AddToggleOption("Self-Milking Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0) == 1)
         pairedMilkingActionDiagnosticOption = AddToggleOption("Paired Milking Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0) == 1)
-        fullnessSelfMilkAnimationDiagnosticOption = AddToggleOption("Fullness Self-Milk Animation", JsonUtil.GetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0) == 1)
         SetCursorPosition(1)
-        AddHeaderOption("Skyrim.Net Diagnostics")
+        AddHeaderOption("Skyrim.Net")
         skyrimNetDrinkDiagnosticOption = AddToggleOption("Milk Drink Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0) == 1)
         skyrimNetMilkingDiagnosticOption = AddToggleOption("Milking Start/End Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingDiagnostic", 0) == 1)
         skyrimNetCreationDiagnosticOption = AddToggleOption("New Milkmaid Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetCreationDiagnostic", 0) == 1)
@@ -730,11 +794,11 @@ Event OnPageReset(String page)
         milkFullNarrationDiagnosticOption = AddToggleOption("Milk Full Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarrationDiagnostic", 0) == 1)
         milkHalfFullNarrationDiagnosticOption = AddToggleOption("Half-Full Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarrationDiagnostic", 0) == 1)
         playerDrinkNarrationDiagnosticOption = AddToggleOption("Player Drink Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", 0) == 1)
+        npcDrinkNarrationDiagnosticOption = AddToggleOption("NPC Drink Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarrationDiagnostic", 0) == 1)
         milkmaidCreatedNarrationDiagnosticOption = AddToggleOption("New Milk Maid Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarrationDiagnostic", 0) == 1)
-        npcDrinkNarrationDiagnosticOption = AddToggleOption("NPC Drink Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarrationDiagnostic", 0) == 1)
-        AddHeaderOption("Arousal Diagnostics")
+        AddHeaderOption("A" + "rousal")
         arousalDiagnosticOption = AddToggleOption("Milk Arousal Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 0) == 1)
-        AddHeaderOption("Dialogue Diagnostics")
+        AddHeaderOption("Dialogue")
         dialogueDiagnosticOption = AddToggleOption("NPC Dialogue Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1)
         Return
     EndIf
@@ -782,13 +846,23 @@ Event OnOptionHighlight(Int option)
     ElseIf option == npcDrinkAnimationOption
         SetInfoText("Play MME's original Lactacid/New Milkmaid reaction animation after a Milkmaid drinks through dialogue.")
     ElseIf option == npcDrinkAnimationDurationOption
-        SetInfoText("Set how long the Milk-Drink Animation plays before the actor returns to idle.")
-    ElseIf option == halfFullSelfMilkAnimationOption
-        SetInfoText("Play MME's Self-Milk animation for about two seconds when a Milkmaid crosses 50% fullness.")
-    ElseIf option == fullSelfMilkAnimationOption
-        SetInfoText("Play MME's standing milking animation when a Milkmaid crosses 100% fullness, without triggering milking.")
-    ElseIf option == fullnessSelfMilkAnimationDurationOption
-        SetInfoText("Set how long both fullness self-milk animations play before the actor returns to idle.")
+        SetInfoText("Set how long the NPC Milk-Drink Animation plays before the actor returns to idle.")
+    ElseIf option == playerDrinkAnimationOption
+        SetInfoText("Play MME's original Lactacid/New Milkmaid reaction animation after you drink recognized milk.")
+    ElseIf option == playerDrinkAnimationDurationOption
+        SetInfoText("Set how long your Milk-Drink Animation plays before you return to idle.")
+    ElseIf option == playerHalfFullSelfMilkAnimationOption
+        SetInfoText("Play MME's Self-Milk animation when you cross 50% fullness.")
+    ElseIf option == playerFullSelfMilkAnimationOption
+        SetInfoText("Play MME's standing milking animation when you cross 100% fullness, without triggering milking.")
+    ElseIf option == playerFullnessSelfMilkAnimationDurationOption
+        SetInfoText("Set how long your fullness self-milk animations play before you return to idle.")
+    ElseIf option == npcHalfFullSelfMilkAnimationOption
+        SetInfoText("Play MME's Self-Milk animation when an NPC Milkmaid crosses 50% fullness.")
+    ElseIf option == npcFullSelfMilkAnimationOption
+        SetInfoText("Play MME's standing milking animation when an NPC Milkmaid crosses 100% fullness, without triggering milking.")
+    ElseIf option == npcFullnessSelfMilkAnimationDurationOption
+        SetInfoText("Set how long NPC fullness self-milk animations play before the actor returns to idle.")
     ElseIf option == npcMilkEffectsOption
         SetInfoText("Apply milk, arousal, and moan effects when an MME Milkmaid consumes recognized milk.")
     ElseIf option == npcDrinkNotificationsOption
@@ -859,12 +933,16 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report new-Milk-Maid narration detection, cooldowns, and API results.")
     ElseIf option == playerDrinkNotificationsDiagnosticOption
         SetInfoText("Report player drink notification skips and the effective milk and arousal results shown.")
+    ElseIf option == armorOverflowDiagnosticOption
+        SetInfoText("Report PLAYER armor-overflow queue, cancellation, eligibility, armor type, threshold, and strip results.")
     ElseIf option == selfMilkingActionDiagnosticOption
         SetInfoText("Report self-milking action registration, Milk Maid checks, and spell requests.")
     ElseIf option == pairedMilkingActionDiagnosticOption
         SetInfoText("Report paired milking action registration, actor selection, dependency checks, and scene results.")
     ElseIf option == fullnessSelfMilkAnimationDiagnosticOption
-        SetInfoText("Report the actor, fullness threshold, self-milk animation start, stop, and failure reasons.")
+        SetInfoText("Report PLAYER/NPC fullness animation triggers, selected animation, start, skip, and reset reasons.")
+    ElseIf option == milkDrinkAnimationDiagnosticOption
+        SetInfoText("Report whether PLAYER or NPC triggered the drink animation, what was detected, and why it started or skipped.")
     ElseIf option == npcDrinkNarrationOption
         SetInfoText("Ask Skyrim.Net for one immediate reaction when an NPC Milkmaid drinks supported milk. Uses LLM tokens.")
     ElseIf option == npcDrinkNarrationCooldownOption
@@ -1044,6 +1122,10 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == armorOverflowDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
     ElseIf option == selfMilkingActionDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", value)
@@ -1106,13 +1188,29 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", value)
         SetToggleOptionValue(option, value == 1)
-    ElseIf option == halfFullSelfMilkAnimationOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableHalfFullSelfMilkAnimation", 1)
-        JsonUtil.SetIntValue(SettingsFile, "enableHalfFullSelfMilkAnimation", value)
+    ElseIf option == playerDrinkAnimationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkAnimation", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkAnimation", value)
         SetToggleOptionValue(option, value == 1)
-    ElseIf option == fullSelfMilkAnimationOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableFullSelfMilkAnimation", 1)
-        JsonUtil.SetIntValue(SettingsFile, "enableFullSelfMilkAnimation", value)
+    ElseIf option == milkDrinkAnimationDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == playerHalfFullSelfMilkAnimationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerHalfFullSelfMilkAnimation", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerHalfFullSelfMilkAnimation", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == playerFullSelfMilkAnimationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerFullSelfMilkAnimation", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerFullSelfMilkAnimation", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == npcHalfFullSelfMilkAnimationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCHalfFullSelfMilkAnimation", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCHalfFullSelfMilkAnimation", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == npcFullSelfMilkAnimationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCFullSelfMilkAnimation", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCFullSelfMilkAnimation", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == fullnessSelfMilkAnimationDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0)
@@ -1189,8 +1287,18 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(3.0)
         SetSliderDialogRange(0.0, 10.0)
         SetSliderDialogInterval(1.0)
-    ElseIf option == fullnessSelfMilkAnimationDurationOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "fullnessSelfMilkAnimationDuration", 3.0))
+    ElseIf option == playerDrinkAnimationDurationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "playerDrinkAnimationDuration", 3.0))
+        SetSliderDialogDefaultValue(3.0)
+        SetSliderDialogRange(0.0, 10.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == playerFullnessSelfMilkAnimationDurationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "playerFullnessSelfMilkAnimationDuration", 3.0))
+        SetSliderDialogDefaultValue(3.0)
+        SetSliderDialogRange(0.0, 10.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == npcFullnessSelfMilkAnimationDurationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "npcFullnessSelfMilkAnimationDuration", 3.0))
         SetSliderDialogDefaultValue(3.0)
         SetSliderDialogRange(0.0, 10.0)
         SetSliderDialogInterval(1.0)
@@ -1253,8 +1361,16 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.SetFloatValue(SettingsFile, "npcDrinkAnimationDuration", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
-    ElseIf option == fullnessSelfMilkAnimationDurationOption
-        JsonUtil.SetFloatValue(SettingsFile, "fullnessSelfMilkAnimationDuration", value)
+    ElseIf option == playerDrinkAnimationDurationOption
+        JsonUtil.SetFloatValue(SettingsFile, "playerDrinkAnimationDuration", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == playerFullnessSelfMilkAnimationDurationOption
+        JsonUtil.SetFloatValue(SettingsFile, "playerFullnessSelfMilkAnimationDuration", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == npcFullnessSelfMilkAnimationDurationOption
+        JsonUtil.SetFloatValue(SettingsFile, "npcFullnessSelfMilkAnimationDuration", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
     EndIf

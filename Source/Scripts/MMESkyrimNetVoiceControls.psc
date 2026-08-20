@@ -81,75 +81,99 @@ Function SelfMilkingExecute(Actor candidate, String contextJson, String paramsJs
 EndFunction
 
 ; Plays MME's standing milking animation without starting a milking spell.
+; Selects Player or NPC fullness settings based on the actor.
 Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableFullnessSelfMilkAnimationDiagnostic", 0) == 1
-    String threshold = "50%"
-    String setting = "enableHalfFullSelfMilkAnimation"
+    Bool isPlayer = candidate != None && candidate == Game.GetPlayer()
+    String role = "NPC"
+    If isPlayer
+        role = "PLAYER"
+    EndIf
+    String actorName = ""
+    If candidate != None
+        actorName = candidate.GetDisplayName()
+    EndIf
+    If actorName == ""
+        actorName = "Unknown actor"
+    EndIf
+
+    String threshold = "Half-Full"
+    String setting = "enableNPCHalfFullSelfMilkAnimation"
+    String durationKey = "npcFullnessSelfMilkAnimationDuration"
+    If isPlayer
+        setting = "enablePlayerHalfFullSelfMilkAnimation"
+        durationKey = "playerFullnessSelfMilkAnimationDuration"
+    EndIf
     If crossing == 2
-        threshold = "100%"
-        setting = "enableFullSelfMilkAnimation"
+        threshold = "Full"
+        If isPlayer
+            setting = "enablePlayerFullSelfMilkAnimation"
+        Else
+            setting = "enableNPCFullSelfMilkAnimation"
+        EndIf
     ElseIf crossing != 1
         If diagnostic
-            Debug.Notification("Fullness Self-Milk: failed - invalid threshold")
+            Debug.Notification("[" + role + "] " + actorName + " fullness animation skipped: invalid threshold")
         EndIf
         Return
     EndIf
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", setting, 1) != 1
+
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", setting, 0) != 1
         If diagnostic
-            Debug.Notification("Fullness Self-Milk: " + threshold + " disabled")
+            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: disabled")
         EndIf
         Return
     EndIf
     If candidate == None || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
         If diagnostic
-            Debug.Notification("Fullness Self-Milk: " + threshold + " failed - actor unavailable")
+            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: actor unavailable")
         EndIf
         Return
     EndIf
     If StorageUtil.GetIntValue(candidate, "MMEAlerts.IsMilking", 0) == 1
         If diagnostic
-            Debug.Notification("Fullness Self-Milk: " + candidate.GetDisplayName() + " " + threshold + " skipped - already milking")
+            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: already milking")
         EndIf
         Return
     EndIf
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None || milkController.MilkMaid.Find(candidate) == -1
         If diagnostic
-            Debug.Notification("Fullness Self-Milk: " + threshold + " failed - MME Milkmaid unavailable")
+            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: not an MME Milkmaid")
         EndIf
         Return
     EndIf
     Int animationCount = JsonUtil.StringListCount("/MME/Strings", "standingmilkinganimations")
     If animationCount <= 0
         If diagnostic
-            Debug.Notification("Fullness Self-Milk: " + threshold + " failed - MME milking animation missing")
+            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: MME milking animation missing")
         EndIf
         Return
     EndIf
     String animationEvent = JsonUtil.StringListGet("/MME/Strings", "standingmilkinganimations", Utility.RandomInt(0, animationCount - 1))
     If animationEvent == ""
         If diagnostic
-            Debug.Notification("Fullness Self-Milk: " + threshold + " failed - MME milking animation empty")
+            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: MME milking animation empty")
         EndIf
         Return
     EndIf
-    Float duration = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "fullnessSelfMilkAnimationDuration", 3.0)
+    Float duration = JsonUtil.GetFloatValue("/MMEAlerts/Settings", durationKey, 3.0)
     If diagnostic
-        Debug.Notification("Fullness Self-Milk: " + candidate.GetDisplayName() + " crossed " + threshold + "; animation start (" + duration + " seconds)")
+        Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation started (" + duration + " seconds)")
     EndIf
     Debug.SendAnimationEvent(candidate, animationEvent)
     Utility.Wait(duration)
     If candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
         If diagnostic
-            Debug.Notification("Fullness Self-Milk: " + threshold + " stopped - actor unavailable")
+            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation stopped - actor unavailable")
         EndIf
         Return
     EndIf
     Debug.SendAnimationEvent(candidate, "IdleForceDefaultState")
     If diagnostic
-        Debug.Notification("Fullness Self-Milk: " + candidate.GetDisplayName() + " crossed " + threshold + "; animation stop")
+        Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation stopped")
     EndIf
-    Debug.Trace("[MMEAlert] Fullness milking animation completed | " + candidate + " | " + threshold)
+    Debug.Trace("[MMEAlert] " + role + " fullness animation completed | " + candidate + " | " + threshold)
 EndFunction
 
 ; Registers the opt-in action that reuses the tested NPC dialogue pipeline.

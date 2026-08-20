@@ -22,7 +22,7 @@ namespace
 {
     constexpr auto kLifecycleEvent = "MMEExtensions_Lifecycle";
     constexpr auto kMMEEffectEvent = "MMEExtensions_MMEEffectApplied";
-    constexpr auto kNPCPotionEvent = "MMEExtensions_NPCPotionConsumed";
+    constexpr auto kPotionEvent = "MMEExtensions_PotionConsumed";
 
     std::vector<RE::Actor*> GetNearbyActors(RE::StaticFunctionTag*, float radius)
     {
@@ -97,7 +97,7 @@ namespace
         SKSE::log::info("MME magic effect sent: target {:08X}, effect {:06X}", target->GetFormID(), effect->GetLocalFormID());
     }
 
-    void SendNPCPotionEvent(RE::Actor* actor, RE::TESForm* potion)
+    void SendPotionEvent(RE::Actor* actor, RE::TESForm* potion)
     {
         auto* source = SKSE::GetModCallbackEventSource();
         auto* sourceFile = potion ? potion->GetFile(0) : nullptr;
@@ -105,13 +105,13 @@ namespace
             return;
         }
         SKSE::ModCallbackEvent event{
-            RE::BSFixedString(kNPCPotionEvent),
+            RE::BSFixedString(kPotionEvent),
             RE::BSFixedString(sourceFile->GetFilename()),
             static_cast<float>(potion->GetLocalFormID()),
             actor
         };
         source->SendEvent(&event);
-        SKSE::log::info("NPC potion equip sent: actor {:08X}, {}:{:06X}", actor->GetFormID(), sourceFile->GetFilename(), potion->GetLocalFormID());
+        SKSE::log::info("potion equip sent: actor {:08X}, {}:{:06X}", actor->GetFormID(), sourceFile->GetFilename(), potion->GetLocalFormID());
     }
 
     class LifecycleEventSink final :
@@ -192,13 +192,13 @@ namespace
             const RE::TESEquipEvent* event,
             RE::BSTEventSource<RE::TESEquipEvent>*) override
         {
-            if (!event || !event->equipped || !event->actor || event->actor.get() == RE::PlayerCharacter::GetSingleton()) {
+            if (!event || !event->equipped || !event->actor) {
                 return RE::BSEventNotifyControl::kContinue;
             }
             auto* actor = event->actor->As<RE::Actor>();
             auto* item = RE::TESForm::LookupByID(event->baseObject);
             if (actor && item && item->GetFormType() == RE::FormType::AlchemyItem) {
-                SendNPCPotionEvent(actor, item);
+                SendPotionEvent(actor, item);
             }
             return RE::BSEventNotifyControl::kContinue;
         }

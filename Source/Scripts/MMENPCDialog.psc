@@ -147,7 +147,7 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
     EndIf
 
     MMEAlertsSkyrimNet.NarrateNPCMilkDrink(target, True)
-    Bool animationStarted = StartDrinkAnimation(target, diagnostic)
+    Bool animationStarted = StartDrinkAnimation(target, selectedItem, diagnostic)
     ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
     FinishDrinkAnimation(target, animationStarted, diagnostic)
     Return True
@@ -196,57 +196,22 @@ Function ApplyExtensionEffects(Actor target, Form selectedItem, String selectedT
 EndFunction
 
 ; Starts MME's visible Lactacid reaction as soon as consumption is confirmed.
-Bool Function StartDrinkAnimation(Actor target, Bool diagnostic) Global
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableNPCDrinkAnimation", 0) != 1
-        Report(diagnostic, "animation disabled")
-        Return False
+Bool Function StartDrinkAnimation(Actor target, Form drinkItem, Bool diagnostic) Global
+    Bool animDiagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkDrinkAnimationDiagnostic", 0) == 1
+    String drinkLabel = ""
+    If drinkItem != None
+        drinkLabel = drinkItem.GetName()
     EndIf
-    If target == None
-        Report(diagnostic, "animation skipped: target missing")
-        Return False
+    If drinkLabel == ""
+        drinkLabel = "<unnamed>"
     EndIf
-
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None || milkController.MilkMaid.Find(target) == -1
-        Report(diagnostic, "animation skipped: target is no longer an MME Milkmaid")
-        Return False
-    EndIf
-    If target.IsDead() || target.IsDisabled() || !target.Is3DLoaded()
-        Report(diagnostic, "animation skipped: target unavailable")
-        Return False
-    EndIf
-    If target.IsInCombat()
-        Report(diagnostic, "animation skipped: target is in combat")
-        Return False
-    EndIf
-    If target.IsOnMount()
-        Report(diagnostic, "animation skipped: target is mounted")
-        Return False
-    EndIf
-    Int sitState = target.GetSitState()
-    If sitState > 0 && sitState <= 3
-        Report(diagnostic, "animation skipped: target is sitting")
-        Return False
-    EndIf
-
-    Debug.SendAnimationEvent(target, "ZaZAPCHorFd")
-    Float duration = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "npcDrinkAnimationDuration", 3.0)
-    Report(diagnostic, "animation started for " + GetActorName(target) + " (" + duration + " seconds)")
-    Return True
+    Return MMEDrinkAnimation.StartDrinkAnimation(target, "enableNPCDrinkAnimation", "npcDrinkAnimationDuration", "NPC", drinkLabel, animDiagnostic)
 EndFunction
 
 ; Holds MME's original Lactacid/New Milkmaid reaction for its configured duration.
 Function FinishDrinkAnimation(Actor target, Bool animationStarted, Bool diagnostic) Global
-    If !animationStarted
-        Return
-    EndIf
-    Utility.Wait(JsonUtil.GetFloatValue("/MMEAlerts/Settings", "npcDrinkAnimationDuration", 3.0))
-    If target != None && !target.IsDead() && target.Is3DLoaded()
-        Debug.SendAnimationEvent(target, "IdleForceDefaultState")
-        Report(diagnostic, "animation finished for " + GetActorName(target))
-    Else
-        Report(diagnostic, "animation ended while target was unavailable")
-    EndIf
+    Bool animDiagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkDrinkAnimationDiagnostic", 0) == 1
+    MMEDrinkAnimation.FinishDrinkAnimation(target, animationStarted, "npcDrinkAnimationDuration", "NPC", animDiagnostic)
 EndFunction
 
 Int Function GetOwnedCount(Actor owner, Form item) Global
