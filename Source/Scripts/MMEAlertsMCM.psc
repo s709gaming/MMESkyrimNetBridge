@@ -1365,6 +1365,10 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
+        MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+        If controller != None
+            controller.UpdatePolling()
+        EndIf
     ElseIf option == ostimBreastfeedingOption && MMEOStimBreastfeeding.IsOStimDetected()
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableOStimBreastfeeding", value)

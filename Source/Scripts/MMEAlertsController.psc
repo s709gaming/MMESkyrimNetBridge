@@ -10,6 +10,9 @@ Float NextCapacityUpdate = 0.0
 Float NextSkyrimNetUpdate = 0.0
 Float NextDebugUpdate = 0.0
 Float NextArmorCheck = 0.0
+Float NextDialogueDiagnosticUpdate = 0.0
+Actor LastDialogueDiagnosticActor = None
+String LastDialogueDiagnosticState = ""
 Bool Property OStimDialogueAvailable Auto Conditional
 
 Bool Function IsExtensionsEnabled() Global
@@ -84,6 +87,9 @@ Function DisableController()
     NextSkyrimNetUpdate = 0.0
     NextDebugUpdate = 0.0
     NextArmorCheck = 0.0
+    NextDialogueDiagnosticUpdate = 0.0
+    LastDialogueDiagnosticActor = None
+    LastDialogueDiagnosticState = ""
 EndFunction
 
 ; Exposes one dependency-free quest condition for the optional dialogue INFOs.
@@ -383,6 +389,9 @@ Function UpdatePolling()
         NextCapacityUpdate = 0.0
         NextSkyrimNetUpdate = 0.0
         NextDebugUpdate = 0.0
+        NextDialogueDiagnosticUpdate = 0.0
+        LastDialogueDiagnosticActor = None
+        LastDialogueDiagnosticState = ""
         Return
     EndIf
     Float now = Utility.GetCurrentRealTime()
@@ -400,6 +409,13 @@ Function UpdatePolling()
         NextDebugUpdate = now + 5.0
     Else
         NextDebugUpdate = 0.0
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
+        NextDialogueDiagnosticUpdate = now + 1.0
+    Else
+        NextDialogueDiagnosticUpdate = 0.0
+        LastDialogueDiagnosticActor = None
+        LastDialogueDiagnosticState = ""
     EndIf
     ScheduleNextUpdate()
 EndFunction
@@ -427,6 +443,9 @@ Function ScheduleNextUpdate()
     If NextArmorCheck > 0.0 && (delay <= 0.0 || NextArmorCheck - now < delay)
         delay = NextArmorCheck - now
     EndIf
+    If NextDialogueDiagnosticUpdate > 0.0 && (delay <= 0.0 || NextDialogueDiagnosticUpdate - now < delay)
+        delay = NextDialogueDiagnosticUpdate - now
+    EndIf
     If delay > 0.0
         If delay < 1.0
             delay = 1.0
@@ -444,6 +463,7 @@ Event OnUpdate()
     Bool capacityDue = NextCapacityUpdate > 0.0 && now >= NextCapacityUpdate
     Bool skyrimNetDue = NextSkyrimNetUpdate > 0.0 && now >= NextSkyrimNetUpdate
     Bool debugDue = NextDebugUpdate > 0.0 && now >= NextDebugUpdate
+    Bool dialogueDiagnosticDue = NextDialogueDiagnosticUpdate > 0.0 && now >= NextDialogueDiagnosticUpdate
     If capacityDue || skyrimNetDue
         ScanNearbyMilkMaids(skyrimNetDue, capacityDue)
     EndIf
@@ -457,6 +477,16 @@ Event OnUpdate()
         ShowDebugCapacitySnapshot()
         NextDebugUpdate = now + 5.0
     EndIf
+    If dialogueDiagnosticDue
+        Actor dialogueTarget = MMEExtensionsNative.GetDialogueTarget()
+        If dialogueTarget == None
+            LastDialogueDiagnosticActor = None
+            LastDialogueDiagnosticState = ""
+        Else
+            ShowDialogueEligibilitySnapshot(dialogueTarget)
+        EndIf
+        NextDialogueDiagnosticUpdate = now + 1.0
+    EndIf
     Bool armorDue = NextArmorCheck > 0.0 && now >= NextArmorCheck
     If armorDue
         NextArmorCheck = 0.0
@@ -464,6 +494,96 @@ Event OnUpdate()
     EndIf
     ScheduleNextUpdate()
 EndEvent
+
+String Function DiagnosticBool(Bool value)
+    If value
+        Return "yes"
+    EndIf
+    Return "no"
+EndFunction
+
+String Function GetMilkBlockers(Actor source, MilkQUEST milkController)
+    If source == None
+        Return "missing actor"
+    EndIf
+    String blockers = ""
+    Spell beingMilked = milkController.BeingMilkedPassive
+    Spell exhaustion = Game.GetFormFromFile(0x023B6C, "MilkModNEW.esp") as Spell
+    Spell mentalExhaustion = Game.GetFormFromFile(0x0581F4, "MilkModNEW.esp") as Spell
+    Spell livingArmor = Game.GetFormFromFile(0x029709, "MilkModNEW.esp") as Spell
+    If beingMilked != None && source.HasSpell(beingMilked)
+        blockers = "BeingMilked"
+    EndIf
+    If exhaustion != None && source.HasSpell(exhaustion)
+        blockers += " MilkExhaustion"
+    EndIf
+    If mentalExhaustion != None && source.HasSpell(mentalExhaustion)
+        blockers += " MentalExhaustion"
+    EndIf
+    If livingArmor != None && source.HasSpell(livingArmor)
+        blockers += " LivingArmor"
+    EndIf
+    If blockers == ""
+        Return "none"
+    EndIf
+    Return blockers
+EndFunction
+
+; Reports the exact live values used by MME's two breastfeeding INFOs. The
+; snapshot repeats only when its state changes, so selecting MME's opening
+; line exposes the before/after Fragment_00 refresh without notification spam.
+Function ShowDialogueEligibilitySnapshot(Actor subject)
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None || milkController.MilkQC == None
+        Debug.Trace("[MME Extensions Dialogue] MME controller/condition quest unavailable")
+        Return
+    EndIf
+
+    Actor playerActor = Game.GetPlayer()
+    MilkQUEST_Conditions conditions = milkController.MilkQC
+    Float playerMilk = MME_Storage.getMilkCurrent(playerActor)
+    Float subjectMilk = MME_Storage.getMilkCurrent(subject)
+    String subjectBlockers = GetMilkBlockers(subject, milkController)
+    String playerBlockers = GetMilkBlockers(playerActor, milkController)
+    Bool subjectShared = conditions.MME_SubjectMilk >= 1.0 && subjectBlockers == "none"
+    Bool playerShared = conditions.MME_TargetMilk >= 1.0 && playerBlockers == "none"
+    Bool subjectMaid = milkController.MilkMaid != None && milkController.MilkMaid.Find(subject) >= 0
+    ActorBase subjectBase = subject.GetLeveledActorBase()
+    ActorBase playerBase = playerActor.GetLeveledActorBase()
+    Bool subjectRefreshAllowed = subjectBase != None && (subjectBase.GetSex() == 1 || (subjectBase.GetSex() == 0 && milkController.MaleMaids))
+    Bool playerRefreshAllowed = playerBase != None && (playerBase.GetSex() == 1 || (playerBase.GetSex() == 0 && milkController.MaleMaids))
+    Keyword actorTypeNPC = Game.GetForm(0x00013794) as Keyword
+    Keyword actorTypeCreature = Game.GetForm(0x00013795) as Keyword
+    Bool rootEligible = conditions.MME_DialogueMilking && !subject.IsChild() && subject.HasKeyword(actorTypeNPC) && !subject.HasKeyword(actorTypeCreature)
+    Bool ostimDetected = MMEOStimBreastfeeding.IsOStimDetected()
+    Bool ostimSetting = JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0) == 1
+    Bool sexLabPlayerDrinks = subjectShared && conditions.MME_BreasfeedingAnimationsCheck
+    Bool sexLabNPCDrinks = playerShared && conditions.MME_BreasfeedingAnimationsCheck
+    Bool ostimPlayerDrinks = subjectShared && OStimDialogueAvailable
+    Bool ostimNPCDrinks = playerShared && OStimDialogueAvailable
+    String snapshotState = subject.GetFormID() + ":" + playerMilk + ":" + subjectMilk + ":" + conditions.MME_TargetMilk + ":" + conditions.MME_SubjectMilk + ":" + subjectBlockers + ":" + playerBlockers + ":" + conditions.MME_DialogueMilking + ":" + conditions.MME_BreasfeedingAnimationsCheck + ":" + OStimDialogueAvailable
+    If subject == LastDialogueDiagnosticActor && snapshotState == LastDialogueDiagnosticState
+        Return
+    EndIf
+    LastDialogueDiagnosticActor = subject
+    LastDialogueDiagnosticState = snapshotState
+
+    String line1 = "Player milk=" + playerMilk + " / TargetMilk=" + conditions.MME_TargetMilk + " | NPC milk=" + subjectMilk + " / SubjectMilk=" + conditions.MME_SubjectMilk
+    String line2 = "NPC maid=" + DiagnosticBool(subjectMaid) + " / SubjectMaid=" + DiagnosticBool(conditions.MME_SubjectMaid) + " | refresh NPC=" + DiagnosticBool(subjectRefreshAllowed) + " Player=" + DiagnosticBool(playerRefreshAllowed)
+    String line3 = "blockers NPC=" + subjectBlockers + " | Player=" + playerBlockers + " | SexLabAnim=" + DiagnosticBool(conditions.MME_BreasfeedingAnimationsCheck)
+    String line4 = "DialogueMilking=" + DiagnosticBool(conditions.MME_DialogueMilking) + " / root=" + DiagnosticBool(rootEligible) + " | OStim detected=" + DiagnosticBool(ostimDetected) + " setting=" + DiagnosticBool(ostimSetting) + " condition=" + DiagnosticBool(OStimDialogueAvailable)
+    String line5 = "Player drinks: SexLab=" + DiagnosticBool(sexLabPlayerDrinks) + " OStim=" + DiagnosticBool(ostimPlayerDrinks) + " | NPC drinks: SexLab=" + DiagnosticBool(sexLabNPCDrinks) + " OStim=" + DiagnosticBool(ostimNPCDrinks)
+    Debug.Trace("[MME Extensions Dialogue] " + GetActorName(subject) + " | " + line1)
+    Debug.Trace("[MME Extensions Dialogue] " + line2)
+    Debug.Trace("[MME Extensions Dialogue] " + line3)
+    Debug.Trace("[MME Extensions Dialogue] " + line4)
+    Debug.Trace("[MME Extensions Dialogue] " + line5)
+    Debug.Notification("Dialogue DEBUG - " + line1)
+    Debug.Notification("Dialogue DEBUG - " + line2)
+    Debug.Notification("Dialogue DEBUG - " + line3)
+    Debug.Notification("Dialogue DEBUG - " + line4)
+    Debug.Notification("Dialogue DEBUG - " + line5)
+EndFunction
 
 ; Lets player lifecycle events request an immediate capacity rescan.
 Function RefreshCapacity(String reason = "event")

@@ -3,6 +3,7 @@
 #include <RE/P/PlayerCharacter.h>
 #include <RE/P/ProcessLists.h>
 #include <RE/P/PackUnpackImpl.h>
+#include <RE/M/MenuTopicManager.h>
 #include <RE/N/NativeFunction.h>
 #include <RE/S/ScriptEventSourceHolder.h>
 #include <RE/T/TESFile.h>
@@ -56,10 +57,22 @@ namespace
         return result;
     }
 
+    RE::Actor* GetDialogueTarget(RE::StaticFunctionTag*)
+    {
+        auto* manager = RE::MenuTopicManager::GetSingleton();
+        if (!manager) {
+            return nullptr;
+        }
+
+        auto speaker = manager->speaker.get();
+        return speaker ? speaker->As<RE::Actor>() : nullptr;
+    }
+
     bool RegisterPapyrus(RE::BSScript::IVirtualMachine* vm)
     {
         vm->RegisterFunction("GetNearbyActors", "MMEExtensionsNative", GetNearbyActors);
-        SKSE::log::info("Native Papyrus scanner registered");
+        vm->RegisterFunction("GetDialogueTarget", "MMEExtensionsNative", GetDialogueTarget);
+        SKSE::log::info("Native Papyrus scanner and dialogue target registered");
         return true;
     }
 
