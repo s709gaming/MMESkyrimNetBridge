@@ -69,6 +69,15 @@ Function StopThread(Int threadID) Global
     EndIf
 EndFunction
 
+; Optional actor-level scene check. Never touch OStim's native API unless its
+; plugin is active, so the compile-time declaration is not a runtime dependency.
+Bool Function IsActorInScene(Actor target) Global
+    If target == None || Game.GetModByName("OStim.esp") == 255
+        Return False
+    EndIf
+    Return OActor.IsInOStim(target)
+EndFunction
+
 Function Report(Bool showNotification, String reportText) Global
     Debug.Trace("[MME Extensions OStim] " + reportText)
     If showNotification

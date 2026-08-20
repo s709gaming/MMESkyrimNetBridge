@@ -149,6 +149,13 @@ Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
         EndIf
         Return
     EndIf
+    String blocked = MMEAnimationSafety.GetStartBlockReason(candidate, milkController, True)
+    If blocked != ""
+        If diagnostic
+            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: " + blocked)
+        EndIf
+        Return
+    EndIf
     Int animationCount = JsonUtil.StringListCount("/MME/Strings", "standingmilkinganimations")
     If animationCount <= 0
         If diagnostic
@@ -164,18 +171,28 @@ Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
         Return
     EndIf
     Float duration = JsonUtil.GetFloatValue("/MMEAlerts/Settings", durationKey, 3.0)
+    String owner = "FullnessAnimation." + role
+    If !MMEAnimationSafety.TryAcquire(candidate, owner)
+        If diagnostic
+            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: another MME Extensions animation owns actor")
+        EndIf
+        Return
+    EndIf
     If diagnostic
         Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation started (" + duration + " seconds)")
     EndIf
     Debug.SendAnimationEvent(candidate, animationEvent)
     Utility.Wait(duration)
-    If candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
+    String resetBlocked = MMEAnimationSafety.GetResetBlockReason(candidate, milkController, owner)
+    If resetBlocked != ""
         If diagnostic
-            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation stopped - actor unavailable")
+            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation stopped without reset: " + resetBlocked)
         EndIf
+        MMEAnimationSafety.Release(candidate, owner)
         Return
     EndIf
     Debug.SendAnimationEvent(candidate, "IdleForceDefaultState")
+    MMEAnimationSafety.Release(candidate, owner)
     If diagnostic
         Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation stopped")
     EndIf

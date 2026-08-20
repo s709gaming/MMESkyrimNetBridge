@@ -10,3 +10,7 @@ EndFunction
 Bool Function IsStrippable(Form ItemRef)
     Return True
 EndFunction
+
+Bool Function IsActorActive(Actor ActorRef)
+    Return False
+EndFunction

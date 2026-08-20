@@ -48,6 +48,16 @@ Bool Function StartDrinkAnimation(Actor target, String enableKey, String duratio
     If animationEvent == ""
         Return False
     EndIf
+    String owner = "DrinkAnimation." + roleLabel
+    String blocked = MMEAnimationSafety.GetStartBlockReason(target, milkController, True)
+    If blocked != ""
+        Report(diagnostic, prefix + " animation skipped: " + blocked)
+        Return False
+    EndIf
+    If !MMEAnimationSafety.TryAcquire(target, owner)
+        Report(diagnostic, prefix + " animation skipped: another MME Extensions animation owns actor")
+        Return False
+    EndIf
     Debug.SendAnimationEvent(target, animationEvent)
     Float duration = JsonUtil.GetFloatValue("/MMEAlerts/Settings", durationKey, 3.0)
     Report(diagnostic, prefix + " animation started: " + animationEvent + " (" + duration + " seconds)")
@@ -82,12 +92,16 @@ EndFunction
 
 ; Non-latent reset for the player native path, called from OnUpdate.
 Function ResetAnimation(Actor target, String roleLabel, Bool diagnostic) Global
-    If target != None && !target.IsDead() && target.Is3DLoaded()
+    String owner = "DrinkAnimation." + roleLabel
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    String blocked = MMEAnimationSafety.GetResetBlockReason(target, milkController, owner)
+    If blocked == ""
         Debug.SendAnimationEvent(target, "IdleForceDefaultState")
         Report(diagnostic, roleLabel + " animation finished for " + GetActorName(target))
     Else
-        Report(diagnostic, roleLabel + " animation ended while actor was unavailable")
+        Report(diagnostic, roleLabel + " animation ended without reset: " + blocked)
     EndIf
+    MMEAnimationSafety.Release(target, owner)
 EndFunction
 
 String Function GetActorName(Actor target) Global

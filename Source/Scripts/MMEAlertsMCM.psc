@@ -78,14 +78,26 @@ Int masterEnableOption
 Int ostimBreastfeedingOption
 Int ostimStatusOption
 Int ostimDebugOption
+Int playerMilkingArmorReactionsOption
+Int playerMilkingArmorEquipSoundOption
+Int playerMilkingArmorFirstEquipAnimationOption
+Int playerMilkingArmorNotificationOption
+Int npcMilkingArmorReactionsOption
+Int npcMilkingArmorEquipSoundOption
+Int npcMilkingArmorFirstEquipAnimationOption
+Int npcMilkingArmorNotificationOption
+Int skyrimNetMilkingArmorEventsOption
+Int playerMilkingArmorNarrationCooldownOption
+Int npcMilkingArmorNarrationCooldownOption
+Int armorDebugOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 70
+    Return 71
 EndFunction
 
 Function SetPageNames()
-    Pages = new String[6]
+    Pages = new String[7]
     Pages[0] = "General"
     Pages[1] = "Milk Drinking"
     ; Build these page names at runtime so Papyrus's case-insensitive string
@@ -94,8 +106,9 @@ Function SetPageNames()
     ; while rendering invisibly in the sidebar.
     Pages[2] = "A" + "nimations "
     Pages[3] = "A" + "rousal "
-    Pages[4] = "Skyrim.Net"
-    Pages[5] = "Debug"
+    Pages[4] = "Armor"
+    Pages[5] = "Skyrim.Net"
+    Pages[6] = "Debug"
 EndFunction
 
 ; Creates the MCM pages and initializes controllers on first registration.
@@ -183,6 +196,8 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableOStimBreastfeeding", MMEOStimBreastfeeding.IsOStimDetected() as Int)
         JsonUtil.SetIntValue(SettingsFile, "enableOStimDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "ostimBreastfeedingMigration70", 1)
+        SetMilkingArmorDefaults()
+        JsonUtil.SetIntValue(SettingsFile, "milkingArmorMigration71", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableVoiceGiveMilk", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableVoiceGiveMilkDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkFullNarration", 1)
@@ -610,6 +625,26 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "ostimBreastfeedingMigration70", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "milkingArmorMigration71", 0) == 0
+        SetMilkingArmorDefaults()
+        JsonUtil.SetIntValue(SettingsFile, "milkingArmorMigration71", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+EndFunction
+
+Function SetMilkingArmorDefaults()
+    JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkingArmorReactions", 1)
+    JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipSound", 1)
+    JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkingArmorFirstEquipAnimation", 1)
+    JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkingArmorNotification", 1)
+    JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkingArmorReactions", 1)
+    JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkingArmorEquipSound", 1)
+    JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkingArmorFirstEquipAnimation", 1)
+    JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkingArmorNotification", 1)
+    JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingArmorEvents", 1)
+    JsonUtil.SetFloatValue(SettingsFile, "playerMilkingArmorNarrationCooldown", 120.0)
+    JsonUtil.SetFloatValue(SettingsFile, "npcMilkingArmorNarrationCooldown", 300.0)
+    JsonUtil.SetIntValue(SettingsFile, "enableArmorDebug", 0)
 EndFunction
 
 ; Renders the selected SkyUI page from persisted JContainers settings.
@@ -692,6 +727,18 @@ Event OnPageReset(String page)
     ostimBreastfeedingOption = -1
     ostimStatusOption = -1
     ostimDebugOption = -1
+    playerMilkingArmorReactionsOption = -1
+    playerMilkingArmorEquipSoundOption = -1
+    playerMilkingArmorFirstEquipAnimationOption = -1
+    playerMilkingArmorNotificationOption = -1
+    npcMilkingArmorReactionsOption = -1
+    npcMilkingArmorEquipSoundOption = -1
+    npcMilkingArmorFirstEquipAnimationOption = -1
+    npcMilkingArmorNotificationOption = -1
+    skyrimNetMilkingArmorEventsOption = -1
+    playerMilkingArmorNarrationCooldownOption = -1
+    npcMilkingArmorNarrationCooldownOption = -1
+    armorDebugOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -746,6 +793,28 @@ Event OnPageReset(String page)
         milkDrinkArousalAmountOption = AddSliderOption("Arousal Per Milk", JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 10.0), "+{0}", arousalFlags)
         Return
     EndIf
+    If page == "Armor"
+        AddHeaderOption("Milking Armor")
+        AddHeaderOption("Player")
+        playerMilkingArmorReactionsOption = AddToggleOption("Enable Player Armor Reactions", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorReactions", 1) == 1)
+        Int playerArmorFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorReactions", 1) != 1
+            playerArmorFlags = OPTION_FLAG_DISABLED
+        EndIf
+        playerMilkingArmorEquipSoundOption = AddToggleOption("Player Equip Sound", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipSound", 1) == 1, playerArmorFlags)
+        playerMilkingArmorFirstEquipAnimationOption = AddToggleOption("Player First-Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorFirstEquipAnimation", 1) == 1, playerArmorFlags)
+        playerMilkingArmorNotificationOption = AddToggleOption("Player In-Game Notification", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorNotification", 1) == 1, playerArmorFlags)
+        AddHeaderOption("NPC")
+        npcMilkingArmorReactionsOption = AddToggleOption("Enable NPC Armor Reactions", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorReactions", 1) == 1)
+        Int npcArmorFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorReactions", 1) != 1
+            npcArmorFlags = OPTION_FLAG_DISABLED
+        EndIf
+        npcMilkingArmorEquipSoundOption = AddToggleOption("NPC Equip Sound", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorEquipSound", 1) == 1, npcArmorFlags)
+        npcMilkingArmorFirstEquipAnimationOption = AddToggleOption("NPC First-Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorFirstEquipAnimation", 1) == 1, npcArmorFlags)
+        npcMilkingArmorNotificationOption = AddToggleOption("NPC In-Game Notification", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorNotification", 1) == 1, npcArmorFlags)
+        Return
+    EndIf
     If page == "Skyrim.Net"
         AddHeaderOption("Integration Status")
         skyrimNetStatusOption = AddToggleOption("Skyrim.Net Detected", MMEAlertsSkyrimNet.IsAvailable(), OPTION_FLAG_DISABLED)
@@ -755,6 +824,14 @@ Event OnPageReset(String page)
         skyrimNetMilkmaidCreatedOption = AddToggleOption("Track New Milkmaids", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1) == 1)
         skyrimNetMilkStatusesOption = AddToggleOption("Track Nearby Milk Statuses", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1)
         skyrimNetStatusIntervalOption = AddSliderOption("Milk Status Interval", JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0), "{0} seconds")
+        AddHeaderOption("Milking Armor")
+        skyrimNetMilkingArmorEventsOption = AddToggleOption("Enable Milking Armor Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingArmorEvents", 1) == 1)
+        Int armorNarrationFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingArmorEvents", 1) != 1
+            armorNarrationFlags = OPTION_FLAG_DISABLED
+        EndIf
+        playerMilkingArmorNarrationCooldownOption = AddSliderOption("Player Armor Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "playerMilkingArmorNarrationCooldown", 120.0), "{0} seconds", armorNarrationFlags)
+        npcMilkingArmorNarrationCooldownOption = AddSliderOption("NPC Armor Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "npcMilkingArmorNarrationCooldown", 300.0), "{0} seconds", armorNarrationFlags)
         AddHeaderOption("Actions")
         selfMilkingActionOption = AddToggleOption("Allow Self-Milking Action", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingAction", 1) == 1)
         pairedMilkingActionOption = AddToggleOption("Allow Paired Milking Action", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) == 1)
@@ -807,6 +884,7 @@ Event OnPageReset(String page)
         npcDrinkNotificationsDiagnosticOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1)
         playerDrinkNotificationsDiagnosticOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0) == 1)
         armorOverflowDiagnosticOption = AddToggleOption("Armor Overflow Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0) == 1)
+        armorDebugOption = AddToggleOption("Armor Debug", JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0) == 1)
         AddHeaderOption("A" + "nimations ")
         milkDrinkAnimationDiagnosticOption = AddToggleOption("Milk Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1)
         fullnessSelfMilkAnimationDiagnosticOption = AddToggleOption("Fullness Animation", JsonUtil.GetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0) == 1)
@@ -971,6 +1049,30 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report player drink notification skips and the effective milk and arousal results shown.")
     ElseIf option == armorOverflowDiagnosticOption
         SetInfoText("Report PLAYER armor-overflow queue, cancellation, eligibility, armor type, threshold, and strip results.")
+    ElseIf option == armorDebugOption
+        SetInfoText("Report Milking Armor equip detection, classification, sound, animation safety, one-time state, and Skyrim.Net results.")
+    ElseIf option == playerMilkingArmorReactionsOption
+        SetInfoText("Enable all Player Milking Armor equip reactions.")
+    ElseIf option == playerMilkingArmorEquipSoundOption
+        SetInfoText("Play the LOW / Mild reaction sound whenever you equip supported Milking Armor.")
+    ElseIf option == playerMilkingArmorFirstEquipAnimationOption
+        SetInfoText("Play ZaZAPCHorFd once per Player and Milking Armor when animation ownership is safe.")
+    ElseIf option == playerMilkingArmorNotificationOption
+        SetInfoText("Show the short latch notification when the Player first-equip animation begins.")
+    ElseIf option == npcMilkingArmorReactionsOption
+        SetInfoText("Enable all NPC Milking Armor equip reactions.")
+    ElseIf option == npcMilkingArmorEquipSoundOption
+        SetInfoText("Play the LOW / Mild reaction sound whenever an NPC equips supported Milking Armor.")
+    ElseIf option == npcMilkingArmorFirstEquipAnimationOption
+        SetInfoText("Play ZaZAPCHorFd once per NPC and Milking Armor when animation ownership is safe.")
+    ElseIf option == npcMilkingArmorNotificationOption
+        SetInfoText("Show the short latch notification when an NPC first-equip animation begins.")
+    ElseIf option == skyrimNetMilkingArmorEventsOption
+        SetInfoText("Send one-time Milking Armor context and cooldown-limited repeat-equip narration to Skyrim.Net.")
+    ElseIf option == playerMilkingArmorNarrationCooldownOption
+        SetInfoText("Set the global real-time delay between token-using Player Milking Armor narrations.")
+    ElseIf option == npcMilkingArmorNarrationCooldownOption
+        SetInfoText("Set the global real-time delay between token-using NPC Milking Armor narrations.")
     ElseIf option == selfMilkingActionDiagnosticOption
         SetInfoText("Report self-milking action registration, Milk Maid checks, and spell requests.")
     ElseIf option == pairedMilkingActionDiagnosticOption
@@ -1162,6 +1264,49 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == armorDebugOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorDebug", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == playerMilkingArmorReactionsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorReactions", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkingArmorReactions", value)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
+    ElseIf option == playerMilkingArmorEquipSoundOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipSound", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipSound", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == playerMilkingArmorFirstEquipAnimationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorFirstEquipAnimation", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkingArmorFirstEquipAnimation", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == playerMilkingArmorNotificationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorNotification", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkingArmorNotification", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == npcMilkingArmorReactionsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorReactions", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkingArmorReactions", value)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
+    ElseIf option == npcMilkingArmorEquipSoundOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorEquipSound", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkingArmorEquipSound", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == npcMilkingArmorFirstEquipAnimationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorFirstEquipAnimation", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkingArmorFirstEquipAnimation", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == npcMilkingArmorNotificationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorNotification", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkingArmorNotification", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == skyrimNetMilkingArmorEventsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingArmorEvents", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingArmorEvents", value)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
     ElseIf option == selfMilkingActionDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", value)
@@ -1350,6 +1495,16 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(3.0)
         SetSliderDialogRange(0.0, 10.0)
         SetSliderDialogInterval(1.0)
+    ElseIf option == playerMilkingArmorNarrationCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "playerMilkingArmorNarrationCooldown", 120.0))
+        SetSliderDialogDefaultValue(120.0)
+        SetSliderDialogRange(10.0, 3600.0)
+        SetSliderDialogInterval(10.0)
+    ElseIf option == npcMilkingArmorNarrationCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "npcMilkingArmorNarrationCooldown", 300.0))
+        SetSliderDialogDefaultValue(300.0)
+        SetSliderDialogRange(10.0, 3600.0)
+        SetSliderDialogInterval(10.0)
     EndIf
 EndEvent
 
@@ -1419,6 +1574,14 @@ Event OnOptionSliderAccept(Int option, Float value)
         SetSliderOptionValue(option, value, "{0} seconds")
     ElseIf option == npcFullnessSelfMilkAnimationDurationOption
         JsonUtil.SetFloatValue(SettingsFile, "npcFullnessSelfMilkAnimationDuration", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == playerMilkingArmorNarrationCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "playerMilkingArmorNarrationCooldown", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == npcMilkingArmorNarrationCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "npcMilkingArmorNarrationCooldown", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
     EndIf

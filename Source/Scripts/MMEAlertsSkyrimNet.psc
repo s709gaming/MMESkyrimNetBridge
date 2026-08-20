@@ -75,6 +75,81 @@ Function SendMilkingEnd(Actor milkMaid) Global
     SendMilkingEvent(milkMaid, "endMessage")
 EndFunction
 
+; Publishes the successful one-time Milking Armor latch for exactly two minutes.
+Int Function SendMilkingArmorFirstEquip(Actor wearer, Armor equippedArmor) Global
+    Bool diagnostic = MMEArmorScript.GetArmorDiagnostic()
+    If !IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkingArmorEvents", 1) != 1
+        MMEArmorScript.ReportArmor(diagnostic, "Skyrim.Net short-lived event skipped: armor events disabled")
+        Return -1
+    EndIf
+    If !IsAvailable() || wearer == None || equippedArmor == None || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
+        MMEArmorScript.ReportArmor(diagnostic, "Skyrim.Net short-lived event skipped: integration unavailable")
+        Return -2
+    EndIf
+
+    String actorName = ResolveActorName(wearer, "The Milk Maid")
+    String content = actorName + "'s newly fitted Milking Armor has latched into place around her milk-heavy breasts. The sudden pressure and support feel intensely pleasurable, and the armor can now accommodate and milk her when needed."
+    String actorUuid = SkyrimNetApi.GetEntityUUID(wearer)
+    If actorUuid == ""
+        actorUuid = "form_" + wearer.GetFormID()
+    EndIf
+    String eventId = "milking_armor_intro_" + actorUuid + "_" + equippedArmor.GetFormID()
+    Int result = SkyrimNetApi.RegisterShortLivedEvent(eventId, "milking_armor_equipped", content, "{}", 120000, wearer, None)
+    If result == 0
+        MMEArmorScript.ReportArmor(diagnostic, "Skyrim.Net short-lived event sent | " + actorName + " | 120s")
+    Else
+        MMEArmorScript.ReportArmor(diagnostic, "Skyrim.Net short-lived event rejected [" + result + "]")
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] Milking Armor intro result " + result + " | " + actorName + " | " + content)
+    Return result
+EndFunction
+
+; Later supported equips use a global cooldown per role and never random chance.
+Int Function NarrateMilkingArmorEquip(Actor wearer) Global
+    Bool diagnostic = MMEArmorScript.GetArmorDiagnostic()
+    If !IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkingArmorEvents", 1) != 1
+        MMEArmorScript.ReportArmor(diagnostic, "repeat narration skipped: armor events disabled")
+        Return -1
+    EndIf
+    If !IsAvailable() || wearer == None || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
+        MMEArmorScript.ReportArmor(diagnostic, "repeat narration skipped: Skyrim.Net unavailable")
+        Return -2
+    EndIf
+
+    String cooldownKey = "npcMilkingArmorNarrationCooldown"
+    String lastKey = "lastNPCMilkingArmorNarrationRealTime"
+    Float defaultCooldown = 300.0
+    If wearer == Game.GetPlayer()
+        cooldownKey = "playerMilkingArmorNarrationCooldown"
+        lastKey = "lastPlayerMilkingArmorNarrationRealTime"
+        defaultCooldown = 120.0
+    EndIf
+    Float cooldown = JsonUtil.GetFloatValue("/MMEAlerts/Settings", cooldownKey, defaultCooldown)
+    Float now = Utility.GetCurrentRealTime()
+    Float last = JsonUtil.GetFloatValue("/MMEAlerts/Settings", lastKey, -1.0)
+    If last > now
+        last = -1.0
+    EndIf
+    If last >= 0.0 && now - last < cooldown
+        Int remaining = (cooldown - (now - last)) as Int
+        MMEArmorScript.ReportArmor(diagnostic, "repeat narration skipped by cooldown | " + remaining + "s")
+        Return -3
+    EndIf
+
+    String actorName = ResolveActorName(wearer, "The Milk Maid")
+    String content = actorName + " has just equipped her Milking Armor. It settles snugly around her breasts, ready to accommodate and milk her."
+    Int result = SkyrimNetApi.DirectNarration(content, None, None)
+    If result == 0
+        JsonUtil.SetFloatValue("/MMEAlerts/Settings", lastKey, now)
+        JsonUtil.Save("/MMEAlerts/Settings", False)
+        MMEArmorScript.ReportArmor(diagnostic, "repeat narration sent | " + actorName)
+    Else
+        MMEArmorScript.ReportArmor(diagnostic, "repeat narration rejected [" + result + "]")
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] Milking Armor narration result " + result + " | cooldown " + cooldown + " | " + content)
+    Return result
+EndFunction
+
 ; Publishes actor-specific capacity crossings for two minutes without forcing dialogue.
 Function SendCapacityMilestone(Actor milkMaid, Int crossing) Global
     If !IsExtensionsEnabled()

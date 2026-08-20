@@ -245,3 +245,182 @@ Function Report(Bool showNotification, String reportText) Global
         Debug.Notification("Armor Overflow: " + reportText)
     EndIf
 EndFunction
+
+; Classification seam: 0 unsupported, 1 Milking Armor, 2 reserved for the
+; future Parasitic Armor pass.
+Int Function ClassifyArmor(MilkQUEST milkController, Armor equippedArmor) Global
+    If milkController == None || equippedArmor == None
+        Return 0
+    EndIf
+    If equippedArmor == milkController.MilkCuirass || equippedArmor == milkController.MilkCuirassFuta
+        Return 1
+    EndIf
+    String armorName = equippedArmor.GetName()
+    If armorName != "" && armorName != "Empty" && milkController.MilkingEquipment.Find(armorName) >= 0
+        Return 1
+    EndIf
+    Return 0
+EndFunction
+
+; Shared Player/NPC Milking Armor equip pipeline. The native equip sink calls
+; this only for a real equipped ARMO, never for inventory additions.
+Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
+    Bool diagnostic = GetArmorDiagnostic()
+    String role = "NPC"
+    If wearer == Game.GetPlayer()
+        role = "PLAYER"
+    EndIf
+    ReportArmor(diagnostic, "equip resolved | " + role + " | " + GetActorName(wearer) + " | " + GetArmorName(equippedArmor))
+
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Int armorClass = ClassifyArmor(milkController, equippedArmor)
+    If armorClass != 1
+        ReportArmor(diagnostic, "unsupported armor rejected | " + role + " | " + GetArmorName(equippedArmor))
+        Return
+    EndIf
+    ReportArmor(diagnostic, "classified as Milking Armor | " + role)
+
+    String roleEnableKey = "enableNPCMilkingArmorReactions"
+    If wearer == Game.GetPlayer()
+        roleEnableKey = "enablePlayerMilkingArmorReactions"
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", roleEnableKey, 1) != 1
+        ReportArmor(diagnostic, "role reaction disabled | " + role)
+        Return
+    EndIf
+    ReportArmor(diagnostic, "role reaction enabled | " + role)
+
+    PlayMilkingArmorEquipSound(wearer, role, diagnostic)
+
+    Bool wasObserved = StorageUtil.FormListHas(wearer, "MMEExtensions.MilkingArmor.Observed", equippedArmor)
+    If !wasObserved
+        StorageUtil.FormListAdd(wearer, "MMEExtensions.MilkingArmor.Observed", equippedArmor, False)
+    EndIf
+
+    If StorageUtil.FormListHas(wearer, "MMEExtensions.MilkingArmor.Introduced", equippedArmor)
+        ReportArmor(diagnostic, "first-equip intro already seen | " + role)
+        MMEAlertsSkyrimNet.NarrateMilkingArmorEquip(wearer)
+        Return
+    EndIf
+
+    Bool introStarted = TryMilkingArmorIntro(wearer, equippedArmor, milkController, role, diagnostic)
+    If introStarted
+        ; The short-lived event already describes this equip; never duplicate it
+        ; with forced narration on the same callback.
+        Return
+    EndIf
+    If wasObserved
+        MMEAlertsSkyrimNet.NarrateMilkingArmorEquip(wearer)
+    Else
+        ReportArmor(diagnostic, "first equip observed without a completed intro; repeat narration deferred")
+    EndIf
+EndFunction
+
+Function PlayMilkingArmorEquipSound(Actor wearer, String role, Bool diagnostic) Global
+    String soundKey = "enableNPCMilkingArmorEquipSound"
+    If wearer == Game.GetPlayer()
+        soundKey = "enablePlayerMilkingArmorEquipSound"
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableReactionSounds", 1) != 1 || JsonUtil.GetIntValue("/MMEAlerts/Settings", soundKey, 1) != 1
+        ReportArmor(diagnostic, "equip sound disabled | " + role)
+        Return
+    EndIf
+    If wearer == None || wearer.IsDead() || wearer.IsDisabled() || !wearer.Is3DLoaded()
+        ReportArmor(diagnostic, "LOW sound skipped: actor unavailable | " + role)
+        Return
+    EndIf
+    ReportArmor(diagnostic, "LOW / Mild sound selected | " + role)
+    Sound reaction = Game.GetFormFromFile(0x000854, "MMEAlert.esp") as Sound
+    If reaction == None
+        ReportArmor(diagnostic, "LOW sound form failed to resolve")
+        Return
+    EndIf
+    Int instance = reaction.Play(wearer)
+    If instance > 0
+        Sound.SetInstanceVolume(instance, JsonUtil.GetFloatValue("/MMEAlerts/Settings", "reactionSoundVolume", 100.0) / 100.0)
+        ReportArmor(diagnostic, "LOW Sound.Play succeeded | instance " + instance)
+    Else
+        ReportArmor(diagnostic, "LOW Sound.Play failed | result " + instance)
+    EndIf
+EndFunction
+
+Bool Function TryMilkingArmorIntro(Actor wearer, Armor equippedArmor, MilkQUEST milkController, String role, Bool diagnostic) Global
+    String animationKey = "enableNPCMilkingArmorFirstEquipAnimation"
+    String notificationKey = "enableNPCMilkingArmorNotification"
+    If wearer == Game.GetPlayer()
+        animationKey = "enablePlayerMilkingArmorFirstEquipAnimation"
+        notificationKey = "enablePlayerMilkingArmorNotification"
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", animationKey, 1) != 1
+        ReportArmor(diagnostic, "first-equip animation disabled | " + role)
+        Return False
+    EndIf
+
+    ReportArmor(diagnostic, "first-equip intro eligible | " + role)
+    String blocked = MMEAnimationSafety.GetStartBlockReason(wearer, milkController, True)
+    If blocked != ""
+        ReportArmor(diagnostic, "animation blocked: " + blocked + " | " + role)
+        Return False
+    EndIf
+    String owner = "MilkingArmorIntro"
+    If !MMEAnimationSafety.TryAcquire(wearer, owner)
+        ReportArmor(diagnostic, "animation blocked: ownership acquisition failed | " + role)
+        Return False
+    EndIf
+
+    Debug.SendAnimationEvent(wearer, "ZaZAPCHorFd")
+    StorageUtil.FormListAdd(wearer, "MMEExtensions.MilkingArmor.Introduced", equippedArmor, False)
+    ReportArmor(diagnostic, "ZaZAPCHorFd started; intro marker written | " + role)
+
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", notificationKey, 1) == 1
+        Debug.Notification("The milking armor latches snugly around your breasts.")
+        ReportArmor(diagnostic, "in-game notification shown | " + role)
+    EndIf
+    Int eventResult = MMEAlertsSkyrimNet.SendMilkingArmorFirstEquip(wearer, equippedArmor)
+    ReportArmor(diagnostic, "Skyrim.Net first-equip event result " + eventResult + " | " + role)
+
+    Utility.Wait(10.0)
+    String resetBlocked = MMEAnimationSafety.GetResetBlockReason(wearer, milkController, owner)
+    If resetBlocked == ""
+        Debug.SendAnimationEvent(wearer, "IdleForceDefaultState")
+        ReportArmor(diagnostic, "intro completed and actor reset | " + role)
+    Else
+        ReportArmor(diagnostic, "intro completed without reset: " + resetBlocked + " | " + role)
+    EndIf
+    MMEAnimationSafety.Release(wearer, owner)
+    Return True
+EndFunction
+
+String Function GetActorName(Actor wearer) Global
+    If wearer == None
+        Return "<missing actor>"
+    EndIf
+    String actorName = wearer.GetDisplayName()
+    If actorName == ""
+        actorName = "Unknown actor"
+    EndIf
+    Return actorName
+EndFunction
+
+String Function GetArmorName(Armor equippedArmor) Global
+    If equippedArmor == None
+        Return "<missing armor>"
+    EndIf
+    String armorName = equippedArmor.GetName()
+    If armorName == ""
+        armorName = "<unnamed armor>"
+    EndIf
+    Return armorName
+EndFunction
+
+Bool Function GetArmorDiagnostic() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorDebug", 0) == 1
+EndFunction
+
+Function ReportArmor(Bool diagnostic, String reportText) Global
+    If !diagnostic
+        Return
+    EndIf
+    Debug.Trace("[MME Extensions Armor] " + reportText)
+    Debug.Notification("Armor Debug: " + reportText)
+EndFunction

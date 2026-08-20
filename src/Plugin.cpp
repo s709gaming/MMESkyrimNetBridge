@@ -23,6 +23,7 @@ namespace
     constexpr auto kLifecycleEvent = "MMEExtensions_Lifecycle";
     constexpr auto kMMEEffectEvent = "MMEExtensions_MMEEffectApplied";
     constexpr auto kPotionEvent = "MMEExtensions_PotionConsumed";
+    constexpr auto kArmorEvent = "MMEExtensions_ArmorEquipped";
 
     std::vector<RE::Actor*> GetNearbyActors(RE::StaticFunctionTag*, float radius)
     {
@@ -114,6 +115,23 @@ namespace
         SKSE::log::info("potion equip sent: actor {:08X}, {}:{:06X}", actor->GetFormID(), sourceFile->GetFilename(), potion->GetLocalFormID());
     }
 
+    void SendArmorEvent(RE::Actor* actor, RE::TESForm* armor)
+    {
+        auto* source = SKSE::GetModCallbackEventSource();
+        auto* sourceFile = armor ? armor->GetFile(0) : nullptr;
+        if (!source || !actor || !armor || !sourceFile) {
+            return;
+        }
+        SKSE::ModCallbackEvent event{
+            RE::BSFixedString(kArmorEvent),
+            RE::BSFixedString(sourceFile->GetFilename()),
+            static_cast<float>(armor->GetLocalFormID()),
+            actor
+        };
+        source->SendEvent(&event);
+        SKSE::log::info("armor equip sent: actor {:08X}, {}:{:06X}", actor->GetFormID(), sourceFile->GetFilename(), armor->GetLocalFormID());
+    }
+
     class LifecycleEventSink final :
         public RE::BSTEventSink<RE::TESWaitStopEvent>,
         public RE::BSTEventSink<RE::TESSleepStopEvent>,
@@ -199,6 +217,8 @@ namespace
             auto* item = RE::TESForm::LookupByID(event->baseObject);
             if (actor && item && item->GetFormType() == RE::FormType::AlchemyItem) {
                 SendPotionEvent(actor, item);
+            } else if (actor && item && item->GetFormType() == RE::FormType::Armor) {
+                SendArmorEvent(actor, item);
             }
             return RE::BSEventNotifyControl::kContinue;
         }

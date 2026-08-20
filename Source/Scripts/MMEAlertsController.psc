@@ -35,6 +35,8 @@ Function InitializeController()
     RegisterForModEvent("MMEExtensions_Lifecycle", "OnNativeLifecycle")
     UnregisterForModEvent("MMEExtensions_MMEEffectApplied")
     RegisterForModEvent("MMEExtensions_MMEEffectApplied", "OnMMEEffectApplied")
+    UnregisterForModEvent("MMEExtensions_ArmorEquipped")
+    RegisterForModEvent("MMEExtensions_ArmorEquipped", "OnArmorEquipped")
     UnregisterForModEvent("MME_AddMilkMaid")
     RegisterForModEvent("MME_AddMilkMaid", "OnMMEAddMilkmaidRequested")
     UnregisterForUpdate()
@@ -69,6 +71,7 @@ Function DisableController()
     UnregisterForUpdate()
     UnregisterForModEvent("MMEExtensions_Lifecycle")
     UnregisterForModEvent("MMEExtensions_MMEEffectApplied")
+    UnregisterForModEvent("MMEExtensions_ArmorEquipped")
     UnregisterForModEvent("MME_AddMilkMaid")
     UnregisterForModEvent("MilkQuest.StartMilkingMachine")
     UnregisterForModEvent("MilkQuest.StopMilkingMachine")
@@ -173,6 +176,28 @@ Event OnMMEEffectApplied(String eventName, String pluginName, Float localEffectF
         Return
     EndIf
     CheckMilkmaidCreation(candidate, "MME effect")
+EndEvent
+
+; Resolves the exact equipped ARMO published by the native global equip sink.
+Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm, Form sender)
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
+    Actor wearer = sender as Actor
+    Bool diagnostic = MMEArmorScript.GetArmorDiagnostic()
+    If diagnostic
+        Debug.Notification("Armor Debug: equip detected")
+    EndIf
+    If wearer == None || pluginName == ""
+        MMEArmorScript.ReportArmor(diagnostic, "equip rejected: actor or plugin missing")
+        Return
+    EndIf
+    Armor equippedArmor = Game.GetFormFromFile(localArmorForm as Int, pluginName) as Armor
+    If equippedArmor == None
+        MMEArmorScript.ReportArmor(diagnostic, "armor resolve failed | " + pluginName + ":" + (localArmorForm as Int))
+        Return
+    EndIf
+    MMEArmorScript.HandleArmorEquipped(wearer, equippedArmor)
 EndEvent
 
 ; Adds coverage for third-party mods using MME's public creation request.

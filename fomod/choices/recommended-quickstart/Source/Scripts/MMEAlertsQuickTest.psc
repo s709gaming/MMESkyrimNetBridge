@@ -3,6 +3,7 @@ Scriptname MMEAlertsQuickTest extends Quest
 ; Installed only by the Recommended FOMOD choice. The global latch prevents
 ; duplicate grants when normal startup hooks invoke this helper more than once.
 String QuickStartGrantKey = "MMEExtensions.QuickStart.Granted"
+String QuickStartMilkCuirassGrantKey = "MMEExtensions.QuickStart.MilkCuirassGranted"
 Bool milkVarietyGranted = False
 
 Event OnInit()
@@ -10,12 +11,12 @@ Event OnInit()
 EndEvent
 
 Function ApplyTestSetup()
-    If milkVarietyGranted || StorageUtil.GetIntValue(None, QuickStartGrantKey, 0) != 0
-        Return
-    EndIf
-
     Actor playerActor = Game.GetPlayer()
     If playerActor == None
+        Return
+    EndIf
+    GrantMilkCuirassOnce(playerActor)
+    If milkVarietyGranted || StorageUtil.GetIntValue(None, QuickStartGrantKey, 0) != 0
         Return
     EndIf
 
@@ -31,6 +32,23 @@ Function ApplyTestSetup()
     Potion succubusMilk = Game.GetFormFromFile(0x0394C2, "MilkModNEW.esp") as Potion
 
     GrantMilkVariety(playerActor, lactacid, regularMilk, bretonMilk, succubusMilk)
+EndFunction
+
+; Separate save latch lets existing Recommended QuickStart users receive this
+; newly added test item without duplicating their earlier milk grants.
+Function GrantMilkCuirassOnce(Actor playerActor)
+    If playerActor == None || StorageUtil.GetIntValue(None, QuickStartMilkCuirassGrantKey, 0) != 0
+        Return
+    EndIf
+    Bool armorDiagnostic = MMEArmorScript.GetArmorDiagnostic()
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None || milkController.MilkCuirass == None
+        MMEArmorScript.ReportArmor(armorDiagnostic, "Recommended QuickStart could not resolve MME Milk Cuirass")
+        Return
+    EndIf
+    StorageUtil.SetIntValue(None, QuickStartMilkCuirassGrantKey, 1)
+    playerActor.AddItem(milkController.MilkCuirass, 1, False)
+    MMEArmorScript.ReportArmor(armorDiagnostic, "Recommended QuickStart granted one MME Milk Cuirass")
 EndFunction
 
 Function GrantMilkVariety(Actor playerActor, Potion lactacid, Potion regularMilk, Potion bretonMilk, Potion succubusMilk)
