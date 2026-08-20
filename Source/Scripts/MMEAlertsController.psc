@@ -10,6 +10,7 @@ Float NextCapacityUpdate = 0.0
 Float NextSkyrimNetUpdate = 0.0
 Float NextDebugUpdate = 0.0
 Float NextArmorCheck = 0.0
+Bool Property OStimDialogueAvailable Auto Conditional
 
 Bool Function IsExtensionsEnabled() Global
     Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMMEExtensions", 1) == 1
@@ -22,6 +23,7 @@ EndEvent
 
 ; Restores event registrations and abilities; called at startup and after load.
 Function InitializeController()
+    RefreshOStimDialogueAvailability()
     If !IsExtensionsEnabled()
         DisableController()
         Return
@@ -63,6 +65,7 @@ EndFunction
 
 ; Stops scheduled work and event subscriptions without removing saved state.
 Function DisableController()
+    OStimDialogueAvailable = False
     UnregisterForUpdate()
     UnregisterForModEvent("MMEExtensions_Lifecycle")
     UnregisterForModEvent("MMEExtensions_MMEEffectApplied")
@@ -78,6 +81,11 @@ Function DisableController()
     NextSkyrimNetUpdate = 0.0
     NextDebugUpdate = 0.0
     NextArmorCheck = 0.0
+EndFunction
+
+; Exposes one dependency-free quest condition for the optional dialogue INFOs.
+Function RefreshOStimDialogueAvailability()
+    OStimDialogueAvailable = MMEOStimBreastfeeding.IsDialogueEnabled()
 EndFunction
 
 ; Records Milkmaids already present when this version starts to avoid false creation reports.

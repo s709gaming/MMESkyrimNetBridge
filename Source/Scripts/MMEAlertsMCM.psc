@@ -75,10 +75,13 @@ Int pairedMilkingActionOption
 Int selfMilkingActionDiagnosticOption
 Int pairedMilkingActionDiagnosticOption
 Int masterEnableOption
+Int ostimBreastfeedingOption
+Int ostimStatusOption
+Int ostimDebugOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 69
+    Return 70
 EndFunction
 
 Function SetPageNames()
@@ -120,6 +123,10 @@ EndEvent
 Event OnConfigOpen()
     ModName = "MME Extensions"
     SetPageNames()
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller != None
+        controller.RefreshOStimDialogueAvailability()
+    EndIf
 EndEvent
 
 ; SkyUI caches the MCM name at first registration, so changing ModName alone
@@ -173,6 +180,9 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableOStimBreastfeeding", MMEOStimBreastfeeding.IsOStimDetected() as Int)
+        JsonUtil.SetIntValue(SettingsFile, "enableOStimDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "ostimBreastfeedingMigration70", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableVoiceGiveMilk", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableVoiceGiveMilkDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkFullNarration", 1)
@@ -593,6 +603,13 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorOverflowDiagnosticMigration69", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; OStim remains optional and starts enabled only when its plugin is active.
+    If JsonUtil.GetIntValue(SettingsFile, "ostimBreastfeedingMigration70", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableOStimBreastfeeding", MMEOStimBreastfeeding.IsOStimDetected() as Int)
+        JsonUtil.SetIntValue(SettingsFile, "enableOStimDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "ostimBreastfeedingMigration70", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 ; Renders the selected SkyUI page from persisted JContainers settings.
@@ -672,6 +689,9 @@ Event OnPageReset(String page)
     selfMilkingActionDiagnosticOption = -1
     pairedMilkingActionDiagnosticOption = -1
     masterEnableOption = -1
+    ostimBreastfeedingOption = -1
+    ostimStatusOption = -1
+    ostimDebugOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -700,6 +720,14 @@ Event OnPageReset(String page)
         npcHalfFullSelfMilkAnimationOption = AddToggleOption("NPC Half-Full Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCHalfFullSelfMilkAnimation", 1) == 1)
         npcFullSelfMilkAnimationOption = AddToggleOption("NPC Full Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCFullSelfMilkAnimation", 1) == 1)
         npcFullnessSelfMilkAnimationDurationOption = AddSliderOption("NPC Fullness Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "npcFullnessSelfMilkAnimationDuration", 3.0), "{0} seconds")
+        Bool ostimAvailable = MMEOStimBreastfeeding.IsOStimDetected()
+        Int ostimFlags = OPTION_FLAG_DISABLED
+        If ostimAvailable
+            ostimFlags = OPTION_FLAG_NONE
+        EndIf
+        AddHeaderOption("OStim")
+        ostimBreastfeedingOption = AddToggleOption("Enable OStim Breastfeeding", JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0) == 1, ostimFlags)
+        ostimStatusOption = AddToggleOption("OStim Detected", ostimAvailable, OPTION_FLAG_DISABLED)
         Return
     EndIf
     If page == "A" + "rousal "
@@ -800,6 +828,8 @@ Event OnPageReset(String page)
         arousalDiagnosticOption = AddToggleOption("Milk Arousal Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 0) == 1)
         AddHeaderOption("Dialogue")
         dialogueDiagnosticOption = AddToggleOption("NPC Dialogue Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1)
+        AddHeaderOption("OStim")
+        ostimDebugOption = AddToggleOption("OStim Debug", JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1)
         Return
     EndIf
     AddHeaderOption("Sounds")
@@ -863,6 +893,12 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Play MME's standing milking animation when an NPC Milkmaid crosses 100% fullness, without triggering milking.")
     ElseIf option == npcFullnessSelfMilkAnimationDurationOption
         SetInfoText("Set how long NPC fullness self-milk animations play before the actor returns to idle.")
+    ElseIf option == ostimBreastfeedingOption
+        SetInfoText("Add optional OStim nipple-sucking choices beside MME's original SexLab breastfeeding dialogue.")
+    ElseIf option == ostimStatusOption
+        SetInfoText("Read-only. Enabled when OStim.esp is active in the load order.")
+    ElseIf option == ostimDebugOption
+        SetInfoText("Show in-game reasons when OStim breastfeeding is unavailable, blocked, or fails to start.")
     ElseIf option == npcMilkEffectsOption
         SetInfoText("Apply milk, arousal, and moan effects when an MME Milkmaid consumes recognized milk.")
     ElseIf option == npcDrinkNotificationsOption
@@ -1183,6 +1219,18 @@ Event OnOptionSelect(Int option)
     ElseIf option == dialogueDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == ostimBreastfeedingOption && MMEOStimBreastfeeding.IsOStimDetected()
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableOStimBreastfeeding", value)
+        SetToggleOptionValue(option, value == 1)
+        MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+        If controller != None
+            controller.RefreshOStimDialogueAvailability()
+        EndIf
+    ElseIf option == ostimDebugOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableOStimDebug", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == npcDrinkAnimationOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)

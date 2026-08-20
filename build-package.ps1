@@ -9,6 +9,7 @@ $skseSource = Join-Path $gameRoot "Data\Scripts\Source"
 $vanillaSource = Join-Path $gameRoot "Data\Source\Scripts"
 $skyUiSdkSource = Join-Path $projectRoot "tools\skyui-sdk"
 $mmeSdkSource = Join-Path $projectRoot "tools\mme-sdk"
+$ostimSdkSource = Join-Path $projectRoot "tools\ostim-sdk"
 $sourceDir = Join-Path $projectRoot "Source\Scripts"
 $compiledDir = Join-Path $projectRoot "Scripts"
 $distDir = Join-Path $projectRoot "dist"
@@ -16,7 +17,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $gameRoot "Data\SEQ\MMEAlert.seq"
-$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEDrinkAnimation", "MMEArmorScript", "MMENPCDialog", "MMEExtensionsNative")
+$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEDrinkAnimation", "MMEArmorScript", "MMENPCDialog", "MMEOStimBreastfeeding", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
@@ -46,7 +47,7 @@ if (!(Test-Path -LiteralPath (Join-Path $standardDefaultsSourceDir "MMEAlertsFla
 
 # Compile the debug scripts against the installed SKSE and Skyrim sources.
 New-Item -ItemType Directory -Force -Path $compiledDir | Out-Null
-$imports = "$sourceDir;$skyUiSdkSource;$mmeSdkSource;$skseSource;$vanillaSource"
+$imports = "$sourceDir;$skyUiSdkSource;$mmeSdkSource;$ostimSdkSource;$skseSource;$vanillaSource"
 foreach ($scriptName in $scriptNames) {
     Write-Host "Compiling $scriptName.psc..." -ForegroundColor Cyan
     & $compiler "$scriptName.psc" "-f=$flags" "-i=$imports" "-o=$compiledDir"
