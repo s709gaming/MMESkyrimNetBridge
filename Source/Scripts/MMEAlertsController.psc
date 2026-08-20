@@ -13,6 +13,8 @@ Float NextArmorCheck = 0.0
 Float NextDialogueDiagnosticUpdate = 0.0
 Actor LastDialogueDiagnosticActor = None
 String LastDialogueDiagnosticState = ""
+Bool MMEOpeningRefreshObserved = False
+Float MMEOpeningRefreshSnapshotAt = 0.0
 Bool Property OStimDialogueAvailable Auto Conditional
 
 Bool Function IsExtensionsEnabled() Global
@@ -90,6 +92,8 @@ Function DisableController()
     NextDialogueDiagnosticUpdate = 0.0
     LastDialogueDiagnosticActor = None
     LastDialogueDiagnosticState = ""
+    MMEOpeningRefreshObserved = False
+    MMEOpeningRefreshSnapshotAt = 0.0
 EndFunction
 
 ; Exposes one dependency-free quest condition for the optional dialogue INFOs.
@@ -392,6 +396,8 @@ Function UpdatePolling()
         NextDialogueDiagnosticUpdate = 0.0
         LastDialogueDiagnosticActor = None
         LastDialogueDiagnosticState = ""
+        MMEOpeningRefreshObserved = False
+        MMEOpeningRefreshSnapshotAt = 0.0
         Return
     EndIf
     Float now = Utility.GetCurrentRealTime()
@@ -411,11 +417,13 @@ Function UpdatePolling()
         NextDebugUpdate = 0.0
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
-        NextDialogueDiagnosticUpdate = now + 1.0
+        NextDialogueDiagnosticUpdate = now + 0.25
     Else
         NextDialogueDiagnosticUpdate = 0.0
         LastDialogueDiagnosticActor = None
         LastDialogueDiagnosticState = ""
+        MMEOpeningRefreshObserved = False
+        MMEOpeningRefreshSnapshotAt = 0.0
     EndIf
     ScheduleNextUpdate()
 EndFunction
@@ -447,8 +455,12 @@ Function ScheduleNextUpdate()
         delay = NextDialogueDiagnosticUpdate - now
     EndIf
     If delay > 0.0
-        If delay < 1.0
-            delay = 1.0
+        Float minimumDelay = 1.0
+        If NextDialogueDiagnosticUpdate > 0.0
+            minimumDelay = 0.25
+        EndIf
+        If delay < minimumDelay
+            delay = minimumDelay
         EndIf
         RegisterForSingleUpdate(delay)
     EndIf
@@ -482,10 +494,26 @@ Event OnUpdate()
         If dialogueTarget == None
             LastDialogueDiagnosticActor = None
             LastDialogueDiagnosticState = ""
+            MMEOpeningRefreshObserved = False
+            MMEOpeningRefreshSnapshotAt = 0.0
         Else
-            ShowDialogueEligibilitySnapshot(dialogueTarget)
+            Form openingInfo = Game.GetFormFromFile(0x06544B, "MilkModNEW.esp")
+            Form[] activeInfos = MMEExtensionsNative.GetActiveDialogueInfos()
+            If openingInfo != None && activeInfos != None && activeInfos.Find(openingInfo) >= 0 && !MMEOpeningRefreshObserved
+                MMEOpeningRefreshObserved = True
+                MMEOpeningRefreshSnapshotAt = now + 0.25
+                Debug.Trace("[MME Extensions Dialogue] observed MME opening INFO 06544B; scheduling post-Fragment_00 snapshot")
+            EndIf
+            If MMEOpeningRefreshObserved && MMEOpeningRefreshSnapshotAt > 0.0 && now >= MMEOpeningRefreshSnapshotAt
+                MMEOpeningRefreshSnapshotAt = 0.0
+                ShowDialogueEligibilitySnapshot(dialogueTarget, True)
+            ElseIf MMEOpeningRefreshObserved && MMEOpeningRefreshSnapshotAt <= 0.0
+                ShowDialogueEligibilitySnapshot(dialogueTarget, True)
+            Else
+                ShowDialogueEligibilitySnapshot(dialogueTarget, False)
+            EndIf
         EndIf
-        NextDialogueDiagnosticUpdate = now + 1.0
+        NextDialogueDiagnosticUpdate = now + 0.25
     EndIf
     Bool armorDue = NextArmorCheck > 0.0 && now >= NextArmorCheck
     If armorDue
@@ -529,10 +557,82 @@ String Function GetMilkBlockers(Actor source, MilkQUEST milkController)
     Return blockers
 EndFunction
 
+String Function ConditionResults(Int[] values)
+    If values == None
+        Return "missing"
+    EndIf
+    String result = ""
+    Int i = 0
+    While i < values.Length
+        If result != ""
+            result += ","
+        EndIf
+        result += "C" + i + "=" + values[i]
+        i += 1
+    EndWhile
+    If result == ""
+        Return "empty"
+    EndIf
+    Return result
+EndFunction
+
+Function ReportDialogueStructure(Actor subject, Actor playerActor)
+    Form playerDrinksTopic = Game.GetFormFromFile(0x062E91, "MilkModNEW.esp")
+    Form npcDrinksTopic = Game.GetFormFromFile(0x062E8F, "MilkModNEW.esp")
+    Form playerDrinksSexLab = Game.GetFormFromFile(0x05FE12, "MilkModNEW.esp")
+    Form npcDrinksSexLab = Game.GetFormFromFile(0x05FE0E, "MilkModNEW.esp")
+    Form playerDrinksOStim = Game.GetFormFromFile(0x000858, "MMEAlert.esp")
+    Form npcDrinksOStim = Game.GetFormFromFile(0x000859, "MMEAlert.esp")
+    Form[] playerDrinksInfos = MMEExtensionsNative.GetTopicInfos(playerDrinksTopic)
+    Form[] npcDrinksInfos = MMEExtensionsNative.GetTopicInfos(npcDrinksTopic)
+    Int playerDrinksCount = 0
+    Int npcDrinksCount = 0
+    Int playerSexLabIndex = -1
+    Int playerOStimIndex = -1
+    Int npcSexLabIndex = -1
+    Int npcOStimIndex = -1
+    If playerDrinksInfos != None
+        playerDrinksCount = playerDrinksInfos.Length
+        playerSexLabIndex = playerDrinksInfos.Find(playerDrinksSexLab)
+        playerOStimIndex = playerDrinksInfos.Find(playerDrinksOStim)
+    EndIf
+    If npcDrinksInfos != None
+        npcDrinksCount = npcDrinksInfos.Length
+        npcSexLabIndex = npcDrinksInfos.Find(npcDrinksSexLab)
+        npcOStimIndex = npcDrinksInfos.Find(npcDrinksOStim)
+    EndIf
+    Bool playerPNAM = MMEExtensionsNative.GetPreviousTopicInfo(playerDrinksOStim) == playerDrinksSexLab
+    Bool npcPNAM = MMEExtensionsNative.GetPreviousTopicInfo(npcDrinksOStim) == npcDrinksSexLab
+    String structure1 = "runtime PlayerDrinks topic count=" + playerDrinksCount + " SexLabIndex=" + playerSexLabIndex + " OStimIndex=" + playerOStimIndex + " PNAM=" + DiagnosticBool(playerPNAM)
+    String structure2 = "runtime NPCDrinks topic count=" + npcDrinksCount + " SexLabIndex=" + npcSexLabIndex + " OStimIndex=" + npcOStimIndex + " PNAM=" + DiagnosticBool(npcPNAM)
+    Debug.Trace("[MME Extensions Dialogue] " + structure1)
+    Debug.Trace("[MME Extensions Dialogue] " + structure2)
+
+    Int[] playerSexLabConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(playerDrinksSexLab, subject, playerActor)
+    Int[] npcSexLabConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(npcDrinksSexLab, subject, playerActor)
+    Int[] playerOStimConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(playerDrinksOStim, subject, playerActor)
+    Int[] npcOStimConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(npcDrinksOStim, subject, playerActor)
+    String exact1 = "Player drinks SexLab [gate,milk,exhaustion,mental,being,living]: " + ConditionResults(playerSexLabConditions)
+    String exact2 = "NPC drinks SexLab [gate,milk,being,living,exhaustion,mental]: " + ConditionResults(npcSexLabConditions)
+    String exact3 = "Player drinks OStim [milk,exhaustion,mental,being,living,gate]: " + ConditionResults(playerOStimConditions)
+    String exact4 = "NPC drinks OStim [milk,being,living,exhaustion,mental,gate]: " + ConditionResults(npcOStimConditions)
+    Debug.Trace("[MME Extensions Dialogue] " + exact1)
+    Debug.Trace("[MME Extensions Dialogue] " + exact2)
+    Debug.Trace("[MME Extensions Dialogue] " + exact3)
+    Debug.Trace("[MME Extensions Dialogue] " + exact4)
+    Debug.Trace("[MME Extensions Dialogue] engine totals | Player drinks SexLab=" + DiagnosticBool(MMEExtensionsNative.EvaluateTopicInfo(playerDrinksSexLab, subject, playerActor)) + " OStim=" + DiagnosticBool(MMEExtensionsNative.EvaluateTopicInfo(playerDrinksOStim, subject, playerActor)) + " | NPC drinks SexLab=" + DiagnosticBool(MMEExtensionsNative.EvaluateTopicInfo(npcDrinksSexLab, subject, playerActor)) + " OStim=" + DiagnosticBool(MMEExtensionsNative.EvaluateTopicInfo(npcDrinksOStim, subject, playerActor)))
+    Debug.Notification("Dialogue DEBUG - " + structure1)
+    Debug.Notification("Dialogue DEBUG - " + structure2)
+    Debug.Notification("Dialogue DEBUG - " + exact1)
+    Debug.Notification("Dialogue DEBUG - " + exact2)
+    Debug.Notification("Dialogue DEBUG - " + exact3)
+    Debug.Notification("Dialogue DEBUG - " + exact4)
+EndFunction
+
 ; Reports the exact live values used by MME's two breastfeeding INFOs. The
 ; snapshot repeats only when its state changes, so selecting MME's opening
 ; line exposes the before/after Fragment_00 refresh without notification spam.
-Function ShowDialogueEligibilitySnapshot(Actor subject)
+Function ShowDialogueEligibilitySnapshot(Actor subject, Bool postRefresh = False)
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None || milkController.MilkQC == None
         Debug.Trace("[MME Extensions Dialogue] MME controller/condition quest unavailable")
@@ -561,28 +661,34 @@ Function ShowDialogueEligibilitySnapshot(Actor subject)
     Bool sexLabNPCDrinks = playerShared && conditions.MME_BreasfeedingAnimationsCheck
     Bool ostimPlayerDrinks = subjectShared && OStimDialogueAvailable
     Bool ostimNPCDrinks = playerShared && OStimDialogueAvailable
-    String snapshotState = subject.GetFormID() + ":" + playerMilk + ":" + subjectMilk + ":" + conditions.MME_TargetMilk + ":" + conditions.MME_SubjectMilk + ":" + subjectBlockers + ":" + playerBlockers + ":" + conditions.MME_DialogueMilking + ":" + conditions.MME_BreasfeedingAnimationsCheck + ":" + OStimDialogueAvailable
+    String snapshotState = postRefresh + ":" + subject.GetFormID() + ":" + playerMilk + ":" + subjectMilk + ":" + conditions.MME_TargetMilk + ":" + conditions.MME_SubjectMilk + ":" + subjectBlockers + ":" + playerBlockers + ":" + conditions.MME_DialogueMilking + ":" + conditions.MME_BreasfeedingAnimationsCheck + ":" + OStimDialogueAvailable
     If subject == LastDialogueDiagnosticActor && snapshotState == LastDialogueDiagnosticState
         Return
     EndIf
     LastDialogueDiagnosticActor = subject
     LastDialogueDiagnosticState = snapshotState
 
+    String line0 = "MME opening INFO observed=" + DiagnosticBool(MMEOpeningRefreshObserved) + " / post-refresh snapshot=" + DiagnosticBool(postRefresh)
     String line1 = "Player milk=" + playerMilk + " / TargetMilk=" + conditions.MME_TargetMilk + " | NPC milk=" + subjectMilk + " / SubjectMilk=" + conditions.MME_SubjectMilk
-    String line2 = "NPC maid=" + DiagnosticBool(subjectMaid) + " / SubjectMaid=" + DiagnosticBool(conditions.MME_SubjectMaid) + " | refresh NPC=" + DiagnosticBool(subjectRefreshAllowed) + " Player=" + DiagnosticBool(playerRefreshAllowed)
+    String line2 = "NPC maid=" + DiagnosticBool(subjectMaid) + " / SubjectMaid=" + DiagnosticBool(conditions.MME_SubjectMaid) + " / SubjectSlave=" + DiagnosticBool(conditions.MME_SubjectSlave) + " | refresh NPC=" + DiagnosticBool(subjectRefreshAllowed) + " Player=" + DiagnosticBool(playerRefreshAllowed)
     String line3 = "blockers NPC=" + subjectBlockers + " | Player=" + playerBlockers + " | SexLabAnim=" + DiagnosticBool(conditions.MME_BreasfeedingAnimationsCheck)
     String line4 = "DialogueMilking=" + DiagnosticBool(conditions.MME_DialogueMilking) + " / root=" + DiagnosticBool(rootEligible) + " | OStim detected=" + DiagnosticBool(ostimDetected) + " setting=" + DiagnosticBool(ostimSetting) + " condition=" + DiagnosticBool(OStimDialogueAvailable)
     String line5 = "Player drinks: SexLab=" + DiagnosticBool(sexLabPlayerDrinks) + " OStim=" + DiagnosticBool(ostimPlayerDrinks) + " | NPC drinks: SexLab=" + DiagnosticBool(sexLabNPCDrinks) + " OStim=" + DiagnosticBool(ostimNPCDrinks)
-    Debug.Trace("[MME Extensions Dialogue] " + GetActorName(subject) + " | " + line1)
+    Debug.Trace("[MME Extensions Dialogue] " + GetActorName(subject) + " | " + line0)
+    Debug.Trace("[MME Extensions Dialogue] " + line1)
     Debug.Trace("[MME Extensions Dialogue] " + line2)
     Debug.Trace("[MME Extensions Dialogue] " + line3)
     Debug.Trace("[MME Extensions Dialogue] " + line4)
     Debug.Trace("[MME Extensions Dialogue] " + line5)
+    Debug.Notification("Dialogue DEBUG - " + line0)
     Debug.Notification("Dialogue DEBUG - " + line1)
     Debug.Notification("Dialogue DEBUG - " + line2)
     Debug.Notification("Dialogue DEBUG - " + line3)
     Debug.Notification("Dialogue DEBUG - " + line4)
     Debug.Notification("Dialogue DEBUG - " + line5)
+    If postRefresh
+        ReportDialogueStructure(subject, playerActor)
+    EndIf
 EndFunction
 
 ; Lets player lifecycle events request an immediate capacity rescan.

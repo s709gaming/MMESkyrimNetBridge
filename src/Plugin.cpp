@@ -12,6 +12,8 @@
 #include <RE/T/TESLoadGameEvent.h>
 #include <RE/T/TESMagicEffectApplyEvent.h>
 #include <RE/T/TESEquipEvent.h>
+#include <RE/T/TESTopic.h>
+#include <RE/T/TESTopicInfo.h>
 #include <RE/T/TESSleepStopEvent.h>
 #include <RE/T/TESWaitStopEvent.h>
 
@@ -68,11 +70,89 @@ namespace
         return speaker ? speaker->As<RE::Actor>() : nullptr;
     }
 
+    std::vector<RE::TESForm*> GetActiveDialogueInfos(RE::StaticFunctionTag*)
+    {
+        std::vector<RE::TESForm*> result;
+        auto* manager = RE::MenuTopicManager::GetSingleton();
+        if (!manager) {
+            return result;
+        }
+
+        const auto appendUnique = [&](RE::TESTopicInfo* info) {
+            if (info && std::find(result.begin(), result.end(), info) == result.end()) {
+                result.push_back(info);
+            }
+        };
+        appendUnique(manager->currentTopicInfo);
+        appendUnique(manager->rootTopicInfo);
+        if (manager->lastSelectedDialogue) {
+            appendUnique(manager->lastSelectedDialogue->parentTopicInfo);
+        }
+        return result;
+    }
+
+    std::vector<RE::TESForm*> GetTopicInfos(RE::StaticFunctionTag*, RE::TESForm* form)
+    {
+        std::vector<RE::TESForm*> result;
+        auto* topic = form && form->GetFormType() == RE::FormType::Dialogue ?
+                          static_cast<RE::TESTopic*>(form) :
+                          nullptr;
+        if (!topic || !topic->topicInfos) {
+            return result;
+        }
+        result.reserve(topic->numTopicInfos);
+        for (std::uint32_t i = 0; i < topic->numTopicInfos; ++i) {
+            if (topic->topicInfos[i]) {
+                result.push_back(topic->topicInfos[i]);
+            }
+        }
+        return result;
+    }
+
+    RE::TESForm* GetPreviousTopicInfo(RE::StaticFunctionTag*, RE::TESForm* form)
+    {
+        auto* info = form && form->GetFormType() == RE::FormType::Info ?
+                         static_cast<RE::TESTopicInfo*>(form) :
+                         nullptr;
+        return info ? info->dataInfo : nullptr;
+    }
+
+    bool EvaluateTopicInfo(RE::StaticFunctionTag*, RE::TESForm* form, RE::Actor* subject, RE::Actor* target)
+    {
+        auto* info = form && form->GetFormType() == RE::FormType::Info ?
+                         static_cast<RE::TESTopicInfo*>(form) :
+                         nullptr;
+        return info && subject && target && info->objConditions.IsTrue(subject, target);
+    }
+
+    std::vector<std::int32_t> EvaluateTopicInfoConditions(
+        RE::StaticFunctionTag*, RE::TESForm* form, RE::Actor* subject, RE::Actor* target)
+    {
+        std::vector<std::int32_t> result;
+        auto* info = form && form->GetFormType() == RE::FormType::Info ?
+                         static_cast<RE::TESTopicInfo*>(form) :
+                         nullptr;
+        if (!info || !subject || !target) {
+            return result;
+        }
+
+        for (auto* condition = info->objConditions.head; condition; condition = condition->next) {
+            RE::ConditionCheckParams params(subject, target);
+            result.push_back(condition->IsTrue(params) ? 1 : 0);
+        }
+        return result;
+    }
+
     bool RegisterPapyrus(RE::BSScript::IVirtualMachine* vm)
     {
         vm->RegisterFunction("GetNearbyActors", "MMEExtensionsNative", GetNearbyActors);
         vm->RegisterFunction("GetDialogueTarget", "MMEExtensionsNative", GetDialogueTarget);
-        SKSE::log::info("Native Papyrus scanner and dialogue target registered");
+        vm->RegisterFunction("GetActiveDialogueInfos", "MMEExtensionsNative", GetActiveDialogueInfos);
+        vm->RegisterFunction("GetTopicInfos", "MMEExtensionsNative", GetTopicInfos);
+        vm->RegisterFunction("GetPreviousTopicInfo", "MMEExtensionsNative", GetPreviousTopicInfo);
+        vm->RegisterFunction("EvaluateTopicInfo", "MMEExtensionsNative", EvaluateTopicInfo);
+        vm->RegisterFunction("EvaluateTopicInfoConditions", "MMEExtensionsNative", EvaluateTopicInfoConditions);
+        SKSE::log::info("Native scanner and dialogue diagnostics registered");
         return true;
     }
 
