@@ -104,6 +104,10 @@ Function SendCapacityMilestone(Actor milkMaid, Int crossing) Global
         tag = "[milk full]"
         content = tag + " " + actorName + " is completely full of milk, deliciously swollen and savoring the ultimate pleasure."
     EndIf
+    String restrainedContent = BuildRestrainedCapacityContent(milkMaid, crossing)
+    If restrainedContent != ""
+        content = tag + " " + restrainedContent
+    EndIf
 
     String actorUuid = SkyrimNetApi.GetEntityUUID(milkMaid)
     If actorUuid == ""
@@ -123,7 +127,7 @@ Function SendCapacityMilestone(Actor milkMaid, Int crossing) Global
 EndFunction
 
 ; Makes at most one token-using narration request for a completed scan's full crossings.
-Function NarrateMilkFull() Global
+Function NarrateMilkFull(Actor milkMaid) Global
     If !IsExtensionsEnabled()
         Return
     EndIf
@@ -161,6 +165,10 @@ Function NarrateMilkFull() Global
     EndIf
 
     String content = "One or more nearby Milk Maids are completely full and savoring the ultimate pleasure near a boobgasm. React briefly and naturally; fullness may be enjoyed without needing immediate milking."
+    String restrainedContent = BuildRestrainedCapacityContent(milkMaid, 2)
+    If restrainedContent != ""
+        content = restrainedContent
+    EndIf
     If diagnostic
         Debug.Notification("Milk Full Narration: sending general Milk Maid situation")
     EndIf
@@ -180,7 +188,7 @@ Function NarrateMilkFull() Global
 EndFunction
 
 ; Makes at most one token-using narration request for a completed scan's half-full crossings.
-Function NarrateMilkHalfFull() Global
+Function NarrateMilkHalfFull(Actor milkMaid) Global
     If !IsExtensionsEnabled()
         Return
     EndIf
@@ -217,6 +225,10 @@ Function NarrateMilkHalfFull() Global
     EndIf
 
     String content = "One or more nearby Milk Maids have become half full. Their breasts are getting pleasantly heavier and more sensitive. React briefly and naturally."
+    String restrainedContent = BuildRestrainedCapacityContent(milkMaid, 1)
+    If restrainedContent != ""
+        content = restrainedContent
+    EndIf
     If diagnostic
         Debug.Notification("Half-Full Narration: sending general Milk Maid situation")
     EndIf
@@ -283,6 +295,9 @@ Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False) Global
     EndIf
 
     String content = actorName + " just drank some milk. Her breasts are feeling heavier and more sensitive, and she's getting increasingly aroused and excited. React briefly and naturally."
+    If MMEAlertsController.AreArmsRestrained(drinker)
+        content = actorName + " just drank some milk. With her arms restrained, drinking it was awkward enough that she may have needed help or found some clever way to manage it. Her breasts are already feeling heavier and more sensitive, adding playful erotic anticipation as she fills. React briefly and naturally."
+    EndIf
     Int result = SkyrimNetApi.DirectNarration(content, None, None)
     If result == 0
         JsonUtil.SetFloatValue(settingsFile, "lastNPCDrinkNarrationRealTime", now)
@@ -350,6 +365,10 @@ Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem) Global
         drinkName = "some milk"
     EndIf
     String content = "The player just drank " + drinkName + ". They're feeling pleasantly heavier and more sensitive. React briefly and naturally."
+    String restrainedContent = BuildRestrainedPlayerDrinkContent(drinker, drinkName)
+    If restrainedContent != ""
+        content = restrainedContent
+    EndIf
     Int result = SkyrimNetApi.DirectNarration(content, None, None)
     If result == 0
         JsonUtil.SetFloatValue(settingsFile, "lastPlayerDrinkNarrationRealTime", now)
@@ -637,6 +656,10 @@ Function SendMilkDrink(Actor drinker, Form drinkItem) Global
     String template = JsonUtil.GetStringValue(settingsFile, "drinkMessage", "{actor} drank {item}.")
     String content = RenderToken(template, "{actor}", actorName)
     content = RenderToken(content, "{item}", itemName)
+    String restrainedContent = BuildRestrainedPlayerDrinkContent(drinker, itemName)
+    If restrainedContent != ""
+        content = restrainedContent
+    EndIf
     If diagnostic
         String buildVersion = SkyrimNetApi.GetBuildVersion()
         String buildType = SkyrimNetApi.GetBuildType()
@@ -744,6 +767,68 @@ Function SendMilkingEvent(Actor milkMaid, String messageKey) Global
         EndIf
         Debug.Trace("[MMEAlert SkyrimNet] Sent 60-second " + eventType + " event: " + content)
     EndIf
+EndFunction
+
+; Returns an empty string unless MME's optional DD bridge positively reports
+; armbinder/yoke arm restraint for this exact crossing actor.
+String Function BuildRestrainedCapacityContent(Actor milkMaid, Int crossing) Global
+    If milkMaid == None || !MMEAlertsController.AreArmsRestrained(milkMaid)
+        Return ""
+    EndIf
+    String actorName = ResolveActorName(milkMaid, "The Milk Maid")
+    If crossing == 2
+        Return actorName + " is completely full and savoring the ultimate pleasure near a boobgasm. Her arms are restrained, leaving her unable to freely touch or relieve her extremely heavy, sensitive breasts. The helplessness turns the fullness into prolonged erotic teasing and edging that she enjoys. React briefly, suggestively, and playfully."
+    ElseIf crossing == 1
+        Return actorName + " has become half full. Her breasts are getting pleasantly heavier and more sensitive. Her mind keeps wandering to the growing sensitivity of her breasts, but her restrained arms cannot reach them, turning the temptation into playful erotic teasing. React briefly, suggestively, and playfully."
+    EndIf
+    Return ""
+EndFunction
+
+; Builds the actor-specific periodic status and performs exactly one restraint
+; selection before returning either the existing normal text or its exact DD variant.
+String Function BuildMilkStatus(Actor milkMaid, Int milkState) Global
+    If milkMaid == None
+        Return ""
+    EndIf
+    String actorName = ResolveActorName(milkMaid, "This Milk Maid")
+    If MMEAlertsController.AreArmsRestrained(milkMaid)
+        If milkState == 2
+            Return actorName + " is completely full, deliciously heavy and savoring the pleasure near a boobgasm. Her arms are restrained, leaving her unable to freely touch or relieve her milk-heavy breasts, turning the fullness into prolonged erotic teasing and edging that she enjoys."
+        ElseIf milkState == 1
+            Return actorName + " is over half full, feeling noticeably heavier and warmer. The growing weight makes her instinctively want to touch and handle her breasts, but her restrained arms cannot reach them, making the denied contact even more teasing and pleasurable."
+        EndIf
+        Return actorName + " is less than half full, feeling pleasantly tingly. Her mind keeps wandering to the growing sensitivity of her breasts, but her restrained arms cannot reach them, turning the temptation into playful erotic teasing."
+    EndIf
+    If milkState == 2
+        Return actorName + " is completely full, deliciously heavy and savoring the pleasure near a boobgasm."
+    ElseIf milkState == 1
+        Return actorName + " is over half full, feeling heavier and warm."
+    EndIf
+    Return actorName + " is less than half full, feeling pleasantly tingly."
+EndFunction
+
+String Function BuildRestrainedPlayerDrinkContent(Actor playerActor, String drinkName) Global
+    If playerActor == None || !MMEAlertsController.AreArmsRestrained(playerActor)
+        Return ""
+    EndIf
+    Return "The player just drank " + drinkName + ". With their arms restrained, drinking it was awkward enough that they may have needed help or found some clever way to manage it. They can already feel themselves growing heavier and more sensitive, adding playful erotic anticipation as they fill. React briefly and naturally."
+EndFunction
+
+String Function ResolveActorName(Actor actorRef, String fallbackName) Global
+    If actorRef == None
+        Return fallbackName
+    EndIf
+    String actorName = actorRef.GetDisplayName()
+    If actorName == ""
+        ActorBase baseInfo = actorRef.GetLeveledActorBase()
+        If baseInfo != None
+            actorName = baseInfo.GetName()
+        EndIf
+    EndIf
+    If actorName == ""
+        actorName = fallbackName
+    EndIf
+    Return actorName
 EndFunction
 
 String Function RenderMessage(String template, String actorName) Global

@@ -137,6 +137,11 @@ Bool Function IsFreeArmAnimationBlocked(Actor candidate) Global
     Return milkController.DDi.IsMilkingBlocked_Armbinder(candidate) || milkController.DDi.IsMilkingBlocked_Yoke(candidate)
 EndFunction
 
+; Narrative-facing semantic alias for the same authoritative MME/DD query.
+Bool Function AreArmsRestrained(Actor candidate) Global
+    Return IsFreeArmAnimationBlocked(candidate)
+EndFunction
+
 ; Resolves MME's configured effects instead of relying on translated display names.
 Bool Function IsMilkmaidCreationEffect(Int localEffectID)
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
@@ -590,17 +595,17 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     ; MME validation and all capacity behavior remain in ProcessActor below.
     String milkStatuses = ""
     Int milkmaidCount = 0
-    Bool halfFullMilestoneDetected = False
-    Bool fullMilestoneDetected = False
+    Actor halfFullNarrationActor = None
+    Actor fullNarrationActor = None
     Int i = 0
     While i < nearbyActors.Length
         Actor candidate = nearbyActors[i]
         If processReactions || publishSkyrimNet
             Int crossing = ProcessActor(candidate, reactionActors, reactionKinds, processReactions)
-            If crossing == 2
-                fullMilestoneDetected = True
-            ElseIf crossing == 1
-                halfFullMilestoneDetected = True
+            If crossing == 2 && fullNarrationActor == None
+                fullNarrationActor = candidate
+            ElseIf crossing == 1 && halfFullNarrationActor == None
+                halfFullNarrationActor = candidate
             EndIf
         EndIf
         String status = EvaluateMilkMaidFlavor(candidate)
@@ -616,11 +621,11 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     If publishSkyrimNet
         MMEAlertsSkyrimNet.SendNearbyMilkStatuses(Game.GetPlayer(), milkStatuses, nearbyActors.Length, milkmaidCount)
     EndIf
-    If fullMilestoneDetected
-        MMEAlertsSkyrimNet.NarrateMilkFull()
+    If fullNarrationActor != None
+        MMEAlertsSkyrimNet.NarrateMilkFull(fullNarrationActor)
     EndIf
-    If halfFullMilestoneDetected
-        MMEAlertsSkyrimNet.NarrateMilkHalfFull()
+    If halfFullNarrationActor != None
+        MMEAlertsSkyrimNet.NarrateMilkHalfFull(halfFullNarrationActor)
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0) == 1
         Debug.Notification("Native Scan active: " + nearbyActors.Length + " nearby actors")
@@ -652,12 +657,13 @@ String Function EvaluateMilkMaidFlavor(Actor candidate)
         Return ""
     EndIf
     Float current = MME_Storage.getMilkCurrent(candidate)
+    Int milkState = 0
     If current >= maximum
-        Return GetActorName(candidate) + " is completely full, deliciously heavy and savoring the pleasure near a boobgasm."
+        milkState = 2
     ElseIf current >= maximum * 0.5
-        Return GetActorName(candidate) + " is over half full, feeling heavier and warm."
+        milkState = 1
     EndIf
-    Return GetActorName(candidate) + " is less than half full, feeling pleasantly tingly."
+    Return MMEAlertsSkyrimNet.BuildMilkStatus(candidate, milkState)
 EndFunction
 
 ; Plays Medium/Hot capacity pools; sound records must exist in MMEAlert.esp.
