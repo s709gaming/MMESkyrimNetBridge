@@ -65,6 +65,14 @@ namespace
         return result;
     }
 
+    RE::TESForm* GetFormByEditorID(RE::StaticFunctionTag*, RE::BSFixedString editorID)
+    {
+        if (editorID.empty()) {
+            return nullptr;
+        }
+        return RE::TESForm::LookupByEditorID(editorID.data());
+    }
+
     RE::Actor* GetDialogueTarget(RE::StaticFunctionTag*)
     {
         auto* manager = RE::MenuTopicManager::GetSingleton();
@@ -169,9 +177,104 @@ namespace
         return result;
     }
 
+    std::vector<RE::BSFixedString> DescribeTopicInfoConditions(RE::StaticFunctionTag*, RE::TESForm* form)
+    {
+        std::vector<RE::BSFixedString> result;
+        auto* info = form && form->GetFormType() == RE::FormType::Info ?
+                         static_cast<RE::TESTopicInfo*>(form) :
+                         nullptr;
+        if (!info) {
+            return result;
+        }
+
+        const auto formLabel = [](RE::TESForm* parameter) {
+            if (!parameter) {
+                return std::string("<none>");
+            }
+            const auto* editorID = parameter->GetFormEditorID();
+            if (editorID && editorID[0] != '\0') {
+                return std::string(editorID);
+            }
+            auto* file = parameter->GetFile(0);
+            return fmt::format(
+                "{}:{:06X}", file ? file->GetFilename().data() : "<dynamic>",
+                parameter->GetLocalFormID());
+        };
+        const auto objectLabel = [](RE::CONDITIONITEMOBJECT object) {
+            switch (object) {
+            case RE::CONDITIONITEMOBJECT::kSelf:
+                return "subject";
+            case RE::CONDITIONITEMOBJECT::kTarget:
+                return "target";
+            case RE::CONDITIONITEMOBJECT::kRef:
+                return "reference";
+            default:
+                return "run-on";
+            }
+        };
+        const auto opLabel = [](RE::CONDITION_ITEM_DATA::OpCode op) {
+            switch (op) {
+            case RE::CONDITION_ITEM_DATA::OpCode::kEqualTo:
+                return "==";
+            case RE::CONDITION_ITEM_DATA::OpCode::kNotEqualTo:
+                return "!=";
+            case RE::CONDITION_ITEM_DATA::OpCode::kGreaterThan:
+                return ">";
+            case RE::CONDITION_ITEM_DATA::OpCode::kGreaterThanOrEqualTo:
+                return ">=";
+            case RE::CONDITION_ITEM_DATA::OpCode::kLessThan:
+                return "<";
+            case RE::CONDITION_ITEM_DATA::OpCode::kLessThanOrEqualTo:
+                return "<=";
+            default:
+                return "?";
+            }
+        };
+
+        for (auto* condition = info->objConditions.head; condition; condition = condition->next) {
+            const auto functionID = condition->data.functionData.function.get();
+            const char* functionName = "Function";
+            bool formParameter = false;
+            switch (functionID) {
+            case RE::FUNCTION_DATA::FunctionID::kGetItemCount:
+                functionName = "GetItemCount";
+                formParameter = true;
+                break;
+            case RE::FUNCTION_DATA::FunctionID::kGetGlobalValue:
+                functionName = "GetGlobalValue";
+                formParameter = true;
+                break;
+            case RE::FUNCTION_DATA::FunctionID::kHasSpell:
+                functionName = "HasSpell";
+                formParameter = true;
+                break;
+            case RE::FUNCTION_DATA::FunctionID::kGetVMQuestVariable:
+                functionName = "GetVMQuestVariable";
+                formParameter = true;
+                break;
+            default:
+                break;
+            }
+            std::string parameter;
+            if (formParameter) {
+                parameter = " " + formLabel(static_cast<RE::TESForm*>(condition->data.functionData.params[0]));
+            } else {
+                parameter = fmt::format(" #{}", static_cast<std::uint16_t>(functionID));
+            }
+            result.emplace_back(fmt::format(
+                "{}{} on {} {} {:.2f}{}", functionName, parameter,
+                objectLabel(condition->data.object.get()),
+                opLabel(condition->data.flags.opCode),
+                condition->data.comparisonValue.f,
+                condition->data.flags.isOR ? " [OR]" : ""));
+        }
+        return result;
+    }
+
     bool RegisterPapyrus(RE::BSScript::IVirtualMachine* vm)
     {
         vm->RegisterFunction("GetNearbyActors", "MMEExtensionsNative", GetNearbyActors);
+        vm->RegisterFunction("GetFormByEditorID", "MMEExtensionsNative", GetFormByEditorID);
         vm->RegisterFunction("GetDialogueTarget", "MMEExtensionsNative", GetDialogueTarget);
         vm->RegisterFunction("GetActiveDialogueInfos", "MMEExtensionsNative", GetActiveDialogueInfos);
         vm->RegisterFunction("GetVisibleDialogueInfos", "MMEExtensionsNative", GetVisibleDialogueInfos);
@@ -179,6 +282,7 @@ namespace
         vm->RegisterFunction("GetPreviousTopicInfo", "MMEExtensionsNative", GetPreviousTopicInfo);
         vm->RegisterFunction("EvaluateTopicInfo", "MMEExtensionsNative", EvaluateTopicInfo);
         vm->RegisterFunction("EvaluateTopicInfoConditions", "MMEExtensionsNative", EvaluateTopicInfoConditions);
+        vm->RegisterFunction("DescribeTopicInfoConditions", "MMEExtensionsNative", DescribeTopicInfoConditions);
         SKSE::log::info("Native scanner and dialogue diagnostics registered");
         return true;
     }

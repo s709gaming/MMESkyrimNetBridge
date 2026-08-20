@@ -173,6 +173,13 @@ if (Test-Path -LiteralPath $pluginPath) {
     if (!$pluginText.Contains($wantedMilkResponse)) {
         throw "MMEAlert.esp is missing the intended milk-dialogue response '$wantedMilkResponse'. Repair the target INFO in SSEEdit before packaging."
     }
+    if (!$pluginText.Contains("MMEExt_OStimDialogueAvailable") -or
+        $pluginText.Contains("::OStimDialogueAvailable_var")) {
+        throw "MMEAlert.esp still uses the unreliable OStim quest-variable dialogue gate. Run the updated tools\AddMMEExtensionsOStimBreastfeedingDialogue.pas in SSEEdit and save the plugin before packaging."
+    }
+    if (!$pluginText.Contains("HearthFires.esm")) {
+        throw "MMEAlert.esp is missing the supported-milk dialogue eligibility update. Run the updated tools\AddMMEExtensionsMilkDialogue.pas in SSEEdit and save the plugin before packaging."
+    }
     Copy-Item -LiteralPath $pluginPath -Destination $stageDir
 } else {
     Write-Warning "MMEAlert.esp is not present yet. Building a scripts-only MME Extensions package."

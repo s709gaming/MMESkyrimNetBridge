@@ -109,6 +109,20 @@ EndFunction
 ; Exposes one dependency-free quest condition for the optional dialogue INFOs.
 Function RefreshOStimDialogueAvailability()
     OStimDialogueAvailable = MMEOStimBreastfeeding.IsDialogueEnabled()
+    GlobalVariable dialogueGate = GetOStimDialogueAvailabilityGlobal()
+    If dialogueGate != None
+        If OStimDialogueAvailable
+            dialogueGate.SetValue(1.0)
+        Else
+            dialogueGate.SetValue(0.0)
+        EndIf
+    Else
+        Debug.Trace("[MME Extensions Dialogue] OStim availability GlobalVariable is missing")
+    EndIf
+EndFunction
+
+GlobalVariable Function GetOStimDialogueAvailabilityGlobal() Global
+    Return MMEExtensionsNative.GetFormByEditorID("MMEExt_OStimDialogueAvailable") as GlobalVariable
 EndFunction
 
 ; Records Milkmaids already present when this version starts to avoid false creation reports.
@@ -692,7 +706,7 @@ String Function ConditionLabel(String route, Int index)
         ElseIf index == 4
             Return "NPC LivingArmor"
         ElseIf index == 5
-            Return "OStim gate"
+            Return "OStim availability global"
         EndIf
     ElseIf route == "NPCOStim"
         If index == 0
@@ -706,19 +720,38 @@ String Function ConditionLabel(String route, Int index)
         ElseIf index == 4
             Return "Player MentalExhaustion"
         ElseIf index == 5
-            Return "OStim gate"
+            Return "OStim availability global"
         EndIf
     EndIf
     Return "condition C" + index
 EndFunction
 
-String Function FirstFailedCondition(Int[] values, String route)
+String Function ConditionDescriptions(String[] values)
+    If values == None || values.Length == 0
+        Return "missing"
+    EndIf
+    String result = ""
+    Int i = 0
+    While i < values.Length
+        If result != ""
+            result += " | "
+        EndIf
+        result += "C" + i + " " + values[i]
+        i += 1
+    EndWhile
+    Return result
+EndFunction
+
+String Function FirstFailedCondition(Int[] values, String[] descriptions, String route)
     If values == None || values.Length == 0
         Return "INFO/conditions unavailable"
     EndIf
     Int i = 0
     While i < values.Length
         If values[i] == 0
+            If descriptions != None && i < descriptions.Length
+                Return "C" + i + " " + descriptions[i]
+            EndIf
             Return ConditionLabel(route, i)
         EndIf
         i += 1
@@ -726,9 +759,9 @@ String Function FirstFailedCondition(Int[] values, String route)
     Return "none"
 EndFunction
 
-String Function RouteResult(Bool eligible, Bool visible, Int[] values, String route)
+String Function RouteResult(Bool eligible, Bool visible, Int[] values, String[] descriptions, String route)
     If !eligible
-        Return "FAIL " + FirstFailedCondition(values, route)
+        Return "FAIL " + FirstFailedCondition(values, descriptions, route)
     ElseIf visible
         Return "PASS shown"
     EndIf
@@ -771,6 +804,10 @@ Function ReportDialogueStructure(Actor subject, Actor playerActor)
     Int[] npcSexLabConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(npcDrinksSexLab, subject, playerActor)
     Int[] playerOStimConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(playerDrinksOStim, subject, playerActor)
     Int[] npcOStimConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(npcDrinksOStim, subject, playerActor)
+    String[] playerSexLabDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(playerDrinksSexLab)
+    String[] npcSexLabDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(npcDrinksSexLab)
+    String[] playerOStimDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(playerDrinksOStim)
+    String[] npcOStimDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(npcDrinksOStim)
     Bool playerSexLabEligible = MMEExtensionsNative.EvaluateTopicInfo(playerDrinksSexLab, subject, playerActor)
     Bool npcSexLabEligible = MMEExtensionsNative.EvaluateTopicInfo(npcDrinksSexLab, subject, playerActor)
     Bool playerOStimEligible = MMEExtensionsNative.EvaluateTopicInfo(playerDrinksOStim, subject, playerActor)
@@ -788,16 +825,16 @@ Function ReportDialogueStructure(Actor subject, Actor playerActor)
         playerOStimVisible = visibleInfos.Find(playerDrinksOStim) >= 0
         npcOStimVisible = visibleInfos.Find(npcDrinksOStim) >= 0
     EndIf
-    String exact1 = "Player drinks SexLab [gate,milk,exhaustion,mental,being,living]: " + ConditionResults(playerSexLabConditions)
-    String exact2 = "NPC drinks SexLab [gate,milk,being,living,exhaustion,mental]: " + ConditionResults(npcSexLabConditions)
-    String exact3 = "Player drinks OStim [milk,exhaustion,mental,being,living,gate]: " + ConditionResults(playerOStimConditions)
-    String exact4 = "NPC drinks OStim [milk,being,living,exhaustion,mental,gate]: " + ConditionResults(npcOStimConditions)
+    String exact1 = "Player drinks SexLab values: " + ConditionResults(playerSexLabConditions) + " | " + ConditionDescriptions(playerSexLabDescriptions)
+    String exact2 = "NPC drinks SexLab values: " + ConditionResults(npcSexLabConditions) + " | " + ConditionDescriptions(npcSexLabDescriptions)
+    String exact3 = "Player drinks OStim values: " + ConditionResults(playerOStimConditions) + " | " + ConditionDescriptions(playerOStimDescriptions)
+    String exact4 = "NPC drinks OStim values: " + ConditionResults(npcOStimConditions) + " | " + ConditionDescriptions(npcOStimDescriptions)
     Debug.Trace("[MME Extensions Dialogue] " + exact1)
     Debug.Trace("[MME Extensions Dialogue] " + exact2)
     Debug.Trace("[MME Extensions Dialogue] " + exact3)
     Debug.Trace("[MME Extensions Dialogue] " + exact4)
-    String playerResults = "Player drinks: SexLab " + RouteResult(playerSexLabEligible, playerSexLabVisible, playerSexLabConditions, "PlayerSexLab") + " | OStim " + RouteResult(playerOStimEligible, playerOStimVisible, playerOStimConditions, "PlayerOStim")
-    String npcResults = "NPC drinks: SexLab " + RouteResult(npcSexLabEligible, npcSexLabVisible, npcSexLabConditions, "NPCSexLab") + " | OStim " + RouteResult(npcOStimEligible, npcOStimVisible, npcOStimConditions, "NPCOStim")
+    String playerResults = "Player drinks: SexLab " + RouteResult(playerSexLabEligible, playerSexLabVisible, playerSexLabConditions, playerSexLabDescriptions, "PlayerSexLab") + " | OStim " + RouteResult(playerOStimEligible, playerOStimVisible, playerOStimConditions, playerOStimDescriptions, "PlayerOStim")
+    String npcResults = "NPC drinks: SexLab " + RouteResult(npcSexLabEligible, npcSexLabVisible, npcSexLabConditions, npcSexLabDescriptions, "NPCSexLab") + " | OStim " + RouteResult(npcOStimEligible, npcOStimVisible, npcOStimConditions, npcOStimDescriptions, "NPCOStim")
     Debug.Trace("[MME Extensions Dialogue] visible INFO count=" + visibleInfoCount + " | " + playerResults)
     Debug.Trace("[MME Extensions Dialogue] " + npcResults)
     Debug.Notification("Dialogue DEBUG: " + playerResults)
@@ -836,12 +873,17 @@ Function ShowDialogueEligibilitySnapshot(Actor subject, Bool postRefresh = False
     Bool rootEligible = conditions.MME_DialogueMilking && !subject.IsChild() && subject.HasKeyword(actorTypeNPC) && !subject.HasKeyword(actorTypeCreature)
     Bool ostimDetected = MMEOStimBreastfeeding.IsOStimDetected()
     Bool ostimSetting = JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0) == 1
+    GlobalVariable ostimDialogueGate = GetOStimDialogueAvailabilityGlobal()
+    Float ostimDialogueGateValue = -1.0
+    If ostimDialogueGate != None
+        ostimDialogueGateValue = ostimDialogueGate.GetValue()
+    EndIf
     Bool sexLabPlayerDrinks = subjectShared && conditions.MME_BreasfeedingAnimationsCheck
     Bool sexLabNPCDrinks = playerShared && conditions.MME_BreasfeedingAnimationsCheck
     Bool ostimPlayerDrinks = subjectShared && OStimDialogueAvailable
     Bool ostimNPCDrinks = playerShared && OStimDialogueAvailable
     Bool milkSnapshotsRefreshed = conditions.MME_TargetMilk == playerMilk && conditions.MME_SubjectMilk == subjectMilk
-    String snapshotState = postRefresh + ":" + subject.GetFormID() + ":" + playerMilk + ":" + subjectMilk + ":" + conditions.MME_TargetMilk + ":" + conditions.MME_SubjectMilk + ":" + subjectBlockers + ":" + playerBlockers + ":" + conditions.MME_DialogueMilking + ":" + conditions.MME_BreasfeedingAnimationsCheck + ":" + OStimDialogueAvailable
+    String snapshotState = postRefresh + ":" + subject.GetFormID() + ":" + playerMilk + ":" + subjectMilk + ":" + conditions.MME_TargetMilk + ":" + conditions.MME_SubjectMilk + ":" + subjectBlockers + ":" + playerBlockers + ":" + conditions.MME_DialogueMilking + ":" + conditions.MME_BreasfeedingAnimationsCheck + ":" + OStimDialogueAvailable + ":" + ostimDialogueGateValue
     If subject == LastDialogueDiagnosticActor && snapshotState == LastDialogueDiagnosticState
         Return
     EndIf
@@ -852,7 +894,7 @@ Function ShowDialogueEligibilitySnapshot(Actor subject, Bool postRefresh = False
     String line1 = "Player milk=" + playerMilk + " / TargetMilk=" + conditions.MME_TargetMilk + " | NPC milk=" + subjectMilk + " / SubjectMilk=" + conditions.MME_SubjectMilk
     String line2 = "NPC maid=" + DiagnosticBool(subjectMaid) + " / SubjectMaid=" + DiagnosticBool(conditions.MME_SubjectMaid) + " / SubjectSlave=" + DiagnosticBool(conditions.MME_SubjectSlave) + " | refresh NPC=" + DiagnosticBool(subjectRefreshAllowed) + " Player=" + DiagnosticBool(playerRefreshAllowed)
     String line3 = "blockers NPC=" + subjectBlockers + " | Player=" + playerBlockers + " | SexLabAnim=" + DiagnosticBool(conditions.MME_BreasfeedingAnimationsCheck)
-    String line4 = "DialogueMilking=" + DiagnosticBool(conditions.MME_DialogueMilking) + " / root=" + DiagnosticBool(rootEligible) + " | OStim detected=" + DiagnosticBool(ostimDetected) + " setting=" + DiagnosticBool(ostimSetting) + " condition=" + DiagnosticBool(OStimDialogueAvailable)
+    String line4 = "DialogueMilking=" + DiagnosticBool(conditions.MME_DialogueMilking) + " / root=" + DiagnosticBool(rootEligible) + " | OStim detected=" + DiagnosticBool(ostimDetected) + " setting=" + DiagnosticBool(ostimSetting) + " property=" + DiagnosticBool(OStimDialogueAvailable) + " global=" + ostimDialogueGateValue
     String line5 = "Player drinks: SexLab=" + DiagnosticBool(sexLabPlayerDrinks) + " OStim=" + DiagnosticBool(ostimPlayerDrinks) + " | NPC drinks: SexLab=" + DiagnosticBool(sexLabNPCDrinks) + " OStim=" + DiagnosticBool(ostimNPCDrinks)
     Debug.Trace("[MME Extensions Dialogue] " + GetActorName(subject) + " | " + line0)
     Debug.Trace("[MME Extensions Dialogue] " + line1)
@@ -861,7 +903,7 @@ Function ShowDialogueEligibilitySnapshot(Actor subject, Bool postRefresh = False
     Debug.Trace("[MME Extensions Dialogue] " + line4)
     Debug.Trace("[MME Extensions Dialogue] " + line5)
     Debug.Notification("Dialogue DEBUG: Hey there refresh=" + DiagnosticBool(MMEOpeningRefreshObserved) + " / milk snapshots refreshed=" + DiagnosticBool(milkSnapshotsRefreshed))
-    Debug.Notification("Dialogue DEBUG: SexLab gate=" + DiagnosticBool(conditions.MME_BreasfeedingAnimationsCheck) + " / OStim gate=" + DiagnosticBool(OStimDialogueAvailable))
+    Debug.Notification("Dialogue DEBUG: SexLab gate=" + DiagnosticBool(conditions.MME_BreasfeedingAnimationsCheck) + " / OStim property=" + DiagnosticBool(OStimDialogueAvailable) + " global=" + ostimDialogueGateValue)
     If postRefresh
         ReportDialogueStructure(subject, playerActor)
     EndIf

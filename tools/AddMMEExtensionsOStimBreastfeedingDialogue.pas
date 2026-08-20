@@ -6,6 +6,7 @@ unit UserScript;
   conditions, topics, and SexLab fragments remain owned by MilkModNEW.esp.
 
   Required loaded files:
+    Skyrim.esm
     MilkModNEW.esp
     MMEAlert.esp
 
@@ -17,9 +18,9 @@ unit UserScript;
 const
   TargetPluginName = 'MMEAlert.esp';
   MMEPluginName = 'MilkModNEW.esp';
-  ControllerQuestEditorID = 'MMEAlertDebugQuest';
+  SkyrimPluginName = 'Skyrim.esm';
   HandlerScriptName = 'MMEOStimBreastfeeding';
-  AvailabilityVariable = '::OStimDialogueAvailable_var';
+  AvailabilityGlobalEditorID = 'MMEExt_OStimDialogueAvailable';
   SexLabAnimationVariable = '::MME_BreasfeedingAnimationsCheck_var';
 
   PlayerDrinksEditorID = 'MMEExt_OStimBreastfeeding_PlayerDrinks';
@@ -30,7 +31,7 @@ const
   NPCDrinksTargetFragment = 'Fragment_NPCDrinks';
 
 var
-  TargetFile, MMEFile, ControllerQuest: IInterface;
+  TargetFile, MMEFile, SkyrimFile, AvailabilityGlobal: IInterface;
   PlayerDrinksSource, NPCDrinksSource: IInterface;
   PlayerDrinksSourceCount, NPCDrinksSourceCount: Integer;
   PlayerDrinksTarget, NPCDrinksTarget: IInterface;
@@ -46,6 +47,37 @@ begin
       Result := FileByIndex(i);
       Exit;
     end;
+end;
+
+function EnsureAvailabilityGlobal: Boolean;
+var
+  globalTemplate: IInterface;
+begin
+  Result := False;
+  AvailabilityGlobal := MainRecordByEditorID(
+    GroupBySignature(TargetFile, 'GLOB'), AvailabilityGlobalEditorID);
+  if not Assigned(AvailabilityGlobal) then begin
+    globalTemplate := RecordByFormID(SkyrimFile, $00000038, True);
+    if not Assigned(globalTemplate) or (Signature(globalTemplate) <> 'GLOB') then begin
+      AddMessage('ERROR: Skyrim GameHour GLOB template was not found.');
+      Exit;
+    end;
+    AvailabilityGlobal := wbCopyElementToFile(globalTemplate, TargetFile,
+      True, True);
+    if not Assigned(AvailabilityGlobal) then begin
+      AddMessage('ERROR: Could not create the OStim availability global.');
+      Exit;
+    end;
+    AddMessage('Created availability global: ' +
+      AvailabilityGlobalEditorID);
+  end else
+    AddMessage('Updating availability global: ' +
+      AvailabilityGlobalEditorID);
+
+  SetEditorID(AvailabilityGlobal, AvailabilityGlobalEditorID);
+  SetElementNativeValues(AvailabilityGlobal, 'FLTV', 0.0);
+  Result := SameText(EditorID(AvailabilityGlobal),
+    AvailabilityGlobalEditorID);
 end;
 
 function TreeHasExactValue(aElement: IInterface; aValue: string): Boolean;
@@ -307,15 +339,17 @@ begin
   if not Assigned(newCondition) then
     Exit;
 
-  SetElementNativeValues(newCondition, 'CTDA\Parameter #1',
-    FormID(ControllerQuest));
-  SetElementEditValues(newCondition, 'CIS2', AvailabilityVariable);
+  SetElementEditValues(newCondition, 'CTDA\Function', 'GetGlobalValue');
+  SetEditValue(ElementByPath(newCondition, 'CTDA\Parameter #1'),
+    Name(AvailabilityGlobal));
+  if Assigned(ElementBySignature(newCondition, 'CIS2')) then
+    Remove(ElementBySignature(newCondition, 'CIS2'));
 
   Result := SameText(GetElementEditValues(newCondition, 'CTDA\Function'),
-      'GetVMQuestVariable') and
-    SameText(GetElementEditValues(newCondition, 'CIS2'), AvailabilityVariable) and
+      'GetGlobalValue') and
     Equals(MasterOrSelf(LinksTo(ElementByPath(newCondition,
-      'CTDA\Parameter #1'))), MasterOrSelf(ControllerQuest)) and
+      'CTDA\Parameter #1'))), MasterOrSelf(AvailabilityGlobal)) and
+    not Assigned(ElementBySignature(newCondition, 'CIS2')) and
     (ElementCount(targetConditions) = ElementCount(sourceConditions));
 end;
 
@@ -429,22 +463,16 @@ begin
   Result := 1;
   TargetFile := FindFileByName(TargetPluginName);
   MMEFile := FindFileByName(MMEPluginName);
-  if not Assigned(TargetFile) or not Assigned(MMEFile) then begin
-    AddMessage('ERROR: Load ' + MMEPluginName + ' and ' +
-      TargetPluginName + ' before running this script.');
+  SkyrimFile := FindFileByName(SkyrimPluginName);
+  if not Assigned(TargetFile) or not Assigned(MMEFile) or
+     not Assigned(SkyrimFile) then begin
+    AddMessage('ERROR: Load ' + SkyrimPluginName + ', ' + MMEPluginName +
+      ', and ' + TargetPluginName + ' before running this script.');
     Exit;
   end;
   if GetLoadOrder(MMEFile) > GetLoadOrder(TargetFile) then begin
     AddMessage('ERROR: ' + TargetPluginName + ' must load after ' +
       MMEPluginName + '. No records were modified.');
-    Exit;
-  end;
-
-  ControllerQuest := FindRecordByEditorIDRecursive(TargetFile, 'QUST',
-    ControllerQuestEditorID);
-  if not Assigned(ControllerQuest) then begin
-    AddMessage('ERROR: Could not find the exact controller quest ' +
-      ControllerQuestEditorID + '. No records were modified.');
     Exit;
   end;
 
@@ -489,6 +517,11 @@ begin
      not ValidateSourceIsTopicTail(NPCDrinksSource) then begin
     AddMessage('ERROR: The original INFO chain is not safe for additive insertion.');
     AddMessage('No records were modified.');
+    Exit;
+  end;
+
+  if not EnsureAvailabilityGlobal then begin
+    AddMessage('ERROR: OStim availability global setup failed.');
     Exit;
   end;
 

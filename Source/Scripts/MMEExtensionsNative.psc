@@ -3,6 +3,9 @@ Scriptname MMEExtensionsNative Hidden
 ; Returns the player followed by loaded actors in the same cell and radius.
 Actor[] Function GetNearbyActors(Float radius) Global Native
 
+; Resolves a loaded form by its stable EditorID.
+Form Function GetFormByEditorID(String editorID) Global Native
+
 ; Returns the actor currently speaking through Skyrim's dialogue manager.
 Actor Function GetDialogueTarget() Global Native
 
@@ -23,3 +26,7 @@ Bool Function EvaluateTopicInfo(Form info, Actor subject, Actor target) Global N
 
 ; Uses Skyrim's own evaluator for each CTDA, returned in record order as 1/0.
 Int[] Function EvaluateTopicInfoConditions(Form info, Actor subject, Actor target) Global Native
+
+; Describes each live CTDA by function, parameter, run-on object, comparison,
+; and OR flag so diagnostics do not have to infer meaning from array position.
+String[] Function DescribeTopicInfoConditions(Form info) Global Native

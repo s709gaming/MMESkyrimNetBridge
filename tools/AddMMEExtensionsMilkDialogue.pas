@@ -1,16 +1,17 @@
 unit UserScript;
 
 {
-  Stage 1 dialogue installer for MME Extensions.
+  Milk-giving dialogue installer for MME Extensions.
 
   Adds one new player response beneath the same MME dialogue topic used by
   MME_Dialogues.Fragment_03 (MME's existing give-Lactacid response). The
-  source INFO is copied as a new record so its existing Milkmaid conditions
-  and dialogue routing are retained, while its VMAD fragment is deliberately
-  removed. At this stage the response proves that the branch appears but does
-  not transfer or consume an item.
+  source INFO is copied as a new record so its Milkmaid conditions and
+  dialogue routing are retained. Its Lactacid-only inventory condition is
+  replaced by the supported Lactacid/normal/racial/special milk OR group.
 
   Required loaded files:
+    Skyrim.esm
+    HearthFires.esm
     MilkModNEW.esp
     MMEAlert.esp
 
@@ -20,13 +21,18 @@ unit UserScript;
 const
   TargetPluginName = 'MMEAlert.esp';
   MMEPluginName = 'MilkModNEW.esp';
+  SkyrimPluginName = 'Skyrim.esm';
+  HearthFiresPluginName = 'HearthFires.esm';
+  BasicMilkListEditorID = 'MME_Milk_Basic';
+  RaceMilkListEditorID = 'MME_Milk_Race_Normal';
+  SpecialMilkListEditorID = 'MME_Milk_Special';
   NewInfoEditorID = 'MMEExt_DialogueDrinkMilk';
   PlayerPrompt = 'Drink this, it will make you milky!';
   NPCResponse = 'Yes! I can''t wait to be nice and heavy!';
   CopiedUnwantedResponse = 'I hope you will give me some good milking soon!';
 
 var
-  TargetFile, MMEFile, SourceInfo: IInterface;
+  TargetFile, MMEFile, SkyrimFile, HearthFiresFile, SourceInfo: IInterface;
   SourceMatches: Integer;
 
 function FindFileByName(aName: string): IInterface;
@@ -39,6 +45,113 @@ begin
       Result := FileByIndex(i);
       Exit;
     end;
+end;
+
+function AddSupportedMilkCondition(aConditions, aTemplate,
+  aItem: IInterface; aUseOr: Boolean): Boolean;
+var
+  newCondition: IInterface;
+  conditionType: Integer;
+begin
+  Result := False;
+  if not Assigned(aConditions) or not Assigned(aTemplate) or
+     not Assigned(aItem) then
+    Exit;
+  AddRequiredElementMasters(aItem, TargetFile, False);
+  newCondition := ElementAssign(aConditions, HighInteger, aTemplate, False);
+  if not Assigned(newCondition) then
+    Exit;
+  SetEditValue(ElementByPath(newCondition, 'CTDA\Parameter #1'), Name(aItem));
+  conditionType := GetElementNativeValues(newCondition, 'CTDA\Type');
+  if aUseOr then
+    conditionType := conditionType or 1
+  else
+    conditionType := conditionType and $FE;
+  SetElementNativeValues(newCondition, 'CTDA\Type', conditionType);
+  Result := SameText(GetElementEditValues(newCondition, 'CTDA\Function'),
+      'GetItemCount') and
+    Equals(MasterOrSelf(LinksTo(ElementByPath(newCondition,
+      'CTDA\Parameter #1'))), MasterOrSelf(aItem));
+end;
+
+function RebuildSupportedMilkConditions(aInfo, aSourceInfo: IInterface): Boolean;
+var
+  sourceConditions, targetConditions, sourceCondition,
+    inventoryTemplate, hearthMilk, basicMilk, raceMilk,
+    specialMilk: IInterface;
+  i, inventoryCount: Integer;
+begin
+  Result := False;
+  sourceConditions := ElementByPath(aSourceInfo, 'Conditions');
+  if not Assigned(sourceConditions) then begin
+    AddMessage('ERROR: Source INFO has no conditions.');
+    Exit;
+  end;
+
+  inventoryTemplate := nil;
+  inventoryCount := 0;
+  for i := 0 to ElementCount(sourceConditions) - 1 do begin
+    sourceCondition := ElementByIndex(sourceConditions, i);
+    if SameText(GetElementEditValues(sourceCondition, 'CTDA\Function'),
+        'GetItemCount') then begin
+      Inc(inventoryCount);
+      inventoryTemplate := sourceCondition;
+    end;
+  end;
+  if (inventoryCount <> 1) or not Assigned(inventoryTemplate) then begin
+    AddMessage('ERROR: Expected one source GetItemCount condition; found ' +
+      IntToStr(inventoryCount) + '.');
+    Exit;
+  end;
+
+  hearthMilk := RecordByFormID(HearthFiresFile, $00003534, True);
+  basicMilk := MainRecordByEditorID(GroupBySignature(MMEFile, 'FLST'),
+    BasicMilkListEditorID);
+  raceMilk := MainRecordByEditorID(GroupBySignature(MMEFile, 'FLST'),
+    RaceMilkListEditorID);
+  specialMilk := MainRecordByEditorID(GroupBySignature(MMEFile, 'FLST'),
+    SpecialMilkListEditorID);
+  if not Assigned(hearthMilk) or not Assigned(basicMilk) or
+     not Assigned(raceMilk) or not Assigned(specialMilk) then begin
+    AddMessage('ERROR: One or more authoritative supported-milk forms are missing.');
+    Exit;
+  end;
+
+  targetConditions := ElementByPath(aInfo, 'Conditions');
+  if Assigned(targetConditions) then
+    Remove(targetConditions);
+  Add(aInfo, 'Conditions', True);
+  targetConditions := ElementByPath(aInfo, 'Conditions');
+  if not Assigned(targetConditions) then
+    Exit;
+
+  if not AddSupportedMilkCondition(targetConditions, inventoryTemplate,
+      LinksTo(ElementByPath(inventoryTemplate, 'CTDA\Parameter #1')), True) or
+     not AddSupportedMilkCondition(targetConditions, inventoryTemplate,
+      hearthMilk, True) or
+     not AddSupportedMilkCondition(targetConditions, inventoryTemplate,
+      basicMilk, True) or
+     not AddSupportedMilkCondition(targetConditions, inventoryTemplate,
+      raceMilk, True) or
+     not AddSupportedMilkCondition(targetConditions, inventoryTemplate,
+      specialMilk, True) then begin
+    AddMessage('ERROR: Supported-milk inventory OR group could not be built.');
+    Exit;
+  end;
+
+  for i := 0 to ElementCount(sourceConditions) - 1 do begin
+    sourceCondition := ElementByIndex(sourceConditions, i);
+    if not SameText(GetElementEditValues(sourceCondition, 'CTDA\Function'),
+        'GetItemCount') then
+      ElementAssign(targetConditions, HighInteger, sourceCondition, False);
+  end;
+
+  Result := ElementCount(targetConditions) =
+    ElementCount(sourceConditions) + 4;
+  if Result then
+    AddMessage('Inventory eligibility: Lactacid OR HearthFires milk OR ' +
+      BasicMilkListEditorID + ' OR ' + RaceMilkListEditorID + ' OR ' +
+      SpecialMilkListEditorID + '.');
 end;
 
 function TreeContains(aElement: IInterface; aNeedle: string): Boolean;
@@ -209,9 +322,13 @@ begin
   createdInfo := False;
   TargetFile := FindFileByName(TargetPluginName);
   MMEFile := FindFileByName(MMEPluginName);
+  SkyrimFile := FindFileByName(SkyrimPluginName);
+  HearthFiresFile := FindFileByName(HearthFiresPluginName);
 
-  if not Assigned(TargetFile) or not Assigned(MMEFile) then begin
-    AddMessage('ERROR: Load ' + MMEPluginName + ' and ' +
+  if not Assigned(TargetFile) or not Assigned(MMEFile) or
+     not Assigned(SkyrimFile) or not Assigned(HearthFiresFile) then begin
+    AddMessage('ERROR: Load ' + SkyrimPluginName + ', ' +
+      HearthFiresPluginName + ', ' + MMEPluginName + ' and ' +
       TargetPluginName + ' before running this script.');
     Exit;
   end;
@@ -269,6 +386,11 @@ begin
     Exit;
   end;
 
+  if not RebuildSupportedMilkConditions(newInfo, SourceInfo) then begin
+    AddMessage('ERROR: Supported-milk dialogue conditions could not be installed.');
+    Exit;
+  end;
+
   actualPrompt := GetElementEditValues(newInfo, 'RNAM');
   actualResponse := GetElementEditValues(
     ElementByIndex(ElementByPath(newInfo, 'Responses'), 0), 'NAM1');
@@ -285,8 +407,8 @@ begin
   AddMessage('New INFO: ' + Name(newInfo));
   AddMessage('Player prompt: ' + actualPrompt);
   AddMessage('NPC response: ' + actualResponse);
-  AddMessage('Test fragment: MMENPCDialog.Fragment_0');
-  AddMessage('Stage one validates and reports only; no item or effect is processed.');
+  AddMessage('Fragment: MMENPCDialog.Fragment_0');
+  AddMessage('Any supported milk keeps the dialogue available; runtime selection preserves priority.');
   Result := 0;
 end;
 
