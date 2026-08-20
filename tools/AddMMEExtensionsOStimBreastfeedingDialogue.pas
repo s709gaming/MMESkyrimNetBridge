@@ -25,6 +25,8 @@ const
 
   PlayerDrinksEditorID = 'MMEExt_OStimBreastfeeding_PlayerDrinks';
   NPCDrinksEditorID = 'MMEExt_OStimBreastfeeding_NPCDrinks';
+  PlayerDrinksTopicEditorID = 'MMEExt_OStimBreastfeeding_PlayerDrinksTopic';
+  NPCDrinksTopicEditorID = 'MMEExt_OStimBreastfeeding_NPCDrinksTopic';
   PlayerDrinksSourceFragment = 'Fragment_01';
   NPCDrinksSourceFragment = 'Fragment_02';
   PlayerDrinksTargetFragment = 'Fragment_PlayerDrinks';
@@ -398,32 +400,90 @@ begin
 end;
 
 function InstallRoute(aSourceInfo, aExistingInfo: IInterface;
-  aEditorID, aSourceFragment, aTargetFragment: string): Boolean;
+  aTopicEditorID, aEditorID, aSourceFragment, aTargetFragment: string): Boolean;
 var
-  newInfo: IInterface;
+  sourceTopic, existingTopic, newTopic, newInfo, topicElement,
+    previousElement: IInterface;
   prompt: string;
-  createdInfo: Boolean;
 begin
   Result := False;
-  createdInfo := False;
   prompt := GetElementEditValues(aSourceInfo, 'RNAM');
   if prompt = '' then begin
     AddMessage('ERROR: Source INFO has an empty player prompt: ' + Name(aSourceInfo));
     Exit;
   end;
 
+  // Delete the complete prior independent route on rerun. Removing only its
+  // INFO would orphan the old DIAL and allow duplicate EditorIDs to accumulate.
+  existingTopic := FindRecordByEditorIDRecursive(
+    GroupBySignature(TargetFile, 'DIAL'), 'DIAL', aTopicEditorID);
+  if Assigned(existingTopic) then begin
+    AddMessage('Removing prior independent DIAL: ' + Name(existingTopic));
+    Remove(existingTopic);
+    aExistingInfo := nil;
+  end;
+
+  // Migrate the obsolete same-DIAL follower from older builder versions.
   if Assigned(aExistingInfo) then begin
-    newInfo := aExistingInfo;
-    AddMessage('Updating existing route: ' + Name(newInfo));
-  end else begin
-    AddRequiredElementMasters(aSourceInfo, TargetFile, False);
-    newInfo := wbCopyElementToFile(aSourceInfo, TargetFile, True, True);
-    if not Assigned(newInfo) then begin
-      AddMessage('ERROR: xEdit could not copy source INFO ' + Name(aSourceInfo));
-      Exit;
+    if UsesSameTopic(aExistingInfo, aSourceInfo) then begin
+      AddMessage('Removing obsolete same-DIAL route: ' + Name(aExistingInfo));
+      Remove(aExistingInfo);
     end;
-    createdInfo := True;
-    AddMessage('Created new route from ' + Name(aSourceInfo));
+  end;
+
+  sourceTopic := LinksTo(ElementByName(aSourceInfo, 'Topic'));
+  if not Assigned(sourceTopic) then begin
+    AddMessage('ERROR: Source DIAL did not resolve for ' + Name(aSourceInfo));
+    Exit;
+  end;
+  AddRequiredElementMasters(sourceTopic, TargetFile, False);
+  // Deep-copying the DIAL creates a genuinely independent branch topic and
+  // its INFO child group. The original DIAL/INFO records are never overridden.
+  newTopic := wbCopyElementToFile(sourceTopic, TargetFile, True, True);
+  if not Assigned(newTopic) then begin
+    AddMessage('ERROR: xEdit could not create independent DIAL from ' + Name(sourceTopic));
+    Exit;
+  end;
+  SetEditorID(newTopic, aTopicEditorID);
+  if not Assigned(LinksTo(ElementBySignature(newTopic, 'QNAM'))) or
+     not Assigned(LinksTo(ElementBySignature(newTopic, 'BNAM'))) then begin
+    AddMessage('ERROR: Copied DIAL did not retain its MME quest/branch links.');
+    Remove(newTopic);
+    Exit;
+  end;
+  if not Equals(MasterOrSelf(LinksTo(ElementBySignature(newTopic, 'QNAM'))),
+      MasterOrSelf(LinksTo(ElementBySignature(sourceTopic, 'QNAM')))) or
+     not Equals(MasterOrSelf(LinksTo(ElementBySignature(newTopic, 'BNAM'))),
+      MasterOrSelf(LinksTo(ElementBySignature(sourceTopic, 'BNAM')))) then begin
+    AddMessage('ERROR: Copied DIAL points at a different quest or branch.');
+    Remove(newTopic);
+    Exit;
+  end;
+  // xEdit does not deep-copy a DIAL's type-7 INFO child group. Copy the one
+  // source INFO separately, then retarget xEdit's synthetic Topic element;
+  // this is the scripted equivalent of the UI's "Move to Topic" operation.
+  AddRequiredElementMasters(aSourceInfo, TargetFile, False);
+  newInfo := wbCopyElementToFile(aSourceInfo, TargetFile, True, True);
+  if not Assigned(newInfo) then begin
+    AddMessage('ERROR: xEdit could not copy source INFO ' + Name(aSourceInfo));
+    Remove(newTopic);
+    Exit;
+  end;
+  topicElement := ElementByName(newInfo, 'Topic');
+  if not Assigned(topicElement) then begin
+    AddMessage('ERROR: Copied INFO exposes no xEdit Topic relationship.');
+    Remove(newInfo);
+    Remove(newTopic);
+    Exit;
+  end;
+  SetEditValue(topicElement, Name(newTopic));
+  if not Assigned(LinksTo(ElementByName(newInfo, 'Topic'))) or
+     not Equals(MasterOrSelf(LinksTo(ElementByName(newInfo, 'Topic'))),
+       MasterOrSelf(newTopic)) then begin
+    AddMessage('ERROR: xEdit could not move copied INFO into independent DIAL.');
+    Remove(newInfo);
+    Remove(newTopic);
+    Exit;
   end;
 
   SetEditorID(newInfo, aEditorID);
@@ -434,20 +494,15 @@ begin
      not InstallHandler(newInfo, aSourceInfo, aSourceFragment,
        aTargetFragment) then begin
     AddMessage('ERROR: Failed to configure ' + aEditorID + '.');
-    if createdInfo then
-      Remove(newInfo);
+    Remove(newTopic);
     Exit;
   end;
 
-  // Point this new INFO at the original as its previous sibling. The preflight
-  // tail check proves this does not branch or override MME's original chain.
-  if not LinkAfterSource(newInfo, aSourceInfo) then begin
-    AddMessage('ERROR: Could not link ' + aEditorID + ' after its source INFO.');
-    if createdInfo then
-      Remove(newInfo);
-    Exit;
-  end;
+  previousElement := ElementBySignature(newInfo, 'PNAM');
+  if Assigned(previousElement) then
+    Remove(previousElement);
 
+  AddMessage('  Independent DIAL: ' + Name(newTopic));
   AddMessage('  INFO: ' + Name(newInfo));
   AddMessage('  Prompt: ' + GetElementEditValues(newInfo, 'RNAM'));
   AddMessage('  Responses preserved: ' +
@@ -494,18 +549,6 @@ begin
     AddMessage('ERROR: Duplicate MME Extensions OStim EditorIDs found. No records were modified.');
     Exit;
   end;
-  if Assigned(PlayerDrinksTarget) and
-     not UsesSameTopic(PlayerDrinksTarget, PlayerDrinksSource) then begin
-    AddMessage('ERROR: Existing ' + PlayerDrinksEditorID +
-      ' is under the wrong topic. No records were modified.');
-    Exit;
-  end;
-  if Assigned(NPCDrinksTarget) and
-     not UsesSameTopic(NPCDrinksTarget, NPCDrinksSource) then begin
-    AddMessage('ERROR: Existing ' + NPCDrinksEditorID +
-      ' is under the wrong topic. No records were modified.');
-    Exit;
-  end;
 
   AddMessage('Validated player-drinks source: ' + Name(PlayerDrinksSource));
   AddMessage('  Prompt: ' + GetElementEditValues(PlayerDrinksSource, 'RNAM'));
@@ -513,31 +556,24 @@ begin
   AddMessage('  Prompt: ' + GetElementEditValues(NPCDrinksSource, 'RNAM'));
   AddMessage('Original MME INFOs will not be overridden.');
 
-  if not ValidateSourceIsTopicTail(PlayerDrinksSource) or
-     not ValidateSourceIsTopicTail(NPCDrinksSource) then begin
-    AddMessage('ERROR: The original INFO chain is not safe for additive insertion.');
-    AddMessage('No records were modified.');
-    Exit;
-  end;
-
   if not EnsureAvailabilityGlobal then begin
     AddMessage('ERROR: OStim availability global setup failed.');
     Exit;
   end;
 
   if not InstallRoute(PlayerDrinksSource, PlayerDrinksTarget,
-      PlayerDrinksEditorID, PlayerDrinksSourceFragment,
+      PlayerDrinksTopicEditorID, PlayerDrinksEditorID, PlayerDrinksSourceFragment,
       PlayerDrinksTargetFragment) then
     Exit;
   if not InstallRoute(NPCDrinksSource, NPCDrinksTarget,
-      NPCDrinksEditorID, NPCDrinksSourceFragment,
+      NPCDrinksTopicEditorID, NPCDrinksEditorID, NPCDrinksSourceFragment,
       NPCDrinksTargetFragment) then
     Exit;
 
   AddMessage('MME Extensions OStim breastfeeding dialogue installed successfully.');
   AddMessage('Both original MME/SexLab routes remain unchanged.');
-  AddMessage('New routes are directly after their originals because placing them above');
-  AddMessage('would require an override of the original INFO chain.');
+  AddMessage('New routes are independent DIAL topics in the same MME branch.');
+  AddMessage('Their relative menu height follows branch/topic load order; no original MME record was overridden to force placement.');
   Result := 0;
 end;
 

@@ -283,18 +283,22 @@ EndEvent
 Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float localInfoForm, Form sender)
     Bool dialogueDebug = JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
     Bool sexLabBFDebug = JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
+    Bool ostimBFDebug = JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1
     If !IsExtensionsEnabled()
         Return
     EndIf
     RefreshMMESexLabAnimationGate("dialogue event " + topicEditorID)
-    If !dialogueDebug && !sexLabBFDebug
+    If !dialogueDebug && !sexLabBFDebug && !ostimBFDebug
         Return
     EndIf
     Debug.Trace("[MME Extensions Dialogue] INFO event | topic=" + topicEditorID + " info=" + (localInfoForm as Int) + " speaker=" + sender)
     If sexLabBFDebug
         Debug.Notification("SexLab BF DEBUG: dialogue event detected | topic=" + topicEditorID)
     EndIf
-    If topicEditorID != "MME_Hello_Dialogue_Topic" && !sexLabBFDebug
+    If ostimBFDebug
+        Debug.Notification("OStim BF DEBUG: dialogue event detected | topic=" + topicEditorID)
+    EndIf
+    If topicEditorID != "MME_Hello_Dialogue_Topic" && !sexLabBFDebug && !ostimBFDebug
         Return
     EndIf
     Actor dialogueActor = sender as Actor
@@ -636,6 +640,9 @@ Event OnUpdate()
             EndIf
             If JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
                 ShowSexLabBreastfeedingDiagnostic(dialogueTarget)
+            EndIf
+            If JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1
+                ShowOStimBreastfeedingDiagnostic(dialogueTarget)
             EndIf
         EndIf
         NextDialogueDiagnosticUpdate = 0.0
@@ -985,6 +992,53 @@ Function ShowSexLabBreastfeedingDiagnostic(Actor subject)
         Debug.Notification("SexLab BF DEBUG: conditions PASS, INFO visible=NO")
     Else
         Debug.Notification("SexLab BF DEBUG: eligible INFO visible=YES")
+    EndIf
+EndFunction
+
+; Audits only the independent OStim alternatives. A route can pass its CTDAs
+; yet remain absent when its INFO was incorrectly placed in an original MME
+; response chain; that structural distinction is deliberately surfaced.
+Function ShowOStimBreastfeedingDiagnostic(Actor subject)
+    Actor playerActor = Game.GetPlayer()
+    Form originalPlayerTopic = Game.GetFormFromFile(0x062E91, "MilkModNEW.esp")
+    Form originalNPCTopic = Game.GetFormFromFile(0x062E8F, "MilkModNEW.esp")
+    Form playerInfo = MMEExtensionsNative.GetFormByEditorID("MMEExt_OStimBreastfeeding_PlayerDrinks")
+    Form npcInfo = MMEExtensionsNative.GetFormByEditorID("MMEExt_OStimBreastfeeding_NPCDrinks")
+    Form playerTopic = MMEExtensionsNative.GetParentTopic(playerInfo)
+    Form npcTopic = MMEExtensionsNative.GetParentTopic(npcInfo)
+    Bool playerIndependent = playerTopic != None && playerTopic != originalPlayerTopic
+    Bool npcIndependent = npcTopic != None && npcTopic != originalNPCTopic
+    Bool detected = MMEOStimBreastfeeding.IsOStimDetected()
+    Bool setting = JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0) == 1
+    GlobalVariable gate = GetOStimDialogueAvailabilityGlobal()
+    Float gateValue = -1.0
+    If gate != None
+        gateValue = gate.GetValue()
+    EndIf
+    Int[] playerConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(playerInfo, subject, playerActor)
+    Int[] npcConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(npcInfo, subject, playerActor)
+    String[] playerDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(playerInfo)
+    String[] npcDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(npcInfo)
+    Bool playerEligible = playerInfo != None && MMEExtensionsNative.EvaluateTopicInfo(playerInfo, subject, playerActor)
+    Bool npcEligible = npcInfo != None && MMEExtensionsNative.EvaluateTopicInfo(npcInfo, subject, playerActor)
+    Form[] visibleInfos = MMEExtensionsNative.GetVisibleDialogueInfos()
+    Bool playerVisible = visibleInfos != None && visibleInfos.Find(playerInfo) >= 0
+    Bool npcVisible = visibleInfos != None && visibleInfos.Find(npcInfo) >= 0
+
+    Debug.Trace("[MME Extensions OStim BF Dialogue] detected=" + DiagnosticBool(detected) + " setting=" + DiagnosticBool(setting) + " global=" + gate + " value=" + gateValue)
+    Debug.Trace("[MME Extensions OStim BF Dialogue] Player INFO=" + playerInfo + " topic=" + playerTopic + " independent=" + DiagnosticBool(playerIndependent) + " sources=" + SourceFileSummary(playerInfo))
+    Debug.Trace("[MME Extensions OStim BF Dialogue] Player CTDA=" + ConditionResults(playerConditions) + " | " + ConditionDescriptions(playerDescriptions) + " eligible=" + DiagnosticBool(playerEligible) + " visible=" + DiagnosticBool(playerVisible))
+    Debug.Trace("[MME Extensions OStim BF Dialogue] NPC INFO=" + npcInfo + " topic=" + npcTopic + " independent=" + DiagnosticBool(npcIndependent) + " sources=" + SourceFileSummary(npcInfo))
+    Debug.Trace("[MME Extensions OStim BF Dialogue] NPC CTDA=" + ConditionResults(npcConditions) + " | " + ConditionDescriptions(npcDescriptions) + " eligible=" + DiagnosticBool(npcEligible) + " visible=" + DiagnosticBool(npcVisible))
+
+    Debug.Notification("OStim BF DEBUG: detected=" + DiagnosticBool(detected) + " setting=" + DiagnosticBool(setting) + " gate=" + gateValue)
+    If !playerIndependent || !npcIndependent
+        Debug.Notification("OStim BF DEBUG: FAIL options are not independent DIALs")
+    Else
+        Debug.Notification("OStim BF DEBUG: Player=" + ShortRouteResult(playerEligible, playerVisible, playerConditions, "PlayerOStim") + " | NPC=" + ShortRouteResult(npcEligible, npcVisible, npcConditions, "NPCOStim"))
+        If (playerEligible && !playerVisible) || (npcEligible && !npcVisible)
+            Debug.Notification("OStim BF DEBUG: conditions PASS but option NOT SHOWN")
+        EndIf
     EndIf
 EndFunction
 

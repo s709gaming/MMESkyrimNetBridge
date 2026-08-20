@@ -198,6 +198,10 @@ if (Test-Path -LiteralPath $pluginPath) {
         $pluginText.Contains("::OStimDialogueAvailable_var")) {
         throw "MMEAlert.esp still uses the unreliable OStim quest-variable dialogue gate. Run the updated tools\AddMMEExtensionsOStimBreastfeedingDialogue.pas in SSEEdit and save the plugin before packaging."
     }
+    if (!$pluginText.Contains("MMEExt_OStimBreastfeeding_PlayerDrinksTopic") -or
+        !$pluginText.Contains("MMEExt_OStimBreastfeeding_NPCDrinksTopic")) {
+        throw "MMEAlert.esp still contains the obsolete same-DIAL OStim breastfeeding routes. Run the updated tools\AddMMEExtensionsOStimBreastfeedingDialogue.pas in SSEEdit and save the plugin before packaging."
+    }
     if (!$pluginText.Contains("HearthFires.esm")) {
         throw "MMEAlert.esp is missing the supported-milk dialogue eligibility update. Run the updated tools\AddMMEExtensionsMilkDialogue.pas in SSEEdit and save the plugin before packaging."
     }

@@ -286,6 +286,13 @@ namespace
         return result;
     }
 
+    RE::TESForm* GetParentTopic(RE::StaticFunctionTag*, RE::TESForm* form)
+    {
+        auto* info = form && form->GetFormType() == RE::FormType::Info ?
+                         static_cast<RE::TESTopicInfo*>(form) : nullptr;
+        return info ? info->parentTopic : nullptr;
+    }
+
     bool RegisterPapyrus(RE::BSScript::IVirtualMachine* vm)
     {
         vm->RegisterFunction("GetNearbyActors", "MMEExtensionsNative", GetNearbyActors);
@@ -299,6 +306,7 @@ namespace
         vm->RegisterFunction("EvaluateTopicInfoConditions", "MMEExtensionsNative", EvaluateTopicInfoConditions);
         vm->RegisterFunction("DescribeTopicInfoConditions", "MMEExtensionsNative", DescribeTopicInfoConditions);
         vm->RegisterFunction("GetFormSourceFiles", "MMEExtensionsNative", GetFormSourceFiles);
+        vm->RegisterFunction("GetParentTopic", "MMEExtensionsNative", GetParentTopic);
         SKSE::log::info("Native scanner and dialogue diagnostics registered");
         return true;
     }

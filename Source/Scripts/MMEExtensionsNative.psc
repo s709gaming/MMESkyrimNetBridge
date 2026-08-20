@@ -33,3 +33,6 @@ String[] Function DescribeTopicInfoConditions(Form info) Global Native
 
 ; Returns every plugin contributing the live record, origin first and winner last.
 String[] Function GetFormSourceFiles(Form target) Global Native
+
+; Returns the live parent DIAL for an INFO.
+Form Function GetParentTopic(Form info) Global Native

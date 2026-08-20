@@ -94,7 +94,7 @@ Int armorDebugOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 72
+    Return 73
 EndFunction
 
 Function SetPageNames()
@@ -778,7 +778,6 @@ Event OnPageReset(String page)
         AddHeaderOption("OStim")
         ostimStatusOption = AddToggleOption("OStim Detected", ostimAvailable, OPTION_FLAG_DISABLED)
         ostimBreastfeedingOption = AddToggleOption("Use OStim Breastfeeding", JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0) == 1, ostimFlags)
-        ostimDebugOption = AddToggleOption("OStim Debug", JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1)
         Return
     EndIf
     If page == "A" + "rousal "
@@ -911,6 +910,7 @@ Event OnPageReset(String page)
         AddHeaderOption("Dialogue")
         dialogueDiagnosticOption = AddToggleOption("NPC Dialogue Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1)
         sexLabBreastfeedingDebugOption = AddToggleOption("SexLab Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1)
+        ostimDebugOption = AddToggleOption("OStim Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1)
         Return
     EndIf
     AddHeaderOption("Sounds")
