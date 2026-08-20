@@ -23,9 +23,14 @@ const
   MMEPluginName = 'MilkModNEW.esp';
   SkyrimPluginName = 'Skyrim.esm';
   HearthFiresPluginName = 'HearthFires.esm';
+  HearthFiresMilkEditorID = 'BYOHFoodMilk';
   BasicMilkListEditorID = 'MME_Milk_Basic';
   RaceMilkListEditorID = 'MME_Milk_Race_Normal';
   SpecialMilkListEditorID = 'MME_Milk_Special';
+  HearthFiresMilkFormID = $00003534;
+  BasicMilkListFormID = $0005E87B;
+  RaceMilkListFormID = $00071C2B;
+  SpecialMilkListFormID = $00071C2D;
   NewInfoEditorID = 'MMEExt_DialogueDrinkMilk';
   PlayerPrompt = 'Drink this, it will make you milky!';
   NPCResponse = 'Yes! I can''t wait to be nice and heavy!';
@@ -45,6 +50,54 @@ begin
       Result := FileByIndex(i);
       Exit;
     end;
+end;
+
+function FindRecordByEditorIDRecursive(aElement: IInterface;
+  aSignature, aEditorID: string): IInterface;
+var
+  i: Integer;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+
+  if (Signature(aElement) = aSignature) and
+     SameText(EditorID(aElement), aEditorID) then begin
+    Result := aElement;
+    Exit;
+  end;
+
+  for i := 0 to ElementCount(aElement) - 1 do begin
+    Result := FindRecordByEditorIDRecursive(ElementByIndex(aElement, i),
+      aSignature, aEditorID);
+    if Assigned(Result) then
+      Exit;
+  end;
+end;
+
+function ResolveSupportedMilkRecord(aFile: IInterface; aSignature,
+  aEditorID: string; aLocalFormID: Cardinal): IInterface;
+begin
+  Result := FindRecordByEditorIDRecursive(GroupBySignature(aFile, aSignature),
+    aSignature, aEditorID);
+
+  // These local IDs were verified against the supported local MME/HearthFires
+  // records. They are only a fallback for xEdit builds whose recursive group
+  // traversal does not expose the record to JvInterpreter.
+  if not Assigned(Result) then begin
+    Result := RecordByFormID(aFile, aLocalFormID, True);
+    if Assigned(Result) and
+       ((Signature(Result) <> aSignature) or
+        not SameText(EditorID(Result), aEditorID)) then
+      Result := nil;
+  end;
+
+  if Assigned(Result) then
+    AddMessage('Resolved supported milk form: ' + Name(Result))
+  else
+    AddMessage('ERROR: Could not resolve ' + aEditorID + ' [' +
+      aSignature + ':' + IntToHex(aLocalFormID, 8) + '] from ' +
+      GetFileName(aFile) + '.');
 end;
 
 function AddSupportedMilkCondition(aConditions, aTemplate,
@@ -104,13 +157,14 @@ begin
     Exit;
   end;
 
-  hearthMilk := RecordByFormID(HearthFiresFile, $00003534, True);
-  basicMilk := MainRecordByEditorID(GroupBySignature(MMEFile, 'FLST'),
-    BasicMilkListEditorID);
-  raceMilk := MainRecordByEditorID(GroupBySignature(MMEFile, 'FLST'),
-    RaceMilkListEditorID);
-  specialMilk := MainRecordByEditorID(GroupBySignature(MMEFile, 'FLST'),
-    SpecialMilkListEditorID);
+  hearthMilk := ResolveSupportedMilkRecord(HearthFiresFile, 'ALCH',
+    HearthFiresMilkEditorID, HearthFiresMilkFormID);
+  basicMilk := ResolveSupportedMilkRecord(MMEFile, 'FLST',
+    BasicMilkListEditorID, BasicMilkListFormID);
+  raceMilk := ResolveSupportedMilkRecord(MMEFile, 'FLST',
+    RaceMilkListEditorID, RaceMilkListFormID);
+  specialMilk := ResolveSupportedMilkRecord(MMEFile, 'FLST',
+    SpecialMilkListEditorID, SpecialMilkListFormID);
   if not Assigned(hearthMilk) or not Assigned(basicMilk) or
      not Assigned(raceMilk) or not Assigned(specialMilk) then begin
     AddMessage('ERROR: One or more authoritative supported-milk forms are missing.');
@@ -198,29 +252,6 @@ begin
 
   for i := 0 to ElementCount(aElement) - 1 do
     FindSourceInfoRecursive(ElementByIndex(aElement, i));
-end;
-
-function FindRecordByEditorIDRecursive(aElement: IInterface;
-  aSignature, aEditorID: string): IInterface;
-var
-  i: Integer;
-begin
-  Result := nil;
-  if not Assigned(aElement) then
-    Exit;
-
-  if (Signature(aElement) = aSignature) and
-     SameText(EditorID(aElement), aEditorID) then begin
-    Result := aElement;
-    Exit;
-  end;
-
-  for i := 0 to ElementCount(aElement) - 1 do begin
-    Result := FindRecordByEditorIDRecursive(ElementByIndex(aElement, i),
-      aSignature, aEditorID);
-    if Assigned(Result) then
-      Exit;
-  end;
 end;
 
 function ConfigureResponses(aInfo: IInterface): Boolean;
