@@ -30,3 +30,6 @@ Int[] Function EvaluateTopicInfoConditions(Form info, Actor subject, Actor targe
 ; Describes each live CTDA by function, parameter, run-on object, comparison,
 ; and OR flag so diagnostics do not have to infer meaning from array position.
 String[] Function DescribeTopicInfoConditions(Form info) Global Native
+
+; Returns every plugin contributing the live record, origin first and winner last.
+String[] Function GetFormSourceFiles(Form target) Global Native

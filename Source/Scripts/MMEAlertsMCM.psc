@@ -27,6 +27,7 @@ Int milkDrinkArousalOption
 Int milkDrinkArousalAmountOption
 Int arousalDiagnosticOption
 Int dialogueDiagnosticOption
+Int sexLabBreastfeedingDebugOption
 Int npcDrinkAnimationOption
 Int npcDrinkAnimationDurationOption
 Int playerDrinkAnimationOption
@@ -93,7 +94,7 @@ Int armorDebugOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 71
+    Return 72
 EndFunction
 
 Function SetPageNames()
@@ -216,6 +217,7 @@ Function EnsureDefaults()
         JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 10.0)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
         JsonUtil.SetFloatValue(SettingsFile, "npcDrinkAnimationDuration", 3.0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkAnimation", 0)
@@ -676,6 +678,7 @@ Event OnPageReset(String page)
     milkDrinkArousalAmountOption = -1
     arousalDiagnosticOption = -1
     dialogueDiagnosticOption = -1
+    sexLabBreastfeedingDebugOption = -1
     npcDrinkAnimationOption = -1
     npcDrinkAnimationDurationOption = -1
     playerDrinkAnimationOption = -1
@@ -907,6 +910,7 @@ Event OnPageReset(String page)
         arousalDiagnosticOption = AddToggleOption("Milk Arousal Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 0) == 1)
         AddHeaderOption("Dialogue")
         dialogueDiagnosticOption = AddToggleOption("NPC Dialogue Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1)
+        sexLabBreastfeedingDebugOption = AddToggleOption("SexLab Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1)
         Return
     EndIf
     AddHeaderOption("Sounds")
@@ -1102,6 +1106,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report actor, milk, amount, detection, and event failures.")
     ElseIf option == dialogueDiagnosticOption
         SetInfoText("Report dialogue target detection and MME Milkmaid validation.")
+    ElseIf option == sexLabBreastfeedingDebugOption
+        SetInfoText("Diagnose MME's original SexLab breastfeeding route when Hey there executes. Never changes eligibility.")
     EndIf
 EndEvent
 
@@ -1368,6 +1374,10 @@ Event OnOptionSelect(Int option)
         If controller != None
             controller.UpdatePolling()
         EndIf
+    ElseIf option == sexLabBreastfeedingDebugOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", value)
+        SetToggleOptionValue(option, value == 1)
     ElseIf option == ostimBreastfeedingOption && MMEOStimBreastfeeding.IsOStimDetected()
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableOStimBreastfeeding", value)

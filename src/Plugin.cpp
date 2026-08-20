@@ -271,6 +271,21 @@ namespace
         return result;
     }
 
+    std::vector<RE::BSFixedString> GetFormSourceFiles(RE::StaticFunctionTag*, RE::TESForm* form)
+    {
+        std::vector<RE::BSFixedString> result;
+        if (!form || !form->sourceFiles.array) {
+            return result;
+        }
+        result.reserve(form->sourceFiles.array->size());
+        for (auto* file : *form->sourceFiles.array) {
+            if (file) {
+                result.emplace_back(file->GetFilename());
+            }
+        }
+        return result;
+    }
+
     bool RegisterPapyrus(RE::BSScript::IVirtualMachine* vm)
     {
         vm->RegisterFunction("GetNearbyActors", "MMEExtensionsNative", GetNearbyActors);
@@ -283,6 +298,7 @@ namespace
         vm->RegisterFunction("EvaluateTopicInfo", "MMEExtensionsNative", EvaluateTopicInfo);
         vm->RegisterFunction("EvaluateTopicInfoConditions", "MMEExtensionsNative", EvaluateTopicInfoConditions);
         vm->RegisterFunction("DescribeTopicInfoConditions", "MMEExtensionsNative", DescribeTopicInfoConditions);
+        vm->RegisterFunction("GetFormSourceFiles", "MMEExtensionsNative", GetFormSourceFiles);
         SKSE::log::info("Native scanner and dialogue diagnostics registered");
         return true;
     }

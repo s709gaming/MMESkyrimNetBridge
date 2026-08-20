@@ -262,7 +262,9 @@ EndEvent
 ; Native TESTopicInfoEvent observation is authoritative. It avoids sampling a
 ; transient current INFO and schedules the snapshot after MME Fragment_00.
 Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float localInfoForm, Form sender)
-    If !IsExtensionsEnabled() || JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) != 1
+    Bool dialogueDebug = JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
+    Bool sexLabBFDebug = JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
+    If !IsExtensionsEnabled() || (!dialogueDebug && !sexLabBFDebug)
         Return
     EndIf
     Debug.Trace("[MME Extensions Dialogue] INFO event | topic=" + topicEditorID + " info=" + (localInfoForm as Int) + " speaker=" + sender)
@@ -598,7 +600,12 @@ Event OnUpdate()
         If dialogueTarget == None
             Debug.Trace("[MME Extensions Dialogue] opening refresh observed, but speaker was unavailable for post-refresh snapshot")
         Else
-            ShowDialogueEligibilitySnapshot(dialogueTarget, True)
+            If JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
+                ShowDialogueEligibilitySnapshot(dialogueTarget, True)
+            EndIf
+            If JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
+                ShowSexLabBreastfeedingDiagnostic(dialogueTarget)
+            EndIf
         EndIf
         NextDialogueDiagnosticUpdate = 0.0
         MMEOpeningRefreshSnapshotAt = 0.0
@@ -768,6 +775,15 @@ String Function RouteResult(Bool eligible, Bool visible, Int[] values, String[] 
     Return "PASS NOT SHOWN"
 EndFunction
 
+String Function ShortRouteResult(Bool eligible, Bool visible, Int[] values, String route)
+    If !eligible
+        Return "FAIL " + FirstFailedCondition(values, None, route)
+    ElseIf visible
+        Return "PASS shown"
+    EndIf
+    Return "PASS NOT SHOWN"
+EndFunction
+
 Function ReportDialogueStructure(Actor subject, Actor playerActor)
     Form playerDrinksTopic = Game.GetFormFromFile(0x062E91, "MilkModNEW.esp")
     Form npcDrinksTopic = Game.GetFormFromFile(0x062E8F, "MilkModNEW.esp")
@@ -842,6 +858,109 @@ Function ReportDialogueStructure(Actor subject, Actor playerActor)
     If (playerSexLabEligible && !playerSexLabVisible) || (npcSexLabEligible && !npcSexLabVisible) || (playerOStimEligible && !playerOStimVisible) || (npcOStimEligible && !npcOStimVisible)
         Debug.Notification("Dialogue DEBUG: conditions PASS but INFO not shown")
         Debug.Trace("[MME Extensions Dialogue] conditions PASS but INFO not shown; investigate merged topic array, PNAM ordering, VMAD, and menu construction")
+    EndIf
+EndFunction
+
+String Function SourceFileSummary(Form target)
+    String[] files = MMEExtensionsNative.GetFormSourceFiles(target)
+    If files == None || files.Length == 0
+        Return "missing"
+    EndIf
+    String result = files[0]
+    Int i = 1
+    While i < files.Length
+        result += " -> " + files[i]
+        i += 1
+    EndWhile
+    Return result
+EndFunction
+
+; Audits MME's original SexLab breastfeeding route only. This runs from the
+; native Hey there INFO event after Fragment_00 has refreshed MME's condition
+; quest; it observes live records and state but never starts or alters a scene.
+Function ShowSexLabBreastfeedingDiagnostic(Actor subject)
+    Actor playerActor = Game.GetPlayer()
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Form playerDrinksTopic = Game.GetFormFromFile(0x062E91, "MilkModNEW.esp")
+    Form npcDrinksTopic = Game.GetFormFromFile(0x062E8F, "MilkModNEW.esp")
+    Form playerDrinksInfo = Game.GetFormFromFile(0x05FE12, "MilkModNEW.esp")
+    Form npcDrinksInfo = Game.GetFormFromFile(0x05FE0E, "MilkModNEW.esp")
+
+    Bool frameworkAvailable = milkController != None && milkController.SexLab != None
+    Bool interfaceValid = frameworkAvailable && milkController.SexLab.AnimSlots != None
+    sslBaseAnimation straightAnimation = None
+    sslBaseAnimation variantAnimation = None
+    If interfaceValid
+        straightAnimation = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding")
+        variantAnimation = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar")
+    EndIf
+    Bool straightResolved = straightAnimation != None
+    Bool variantResolved = variantAnimation != None
+
+    If milkController == None || milkController.MilkQC == None
+        Debug.Notification("SexLab BF DEBUG: MME interface=FAIL")
+        Debug.Trace("[MME Extensions SexLab BF] MME_MilkQUEST or MilkQC unavailable")
+        Return
+    EndIf
+    MilkQUEST_Conditions conditions = milkController.MilkQC
+    Float playerMilk = MME_Storage.getMilkCurrent(playerActor)
+    Float npcMilk = MME_Storage.getMilkCurrent(subject)
+    String playerBlockers = GetMilkBlockers(playerActor, milkController)
+    String npcBlockers = GetMilkBlockers(subject, milkController)
+    Bool playerInfoExists = playerDrinksInfo != None
+    Bool npcInfoExists = npcDrinksInfo != None
+    Bool playerInfoInTopic = playerInfoExists && MMEExtensionsNative.GetTopicInfos(playerDrinksTopic).Find(playerDrinksInfo) >= 0
+    Bool npcInfoInTopic = npcInfoExists && MMEExtensionsNative.GetTopicInfos(npcDrinksTopic).Find(npcDrinksInfo) >= 0
+    Int[] playerConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(playerDrinksInfo, subject, playerActor)
+    Int[] npcConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(npcDrinksInfo, subject, playerActor)
+    String[] playerDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(playerDrinksInfo)
+    String[] npcDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(npcDrinksInfo)
+    Bool playerEligible = playerInfoExists && MMEExtensionsNative.EvaluateTopicInfo(playerDrinksInfo, subject, playerActor)
+    Bool npcEligible = npcInfoExists && MMEExtensionsNative.EvaluateTopicInfo(npcDrinksInfo, subject, playerActor)
+    Form[] visibleInfos = MMEExtensionsNative.GetVisibleDialogueInfos()
+    Bool playerVisible = visibleInfos != None && visibleInfos.Find(playerDrinksInfo) >= 0
+    Bool npcVisible = visibleInfos != None && visibleInfos.Find(npcDrinksInfo) >= 0
+
+    ActorBase subjectBase = subject.GetLeveledActorBase()
+    ActorBase playerBase = playerActor.GetLeveledActorBase()
+    Bool sameSex = subjectBase != None && playerBase != None && subjectBase.GetSex() == playerBase.GetSex()
+    Bool expectedAnimation = straightResolved
+    String expectedRegistrar = "zjBreastFeeding"
+    If sameSex
+        expectedAnimation = variantResolved
+        expectedRegistrar = "zjBreastFeedingVar"
+    EndIf
+
+    Debug.Trace("[MME Extensions SexLab BF] actor=" + subject + " player=" + playerActor + " sameSex=" + DiagnosticBool(sameSex))
+    Debug.Trace("[MME Extensions SexLab BF] Framework=" + DiagnosticBool(frameworkAvailable) + " AnimSlots=" + DiagnosticBool(interfaceValid) + " zjBreastFeeding=" + straightAnimation + " zjBreastFeedingVar=" + variantAnimation + " expected=" + expectedRegistrar)
+    Debug.Trace("[MME Extensions SexLab BF] gate=" + DiagnosticBool(conditions.MME_BreasfeedingAnimationsCheck) + " DialogueMilking=" + DiagnosticBool(conditions.MME_DialogueMilking) + " Player milk=" + playerMilk + "/TargetMilk=" + conditions.MME_TargetMilk + " blockers=" + playerBlockers + " NPC milk=" + npcMilk + "/SubjectMilk=" + conditions.MME_SubjectMilk + " blockers=" + npcBlockers)
+    Debug.Trace("[MME Extensions SexLab BF] Player-drinks INFO=" + playerDrinksInfo + " topicMember=" + DiagnosticBool(playerInfoInTopic) + " sources=" + SourceFileSummary(playerDrinksInfo))
+    Debug.Trace("[MME Extensions SexLab BF] Player-drinks CTDA=" + ConditionResults(playerConditions) + " | " + ConditionDescriptions(playerDescriptions) + " | eligible=" + DiagnosticBool(playerEligible) + " visible=" + DiagnosticBool(playerVisible))
+    Debug.Trace("[MME Extensions SexLab BF] NPC-drinks INFO=" + npcDrinksInfo + " topicMember=" + DiagnosticBool(npcInfoInTopic) + " sources=" + SourceFileSummary(npcDrinksInfo))
+    Debug.Trace("[MME Extensions SexLab BF] NPC-drinks CTDA=" + ConditionResults(npcConditions) + " | " + ConditionDescriptions(npcDescriptions) + " | eligible=" + DiagnosticBool(npcEligible) + " visible=" + DiagnosticBool(npcVisible))
+    Debug.Trace("[MME Extensions SexLab BF] MMEAlert touches Player-drinks=" + DiagnosticBool(StringUtil.Find(SourceFileSummary(playerDrinksInfo), "MMEAlert.esp") >= 0) + " NPC-drinks=" + DiagnosticBool(StringUtil.Find(SourceFileSummary(npcDrinksInfo), "MMEAlert.esp") >= 0))
+
+    Debug.Notification("SexLab BF DEBUG: Framework=" + DiagnosticBool(frameworkAvailable) + " Straight=" + DiagnosticBool(straightResolved) + " Variant=" + DiagnosticBool(variantResolved) + " MME gate=" + DiagnosticBool(conditions.MME_BreasfeedingAnimationsCheck))
+    Debug.Notification("SexLab BF DEBUG: NPC milk=" + DiagnosticBool(conditions.MME_SubjectMilk >= 1.0 && npcBlockers == "none") + " Player milk=" + DiagnosticBool(conditions.MME_TargetMilk >= 1.0 && playerBlockers == "none"))
+    Debug.Notification("SexLab BF DEBUG: Player drinks=" + ShortRouteResult(playerEligible, playerVisible, playerConditions, "PlayerSexLab") + " | NPC drinks=" + ShortRouteResult(npcEligible, npcVisible, npcConditions, "NPCSexLab"))
+    If !frameworkAvailable
+        Debug.Notification("SexLab BF DEBUG: first failure=SexLab framework missing")
+    ElseIf !interfaceValid
+        Debug.Notification("SexLab BF DEBUG: first failure=MME AnimSlots invalid")
+    ElseIf !expectedAnimation
+        Debug.Notification("SexLab BF DEBUG: first failure=" + expectedRegistrar + " missing")
+    ElseIf !conditions.MME_BreasfeedingAnimationsCheck
+        Debug.Notification("SexLab BF DEBUG: first failure=MME animation gate")
+    ElseIf !playerInfoExists || !npcInfoExists
+        Debug.Notification("SexLab BF DEBUG: first failure=original INFO missing")
+    ElseIf !playerInfoInTopic || !npcInfoInTopic
+        Debug.Notification("SexLab BF DEBUG: first failure=INFO absent from topic")
+    ElseIf !playerEligible && !npcEligible
+        Debug.Notification("SexLab BF DEBUG: first failure=INFO conditions")
+    ElseIf (playerEligible && !playerVisible) || (npcEligible && !npcVisible)
+        Debug.Notification("SexLab BF DEBUG: conditions PASS, INFO visible=NO")
+    Else
+        Debug.Notification("SexLab BF DEBUG: eligible INFO visible=YES")
     EndIf
 EndFunction
 
