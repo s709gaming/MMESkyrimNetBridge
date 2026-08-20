@@ -357,6 +357,10 @@ Bool Function TryMilkingArmorIntro(Actor wearer, Armor equippedArmor, MilkQUEST 
     EndIf
 
     ReportArmor(diagnostic, "first-equip intro eligible | " + role)
+    If MMEAlertsController.IsMilkmaidCreationPending(wearer) || wearer.IsUnconscious()
+        ReportArmor(diagnostic, "animation blocked: MME Milk Maid conversion owns actor | " + role)
+        Return False
+    EndIf
     String blocked = MMEAnimationSafety.GetStartBlockReason(wearer, milkController, True)
     If blocked != ""
         ReportArmor(diagnostic, "animation blocked: " + blocked + " | " + role)
@@ -368,18 +372,32 @@ Bool Function TryMilkingArmorIntro(Actor wearer, Armor equippedArmor, MilkQUEST 
         Return False
     EndIf
 
+    Bool playerMovementLocked = False
+    If wearer == Game.GetPlayer()
+        wearer.SetDontMove(True)
+        StorageUtil.SetIntValue(wearer, "MMEExtensions.MilkingArmor.PlayerMovementLocked", 1)
+        playerMovementLocked = True
+        ReportArmor(diagnostic, "PLAYER movement locked for owned intro")
+    EndIf
     Debug.SendAnimationEvent(wearer, "ZaZAPCHorFd")
     StorageUtil.FormListAdd(wearer, "MMEExtensions.MilkingArmor.Introduced", equippedArmor, False)
     ReportArmor(diagnostic, "ZaZAPCHorFd started; intro marker written | " + role)
 
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", notificationKey, 1) == 1
-        Debug.Notification("The milking armor latches snugly around your breasts.")
+        If wearer == Game.GetPlayer()
+            Debug.Notification("The milking armor closes around your breasts, its snug pressure promising relentless attention.")
+        Else
+            Debug.Notification("The milking armor closes snugly around " + GetActorName(wearer) + "'s breasts, ready to put its wearer to work.")
+        EndIf
         ReportArmor(diagnostic, "in-game notification shown | " + role)
     EndIf
     Int eventResult = MMEAlertsSkyrimNet.SendMilkingArmorFirstEquip(wearer, equippedArmor)
     ReportArmor(diagnostic, "Skyrim.Net first-equip event result " + eventResult + " | " + role)
 
     Utility.Wait(10.0)
+    If playerMovementLocked
+        RestorePlayerMovementIfNeeded(wearer, diagnostic)
+    EndIf
     String resetBlocked = MMEAnimationSafety.GetResetBlockReason(wearer, milkController, owner)
     If resetBlocked == ""
         Debug.SendAnimationEvent(wearer, "IdleForceDefaultState")
@@ -389,6 +407,17 @@ Bool Function TryMilkingArmorIntro(Actor wearer, Armor equippedArmor, MilkQUEST 
     EndIf
     MMEAnimationSafety.Release(wearer, owner)
     Return True
+EndFunction
+
+; Clears only the actor-level movement constraint owned by the armor intro.
+; Controller startup also calls this to recover a save made mid-animation.
+Function RestorePlayerMovementIfNeeded(Actor wearer, Bool diagnostic = False) Global
+    If wearer != Game.GetPlayer() || StorageUtil.GetIntValue(wearer, "MMEExtensions.MilkingArmor.PlayerMovementLocked", 0) != 1
+        Return
+    EndIf
+    wearer.SetDontMove(False)
+    StorageUtil.UnsetIntValue(wearer, "MMEExtensions.MilkingArmor.PlayerMovementLocked")
+    ReportArmor(diagnostic, "PLAYER movement restored after owned intro")
 EndFunction
 
 String Function GetActorName(Actor wearer) Global

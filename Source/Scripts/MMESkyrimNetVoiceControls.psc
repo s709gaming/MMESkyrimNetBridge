@@ -281,6 +281,29 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
         EndIf
         Return
     EndIf
+
+    ; One Skyrim.Net action, two internal backends. An enabled and available
+    ; OStim route owns this request completely; a failed OStim start must not
+    ; silently begin a SexLab scene instead.
+    If MMEOStimBreastfeeding.IsDialogueEnabled()
+        MMEOStimBreastfeeding ostimHandler = Game.GetFormFromFile(0x000858, "MMEAlert.esp") as MMEOStimBreastfeeding
+        If ostimHandler == None
+            Bool ostimDiagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableOStimDebug", 0) == 1
+            MMEOStimBreastfeeding.Report(diagnostic || ostimDiagnostic, "Skyrim.Net route could not resolve the installed OStim breastfeeding handler")
+            Return
+        EndIf
+        Bool ostimStarted = ostimHandler.StartBreastfeeding(milkSource, drinker)
+        If diagnostic
+            If ostimStarted
+                Debug.Notification("[MME Debug] OStim breastfeeding request started")
+            Else
+                Debug.Notification("[MME Debug] FAILED: OStim breastfeeding request was rejected")
+            EndIf
+        EndIf
+        Debug.Trace("[MMEAlert SkyrimNet] Milk-share OStim result " + ostimStarted + " | source " + milkSource + " | drinker " + drinker)
+        Return
+    EndIf
+
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None || milkController.SexLab == None
         If diagnostic

@@ -52,11 +52,12 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
     Form lactacid = milkController.MME_Util_Potions.GetAt(0)
     Form hearthfireMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
     Int lactacidCount = GetOwnedCount(giver, lactacid)
-    Int normalCount = GetOwnedCount(giver, hearthfireMilk) + CountOwnedFromList(giver, milkController.MME_Milk_Basic)
+    Int normalCount = CountOwnedNormalMilk(giver, hearthfireMilk, milkController.MME_Milk_Basic)
     Int racialCount = CountOwnedFromList(giver, milkController.MME_Milk_Race)
     Int supernaturalCount = CountOwnedFromList(giver, milkController.MME_Milk_Special)
 
     Report(diagnostic, "inventory: Lactacid " + lactacidCount + " | Normal " + normalCount + " | Racial " + racialCount + " | Supernatural " + supernaturalCount)
+    ReportNormalMilkInventory(giver, hearthfireMilk, milkController.MME_Milk_Basic, diagnostic)
 
     Form selectedItem = None
     String selectedType = ""
@@ -64,11 +65,7 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
         selectedItem = lactacid
         selectedType = "Lactacid"
     ElseIf normalCount > 0
-        If GetOwnedCount(giver, hearthfireMilk) > 0
-            selectedItem = hearthfireMilk
-        Else
-            selectedItem = FindFirstOwnedFromList(giver, milkController.MME_Milk_Basic)
-        EndIf
+        selectedItem = FindFirstOwnedNormalMilk(giver, hearthfireMilk, milkController.MME_Milk_Basic)
         selectedType = "Normal"
     ElseIf racialCount > 0
         selectedItem = FindFirstOwnedFromList(giver, milkController.MME_Milk_Race)
@@ -88,6 +85,78 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
     EndIf
     Report(diagnostic, "selected " + selectedType + ": " + itemName + " [form " + selectedItem.GetFormID() + "]")
     Return ProcessNativeConsumption(giver, target, selectedItem, selectedType, milkController, diagnostic)
+EndFunction
+
+; Counts HearthFires milk and MME's four verified basic milk forms once each.
+; The explicit records are a fallback for saves where MilkQUEST's FormList
+; property is unavailable or incomplete; they are the actual list members in
+; the supported local MilkModNEW.esp.
+Int Function CountOwnedNormalMilk(Actor owner, Form hearthfireMilk, FormList basicMilkList) Global
+    Int total = GetOwnedCount(owner, hearthfireMilk)
+    total += CountOwnedFromList(owner, basicMilkList)
+    total += CountOwnedVerifiedBasicFallback(owner, basicMilkList, 0x016364)
+    total += CountOwnedVerifiedBasicFallback(owner, basicMilkList, 0x016368)
+    total += CountOwnedVerifiedBasicFallback(owner, basicMilkList, 0x016369)
+    total += CountOwnedVerifiedBasicFallback(owner, basicMilkList, 0x0168CE)
+    Return total
+EndFunction
+
+Int Function CountOwnedVerifiedBasicFallback(Actor owner, FormList basicMilkList, Int localFormID) Global
+    Form basicMilk = Game.GetFormFromFile(localFormID, "MilkModNEW.esp")
+    If basicMilk == None || (basicMilkList != None && basicMilkList.HasForm(basicMilk))
+        Return 0
+    EndIf
+    Return GetOwnedCount(owner, basicMilk)
+EndFunction
+
+Form Function FindFirstOwnedNormalMilk(Actor owner, Form hearthfireMilk, FormList basicMilkList) Global
+    If GetOwnedCount(owner, hearthfireMilk) > 0
+        Return hearthfireMilk
+    EndIf
+    Form selectedItem = FindFirstOwnedFromList(owner, basicMilkList)
+    If selectedItem != None
+        Return selectedItem
+    EndIf
+    selectedItem = FindOwnedVerifiedBasic(owner, 0x016364)
+    If selectedItem == None
+        selectedItem = FindOwnedVerifiedBasic(owner, 0x016368)
+    EndIf
+    If selectedItem == None
+        selectedItem = FindOwnedVerifiedBasic(owner, 0x016369)
+    EndIf
+    If selectedItem == None
+        selectedItem = FindOwnedVerifiedBasic(owner, 0x0168CE)
+    EndIf
+    Return selectedItem
+EndFunction
+
+Form Function FindOwnedVerifiedBasic(Actor owner, Int localFormID) Global
+    Form basicMilk = Game.GetFormFromFile(localFormID, "MilkModNEW.esp")
+    If GetOwnedCount(owner, basicMilk) > 0
+        Return basicMilk
+    EndIf
+    Return None
+EndFunction
+
+Function ReportNormalMilkInventory(Actor owner, Form hearthfireMilk, FormList basicMilkList, Bool diagnostic) Global
+    If !diagnostic
+        Return
+    EndIf
+    Int listSize = 0
+    If basicMilkList != None
+        listSize = basicMilkList.GetSize()
+    EndIf
+    Report(True, "normal milk sources | HearthFires resolved=" + (hearthfireMilk != None) + " count=" + GetOwnedCount(owner, hearthfireMilk) + " | MME basic list size=" + listSize)
+    Int index = 0
+    While basicMilkList != None && index < basicMilkList.GetSize()
+        Form basicMilk = basicMilkList.GetAt(index)
+        If basicMilk != None
+            Report(True, "MME basic[" + index + "] " + basicMilk.GetName() + " [form " + basicMilk.GetFormID() + "] count=" + GetOwnedCount(owner, basicMilk))
+        Else
+            Report(True, "MME basic[" + index + "] failed to resolve")
+        EndIf
+        index += 1
+    EndWhile
 EndFunction
 
 ; Stage three transfers exactly one item and verifies that EquipItem consumed it.

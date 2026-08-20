@@ -773,8 +773,9 @@ Event OnPageReset(String page)
             ostimFlags = OPTION_FLAG_NONE
         EndIf
         AddHeaderOption("OStim")
-        ostimBreastfeedingOption = AddToggleOption("Enable OStim Breastfeeding", JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0) == 1, ostimFlags)
         ostimStatusOption = AddToggleOption("OStim Detected", ostimAvailable, OPTION_FLAG_DISABLED)
+        ostimBreastfeedingOption = AddToggleOption("Use OStim Breastfeeding", JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0) == 1, ostimFlags)
+        ostimDebugOption = AddToggleOption("OStim Debug", JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1)
         Return
     EndIf
     If page == "A" + "rousal "
@@ -906,8 +907,6 @@ Event OnPageReset(String page)
         arousalDiagnosticOption = AddToggleOption("Milk Arousal Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 0) == 1)
         AddHeaderOption("Dialogue")
         dialogueDiagnosticOption = AddToggleOption("NPC Dialogue Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1)
-        AddHeaderOption("OStim")
-        ostimDebugOption = AddToggleOption("OStim Debug", JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1)
         Return
     EndIf
     AddHeaderOption("Sounds")

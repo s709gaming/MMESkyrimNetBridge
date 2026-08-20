@@ -156,6 +156,23 @@ If (Test-Path -LiteralPath $spidConfig) {
 
 # Include the xEdit-created plugin and its Start Game Enabled quest index.
 if (Test-Path -LiteralPath $pluginPath) {
+    # Dialogue response records are authored through xEdit. Refuse to ship an
+    # older local ESP if the one-time response repair was not actually saved
+    # back into the project after a successful SSEEdit run.
+    $pluginText = [System.Text.Encoding]::UTF8.GetString([System.IO.File]::ReadAllBytes($pluginPath))
+    $wantedMilkResponse = "Yes! I can't wait to be nice and heavy!"
+    $staleMilkResponses = @(
+        "I hope you will give me some good milking soon!",
+        "I hope you will give me a good milking."
+    )
+    foreach ($staleMilkResponse in $staleMilkResponses) {
+        if ($pluginText.Contains($staleMilkResponse)) {
+            throw "MMEAlert.esp still contains the stale milk-dialogue response '$staleMilkResponse'. Run tools\RepairMMEExtensionsMilkDialogueResponses.pas in SSEEdit, save MMEAlert.esp, and copy that saved file into the project root before packaging."
+        }
+    }
+    if (!$pluginText.Contains($wantedMilkResponse)) {
+        throw "MMEAlert.esp is missing the intended milk-dialogue response '$wantedMilkResponse'. Repair the target INFO in SSEEdit before packaging."
+    }
     Copy-Item -LiteralPath $pluginPath -Destination $stageDir
 } else {
     Write-Warning "MMEAlert.esp is not present yet. Building a scripts-only MME Extensions package."

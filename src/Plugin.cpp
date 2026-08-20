@@ -3,12 +3,15 @@
 #include <RE/P/PlayerCharacter.h>
 #include <RE/P/ProcessLists.h>
 #include <RE/P/PackUnpackImpl.h>
+#include <RE/A/ActiveEffect.h>
+#include <RE/E/EffectSetting.h>
 #include <RE/M/MenuTopicManager.h>
 #include <RE/N/NativeFunction.h>
 #include <RE/S/ScriptEventSourceHolder.h>
 #include <RE/T/TESFile.h>
 #include <RE/T/TESForm.h>
 #include <RE/T/TESActorLocationChangeEvent.h>
+#include <RE/T/TESActiveEffectApplyRemoveEvent.h>
 #include <RE/T/TESLoadGameEvent.h>
 #include <RE/T/TESMagicEffectApplyEvent.h>
 #include <RE/T/TESEquipEvent.h>
@@ -20,11 +23,14 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
 #include <unordered_set>
+#include <unordered_map>
 
 namespace
 {
     constexpr auto kLifecycleEvent = "MMEExtensions_Lifecycle";
     constexpr auto kMMEEffectEvent = "MMEExtensions_MMEEffectApplied";
+    constexpr auto kMMEEffectRemovedEvent = "MMEExtensions_MMEEffectRemoved";
+    constexpr auto kDialogueInfoEvent = "MMEExtensions_DialogueInfo";
     constexpr auto kPotionEvent = "MMEExtensions_PotionConsumed";
     constexpr auto kArmorEvent = "MMEExtensions_ArmorEquipped";
 
@@ -67,6 +73,9 @@ namespace
         }
 
         auto speaker = manager->speaker.get();
+        if (!speaker) {
+            speaker = manager->lastSpeaker.get();
+        }
         return speaker ? speaker->As<RE::Actor>() : nullptr;
     }
 
@@ -87,6 +96,23 @@ namespace
         appendUnique(manager->rootTopicInfo);
         if (manager->lastSelectedDialogue) {
             appendUnique(manager->lastSelectedDialogue->parentTopicInfo);
+        }
+        return result;
+    }
+
+    std::vector<RE::TESForm*> GetVisibleDialogueInfos(RE::StaticFunctionTag*)
+    {
+        std::vector<RE::TESForm*> result;
+        auto* manager = RE::MenuTopicManager::GetSingleton();
+        if (!manager || !manager->dialogueList) {
+            return result;
+        }
+
+        for (auto* dialogue : *manager->dialogueList) {
+            auto* info = dialogue ? dialogue->parentTopicInfo : nullptr;
+            if (info && std::find(result.begin(), result.end(), info) == result.end()) {
+                result.push_back(info);
+            }
         }
         return result;
     }
@@ -148,6 +174,7 @@ namespace
         vm->RegisterFunction("GetNearbyActors", "MMEExtensionsNative", GetNearbyActors);
         vm->RegisterFunction("GetDialogueTarget", "MMEExtensionsNative", GetDialogueTarget);
         vm->RegisterFunction("GetActiveDialogueInfos", "MMEExtensionsNative", GetActiveDialogueInfos);
+        vm->RegisterFunction("GetVisibleDialogueInfos", "MMEExtensionsNative", GetVisibleDialogueInfos);
         vm->RegisterFunction("GetTopicInfos", "MMEExtensionsNative", GetTopicInfos);
         vm->RegisterFunction("GetPreviousTopicInfo", "MMEExtensionsNative", GetPreviousTopicInfo);
         vm->RegisterFunction("EvaluateTopicInfo", "MMEExtensionsNative", EvaluateTopicInfo);
@@ -191,6 +218,60 @@ namespace
         SKSE::log::info("MME magic effect sent: target {:08X}, effect {:06X}", target->GetFormID(), effect->GetLocalFormID());
     }
 
+    void SendMMEEffectRemovedEvent(RE::TESObjectREFR* target, RE::TESForm* effect)
+    {
+        auto* source = SKSE::GetModCallbackEventSource();
+        if (!source || !target || !effect) {
+            return;
+        }
+
+        SKSE::ModCallbackEvent event{
+            RE::BSFixedString(kMMEEffectRemovedEvent),
+            RE::BSFixedString("MilkModNEW.esp"),
+            static_cast<float>(effect->GetLocalFormID()),
+            target
+        };
+        source->SendEvent(&event);
+        SKSE::log::info("MME magic effect removed: target {:08X}, effect {:06X}", target->GetFormID(), effect->GetLocalFormID());
+    }
+
+    void SendDialogueInfoEvent(RE::TESTopicInfo* info)
+    {
+        auto* source = SKSE::GetModCallbackEventSource();
+        auto* manager = RE::MenuTopicManager::GetSingleton();
+        auto* topic = info ? info->parentTopic : nullptr;
+        if (!source || !manager || !info || !topic) {
+            return;
+        }
+
+        auto speaker = manager->speaker.get();
+        if (!speaker) {
+            speaker = manager->lastSpeaker.get();
+        }
+        if (!speaker) {
+            return;
+        }
+
+        SKSE::ModCallbackEvent event{
+            RE::BSFixedString(kDialogueInfoEvent),
+            RE::BSFixedString(topic->GetFormEditorID()),
+            static_cast<float>(info->GetLocalFormID()),
+            speaker.get()
+        };
+        source->SendEvent(&event);
+        SKSE::log::info(
+            "dialogue INFO selected: topic {} info {:06X} speaker {:08X}",
+            topic->GetFormEditorID(), info->GetLocalFormID(), speaker->GetFormID());
+    }
+
+    std::uint64_t ActiveEffectKey(RE::TESObjectREFR* target, std::uint16_t uniqueID)
+    {
+        return (static_cast<std::uint64_t>(target->GetFormID()) << 16) | uniqueID;
+    }
+
+    std::unordered_map<std::uint64_t, RE::FormID> g_mmeActiveEffects;
+    std::unordered_map<RE::FormID, RE::FormID> g_pendingMMEEffects;
+
     void SendPotionEvent(RE::Actor* actor, RE::TESForm* potion)
     {
         auto* source = SKSE::GetModCallbackEventSource();
@@ -231,6 +312,8 @@ namespace
         public RE::BSTEventSink<RE::TESActorLocationChangeEvent>,
         public RE::BSTEventSink<RE::TESLoadGameEvent>,
         public RE::BSTEventSink<RE::TESMagicEffectApplyEvent>,
+        public RE::BSTEventSink<RE::TESActiveEffectApplyRemoveEvent>,
+        public RE::BSTEventSink<RE::TESTopicInfoEvent>,
         public RE::BSTEventSink<RE::TESEquipEvent>
     {
     public:
@@ -248,6 +331,8 @@ namespace
             holder->AddEventSink<RE::TESActorLocationChangeEvent>(this);
             holder->AddEventSink<RE::TESLoadGameEvent>(this);
             holder->AddEventSink<RE::TESMagicEffectApplyEvent>(this);
+            holder->AddEventSink<RE::TESActiveEffectApplyRemoveEvent>(this);
+            holder->AddEventSink<RE::TESTopicInfoEvent>(this);
             holder->AddEventSink<RE::TESEquipEvent>(this);
             SKSE::log::info("Lifecycle event sinks registered");
         }
@@ -279,6 +364,8 @@ namespace
         RE::BSEventNotifyControl ProcessEvent(
             const RE::TESLoadGameEvent*, RE::BSTEventSource<RE::TESLoadGameEvent>*) override
         {
+            g_mmeActiveEffects.clear();
+            g_pendingMMEEffects.clear();
             SendLifecycleEvent("load");
             return RE::BSEventNotifyControl::kContinue;
         }
@@ -294,8 +381,73 @@ namespace
             auto* effect = RE::TESForm::LookupByID(event->magicEffect);
             auto* sourceFile = effect ? effect->GetFile(0) : nullptr;
             if (sourceFile && _stricmp(sourceFile->GetFilename().data(), "MilkModNEW.esp") == 0) {
+                g_pendingMMEEffects[event->target->GetFormID()] = effect->GetFormID();
                 SendMMEEffectEvent(event->target.get(), effect);
             }
+            return RE::BSEventNotifyControl::kContinue;
+        }
+
+        RE::BSEventNotifyControl ProcessEvent(
+            const RE::TESActiveEffectApplyRemoveEvent* event,
+            RE::BSTEventSource<RE::TESActiveEffectApplyRemoveEvent>*) override
+        {
+            if (!event || !event->target) {
+                return RE::BSEventNotifyControl::kContinue;
+            }
+
+            const auto key = ActiveEffectKey(event->target.get(), event->activeEffectUniqueID);
+            if (event->isApplied) {
+                bool tracked = false;
+                auto* actor = event->target->As<RE::Actor>();
+                auto* effects = actor ? actor->AsMagicTarget()->GetActiveEffectList() : nullptr;
+                if (effects) {
+                    for (auto* activeEffect : *effects) {
+                        if (!activeEffect || activeEffect->usUniqueID != event->activeEffectUniqueID) {
+                            continue;
+                        }
+                        auto* effect = activeEffect->GetBaseObject();
+                        auto* sourceFile = effect ? effect->GetFile(0) : nullptr;
+                        if (sourceFile && _stricmp(sourceFile->GetFilename().data(), "MilkModNEW.esp") == 0) {
+                            g_mmeActiveEffects[key] = effect->GetFormID();
+                            tracked = true;
+                        }
+                        break;
+                    }
+                }
+                const auto pending = g_pendingMMEEffects.find(event->target->GetFormID());
+                if (!tracked && pending != g_pendingMMEEffects.end()) {
+                    g_mmeActiveEffects[key] = pending->second;
+                }
+                if (pending != g_pendingMMEEffects.end()) {
+                    g_pendingMMEEffects.erase(pending);
+                }
+            } else {
+                const auto found = g_mmeActiveEffects.find(key);
+                if (found != g_mmeActiveEffects.end()) {
+                    auto* effect = RE::TESForm::LookupByID(found->second);
+                    SendMMEEffectRemovedEvent(event->target.get(), effect);
+                    g_mmeActiveEffects.erase(found);
+                }
+            }
+            return RE::BSEventNotifyControl::kContinue;
+        }
+
+        RE::BSEventNotifyControl ProcessEvent(
+            const RE::TESTopicInfoEvent*,
+            RE::BSTEventSource<RE::TESTopicInfoEvent>*) override
+        {
+            auto* manager = RE::MenuTopicManager::GetSingleton();
+            if (!manager) {
+                return RE::BSEventNotifyControl::kContinue;
+            }
+            auto* info = manager->currentTopicInfo;
+            if (!info) {
+                info = manager->lastTopicInfo;
+            }
+            if (!info && manager->lastSelectedDialogue) {
+                info = manager->lastSelectedDialogue->parentTopicInfo;
+            }
+            SendDialogueInfoEvent(info);
             return RE::BSEventNotifyControl::kContinue;
         }
 

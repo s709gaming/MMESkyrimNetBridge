@@ -9,6 +9,9 @@ Actor Function GetDialogueTarget() Global Native
 ; Returns the dialogue manager's current/root/selected INFOs without duplicates.
 Form[] Function GetActiveDialogueInfos() Global Native
 
+; Returns the INFOs currently present in Skyrim's visible dialogue choice list.
+Form[] Function GetVisibleDialogueInfos() Global Native
+
 ; Returns the INFO array Skyrim actually loaded for a DIAL record.
 Form[] Function GetTopicInfos(Form topic) Global Native
 
