@@ -24,6 +24,7 @@ $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Sour
 $standardDefaultsOutputDir = Join-Path $projectRoot "fomod\choices\standard\Scripts"
 
 $nativeDll = Join-Path $projectRoot "build\native-release\package\SKSE\Plugins\MMEExtensions.dll"
+$ostimBreastfeedingScene = Join-Path $projectRoot "SKSE\Plugins\OStim\scenes\MMEExtensions\2P\FF\MMEExt2PStandingNippleSuckingFF.json"
 
 # Fail early with a useful explanation if the local toolchain is incomplete.
 if (!(Test-Path -LiteralPath $compiler)) {
@@ -43,6 +44,19 @@ if (!(Test-Path -LiteralPath (Join-Path $quickStartSourceDir "MMEAlertsQuickTest
 }
 if (!(Test-Path -LiteralPath (Join-Path $standardDefaultsSourceDir "MMEAlertsFlatRateDefaults.psc"))) {
     throw "Vanilla defaults source script not found: $standardDefaultsSourceDir\MMEAlertsFlatRateDefaults.psc"
+}
+if (!(Test-Path -LiteralPath $ostimBreastfeedingScene)) {
+    throw "OStim female/female breastfeeding scene is missing: $ostimBreastfeedingScene"
+}
+$ostimSceneData = Get-Content -LiteralPath $ostimBreastfeedingScene -Raw | ConvertFrom-Json
+if ($ostimSceneData.actors.Count -ne 2 -or
+    $ostimSceneData.actors[0].intendedSex -ne "female" -or
+    $ostimSceneData.actors[1].intendedSex -ne "female" -or
+    $ostimSceneData.actions.Count -ne 1 -or
+    $ostimSceneData.actions[0].type -ne "suckingnipples" -or
+    $ostimSceneData.actions[0].actor -ne 0 -or
+    $ostimSceneData.actions[0].target -ne 1) {
+    throw "OStim breastfeeding scene metadata no longer preserves FF drinker=0/milk-source=1 nipple-sucking roles."
 }
 
 # Compile the debug scripts against the installed SKSE and Skyrim sources.
@@ -113,6 +127,13 @@ if (!(Test-Path -LiteralPath $nativeDll)) {
     throw "Native lifecycle DLL missing. Run build-native.ps1 first: $nativeDll"
 }
 Copy-Item -LiteralPath $nativeDll -Destination $packageSKSEPlugins
+
+# OStim Standalone currently ships nipple-sucking only as an MF scene. This
+# additive descriptor reuses that exact animation for FF actors while keeping
+# the semantic action and drinker/source roles visible to OLibrary.
+$packageOStimScene = Join-Path $stageDir "SKSE\Plugins\OStim\scenes\MMEExtensions\2P\FF"
+New-Item -ItemType Directory -Force -Path $packageOStimScene | Out-Null
+Copy-Item -LiteralPath $ostimBreastfeedingScene -Destination $packageOStimScene
 
 # Install the editable SkyrimNet message configuration at PapyrusUtil's JSON path.
 $skyrimNetConfig = Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\SkyrimNet.json"
