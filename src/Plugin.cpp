@@ -360,7 +360,7 @@ namespace
         auto* source = SKSE::GetModCallbackEventSource();
         auto* manager = RE::MenuTopicManager::GetSingleton();
         auto* topic = info ? info->parentTopic : nullptr;
-        if (!source || !manager || !info || !topic) {
+        if (!source || !manager) {
             return;
         }
 
@@ -368,20 +368,17 @@ namespace
         if (!speaker) {
             speaker = manager->lastSpeaker.get();
         }
-        if (!speaker) {
-            return;
-        }
-
         SKSE::ModCallbackEvent event{
             RE::BSFixedString(kDialogueInfoEvent),
-            RE::BSFixedString(topic->GetFormEditorID()),
-            static_cast<float>(info->GetLocalFormID()),
+            RE::BSFixedString(topic ? topic->GetFormEditorID() : "<unresolved>"),
+            info ? static_cast<float>(info->GetLocalFormID()) : -1.0F,
             speaker.get()
         };
         source->SendEvent(&event);
-        SKSE::log::info(
-            "dialogue INFO selected: topic {} info {:06X} speaker {:08X}",
-            topic->GetFormEditorID(), info->GetLocalFormID(), speaker->GetFormID());
+        SKSE::log::info("dialogue event: topic {} info {} speaker {}",
+            topic ? topic->GetFormEditorID() : "<unresolved>",
+            info ? fmt::format("{:06X}", info->GetLocalFormID()) : "<unresolved>",
+            speaker ? fmt::format("{:08X}", speaker->GetFormID()) : "<unresolved>");
     }
 
     std::uint64_t ActiveEffectKey(RE::TESObjectREFR* target, std::uint16_t uniqueID)
