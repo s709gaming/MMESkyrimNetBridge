@@ -211,7 +211,8 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
     ; a framework. The parameter contract is explicit source then drinker.
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingActionDiagnostic", 0) == 1
     Bool ostimDiagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableOStimDebug", 0) == 1
-    Bool routeDiagnostic = diagnostic || ostimDiagnostic
+    Bool skyrimNetOStimTrace = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetOStimTrace", 0) == 1
+    Bool routeDiagnostic = diagnostic || ostimDiagnostic || skyrimNetOStimTrace
     Actor drinker = target
     String milkSourceName = MMEOStimBreastfeeding.GetActorName(milkSource)
     String drinkerName = MMEOStimBreastfeeding.GetActorName(drinker)
@@ -244,6 +245,12 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
         Debug.Notification("Skyrim.Net BF: source=" + milkSourceName + " | drinker=" + drinkerName)
     EndIf
 
+    If skyrimNetOStimTrace
+        Bool ostimDetected = MMEOStimBreastfeeding.IsOStimDetected()
+        Bool ostimToggle = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableOStimBreastfeeding", 0) == 1
+        Debug.Notification("SN OStim Trace: actors valid | detected=" + ostimDetected + " | toggle=" + ostimToggle)
+    EndIf
+
     ; Phase 2: OStim is an independent complete backend when enabled. A rejected
     ; OStim request must not silently fall through to SexLab: that would violate
     ; user framework choice and could start a second, unexpected scene.
@@ -258,15 +265,26 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
         ; INFO records are not reliably returned by the runtime editor-ID lookup.
         ; Resolve the same Player-Drinks INFO that owns the proven dialogue route
         ; by its stable MMEAlert.esp-local FormID, then call its shared pipeline.
-        Form ostimHandlerForm = Game.GetFormFromFile(0x000858, "MMEAlert.esp")
+        ; The independent dialogue rebuild allocated the Player-Drinks INFO at
+        ; local FormID 0x85F (0x858 was an older pre-rebuild record identity).
+        Form ostimHandlerForm = Game.GetFormFromFile(0x00085F, "MMEAlert.esp")
         Debug.Trace("[MMEAlert SkyrimNet BF] OStim handler raw form=" + ostimHandlerForm)
+        If skyrimNetOStimTrace
+            Debug.Notification("SN OStim Trace: handler form=" + ostimHandlerForm)
+        EndIf
         MMEOStimBreastfeeding ostimHandler = ostimHandlerForm as MMEOStimBreastfeeding
         Debug.Trace("[MMEAlert SkyrimNet BF] OStim handler script=" + ostimHandler)
+        If skyrimNetOStimTrace
+            Debug.Notification("SN OStim Trace: handler script=" + ostimHandler)
+        EndIf
         If ostimHandler == None
             MMEOStimBreastfeeding.Report(routeDiagnostic, "Skyrim.Net breastfeeding rejected: MMEAlert.esp Player-Drinks OStim handler form or script could not resolve")
             Return
         EndIf
         Debug.Trace("[MMEAlert SkyrimNet BF] calling StartBreastfeeding")
+        If skyrimNetOStimTrace
+            Debug.Notification("SN OStim Trace: calling shared StartBreastfeeding")
+        EndIf
         Bool ostimStarted = ostimHandler.StartBreastfeeding(milkSource, drinker)
         If routeDiagnostic
             If ostimStarted
@@ -274,6 +292,9 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
             Else
                 Debug.Notification("Skyrim.Net BF: OStim rejected request; see log")
             EndIf
+        EndIf
+        If skyrimNetOStimTrace
+            Debug.Notification("SN OStim Trace: start result=" + ostimStarted + " | SexLab fallback blocked")
         EndIf
         Debug.Trace("[MMEAlert SkyrimNet BF] OStim StartBreastfeeding result=" + ostimStarted + " | milk source=" + milkSourceName + " | drinker=" + drinkerName + " | SexLab fallback=blocked")
         Return

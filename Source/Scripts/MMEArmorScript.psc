@@ -128,6 +128,10 @@ Function CheckPlayerArmorNow(Actor target) Global
         Return
     EndIf
     Report(diagnostic, "slot=32 | armor=" + GetArmorName(slotArmor))
+    String ignoredRegistration = GetIgnoredAmbiguousRegistration(milkController, slotArmor)
+    If ignoredRegistration != ""
+        Report(False, "ignoring ambiguous generic-name registration | " + ignoredRegistration)
+    EndIf
     String protectionReason = GetMMEArmorProtectionReason(milkController, slotArmor)
     If protectionReason != ""
         ReportDecision(diagnostic, "decision=BLOCKED | protection=" + protectionReason)
@@ -280,7 +284,7 @@ String Function GetMMEArmorProtectionReason(MilkQUEST milkController, Armor slot
         Return nativeReason
     EndIf
     String armorName = slotArmor.GetName()
-    If armorName == "" || armorName == "Empty" || milkController.MilkingEquipment == None
+    If armorName == "" || armorName == "Empty" || IsAmbiguousOrdinaryArmorName(armorName) || milkController.MilkingEquipment == None
         Return ""
     EndIf
     Int registeredIndex = milkController.MilkingEquipment.Find(armorName)
@@ -315,6 +319,12 @@ String Function GetNativeMMEArmorProtectionReason(MilkQUEST milkController, Armo
     If armorName == "" || armorName == "Empty"
         Return ""
     EndIf
+    ; MME arrays store only display names. Generic names such as "clothes" can
+    ; therefore leak from a stale/mistaken registration onto unrelated forms.
+    ; Direct MME forms above and framework protections below remain unaffected.
+    If IsAmbiguousOrdinaryArmorName(armorName)
+        Return ""
+    EndIf
     If milkController.BasicLivingArmor != None
         Int livingIndex = milkController.BasicLivingArmor.Find(armorName)
         If livingIndex >= 0
@@ -343,6 +353,44 @@ String Function GetNativeMMEArmorProtectionReason(MilkQUEST milkController, Armo
     || StringUtil.Find(armorName, "Milking Cuirass") >= 0 \
     || StringUtil.Find(armorName, "Milker") >= 0
         Return "MME special name rule"
+    EndIf
+    Return ""
+EndFunction
+
+; These generic labels do not carry enough identity to safely classify every
+; same-named ARMO form as custom living/parasite/milking equipment. Keep this
+; list deliberately narrow so MME's normal display-name registries still work.
+Bool Function IsAmbiguousOrdinaryArmorName(String armorName) Global
+    Return armorName == "clothes" || armorName == "Clothes" || armorName == "cloths" || armorName == "Cloths"
+EndFunction
+
+; Diagnostic-only evidence explaining when a bad generic-name array entry was
+; ignored. This never mutates MME's authoritative arrays or Blacksmith state.
+String Function GetIgnoredAmbiguousRegistration(MilkQUEST milkController, Armor slotArmor) Global
+    If milkController == None || slotArmor == None
+        Return ""
+    EndIf
+    String armorName = slotArmor.GetName()
+    If !IsAmbiguousOrdinaryArmorName(armorName)
+        Return ""
+    EndIf
+    If milkController.MilkingEquipment != None
+        Int milkingIndex = milkController.MilkingEquipment.Find(armorName)
+        If milkingIndex >= 0
+            Return "registry=MilkingEquipment | index=" + milkingIndex + " | name=" + armorName
+        EndIf
+    EndIf
+    If milkController.BasicLivingArmor != None
+        Int livingIndex = milkController.BasicLivingArmor.Find(armorName)
+        If livingIndex >= 0
+            Return "registry=BasicLivingArmor | index=" + livingIndex + " | name=" + armorName
+        EndIf
+    EndIf
+    If milkController.ParasiteLivingArmor != None
+        Int parasiteIndex = milkController.ParasiteLivingArmor.Find(armorName)
+        If parasiteIndex >= 0
+            Return "registry=ParasiteLivingArmor | index=" + parasiteIndex + " | name=" + armorName
+        EndIf
     EndIf
     Return ""
 EndFunction

@@ -25,6 +25,7 @@ Int skyrimNetMilkingDiagnosticOption
 Int skyrimNetCreationDiagnosticOption
 Int skyrimNetStatusDiagnosticOption
 Int skyrimNetPromptDiagnosticOption
+Int skyrimNetOStimTraceOption
 Int drinkMoansOption
 Int fullnessMoansOption
 Int milkingMoansOption
@@ -204,6 +205,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetCreationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetOStimTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", 1)
@@ -738,6 +740,7 @@ Event OnPageReset(String page)
     skyrimNetCreationDiagnosticOption = -1
     skyrimNetStatusDiagnosticOption = -1
     skyrimNetPromptDiagnosticOption = -1
+    skyrimNetOStimTraceOption = -1
     drinkMoansOption = -1
     fullnessMoansOption = -1
     milkingMoansOption = -1
@@ -980,6 +983,7 @@ Event OnPageReset(String page)
         skyrimNetCreationDiagnosticOption = AddToggleOption("New Milkmaid Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetCreationDiagnostic", 0) == 1)
         skyrimNetStatusDiagnosticOption = AddToggleOption("Nearby Milk Status Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", 0) == 1)
         skyrimNetPromptDiagnosticOption = AddToggleOption("Milkmaid Bio Prompt", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 1) == 1)
+        skyrimNetOStimTraceOption = AddToggleOption("Skyrim.Net OStim Trace", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetOStimTrace", 0) == 1)
         milkFullNarrationDiagnosticOption = AddToggleOption("Milk Full Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarrationDiagnostic", 0) == 1)
         milkHalfFullNarrationDiagnosticOption = AddToggleOption("Half-Full Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarrationDiagnostic", 0) == 1)
         playerDrinkNarrationDiagnosticOption = AddToggleOption("Player Drink Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", 0) == 1)
@@ -1096,6 +1100,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report SkyrimNet nearby Milkmaid status updates and failures.")
     ElseIf option == skyrimNetPromptDiagnosticOption
         SetInfoText("Report when SkyrimNet renders the optional Milkmaid bio prompt for an actor.")
+    ElseIf option == skyrimNetOStimTraceOption
+        SetInfoText("Show in-game checkpoints for Skyrim.Net breastfeeding actor validation, OStim selection, handler resolution, and startup results.")
     ElseIf option == skyrimNetStatusOption
         SetInfoText("Read-only. Enabled when SkyrimNet.esp is active in the load order.")
     ElseIf option == skyrimNetMilkStatusesOption
@@ -1427,6 +1433,10 @@ Event OnOptionSelect(Int option)
     ElseIf option == skyrimNetPromptDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == skyrimNetOStimTraceOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetOStimTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetOStimTrace", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == skyrimNetMilkStatusesOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1)
