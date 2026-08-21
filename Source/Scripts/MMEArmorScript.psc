@@ -40,6 +40,15 @@ Function ClearPendingPlayerDrinkAttempt(Actor target) Global
     EndIf
 EndFunction
 
+; Cancels both halves of the deferred transaction. Controller shutdown uses
+; this so a disabled/re-enabled extension cannot consume an old drink attempt.
+Function CancelPlayerArmorCheck(Actor target) Global
+    If target == Game.GetPlayer()
+        StorageUtil.UnsetIntValue(target, "MMEExtensions.ArmorCheck.Generation")
+        ClearPendingPlayerDrinkAttempt(target)
+    EndIf
+EndFunction
+
 ; Queues the debounced player post-drink pass after a real milk gain or an
 ; attempted overflow. This function is non-latent: it only bumps a token and
 ; asks the controller quest to schedule its own single update.
@@ -119,20 +128,17 @@ Function CheckPlayerArmorNow(Actor target) Global
         Return
     EndIf
     Report(diagnostic, "slot=32 | armor=" + GetArmorName(slotArmor))
-    If IsSpecialMMEArmor(milkController, slotArmor)
-        Report(diagnostic, "decision=BLOCKED | protected MME armor")
-        Return
-    EndIf
-    If slotArmor == milkController.TITS4 || slotArmor == milkController.TITS6 || slotArmor == milkController.TITS8
-        Report(diagnostic, "decision=BLOCKED | protected MME breast armor")
+    String protectionReason = GetMMEArmorProtectionReason(milkController, slotArmor)
+    If protectionReason != ""
+        ReportDecision(diagnostic, "decision=BLOCKED | protection=" + protectionReason)
         Return
     EndIf
     If milkController.DDi != None && milkController.DDi.IsMilkingBlocked_Suit(target)
-        Report(diagnostic, "decision=BLOCKED | protected DD/special armor")
+        ReportDecision(diagnostic, "decision=BLOCKED | protection=DD/special armor")
         Return
     EndIf
     If !IsStripSafeByFramework(milkController, slotArmor)
-        Report(diagnostic, "decision=BLOCKED | framework marks armor not strippable")
+        ReportDecision(diagnostic, "decision=BLOCKED | protection=SexLab no-strip")
         Return
     EndIf
 
@@ -258,14 +264,30 @@ Bool Function IsSpecialMMEArmor(MilkQUEST milkController, Armor slotArmor) Globa
     ; User-added MilkingEquipment entries are protected just like MME's native
     ; armor. Vendor services need to distinguish these removable entries from
     ; inherent MME recognition, so the native portion lives in the helper below.
+    Return GetMMEArmorProtectionReason(milkController, slotArmor) != ""
+EndFunction
+
+; Returns a stable diagnostic reason for the first applicable MME protection.
+; MME's arrays intentionally use display-name identity, including names added
+; by the Blacksmith service. Empty names and MME's "Empty" sentinel are never
+; armor identities and must not match malformed or unused array entries.
+String Function GetMMEArmorProtectionReason(MilkQUEST milkController, Armor slotArmor) Global
     If milkController == None || slotArmor == None
-        Return True
+        Return "invalid MME/armor state"
+    EndIf
+    String nativeReason = GetNativeMMEArmorProtectionReason(milkController, slotArmor)
+    If nativeReason != ""
+        Return nativeReason
     EndIf
     String armorName = slotArmor.GetName()
-    If milkController.MilkingEquipment != None && milkController.MilkingEquipment.Find(armorName) >= 0
-        Return True
+    If armorName == "" || armorName == "Empty" || milkController.MilkingEquipment == None
+        Return ""
     EndIf
-    Return IsNativeOrSpecialMMEArmor(milkController, slotArmor)
+    Int registeredIndex = milkController.MilkingEquipment.Find(armorName)
+    If registeredIndex >= 0
+        Return "MilkingEquipment | index=" + registeredIndex
+    EndIf
+    Return ""
 EndFunction
 
 ; Returns only armor MME already recognizes without a user MilkingEquipment
@@ -275,24 +297,42 @@ Bool Function IsNativeOrSpecialMMEArmor(MilkQUEST milkController, Armor slotArmo
     ; Explicit quest properties and MME-configured living-armor arrays come
     ; first. Name fragments reproduce the checks in MME's MilkPlayerLoadGame
     ; and overflow paths, including long-established third-party integrations.
+    Return GetNativeMMEArmorProtectionReason(milkController, slotArmor) != ""
+EndFunction
+
+String Function GetNativeMMEArmorProtectionReason(MilkQUEST milkController, Armor slotArmor) Global
     If milkController == None || slotArmor == None
-        Return True
+        Return "invalid MME/armor state"
     EndIf
-    If slotArmor == milkController.MilkCuirass || slotArmor == milkController.MilkCuirassFuta
-        Return True
+    If slotArmor == milkController.MilkCuirass
+        Return "MilkCuirass"
+    ElseIf slotArmor == milkController.MilkCuirassFuta
+        Return "MilkCuirassFuta"
+    ElseIf slotArmor == milkController.TITS4 || slotArmor == milkController.TITS6 || slotArmor == milkController.TITS8
+        Return "MME breast armor"
     EndIf
     String armorName = slotArmor.GetName()
-    If milkController.BasicLivingArmor != None && milkController.BasicLivingArmor.Find(armorName) >= 0
-        Return True
+    If armorName == "" || armorName == "Empty"
+        Return ""
     EndIf
-    If milkController.ParasiteLivingArmor != None && milkController.ParasiteLivingArmor.Find(armorName) >= 0
-        Return True
+    If milkController.BasicLivingArmor != None
+        Int livingIndex = milkController.BasicLivingArmor.Find(armorName)
+        If livingIndex >= 0
+            Return "BasicLivingArmor | index=" + livingIndex
+        EndIf
     EndIf
-    If StringUtil.Find(armorName, "Milk") >= 0 || StringUtil.Find(armorName, "Cow") >= 0
-        Return True
+    If milkController.ParasiteLivingArmor != None
+        Int parasiteIndex = milkController.ParasiteLivingArmor.Find(armorName)
+        If parasiteIndex >= 0
+            Return "ParasiteLivingArmor | index=" + parasiteIndex
+        EndIf
     EndIf
-    If StringUtil.Find(armorName, "Spriggan Armor") >= 0 \
-    || StringUtil.Find(armorName, "Spriggan Host") >= 0 \
+    If StringUtil.Find(armorName, "Milk") >= 0
+        Return "MME name rule=Milk"
+    ElseIf StringUtil.Find(armorName, "Cow") >= 0
+        Return "MME name rule=Cow"
+    EndIf
+    If StringUtil.Find(armorName, "Spriggan") >= 0 \
     || StringUtil.Find(armorName, "Living Arm") >= 0 \
     || StringUtil.Find(armorName, "Hermaeus Mora") >= 0 \
     || StringUtil.Find(armorName, "HM Priestess") >= 0 \
@@ -302,9 +342,9 @@ Bool Function IsNativeOrSpecialMMEArmor(MilkQUEST milkController, Armor slotArmo
     || StringUtil.Find(armorName, "Cow Harness") >= 0 \
     || StringUtil.Find(armorName, "Milking Cuirass") >= 0 \
     || StringUtil.Find(armorName, "Milker") >= 0
-        Return True
+        Return "MME special name rule"
     EndIf
-    Return False
+    Return ""
 EndFunction
 
 ; Isolates the framework-specific strippability gate so the overflow algorithm

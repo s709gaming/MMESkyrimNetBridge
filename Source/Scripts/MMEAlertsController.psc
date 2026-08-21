@@ -145,6 +145,7 @@ Function DisableController()
     NextSkyrimNetUpdate = 0.0
     NextDebugUpdate = 0.0
     NextArmorCheck = 0.0
+    MMEArmorScript.CancelPlayerArmorCheck(Game.GetPlayer())
     NextDialogueDiagnosticUpdate = 0.0
     LastDialogueDiagnosticActor = None
     PendingDialogueDiagnosticActor = None
@@ -701,6 +702,8 @@ Event OnUpdate()
     ; Snapshot due flags before executing work so each deadline is serviced at
     ; most once per callback. Capacity and Skyrim.Net share the same actor scan.
     If !IsExtensionsEnabled()
+        NextArmorCheck = 0.0
+        MMEArmorScript.CancelPlayerArmorCheck(Game.GetPlayer())
         Return
     EndIf
     Float now = Utility.GetCurrentRealTime()
