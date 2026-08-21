@@ -1,5 +1,13 @@
 Scriptname MMEAlertsSkyrimNet extends Quest
 
+; ---------------------------------------------------------------------------
+; Optional Skyrim.Net publication boundary
+; ---------------------------------------------------------------------------
+; This script owns all direct SkyrimNetApi calls. Gameplay scripts pass verified
+; actors/events here, but every public entry point still rechecks the master
+; toggle and optional plugin. Short-lived context events never call narration;
+; DirectNarration paths are token-using, separately toggled, and cooldown-bound.
+
 Bool Function IsAvailable() Global
     Return Game.GetModByName("SkyrimNet.esp") != 255
 EndFunction
@@ -10,6 +18,8 @@ EndFunction
 
 ; Registers the callback used by the optional actor-specific Milkmaid bio prompt.
 Function RegisterPromptDecorator() Global
+    ; Registration may be repeated after load/MCM upgrades. Skyrim.Net's return
+    ; code can therefore mean "already registered" and is logged, not fatal.
     If !IsExtensionsEnabled()
         Return
     EndIf
@@ -78,6 +88,8 @@ EndFunction
 ; Direct narration for one supported armor equip. Classification is repeated
 ; here so narration never trusts a caller's label or a hardcoded armor name.
 Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
+    ; Phase 1: revalidate actor membership and classify the actual equipped ARMO.
+    ; Never trust a caller-provided label: MME's live arrays are source of truth.
     Bool diagnostic = MMEArmorScript.GetArmorDiagnostic()
     If !IsExtensionsEnabled()
         Return -1
@@ -104,6 +116,7 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
         MMEArmorScript.ReportArmor(diagnostic, "equip narration skipped: Unsupported")
         Return -3
     EndIf
+    ; Phase 2: select the independent Player/NPC toggle after classification.
     Bool narrationEnabled = JsonUtil.GetIntValue("/MMEAlerts/Settings", narrationToggle, 1) == 1
     MMEArmorScript.ReportArmor(diagnostic, "equip narration enabled=" + narrationEnabled + " | role=" + role + " | type=" + armorType)
     If !narrationEnabled
@@ -114,6 +127,8 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
         Return -5
     EndIf
 
+    ; Phase 3: enforce role-specific real-time cooldowns. CurrentRealTime resets
+    ; between Skyrim sessions, so a saved future timestamp must be discarded.
     String cooldownKey = "npcMilkingArmorNarrationCooldown"
     String lastKey = "lastNPCMilkingArmorNarrationRealTime"
     Float defaultCooldown = 300.0
@@ -134,6 +149,8 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
         Return -6
     EndIf
 
+    ; Phase 4: build class-specific narration and make exactly one external API
+    ; call. Persist cooldown only after Skyrim.Net accepts the request (code 0).
     String narrationType = "Milking Armor"
     String content = actorName + " has just equipped Milking Armor. Suction cups settle onto her nipples, ready to milk her."
     If armorClass == 2
@@ -157,6 +174,8 @@ EndFunction
 
 ; Publishes actor-specific capacity crossings for two minutes without forcing dialogue.
 Function SendCapacityMilestone(Actor milkMaid, Int crossing) Global
+    ; Validate feature/plugin state before building payloads. Milestones are
+    ; context only: they use stable per-actor IDs and never consume narration.
     If !IsExtensionsEnabled()
         Return
     EndIf
@@ -194,6 +213,8 @@ Function SendCapacityMilestone(Actor milkMaid, Int crossing) Global
         actorUuid = "form_" + milkMaid.GetFormID()
     EndIf
     String eventId = eventType + "_" + actorUuid
+    ; Stable event ID + TTL makes repeated crossings refresh/replace context
+    ; rather than grow an unbounded history of transient fullness statements.
     Int ttlMs = JsonUtil.GetIntValue(settingsFile, "capacityMilestoneTtlMs", 120000)
     Int result = SkyrimNetApi.RegisterShortLivedEvent(eventId, eventType, content, "{}", ttlMs, milkMaid, None)
     If diagnostic
@@ -208,6 +229,8 @@ EndFunction
 
 ; Makes at most one token-using narration request for a completed scan's full crossings.
 Function NarrateMilkFull(Actor milkMaid) Global
+    ; Phase 1: resolve toggle, dependency, and one global scan-level cooldown.
+    ; The controller selects at most one full actor per scan before calling here.
     If !IsExtensionsEnabled()
         Return
     EndIf
@@ -244,6 +267,8 @@ Function NarrateMilkFull(Actor milkMaid) Global
         Return
     EndIf
 
+    ; Phase 2: choose restraint-aware prose, submit once, and commit cooldown
+    ; only on success so a rejected API call can be retried later.
     String content = "One or more nearby Milk Maids are completely full and savoring the ultimate pleasure near a boobgasm. React briefly and naturally; fullness may be enjoyed without needing immediate milking."
     String restrainedContent = BuildRestrainedCapacityContent(milkMaid, 2)
     If restrainedContent != ""
@@ -327,6 +352,8 @@ EndFunction
 
 ; Requests one actor-specific narration after a verified NPC Milkmaid drink.
 Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False) Global
+    ; Dialogue and native potion paths converge here after their own duplicate
+    ; suppression. This function owns only narration gates and cooldown state.
     If !IsExtensionsEnabled()
         Return
     EndIf
@@ -393,6 +420,8 @@ EndFunction
 
 ; Requests an opt-in narration after a confirmed player milk drink.
 Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem) Global
+    ; Chance is evaluated before the cooldown/API call. This keeps an ineligible
+    ; random roll from consuming cooldown and preserves the opt-in default.
     If !IsExtensionsEnabled() || drinker != Game.GetPlayer() || drinkItem == None
         Return
     EndIf
@@ -523,6 +552,9 @@ EndFunction
 ; Builds one line for the existing nearby scan. This never publishes or calls
 ; DirectNarration; SendNearbyArmorStatuses performs the single combined write.
 String Function BuildNearbyArmorStatus(Actor candidate) Global
+    ; Phase 1: require a real MME Milk Maid and inspect the currently worn slot-32
+    ; form. This is called inside the existing 15-second nearby scan; do not add
+    ; a second polling loop for armor status.
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableNearbyMilkArmorStatus", 1) != 1 || !IsRealMMEMilkmaid(candidate)
         Return ""
     EndIf
@@ -548,6 +580,8 @@ String Function BuildNearbyArmorStatus(Actor candidate) Global
         Return ""
     EndIf
 
+    ; Phase 2: return one line only. The controller concatenates all qualifying
+    ; actors and SendNearbyArmorStatuses performs the single external write.
     String content = "[Milking Armor] " + actorName + " is wearing Milking Armor. Suction cups are attached to her nipples for milking."
     If armorClass == 2
         content = "[Living Armor] " + actorName + " is wearing Living Armor. Living tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk."
@@ -561,6 +595,8 @@ EndFunction
 ; Refreshes one stable Player-attached context event. Empty scans intentionally
 ; do nothing so the last 45-second event expires naturally.
 Function SendNearbyArmorStatuses(Actor playerActor, String statuses, Int armorCount) Global
+    ; Empty scans deliberately do not publish a clearing event. The previous
+    ; 45-second context expires naturally, avoiding needless API traffic.
     If !IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableNearbyMilkArmorStatus", 1) != 1
         Return
     EndIf
@@ -574,6 +610,8 @@ Function SendNearbyArmorStatuses(Actor playerActor, String statuses, Int armorCo
         Return
     EndIf
 
+    ; One stable ID attached to Player replaces the previous combined snapshot.
+    ; Never split this into per-NPC events and never call DirectNarration here.
     Int result = SkyrimNetApi.RegisterShortLivedEvent("nearby_milk_armor_status_player", "nearby_milk_armor_status", statuses, "{}", 45000, playerActor, None)
     MMEArmorScript.ReportArmor(diagnostic, "nearby tracker publish result=" + result + " | entries=" + armorCount + " | attached=Player | TTL=45s")
     Debug.Trace("[MMEAlert SkyrimNet] Nearby armor status result " + result + " | entries " + armorCount + " | " + statuses)
@@ -581,6 +619,8 @@ EndFunction
 
 ; Publishes one replaceable five-minute summary from the existing capacity scan.
 Function SendNearbyMilkStatuses(Actor playerActor, String statuses, Int scannedCount, Int milkmaidCount) Global
+    ; This is the milk-state sibling of nearby armor context. It consumes the
+    ; same controller scan and publishes one replaceable Player-attached summary.
     If !IsExtensionsEnabled()
         Return
     EndIf
@@ -637,6 +677,8 @@ EndFunction
 
 ; Records a confirmed false-to-true Milkmaid transition in SkyrimNet history.
 Function SendMilkmaidCreated(Actor milkMaid) Global
+    ; Creation is persistent history rather than temporary context. Validate the
+    ; schema and JSON-escape rendered content before calling RegisterEvent.
     If !IsExtensionsEnabled()
         Return
     EndIf
@@ -737,6 +779,8 @@ EndFunction
 
 ; Gives SkyrimNet a clean body format instead of its unknown-type [event_type] fallback.
 Function EnsureMilkmaidCreatedSchema(Bool diagnostic) Global
+    ; Schema registration is idempotent and performed lazily so Skyrim.Net load
+    ; order cannot make quest initialization permanently miss the event type.
     If SkyrimNetApi.IsEventTypeRegistered("milkmaid_created")
         Return
     EndIf
@@ -755,6 +799,8 @@ EndFunction
 
 ; Publishes the player's latest drink into scene context for ninety seconds.
 Function SendMilkDrink(Actor drinker, Form drinkItem) Global
+    ; Build one bounded Player context event after the drink pipeline confirms a
+    ; supported item. Restraint changes prose only; it never changes milk effects.
     If !IsExtensionsEnabled()
         Return
     EndIf
@@ -825,6 +871,8 @@ Function SendMilkDrink(Actor drinker, Form drinkItem) Global
 EndFunction
 
 Function SendMilkingEvent(Actor milkMaid, String messageKey) Global
+    ; Start/end share one implementation but retain distinct stable event IDs.
+    ; Validate all gates before rendering configurable templates or calling API.
     If !IsExtensionsEnabled()
         Return
     EndIf

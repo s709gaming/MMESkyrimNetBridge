@@ -27,6 +27,12 @@
 
 namespace
 {
+    // ------------------------------------------------------------------------
+    // Native/Papyrus boundary contracts
+    // ------------------------------------------------------------------------
+    // The DLL observes engine events and publishes load-order-independent form
+    // identity (source filename + local FormID). Gameplay decisions stay in
+    // Papyrus. These event names are therefore a stable cross-language API.
     constexpr auto kLifecycleEvent = "MMEExtensions_Lifecycle";
     constexpr auto kMMEEffectEvent = "MMEExtensions_MMEEffectApplied";
     constexpr auto kMMEEffectRemovedEvent = "MMEExtensions_MMEEffectRemoved";
@@ -36,6 +42,8 @@ namespace
 
     std::vector<RE::Actor*> GetNearbyActors(RE::StaticFunctionTag*, float radius)
     {
+        // Build one deduplicated, current-cell snapshot from ProcessLists. The
+        // Player is always first so Papyrus can process Player/NPC uniformly.
         std::vector<RE::Actor*> result;
         auto* player = RE::PlayerCharacter::GetSingleton();
         auto* processLists = RE::ProcessLists::GetSingleton();
@@ -50,6 +58,8 @@ namespace
         std::unordered_set<RE::FormID> seen{ player->GetFormID() };
 
         processLists->ForAllActors([&](RE::Actor* actor) {
+            // Require loaded 3D and the Player's exact cell before measuring
+            // squared distance; this avoids handles that Papyrus cannot use.
             if (!actor || actor == player || !actor->Is3DLoaded() || actor->GetParentCell() != playerCell) {
                 return RE::BSContainer::ForEachResult::kContinue;
             }
@@ -80,6 +90,8 @@ namespace
             return nullptr;
         }
 
+        // speaker is authoritative while the menu is active; lastSpeaker is a
+        // diagnostic fallback for the short transition after an INFO executes.
         auto speaker = manager->speaker.get();
         if (!speaker) {
             speaker = manager->lastSpeaker.get();
@@ -95,6 +107,8 @@ namespace
             return result;
         }
 
+        // These are execution-chain INFOs, not the visible choice list. Keep the
+        // two concepts separate because dialogue diagnostics compare both.
         const auto appendUnique = [&](RE::TESTopicInfo* info) {
             if (info && std::find(result.begin(), result.end(), info) == result.end()) {
                 result.push_back(info);
@@ -116,6 +130,9 @@ namespace
             return result;
         }
 
+        // dialogueList is Skyrim's currently enumerated menu. An empty vector
+        // after selection means visibility is unavailable, not historical proof
+        // that an INFO was absent before the menu advanced.
         for (auto* dialogue : *manager->dialogueList) {
             auto* info = dialogue ? dialogue->parentTopicInfo : nullptr;
             if (info && std::find(result.begin(), result.end(), info) == result.end()) {
@@ -156,6 +173,8 @@ namespace
         auto* info = form && form->GetFormType() == RE::FormType::Info ?
                          static_cast<RE::TESTopicInfo*>(form) :
                          nullptr;
+        // Preserve engine role order exactly: dialogue speaker is Subject and
+        // Player is Target. Papyrus callers provide both explicitly.
         return info && subject && target && info->objConditions.IsTrue(subject, target);
     }
 
@@ -170,6 +189,8 @@ namespace
             return result;
         }
 
+        // Return each CTDA result in record order. The aggregate engine result is
+        // exposed separately so OR chains retain Skyrim's real semantics.
         for (auto* condition = info->objConditions.head; condition; condition = condition->next) {
             RE::ConditionCheckParams params(subject, target);
             result.push_back(condition->IsTrue(params) ? 1 : 0);
@@ -187,6 +208,8 @@ namespace
             return result;
         }
 
+        // Descriptions are diagnostic-only. Prefer EditorID, then source/local ID
+        // so overridden and master records remain identifiable in Papyrus logs.
         const auto formLabel = [](RE::TESForm* parameter) {
             if (!parameter) {
                 return std::string("<none>");
@@ -295,6 +318,8 @@ namespace
 
     bool RegisterPapyrus(RE::BSScript::IVirtualMachine* vm)
     {
+        // Keep registration names synchronized with MMEExtensionsNative.psc.
+        // Renaming either side is an API break for existing compiled scripts.
         vm->RegisterFunction("GetNearbyActors", "MMEExtensionsNative", GetNearbyActors);
         vm->RegisterFunction("GetFormByEditorID", "MMEExtensionsNative", GetFormByEditorID);
         vm->RegisterFunction("GetDialogueTarget", "MMEExtensionsNative", GetDialogueTarget);
@@ -372,6 +397,9 @@ namespace
             return;
         }
 
+        // Send the parent DIAL EditorID plus local INFO ID. Papyrus uses the
+        // opening DIAL as the precise post-Fragment diagnostic trigger and the
+        // two OStim DIAL IDs as positive selection evidence.
         auto speaker = manager->speaker.get();
         if (!speaker) {
             speaker = manager->lastSpeaker.get();
@@ -397,6 +425,10 @@ namespace
     std::unordered_map<std::uint64_t, RE::FormID> g_mmeActiveEffects;
     std::unordered_map<RE::FormID, RE::FormID> g_pendingMMEEffects;
 
+    // MagicEffectApply identifies the base MGEF; ActiveEffectApplyRemove supplies
+    // the unique runtime instance. Pairing both lets removal events name the exact
+    // MME effect without unsafe VR ActiveEffect-list traversal.
+
     void SendPotionEvent(RE::Actor* actor, RE::TESForm* potion)
     {
         auto* source = SKSE::GetModCallbackEventSource();
@@ -404,6 +436,8 @@ namespace
         if (!source || !actor || !potion || !sourceFile) {
             return;
         }
+        // Source filename + local ID survives arbitrary load order and is safely
+        // reconstructed with Game.GetFormFromFile on the Papyrus side.
         SKSE::ModCallbackEvent event{
             RE::BSFixedString(kPotionEvent),
             RE::BSFixedString(sourceFile->GetFilename()),
@@ -450,6 +484,8 @@ namespace
 
         void Register()
         {
+            // One singleton observes all engine sources. The sink never performs
+            // gameplay or calls Papyrus directly; it only emits ModCallbackEvents.
             auto* holder = RE::ScriptEventSourceHolder::GetSingleton();
             holder->AddEventSink<RE::TESWaitStopEvent>(this);
             holder->AddEventSink<RE::TESSleepStopEvent>(this);
@@ -489,6 +525,8 @@ namespace
         RE::BSEventNotifyControl ProcessEvent(
             const RE::TESLoadGameEvent*, RE::BSTEventSource<RE::TESLoadGameEvent>*) override
         {
+            // Runtime ActiveEffect unique IDs do not survive load. Clear both
+            // pairing maps before asking Papyrus to rebuild controller state.
             g_mmeActiveEffects.clear();
             g_pendingMMEEffects.clear();
             SendLifecycleEvent("load");
@@ -503,6 +541,8 @@ namespace
                 return RE::BSEventNotifyControl::kContinue;
             }
 
+            // Publish immediately and cache per actor. The following active-effect
+            // event may need this base form, especially on VR.
             auto* effect = RE::TESForm::LookupByID(event->magicEffect);
             auto* sourceFile = effect ? effect->GetFile(0) : nullptr;
             if (sourceFile && _stricmp(sourceFile->GetFilename().data(), "MilkModNEW.esp") == 0) {
@@ -579,6 +619,8 @@ namespace
             if (!manager) {
                 return RE::BSEventNotifyControl::kContinue;
             }
+            // Engine versions populate these fields at slightly different points.
+            // Prefer current, then last, then the selected dialogue wrapper.
             auto* info = manager->currentTopicInfo;
             if (!info) {
                 info = manager->lastTopicInfo;
@@ -597,6 +639,8 @@ namespace
             if (!event || !event->equipped || !event->actor) {
                 return RE::BSEventNotifyControl::kContinue;
             }
+            // One global equip sink covers both consumable potions and supported
+            // armor candidates. Papyrus performs final item/actor classification.
             auto* actor = event->actor->As<RE::Actor>();
             auto* item = RE::TESForm::LookupByID(event->baseObject);
             if (actor && item && item->GetFormType() == RE::FormType::AlchemyItem) {
@@ -627,6 +671,7 @@ namespace
 
     void OnSKSEMessage(SKSE::MessagingInterface::Message* message)
     {
+        // Event sources and loaded forms are ready only after DataLoaded.
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
             LifecycleEventSink::GetSingleton()->Register();
         }

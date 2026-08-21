@@ -1,5 +1,12 @@
 Scriptname MMESkyrimNetVoiceControls extends Quest Hidden
 
+; ---------------------------------------------------------------------------
+; Skyrim.Net action adapters
+; ---------------------------------------------------------------------------
+; Eligibility callbacks are advisory UI gates; execute callbacks always repeat
+; actor/framework checks because world state can change between model selection
+; and Papyrus execution. Gameplay remains owned by MME/dialogue/OStim backends.
+
 ; Registers MME's original contextual self-milking spell action.
 Function RegisterSelfMilkingAction() Global
     If !MMEAlertsController.IsExtensionsEnabled() || !MMEAlertsSkyrimNet.IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingAction", 1) != 1
@@ -13,6 +20,8 @@ Function RegisterSelfMilkingAction() Global
 EndFunction
 
 Bool Function SelfMilkingIsEligible(Actor candidate, String contextJson, String paramsJson) Global
+    ; Require an NPC, live loaded actor, real MilkQUEST membership, and no active
+    ; observed milking. The action does not infer Milk Maid state from prose.
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingActionDiagnostic", 0) == 1
     If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingAction", 1) != 1
         Return False
@@ -46,6 +55,8 @@ Bool Function SelfMilkingIsEligible(Actor candidate, String contextJson, String 
 EndFunction
 
 Function SelfMilkingExecute(Actor candidate, String contextJson, String paramsJson) Global
+    ; Revalidate every eligibility invariant, then invoke MME's own MilkSelf
+    ; spell. This adapter does not reproduce MME's milking implementation.
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingActionDiagnostic", 0) == 1
     If diagnostic
         Debug.Notification("[MME Debug] LLM ACTION RECEIVED: StartMilkMaidSelfMilking")
@@ -83,6 +94,7 @@ EndFunction
 ; Fullness-specific trigger adapter. The shared reaction executor owns actor
 ; validation, standing-animation selection, playback, and safe completion.
 Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
+    ; Phase 1: map crossing + Player/NPC role to independent settings and duration.
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableFullnessSelfMilkAnimationDiagnostic", 0) == 1
     Bool isPlayer = candidate != None && candidate == Game.GetPlayer()
     String role = "NPC"
@@ -118,6 +130,8 @@ Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
         Return
     EndIf
 
+    ; Phase 2: delegate all animation validation, cooperative ownership, and safe
+    ; reset to MMEReactionAnimation; this adapter only chooses policy.
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", setting, 0) != 1
         If diagnostic
             Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: disabled")
@@ -170,6 +184,9 @@ EndFunction
 
 ; Revalidates and delegates inventory selection, transfer, and effects to MMENPCDialog.
 Function VoiceGiveMilkExecute(Actor candidate) Global
+    ; MMENPCDialog is the reusable backend for inventory selection, transfer,
+    ; native consumption, effects, and animation. Do not duplicate that flow in
+    ; a Skyrim.Net action callback.
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceGiveMilkDiagnostic", 1) == 1
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceGiveMilk", 0) != 1
         Return
@@ -190,6 +207,8 @@ EndFunction
 
 ; Skyrim.Net resolves its conversational second actor through the target parameter.
 Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
+    ; Phase 1: validate action policy and both actor references before selecting
+    ; a framework. The parameter contract is explicit source then drinker.
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingActionDiagnostic", 0) == 1
     If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingAction", 1) != 1
         If diagnostic
@@ -214,6 +233,9 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
         Return
     EndIf
 
+    ; Phase 2: OStim is an independent complete backend when enabled. A rejected
+    ; OStim request must not silently fall through to SexLab: that would violate
+    ; user framework choice and could start a second, unexpected scene.
     ; One Skyrim.Net action, two internal backends. An enabled and available
     ; OStim route owns this request completely; a failed OStim start must not
     ; silently begin a SexLab scene instead.
@@ -236,6 +258,9 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
         Return
     EndIf
 
+    ; Phase 3: otherwise use MME's original SexLab interface and registrar names.
+    ; Drinker sex selects MME's Var/non-Var animation exactly as the original
+    ; pathway expects; missing registration is a failure, never a generic fallback.
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None || milkController.SexLab == None
         If diagnostic
@@ -258,6 +283,8 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
         Return
     EndIf
     Actor[] sceneActors = new Actor[2]
+    ; SexLab's original MME ordering is source first, drinker second. This differs
+    ; from OStim action ordering and must not be "normalized" across frameworks.
     sceneActors[0] = milkSource
     sceneActors[1] = drinker
     If diagnostic
@@ -267,6 +294,8 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
         Debug.Notification("[MME Debug] Animation lookup: " + animationName)
         Debug.Notification("[MME Debug] SexLab StartSex request")
     EndIf
+    ; StartSex is the SexLab commit point; diagnostics report its returned thread
+    ; ID but scene lifecycle remains owned by SexLab/MME after this call.
     Int sceneId = milkController.SexLab.StartSex(sceneActors, animations)
     If diagnostic
         If sceneId >= 0

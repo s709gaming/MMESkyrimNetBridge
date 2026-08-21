@@ -2,6 +2,8 @@ Scriptname MMEAlertsQuickTest extends Quest
 
 ; Release-safe placeholder. The Recommended FOMOD choice replaces this with
 ; its isolated QuickStart variant; all other installs grant no starter items.
+; Keep the public functions because the ESP and established saves reference this
+; script shape even when the selected installer profile deliberately does nothing.
 Bool testSetupApplied = False
 Bool milkVarietyGranted = False
 

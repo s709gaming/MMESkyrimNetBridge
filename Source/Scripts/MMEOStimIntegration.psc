@@ -16,6 +16,7 @@ String Function FindSemanticScene(Actor[] actors, Int actorPosition, Int targetP
 EndFunction
 
 Int Function StartManualScene(Actor[] actors, String sceneID, String metadata, Bool diagnostic = False) Global
+    ; Validate the already-resolved semantic request before allocating a builder.
     If actors == None || sceneID == ""
         Report(diagnostic, "invalid actors or scene passed to OStim")
         Return -1
@@ -27,6 +28,9 @@ Int Function StartManualScene(Actor[] actors, String sceneID, String metadata, B
         Return -1
     EndIf
 
+    ; Configure a deliberately manual, furniture-free thread. NoAutoMode is an
+    ; ownership invariant used by MMEOStimBreastfeeding: if auto mode later
+    ; becomes active, this integration treats the thread as externally adopted.
     OThreadBuilder.SetStartingAnimation(builderID, sceneID)
     OThreadBuilder.NoFurniture(builderID)
     ; Prevent OStim's normal automatic progression without blocking deliberate
@@ -36,6 +40,8 @@ Int Function StartManualScene(Actor[] actors, String sceneID, String metadata, B
         OThreadBuilder.SetMetadataCSV(builderID, metadata)
     EndIf
 
+    ; Start is the external API commit point. Cancel only an unstarted builder;
+    ; a successfully returned thread is managed by the breastfeeding owner.
     Int threadID = OThreadBuilder.Start(builderID)
     If threadID < 0
         OThreadBuilder.Cancel(builderID)
@@ -56,6 +62,9 @@ String Function GetThreadScene(Int threadID) Global
 EndFunction
 
 Bool Function OwnsManualScene(Int threadID, String expectedSceneID) Global
+    ; Ownership requires all three facts: running thread, unchanged scene, and
+    ; manual mode. Thread identity alone is unsafe because OStim reuses a live
+    ; thread while other integrations or the player change its contents.
     Return threadID >= 0 && expectedSceneID != "" && OThread.IsRunning(threadID) && OThread.GetScene(threadID) == expectedSceneID && !OThread.IsInAutoMode(threadID)
 EndFunction
 

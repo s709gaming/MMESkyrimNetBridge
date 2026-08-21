@@ -1,5 +1,8 @@
 Scriptname MMEAlertsPlayerEffect extends ActiveMagicEffect
 
+; Permanent Player ability host. It owns no polling itself; lifecycle callbacks
+; reinitialize the controller and optional installer profiles after save load.
+
 ; Forwards lifecycle changes to the quest controller; the ESP form ID is fixed.
 Function Refresh(String reason)
     MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
@@ -21,6 +24,8 @@ EndEvent
 
 ; Reinitializes registrations and development helpers after loading a save.
 Event OnPlayerLoadGame()
+    ; Ordering is intentional: apply one-time MME defaults first, rebuild runtime
+    ; registrations/schedules second, then arm the optional delayed QuickStart.
     MMEAlertsFlatRateDefaults flatDefaults = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsFlatRateDefaults
     If flatDefaults != None
         flatDefaults.ApplyDefaults()

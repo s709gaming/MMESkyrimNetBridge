@@ -1,5 +1,8 @@
 Scriptname MMEArousalBridge Hidden
 
+; Optional SexLab Aroused boundary. Event-based writes avoid compiling against a
+; specific SLA script version while faction/rank reads provide diagnostics.
+
 String Function GetSettingsFile() Global
     Return "/MMEAlerts/Settings"
 EndFunction
@@ -22,6 +25,8 @@ EndFunction
 
 ; Actor-safe implementation shared by player drinking and explicit NPC interactions.
 Bool Function ApplyMilkDrinkArousalForActor(Actor drinker, Form drinkItem, Bool showDiagnostic = False) Global
+    ; Phase 1: enforce master/feature/dependency/actor gates before resolving the
+    ; configured amount. A missing optional framework is a clean no-op.
     String settingsFile = GetSettingsFile()
     String actorName = GetActorName(drinker)
     If drinker == None
@@ -64,6 +69,8 @@ Bool Function ApplyMilkDrinkArousalForActor(Actor drinker, Form drinkItem, Bool 
         Return False
     EndIf
     Int handle = ModEvent.Create("slaUpdateExposure")
+    ; Phase 2: use SLA's public ModEvent contract. The event owns the actual state
+    ; change; the before/after faction ranks are diagnostic observations only.
     If handle == 0
         Report(showDiagnostic, "failed: slaUpdateExposure event creation returned 0")
         Return False

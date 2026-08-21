@@ -1,5 +1,13 @@
 Scriptname MMEArmorScript Hidden
 
+; ---------------------------------------------------------------------------
+; Player post-drink Armor Stripping Check
+; ---------------------------------------------------------------------------
+; The first half of this file mirrors only MME's capacity-related slot-32 strip
+; decision after an Extensions-managed drink. It does not run MilkCycle because
+; MilkCycle also changes production, progression, effects, and arousal. The
+; second half is an independent per-equip reaction/classification pipeline.
+
 ; Records an attempted direct-drink overflow before MME's storage API can
 ; clamp it. The existing deferred pass consumes this marker.
 Function MarkPlayerOverflowPending(Actor target) Global
@@ -17,6 +25,8 @@ EndFunction
 ; attempted overflow. This function is non-latent: it only bumps a token and
 ; asks the controller quest to schedule its own single update.
 Function SchedulePlayerArmorCheck(Actor target) Global
+    ; Phase 1: only player drinks own this delayed strip path. NPC drinks use
+    ; MME's normal actor processing and must not share the player's debounce key.
     If target != Game.GetPlayer()
         Return
     EndIf
@@ -26,6 +36,9 @@ Function SchedulePlayerArmorCheck(Actor target) Global
         Report(diagnostic, "PLAYER armor check skipped: controller unavailable")
         Return
     EndIf
+    ; Phase 2: bump a persistent generation before arming the controller timer.
+    ; Multiple drinks collapse to the latest deadline; the token proves there is
+    ; still real work when a stale/duplicate OnUpdate callback eventually fires.
     If StorageUtil.GetIntValue(target, "MMEExtensions.ArmorCheck.Generation", 0) > 0
         Report(diagnostic, "PLAYER armor check superseded by newer drink")
     EndIf
@@ -36,6 +49,8 @@ EndFunction
 
 ; Runs the deferred check using only the current live state.
 Function CheckPlayerArmorNow(Actor target) Global
+    ; Phase 1: consume exactly one queued request and its attempted-overflow bit.
+    ; Clear both before further work so every early exit remains one-shot.
     If target != Game.GetPlayer()
         Return
     EndIf
@@ -49,6 +64,9 @@ Function CheckPlayerArmorNow(Actor target) Global
     StorageUtil.UnsetIntValue(target, "MMEExtensions.PostDrinkOverflow.Pending")
     Report(diagnostic, "running | actor=PLAYER | milk=" + MME_Storage.getMilkCurrent(target) + " | overflowAttempt=" + attemptedOverflow)
 
+    ; Phase 2: resolve live MME state and verify Player membership. MilkQUEST and
+    ; its MilkMaid array are authoritative; a StorageUtil milk value alone does
+    ; not make an actor eligible for MME armor behavior.
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None
         Report(diagnostic, "decision=BLOCKED | MME controller unavailable")
@@ -64,6 +82,9 @@ Function CheckPlayerArmorNow(Actor target) Global
     ; pain, progression, arousal, effects, events, and messages.
     ReconcileMMEOverflow(target, milkController, attemptedOverflow, diagnostic)
 
+    ; Phase 3: apply MME/global compatibility gates before inspecting thresholds.
+    ; Protected MME, DD, TITS, SexLab-no-strip, Living, Parasite, and milking
+    ; equipment must remain equipped even at extreme milk values.
     If milkController.ArmorStrippingDisabled
         Report(diagnostic, "decision=BLOCKED | MME armor stripping disabled")
         Return
@@ -93,6 +114,9 @@ Function CheckPlayerArmorNow(Actor target) Global
         Return
     EndIf
 
+    ; Phase 4: classify the ordinary body armor with MME's original thresholds.
+    ; The strict greater-than comparison is intentional and preserves the
+    ; existing heavy=4, light=8, clothing=12 behavior exactly.
     Float milk = MME_Storage.getMilkCurrent(target)
     Float threshold = GetArmorThreshold(slotArmor)
     String armorKind = "clothes"
@@ -111,6 +135,9 @@ Function CheckPlayerArmorNow(Actor target) Global
         Return
     EndIf
 
+    ; Phase 5: request the unequip, then verify Skyrim actually changed slot 32.
+    ; A successful Papyrus call is not proof: quests or equipment systems may
+    ; immediately retain/re-equip an item, which diagnostics must report honestly.
     ; Exactly one mutually-exclusive strip decision and one notification.
     Report(diagnostic, "decision=ALLOWED | requesting unequip")
     target.UnequipItem(slotArmor)
@@ -126,6 +153,9 @@ EndFunction
 ; state after a direct drink. An attempted-overflow marker reconstructs the
 ; branch when MME's enforcing storage call already clamped milk to the maximum.
 Function ReconcileMMEOverflow(Actor target, MilkQUEST milkController, Bool attemptedOverflow, Bool diagnostic) Global
+    ; Phase 1: reconstruct only the overflow branch that direct storage writes
+    ; bypass. When BreastScaleLimit clamps the write to exactly maximum, the
+    ; attemptedOverflow marker distinguishes a real overflow from normal fullness.
     Float milk = MME_Storage.getMilkCurrent(target)
     Float maximum = MME_Storage.getMilkMaximum(target)
     If maximum <= 0.0 || milk < maximum || (milk == maximum && !attemptedOverflow)
@@ -137,6 +167,8 @@ Function ReconcileMMEOverflow(Actor target, MilkQUEST milkController, Bool attem
         Return
     EndIf
 
+    ; Phase 2: preserve MME's fixed/dynamic maid-level arithmetic and container
+    ; routing. This math is intentionally not replaced with a simpler clamp.
     Float reconciledMilk = milk
     Float overflowMilk = 0.0
     If milk > maximum
@@ -158,6 +190,8 @@ Function ReconcileMMEOverflow(Actor target, MilkQUEST milkController, Bool attem
         EndIf
     EndIf
 
+    ; Phase 3: reproduce MME's visible leak/size side effects, then commit the
+    ; reconciled amount through MME_Storage so MME remains state owner.
     If target.IsNearPlayer()
         milkController.AddMilkFx(target, 1)
         milkController.AddLeak(target)
@@ -196,6 +230,9 @@ EndFunction
 
 ; Framework-neutral overflow gate: protects MME's milking/living/special armor.
 Bool Function IsSpecialMMEArmor(MilkQUEST milkController, Armor slotArmor) Global
+    ; Explicit quest properties and MME-configured name arrays come first. Name
+    ; fragments are compatibility fallbacks for established third-party armor
+    ; integrations and should not be casually removed as "redundant" checks.
     If milkController == None || slotArmor == None
         Return True
     EndIf
@@ -234,6 +271,8 @@ EndFunction
 ; Isolates the framework-specific strippability gate so the overflow algorithm
 ; stays framework-neutral. Returns True when a strip is permitted.
 Bool Function IsStripSafeByFramework(MilkQUEST milkController, Armor slotArmor) Global
+    ; SexLab is optional. When present, its no-strip policy is authoritative;
+    ; when absent, lack of SexLab must not disable ordinary MME armor stripping.
     If milkController == None || milkController.SexLab == None
         Return True
     EndIf
@@ -258,6 +297,9 @@ EndFunction
 ; MME's own configured armor-name arrays are the source of truth.
 ; 0 unsupported, 1 Milking Armor, 2 AM Living Armor, 3 AM Living Parasite.
 Int Function ClassifyArmor(MilkQUEST milkController, Armor equippedArmor) Global
+    ; Direct form properties identify MME's canonical cuirasses even if renamed.
+    ; Array matching intentionally uses the live display name because that is how
+    ; MME exposes configurable third-party Milking/Living/Parasite equipment.
     If milkController == None || equippedArmor == None
         Return 0
     EndIf
@@ -315,6 +357,8 @@ EndFunction
 ; One per-equip reaction path for every supported MME armor family. Armor type
 ; only selects settings and Standing/Kneeling; safety and playback stay shared.
 Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
+    ; Phase 1: classify the exact native equip-event ARMO and reject unsupported
+    ; items before resolving settings, sounds, animations, or Skyrim.Net work.
     Bool diagnostic = GetArmorDiagnostic()
     String role = "NPC"
     If wearer == Game.GetPlayer()
@@ -330,6 +374,8 @@ Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
         NotifyArmorDebug(diagnostic, role + " | Unsupported | " + GetArmorName(equippedArmor))
         Return
     EndIf
+    ; Phase 2: require real live MilkQUEST membership for both Player and NPC.
+    ; Classification says what an item is; it does not establish actor eligibility.
     If milkController == None || wearer == None || milkController.MilkMaid.Find(wearer) == -1
         ReportArmor(diagnostic, "reaction does not apply: actor is not an MME Milk Maid | " + role + " | " + armorType)
         NotifyArmorDebug(diagnostic, role + " " + armorType + " | reaction=NO (not Milk Maid)")
@@ -337,6 +383,9 @@ Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
     EndIf
     ReportArmor(diagnostic, "reaction applies | " + role + " | " + armorType)
 
+    ; Phase 3: resolve independent role/type settings and play the equip moan.
+    ; Milking Armor uses MILD; both Living families use HIGH because their
+    ; invasive equip reaction is intentionally stronger.
     String settingPrefix = GetArmorSettingPrefix(armorClass, wearer == Game.GetPlayer())
     Int moanResult = PlayArmorEquipMoan(wearer, settingPrefix + "EquipMoan", role, armorType, armorClass, diagnostic)
     String moanState = "DISABLED"
@@ -348,6 +397,9 @@ Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
 
     MMEAlertsSkyrimNet.NarrateArmorEquip(wearer, equippedArmor)
 
+    ; Phase 4: map armor family to the shared reaction executor. Milking Armor
+    ; reuses Standing (drink/50% capacity); Living and Parasite reuse Kneeling.
+    ; Do not fork per-armor animation ownership or first-equip state here.
     String animationKind = "Standing"
     If armorClass == 2 || armorClass == 3
         animationKind = "Kneeling"
@@ -359,6 +411,8 @@ Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
         Return
     EndIf
 
+    ; Phase 5: delegate safety, ownership, playback, and restoration to the one
+    ; shared animation pipeline. This handler owns only the three-second hold.
     String owner = "ArmorReaction." + role
     String requestLabel = "Armor " + role + " " + armorType
     ReportArmor(diagnostic, "animation requested=" + animationKind + " | " + role + " | " + armorType)
@@ -399,6 +453,8 @@ EndFunction
 
 ; Returns 1 when the moan played, 0 when disabled, and -1 on failure.
 Int Function PlayArmorEquipMoan(Actor wearer, String moanKey, String role, String armorType, Int armorClass, Bool diagnostic) Global
+    ; Select the sound pool from classification before applying toggles so debug
+    ; output remains useful even when playback is disabled.
     Int localSoundForm = 0x000854
     String soundPool = "MILD"
     If armorClass == 2 || armorClass == 3
@@ -406,6 +462,7 @@ Int Function PlayArmorEquipMoan(Actor wearer, String moanKey, String role, Strin
         soundPool = "HIGH"
     EndIf
     ReportArmor(diagnostic, "equip moan pool=" + soundPool + " | " + role + " | " + armorType)
+    ; The global sound switch and per-role/per-family switch are both required.
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableReactionSounds", 1) != 1 || JsonUtil.GetIntValue("/MMEAlerts/Settings", moanKey, 1) != 1
         ReportArmor(diagnostic, "equip moan disabled | pool=" + soundPool + " | " + role + " | " + armorType)
         Return 0
@@ -419,6 +476,8 @@ Int Function PlayArmorEquipMoan(Actor wearer, String moanKey, String role, Strin
         ReportArmor(diagnostic, "equip moan failed: " + soundPool + " sound form unresolved | " + role + " | " + armorType)
         Return -1
     EndIf
+    ; Sound.Play returns an instance handle, which is required for the shared
+    ; volume setting. A non-positive handle is a real playback failure.
     Int instance = reaction.Play(wearer)
     If instance > 0
         Sound.SetInstanceVolume(instance, JsonUtil.GetFloatValue("/MMEAlerts/Settings", "reactionSoundVolume", 100.0) / 100.0)
@@ -432,6 +491,9 @@ EndFunction
 ; Upgrade recovery for saves made while the retired ZaZ/player-lock armor
 ; intro was active. New armor reactions never lock player movement.
 Function RestorePlayerMovementIfNeeded(Actor wearer, Bool diagnostic = False) Global
+    ; Upgrade-only cleanup for saves made by the retired armor intro. Current
+    ; reactions never SetDontMove; retaining this recovery prevents a legacy
+    ; interrupted animation from permanently immobilizing the Player.
     If wearer != Game.GetPlayer()
         Return
     EndIf

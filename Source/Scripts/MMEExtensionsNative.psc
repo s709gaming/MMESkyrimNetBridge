@@ -1,5 +1,9 @@
 Scriptname MMEExtensionsNative Hidden
 
+; Papyrus declarations for the SKSE/CommonLib native bridge. Keep every name and
+; signature synchronized with RegisterPapyrus in src/Plugin.cpp; compiled callers
+; depend on this ABI. Functions observe engine state only and never edit records.
+
 ; Returns the player followed by loaded actors in the same cell and radius.
 Actor[] Function GetNearbyActors(Float radius) Global Native
 

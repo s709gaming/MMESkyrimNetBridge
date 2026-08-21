@@ -1,5 +1,9 @@
 Scriptname MMEMilkDrinkEffects Hidden
 
+; Shared drink-moans boundary. Resolve the ESP SOUN marker rather than individual
+; WAVs so Skyrim selects from the configured Mild pool and returns one volume-
+; controllable playback instance.
+
 ; Returns the sound instance, 0 when disabled, or -1 when playback fails.
 Int Function PlayDrinkReaction(Actor drinker, Bool showDiagnostic = False) Global
     String settingsFile = "/MMEAlerts/Settings"

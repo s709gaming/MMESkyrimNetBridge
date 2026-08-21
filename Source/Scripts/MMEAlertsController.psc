@@ -1,5 +1,12 @@
 Scriptname MMEAlertsController extends Quest
 
+; ---------------------------------------------------------------------------
+; Controller-owned persistent state
+; ---------------------------------------------------------------------------
+; This quest is the long-lived coordinator for native events and periodic work.
+; All timed features share one OnUpdate schedule below; adding an independent
+; polling quest should be a last resort. Each Next* value is an absolute real-
+; time deadline, while dialogue fields form one debounced post-INFO snapshot.
 String SettingsFile = "/MMEAlerts/Settings"
 String StateKey = "MMEAlerts.CapacityState"
 String MilkingStateKey = "MMEAlerts.IsMilking"
@@ -30,12 +37,18 @@ EndEvent
 
 ; Restores event registrations and abilities; called at startup and after load.
 Function InitializeController()
+    ; Phase 1: refresh conditional forms and recover legacy animation state
+    ; before honoring the master toggle. The OStim Global must also be correct
+    ; while disabled so Skyrim cannot retain a stale dialogue choice.
     RefreshOStimDialogueAvailability()
     MMEArmorScript.RestorePlayerMovementIfNeeded(Game.GetPlayer(), MMEArmorScript.GetArmorDiagnostic())
     If !IsExtensionsEnabled()
         DisableController()
         Return
     EndIf
+    ; Phase 2: refresh framework-derived gates and register integrations. Event
+    ; registration is deliberately idempotent: unregister first so save reloads
+    ; and MCM upgrades cannot accumulate duplicate callbacks.
     RefreshMMESexLabAnimationGate("controller initialization")
     RegisterMilkingEvents()
     MMEAlertsSkyrimNet.RegisterPromptDecorator()
@@ -52,6 +65,9 @@ Function InitializeController()
     RegisterForModEvent("MMEExtensions_ArmorEquipped", "OnArmorEquipped")
     UnregisterForModEvent("MME_AddMilkMaid")
     RegisterForModEvent("MME_AddMilkMaid", "OnMMEAddMilkmaidRequested")
+    ; Phase 3: repair the player monitoring ability on the one known bytecode
+    ; migration. Existing active effects retain their original script instance,
+    ; so remove/re-add is required when the tracker implementation changes.
     UnregisterForUpdate()
     Spell monitorAbility = Game.GetFormFromFile(0x000805, "MMEAlert.esp") as Spell
     If monitorAbility != None
@@ -68,6 +84,8 @@ Function InitializeController()
             Game.GetPlayer().AddSpell(monitorAbility, False)
         EndIf
     EndIf
+    ; Phase 4: start shared schedules, then baseline existing Milk Maids. The
+    ; baseline prevents established actors from being narrated as new creations.
     UpdatePolling()
     BaselineKnownMilkmaids()
 EndFunction
@@ -76,6 +94,9 @@ EndFunction
 ; script. Refreshing the cached value fixes load-order staleness without
 ; weakening the original requirement or coupling SexLab to OStim.
 Bool Function RefreshMMESexLabAnimationGate(String reason = "event")
+    ; MME caches registrar availability in a quest-condition Boolean. Resolve
+    ; the live SexLab animation slots first; missing interfaces are diagnostic,
+    ; never a reason to force the original dialogue gate open.
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None || milkController.MilkQC == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
         Debug.Trace("[MME Extensions SexLab BF] gate refresh skipped: MME/SexLab interface unavailable | " + reason)
@@ -84,6 +105,8 @@ Bool Function RefreshMMESexLabAnimationGate(String reason = "event")
     Bool straightFound = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar") != None
     Bool lesbianFound = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding") != None
     Bool liveGate = straightFound && lesbianFound
+    ; Match MME's own AND requirement exactly. This refresh repairs stale cache
+    ; state but does not relax registration or gameplay conditions.
     Bool oldGate = milkController.MilkQC.MME_BreasfeedingAnimationsCheck
     milkController.MilkQC.MME_BreasfeedingAnimationsCheck = liveGate
     Debug.Trace("[MME Extensions SexLab BF] refreshed MME gate " + DiagnosticBool(oldGate) + " -> " + DiagnosticBool(liveGate) + " | zjBreastFeedingVar(Straight)=" + DiagnosticBool(straightFound) + " zjBreastFeeding(Lesbian)=" + DiagnosticBool(lesbianFound) + " | " + reason)
@@ -98,6 +121,8 @@ EndFunction
 
 ; Stops scheduled work and event subscriptions without removing saved state.
 Function DisableController()
+    ; Symmetric teardown for every registration and deadline owned by this quest.
+    ; Saved gameplay data is preserved; only active observation/scheduling stops.
     OStimDialogueAvailable = False
     UnregisterForUpdate()
     UnregisterForModEvent("MMEExtensions_Lifecycle")
@@ -127,6 +152,8 @@ EndFunction
 
 ; Exposes one dependency-free quest condition for the optional dialogue INFOs.
 Function RefreshOStimDialogueAvailability()
+    ; The ESP dialogue CTDA reads a GlobalVariable, not Papyrus directly. Keep
+    ; the Conditional property and Global synchronized from the same predicate.
     OStimDialogueAvailable = MMEOStimBreastfeeding.IsDialogueEnabled()
     GlobalVariable dialogueGate = GetOStimDialogueAvailabilityGlobal()
     If dialogueGate != None
@@ -146,6 +173,8 @@ EndFunction
 
 ; Records Milkmaids already present when this version starts to avoid false creation reports.
 Function BaselineKnownMilkmaids()
+    ; Baseline is intentionally cell-local and startup-only. The native scanner
+    ; discovers future nearby actors; a permanent second actor scan is wasteful.
     Actor playerActor = Game.GetPlayer()
     RememberMilkmaid(playerActor)
     Cell currentCell = playerActor.GetParentCell()
@@ -282,6 +311,8 @@ EndEvent
 ; Fragment_00. Raw events stay in the log; the HUD reports only the resulting
 ; route state.
 Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float localInfoForm, Form sender)
+    ; Phase 1: resolve enabled diagnostics and keep MME's registrar cache fresh.
+    ; The native event is observational; it never changes INFO eligibility.
     Bool dialogueDebug = JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
     Bool sexLabBFDebug = JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
     Bool ostimBFDebug = JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1
@@ -292,6 +323,9 @@ Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float local
     If !dialogueDebug && !sexLabBFDebug && !ostimBFDebug
         Return
     EndIf
+    ; Phase 2: treat selection of either independent OStim DIAL as terminal
+    ; evidence that the option was visible. Never schedule another visibility
+    ; snapshot here: Skyrim has already advanced beyond the choice list.
     Debug.Trace("[MME Extensions Dialogue] INFO event | topic=" + topicEditorID + " info=" + (localInfoForm as Int) + " speaker=" + sender)
     Bool ostimPlayerSelected = topicEditorID == "MMEExt_OStimBreastfeeding_PlayerDrinksTopic"
     Bool ostimNPCSelected = topicEditorID == "MMEExt_OStimBreastfeeding_NPCDrinksTopic"
@@ -312,6 +346,9 @@ Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float local
     If topicEditorID != "MME_Hello_Dialogue_Topic"
         Return
     EndIf
+    ; Phase 3: the MME opening fragment refreshes shared MilkQC values and then
+    ; constructs the menu. Debounce one short post-fragment snapshot through the
+    ; controller scheduler; this avoids dialogue polling and repeated HUD spam.
     Actor dialogueActor = sender as Actor
     If dialogueActor == None
         dialogueActor = MMEExtensionsNative.GetDialogueTarget()
@@ -326,6 +363,9 @@ EndEvent
 
 ; Resolves the exact equipped ARMO published by the native global equip sink.
 Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm, Form sender)
+    ; Native events cross the DLL/Papyrus boundary as plugin name + local ID so
+    ; load order is irrelevant. Resolve the actual ARMO here, then delegate all
+    ; classification, settings, reactions, and narration to MMEArmorScript.
     If !IsExtensionsEnabled()
         Return
     EndIf
@@ -353,6 +393,9 @@ EndEvent
 
 ; Waits for MME, validates a real false-to-true transition, and publishes it once.
 Function CheckMilkmaidCreation(Actor candidate, String source, Bool ownsPendingMarker = True)
+    ; This routine reconciles several creation signals that may arrive in either
+    ; order. MilkQUEST membership is authoritative; effect/pending markers only
+    ; explain whether conversion is still underway and who may clear the state.
     Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 1) == 1
     If candidate == None
         If diagnostic
@@ -526,6 +569,9 @@ EndFunction
 
 ; Synchronizes optional capacity polling with its persisted MCM toggle.
 Function UpdatePolling()
+    ; Rebuild absolute deadlines from MCM settings. This function owns the only
+    ; recurring capacity/Skyrim.Net/debug schedules; dialogue and armor checks
+    ; remain event-driven one-shots inserted into the same deadline set.
     UnregisterForUpdate()
     If !IsExtensionsEnabled()
         NextCapacityUpdate = 0.0
@@ -574,6 +620,9 @@ EndFunction
 ; Re-scheduling cancels the previous single update, so rapid successive drinks
 ; collapse into one check timed after the most recent drink.
 Function RequestPlayerArmorCheck()
+    ; Debounce at the deadline level. Rapid drinks overwrite NextArmorCheck, but
+    ; the StorageUtil generation token remains the authority consumed by the
+    ; eventual Armor Stripping Check.
     Float now = Utility.GetCurrentRealTime()
     NextArmorCheck = now + 3.0
     MMEArmorScript.Report(MMEArmorScript.GetDiagnostic(), "timer armed | delay=3 seconds | due=" + NextArmorCheck)
@@ -581,6 +630,9 @@ Function RequestPlayerArmorCheck()
 EndFunction
 
 Function ScheduleNextUpdate()
+    ; Select the earliest absolute deadline across all controller-owned work.
+    ; Overdue candidates are clamped positive: RegisterForSingleUpdate ignores
+    ; non-positive delays, which previously allowed a due armor check to vanish.
     Float now = Utility.GetCurrentRealTime()
     Float delay = 0.0
     Float candidate = 0.0
@@ -628,6 +680,8 @@ Function ScheduleNextUpdate()
         EndIf
     EndIf
     If delay > 0.0
+        ; Dialogue needs a quarter-second post-fragment snapshot. All other work
+        ; is intentionally throttled to one second to avoid tight Papyrus loops.
         Float minimumDelay = 1.0
         If NextDialogueDiagnosticUpdate > 0.0
             minimumDelay = 0.25
@@ -641,6 +695,8 @@ EndFunction
 
 ; Services independent local-capacity and SkyrimNet status schedules.
 Event OnUpdate()
+    ; Snapshot due flags before executing work so each deadline is serviced at
+    ; most once per callback. Capacity and Skyrim.Net share the same actor scan.
     If !IsExtensionsEnabled()
         Return
     EndIf
@@ -652,6 +708,8 @@ Event OnUpdate()
     If capacityDue || skyrimNetDue
         ScanNearbyMilkMaids(skyrimNetDue, capacityDue)
     EndIf
+    ; Advance recurring deadlines from this callback's timestamp. One-shot
+    ; dialogue and armor deadlines are cleared only when their work is consumed.
     If capacityDue
         NextCapacityUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 15.0)
     EndIf
@@ -663,6 +721,8 @@ Event OnUpdate()
         NextDebugUpdate = now + 5.0
     EndIf
     If dialogueDiagnosticDue
+        ; Prefer Skyrim's live speaker at evaluation time. The event sender is a
+        ; fallback because noisy INFO transitions may report a stale lastSpeaker.
         Actor dialogueTarget = PendingDialogueDiagnosticActor
         ; At evaluation time Skyrim's menu speaker is the CTDA Subject. Prefer
         ; that live value over a speaker captured by an earlier noisy event.
@@ -692,10 +752,14 @@ Event OnUpdate()
     now = Utility.GetCurrentRealTime()
     Bool armorDue = NextArmorCheck > 0.0 && now >= NextArmorCheck
     If armorDue
+        ; Clear the deadline before calling the armor script. That script may
+        ; trigger animation/equip activity, which must not re-enter this check.
         NextArmorCheck = 0.0
         MMEArmorScript.Report(MMEArmorScript.GetDiagnostic(), "timer fired")
         MMEArmorScript.CheckPlayerArmorNow(Game.GetPlayer())
     EndIf
+    ; Recompute from all remaining deadlines. ScheduleNextUpdate handles work
+    ; that became overdue while a latent scan or diagnostic was running.
     ScheduleNextUpdate()
 EndEvent
 
@@ -865,6 +929,9 @@ String Function ShortRouteResult(Bool eligible, Bool visible, Int[] values, Stri
 EndFunction
 
 Function ReportDialogueStructure(Actor subject, Actor playerActor)
+    ; Resolve both original MME records and extension records by their stable
+    ; source identities, then inspect runtime topic arrays/PNAM links. This is a
+    ; topology audit only; it never edits or forces a dialogue record.
     Form playerDrinksTopic = Game.GetFormFromFile(0x062E91, "MilkModNEW.esp")
     Form npcDrinksTopic = Game.GetFormFromFile(0x062E8F, "MilkModNEW.esp")
     Form playerDrinksSexLab = Game.GetFormFromFile(0x05FE12, "MilkModNEW.esp")
@@ -959,6 +1026,8 @@ EndFunction
 ; native Hey there INFO event after Fragment_00 has refreshed MME's condition
 ; quest; it observes live records and state but never starts or alters a scene.
 Function ShowSexLabBreastfeedingDiagnostic(Actor subject)
+    ; Phase 1: resolve the exact original MME interfaces, registrars, INFOs, and
+    ; cached milk values used by the SexLab lane. Do not substitute OStim state.
     Actor playerActor = Game.GetPlayer()
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     Form playerDrinksTopic = Game.GetFormFromFile(0x062E91, "MilkModNEW.esp")
@@ -1002,6 +1071,8 @@ Function ShowSexLabBreastfeedingDiagnostic(Actor subject)
     Bool playerVisible = visibleInfos != None && visibleInfos.Find(playerDrinksInfo) >= 0
     Bool npcVisible = visibleInfos != None && visibleInfos.Find(npcDrinksInfo) >= 0
 
+    ; Phase 2: keep technical CTDA/override detail in the Papyrus log. The HUD
+    ; reports only framework state and the first meaningful route failure.
     Debug.Trace("[MME Extensions SexLab BF] actor=" + subject + " player=" + playerActor)
     Debug.Trace("[MME Extensions SexLab BF] Framework=" + DiagnosticBool(frameworkAvailable) + " AnimSlots=" + DiagnosticBool(interfaceValid) + " zjBreastFeedingVar(Straight)=" + straightAnimation + " zjBreastFeeding(Lesbian)=" + lesbianAnimation)
     Debug.Trace("[MME Extensions SexLab BF] gate=" + DiagnosticBool(conditions.MME_BreasfeedingAnimationsCheck) + " DialogueMilking=" + DiagnosticBool(conditions.MME_DialogueMilking) + " Player milk=" + playerMilk + "/TargetMilk=" + conditions.MME_TargetMilk + " blockers=" + playerBlockers + " NPC milk=" + npcMilk + "/SubjectMilk=" + conditions.MME_SubjectMilk + " blockers=" + npcBlockers)
@@ -1041,6 +1112,8 @@ EndFunction
 ; yet remain absent when its INFO was incorrectly placed in an original MME
 ; response chain; that structural distinction is deliberately surfaced.
 Function ShowOStimBreastfeedingDiagnostic(Actor subject)
+    ; Phase 1: gather live MME milk, cached MilkQC values, the independent OStim
+    ; INFOs/topics, and the framework availability Global used by their CTDAs.
     Actor playerActor = Game.GetPlayer()
     If subject == None || playerActor == None
         Debug.Trace("[MME Extensions OStim BF Dialogue] evaluation actor unavailable")
@@ -1077,6 +1150,9 @@ Function ShowOStimBreastfeedingDiagnostic(Actor subject)
     If gate != None
         gateValue = gate.GetValue()
     EndIf
+    ; Phase 2: evaluate with Skyrim's real dialogue roles: speaker is Subject,
+    ; player is Target for both opposite directions. Direction changes which
+    ; cached milk value the copied MME condition tests, not the CTDA role order.
     ; Skyrim evaluates both choice INFOs with the dialogue speaker as Subject
     ; and the player as Target. MME's Fragment_00 maps those roles to
     ; SubjectMilk (NPC) and TargetMilk (player), respectively.
@@ -1095,6 +1171,9 @@ Function ShowOStimBreastfeedingDiagnostic(Actor subject)
     Bool playerVisible = visibleInfos != None && visibleInfos.Find(playerInfo) >= 0
     Bool npcVisible = visibleInfos != None && visibleInfos.Find(npcInfo) >= 0
 
+    ; Phase 3: distinguish a real populated-menu absence from an unknowable
+    ; post-dialogue state. An empty list after selection is not evidence that a
+    ; choice was never shown; selection/start events provide stronger evidence.
     Debug.Trace("[MME Extensions OStim BF Dialogue] detected=" + DiagnosticBool(detected) + " setting=" + DiagnosticBool(setting) + " global=" + gate + " value=" + gateValue)
     Debug.Trace("[MME Extensions OStim BF Dialogue] CTDA roles: Subject=speaker " + subject + " (milk live=" + subjectMilk + ", MME_SubjectMilk=" + subjectSnapshot + "); Target=player " + playerActor + " (milk live=" + playerMilk + ", MME_TargetMilk=" + playerSnapshot + ")")
     Debug.Trace("[MME Extensions OStim BF Dialogue] Player INFO=" + playerInfo + " topic=" + playerTopic + " independent=" + DiagnosticBool(playerIndependent) + " sources=" + SourceFileSummary(playerInfo))
@@ -1134,6 +1213,9 @@ EndFunction
 ; snapshot repeats only when its state changes, so selecting MME's opening
 ; line exposes the before/after Fragment_00 refresh without notification spam.
 Function ShowDialogueEligibilitySnapshot(Actor subject, Bool postRefresh = False)
+    ; Compare live MME storage against Fragment_00's cached MilkQC snapshot.
+    ; This reveals stale dialogue inputs without rewriting them or bypassing any
+    ; original MME blocker spells, sex rules, or Milk Maid membership checks.
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None || milkController.MilkQC == None
         Debug.Trace("[MME Extensions Dialogue] MME controller/condition quest unavailable")
@@ -1333,6 +1415,9 @@ EndFunction
 
 ; Scans the current cell and selects one highest-priority capacity sound.
 Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReactions = True)
+    ; Phase 1: scan the player and current cell once for all consumers. Only
+    ; loaded actors inside NearbyRange are considered; MME membership is checked
+    ; again by ProcessActor/Skyrim.Net helpers before publication.
     Actor[] reactionActors = new Actor[128]
     Int[] reactionKinds = new Int[128]
     Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
@@ -1347,6 +1432,9 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     ; Retired after native/Papyrus parity testing passed:
     ; Cell.GetNumRefs(43) + Cell.GetNthRef() enumeration previously ran here.
     ; MME validation and all capacity behavior remain in ProcessActor below.
+    ; Phase 2: accumulate capacity crossings and short-lived context text during
+    ; the scan. Skyrim.Net receives one combined Player-attached event rather
+    ; than one event per NPC, keeping context bounded and replaceable.
     String milkStatuses = ""
     String armorStatuses = ""
     Int milkmaidCount = 0
@@ -1398,6 +1486,8 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
         Debug.Notification("Native Scan active: " + nearbyActors.Length + " nearby actors")
     EndIf
 
+    ; Phase 3: play reactions after enumeration. Delaying animation work until
+    ; the scan ends avoids actor-state mutations while iterating references.
     ; One sound per scan. A full crossing has priority over a half crossing.
     Actor soundActor = None
     Int soundKind = 0

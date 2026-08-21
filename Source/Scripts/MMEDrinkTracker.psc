@@ -1,5 +1,12 @@
 Scriptname MMEDrinkTracker extends ReferenceAlias
 
+; ---------------------------------------------------------------------------
+; Native potion-event intake and drink pipeline ownership
+; ---------------------------------------------------------------------------
+; The player alias hosts this listener, while the DLL publishes exact consumed
+; ALCH forms for Player and NPC. Native form identity avoids unreliable inventory
+; polling. Player and NPC branches converge only on reusable effect helpers.
+
 String SettingsFile = "/MMEAlerts/Settings"
 
 Event OnInit()
@@ -14,6 +21,8 @@ EndEvent
 ; enforced inside OnNativePotionConsumed, so re-enabling MME Extensions through
 ; the MCM works immediately without waiting for another load.
 Function RegisterNativeDrink()
+    ; Re-registration is idempotent and required after load because ModEvent
+    ; subscriptions belong to the active script instance, not the save globally.
     UnregisterForModEvent("MMEExtensions_PotionConsumed")
     RegisterForModEvent("MMEExtensions_PotionConsumed", "OnNativePotionConsumed")
 EndFunction
@@ -42,6 +51,8 @@ EndFunction
 
 ; Native CommonLib entry point for both player and NPC potion consumption.
 Event OnNativePotionConsumed(String eventName, String pluginName, Float localFormID, Form sender)
+    ; Phase 1: reconstruct the consumed form from load-order-independent source
+    ; data, then reject non-milk items before any effects or narration occur.
     If !MMEAlertsController.IsExtensionsEnabled()
         Return
     EndIf
@@ -63,6 +74,8 @@ EndEvent
 
 ; Returns True when this native event is a duplicate within the given window.
 Bool Function IsDuplicateDrink(Actor drinker, Form drinkItem, String keyPrefix, Float window)
+    ; Native and dialogue consumption can describe the same item close together.
+    ; Per-actor form/time keys suppress only that narrow duplicate window.
     Float now = Utility.GetCurrentRealTime()
     Float lastTime = StorageUtil.GetFloatValue(drinker, keyPrefix + ".LastTime", -10.0)
     Int lastForm = StorageUtil.GetIntValue(drinker, keyPrefix + ".LastForm", 0)
@@ -76,6 +89,8 @@ EndFunction
 
 ; Handles a supported player drink: effects, then the optional player animation.
 Function HandleNativePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, String pluginName, Float localFormID)
+    ; Phase 1: snapshot established Milk Maid status before Lactacid effects can
+    ; convert the Player. The new-conversion animation owns that transition.
     If IsDuplicateDrink(drinker, drinkItem, "MMEExtensions.PlayerDrink", 1.0)
         Return
     EndIf
@@ -85,6 +100,8 @@ Function HandleNativePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, S
     ; established Milk Maids before this drink, never for a new conversion.
     Bool wasKnownMilkmaid = MMEAlertsController.IsKnownMilkmaid(drinker)
     Float milkDelta = HandleDrinkDetected(drinker, drinkItem, drinkKind)
+    ; Phase 2: request the optional shared standing reaction after effects. The
+    ; tracker owns completion through its existing single OnUpdate callback.
     Bool animDiagnostic = JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1
     String drinkLabel = drinkItem.GetName()
     If drinkLabel == ""
@@ -94,7 +111,7 @@ Function HandleNativePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, S
     If animationStarted
         RegisterForSingleUpdate(JsonUtil.GetFloatValue(SettingsFile, "playerDrinkAnimationDuration", 3.0))
     EndIf
-    ; Queue the existing deferred post-drink pass after a real gain or when
+    ; Phase 3: queue the existing deferred post-drink pass after a real gain or when
     ; MME clamped an attempted overflow to the already-full capacity.
     If milkDelta > 0.0 || MMEArmorScript.HasPendingPlayerOverflow(drinker)
         MMEArmorScript.SchedulePlayerArmorCheck(drinker)
@@ -109,6 +126,8 @@ EndEvent
 
 ; Processes a supported NPC milk drink through the native event pipeline.
 Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, String pluginName, Float localFormID)
+    ; Phase 1: require a live real MME Milk Maid and suppress dialogue/native
+    ; duplication before changing milk, arousal, sound, or Skyrim.Net context.
     Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0) == 1
     If drinker.IsDead() || drinker.IsDisabled()
         Return
@@ -147,6 +166,8 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
         Return
     EndIf
 
+    ; Phase 2: narration observes the confirmed drink independently of optional
+    ; Extensions gameplay effects. Disabling effects must not erase the event.
     MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker)
     If JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1) != 1
         If diagnostic
@@ -156,6 +177,8 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
         Return
     EndIf
 
+    ; Phase 3: apply milk/arousal/sound through actor-safe shared integrations,
+    ; then emit one consolidated result notification.
     Float milkBefore = MME_Storage.getMilkCurrent(drinker)
     Float milkAdded = MMEMilkBoost.ApplyMilkDrinkBonusForActor(drinker, drinkKind, diagnostic)
     Float milkAfter = MME_Storage.getMilkCurrent(drinker)
@@ -276,11 +299,13 @@ Float Function HandleDrinkDetected(Actor drinker, Form drinkItem, Int drinkKind)
         EndIf
         Debug.Notification("Milk Debug: detected " + itemName + " [form " + drinkItem.GetFormID() + ", kind " + drinkKind + "]")
     EndIf
-    ; Keep the proven reaction path first so an optional gameplay integration
+    ; Phase 1: keep the proven reaction path first so an optional gameplay integration
     ; cannot prevent the consumption sound from running.
     MMEMilkDrinkEffects.PlayDrinkReaction(drinker, JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1)
     ; MME milk and regular milk use the normal formula; Lactacid uses 2x flat.
     Float milkAdded = MMEMilkBoost.ApplyMilkDrinkBonusForActor(drinker, drinkKind)
+    ; Phase 2: independent integrations observe the same confirmed drink. Their
+    ; failures must not roll back MME milk that was already applied.
     Bool arousalSent = MMEArousalBridge.ApplyMilkDrinkArousalForActor(drinker, drinkItem)
     MMEAlertsSkyrimNet.SendMilkDrink(drinker, drinkItem)
     MMEAlertsSkyrimNet.NarratePlayerMilkDrink(drinker, drinkItem)

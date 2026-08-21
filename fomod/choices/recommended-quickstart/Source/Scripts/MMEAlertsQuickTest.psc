@@ -14,6 +14,8 @@ EndEvent
 ; Every startup hook enters through this one delayed gate. Repeated hooks do
 ; not restart the timer or create another grant attempt.
 Function ScheduleTestSetup()
+    ; Delay is a compatibility barrier for MME quest-property initialization,
+    ; not a recurring timer. Multiple startup hooks share quickStartScheduled.
     If quickStartScheduled
         Return
     EndIf
@@ -25,11 +27,15 @@ Function ScheduleTestSetup()
 EndFunction
 
 Event OnUpdate()
+    ; Clear the in-memory debounce before attempting grants so an unresolved MME
+    ; property can be retried by a later legitimate startup hook.
     quickStartScheduled = False
     ApplyTestSetup()
 EndEvent
 
 Function ApplyTestSetup()
+    ; Armor and milk use separate persistent latches so upgrades can add the
+    ; cuirass without duplicating milk previously granted by QuickStart.
     Actor playerActor = Game.GetPlayer()
     If playerActor == None
         Return
@@ -65,6 +71,8 @@ Function GrantMilkCuirassOnce(Actor playerActor)
         MMEArmorScript.ReportArmor(armorDiagnostic, "Recommended QuickStart could not resolve MME Milk Cuirass")
         Return
     EndIf
+    ; Set the latch only after inventory proves AddItem succeeded. A transiently
+    ; unresolved property remains safely retryable on the next startup.
     Int cuirassCountBefore = playerActor.GetItemCount(milkController.MilkCuirass)
     playerActor.AddItem(milkController.MilkCuirass, 1, False)
     If playerActor.GetItemCount(milkController.MilkCuirass) > cuirassCountBefore

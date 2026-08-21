@@ -1,5 +1,9 @@
 Scriptname MMEDebug extends Quest
 
+; Compatibility shell attached to the controller quest. Because Skyrim delivers
+; OnUpdate to every script on a quest, this script must remain passive: only
+; MMEAlertsController may register and service the shared update schedule.
+
 String SettingsFile = "/MMEAlerts/Settings"
 
 ; Quest startup delegates timing to the shared controller scheduler.

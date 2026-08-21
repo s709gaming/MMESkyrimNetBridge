@@ -1,5 +1,12 @@
 Scriptname MMEAlertsMCM extends SKI_ConfigBase
 
+; ---------------------------------------------------------------------------
+; MCM settings schema and migrations
+; ---------------------------------------------------------------------------
+; JsonUtil is the persistent authority read by runtime scripts. This menu writes
+; settings and asks only affected controllers to refresh; it must not implement
+; gameplay. EnsureDefaults is append-only migration history for existing saves.
+
 String SettingsFile = "/MMEAlerts/Settings"
 Int soundsOption
 Int volumeOption
@@ -168,6 +175,8 @@ EndFunction
 
 ; Seeds new settings and runs one-time migrations without overriding later choices.
 Function EnsureDefaults()
+    ; New installations enter the first-version defaults block. Later blocks are
+    ; individually guarded migrations so upgrades never overwrite user choices.
     If !JsonUtil.IsPendingSave(SettingsFile) && JsonUtil.GetIntValue(SettingsFile, "initialized", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "initialized", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMMEExtensions", 1)
@@ -657,6 +666,8 @@ Function EnsureDefaults()
 EndFunction
 
 Function SetArmorReactionDefaults()
+    ; One helper defines the complete role/family matrix. Player animations start
+    ; off; NPC animations start on; equip moans start on for every family.
     JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipMoan", 1)
     JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipAnimation", 0)
     JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkingArmorEquipMoan", 1)
@@ -678,6 +689,8 @@ EndFunction
 ; the old moan choices, use the requested Player animation default, and keep
 ; the prior NPC animation behavior.
 Function MigrateArmorReactionSettings()
+    ; Preserve legacy Milking Armor choices while creating explicit Living and
+    ; Parasite settings. Old "Sound" keys map once to the clearer "Moan" keys.
     JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipMoan", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipSound", 1))
     JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipAnimation", 0)
     JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkingArmorEquipMoan", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorEquipSound", 1))
@@ -694,6 +707,8 @@ EndFunction
 
 ; Renders the selected SkyUI page from persisted JContainers settings.
 Event OnPageReset(String page)
+    ; Rebuild option IDs on every page render; SkyUI IDs are ephemeral and must
+    ; never be persisted. Runtime values are always reread from JsonUtil.
     EnsureDefaults()
     soundsOption = -1
     volumeOption = -1
@@ -1165,6 +1180,8 @@ EndEvent
 
 ; Persists toggle changes and refreshes only controllers affected by that option.
 Event OnOptionSelect(Int option)
+    ; Each branch commits one setting and performs only the minimal live refresh
+    ; required by that feature (controller polling, action registration, etc.).
     If option == masterEnableOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMMEExtensions", value)
@@ -1581,6 +1598,8 @@ EndEvent
 
 ; Saves accepted slider values and reschedules polling when its interval changes.
 Event OnOptionSliderAccept(Int option, Float value)
+    ; Slider values are clamped by their dialog ranges. Persist the accepted value
+    ; immediately so runtime scripts and subsequent page renders agree.
     If option == volumeOption
         JsonUtil.SetFloatValue(SettingsFile, "reactionSoundVolume", value)
         JsonUtil.Save(SettingsFile, False)

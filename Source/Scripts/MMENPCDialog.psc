@@ -1,5 +1,12 @@
 Scriptname MMENPCDialog extends TopicInfo Hidden
 
+; ---------------------------------------------------------------------------
+; Reusable Give Milk backend
+; ---------------------------------------------------------------------------
+; The dialogue INFO and Skyrim.Net action both delegate here. This script owns
+; inventory selection, one-item transfer/consumption, duplicate suppression,
+; Extensions effects, and the optional NPC drink animation in that order.
+
 String SettingsFile = "/MMEAlerts/Settings"
 
 ; Stage-one dialogue fragment: validate and report only. No inventory changes.
@@ -15,6 +22,7 @@ EndFunction
 
 ; Shared entry point for dialogue fragments and optional Skyrim.Net actions.
 Bool Function GiveMilkToTarget(Actor target, Bool diagnostic = False) Global
+    ; Phase 1: validate extension state, actor identity, and live MME membership.
     If !MMEAlertsController.IsExtensionsEnabled()
         Return False
     EndIf
@@ -39,11 +47,15 @@ Bool Function GiveMilkToTarget(Actor target, Bool diagnostic = False) Global
     EndIf
 
     Report(diagnostic, targetName + " is an MME Milkmaid; validation passed")
+    ; Phase 2: hand the validated pair to the single inventory/consumption path.
+    ; Keeping selection and consumption together minimizes inventory races.
     Return TestInventorySelection(Game.GetPlayer(), target, milkController, diagnostic)
 EndFunction
 
 ; Selects one supported milk, then hands it to the validated NPC for native consumption.
 Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkController, Bool diagnostic) Global
+    ; Phase 1: resolve all supported MME/vanilla sources and report inventory
+    ; state. MME's live FormLists remain authoritative where available.
     If giver == None
         Report(diagnostic, "inventory test failed: giver not found")
         Return False
@@ -59,6 +71,8 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
     Report(diagnostic, "inventory: Lactacid " + lactacidCount + " | Normal " + normalCount + " | Racial " + racialCount + " | Supernatural " + supernaturalCount)
     ReportNormalMilkInventory(giver, hearthfireMilk, milkController.MME_Milk_Basic, diagnostic)
 
+    ; Phase 2: select exactly one category in established priority order:
+    ; Lactacid, normal, racial, then supernatural. This ordering is behavior.
     Form selectedItem = None
     String selectedType = ""
     If lactacidCount > 0
@@ -161,6 +175,8 @@ EndFunction
 
 ; Stage three transfers exactly one item and verifies that EquipItem consumed it.
 Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedItem, String selectedType, MilkQUEST milkController, Bool diagnostic) Global
+    ; Phase 1: revalidate references, membership, and inventory immediately before
+    ; committing. Eligibility may have changed since the dialogue/action check.
     If giver == None || target == None || selectedItem == None
         Report(diagnostic, "transfer failed: missing giver, target, or item")
         Return False
@@ -178,6 +194,8 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
     EndIf
 
     Float lactacidBefore = MME_Storage.getLactacidCurrent(target)
+    ; Phase 2: transfer one item and verify both inventories. Any partial transfer
+    ; is rolled back before consumption or extension effects are attempted.
     giver.RemoveItem(selectedItem, 1, True, target)
     Int giverAfterTransfer = giver.GetItemCount(selectedItem)
     Int targetAfterTransfer = target.GetItemCount(selectedItem)
@@ -193,6 +211,8 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
     EndIf
 
     Report(diagnostic, "transferred one " + selectedType + " milk to " + GetActorName(target) + "; native consume attempted")
+    ; Phase 3: mark the corresponding DLL potion event for suppression, then use
+    ; EquipItem so Skyrim/MME execute the real native potion effects.
     ; The native equip observer will see this consumption. Mark it so the already
     ; tested dialogue pipeline remains the sole owner of these extension effects.
     StorageUtil.SetFloatValue(target, "MMEExtensions.NPCDrink.SuppressTime", Utility.GetCurrentRealTime())
@@ -200,6 +220,8 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
     target.EquipItem(selectedItem, False, True)
     Utility.Wait(0.5)
 
+    ; Phase 4: verify consumption by inventory delta. If Skyrim retained the item,
+    ; return the transferred copy rather than silently duplicating or deleting it.
     Int targetAfterConsume = target.GetItemCount(selectedItem)
     If targetAfterConsume >= targetAfterTransfer
         ; The item is still present, so return the transferred copy to the giver.
@@ -215,6 +237,8 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
         Report(diagnostic, GetActorName(target) + " consumed " + selectedItem.GetName() + " | player " + giverBefore + " -> " + giver.GetItemCount(selectedItem) + " | native potion processed")
     EndIf
 
+    ; Phase 5: narration, optional animation, and modular Extensions effects run
+    ; only after native consumption succeeded. The animation reset is last.
     MMEAlertsSkyrimNet.NarrateNPCMilkDrink(target, True)
     Bool animationStarted = StartDrinkAnimation(target, selectedItem, diagnostic)
     ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
@@ -225,6 +249,8 @@ EndFunction
 ; Stage four applies only our modular extension effects. Native MME potion effects have
 ; already run, and Skyrim.Net is intentionally excluded from NPC dialogue consumption.
 Function ApplyExtensionEffects(Actor target, Form selectedItem, String selectedType, Bool diagnostic) Global
+    ; Each integration is intentionally independent. Milk, arousal, sound, and
+    ; notification failures do not undo successful native potion consumption.
     If target == None || selectedItem == None
         Report(diagnostic, "effects failed: missing target or consumed item")
         Return

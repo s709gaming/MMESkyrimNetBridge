@@ -1,5 +1,9 @@
 Scriptname MMEDrinkAnimation Hidden
 
+; Policy adapter only. The Player path uses its alias OnUpdate for completion;
+; the NPC dialogue path can wait latently. Both share MMEReactionAnimation's
+; standing pool, cooperative lock, and takeover-safe reset.
+
 ; Drink-specific adapter for the shared standing reaction executor.
 Bool Function StartDrinkAnimation(Actor target, String enableKey, String durationKey, String roleLabel, String drinkLabel, Bool diagnostic, Bool wasEstablishedMilkmaid = True) Global
     String prefix = roleLabel + " (" + drinkLabel + ")"

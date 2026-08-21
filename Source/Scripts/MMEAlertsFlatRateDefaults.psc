@@ -27,6 +27,7 @@ EndEvent
 ; Called after loading as well so the one-time preset can run if MME was not
 ; available during quest initialization.
 Function ApplyDefaults()
+    ; Phase 1: protect the one-time profile latch and honor the installer choice.
     If defaultsApplied
         Return
     EndIf
@@ -43,6 +44,7 @@ Function ApplyDefaults()
         Return
     EndIf
 
+    ; Phase 2: apply only documented MME-owned preferences after MilkQUEST exists.
     Actor playerActor = Game.GetPlayer()
     Spell milkEquipment = Game.GetFormFromFile(0x0597A1, "MilkModNEW.esp") as Spell
 
@@ -79,6 +81,7 @@ Function ApplyDefaults()
     ; Optional Armor Management MilkEquipment spell; a missing form is harmless.
     AddSpellIfMissing(playerActor, milkEquipment)
 
+    ; Commit the save latch only after every available preference/grant ran.
     defaultsApplied = True
     Debug.Trace("[MME Extensions Defaults] fixed production, level cap, and Novice profile applied")
 EndFunction
@@ -88,4 +91,3 @@ Function AddSpellIfMissing(Actor playerActor, Spell spellToAdd)
         playerActor.AddSpell(spellToAdd, False)
     EndIf
 EndFunction
-
