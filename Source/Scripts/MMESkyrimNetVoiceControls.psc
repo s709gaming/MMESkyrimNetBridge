@@ -255,11 +255,18 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
         If routeDiagnostic
             Debug.Notification("Skyrim.Net BF: backend=OStim")
         EndIf
-        MMEOStimBreastfeeding ostimHandler = MMEExtensionsNative.GetFormByEditorID("MMEExt_OStimBreastfeeding_PlayerDrinks") as MMEOStimBreastfeeding
+        ; INFO records are not reliably returned by the runtime editor-ID lookup.
+        ; Resolve the same Player-Drinks INFO that owns the proven dialogue route
+        ; by its stable MMEAlert.esp-local FormID, then call its shared pipeline.
+        Form ostimHandlerForm = Game.GetFormFromFile(0x000858, "MMEAlert.esp")
+        Debug.Trace("[MMEAlert SkyrimNet BF] OStim handler raw form=" + ostimHandlerForm)
+        MMEOStimBreastfeeding ostimHandler = ostimHandlerForm as MMEOStimBreastfeeding
+        Debug.Trace("[MMEAlert SkyrimNet BF] OStim handler script=" + ostimHandler)
         If ostimHandler == None
-            MMEOStimBreastfeeding.Report(routeDiagnostic, "Skyrim.Net breastfeeding rejected: installed OStim breastfeeding handler could not resolve")
+            MMEOStimBreastfeeding.Report(routeDiagnostic, "Skyrim.Net breastfeeding rejected: MMEAlert.esp Player-Drinks OStim handler form or script could not resolve")
             Return
         EndIf
+        Debug.Trace("[MMEAlert SkyrimNet BF] calling StartBreastfeeding")
         Bool ostimStarted = ostimHandler.StartBreastfeeding(milkSource, drinker)
         If routeDiagnostic
             If ostimStarted
