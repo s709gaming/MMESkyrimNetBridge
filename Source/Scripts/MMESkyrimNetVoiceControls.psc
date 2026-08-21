@@ -258,34 +258,32 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
     ; OStim route owns this request completely; a failed OStim start must not
     ; silently begin a SexLab scene instead.
     If MMEOStimBreastfeeding.IsBreastfeedingEnabled()
-        Debug.Trace("[MMEAlert SkyrimNet BF] backend=OStim | calling MMEOStimBreastfeeding.StartBreastfeeding | milk source=" + milkSourceName + " | drinker=" + drinkerName)
+        Debug.Trace("[MMEAlert SkyrimNet BF] backend=OStim | calling persistent shared breastfeeding service | milk source=" + milkSourceName + " | drinker=" + drinkerName)
         If routeDiagnostic
             Debug.Notification("Skyrim.Net BF: backend=OStim")
         EndIf
-        ; INFO records are not reliably returned by the runtime editor-ID lookup.
-        ; Resolve the same Player-Drinks INFO that owns the proven dialogue route
-        ; by its stable MMEAlert.esp-local FormID, then call its shared pipeline.
-        ; The independent dialogue rebuild allocated the Player-Drinks INFO at
-        ; local FormID 0x85F (0x858 was an older pre-rebuild record identity).
-        Form ostimHandlerForm = Game.GetFormFromFile(0x00085F, "MMEAlert.esp")
-        Debug.Trace("[MMEAlert SkyrimNet BF] OStim handler raw form=" + ostimHandlerForm)
+        ; TopicInfo scripts are instantiated for dialogue fragments and cannot
+        ; be used safely as an external API. Resolve the persistent quest script
+        ; that now owns the same pipeline used by those dialogue fragments.
+        Form ostimServiceForm = Game.GetFormFromFile(0x000800, "MMEAlert.esp")
+        Debug.Trace("[MMEAlert SkyrimNet BF] OStim service raw form=" + ostimServiceForm)
         If skyrimNetOStimTrace
-            Debug.Notification("SN OStim Trace: handler form=" + ostimHandlerForm)
+            Debug.Notification("SN OStim Trace: service form=" + ostimServiceForm)
         EndIf
-        MMEOStimBreastfeeding ostimHandler = ostimHandlerForm as MMEOStimBreastfeeding
-        Debug.Trace("[MMEAlert SkyrimNet BF] OStim handler script=" + ostimHandler)
+        MMEDebug ostimService = ostimServiceForm as MMEDebug
+        Debug.Trace("[MMEAlert SkyrimNet BF] OStim service script=" + ostimService)
         If skyrimNetOStimTrace
-            Debug.Notification("SN OStim Trace: handler script=" + ostimHandler)
+            Debug.Notification("SN OStim Trace: service script=" + ostimService)
         EndIf
-        If ostimHandler == None
-            MMEOStimBreastfeeding.Report(routeDiagnostic, "Skyrim.Net breastfeeding rejected: MMEAlert.esp Player-Drinks OStim handler form or script could not resolve")
+        If ostimService == None
+            MMEOStimBreastfeeding.Report(routeDiagnostic, "Skyrim.Net breastfeeding rejected: persistent OStim breastfeeding service could not resolve")
             Return
         EndIf
         Debug.Trace("[MMEAlert SkyrimNet BF] calling StartBreastfeeding")
         If skyrimNetOStimTrace
             Debug.Notification("SN OStim Trace: calling shared StartBreastfeeding")
         EndIf
-        Bool ostimStarted = ostimHandler.StartBreastfeeding(milkSource, drinker)
+        Bool ostimStarted = ostimService.StartBreastfeeding(milkSource, drinker, routeDiagnostic)
         If routeDiagnostic
             If ostimStarted
                 Debug.Notification("Skyrim.Net BF: OStim breastfeeding started")
