@@ -13,7 +13,7 @@ Event OnEffectStart(Actor target, Actor caster)
     If target == Game.GetPlayer()
         MMEAlertsQuickTest quickTest = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsQuickTest
         If quickTest != None
-            quickTest.ApplyTestSetup()
+            quickTest.ScheduleTestSetup()
         EndIf
         Refresh("monitor start")
     EndIf
@@ -31,6 +31,6 @@ Event OnPlayerLoadGame()
     EndIf
     MMEAlertsQuickTest quickTest = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsQuickTest
     If quickTest != None
-        quickTest.ApplyTestSetup()
+        quickTest.ScheduleTestSetup()
     EndIf
 EndEvent

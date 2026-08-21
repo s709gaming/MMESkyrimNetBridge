@@ -5,8 +5,27 @@ Scriptname MMEAlertsQuickTest extends Quest
 String QuickStartGrantKey = "MMEExtensions.QuickStart.Granted"
 String QuickStartMilkCuirassGrantKey = "MMEExtensions.QuickStart.MilkCuirassGranted"
 Bool milkVarietyGranted = False
+Bool quickStartScheduled = False
 
 Event OnInit()
+    ScheduleTestSetup()
+EndEvent
+
+; Every startup hook enters through this one delayed gate. Repeated hooks do
+; not restart the timer or create another grant attempt.
+Function ScheduleTestSetup()
+    If quickStartScheduled
+        Return
+    EndIf
+    If StorageUtil.GetIntValue(None, QuickStartGrantKey, 0) != 0 && StorageUtil.GetIntValue(None, QuickStartMilkCuirassGrantKey, 0) != 0
+        Return
+    EndIf
+    quickStartScheduled = True
+    RegisterForSingleUpdate(15.0)
+EndFunction
+
+Event OnUpdate()
+    quickStartScheduled = False
     ApplyTestSetup()
 EndEvent
 
@@ -46,9 +65,14 @@ Function GrantMilkCuirassOnce(Actor playerActor)
         MMEArmorScript.ReportArmor(armorDiagnostic, "Recommended QuickStart could not resolve MME Milk Cuirass")
         Return
     EndIf
-    StorageUtil.SetIntValue(None, QuickStartMilkCuirassGrantKey, 1)
+    Int cuirassCountBefore = playerActor.GetItemCount(milkController.MilkCuirass)
     playerActor.AddItem(milkController.MilkCuirass, 1, False)
-    MMEArmorScript.ReportArmor(armorDiagnostic, "Recommended QuickStart granted one MME Milk Cuirass")
+    If playerActor.GetItemCount(milkController.MilkCuirass) > cuirassCountBefore
+        StorageUtil.SetIntValue(None, QuickStartMilkCuirassGrantKey, 1)
+        MMEArmorScript.ReportArmor(armorDiagnostic, "Recommended QuickStart granted one MME Milk Cuirass")
+    Else
+        MMEArmorScript.ReportArmor(armorDiagnostic, "Recommended QuickStart Milk Cuirass add did not succeed; grant remains pending")
+    EndIf
 EndFunction
 
 Function GrantMilkVariety(Actor playerActor, Potion lactacid, Potion regularMilk, Potion bretonMilk, Potion succubusMilk)

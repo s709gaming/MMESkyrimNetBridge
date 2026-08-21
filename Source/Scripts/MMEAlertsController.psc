@@ -319,9 +319,6 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
     EndIf
     Actor wearer = sender as Actor
     Bool diagnostic = MMEArmorScript.GetArmorDiagnostic()
-    If diagnostic
-        Debug.Notification("Armor Debug: equip detected")
-    EndIf
     If wearer == None || pluginName == ""
         MMEArmorScript.ReportArmor(diagnostic, "equip rejected: actor or plugin missing")
         Return

@@ -6,8 +6,12 @@ Bool testSetupApplied = False
 Bool milkVarietyGranted = False
 
 Event OnInit()
-    ApplyTestSetup()
+    ScheduleTestSetup()
 EndEvent
+
+Function ScheduleTestSetup()
+    Return
+EndFunction
 
 Function ApplyTestSetup()
     Return

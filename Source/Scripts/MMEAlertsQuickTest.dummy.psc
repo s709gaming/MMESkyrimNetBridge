@@ -8,8 +8,12 @@ Bool milkVarietyGranted = False
 
 ; The attached quest may still invoke this event; the retained function is inert.
 Event OnInit()
-    ApplyTestSetup()
+    ScheduleTestSetup()
 EndEvent
+
+Function ScheduleTestSetup()
+    Return
+EndFunction
 
 ; Intentionally disabled for release. Do not delete without first removing every
 ; ESP attachment and caller, including references held by existing saves.

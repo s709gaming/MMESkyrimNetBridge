@@ -1,9 +1,20 @@
 Scriptname MMEReactionAnimation Hidden
 
-; Shared executor for short, free-arm standing reactions requested by the
-; drink, fullness-threshold, and Milking Armor features. Trigger-specific
-; settings, notifications, and Skyrim.Net work stay with their callers.
+; Shared executor for short free-arm Standing and Kneeling reactions. Trigger-
+; specific settings, notifications, and Skyrim.Net work stay with callers.
 Bool Function Start(Actor target, String owner, String requestLabel, Bool diagnostic, Bool wasEstablishedMilkmaid = True) Global
+    Return StartStanding(target, owner, requestLabel, diagnostic, wasEstablishedMilkmaid)
+EndFunction
+
+Bool Function StartStanding(Actor target, String owner, String requestLabel, Bool diagnostic, Bool wasEstablishedMilkmaid = True) Global
+    Return StartSelected(target, owner, requestLabel, "Standing", "", diagnostic, wasEstablishedMilkmaid)
+EndFunction
+
+Bool Function StartKneeling(Actor target, String owner, String requestLabel, Bool diagnostic, Bool wasEstablishedMilkmaid = True) Global
+    Return StartSelected(target, owner, requestLabel, "Kneeling", "ZaZAPCHorFd", diagnostic, wasEstablishedMilkmaid)
+EndFunction
+
+Bool Function StartSelected(Actor target, String owner, String requestLabel, String animationKind, String animationEvent, Bool diagnostic, Bool wasEstablishedMilkmaid = True) Global
     If target == None
         Report(diagnostic, requestLabel, "rejected: actor missing")
         Return False
@@ -33,8 +44,14 @@ Bool Function Start(Actor target, String owner, String requestLabel, Bool diagno
         Return False
     EndIf
 
-    String animationEvent = PickStandingAnimation(requestLabel, diagnostic)
+    If animationKind == "Standing"
+        animationEvent = PickStandingAnimation(requestLabel, diagnostic)
+        If animationEvent == ""
+            Return False
+        EndIf
+    EndIf
     If animationEvent == ""
+        Report(diagnostic, requestLabel, "rejected: " + animationKind + " animation missing")
         Return False
     EndIf
     If !MMEAnimationSafety.TryAcquire(target, owner)
@@ -43,7 +60,7 @@ Bool Function Start(Actor target, String owner, String requestLabel, Bool diagno
     EndIf
 
     Debug.SendAnimationEvent(target, animationEvent)
-    Report(diagnostic, requestLabel, "started " + animationEvent + " on " + GetActorName(target))
+    Report(False, requestLabel, animationKind + " started: " + animationEvent + " on " + GetActorName(target))
     Return True
 EndFunction
 
@@ -67,7 +84,7 @@ Function Reset(Actor target, String owner, String requestLabel, Bool diagnostic)
     String blocked = MMEAnimationSafety.GetResetBlockReason(target, milkController, owner)
     If blocked == ""
         Debug.SendAnimationEvent(target, "IdleForceDefaultState")
-        Report(diagnostic, requestLabel, "finished and reset " + GetActorName(target))
+        Report(False, requestLabel, "finished and reset " + GetActorName(target))
     Else
         Report(diagnostic, requestLabel, "finished without reset: " + blocked)
     EndIf

@@ -127,7 +127,7 @@ Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
     Float duration = JsonUtil.GetFloatValue("/MMEAlerts/Settings", durationKey, 3.0)
     String owner = "FullnessAnimation." + role
     String requestLabel = "Fullness " + role + " " + threshold
-    Bool animationStarted = MMEReactionAnimation.Start(candidate, owner, requestLabel, diagnostic)
+    Bool animationStarted = MMEReactionAnimation.StartStanding(candidate, owner, requestLabel, diagnostic)
     MMEReactionAnimation.Finish(candidate, animationStarted, owner, duration, requestLabel, diagnostic)
 EndFunction
 

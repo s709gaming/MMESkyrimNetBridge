@@ -9,7 +9,7 @@ Bool Function StartDrinkAnimation(Actor target, String enableKey, String duratio
     EndIf
     Float duration = JsonUtil.GetFloatValue("/MMEAlerts/Settings", durationKey, 3.0)
     Report(False, prefix + " requested (" + duration + " seconds)")
-    Return MMEReactionAnimation.Start(target, "DrinkAnimation." + roleLabel, "Drink " + prefix, diagnostic, wasEstablishedMilkmaid)
+    Return MMEReactionAnimation.StartStanding(target, "DrinkAnimation." + roleLabel, "Drink " + prefix, diagnostic, wasEstablishedMilkmaid)
 EndFunction
 
 ; Latent finish path for the NPC dialogue pipeline: holds for the configured

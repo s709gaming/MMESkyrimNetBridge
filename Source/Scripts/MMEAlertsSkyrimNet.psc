@@ -75,36 +75,7 @@ Function SendMilkingEnd(Actor milkMaid) Global
     SendMilkingEvent(milkMaid, "endMessage")
 EndFunction
 
-; Publishes the successful one-time Milking Armor latch for exactly two minutes.
-Int Function SendMilkingArmorFirstEquip(Actor wearer, Armor equippedArmor) Global
-    Bool diagnostic = MMEArmorScript.GetArmorDiagnostic()
-    If !IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkingArmorEvents", 1) != 1
-        MMEArmorScript.ReportArmor(diagnostic, "Skyrim.Net short-lived event skipped: armor events disabled")
-        Return -1
-    EndIf
-    If !IsAvailable() || wearer == None || equippedArmor == None || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
-        MMEArmorScript.ReportArmor(diagnostic, "Skyrim.Net short-lived event skipped: integration unavailable")
-        Return -2
-    EndIf
-
-    String actorName = ResolveActorName(wearer, "The Milk Maid")
-    String content = actorName + "'s newly fitted Milking Armor has latched into place around her milk-heavy breasts. The sudden pressure and support feel intensely pleasurable, and the armor can now accommodate and milk her when needed."
-    String actorUuid = SkyrimNetApi.GetEntityUUID(wearer)
-    If actorUuid == ""
-        actorUuid = "form_" + wearer.GetFormID()
-    EndIf
-    String eventId = "milking_armor_intro_" + actorUuid + "_" + equippedArmor.GetFormID()
-    Int result = SkyrimNetApi.RegisterShortLivedEvent(eventId, "milking_armor_equipped", content, "{}", 120000, wearer, None)
-    If result == 0
-        MMEArmorScript.ReportArmor(diagnostic, "Skyrim.Net short-lived event sent | " + actorName + " | 120s")
-    Else
-        MMEArmorScript.ReportArmor(diagnostic, "Skyrim.Net short-lived event rejected [" + result + "]")
-    EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Milking Armor intro result " + result + " | " + actorName + " | " + content)
-    Return result
-EndFunction
-
-; Later supported equips use a global cooldown per role and never random chance.
+; Supported Milking Armor equips use a global cooldown per role.
 Int Function NarrateMilkingArmorEquip(Actor wearer) Global
     Bool diagnostic = MMEArmorScript.GetArmorDiagnostic()
     If !IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkingArmorEvents", 1) != 1
