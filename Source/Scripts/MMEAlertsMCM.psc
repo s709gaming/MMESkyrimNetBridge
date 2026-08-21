@@ -1059,7 +1059,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == playerMilkingArmorEquipSoundOption
         SetInfoText("Play the LOW / Mild reaction sound whenever you equip supported Milking Armor.")
     ElseIf option == playerMilkingArmorFirstEquipAnimationOption
-        SetInfoText("Play ZaZAPCHorFd once per Player and Milking Armor when animation ownership is safe.")
+        SetInfoText("Play one MME standing reaction once per Player and Milking Armor when animation ownership is safe.")
     ElseIf option == playerMilkingArmorNotificationOption
         SetInfoText("Show the short latch notification when the Player first-equip animation begins.")
     ElseIf option == npcMilkingArmorReactionsOption
@@ -1067,7 +1067,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == npcMilkingArmorEquipSoundOption
         SetInfoText("Play the LOW / Mild reaction sound whenever an NPC equips supported Milking Armor.")
     ElseIf option == npcMilkingArmorFirstEquipAnimationOption
-        SetInfoText("Play ZaZAPCHorFd once per NPC and Milking Armor when animation ownership is safe.")
+        SetInfoText("Play one MME standing reaction once per NPC and Milking Armor when animation ownership is safe.")
     ElseIf option == npcMilkingArmorNotificationOption
         SetInfoText("Show the short latch notification when an NPC first-equip animation begins.")
     ElseIf option == skyrimNetMilkingArmorEventsOption

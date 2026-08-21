@@ -1,3 +1,7 @@
+param(
+    [switch]$VR
+)
+
 $ErrorActionPreference = "Stop"
 
 # Builds the CommonLibSSE-NG lifecycle DLL used by the complete mod package.
@@ -28,13 +32,15 @@ $env:VCPKG_PLATFORM_TOOLSET = "v143"
 
 Push-Location $projectRoot
 try {
-    & $cmake --preset release-msvc
+    $preset = if ($VR) { "vr-release-msvc" } else { "release-msvc" }
+    $buildFolder = if ($VR) { "native-vr-release" } else { "native-release" }
+    & $cmake --preset $preset
     if ($LASTEXITCODE -ne 0) { throw "CMake configuration failed" }
 
-    & $cmake --build --preset release-msvc
+    & $cmake --build --preset $preset
     if ($LASTEXITCODE -ne 0) { throw "Native plugin build failed" }
 
-    $dll = Join-Path $projectRoot "build\native-release\package\SKSE\Plugins\MMEExtensions.dll"
+    $dll = Join-Path $projectRoot "build\$buildFolder\package\SKSE\Plugins\MMEExtensions.dll"
     if (!(Test-Path -LiteralPath $dll)) { throw "Build completed without producing $dll" }
 
     Write-Host ""

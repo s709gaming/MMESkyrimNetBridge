@@ -278,8 +278,9 @@ Event OnMMEEffectRemoved(String eventName, String pluginName, Float localEffectF
     EndIf
 EndEvent
 
-; Native TESTopicInfoEvent observation is authoritative. It avoids sampling a
-; transient current INFO and schedules the snapshot after MME Fragment_00.
+; Native TESTopicInfoEvent observation schedules the snapshot after MME
+; Fragment_00. Raw events stay in the log; the HUD reports only the resulting
+; route state.
 Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float localInfoForm, Form sender)
     Bool dialogueDebug = JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
     Bool sexLabBFDebug = JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
@@ -292,12 +293,6 @@ Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float local
         Return
     EndIf
     Debug.Trace("[MME Extensions Dialogue] INFO event | topic=" + topicEditorID + " info=" + (localInfoForm as Int) + " speaker=" + sender)
-    If sexLabBFDebug
-        Debug.Notification("SexLab BF DEBUG: dialogue event detected | topic=" + topicEditorID)
-    EndIf
-    If ostimBFDebug
-        Debug.Notification("OStim BF DEBUG: dialogue event detected | topic=" + topicEditorID)
-    EndIf
     If topicEditorID != "MME_Hello_Dialogue_Topic" && !sexLabBFDebug && !ostimBFDebug
         Return
     EndIf
@@ -629,8 +624,11 @@ Event OnUpdate()
     EndIf
     If dialogueDiagnosticDue
         Actor dialogueTarget = PendingDialogueDiagnosticActor
-        If dialogueTarget == None
-            dialogueTarget = MMEExtensionsNative.GetDialogueTarget()
+        ; At evaluation time Skyrim's menu speaker is the CTDA Subject. Prefer
+        ; that live value over a speaker captured by an earlier noisy event.
+        Actor liveDialogueTarget = MMEExtensionsNative.GetDialogueTarget()
+        If liveDialogueTarget != None
+            dialogueTarget = liveDialogueTarget
         EndIf
         If dialogueTarget == None
             Debug.Trace("[MME Extensions Dialogue] opening refresh observed, but speaker was unavailable for post-refresh snapshot")
@@ -1000,6 +998,26 @@ EndFunction
 ; response chain; that structural distinction is deliberately surfaced.
 Function ShowOStimBreastfeedingDiagnostic(Actor subject)
     Actor playerActor = Game.GetPlayer()
+    If subject == None || playerActor == None
+        Debug.Trace("[MME Extensions OStim BF Dialogue] evaluation actor unavailable")
+        Debug.Notification("OStim BF DEBUG: FAIL dialogue actors unavailable")
+        Return
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    MilkQUEST_Conditions conditions = None
+    Float subjectMilk = -1.0
+    Float playerMilk = -1.0
+    Float subjectSnapshot = -1.0
+    Float playerSnapshot = -1.0
+    If milkController != None
+        conditions = milkController.MilkQC
+        subjectMilk = MME_Storage.getMilkCurrent(subject)
+        playerMilk = MME_Storage.getMilkCurrent(playerActor)
+    EndIf
+    If conditions != None
+        subjectSnapshot = conditions.MME_SubjectMilk
+        playerSnapshot = conditions.MME_TargetMilk
+    EndIf
     Form originalPlayerTopic = Game.GetFormFromFile(0x062E91, "MilkModNEW.esp")
     Form originalNPCTopic = Game.GetFormFromFile(0x062E8F, "MilkModNEW.esp")
     Form playerInfo = MMEExtensionsNative.GetFormByEditorID("MMEExt_OStimBreastfeeding_PlayerDrinks")
@@ -1015,6 +1033,9 @@ Function ShowOStimBreastfeedingDiagnostic(Actor subject)
     If gate != None
         gateValue = gate.GetValue()
     EndIf
+    ; Skyrim evaluates both choice INFOs with the dialogue speaker as Subject
+    ; and the player as Target. MME's Fragment_00 maps those roles to
+    ; SubjectMilk (NPC) and TargetMilk (player), respectively.
     Int[] playerConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(playerInfo, subject, playerActor)
     Int[] npcConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(npcInfo, subject, playerActor)
     String[] playerDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(playerInfo)
@@ -1026,6 +1047,7 @@ Function ShowOStimBreastfeedingDiagnostic(Actor subject)
     Bool npcVisible = visibleInfos != None && visibleInfos.Find(npcInfo) >= 0
 
     Debug.Trace("[MME Extensions OStim BF Dialogue] detected=" + DiagnosticBool(detected) + " setting=" + DiagnosticBool(setting) + " global=" + gate + " value=" + gateValue)
+    Debug.Trace("[MME Extensions OStim BF Dialogue] CTDA roles: Subject=speaker " + subject + " (milk live=" + subjectMilk + ", MME_SubjectMilk=" + subjectSnapshot + "); Target=player " + playerActor + " (milk live=" + playerMilk + ", MME_TargetMilk=" + playerSnapshot + ")")
     Debug.Trace("[MME Extensions OStim BF Dialogue] Player INFO=" + playerInfo + " topic=" + playerTopic + " independent=" + DiagnosticBool(playerIndependent) + " sources=" + SourceFileSummary(playerInfo))
     Debug.Trace("[MME Extensions OStim BF Dialogue] Player CTDA=" + ConditionResults(playerConditions) + " | " + ConditionDescriptions(playerDescriptions) + " eligible=" + DiagnosticBool(playerEligible) + " visible=" + DiagnosticBool(playerVisible))
     Debug.Trace("[MME Extensions OStim BF Dialogue] NPC INFO=" + npcInfo + " topic=" + npcTopic + " independent=" + DiagnosticBool(npcIndependent) + " sources=" + SourceFileSummary(npcInfo))
@@ -1035,9 +1057,13 @@ Function ShowOStimBreastfeedingDiagnostic(Actor subject)
     If !playerIndependent || !npcIndependent
         Debug.Notification("OStim BF DEBUG: FAIL options are not independent DIALs")
     Else
-        Debug.Notification("OStim BF DEBUG: Player=" + ShortRouteResult(playerEligible, playerVisible, playerConditions, "PlayerOStim") + " | NPC=" + ShortRouteResult(npcEligible, npcVisible, npcConditions, "NPCOStim"))
+        Debug.Notification("OStim BF DEBUG: Player<-NPC=" + ShortRouteResult(playerEligible, playerVisible, playerConditions, "PlayerOStim") + " | NPC<-Player=" + ShortRouteResult(npcEligible, npcVisible, npcConditions, "NPCOStim"))
         If (playerEligible && !playerVisible) || (npcEligible && !npcVisible)
             Debug.Notification("OStim BF DEBUG: conditions PASS but option NOT SHOWN")
+        ElseIf conditions != None && subjectMilk >= 1.0 && subjectSnapshot < 1.0
+            Debug.Notification("OStim BF DEBUG: NPC milk live PASS, MME SubjectMilk stale")
+        ElseIf conditions != None && playerMilk >= 1.0 && playerSnapshot < 1.0
+            Debug.Notification("OStim BF DEBUG: Player milk live PASS, MME TargetMilk stale")
         EndIf
     EndIf
 EndFunction

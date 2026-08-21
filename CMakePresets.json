@@ -16,12 +16,31 @@
         "CMAKE_BUILD_TYPE": "Release",
         "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
       }
+    },
+    {
+      "name": "vr-release-msvc",
+      "displayName": "MME Extensions - Skyrim VR Release (MSVC)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/native-vr-release",
+      "toolchainFile": "${sourceDir}/extern/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static-md",
+        "ENABLE_SKYRIM_SE": "OFF",
+        "ENABLE_SKYRIM_AE": "OFF",
+        "ENABLE_SKYRIM_VR": "ON"
+      }
     }
   ],
   "buildPresets": [
     {
       "name": "release-msvc",
       "configurePreset": "release-msvc",
+      "targets": ["MMEExtensions"]
+    },
+    {
+      "name": "vr-release-msvc",
+      "configurePreset": "vr-release-msvc",
       "targets": ["MMEExtensions"]
     }
   ]

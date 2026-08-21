@@ -2,8 +2,10 @@ unit UserScript;
 
 {
   Adds two optional OStim alternatives beside MME's original breastfeeding
-  INFOs. The source INFOs are never overridden: their prompts, responses,
-  conditions, topics, and SexLab fragments remain owned by MilkModNEW.esp.
+  INFOs. The source breastfeeding INFOs are never overridden: their prompts,
+  responses, conditions, topics, and SexLab fragments remain owned by
+  MilkModNEW.esp. One additive override of MME's Hey there INFO appends only
+  the two new DIALs to its TCLT choice list.
 
   Required loaded files:
     Skyrim.esm
@@ -31,11 +33,14 @@ const
   NPCDrinksSourceFragment = 'Fragment_02';
   PlayerDrinksTargetFragment = 'Fragment_PlayerDrinks';
   NPCDrinksTargetFragment = 'Fragment_NPCDrinks';
+  OpeningFragment = 'Fragment_00';
 
 var
   TargetFile, MMEFile, SkyrimFile, AvailabilityGlobal: IInterface;
   PlayerDrinksSource, NPCDrinksSource: IInterface;
+  OpeningSource: IInterface;
   PlayerDrinksSourceCount, NPCDrinksSourceCount: Integer;
+  OpeningSourceCount: Integer;
   PlayerDrinksTarget, NPCDrinksTarget: IInterface;
   PlayerDrinksTargetCount, NPCDrinksTargetCount: Integer;
 
@@ -118,10 +123,70 @@ begin
         Inc(NPCDrinksSourceCount);
         NPCDrinksSource := aElement;
       end;
+      if TreeHasExactValue(vmad, OpeningFragment) then begin
+        Inc(OpeningSourceCount);
+        OpeningSource := aElement;
+      end;
     end;
   end;
   for i := 0 to ElementCount(aElement) - 1 do
     FindSourcesRecursive(ElementByIndex(aElement, i));
+end;
+
+function EnsureChoiceLink(aOpeningInfo, aTopic: IInterface): Boolean;
+var
+  links, linkElement, template: IInterface;
+  i: Integer;
+begin
+  Result := False;
+  links := ElementByName(aOpeningInfo, 'Link To');
+  if not Assigned(links) or (ElementCount(links) = 0) then begin
+    AddMessage('ERROR: Hey there INFO exposes no TCLT Link To array.');
+    Exit;
+  end;
+  for i := 0 to ElementCount(links) - 1 do begin
+    linkElement := ElementByIndex(links, i);
+    if Assigned(LinksTo(linkElement)) and
+       Equals(MasterOrSelf(LinksTo(linkElement)), MasterOrSelf(aTopic)) then begin
+      AddMessage('  Reachability link already present: ' + Name(aTopic));
+      Result := True;
+      Exit;
+    end;
+  end;
+  template := ElementByIndex(links, ElementCount(links) - 1);
+  linkElement := ElementAssign(links, HighInteger, template, False);
+  if not Assigned(linkElement) then begin
+    AddMessage('ERROR: Could not append Hey there TCLT choice.');
+    Exit;
+  end;
+  SetEditValue(linkElement, Name(aTopic));
+  Result := Assigned(LinksTo(linkElement)) and
+    Equals(MasterOrSelf(LinksTo(linkElement)), MasterOrSelf(aTopic));
+  if Result then
+    AddMessage('  Added Hey there reachability link: ' + Name(aTopic))
+  else
+    AddMessage('ERROR: Appended TCLT did not resolve to ' + Name(aTopic));
+end;
+
+function InstallReachability(aPlayerTopic, aNPCTopic: IInterface): Boolean;
+var
+  winningOpening, openingOverride: IInterface;
+begin
+  Result := False;
+  winningOpening := WinningOverride(OpeningSource);
+  if Assigned(winningOpening) and Equals(GetFile(winningOpening), TargetFile) then
+    openingOverride := winningOpening
+  else begin
+    AddRequiredElementMasters(winningOpening, TargetFile, False);
+    openingOverride := wbCopyElementToFile(winningOpening, TargetFile, False, True);
+  end;
+  if not Assigned(openingOverride) then begin
+    AddMessage('ERROR: Could not create additive Hey there INFO override.');
+    Exit;
+  end;
+  AddMessage('Updating Hey there reachability only: ' + Name(openingOverride));
+  Result := EnsureChoiceLink(openingOverride, aPlayerTopic) and
+    EnsureChoiceLink(openingOverride, aNPCTopic);
 end;
 
 procedure FindTargetsRecursive(aElement: IInterface);
@@ -405,22 +470,47 @@ var
   sourceTopic, existingTopic, newTopic, newInfo, topicElement,
     previousElement: IInterface;
   prompt: string;
+  createdTopic: Boolean;
 begin
   Result := False;
+  createdTopic := False;
   prompt := GetElementEditValues(aSourceInfo, 'RNAM');
   if prompt = '' then begin
     AddMessage('ERROR: Source INFO has an empty player prompt: ' + Name(aSourceInfo));
     Exit;
   end;
 
-  // Delete the complete prior independent route on rerun. Removing only its
-  // INFO would orphan the old DIAL and allow duplicate EditorIDs to accumulate.
+  sourceTopic := LinksTo(ElementByName(aSourceInfo, 'Topic'));
+  if not Assigned(sourceTopic) then begin
+    AddMessage('ERROR: Source DIAL did not resolve for ' + Name(aSourceInfo));
+    Exit;
+  end;
+
+  // Reuse the independent DIAL on rerun. Its stable FormID may already be in
+  // the opening INFO's TCLT list. Deleting and recreating multiple DIALs in a
+  // live xEdit group can invalidate that group and leave dead choice links.
   existingTopic := FindRecordByEditorIDRecursive(
     GroupBySignature(TargetFile, 'DIAL'), 'DIAL', aTopicEditorID);
   if Assigned(existingTopic) then begin
-    AddMessage('Removing prior independent DIAL: ' + Name(existingTopic));
-    Remove(existingTopic);
-    aExistingInfo := nil;
+    AddMessage('Reusing independent DIAL: ' + Name(existingTopic));
+    newTopic := existingTopic;
+    if Assigned(aExistingInfo) then begin
+      if not UsesSameTopic(aExistingInfo, aSourceInfo) then begin
+        AddMessage('  Rebuilding prior independent INFO: ' + Name(aExistingInfo));
+        Remove(aExistingInfo);
+        aExistingInfo := nil;
+      end;
+    end;
+    SetEditorID(newTopic, aTopicEditorID);
+    if not Assigned(LinksTo(ElementBySignature(newTopic, 'QNAM'))) or
+       not Assigned(LinksTo(ElementBySignature(newTopic, 'BNAM'))) or
+       not Equals(MasterOrSelf(LinksTo(ElementBySignature(newTopic, 'QNAM'))),
+         MasterOrSelf(LinksTo(ElementBySignature(sourceTopic, 'QNAM')))) or
+       not Equals(MasterOrSelf(LinksTo(ElementBySignature(newTopic, 'BNAM'))),
+         MasterOrSelf(LinksTo(ElementBySignature(sourceTopic, 'BNAM')))) then begin
+      AddMessage('ERROR: Existing independent DIAL has invalid MME quest/branch links.');
+      Exit;
+    end;
   end;
 
   // Migrate the obsolete same-DIAL follower from older builder versions.
@@ -431,33 +521,31 @@ begin
     end;
   end;
 
-  sourceTopic := LinksTo(ElementByName(aSourceInfo, 'Topic'));
-  if not Assigned(sourceTopic) then begin
-    AddMessage('ERROR: Source DIAL did not resolve for ' + Name(aSourceInfo));
-    Exit;
-  end;
-  AddRequiredElementMasters(sourceTopic, TargetFile, False);
-  // Deep-copying the DIAL creates a genuinely independent branch topic and
-  // its INFO child group. The original DIAL/INFO records are never overridden.
-  newTopic := wbCopyElementToFile(sourceTopic, TargetFile, True, True);
   if not Assigned(newTopic) then begin
-    AddMessage('ERROR: xEdit could not create independent DIAL from ' + Name(sourceTopic));
-    Exit;
-  end;
-  SetEditorID(newTopic, aTopicEditorID);
-  if not Assigned(LinksTo(ElementBySignature(newTopic, 'QNAM'))) or
-     not Assigned(LinksTo(ElementBySignature(newTopic, 'BNAM'))) then begin
-    AddMessage('ERROR: Copied DIAL did not retain its MME quest/branch links.');
-    Remove(newTopic);
-    Exit;
-  end;
-  if not Equals(MasterOrSelf(LinksTo(ElementBySignature(newTopic, 'QNAM'))),
-      MasterOrSelf(LinksTo(ElementBySignature(sourceTopic, 'QNAM')))) or
-     not Equals(MasterOrSelf(LinksTo(ElementBySignature(newTopic, 'BNAM'))),
-      MasterOrSelf(LinksTo(ElementBySignature(sourceTopic, 'BNAM')))) then begin
-    AddMessage('ERROR: Copied DIAL points at a different quest or branch.');
-    Remove(newTopic);
-    Exit;
+    AddRequiredElementMasters(sourceTopic, TargetFile, False);
+    // Deep-copying the DIAL creates a genuinely independent branch topic.
+    // xEdit does not copy its type-7 INFO child group.
+    newTopic := wbCopyElementToFile(sourceTopic, TargetFile, True, True);
+    if not Assigned(newTopic) then begin
+      AddMessage('ERROR: xEdit could not create independent DIAL from ' + Name(sourceTopic));
+      Exit;
+    end;
+    createdTopic := True;
+    SetEditorID(newTopic, aTopicEditorID);
+    if not Assigned(LinksTo(ElementBySignature(newTopic, 'QNAM'))) or
+       not Assigned(LinksTo(ElementBySignature(newTopic, 'BNAM'))) then begin
+      AddMessage('ERROR: Copied DIAL did not retain its MME quest/branch links.');
+      Remove(newTopic);
+      Exit;
+    end;
+    if not Equals(MasterOrSelf(LinksTo(ElementBySignature(newTopic, 'QNAM'))),
+        MasterOrSelf(LinksTo(ElementBySignature(sourceTopic, 'QNAM')))) or
+       not Equals(MasterOrSelf(LinksTo(ElementBySignature(newTopic, 'BNAM'))),
+        MasterOrSelf(LinksTo(ElementBySignature(sourceTopic, 'BNAM')))) then begin
+      AddMessage('ERROR: Copied DIAL points at a different quest or branch.');
+      Remove(newTopic);
+      Exit;
+    end;
   end;
   // xEdit does not deep-copy a DIAL's type-7 INFO child group. Copy the one
   // source INFO separately, then retarget xEdit's synthetic Topic element;
@@ -466,14 +554,16 @@ begin
   newInfo := wbCopyElementToFile(aSourceInfo, TargetFile, True, True);
   if not Assigned(newInfo) then begin
     AddMessage('ERROR: xEdit could not copy source INFO ' + Name(aSourceInfo));
-    Remove(newTopic);
+    if createdTopic then
+      Remove(newTopic);
     Exit;
   end;
   topicElement := ElementByName(newInfo, 'Topic');
   if not Assigned(topicElement) then begin
     AddMessage('ERROR: Copied INFO exposes no xEdit Topic relationship.');
     Remove(newInfo);
-    Remove(newTopic);
+    if createdTopic then
+      Remove(newTopic);
     Exit;
   end;
   SetEditValue(topicElement, Name(newTopic));
@@ -482,7 +572,8 @@ begin
        MasterOrSelf(newTopic)) then begin
     AddMessage('ERROR: xEdit could not move copied INFO into independent DIAL.');
     Remove(newInfo);
-    Remove(newTopic);
+    if createdTopic then
+      Remove(newTopic);
     Exit;
   end;
 
@@ -494,7 +585,9 @@ begin
      not InstallHandler(newInfo, aSourceInfo, aSourceFragment,
        aTargetFragment) then begin
     AddMessage('ERROR: Failed to configure ' + aEditorID + '.');
-    Remove(newTopic);
+    Remove(newInfo);
+    if createdTopic then
+      Remove(newTopic);
     Exit;
   end;
 
@@ -533,14 +626,16 @@ begin
 
   PlayerDrinksSourceCount := 0;
   NPCDrinksSourceCount := 0;
+  OpeningSourceCount := 0;
   FindSourcesRecursive(GroupBySignature(MMEFile, 'DIAL'));
   PlayerDrinksTargetCount := 0;
   NPCDrinksTargetCount := 0;
   FindTargetsRecursive(GroupBySignature(TargetFile, 'DIAL'));
 
   if (PlayerDrinksSourceCount <> 1) or
-     (NPCDrinksSourceCount <> 1) then begin
-    AddMessage('ERROR: Expected one MME Fragment_01 and one Fragment_02 INFO; found ' +
+     (NPCDrinksSourceCount <> 1) or (OpeningSourceCount <> 1) then begin
+    AddMessage('ERROR: Expected one MME Fragment_00, Fragment_01, and Fragment_02 INFO; found opening=' +
+      IntToStr(OpeningSourceCount) + ', routes=' +
       IntToStr(PlayerDrinksSourceCount) + ' and ' +
       IntToStr(NPCDrinksSourceCount) + '. No records were modified.');
     Exit;
@@ -554,7 +649,7 @@ begin
   AddMessage('  Prompt: ' + GetElementEditValues(PlayerDrinksSource, 'RNAM'));
   AddMessage('Validated NPC-drinks source: ' + Name(NPCDrinksSource));
   AddMessage('  Prompt: ' + GetElementEditValues(NPCDrinksSource, 'RNAM'));
-  AddMessage('Original MME INFOs will not be overridden.');
+  AddMessage('Original MME breastfeeding INFOs will not be overridden.');
 
   if not EnsureAvailabilityGlobal then begin
     AddMessage('ERROR: OStim availability global setup failed.');
@@ -570,10 +665,17 @@ begin
       NPCDrinksTargetFragment) then
     Exit;
 
+  if not InstallReachability(
+      FindRecordByEditorIDRecursive(GroupBySignature(TargetFile, 'DIAL'),
+        'DIAL', PlayerDrinksTopicEditorID),
+      FindRecordByEditorIDRecursive(GroupBySignature(TargetFile, 'DIAL'),
+        'DIAL', NPCDrinksTopicEditorID)) then
+    Exit;
+
   AddMessage('MME Extensions OStim breastfeeding dialogue installed successfully.');
   AddMessage('Both original MME/SexLab routes remain unchanged.');
-  AddMessage('New routes are independent DIAL topics in the same MME branch.');
-  AddMessage('Their relative menu height follows branch/topic load order; no original MME record was overridden to force placement.');
+  AddMessage('New routes are independent DIAL topics linked from MME Hey there.');
+  AddMessage('Only the opening INFO TCLT choice list is additively overridden; original breastfeeding INFOs remain untouched.');
   Result := 0;
 end;
 

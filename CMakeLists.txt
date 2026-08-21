@@ -11,17 +11,19 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# This native bridge targets desktop Skyrim SE/AE, not Skyrim VR.
-set(ENABLE_SKYRIM_SE ON CACHE BOOL "" FORCE)
-set(ENABLE_SKYRIM_AE ON CACHE BOOL "" FORCE)
-set(ENABLE_SKYRIM_VR ON CACHE BOOL "" FORCE)
+# Universal builds remain the release default. Presets may turn off the
+# desktop ABIs to produce a VR-only validation/development build.
+option(ENABLE_SKYRIM_SE "Enable Skyrim SE support" ON)
+option(ENABLE_SKYRIM_AE "Enable Skyrim AE support" ON)
+option(ENABLE_SKYRIM_VR "Enable Skyrim VR support" ON)
 set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
 # Build the pinned local CommonLibSSE-NG checkout and expose its plugin helper.
 add_subdirectory(extern/CommonLibSSE-NG EXCLUDE_FROM_ALL)
 include(extern/CommonLibSSE-NG/cmake/CommonLibSSE.cmake)
 
-# One Address Library-based NG DLL supports SE, AE, and VR runtimes.
+# Address Library-based NG builds can support SE, AE, and VR in one DLL, while
+# the VR preset below proves that no desktop-only compile dependency leaked in.
 add_commonlibsse_plugin(
     MMEExtensions
     NAME "MMEExtensions"

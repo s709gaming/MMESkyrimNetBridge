@@ -523,28 +523,42 @@ namespace
             const auto key = ActiveEffectKey(event->target.get(), event->activeEffectUniqueID);
             if (event->isApplied) {
                 bool tracked = false;
-                auto* actor = event->target->As<RE::Actor>();
-                auto* effects = actor ? actor->AsMagicTarget()->GetActiveEffectList() : nullptr;
-                if (effects) {
-                    for (auto* activeEffect : *effects) {
-                        if (!activeEffect || activeEffect->usUniqueID != event->activeEffectUniqueID) {
-                            continue;
+                // CommonLibSSE-NG documents active-effect traversal as unsafe
+                // on VR. TESMagicEffectApplyEvent has already published and
+                // cached the exact MME effect, so VR pairs that cache with this
+                // unique active-effect ID instead of touching the incompatible
+                // ActiveEffect list layout.
+                if (!REL::Module::IsVR()) {
+                    auto* actor = event->target->As<RE::Actor>();
+                    auto* magicTarget = actor ? actor->AsMagicTarget() : nullptr;
+                    auto* effects = magicTarget ? magicTarget->GetActiveEffectList() : nullptr;
+                    if (effects) {
+                        for (auto* activeEffect : *effects) {
+                            if (!activeEffect || activeEffect->usUniqueID != event->activeEffectUniqueID) {
+                                continue;
+                            }
+                            auto* effect = activeEffect->GetBaseObject();
+                            auto* sourceFile = effect ? effect->GetFile(0) : nullptr;
+                            if (sourceFile && _stricmp(sourceFile->GetFilename().data(), "MilkModNEW.esp") == 0) {
+                                g_mmeActiveEffects[key] = effect->GetFormID();
+                                tracked = true;
+                            }
+                            break;
                         }
-                        auto* effect = activeEffect->GetBaseObject();
-                        auto* sourceFile = effect ? effect->GetFile(0) : nullptr;
-                        if (sourceFile && _stricmp(sourceFile->GetFilename().data(), "MilkModNEW.esp") == 0) {
-                            g_mmeActiveEffects[key] = effect->GetFormID();
-                            tracked = true;
-                        }
-                        break;
                     }
                 }
                 const auto pending = g_pendingMMEEffects.find(event->target->GetFormID());
                 if (!tracked && pending != g_pendingMMEEffects.end()) {
                     g_mmeActiveEffects[key] = pending->second;
+                    tracked = true;
                 }
                 if (pending != g_pendingMMEEffects.end()) {
                     g_pendingMMEEffects.erase(pending);
+                }
+                if (REL::Module::IsVR() && !tracked) {
+                    SKSE::log::debug(
+                        "VR active-effect apply had no paired MME magic-effect event: target {:08X}, unique {}",
+                        event->target->GetFormID(), event->activeEffectUniqueID);
                 }
             } else {
                 const auto found = g_mmeActiveEffects.find(key);
@@ -628,5 +642,6 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse)
     SKSE::GetPapyrusInterface()->Register(RegisterPapyrus);
     SKSE::log::info("MME Extensions native bridge loaded");
     SKSE::log::info("Runtime version: {}", skse->RuntimeVersion().string());
+    SKSE::log::info("Runtime family: {}", REL::Module::IsVR() ? "VR" : (REL::Module::IsAE() ? "AE" : "SE"));
     return true;
 }

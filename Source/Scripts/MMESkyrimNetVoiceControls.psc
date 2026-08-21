@@ -80,8 +80,8 @@ Function SelfMilkingExecute(Actor candidate, String contextJson, String paramsJs
     Debug.Trace("[MMEAlert SkyrimNet] Self-milking action cast MME MilkSelf on " + candidate)
 EndFunction
 
-; Plays MME's standing milking animation without starting a milking spell.
-; Selects Player or NPC fullness settings based on the actor.
+; Fullness-specific trigger adapter. The shared reaction executor owns actor
+; validation, standing-animation selection, playback, and safe completion.
 Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableFullnessSelfMilkAnimationDiagnostic", 0) == 1
     Bool isPlayer = candidate != None && candidate == Game.GetPlayer()
@@ -124,79 +124,11 @@ Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
         EndIf
         Return
     EndIf
-    If candidate == None || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
-        If diagnostic
-            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: actor unavailable")
-        EndIf
-        Return
-    EndIf
-    If StorageUtil.GetIntValue(candidate, "MMEAlerts.IsMilking", 0) == 1
-        If diagnostic
-            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: already milking")
-        EndIf
-        Return
-    EndIf
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None || milkController.MilkMaid.Find(candidate) == -1
-        If diagnostic
-            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: not an MME Milkmaid")
-        EndIf
-        Return
-    EndIf
-    If MMEAlertsController.IsFreeArmAnimationBlocked(candidate)
-        If diagnostic
-            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: arms restrained by Devious Devices")
-        EndIf
-        Return
-    EndIf
-    String blocked = MMEAnimationSafety.GetStartBlockReason(candidate, milkController, True)
-    If blocked != ""
-        If diagnostic
-            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: " + blocked)
-        EndIf
-        Return
-    EndIf
-    Int animationCount = JsonUtil.StringListCount("/MME/Strings", "standingmilkinganimations")
-    If animationCount <= 0
-        If diagnostic
-            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: MME milking animation missing")
-        EndIf
-        Return
-    EndIf
-    String animationEvent = JsonUtil.StringListGet("/MME/Strings", "standingmilkinganimations", Utility.RandomInt(0, animationCount - 1))
-    If animationEvent == ""
-        If diagnostic
-            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: MME milking animation empty")
-        EndIf
-        Return
-    EndIf
     Float duration = JsonUtil.GetFloatValue("/MMEAlerts/Settings", durationKey, 3.0)
     String owner = "FullnessAnimation." + role
-    If !MMEAnimationSafety.TryAcquire(candidate, owner)
-        If diagnostic
-            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: another MME Extensions animation owns actor")
-        EndIf
-        Return
-    EndIf
-    If diagnostic
-        Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation started (" + duration + " seconds)")
-    EndIf
-    Debug.SendAnimationEvent(candidate, animationEvent)
-    Utility.Wait(duration)
-    String resetBlocked = MMEAnimationSafety.GetResetBlockReason(candidate, milkController, owner)
-    If resetBlocked != ""
-        If diagnostic
-            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation stopped without reset: " + resetBlocked)
-        EndIf
-        MMEAnimationSafety.Release(candidate, owner)
-        Return
-    EndIf
-    Debug.SendAnimationEvent(candidate, "IdleForceDefaultState")
-    MMEAnimationSafety.Release(candidate, owner)
-    If diagnostic
-        Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation stopped")
-    EndIf
-    Debug.Trace("[MMEAlert] " + role + " fullness animation completed | " + candidate + " | " + threshold)
+    String requestLabel = "Fullness " + role + " " + threshold
+    Bool animationStarted = MMEReactionAnimation.Start(candidate, owner, requestLabel, diagnostic)
+    MMEReactionAnimation.Finish(candidate, animationStarted, owner, duration, requestLabel, diagnostic)
 EndFunction
 
 ; Registers the opt-in action that reuses the tested NPC dialogue pipeline.
