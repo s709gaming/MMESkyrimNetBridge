@@ -5,7 +5,7 @@ Scriptname MMEArmorScript Hidden
 Function MarkPlayerOverflowPending(Actor target) Global
     If target == Game.GetPlayer()
         StorageUtil.SetIntValue(target, "MMEExtensions.PostDrinkOverflow.Pending", 1)
-        Report(GetDiagnostic(), "PLAYER MME overflow reconciliation marked")
+        Report(GetDiagnostic(), "overflow attempt marked for post-drink stripping check")
     EndIf
 EndFunction
 
@@ -31,7 +31,7 @@ Function SchedulePlayerArmorCheck(Actor target) Global
     EndIf
     StorageUtil.SetIntValue(target, "MMEExtensions.ArmorCheck.Generation", StorageUtil.GetIntValue(target, "MMEExtensions.ArmorCheck.Generation", 0) + 1)
     controller.RequestPlayerArmorCheck()
-    Report(diagnostic, "PLAYER armor check queued")
+    Report(diagnostic, "queued | generation=" + StorageUtil.GetIntValue(target, "MMEExtensions.ArmorCheck.Generation", 0))
 EndFunction
 
 ; Runs the deferred check using only the current live state.
@@ -39,22 +39,23 @@ Function CheckPlayerArmorNow(Actor target) Global
     If target != Game.GetPlayer()
         Return
     EndIf
+    Bool diagnostic = GetDiagnostic()
     If StorageUtil.GetIntValue(target, "MMEExtensions.ArmorCheck.Generation", 0) <= 0
+        Report(diagnostic, "timer fired but request token was missing")
         Return
     EndIf
     StorageUtil.SetIntValue(target, "MMEExtensions.ArmorCheck.Generation", 0)
     Bool attemptedOverflow = HasPendingPlayerOverflow(target)
     StorageUtil.UnsetIntValue(target, "MMEExtensions.PostDrinkOverflow.Pending")
-    Bool diagnostic = GetDiagnostic()
-    Report(diagnostic, "PLAYER armor check running | milk " + MME_Storage.getMilkCurrent(target))
+    Report(diagnostic, "running | actor=PLAYER | milk=" + MME_Storage.getMilkCurrent(target) + " | overflowAttempt=" + attemptedOverflow)
 
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None
-        Report(diagnostic, "PLAYER armor check skipped: MME controller unavailable")
+        Report(diagnostic, "decision=BLOCKED | MME controller unavailable")
         Return
     EndIf
     If !IsValidMilkMaid(target, milkController)
-        Report(diagnostic, "PLAYER armor check skipped: not a valid Milkmaid")
+        Report(diagnostic, "decision=BLOCKED | actor is not a valid Milk Maid")
         Return
     EndIf
 
@@ -64,53 +65,61 @@ Function CheckPlayerArmorNow(Actor target) Global
     ReconcileMMEOverflow(target, milkController, attemptedOverflow, diagnostic)
 
     If milkController.ArmorStrippingDisabled
-        Report(diagnostic, "PLAYER armor check skipped: MME armor stripping disabled")
+        Report(diagnostic, "decision=BLOCKED | MME armor stripping disabled")
         Return
     EndIf
 
-    Armor slotArmor = target.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
+    Int bodyMask = Armor.GetMaskForSlot(32)
+    Armor slotArmor = target.GetWornForm(bodyMask) as Armor
     If slotArmor == None
-        Report(diagnostic, "PLAYER armor check skipped: no slot-32 armor")
+        Report(diagnostic, "slot=32 | armor=<none> | decision=BLOCKED")
         Return
     EndIf
+    Report(diagnostic, "slot=32 | armor=" + GetArmorName(slotArmor))
     If IsSpecialMMEArmor(milkController, slotArmor)
-        Report(diagnostic, "PLAYER armor check skipped: protected MME armor")
+        Report(diagnostic, "decision=BLOCKED | protected MME armor")
         Return
     EndIf
     If slotArmor == milkController.TITS4 || slotArmor == milkController.TITS6 || slotArmor == milkController.TITS8
-        Report(diagnostic, "PLAYER armor check skipped: protected MME armor")
+        Report(diagnostic, "decision=BLOCKED | protected MME breast armor")
         Return
     EndIf
     If milkController.DDi != None && milkController.DDi.IsMilkingBlocked_Suit(target)
-        Report(diagnostic, "PLAYER armor check skipped: protected DD/special armor")
+        Report(diagnostic, "decision=BLOCKED | protected DD/special armor")
         Return
     EndIf
     If !IsStripSafeByFramework(milkController, slotArmor)
-        Report(diagnostic, "PLAYER armor check skipped: not strippable")
+        Report(diagnostic, "decision=BLOCKED | framework marks armor not strippable")
         Return
     EndIf
 
     Float milk = MME_Storage.getMilkCurrent(target)
     Float threshold = GetArmorThreshold(slotArmor)
-    If threshold <= 0.0
-        Report(diagnostic, "PLAYER armor check skipped: unclassified armor")
-        Return
-    EndIf
-    If milk <= threshold
-        Report(diagnostic, "PLAYER armor check skipped: milk " + milk + " not above " + threshold)
-        Return
-    EndIf
-
-    ; Exactly one mutually-exclusive strip decision and one notification.
     String armorKind = "clothes"
     If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD2, "Skyrim.esm") as Keyword)
         armorKind = "heavy armor"
     ElseIf slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD3, "Skyrim.esm") as Keyword)
         armorKind = "light armor"
     EndIf
+    Report(diagnostic, "type=" + armorKind + " | milk=" + milk + " | threshold=" + threshold)
+    If threshold <= 0.0
+        Report(diagnostic, "decision=BLOCKED | unclassified armor")
+        Return
+    EndIf
+    If milk <= threshold
+        Report(diagnostic, "decision=BLOCKED | milk does not exceed threshold")
+        Return
+    EndIf
+
+    ; Exactly one mutually-exclusive strip decision and one notification.
+    Report(diagnostic, "decision=ALLOWED | requesting unequip")
     target.UnequipItem(slotArmor)
+    If target.GetWornForm(bodyMask) == slotArmor
+        Report(diagnostic, "result=BLOCKED | engine retained " + armorKind)
+        Return
+    EndIf
     Debug.Notification("Your breasts are too big to fit into your " + armorKind)
-    Report(diagnostic, "PLAYER " + armorKind + " stripped | milk " + milk + " > " + threshold)
+    Report(diagnostic, "result=STRIPPED | " + armorKind + " | milk=" + milk + " > " + threshold)
 EndFunction
 
 ; Applies MME MilkCycle's overflow math and leak calls to the current player
@@ -240,9 +249,9 @@ Bool Function GetDiagnostic() Global
 EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
-    Debug.Trace("[MMEAlert Armor Overflow] " + reportText)
+    Debug.Trace("[MMEAlert Armor Stripping Check] " + reportText)
     If showNotification
-        Debug.Notification("Armor Overflow: " + reportText)
+        Debug.Notification("Armor Stripping Check: " + reportText)
     EndIf
 EndFunction
 
@@ -329,7 +338,7 @@ Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
     ReportArmor(diagnostic, "reaction applies | " + role + " | " + armorType)
 
     String settingPrefix = GetArmorSettingPrefix(armorClass, wearer == Game.GetPlayer())
-    Int moanResult = PlayArmorEquipMoan(wearer, settingPrefix + "EquipMoan", role, armorType, diagnostic)
+    Int moanResult = PlayArmorEquipMoan(wearer, settingPrefix + "EquipMoan", role, armorType, armorClass, diagnostic)
     String moanState = "DISABLED"
     If moanResult > 0
         moanState = "PLAYED"
@@ -389,27 +398,34 @@ Int Function GetDefaultArmorAnimation(Actor wearer) Global
 EndFunction
 
 ; Returns 1 when the moan played, 0 when disabled, and -1 on failure.
-Int Function PlayArmorEquipMoan(Actor wearer, String moanKey, String role, String armorType, Bool diagnostic) Global
+Int Function PlayArmorEquipMoan(Actor wearer, String moanKey, String role, String armorType, Int armorClass, Bool diagnostic) Global
+    Int localSoundForm = 0x000854
+    String soundPool = "MILD"
+    If armorClass == 2 || armorClass == 3
+        localSoundForm = 0x000856
+        soundPool = "HIGH"
+    EndIf
+    ReportArmor(diagnostic, "equip moan pool=" + soundPool + " | " + role + " | " + armorType)
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableReactionSounds", 1) != 1 || JsonUtil.GetIntValue("/MMEAlerts/Settings", moanKey, 1) != 1
-        ReportArmor(diagnostic, "equip moan disabled | " + role + " | " + armorType)
+        ReportArmor(diagnostic, "equip moan disabled | pool=" + soundPool + " | " + role + " | " + armorType)
         Return 0
     EndIf
     If wearer == None || wearer.IsDead() || wearer.IsDisabled() || !wearer.Is3DLoaded()
-        ReportArmor(diagnostic, "equip moan failed: actor unavailable | " + role + " | " + armorType)
+        ReportArmor(diagnostic, "equip moan failed: actor unavailable | pool=" + soundPool + " | " + role + " | " + armorType)
         Return -1
     EndIf
-    Sound reaction = Game.GetFormFromFile(0x000854, "MMEAlert.esp") as Sound
+    Sound reaction = Game.GetFormFromFile(localSoundForm, "MMEAlert.esp") as Sound
     If reaction == None
-        ReportArmor(diagnostic, "equip moan failed: sound form unresolved | " + role + " | " + armorType)
+        ReportArmor(diagnostic, "equip moan failed: " + soundPool + " sound form unresolved | " + role + " | " + armorType)
         Return -1
     EndIf
     Int instance = reaction.Play(wearer)
     If instance > 0
         Sound.SetInstanceVolume(instance, JsonUtil.GetFloatValue("/MMEAlerts/Settings", "reactionSoundVolume", 100.0) / 100.0)
-        ReportArmor(diagnostic, "equip moan played | " + role + " | " + armorType + " | instance=" + instance)
+        ReportArmor(diagnostic, "equip moan played | pool=" + soundPool + " | " + role + " | " + armorType + " | instance=" + instance)
         Return 1
     EndIf
-    ReportArmor(diagnostic, "equip moan failed | " + role + " | " + armorType + " | result=" + instance)
+    ReportArmor(diagnostic, "equip moan failed | pool=" + soundPool + " | " + role + " | " + armorType + " | result=" + instance)
     Return -1
 EndFunction
 

@@ -146,6 +146,9 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker)
     ; the interaction and supplies cleanup if either mod event is missed.
     RegisterForSingleUpdate(1.0)
     Debug.Trace("[MME Extensions OStim] started " + sceneID + " | drinker=" + GetActorName(drinker) + " | milk source=" + GetActorName(milkSource) + " | thread=" + threadID)
+    If diagnostic
+        Debug.Notification("OStim BF DEBUG: scene STARTED; MME milking active")
+    EndIf
     Return True
 EndFunction
 

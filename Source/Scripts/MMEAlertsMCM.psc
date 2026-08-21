@@ -46,7 +46,7 @@ Int npcDrinkNotificationsOption
 Int npcDrinkNotificationsDiagnosticOption
 Int playerDrinkNotificationsOption
 Int playerDrinkNotificationsDiagnosticOption
-Int armorOverflowDiagnosticOption
+Int armorStrippingCheckDiagnosticOption
 Int lifecycleDiagnosticOption
 Int milkmaidCreationDiagnosticOption
 Int nativeScanDiagnosticOption
@@ -100,7 +100,7 @@ Int armorDebugOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 75
+    Return 76
 EndFunction
 
 Function SetPageNames()
@@ -624,7 +624,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "fullnessAnimationSplit68", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
-    ; Adds the optional armor-overflow diagnostic without touching other settings.
+    ; Adds the optional post-drink armor stripping diagnostic without touching other settings.
     If JsonUtil.GetIntValue(SettingsFile, "armorOverflowDiagnosticMigration69", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "armorOverflowDiagnosticMigration69", 1)
@@ -740,7 +740,7 @@ Event OnPageReset(String page)
     npcDrinkNotificationsDiagnosticOption = -1
     playerDrinkNotificationsOption = -1
     playerDrinkNotificationsDiagnosticOption = -1
-    armorOverflowDiagnosticOption = -1
+    armorStrippingCheckDiagnosticOption = -1
     lifecycleDiagnosticOption = -1
     milkmaidCreationDiagnosticOption = -1
     nativeScanDiagnosticOption = -1
@@ -938,7 +938,7 @@ Event OnPageReset(String page)
         npcDrinkNotificationsDiagnosticOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1)
         playerDrinkNotificationsDiagnosticOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0) == 1)
         AddHeaderOption("Armor Debug")
-        armorOverflowDiagnosticOption = AddToggleOption("Armor Overflow Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0) == 1)
+        armorStrippingCheckDiagnosticOption = AddToggleOption("Armor Stripping Check", JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0) == 1)
         armorDebugOption = AddToggleOption("Equip Reaction Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0) == 1)
         AddHeaderOption("A" + "nimations ")
         milkDrinkAnimationDiagnosticOption = AddToggleOption("Milk Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1)
@@ -1102,8 +1102,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report new-Milk-Maid narration detection, cooldowns, and API results.")
     ElseIf option == playerDrinkNotificationsDiagnosticOption
         SetInfoText("Report player drink notification skips and the effective milk and arousal results shown.")
-    ElseIf option == armorOverflowDiagnosticOption
-        SetInfoText("Report PLAYER armor-overflow queue, cancellation, eligibility, armor type, threshold, and strip results.")
+    ElseIf option == armorStrippingCheckDiagnosticOption
+        SetInfoText("Report the delayed Player drink armor check: queue, timer, milk, slot 32, armor type, threshold, decision, and strip result.")
     ElseIf option == armorDebugOption
         SetInfoText("Report armor classification, matched MME list, equip reactions, nearby tracking, narration gates, and Skyrim.Net results.")
     ElseIf option == playerMilkingArmorEquipMoanOption || option == npcMilkingArmorEquipMoanOption
@@ -1111,11 +1111,11 @@ Event OnOptionHighlight(Int option)
     ElseIf option == playerMilkingArmorEquipAnimationOption || option == npcMilkingArmorEquipAnimationOption
         SetInfoText("Play the shared three-second Standing reaction whenever supported Milking Armor is equipped.")
     ElseIf option == playerLivingArmorEquipMoanOption || option == npcLivingArmorEquipMoanOption
-        SetInfoText("Play the mild equip moan whenever the matching Milk Maid equips configured AM Living Armor.")
+        SetInfoText("Play the strongest equip moan pool whenever the matching Milk Maid equips configured AM Living Armor.")
     ElseIf option == playerLivingArmorEquipAnimationOption || option == npcLivingArmorEquipAnimationOption
         SetInfoText("Play the shared three-second Kneeling reaction whenever configured AM Living Armor is equipped.")
     ElseIf option == playerLivingParasiteEquipMoanOption || option == npcLivingParasiteEquipMoanOption
-        SetInfoText("Play the mild equip moan whenever the matching Milk Maid equips configured AM Living Parasite armor.")
+        SetInfoText("Play the strongest equip moan pool whenever the matching Milk Maid equips configured AM Living Parasite armor.")
     ElseIf option == playerLivingParasiteEquipAnimationOption || option == npcLivingParasiteEquipAnimationOption
         SetInfoText("Play the shared three-second Kneeling reaction whenever configured AM Living Parasite armor is equipped.")
     ElseIf option == nearbyMilkArmorStatusOption
@@ -1317,7 +1317,7 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
-    ElseIf option == armorOverflowDiagnosticOption
+    ElseIf option == armorStrippingCheckDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", value)
         SetToggleOptionValue(option, value == 1)

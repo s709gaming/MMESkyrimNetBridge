@@ -293,7 +293,23 @@ Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float local
         Return
     EndIf
     Debug.Trace("[MME Extensions Dialogue] INFO event | topic=" + topicEditorID + " info=" + (localInfoForm as Int) + " speaker=" + sender)
-    If topicEditorID != "MME_Hello_Dialogue_Topic" && !sexLabBFDebug && !ostimBFDebug
+    Bool ostimPlayerSelected = topicEditorID == "MMEExt_OStimBreastfeeding_PlayerDrinksTopic"
+    Bool ostimNPCSelected = topicEditorID == "MMEExt_OStimBreastfeeding_NPCDrinksTopic"
+    If ostimPlayerSelected || ostimNPCSelected
+        String selectedRoute = "Player drinks from NPC"
+        If ostimNPCSelected
+            selectedRoute = "NPC drinks from Player"
+        EndIf
+        Debug.Trace("[MME Extensions OStim BF Dialogue] option SELECTED | " + selectedRoute + " | INFO=" + (localInfoForm as Int))
+        If ostimBFDebug
+            Debug.Notification("OStim BF DEBUG: option SELECTED; starting scene")
+        EndIf
+        Return
+    EndIf
+    ; Only the MME opening INFO constructs the choice list we are auditing.
+    ; Scheduling from later INFOs observes an already-advanced/closed menu and
+    ; turns a successful selection into a false NOT SHOWN verdict.
+    If topicEditorID != "MME_Hello_Dialogue_Topic"
         Return
     EndIf
     Actor dialogueActor = sender as Actor
@@ -304,11 +320,7 @@ Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float local
     PendingDialogueDiagnosticActor = dialogueActor
     MMEOpeningRefreshSnapshotAt = Utility.GetCurrentRealTime() + 0.25
     NextDialogueDiagnosticUpdate = MMEOpeningRefreshSnapshotAt
-    If topicEditorID == "MME_Hello_Dialogue_Topic"
-        Debug.Trace("[MME Extensions Dialogue] MME opening refresh INFO executed; scheduling authoritative post-Fragment_00 snapshot")
-    Else
-        Debug.Trace("[MME Extensions SexLab BF] topic sample did not match Hey there; scheduling fallback audit so the event cannot fail silently")
-    EndIf
+    Debug.Trace("[MME Extensions Dialogue] MME opening refresh INFO executed; scheduling authoritative post-Fragment_00 snapshot")
     ScheduleNextUpdate()
 EndEvent
 
@@ -558,31 +570,62 @@ Function UpdatePolling()
     ScheduleNextUpdate()
 EndFunction
 
-; Schedules the debounced player armor-overflow check three seconds from now.
+; Schedules the debounced player armor stripping check three seconds from now.
 ; Re-scheduling cancels the previous single update, so rapid successive drinks
 ; collapse into one check timed after the most recent drink.
 Function RequestPlayerArmorCheck()
-    NextArmorCheck = Utility.GetCurrentRealTime() + 3.0
+    Float now = Utility.GetCurrentRealTime()
+    NextArmorCheck = now + 3.0
+    MMEArmorScript.Report(MMEArmorScript.GetDiagnostic(), "timer armed | delay=3 seconds | due=" + NextArmorCheck)
     ScheduleNextUpdate()
 EndFunction
 
 Function ScheduleNextUpdate()
     Float now = Utility.GetCurrentRealTime()
     Float delay = 0.0
+    Float candidate = 0.0
     If NextCapacityUpdate > 0.0
-        delay = NextCapacityUpdate - now
+        candidate = NextCapacityUpdate - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        delay = candidate
     EndIf
-    If NextSkyrimNetUpdate > 0.0 && (delay <= 0.0 || NextSkyrimNetUpdate - now < delay)
-        delay = NextSkyrimNetUpdate - now
+    If NextSkyrimNetUpdate > 0.0
+        candidate = NextSkyrimNetUpdate - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
     EndIf
-    If NextDebugUpdate > 0.0 && (delay <= 0.0 || NextDebugUpdate - now < delay)
-        delay = NextDebugUpdate - now
+    If NextDebugUpdate > 0.0
+        candidate = NextDebugUpdate - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
     EndIf
-    If NextArmorCheck > 0.0 && (delay <= 0.0 || NextArmorCheck - now < delay)
-        delay = NextArmorCheck - now
+    If NextArmorCheck > 0.0
+        candidate = NextArmorCheck - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
     EndIf
-    If NextDialogueDiagnosticUpdate > 0.0 && (delay <= 0.0 || NextDialogueDiagnosticUpdate - now < delay)
-        delay = NextDialogueDiagnosticUpdate - now
+    If NextDialogueDiagnosticUpdate > 0.0
+        candidate = NextDialogueDiagnosticUpdate - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
     EndIf
     If delay > 0.0
         Float minimumDelay = 1.0
@@ -644,9 +687,13 @@ Event OnUpdate()
         MMEOpeningRefreshSnapshotAt = 0.0
         PendingDialogueDiagnosticActor = None
     EndIf
+    ; Earlier scan/diagnostic work may be latent. Re-read real time so an
+    ; armor timer that became due during this update fires in this same pass.
+    now = Utility.GetCurrentRealTime()
     Bool armorDue = NextArmorCheck > 0.0 && now >= NextArmorCheck
     If armorDue
         NextArmorCheck = 0.0
+        MMEArmorScript.Report(MMEArmorScript.GetDiagnostic(), "timer fired")
         MMEArmorScript.CheckPlayerArmorNow(Game.GetPlayer())
     EndIf
     ScheduleNextUpdate()
@@ -1040,22 +1087,40 @@ Function ShowOStimBreastfeedingDiagnostic(Actor subject)
     Bool playerEligible = playerInfo != None && MMEExtensionsNative.EvaluateTopicInfo(playerInfo, subject, playerActor)
     Bool npcEligible = npcInfo != None && MMEExtensionsNative.EvaluateTopicInfo(npcInfo, subject, playerActor)
     Form[] visibleInfos = MMEExtensionsNative.GetVisibleDialogueInfos()
+    Int visibleInfoCount = 0
+    If visibleInfos != None
+        visibleInfoCount = visibleInfos.Length
+    EndIf
+    Bool visibilityAvailable = visibleInfoCount > 0
     Bool playerVisible = visibleInfos != None && visibleInfos.Find(playerInfo) >= 0
     Bool npcVisible = visibleInfos != None && visibleInfos.Find(npcInfo) >= 0
 
     Debug.Trace("[MME Extensions OStim BF Dialogue] detected=" + DiagnosticBool(detected) + " setting=" + DiagnosticBool(setting) + " global=" + gate + " value=" + gateValue)
     Debug.Trace("[MME Extensions OStim BF Dialogue] CTDA roles: Subject=speaker " + subject + " (milk live=" + subjectMilk + ", MME_SubjectMilk=" + subjectSnapshot + "); Target=player " + playerActor + " (milk live=" + playerMilk + ", MME_TargetMilk=" + playerSnapshot + ")")
     Debug.Trace("[MME Extensions OStim BF Dialogue] Player INFO=" + playerInfo + " topic=" + playerTopic + " independent=" + DiagnosticBool(playerIndependent) + " sources=" + SourceFileSummary(playerInfo))
+    Debug.Trace("[MME Extensions OStim BF Dialogue] visible list available=" + DiagnosticBool(visibilityAvailable) + " count=" + visibleInfoCount)
     Debug.Trace("[MME Extensions OStim BF Dialogue] Player CTDA=" + ConditionResults(playerConditions) + " | " + ConditionDescriptions(playerDescriptions) + " eligible=" + DiagnosticBool(playerEligible) + " visible=" + DiagnosticBool(playerVisible))
     Debug.Trace("[MME Extensions OStim BF Dialogue] NPC INFO=" + npcInfo + " topic=" + npcTopic + " independent=" + DiagnosticBool(npcIndependent) + " sources=" + SourceFileSummary(npcInfo))
     Debug.Trace("[MME Extensions OStim BF Dialogue] NPC CTDA=" + ConditionResults(npcConditions) + " | " + ConditionDescriptions(npcDescriptions) + " eligible=" + DiagnosticBool(npcEligible) + " visible=" + DiagnosticBool(npcVisible))
 
-    Debug.Notification("OStim BF DEBUG: detected=" + DiagnosticBool(detected) + " setting=" + DiagnosticBool(setting) + " gate=" + gateValue)
-    If !playerIndependent || !npcIndependent
+    If !detected
+        Debug.Notification("OStim BF DEBUG: UNAVAILABLE - OStim not detected")
+    ElseIf !setting
+        Debug.Notification("OStim BF DEBUG: UNAVAILABLE - setting OFF")
+    ElseIf gate == None || gateValue < 1.0
+        Debug.Notification("OStim BF DEBUG: UNAVAILABLE - dialogue gate OFF")
+    ElseIf !playerIndependent || !npcIndependent
         Debug.Notification("OStim BF DEBUG: FAIL options are not independent DIALs")
     Else
-        Debug.Notification("OStim BF DEBUG: Player<-NPC=" + ShortRouteResult(playerEligible, playerVisible, playerConditions, "PlayerOStim") + " | NPC<-Player=" + ShortRouteResult(npcEligible, npcVisible, npcConditions, "NPCOStim"))
-        If (playerEligible && !playerVisible) || (npcEligible && !npcVisible)
+        If visibilityAvailable
+            Debug.Notification("OStim BF DEBUG: Player<-NPC=" + ShortRouteResult(playerEligible, playerVisible, playerConditions, "PlayerOStim") + " | NPC<-Player=" + ShortRouteResult(npcEligible, npcVisible, npcConditions, "NPCOStim"))
+        ElseIf playerEligible || npcEligible
+            Debug.Notification("OStim BF DEBUG: conditions PASS; visibility unavailable")
+            Debug.Trace("[MME Extensions OStim BF Dialogue] visibility cannot be determined because the dialogue choice list has already progressed or closed")
+        Else
+            Debug.Notification("OStim BF DEBUG: conditions FAIL | Player=" + ShortRouteResult(playerEligible, False, playerConditions, "PlayerOStim") + " | NPC=" + ShortRouteResult(npcEligible, False, npcConditions, "NPCOStim"))
+        EndIf
+        If visibilityAvailable && ((playerEligible && !playerVisible) || (npcEligible && !npcVisible))
             Debug.Notification("OStim BF DEBUG: conditions PASS but option NOT SHOWN")
         ElseIf conditions != None && subjectMilk >= 1.0 && subjectSnapshot < 1.0
             Debug.Notification("OStim BF DEBUG: NPC milk live PASS, MME SubjectMilk stale")
