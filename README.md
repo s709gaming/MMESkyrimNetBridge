@@ -499,6 +499,7 @@ Polling remains available only where useful, with an adjustable interval.
 - `MMEMilkBoost.psc` - milk-bonus calculation and capacity-safe application.
 - `MMEArousalBridge.psc` - optional arousal integration.
 - `MMENPCDialog.psc` - Milk Maid dialogue, inventory selection, consumption, effects, and animation.
+- `MMEVendorServices.psc` - Blacksmith armor-service state, milk payment, and verified `MilkingEquipment` add/remove transactions.
 - `MMEAlertsFlatRateDefaults.psc` - optional FOMOD-selected MME preset.
 - `MMEAlertsQuickTest.psc` - compatibility/testing helper.
 - `MMEDebug.psc` - troubleshooting helper.

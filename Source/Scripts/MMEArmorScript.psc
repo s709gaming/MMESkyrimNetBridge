@@ -230,9 +230,26 @@ EndFunction
 
 ; Framework-neutral overflow gate: protects MME's milking/living/special armor.
 Bool Function IsSpecialMMEArmor(MilkQUEST milkController, Armor slotArmor) Global
-    ; Explicit quest properties and MME-configured name arrays come first. Name
-    ; fragments are compatibility fallbacks for established third-party armor
-    ; integrations and should not be casually removed as "redundant" checks.
+    ; User-added MilkingEquipment entries are protected just like MME's native
+    ; armor. Vendor services need to distinguish these removable entries from
+    ; inherent MME recognition, so the native portion lives in the helper below.
+    If milkController == None || slotArmor == None
+        Return True
+    EndIf
+    String armorName = slotArmor.GetName()
+    If milkController.MilkingEquipment != None && milkController.MilkingEquipment.Find(armorName) >= 0
+        Return True
+    EndIf
+    Return IsNativeOrSpecialMMEArmor(milkController, slotArmor)
+EndFunction
+
+; Returns only armor MME already recognizes without a user MilkingEquipment
+; registration. Blacksmith removal must never erase BasicLivingArmor or
+; ParasiteLivingArmor, and adding any of these names would waste array capacity.
+Bool Function IsNativeOrSpecialMMEArmor(MilkQUEST milkController, Armor slotArmor) Global
+    ; Explicit quest properties and MME-configured living-armor arrays come
+    ; first. Name fragments reproduce the checks in MME's MilkPlayerLoadGame
+    ; and overflow paths, including long-established third-party integrations.
     If milkController == None || slotArmor == None
         Return True
     EndIf
@@ -240,13 +257,10 @@ Bool Function IsSpecialMMEArmor(MilkQUEST milkController, Armor slotArmor) Globa
         Return True
     EndIf
     String armorName = slotArmor.GetName()
-    If milkController.MilkingEquipment.Find(armorName) >= 0
+    If milkController.BasicLivingArmor != None && milkController.BasicLivingArmor.Find(armorName) >= 0
         Return True
     EndIf
-    If milkController.BasicLivingArmor.Find(armorName) >= 0
-        Return True
-    EndIf
-    If milkController.ParasiteLivingArmor.Find(armorName) >= 0
+    If milkController.ParasiteLivingArmor != None && milkController.ParasiteLivingArmor.Find(armorName) >= 0
         Return True
     EndIf
     If StringUtil.Find(armorName, "Milk") >= 0 || StringUtil.Find(armorName, "Cow") >= 0

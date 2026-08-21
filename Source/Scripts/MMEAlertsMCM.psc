@@ -104,10 +104,11 @@ Int npcMilkArmorEquipNarrationOption
 Int playerMilkingArmorNarrationCooldownOption
 Int npcMilkingArmorNarrationCooldownOption
 Int armorDebugOption
+Int blacksmithDebugOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 76
+    Return 77
 EndFunction
 
 Function SetPageNames()
@@ -208,6 +209,8 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkArmorEquipNarration", 1)
         JsonUtil.SetIntValue(SettingsFile, "skyrimNetArmorMigration75", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBlacksmithDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "blacksmithServiceMigration77", 1)
         JsonUtil.SetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingAction", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
@@ -663,6 +666,14 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "skyrimNetArmorMigration75", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds diagnostics for the Blacksmith vendor-service transaction. Gameplay
+    ; remains enabled with the MME Extensions master toggle; this controls only
+    ; the short HUD checkpoints requested for testing.
+    If JsonUtil.GetIntValue(SettingsFile, "blacksmithServiceMigration77", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableBlacksmithDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "blacksmithServiceMigration77", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -806,6 +817,7 @@ Event OnPageReset(String page)
     playerMilkingArmorNarrationCooldownOption = -1
     npcMilkingArmorNarrationCooldownOption = -1
     armorDebugOption = -1
+    blacksmithDebugOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -955,6 +967,7 @@ Event OnPageReset(String page)
         AddHeaderOption("Armor Debug")
         armorStrippingCheckDiagnosticOption = AddToggleOption("Armor Stripping Check", JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0) == 1)
         armorDebugOption = AddToggleOption("Equip Reaction Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0) == 1)
+        blacksmithDebugOption = AddToggleOption("Blacksmith Debug", JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDebug", 0) == 1)
         AddHeaderOption("A" + "nimations ")
         milkDrinkAnimationDiagnosticOption = AddToggleOption("Milk Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1)
         fullnessSelfMilkAnimationDiagnosticOption = AddToggleOption("Fullness Animation", JsonUtil.GetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0) == 1)
@@ -1121,6 +1134,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report the delayed Player drink armor check: queue, timer, milk, slot 32, armor type, threshold, decision, and strip result.")
     ElseIf option == armorDebugOption
         SetInfoText("Report armor classification, matched MME list, equip reactions, nearby tracking, narration gates, and Skyrim.Net results.")
+    ElseIf option == blacksmithDebugOption
+        SetInfoText("Report Blacksmith eligibility, worn armor state, supported-milk payment, MilkingEquipment capacity, same-armor checks, and verified add/remove results.")
     ElseIf option == playerMilkingArmorEquipMoanOption || option == npcMilkingArmorEquipMoanOption
         SetInfoText("Play the mild equip moan whenever the matching Milk Maid equips supported Milking Armor.")
     ElseIf option == playerMilkingArmorEquipAnimationOption || option == npcMilkingArmorEquipAnimationOption
@@ -1341,6 +1356,10 @@ Event OnOptionSelect(Int option)
     ElseIf option == armorDebugOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorDebug", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == blacksmithDebugOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableBlacksmithDebug", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == playerMilkingArmorEquipMoanOption
         ToggleArmorSetting(option, "enablePlayerMilkingArmorEquipMoan", 1)

@@ -71,23 +71,11 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
     Report(diagnostic, "inventory: Lactacid " + lactacidCount + " | Normal " + normalCount + " | Racial " + racialCount + " | Supernatural " + supernaturalCount)
     ReportNormalMilkInventory(giver, hearthfireMilk, milkController.MME_Milk_Basic, diagnostic)
 
-    ; Phase 2: select exactly one category in established priority order:
-    ; Lactacid, normal, racial, then supernatural. This ordering is behavior.
-    Form selectedItem = None
-    String selectedType = ""
-    If lactacidCount > 0
-        selectedItem = lactacid
-        selectedType = "Lactacid"
-    ElseIf normalCount > 0
-        selectedItem = FindFirstOwnedNormalMilk(giver, hearthfireMilk, milkController.MME_Milk_Basic)
-        selectedType = "Normal"
-    ElseIf racialCount > 0
-        selectedItem = FindFirstOwnedFromList(giver, milkController.MME_Milk_Race)
-        selectedType = "Racial"
-    ElseIf supernaturalCount > 0
-        selectedItem = FindFirstOwnedFromList(giver, milkController.MME_Milk_Special)
-        selectedType = "Supernatural"
-    EndIf
+    ; Phase 2: use the shared supported-milk selector. Blacksmith payment calls
+    ; this same helper, keeping category membership, fallback records, and the
+    ; Lactacid -> normal -> racial -> supernatural priority in one place.
+    Form selectedItem = FindFirstSupportedMilk(giver, milkController)
+    String selectedType = GetSupportedMilkType(selectedItem, milkController)
 
     If selectedItem == None
         Report(diagnostic, "no supported milk found; inventory unchanged")
@@ -99,6 +87,66 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
     EndIf
     Report(diagnostic, "selected " + selectedType + ": " + itemName + " [form " + selectedItem.GetFormID() + "]")
     Return ProcessNativeConsumption(giver, target, selectedItem, selectedType, milkController, diagnostic)
+EndFunction
+
+; Selects one owned item from the exact milk sources supported by Give Milk.
+; This function only resolves inventory; callers remain responsible for their
+; own final revalidation and for consuming/transferring exactly one item.
+Form Function FindFirstSupportedMilk(Actor owner, MilkQUEST milkController) Global
+    If owner == None || milkController == None
+        Return None
+    EndIf
+    Form lactacid = None
+    If milkController.MME_Util_Potions != None
+        lactacid = milkController.MME_Util_Potions.GetAt(0)
+    EndIf
+    If GetOwnedCount(owner, lactacid) > 0
+        Return lactacid
+    EndIf
+    Form hearthfireMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
+    Form selectedItem = FindFirstOwnedNormalMilk(owner, hearthfireMilk, milkController.MME_Milk_Basic)
+    If selectedItem != None
+        Return selectedItem
+    EndIf
+    selectedItem = FindFirstOwnedFromList(owner, milkController.MME_Milk_Race)
+    If selectedItem != None
+        Return selectedItem
+    EndIf
+    Return FindFirstOwnedFromList(owner, milkController.MME_Milk_Special)
+EndFunction
+
+; Provides the existing Give Milk diagnostic label for a shared selected form.
+String Function GetSupportedMilkType(Form milkItem, MilkQUEST milkController) Global
+    If milkItem == None || milkController == None
+        Return ""
+    EndIf
+    If milkController.MME_Util_Potions != None && milkItem == milkController.MME_Util_Potions.GetAt(0)
+        Return "Lactacid"
+    EndIf
+    Form hearthfireMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
+    If IsNormalMilk(milkItem, hearthfireMilk, milkController.MME_Milk_Basic)
+        Return "Normal"
+    EndIf
+    If milkController.MME_Milk_Race != None && milkController.MME_Milk_Race.HasForm(milkItem)
+        Return "Racial"
+    EndIf
+    If milkController.MME_Milk_Special != None && milkController.MME_Milk_Special.HasForm(milkItem)
+        Return "Supernatural"
+    EndIf
+    Return "Supported"
+EndFunction
+
+Bool Function IsNormalMilk(Form milkItem, Form hearthfireMilk, FormList basicMilkList) Global
+    If milkItem == None
+        Return False
+    EndIf
+    If milkItem == hearthfireMilk || (basicMilkList != None && basicMilkList.HasForm(milkItem))
+        Return True
+    EndIf
+    Return milkItem == Game.GetFormFromFile(0x016364, "MilkModNEW.esp") \
+        || milkItem == Game.GetFormFromFile(0x016368, "MilkModNEW.esp") \
+        || milkItem == Game.GetFormFromFile(0x016369, "MilkModNEW.esp") \
+        || milkItem == Game.GetFormFromFile(0x0168CE, "MilkModNEW.esp")
 EndFunction
 
 ; Counts HearthFires milk and MME's four verified basic milk forms once each.
