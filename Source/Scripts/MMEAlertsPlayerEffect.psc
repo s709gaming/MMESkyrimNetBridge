@@ -30,6 +30,10 @@ Event OnPlayerLoadGame()
     If flatDefaults != None
         flatDefaults.ApplyDefaults()
     EndIf
+    MMEDebug breastfeedingService = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
+    If breastfeedingService != None
+        breastfeedingService.RecoverAfterLoad()
+    EndIf
     MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
     If controller != None
         controller.InitializeController()

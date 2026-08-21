@@ -30,6 +30,32 @@ Bool Function IsDialogueEnabled() Global
     Return IsBreastfeedingEnabled()
 EndFunction
 
+; Shared source-side gameplay contract used before either animation backend.
+Bool Function ValidateMilkSource(Actor milkSource, MilkQUEST milkController, Bool diagnostic = False) Global
+    If milkController == None
+        Report(diagnostic, "MME backend unavailable")
+        Return False
+    EndIf
+    If milkController.MilkMaid == None || milkController.MilkMaid.Find(milkSource) == -1
+        Report(diagnostic, GetActorName(milkSource) + " is not an MME Milk Maid")
+        Return False
+    EndIf
+    ActorBase milkSourceBase = milkSource.GetLeveledActorBase()
+    If milkSourceBase == None || (milkSourceBase.GetSex() != 1 && !(milkSourceBase.GetSex() == 0 && milkController.MaleMaids))
+        Report(diagnostic, GetActorName(milkSource) + " is not eligible under MME's Milk Maid sex settings")
+        Return False
+    EndIf
+    If milkController.BeingMilkedPassive == None
+        Report(diagnostic, "MME passive-milking state spell is unavailable")
+        Return False
+    EndIf
+    If milkSource.HasSpell(milkController.BeingMilkedPassive)
+        Report(diagnostic, GetActorName(milkSource) + " is already being milked")
+        Return False
+    EndIf
+    Return True
+EndFunction
+
 String Function GetActorName(Actor target) Global
     If target == None
         Return "<no actor>"

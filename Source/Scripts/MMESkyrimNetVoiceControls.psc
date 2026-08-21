@@ -241,6 +241,16 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
         EndIf
         Return
     EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If !MMEOStimBreastfeeding.ValidateMilkSource(milkSource, milkController, routeDiagnostic)
+        Return
+    EndIf
+    Actor[] requestedPair = new Actor[2]
+    requestedPair[0] = milkSource
+    requestedPair[1] = drinker
+    If !MMEOStimIntegration.ValidatePairForCommit(requestedPair, routeDiagnostic)
+        Return
+    EndIf
     If routeDiagnostic
         Debug.Notification("Skyrim.Net BF: source=" + milkSourceName + " | drinker=" + drinkerName)
     EndIf
@@ -305,7 +315,6 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
     If routeDiagnostic
         Debug.Notification("Skyrim.Net BF: backend=SexLab")
     EndIf
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None || milkController.SexLab == None
         Debug.Trace("[MMEAlert SkyrimNet BF] SexLab rejected | MME or SexLab unavailable")
         If routeDiagnostic
@@ -333,6 +342,9 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
     ; from OStim action ordering and must not be "normalized" across frameworks.
     sceneActors[0] = milkSource
     sceneActors[1] = drinker
+    If !MMEOStimBreastfeeding.ValidateMilkSource(milkSource, milkController, routeDiagnostic) || !MMEOStimIntegration.ValidatePairForCommit(sceneActors, routeDiagnostic)
+        Return
+    EndIf
     If diagnostic
         Debug.Notification("Skyrim.Net BF: SexLab animation=" + animationName)
     EndIf

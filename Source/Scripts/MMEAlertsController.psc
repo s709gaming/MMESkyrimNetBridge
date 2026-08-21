@@ -19,6 +19,7 @@ Float NextSkyrimNetUpdate = 0.0
 Float NextDebugUpdate = 0.0
 Float NextArmorCheck = 0.0
 Float NextDialogueDiagnosticUpdate = 0.0
+Float NextOStimBreastfeedingWatchdog = 0.0
 Actor LastDialogueDiagnosticActor = None
 Actor PendingDialogueDiagnosticActor = None
 String LastDialogueDiagnosticState = ""
@@ -147,6 +148,7 @@ Function DisableController()
     NextArmorCheck = 0.0
     MMEArmorScript.CancelPlayerArmorCheck(Game.GetPlayer())
     NextDialogueDiagnosticUpdate = 0.0
+    NextOStimBreastfeedingWatchdog = 0.0
     LastDialogueDiagnosticActor = None
     PendingDialogueDiagnosticActor = None
     LastDialogueDiagnosticState = ""
@@ -633,6 +635,11 @@ Function RequestPlayerArmorCheck()
     ScheduleNextUpdate()
 EndFunction
 
+Function RequestOStimBreastfeedingWatchdog()
+    NextOStimBreastfeedingWatchdog = Utility.GetCurrentRealTime() + 1.0
+    ScheduleNextUpdate()
+EndFunction
+
 Function ScheduleNextUpdate()
     ; Select the earliest absolute deadline across all controller-owned work.
     ; Overdue candidates are clamped positive: RegisterForSingleUpdate ignores
@@ -683,6 +690,15 @@ Function ScheduleNextUpdate()
             delay = candidate
         EndIf
     EndIf
+    If NextOStimBreastfeedingWatchdog > 0.0
+        candidate = NextOStimBreastfeedingWatchdog - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
+    EndIf
     If delay > 0.0
         ; Dialogue needs a quarter-second post-fragment snapshot. All other work
         ; is intentionally throttled to one second to avoid tight Papyrus loops.
@@ -711,6 +727,7 @@ Event OnUpdate()
     Bool skyrimNetDue = NextSkyrimNetUpdate > 0.0 && now >= NextSkyrimNetUpdate
     Bool debugDue = NextDebugUpdate > 0.0 && now >= NextDebugUpdate
     Bool dialogueDiagnosticDue = NextDialogueDiagnosticUpdate > 0.0 && now >= NextDialogueDiagnosticUpdate
+    Bool ostimBreastfeedingDue = NextOStimBreastfeedingWatchdog > 0.0 && now >= NextOStimBreastfeedingWatchdog
     If capacityDue || skyrimNetDue
         ScanNearbyMilkMaids(skyrimNetDue, capacityDue)
     EndIf
@@ -752,6 +769,13 @@ Event OnUpdate()
         NextDialogueDiagnosticUpdate = 0.0
         MMEOpeningRefreshSnapshotAt = 0.0
         PendingDialogueDiagnosticActor = None
+    EndIf
+    If ostimBreastfeedingDue
+        NextOStimBreastfeedingWatchdog = 0.0
+        MMEDebug breastfeedingService = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
+        If breastfeedingService != None
+            breastfeedingService.HandleWatchdogUpdate()
+        EndIf
     EndIf
     ; Earlier scan/diagnostic work may be latent. Re-read real time so an
     ; armor timer that became due during this update fires in this same pass.
