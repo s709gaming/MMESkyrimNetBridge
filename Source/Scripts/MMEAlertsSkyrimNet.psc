@@ -143,7 +143,7 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
         narrationType = "Living Parasite"
         content = actorName + " has just equipped Living Parasite armor. Parasitic tendrils bury into her nipples, injecting stimulants and pleasurably draining milk."
     EndIf
-    Int result = SkyrimNetApi.DirectNarration(content, None, None)
+    Int result = SkyrimNetApi.DirectNarration(content, wearer, None)
     If result == 0
         JsonUtil.SetFloatValue("/MMEAlerts/Settings", lastKey, now)
         JsonUtil.Save("/MMEAlerts/Settings", False)
