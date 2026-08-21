@@ -20,7 +20,7 @@ String Function FindSemanticScene(Actor[] actors, Int actorPosition, Int targetP
     Return sceneID
 EndFunction
 
-Int Function StartManualScene(Actor[] actors, String sceneID, String metadata, Bool diagnostic = False, String context = "") Global
+Int Function StartManualScene(Actor[] actors, String sceneID, String metadata, Bool suppressPlayerControl = False, Float duration = 0.0, Bool diagnostic = False, String context = "") Global
     ; Validate the already-resolved semantic request before allocating a builder.
     If actors == None || sceneID == ""
         Report(diagnostic, context + "invalid actors or scene passed to OStim")
@@ -36,14 +36,23 @@ Int Function StartManualScene(Actor[] actors, String sceneID, String metadata, B
         Return -1
     EndIf
 
-    ; Configure a deliberately manual, furniture-free thread. NoAutoMode is an
+    ; Configure a deliberately fixed, furniture-free thread. NoAutoMode is an
     ; ownership invariant used by MMEOStimBreastfeeding: if auto mode later
     ; becomes active, this integration treats the thread as externally adopted.
     OThreadBuilder.SetStartingAnimation(builderID, sceneID)
     OThreadBuilder.NoFurniture(builderID)
-    ; Prevent OStim's normal automatic progression without blocking deliberate
-    ; player navigation or another integration taking control of the thread.
     OThreadBuilder.NoAutoMode(builderID)
+    ; A player-containing dedicated action must not expose OStim's SceneMenu.
+    ; NoPlayerControl is OStim's supported control for that behavior and is a
+    ; no-op for NPC-only threads.
+    If suppressPlayerControl
+        OThreadBuilder.NoPlayerControl(builderID)
+    EndIf
+    ; With navigation disabled, keep scene termination inside OStim rather than
+    ; coupling it to MME completion or requiring this integration to stop it.
+    If duration > 0.0
+        OThreadBuilder.SetDuration(builderID, duration)
+    EndIf
     If metadata != ""
         OThreadBuilder.SetMetadataCSV(builderID, metadata)
     EndIf

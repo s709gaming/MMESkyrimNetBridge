@@ -99,7 +99,14 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
     ; OStim action actor 0 drinks from target actor 1.
     actors[0] = drinker
     actors[1] = milkSource
+    Bool playerIsActor0 = actors[0] == Game.GetPlayer()
+    Bool playerIsActor1 = actors[1] == Game.GetPlayer()
+    Bool suppressPlayerControl = playerIsActor0 || playerIsActor1
+    ; Match OStimNet's established default for a bounded nonsexual scene. This
+    ; OStim-owned timer remains independent of optional MME Mode 4 completion.
+    Float sceneDuration = 20.0
     String traceContext = "BF #" + attemptID + " "
+    TraceAttempt(attemptID, diagnostic, "roles actor0/drinker=" + GetActorName(actors[0]) + " | actor1/source=" + GetActorName(actors[1]) + " | player actor0=" + playerIsActor0 + " | player actor1=" + playerIsActor1)
     If !MMEOStimIntegration.ValidatePairForCommit(actors, diagnostic, True, traceContext)
         TraceAttempt(attemptID, diagnostic, "OStim preflight=FAIL; see preceding reason")
         Return False
@@ -125,13 +132,13 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
         passiveSpell = milkController.BeingMilkedPassive
     EndIf
     BeginSession(attemptID, caller, milkSource, drinker, passiveSpell, sceneID, diagnostic)
-    Int threadID = MMEOStimIntegration.StartManualScene(actors, sceneID, "MMEExtensions,Breastfeeding", diagnostic, traceContext)
+    Int threadID = MMEOStimIntegration.StartManualScene(actors, sceneID, "MMEExtensions,Breastfeeding", suppressPlayerControl, sceneDuration, diagnostic, traceContext)
     If threadID < 0
         EndSession("OStim builder start rejected")
         Return False
     EndIf
     ActiveThreadID = threadID
-    TraceActive("OStim builder returned thread=" + threadID)
+    TraceActive("OStim builder returned thread=" + threadID + " | NoPlayerControl applied=" + suppressPlayerControl + " | OStim duration=" + sceneDuration + " seconds")
 
     If !WaitForExpectedScene()
         If StillOwnsThread()
@@ -141,7 +148,8 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
         EndSession("OStim startup verification failed")
         Return False
     EndIf
-    TraceActive("OStim thread started | thread=" + threadID + " | scene=" + sceneID)
+    String finalSceneID = MMEOStimIntegration.GetThreadScene(threadID)
+    TraceActive("OStim thread started | thread=" + threadID + " | selected scene=" + sceneID + " | final current scene=" + finalSceneID + " | NoPlayerControl applied=" + suppressPlayerControl)
 
     ; MME is an optional gameplay sidecar. Its eligibility, startup, completion,
     ; or failure never determines the lifetime of the valid OStim animation.
