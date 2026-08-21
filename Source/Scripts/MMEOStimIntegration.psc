@@ -7,32 +7,32 @@ EndFunction
 
 ; Keeps direct OStim API calls in one optional integration boundary. Nothing in
 ; this source is installed in place of OStim's real scripts.
-String Function FindSemanticScene(Actor[] actors, Int actorPosition, Int targetPosition, String actionType, Bool diagnostic = False) Global
+String Function FindSemanticScene(Actor[] actors, Int actorPosition, Int targetPosition, String actionType, Bool diagnostic = False, String context = "") Global
     If actors == None || !OActor.VerifyActors(actors)
-        Report(diagnostic, "OStim rejected one or more actors")
+        Report(diagnostic, context + "OStim rejected one or more actors")
         Return ""
     EndIf
 
     String sceneID = OLibrary.GetRandomSceneWithActionForActorAndTarget(actors, actorPosition, targetPosition, actionType)
     If sceneID == ""
-        Report(diagnostic, "no compatible OStim " + actionType + " scene found")
+        Report(diagnostic, context + "no compatible OStim " + actionType + " scene found")
     EndIf
     Return sceneID
 EndFunction
 
-Int Function StartManualScene(Actor[] actors, String sceneID, String metadata, Bool diagnostic = False) Global
+Int Function StartManualScene(Actor[] actors, String sceneID, String metadata, Bool diagnostic = False, String context = "") Global
     ; Validate the already-resolved semantic request before allocating a builder.
     If actors == None || sceneID == ""
-        Report(diagnostic, "invalid actors or scene passed to OStim")
+        Report(diagnostic, context + "invalid actors or scene passed to OStim")
         Return -1
     EndIf
-    If !ValidatePairForCommit(actors, diagnostic, True)
+    If !ValidatePairForCommit(actors, diagnostic, True, context)
         Return -1
     EndIf
 
     Int builderID = OThreadBuilder.Create(actors)
     If builderID < 0
-        Report(diagnostic, "OStim scene builder rejected the actors")
+        Report(diagnostic, context + "OStim scene builder rejected the actors")
         Return -1
     EndIf
 
@@ -53,7 +53,7 @@ Int Function StartManualScene(Actor[] actors, String sceneID, String metadata, B
     Int threadID = OThreadBuilder.Start(builderID)
     If threadID < 0
         OThreadBuilder.Cancel(builderID)
-        Report(diagnostic, "OStim scene start rejected for " + sceneID)
+        Report(diagnostic, context + "OStim scene start rejected for " + sceneID)
     EndIf
     Return threadID
 EndFunction
@@ -118,34 +118,34 @@ EndFunction
 ; Rechecked at the final framework commit boundary. OStimNet uses the same
 ; same-cell and cross-framework rules to prevent delayed Skyrim.Net actions
 ; from stealing actors whose world state changed after action selection.
-Bool Function ValidatePairForCommit(Actor[] actors, Bool diagnostic = False, Bool requireOStimVerification = False) Global
+Bool Function ValidatePairForCommit(Actor[] actors, Bool diagnostic = False, Bool requireOStimVerification = False, String context = "") Global
     If actors == None || actors.Length != 2 || actors[0] == None || actors[1] == None || actors[0] == actors[1]
-        Report(diagnostic, "invalid source/drinker pair at scene commit")
+        Report(diagnostic, context + "invalid source/drinker pair at scene commit")
         Return False
     EndIf
     If actors[0].IsDead() || actors[0].IsDisabled() || !actors[0].Is3DLoaded() || actors[1].IsDead() || actors[1].IsDisabled() || !actors[1].Is3DLoaded()
-        Report(diagnostic, "source or drinker became unavailable before scene commit")
+        Report(diagnostic, context + "source or drinker became unavailable before scene commit")
         Return False
     EndIf
     If actors[0].IsChild() || actors[1].IsChild()
-        Report(diagnostic, "OStim/SexLab breastfeeding does not accept child actors")
+        Report(diagnostic, context + "OStim/SexLab breastfeeding does not accept child actors")
         Return False
     EndIf
     Cell firstCell = actors[0].GetParentCell()
     If firstCell == None || actors[1].GetParentCell() != firstCell
-        Report(diagnostic, "source and drinker are no longer in the same cell")
+        Report(diagnostic, context + "source and drinker are no longer in the same cell")
         Return False
     EndIf
     If actors[0].IsInCombat() || actors[1].IsInCombat()
-        Report(diagnostic, "source or drinker entered combat before scene commit")
+        Report(diagnostic, context + "source or drinker entered combat before scene commit")
         Return False
     EndIf
     If IsActorBusy(actors[0]) || IsActorBusy(actors[1])
-        Report(diagnostic, "source or drinker is already controlled by OStim or SexLab")
+        Report(diagnostic, context + "source or drinker is already controlled by OStim or SexLab")
         Return False
     EndIf
     If requireOStimVerification && !OActor.VerifyActors(actors)
-        Report(diagnostic, "OStim rejected source or drinker during final verification")
+        Report(diagnostic, context + "OStim rejected source or drinker during final verification")
         Return False
     EndIf
     Return True

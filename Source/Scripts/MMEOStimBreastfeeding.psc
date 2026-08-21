@@ -3,19 +3,19 @@ Scriptname MMEOStimBreastfeeding extends TopicInfo Hidden
 ; Thin dialogue adapter. Both dialogue and Skyrim.Net call the persistent quest
 ; service because TopicInfo script objects are not safe external entry points.
 Function Fragment_PlayerDrinks(ObjectReference akSpeakerRef)
-    StartSharedBreastfeeding(akSpeakerRef as Actor, Game.GetPlayer())
+    StartSharedBreastfeeding(akSpeakerRef as Actor, Game.GetPlayer(), "Dialogue")
 EndFunction
 Function Fragment_NPCDrinks(ObjectReference akSpeakerRef)
-    StartSharedBreastfeeding(Game.GetPlayer(), akSpeakerRef as Actor)
+    StartSharedBreastfeeding(Game.GetPlayer(), akSpeakerRef as Actor, "Dialogue")
 EndFunction
 
-Bool Function StartSharedBreastfeeding(Actor milkSource, Actor drinker) Global
+Bool Function StartSharedBreastfeeding(Actor milkSource, Actor drinker, String caller = "Dialogue") Global
     MMEDebug service = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
     If service == None
         Report(JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableOStimDebug", 0) == 1, "persistent OStim breastfeeding service could not resolve")
         Return False
     EndIf
-    Return service.StartBreastfeeding(milkSource, drinker)
+    Return service.StartBreastfeeding(milkSource, drinker, False, caller)
 EndFunction
 
 Bool Function IsOStimDetected() Global

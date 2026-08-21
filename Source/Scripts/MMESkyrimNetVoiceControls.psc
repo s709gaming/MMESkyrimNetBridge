@@ -241,16 +241,6 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
         EndIf
         Return
     EndIf
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If !MMEOStimBreastfeeding.ValidateMilkSource(milkSource, milkController, routeDiagnostic)
-        Return
-    EndIf
-    Actor[] requestedPair = new Actor[2]
-    requestedPair[0] = milkSource
-    requestedPair[1] = drinker
-    If !MMEOStimIntegration.ValidatePairForCommit(requestedPair, routeDiagnostic)
-        Return
-    EndIf
     If routeDiagnostic
         Debug.Notification("Skyrim.Net BF: source=" + milkSourceName + " | drinker=" + drinkerName)
     EndIf
@@ -293,7 +283,7 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
         If skyrimNetOStimTrace
             Debug.Notification("SN OStim Trace: calling shared StartBreastfeeding")
         EndIf
-        Bool ostimStarted = ostimService.StartBreastfeeding(milkSource, drinker, routeDiagnostic)
+        Bool ostimStarted = ostimService.StartBreastfeeding(milkSource, drinker, routeDiagnostic, "Skyrim.Net")
         If routeDiagnostic
             If ostimStarted
                 Debug.Notification("Skyrim.Net BF: OStim breastfeeding started")
@@ -315,11 +305,15 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
     If routeDiagnostic
         Debug.Notification("Skyrim.Net BF: backend=SexLab")
     EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None || milkController.SexLab == None
         Debug.Trace("[MMEAlert SkyrimNet BF] SexLab rejected | MME or SexLab unavailable")
         If routeDiagnostic
             Debug.Notification("Skyrim.Net BF: SexLab unavailable")
         EndIf
+        Return
+    EndIf
+    If !MMEOStimBreastfeeding.ValidateMilkSource(milkSource, milkController, routeDiagnostic)
         Return
     EndIf
     sslBaseAnimation[] animations = new sslBaseAnimation[1]
