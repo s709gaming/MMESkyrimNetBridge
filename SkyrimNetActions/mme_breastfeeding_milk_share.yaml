@@ -1,14 +1,14 @@
 name: StartBreastfeedingMilkShare
 label: Breastfeeding milk share
-description: "Start a consensual breastfeeding scene in which the speaker is the MME Milk Maid offering her breast and the selected target is the actor drinking from her. Use only when the speaker and target naturally agree to that exact source/drinker arrangement; do not reverse their roles. The target may be {{ player.name }} or another nearby actor."
+description: "Dedicated breastfeeding action: the speaker offers their breast and the selected target drinks from it. Use this instead of any generic OStim care/sex action whenever that exact consensual nipple-sucking intent is agreed. In this action only, speaker = milk source and target = drinker; use StartBreastfeedingDrinkFromTarget for the reverse. The source need not be an MME Milk Maid when the OStim backend is enabled; MME milk effects are optional. The target may be {{ player.name }} or another nearby actor."
 questEditorId: MMEAlertDebugQuest
 scriptName: MMEAlertsController
 executionFunctionName: StartBreastfeedingMilkShare
-defaultPriority: 7
+defaultPriority: 9
 parameterMapping:
   - type: speaker
     name: milkSource
-    description: the MME Milk Maid whose breast is being used; this actor is the milk source, never the drinker
+    description: the speaker whose breast is being used; this actor is the milk source, never the drinker
   - type: dynamic
     name: target
     description: the nearby actor who will drink from the speaker's breast; this actor is the drinker, never the milk source

@@ -85,6 +85,7 @@ Int selfMilkingActionDiagnosticOption
 Int pairedMilkingActionDiagnosticOption
 Int masterEnableOption
 Int ostimBreastfeedingOption
+Int ostimBreastfeedingDurationOption
 Int ostimStatusOption
 Int ostimDebugOption
 Int playerMilkingArmorEquipMoanOption
@@ -109,7 +110,7 @@ Int blacksmithDebugOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 77
+    Return 78
 EndFunction
 
 Function SetPageNames()
@@ -219,6 +220,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableOStimBreastfeeding", MMEOStimBreastfeeding.IsOStimDetected() as Int)
+        JsonUtil.SetFloatValue(SettingsFile, "ostimBreastfeedingDuration", 20.0)
         JsonUtil.SetIntValue(SettingsFile, "enableOStimDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "ostimBreastfeedingMigration70", 1)
         SetArmorReactionDefaults()
@@ -676,6 +678,13 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "blacksmithServiceMigration77", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Dedicated OStim breastfeeding scenes suppress navigation, so their safe
+    ; OStim-owned end condition has its own gameplay-independent duration.
+    If JsonUtil.GetIntValue(SettingsFile, "ostimBreastfeedingDurationMigration78", 0) == 0
+        JsonUtil.SetFloatValue(SettingsFile, "ostimBreastfeedingDuration", 20.0)
+        JsonUtil.SetIntValue(SettingsFile, "ostimBreastfeedingDurationMigration78", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -800,6 +809,7 @@ Event OnPageReset(String page)
     pairedMilkingActionDiagnosticOption = -1
     masterEnableOption = -1
     ostimBreastfeedingOption = -1
+    ostimBreastfeedingDurationOption = -1
     ostimStatusOption = -1
     ostimDebugOption = -1
     playerMilkingArmorEquipMoanOption = -1
@@ -857,6 +867,7 @@ Event OnPageReset(String page)
         AddHeaderOption("OStim")
         ostimStatusOption = AddToggleOption("OStim Detected", ostimAvailable, OPTION_FLAG_DISABLED)
         ostimBreastfeedingOption = AddToggleOption("Use OStim Breastfeeding", JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0) == 1, ostimFlags)
+        ostimBreastfeedingDurationOption = AddSliderOption("OStim Breastfeeding Scene Duration", JsonUtil.GetFloatValue(SettingsFile, "ostimBreastfeedingDuration", 20.0), "{0} seconds", ostimFlags)
         Return
     EndIf
     If page == "A" + "rousal "
@@ -1060,6 +1071,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Set how long NPC fullness self-milk animations play before the actor returns to idle.")
     ElseIf option == ostimBreastfeedingOption
         SetInfoText("Add optional OStim nipple-sucking choices beside MME's original SexLab breastfeeding dialogue.")
+    ElseIf option == ostimBreastfeedingDurationOption
+        SetInfoText("Set how long the dedicated fixed OStim breastfeeding scene runs. This is independent of MME milking completion.")
     ElseIf option == ostimStatusOption
         SetInfoText("Read-only. Enabled when OStim.esp is active in the load order.")
     ElseIf option == ostimDebugOption
@@ -1101,7 +1114,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == skyrimNetPromptDiagnosticOption
         SetInfoText("Report when SkyrimNet renders the optional Milkmaid bio prompt for an actor.")
     ElseIf option == skyrimNetOStimTraceOption
-        SetInfoText("Show in-game checkpoints for Skyrim.Net breastfeeding actor validation, OStim selection, handler resolution, and startup results.")
+        SetInfoText("Show Skyrim.Net breastfeeding action selection, semantic roles, OStim routing, and startup. If no SN BF intent appears, another action was selected before this mod ran.")
     ElseIf option == skyrimNetStatusOption
         SetInfoText("Read-only. Enabled when SkyrimNet.esp is active in the load order.")
     ElseIf option == skyrimNetMilkStatusesOption
@@ -1612,6 +1625,11 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(3.0)
         SetSliderDialogRange(0.0, 10.0)
         SetSliderDialogInterval(1.0)
+    ElseIf option == ostimBreastfeedingDurationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "ostimBreastfeedingDuration", 20.0))
+        SetSliderDialogDefaultValue(20.0)
+        SetSliderDialogRange(5.0, 60.0)
+        SetSliderDialogInterval(5.0)
     ElseIf option == playerMilkingArmorNarrationCooldownOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "playerMilkingArmorNarrationCooldown", 120.0))
         SetSliderDialogDefaultValue(120.0)
@@ -1693,6 +1711,10 @@ Event OnOptionSliderAccept(Int option, Float value)
         SetSliderOptionValue(option, value, "{0} seconds")
     ElseIf option == npcFullnessSelfMilkAnimationDurationOption
         JsonUtil.SetFloatValue(SettingsFile, "npcFullnessSelfMilkAnimationDuration", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == ostimBreastfeedingDurationOption
+        JsonUtil.SetFloatValue(SettingsFile, "ostimBreastfeedingDuration", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
     ElseIf option == playerMilkingArmorNarrationCooldownOption

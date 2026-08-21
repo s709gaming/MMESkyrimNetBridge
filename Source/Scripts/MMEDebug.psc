@@ -63,11 +63,15 @@ Function RecoverAfterLoad()
     EndIf
 EndFunction
 
-Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDiagnostic = False, String caller = "Unknown")
+Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDiagnostic = False, String caller = "Unknown", String semanticIntent = "")
     Bool diagnostic = callerDiagnostic || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableOStimDebug", 0) == 1
     AttemptSequence += 1
     Int attemptID = AttemptSequence
-    TraceAttempt(attemptID, diagnostic, "caller=" + caller + " | source=" + GetActorName(milkSource) + " | drinker=" + GetActorName(drinker))
+    String requestTrace = "caller=" + caller
+    If semanticIntent != ""
+        requestTrace += " | semantic intent=" + semanticIntent
+    EndIf
+    TraceAttempt(attemptID, diagnostic, requestTrace + " | normalized source=" + GetActorName(milkSource) + " | normalized drinker=" + GetActorName(drinker))
 
     ; Reject duplicate requests before any scene or MME work begins.
     If ActiveSession
@@ -102,9 +106,14 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
     Bool playerIsActor0 = actors[0] == Game.GetPlayer()
     Bool playerIsActor1 = actors[1] == Game.GetPlayer()
     Bool suppressPlayerControl = playerIsActor0 || playerIsActor1
-    ; Match OStimNet's established default for a bounded nonsexual scene. This
-    ; OStim-owned timer remains independent of optional MME Mode 4 completion.
-    Float sceneDuration = 20.0
+    ; Match OStimNet's established default for a bounded nonsexual scene while
+    ; allowing the dedicated duration to be configured independently of MME.
+    Float sceneDuration = JsonUtil.GetFloatValue(SettingsFile, "ostimBreastfeedingDuration", 20.0)
+    If sceneDuration < 5.0
+        sceneDuration = 5.0
+    ElseIf sceneDuration > 60.0
+        sceneDuration = 60.0
+    EndIf
     String traceContext = "BF #" + attemptID + " "
     TraceAttempt(attemptID, diagnostic, "roles actor0/drinker=" + GetActorName(actors[0]) + " | actor1/source=" + GetActorName(actors[1]) + " | player actor0=" + playerIsActor0 + " | player actor1=" + playerIsActor1)
     If !MMEOStimIntegration.ValidatePairForCommit(actors, diagnostic, True, traceContext)

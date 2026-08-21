@@ -206,7 +206,7 @@ Function VoiceGiveMilkExecute(Actor candidate) Global
 EndFunction
 
 ; Skyrim.Net resolves its conversational second actor through the target parameter.
-Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
+Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String semanticIntent = "speaker/source offers to target/drinker") Global
     ; Phase 1: validate action policy and both actor references before selecting
     ; a framework. The parameter contract is explicit source then drinker.
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingActionDiagnostic", 0) == 1
@@ -216,9 +216,12 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
     Actor drinker = target
     String milkSourceName = MMEOStimBreastfeeding.GetActorName(milkSource)
     String drinkerName = MMEOStimBreastfeeding.GetActorName(drinker)
-    Debug.Trace("[MMEAlert SkyrimNet BF] action received | milk source=" + milkSourceName + " " + milkSource + " | drinker=" + drinkerName + " " + drinker)
+    Debug.Trace("[MMEAlert SkyrimNet BF] action received | semantic intent=" + semanticIntent + " | normalized milk source=" + milkSourceName + " " + milkSource + " | normalized drinker=" + drinkerName + " " + drinker)
     If routeDiagnostic
         Debug.Notification("Skyrim.Net BF: action received")
+    EndIf
+    If skyrimNetOStimTrace
+        Debug.Notification("SN BF intent: " + semanticIntent)
     EndIf
     If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingAction", 1) != 1
         Debug.Trace("[MMEAlert SkyrimNet BF] rejected | MME Extensions or paired milking action disabled")
@@ -283,7 +286,7 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target) Global
         If skyrimNetOStimTrace
             Debug.Notification("SN OStim Trace: calling shared StartBreastfeeding")
         EndIf
-        Bool ostimStarted = ostimService.StartBreastfeeding(milkSource, drinker, routeDiagnostic, "Skyrim.Net")
+        Bool ostimStarted = ostimService.StartBreastfeeding(milkSource, drinker, routeDiagnostic, "Skyrim.Net", semanticIntent)
         If routeDiagnostic
             If ostimStarted
                 Debug.Notification("Skyrim.Net BF: OStim breastfeeding started")

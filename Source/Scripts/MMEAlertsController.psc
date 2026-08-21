@@ -118,8 +118,16 @@ EndFunction
 ; Skyrim.Net resolves quest action scripts from the existing quest instance.
 ; Keep this entry point on the controller so upgrades work in established saves.
 Function StartBreastfeedingMilkShare(Actor milkSource, Actor target)
-    Debug.Trace("[MMEAlert SkyrimNet BF] quest action entry reached | milk source=" + milkSource + " | target/drinker=" + target)
-    MMESkyrimNetVoiceControls.StartBreastfeedingMilkShare(milkSource, target)
+    Debug.Trace("[MMEAlert SkyrimNet BF] dedicated action selected | semantic intent=speaker offers breast to target | speaker/source=" + milkSource + " | target/drinker=" + target)
+    MMESkyrimNetVoiceControls.StartBreastfeedingMilkShare(milkSource, target, "speaker/source=" + MMEOStimBreastfeeding.GetActorName(milkSource) + " | target/drinker=" + MMEOStimBreastfeeding.GetActorName(target))
+EndFunction
+
+; Reverse Skyrim.Net contract: the conversational speaker is the drinker and
+; the selected target is the source. Normalize it before entering the one shared
+; OStim/SexLab backend so animation and gameplay logic are never duplicated.
+Function StartBreastfeedingDrinkFromTarget(Actor drinker, Actor milkSource)
+    Debug.Trace("[MMEAlert SkyrimNet BF] dedicated action selected | semantic intent=speaker drinks from target | speaker/drinker=" + drinker + " | target/source=" + milkSource)
+    MMESkyrimNetVoiceControls.StartBreastfeedingMilkShare(milkSource, drinker, "speaker/drinker=" + MMEOStimBreastfeeding.GetActorName(drinker) + " | target/source=" + MMEOStimBreastfeeding.GetActorName(milkSource))
 EndFunction
 
 ; Stops scheduled work and event subscriptions without removing saved state.

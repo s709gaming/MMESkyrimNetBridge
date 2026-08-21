@@ -151,12 +151,18 @@ if (Test-Path -LiteralPath $milkmaidPrompt) {
     Copy-Item -LiteralPath $milkmaidPrompt -Destination $promptDestination
 }
 
-# Skyrim.Net YAML maps its conversational speaker and dynamic target directly
-# to the two-actor milk-sharing bridge on MMEAlertDebugQuest.
-$milkShareAction = Join-Path $projectRoot "SkyrimNetActions\mme_breastfeeding_milk_share.yaml"
-if (Test-Path -LiteralPath $milkShareAction) {
-    $actionDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\config\actions"
-    New-Item -ItemType Directory -Force -Path $actionDestination | Out-Null
+# Skyrim.Net exposes explicit source-speaks and drinker-speaks contracts. Both
+# normalize into the same two-actor bridge on MMEAlertDebugQuest.
+$milkShareActions = @(
+    (Join-Path $projectRoot "SkyrimNetActions\mme_breastfeeding_milk_share.yaml"),
+    (Join-Path $projectRoot "SkyrimNetActions\mme_breastfeeding_drink_from_target.yaml")
+)
+$actionDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\config\actions"
+New-Item -ItemType Directory -Force -Path $actionDestination | Out-Null
+foreach ($milkShareAction in $milkShareActions) {
+    if (!(Test-Path -LiteralPath $milkShareAction)) {
+        throw "Required Skyrim.Net breastfeeding action is missing: $milkShareAction"
+    }
     Copy-Item -LiteralPath $milkShareAction -Destination $actionDestination
 }
 
