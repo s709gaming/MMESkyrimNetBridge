@@ -8,17 +8,36 @@ Scriptname MMEArmorScript Hidden
 ; MilkCycle also changes production, progression, effects, and arousal. The
 ; second half is an independent per-equip reaction/classification pipeline.
 
-; Records an attempted direct-drink overflow before MME's storage API can
-; clamp it. The existing deferred pass consumes this marker.
-Function MarkPlayerOverflowPending(Actor target) Global
+; Records the post-drink value before MME's storage API can clamp it. Rapid
+; drinks share one debounce window, so retain the highest attempt until the
+; delayed pass consumes it. The overflow bit remains separate because it also
+; controls MME's leak reconciliation.
+Function MarkPlayerDrinkAttempt(Actor target, Float attemptedMilk, Bool attemptedOverflow) Global
     If target == Game.GetPlayer()
-        StorageUtil.SetIntValue(target, "MMEExtensions.PostDrinkOverflow.Pending", 1)
-        Report(GetDiagnostic(), "overflow attempt marked for post-drink stripping check")
+        Float pendingAttempt = StorageUtil.GetFloatValue(target, "MMEExtensions.ArmorCheck.AttemptedMilk", attemptedMilk)
+        If !StorageUtil.HasFloatValue(target, "MMEExtensions.ArmorCheck.AttemptedMilk") || attemptedMilk > pendingAttempt
+            StorageUtil.SetFloatValue(target, "MMEExtensions.ArmorCheck.AttemptedMilk", attemptedMilk)
+        EndIf
+        If attemptedOverflow
+            StorageUtil.SetIntValue(target, "MMEExtensions.PostDrinkOverflow.Pending", 1)
+        EndIf
+        Report(False, "drink attempt retained | attemptedMilk=" + attemptedMilk + " | overflowAttempt=" + attemptedOverflow)
     EndIf
 EndFunction
 
 Bool Function HasPendingPlayerOverflow(Actor target) Global
     Return target == Game.GetPlayer() && StorageUtil.GetIntValue(target, "MMEExtensions.PostDrinkOverflow.Pending", 0) == 1
+EndFunction
+
+Bool Function HasPendingPlayerDrinkAttempt(Actor target) Global
+    Return target == Game.GetPlayer() && StorageUtil.HasFloatValue(target, "MMEExtensions.ArmorCheck.AttemptedMilk")
+EndFunction
+
+Function ClearPendingPlayerDrinkAttempt(Actor target) Global
+    If target == Game.GetPlayer()
+        StorageUtil.UnsetFloatValue(target, "MMEExtensions.ArmorCheck.AttemptedMilk")
+        StorageUtil.UnsetIntValue(target, "MMEExtensions.PostDrinkOverflow.Pending")
+    EndIf
 EndFunction
 
 ; Queues the debounced player post-drink pass after a real milk gain or an
@@ -34,6 +53,7 @@ Function SchedulePlayerArmorCheck(Actor target) Global
     MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
     If controller == None
         Report(diagnostic, "PLAYER armor check skipped: controller unavailable")
+        ClearPendingPlayerDrinkAttempt(target)
         Return
     EndIf
     ; Phase 2: bump a persistent generation before arming the controller timer.
@@ -57,12 +77,14 @@ Function CheckPlayerArmorNow(Actor target) Global
     Bool diagnostic = GetDiagnostic()
     If StorageUtil.GetIntValue(target, "MMEExtensions.ArmorCheck.Generation", 0) <= 0
         Report(diagnostic, "timer fired but request token was missing")
+        ClearPendingPlayerDrinkAttempt(target)
         Return
     EndIf
     StorageUtil.SetIntValue(target, "MMEExtensions.ArmorCheck.Generation", 0)
     Bool attemptedOverflow = HasPendingPlayerOverflow(target)
-    StorageUtil.UnsetIntValue(target, "MMEExtensions.PostDrinkOverflow.Pending")
-    Report(diagnostic, "running | actor=PLAYER | milk=" + MME_Storage.getMilkCurrent(target) + " | overflowAttempt=" + attemptedOverflow)
+    Float attemptedMilk = StorageUtil.GetFloatValue(target, "MMEExtensions.ArmorCheck.AttemptedMilk", MME_Storage.getMilkCurrent(target))
+    ClearPendingPlayerDrinkAttempt(target)
+    Report(False, "running | actor=PLAYER | storedMilk=" + MME_Storage.getMilkCurrent(target) + " | attemptedMilk=" + attemptedMilk + " | overflowAttempt=" + attemptedOverflow)
 
     ; Phase 2: resolve live MME state and verify Player membership. MilkQUEST and
     ; its MilkMaid array are authoritative; a StorageUtil milk value alone does
@@ -117,7 +139,11 @@ Function CheckPlayerArmorNow(Actor target) Global
     ; Phase 4: classify the ordinary body armor with MME's original thresholds.
     ; The strict greater-than comparison is intentional and preserves the
     ; existing heavy=4, light=8, clothing=12 behavior exactly.
-    Float milk = MME_Storage.getMilkCurrent(target)
+    Float storedMilk = MME_Storage.getMilkCurrent(target)
+    Float effectiveMilk = storedMilk
+    If attemptedMilk > effectiveMilk
+        effectiveMilk = attemptedMilk
+    EndIf
     Float threshold = GetArmorThreshold(slotArmor)
     String armorKind = "clothes"
     If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD2, "Skyrim.esm") as Keyword)
@@ -125,13 +151,12 @@ Function CheckPlayerArmorNow(Actor target) Global
     ElseIf slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD3, "Skyrim.esm") as Keyword)
         armorKind = "light armor"
     EndIf
-    Report(diagnostic, "type=" + armorKind + " | milk=" + milk + " | threshold=" + threshold)
     If threshold <= 0.0
         Report(diagnostic, "decision=BLOCKED | unclassified armor")
         Return
     EndIf
-    If milk <= threshold
-        Report(diagnostic, "decision=BLOCKED | milk does not exceed threshold")
+    If effectiveMilk <= threshold
+        ReportDecision(diagnostic, "type=" + armorKind + " | storedMilk=" + storedMilk + " | attemptedMilk=" + attemptedMilk + " | effectiveMilk=" + effectiveMilk + " | threshold=" + threshold + " | decision=BLOCKED")
         Return
     EndIf
 
@@ -139,14 +164,14 @@ Function CheckPlayerArmorNow(Actor target) Global
     ; A successful Papyrus call is not proof: quests or equipment systems may
     ; immediately retain/re-equip an item, which diagnostics must report honestly.
     ; Exactly one mutually-exclusive strip decision and one notification.
-    Report(diagnostic, "decision=ALLOWED | requesting unequip")
+    ReportDecision(diagnostic, "type=" + armorKind + " | storedMilk=" + storedMilk + " | attemptedMilk=" + attemptedMilk + " | effectiveMilk=" + effectiveMilk + " | threshold=" + threshold + " | decision=ALLOWED")
     target.UnequipItem(slotArmor)
     If target.GetWornForm(bodyMask) == slotArmor
         Report(diagnostic, "result=BLOCKED | engine retained " + armorKind)
         Return
     EndIf
     Debug.Notification("Your breasts are too big to fit into your " + armorKind)
-    Report(diagnostic, "result=STRIPPED | " + armorKind + " | milk=" + milk + " > " + threshold)
+    Report(diagnostic, "result=STRIPPED | " + armorKind + " | effectiveMilk=" + effectiveMilk + " > " + threshold)
 EndFunction
 
 ; Applies MME MilkCycle's overflow math and leak calls to the current player
@@ -303,6 +328,12 @@ EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
     Debug.Trace("[MMEAlert Armor Stripping Check] " + reportText)
+EndFunction
+
+; Keep the full trace in Papyrus, but show only the useful threshold decision
+; on the HUD when the diagnostic is enabled.
+Function ReportDecision(Bool showNotification, String reportText) Global
+    Report(False, reportText)
     If showNotification
         Debug.Notification("Armor Stripping Check: " + reportText)
     EndIf

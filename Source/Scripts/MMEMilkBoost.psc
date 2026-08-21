@@ -66,15 +66,15 @@ Float Function ApplyMilkDrinkBonusForActor(Actor drinker, Int drinkKind, Bool sh
         MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
         Bool enforceMilkLimit = milkController != None && milkController.BreastScaleLimit
         Float milkBefore = MME_Storage.getMilkCurrent(drinker)
+        Float attemptedMilk = milkBefore + milkAdded
+        Bool attemptedOverflow = False
         If milkController != None
             Float milkMaximum = MME_Storage.getMilkMaximum(drinker)
-            If milkMaximum > 0.0 && milkBefore + milkAdded > milkMaximum
-                ; Remember the attempted overflow before MME's enforcing
-                ; storage call clamps it, so the shared deferred pass can run
-                ; the leak branch that MilkCycle would normally run.
-                MMEArmorScript.MarkPlayerOverflowPending(drinker)
-            EndIf
+            attemptedOverflow = milkMaximum > 0.0 && attemptedMilk > milkMaximum
         EndIf
+        ; Preserve the attempted post-drink value independently of MME's real
+        ; stored value. Only the delayed armor threshold check uses this value.
+        MMEArmorScript.MarkPlayerDrinkAttempt(drinker, attemptedMilk, attemptedOverflow)
         MME_Storage.changeMilkCurrent(drinker, milkAdded, enforceMilkLimit)
         ; Phase 3: refresh MME visual size only after a real stored increase and
         ; return the actual delta, not the requested amount.

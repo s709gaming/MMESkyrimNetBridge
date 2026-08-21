@@ -111,9 +111,9 @@ Function HandleNativePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, S
     If animationStarted
         RegisterForSingleUpdate(JsonUtil.GetFloatValue(SettingsFile, "playerDrinkAnimationDuration", 3.0))
     EndIf
-    ; Phase 3: queue the existing deferred post-drink pass after a real gain or when
-    ; MME clamped an attempted overflow to the already-full capacity.
-    If milkDelta > 0.0 || MMEArmorScript.HasPendingPlayerOverflow(drinker)
+    ; Phase 3: queue the existing deferred post-drink pass whenever the boost
+    ; retained an attempted value, including a write MME clamped completely.
+    If milkDelta > 0.0 || MMEArmorScript.HasPendingPlayerDrinkAttempt(drinker)
         MMEArmorScript.SchedulePlayerArmorCheck(drinker)
     EndIf
     Debug.Trace("[MMEAlert Player Drink] processed player | " + pluginName + ":" + localFormID)
