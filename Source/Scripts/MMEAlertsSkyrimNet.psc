@@ -75,22 +75,49 @@ Function SendMilkingEnd(Actor milkMaid) Global
     SendMilkingEvent(milkMaid, "endMessage")
 EndFunction
 
-; Supported Milking Armor equips use a global cooldown per role.
-Int Function NarrateMilkingArmorEquip(Actor wearer) Global
+; Direct narration for one supported armor equip. Classification is repeated
+; here so narration never trusts a caller's label or a hardcoded armor name.
+Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
     Bool diagnostic = MMEArmorScript.GetArmorDiagnostic()
-    If !IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkingArmorEvents", 1) != 1
-        MMEArmorScript.ReportArmor(diagnostic, "repeat narration skipped: armor events disabled")
+    If !IsExtensionsEnabled()
         Return -1
     EndIf
-    If !IsAvailable() || wearer == None || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
-        MMEArmorScript.ReportArmor(diagnostic, "repeat narration skipped: Skyrim.Net unavailable")
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If wearer == None || equippedArmor == None || milkController == None || milkController.MilkMaid.Find(wearer) == -1
+        MMEArmorScript.ReportArmor(diagnostic, "equip narration rejected: actor/armor missing or actor not an MME Milk Maid")
         Return -2
+    EndIf
+
+    Int armorClass = MMEArmorScript.ClassifyArmor(milkController, equippedArmor)
+    String armorType = MMEArmorScript.GetArmorTypeLabel(armorClass)
+    String matchSource = MMEArmorScript.GetArmorClassificationSource(milkController, equippedArmor)
+    Bool isPlayer = wearer == Game.GetPlayer()
+    String role = "NPC"
+    String narrationToggle = "enableNPCMilkArmorEquipNarration"
+    If isPlayer
+        role = "PLAYER"
+        narrationToggle = "enablePlayerMilkArmorEquipNarration"
+    EndIf
+    String actorName = ResolveActorName(wearer, "The Milk Maid")
+    MMEArmorScript.ReportArmor(diagnostic, "equip narration detected | actor=" + actorName + " | role=" + role + " | armor=" + equippedArmor.GetName() + " | matched=" + matchSource + " | classification=" + armorType)
+    If armorClass == 0
+        MMEArmorScript.ReportArmor(diagnostic, "equip narration skipped: Unsupported")
+        Return -3
+    EndIf
+    Bool narrationEnabled = JsonUtil.GetIntValue("/MMEAlerts/Settings", narrationToggle, 1) == 1
+    MMEArmorScript.ReportArmor(diagnostic, "equip narration enabled=" + narrationEnabled + " | role=" + role + " | type=" + armorType)
+    If !narrationEnabled
+        Return -4
+    EndIf
+    If !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
+        MMEArmorScript.ReportArmor(diagnostic, "equip narration failed: Skyrim.Net unavailable")
+        Return -5
     EndIf
 
     String cooldownKey = "npcMilkingArmorNarrationCooldown"
     String lastKey = "lastNPCMilkingArmorNarrationRealTime"
     Float defaultCooldown = 300.0
-    If wearer == Game.GetPlayer()
+    If isPlayer
         cooldownKey = "playerMilkingArmorNarrationCooldown"
         lastKey = "lastPlayerMilkingArmorNarrationRealTime"
         defaultCooldown = 120.0
@@ -103,21 +130,28 @@ Int Function NarrateMilkingArmorEquip(Actor wearer) Global
     EndIf
     If last >= 0.0 && now - last < cooldown
         Int remaining = (cooldown - (now - last)) as Int
-        MMEArmorScript.ReportArmor(diagnostic, "repeat narration skipped by cooldown | " + remaining + "s")
-        Return -3
+        MMEArmorScript.ReportArmor(diagnostic, "equip narration skipped by " + role + " cooldown | " + remaining + "s | type=" + armorType)
+        Return -6
     EndIf
 
-    String actorName = ResolveActorName(wearer, "The Milk Maid")
-    String content = actorName + " has just equipped her Milking Armor. It settles snugly around her breasts, ready to accommodate and milk her."
+    String narrationType = "Milking Armor"
+    String content = actorName + " has just equipped Milking Armor. Suction cups settle onto her nipples, ready to milk her."
+    If armorClass == 2
+        narrationType = "Living Armor"
+        content = actorName + " has just equipped Living Armor. Living tendrils bury into her nipples, injecting stimulants and pleasurably draining milk."
+    ElseIf armorClass == 3
+        narrationType = "Living Parasite"
+        content = actorName + " has just equipped Living Parasite armor. Parasitic tendrils bury into her nipples, injecting stimulants and pleasurably draining milk."
+    EndIf
     Int result = SkyrimNetApi.DirectNarration(content, None, None)
     If result == 0
         JsonUtil.SetFloatValue("/MMEAlerts/Settings", lastKey, now)
         JsonUtil.Save("/MMEAlerts/Settings", False)
-        MMEArmorScript.ReportArmor(diagnostic, "repeat narration sent | " + actorName)
+        MMEArmorScript.ReportArmor(diagnostic, "equip narration sent | actor=" + actorName + " | role=" + role + " | type=" + narrationType + " | result=0")
     Else
-        MMEArmorScript.ReportArmor(diagnostic, "repeat narration rejected [" + result + "]")
+        MMEArmorScript.ReportArmor(diagnostic, "equip narration failed | actor=" + actorName + " | role=" + role + " | type=" + narrationType + " | result=" + result)
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Milking Armor narration result " + result + " | cooldown " + cooldown + " | " + content)
+    Debug.Trace("[MMEAlert SkyrimNet] Armor equip narration result " + result + " | " + role + " | " + narrationType + " | cooldown " + cooldown + " | " + content)
     Return result
 EndFunction
 
@@ -484,6 +518,65 @@ Function NarrateMilkmaidCreated(Actor milkMaid) Global
         Debug.Notification("New Milk Maid Narration: rejected [" + result + "]")
     EndIf
     Debug.Trace("[MMEAlert SkyrimNet] New Milk Maid DirectNarration result " + result + " | " + content)
+EndFunction
+
+; Builds one line for the existing nearby scan. This never publishes or calls
+; DirectNarration; SendNearbyArmorStatuses performs the single combined write.
+String Function BuildNearbyArmorStatus(Actor candidate) Global
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableNearbyMilkArmorStatus", 1) != 1 || !IsRealMMEMilkmaid(candidate)
+        Return ""
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None
+        Return ""
+    EndIf
+    Armor wornArmor = candidate.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
+    Int armorClass = MMEArmorScript.ClassifyArmor(milkController, wornArmor)
+    String armorType = MMEArmorScript.GetArmorTypeLabel(armorClass)
+    String matchSource = MMEArmorScript.GetArmorClassificationSource(milkController, wornArmor)
+    String actorName = ResolveActorName(candidate, "The Milk Maid")
+    String armorName = "<none>"
+    If wornArmor != None
+        armorName = wornArmor.GetName()
+        If armorName == ""
+            armorName = "<unnamed armor>"
+        EndIf
+    EndIf
+    Bool diagnostic = MMEArmorScript.GetArmorDiagnostic()
+    MMEArmorScript.ReportArmor(diagnostic, "nearby tracker checked | actor=" + actorName + " | armor=" + armorName + " | matched=" + matchSource + " | classification=" + armorType)
+    If armorClass == 0
+        Return ""
+    EndIf
+
+    String content = "[Milking Armor] " + actorName + " is wearing Milking Armor. Suction cups are attached to her nipples for milking."
+    If armorClass == 2
+        content = "[Living Armor] " + actorName + " is wearing Living Armor. Living tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk."
+    ElseIf armorClass == 3
+        content = "[Living Parasite] " + actorName + " is wearing Living Parasite armor. Parasitic tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk."
+    EndIf
+    MMEArmorScript.ReportArmor(diagnostic, "nearby tracker queued | actor=" + actorName + " | armor=" + armorName + " | matched=" + matchSource + " | classification=" + armorType)
+    Return content
+EndFunction
+
+; Refreshes one stable Player-attached context event. Empty scans intentionally
+; do nothing so the last 45-second event expires naturally.
+Function SendNearbyArmorStatuses(Actor playerActor, String statuses, Int armorCount) Global
+    If !IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableNearbyMilkArmorStatus", 1) != 1
+        Return
+    EndIf
+    Bool diagnostic = MMEArmorScript.GetArmorDiagnostic()
+    If armorCount <= 0 || statuses == ""
+        MMEArmorScript.ReportArmor(diagnostic, "nearby tracker not refreshed: no nearby Milk Maid wears supported armor")
+        Return
+    EndIf
+    If playerActor == None || !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
+        MMEArmorScript.ReportArmor(diagnostic, "nearby tracker failed: Player or Skyrim.Net unavailable")
+        Return
+    EndIf
+
+    Int result = SkyrimNetApi.RegisterShortLivedEvent("nearby_milk_armor_status_player", "nearby_milk_armor_status", statuses, "{}", 45000, playerActor, None)
+    MMEArmorScript.ReportArmor(diagnostic, "nearby tracker publish result=" + result + " | entries=" + armorCount + " | attached=Player | TTL=45s")
+    Debug.Trace("[MMEAlert SkyrimNet] Nearby armor status result " + result + " | entries " + armorCount + " | " + statuses)
 EndFunction
 
 ; Publishes one replaceable five-minute summary from the existing capacity scan.

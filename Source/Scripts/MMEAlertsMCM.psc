@@ -91,14 +91,16 @@ Int playerLivingParasiteEquipMoanOption
 Int playerLivingParasiteEquipAnimationOption
 Int npcLivingParasiteEquipMoanOption
 Int npcLivingParasiteEquipAnimationOption
-Int skyrimNetMilkingArmorEventsOption
+Int nearbyMilkArmorStatusOption
+Int playerMilkArmorEquipNarrationOption
+Int npcMilkArmorEquipNarrationOption
 Int playerMilkingArmorNarrationCooldownOption
 Int npcMilkingArmorNarrationCooldownOption
 Int armorDebugOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 74
+    Return 75
 EndFunction
 
 Function SetPageNames()
@@ -193,6 +195,10 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkArmorEquipNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "skyrimNetArmorMigration75", 1)
         JsonUtil.SetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingAction", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
@@ -641,6 +647,13 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorReactionMigration74", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "skyrimNetArmorMigration75", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkArmorEquipNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "skyrimNetArmorMigration75", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -656,7 +669,6 @@ Function SetArmorReactionDefaults()
     JsonUtil.SetIntValue(SettingsFile, "enablePlayerLivingParasiteEquipAnimation", 0)
     JsonUtil.SetIntValue(SettingsFile, "enableNPCLivingParasiteEquipMoan", 1)
     JsonUtil.SetIntValue(SettingsFile, "enableNPCLivingParasiteEquipAnimation", 1)
-    JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingArmorEvents", 1)
     JsonUtil.SetFloatValue(SettingsFile, "playerMilkingArmorNarrationCooldown", 120.0)
     JsonUtil.SetFloatValue(SettingsFile, "npcMilkingArmorNarrationCooldown", 300.0)
     JsonUtil.SetIntValue(SettingsFile, "enableArmorDebug", 0)
@@ -773,7 +785,9 @@ Event OnPageReset(String page)
     playerLivingParasiteEquipAnimationOption = -1
     npcLivingParasiteEquipMoanOption = -1
     npcLivingParasiteEquipAnimationOption = -1
-    skyrimNetMilkingArmorEventsOption = -1
+    nearbyMilkArmorStatusOption = -1
+    playerMilkArmorEquipNarrationOption = -1
+    npcMilkArmorEquipNarrationOption = -1
     playerMilkingArmorNarrationCooldownOption = -1
     npcMilkingArmorNarrationCooldownOption = -1
     armorDebugOption = -1
@@ -858,14 +872,20 @@ Event OnPageReset(String page)
         skyrimNetMilkmaidCreatedOption = AddToggleOption("Track New Milkmaids", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1) == 1)
         skyrimNetMilkStatusesOption = AddToggleOption("Track Nearby Milk Statuses", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1)
         skyrimNetStatusIntervalOption = AddSliderOption("Milk Status Interval", JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0), "{0} seconds")
-        AddHeaderOption("Milking Armor")
-        skyrimNetMilkingArmorEventsOption = AddToggleOption("Enable Milking Armor Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingArmorEvents", 1) == 1)
-        Int armorNarrationFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingArmorEvents", 1) != 1
-            armorNarrationFlags = OPTION_FLAG_DISABLED
+        AddHeaderOption("Milk Armor")
+        nearbyMilkArmorStatusOption = AddToggleOption("Track Nearby Milk Armor Status", JsonUtil.GetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", 1) == 1)
+        playerMilkArmorEquipNarrationOption = AddToggleOption("Player Milk Armor Equip Narration", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", 1) == 1)
+        npcMilkArmorEquipNarrationOption = AddToggleOption("NPC Milk Armor Equip Narration", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkArmorEquipNarration", 1) == 1)
+        Int playerArmorNarrationFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", 1) != 1
+            playerArmorNarrationFlags = OPTION_FLAG_DISABLED
         EndIf
-        playerMilkingArmorNarrationCooldownOption = AddSliderOption("Player Armor Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "playerMilkingArmorNarrationCooldown", 120.0), "{0} seconds", armorNarrationFlags)
-        npcMilkingArmorNarrationCooldownOption = AddSliderOption("NPC Armor Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "npcMilkingArmorNarrationCooldown", 300.0), "{0} seconds", armorNarrationFlags)
+        Int npcArmorNarrationFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkArmorEquipNarration", 1) != 1
+            npcArmorNarrationFlags = OPTION_FLAG_DISABLED
+        EndIf
+        playerMilkingArmorNarrationCooldownOption = AddSliderOption("Player Armor Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "playerMilkingArmorNarrationCooldown", 120.0), "{0} seconds", playerArmorNarrationFlags)
+        npcMilkingArmorNarrationCooldownOption = AddSliderOption("NPC Armor Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "npcMilkingArmorNarrationCooldown", 300.0), "{0} seconds", npcArmorNarrationFlags)
         AddHeaderOption("Actions")
         selfMilkingActionOption = AddToggleOption("Allow Self-Milking Action", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingAction", 1) == 1)
         pairedMilkingActionOption = AddToggleOption("Allow Paired Milking Action", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) == 1)
@@ -937,7 +957,7 @@ Event OnPageReset(String page)
         playerDrinkNarrationDiagnosticOption = AddToggleOption("Player Drink Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", 0) == 1)
         npcDrinkNarrationDiagnosticOption = AddToggleOption("NPC Drink Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarrationDiagnostic", 0) == 1)
         milkmaidCreatedNarrationDiagnosticOption = AddToggleOption("New Milk Maid Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarrationDiagnostic", 0) == 1)
-        AddHeaderOption("A" + "rousal")
+        AddHeaderOption("A" + "rousal ")
         arousalDiagnosticOption = AddToggleOption("Milk Arousal Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 0) == 1)
         AddHeaderOption("Dialogue")
         dialogueDiagnosticOption = AddToggleOption("NPC Dialogue Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1)
@@ -1053,7 +1073,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == skyrimNetMilkStatusesOption
         SetInfoText("Send nearby Milkmaid states plus half-full and full milestones to Skyrim.Net.")
     ElseIf option == skyrimNetStatusIntervalOption
-        SetInfoText("Set both the Skyrim.Net status refresh interval and event lifetime.")
+        SetInfoText("Set the shared nearby Skyrim.Net refresh interval. Nearby armor context keeps a 45-second lifetime.")
     ElseIf option == milkFullNarrationOption
         SetInfoText("Ask Skyrim.Net for one immediate Milk Maid reaction at full capacity. Uses LLM tokens.")
     ElseIf option == milkFullNarrationCooldownOption
@@ -1085,7 +1105,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == armorOverflowDiagnosticOption
         SetInfoText("Report PLAYER armor-overflow queue, cancellation, eligibility, armor type, threshold, and strip results.")
     ElseIf option == armorDebugOption
-        SetInfoText("Report actor, armor type, Player/NPC role, equip moan, requested shared animation, and rejection reason.")
+        SetInfoText("Report armor classification, matched MME list, equip reactions, nearby tracking, narration gates, and Skyrim.Net results.")
     ElseIf option == playerMilkingArmorEquipMoanOption || option == npcMilkingArmorEquipMoanOption
         SetInfoText("Play the mild equip moan whenever the matching Milk Maid equips supported Milking Armor.")
     ElseIf option == playerMilkingArmorEquipAnimationOption || option == npcMilkingArmorEquipAnimationOption
@@ -1098,8 +1118,12 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Play the mild equip moan whenever the matching Milk Maid equips configured AM Living Parasite armor.")
     ElseIf option == playerLivingParasiteEquipAnimationOption || option == npcLivingParasiteEquipAnimationOption
         SetInfoText("Play the shared three-second Kneeling reaction whenever configured AM Living Parasite armor is equipped.")
-    ElseIf option == skyrimNetMilkingArmorEventsOption
-        SetInfoText("Send cooldown-limited Milking Armor equip narration to Skyrim.Net.")
+    ElseIf option == nearbyMilkArmorStatusOption
+        SetInfoText("Refresh one combined Player-attached Skyrim.Net context for nearby Milk Maids wearing supported MME armor.")
+    ElseIf option == playerMilkArmorEquipNarrationOption
+        SetInfoText("Directly narrate supported Player Milk Armor equips through Skyrim.Net.")
+    ElseIf option == npcMilkArmorEquipNarrationOption
+        SetInfoText("Directly narrate supported NPC Milk Maid armor equips through Skyrim.Net.")
     ElseIf option == playerMilkingArmorNarrationCooldownOption
         SetInfoText("Set the global real-time delay between token-using Player Milking Armor narrations.")
     ElseIf option == npcMilkingArmorNarrationCooldownOption
@@ -1325,9 +1349,19 @@ Event OnOptionSelect(Int option)
         ToggleArmorSetting(option, "enableNPCLivingParasiteEquipMoan", 1)
     ElseIf option == npcLivingParasiteEquipAnimationOption
         ToggleArmorSetting(option, "enableNPCLivingParasiteEquipAnimation", 1)
-    ElseIf option == skyrimNetMilkingArmorEventsOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingArmorEvents", 1)
-        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingArmorEvents", value)
+    ElseIf option == nearbyMilkArmorStatusOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", value)
+        SetToggleOptionValue(option, value == 1)
+        (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
+    ElseIf option == playerMilkArmorEquipNarrationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", value)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
+    ElseIf option == npcMilkArmorEquipNarrationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkArmorEquipNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkArmorEquipNarration", value)
         SetToggleOptionValue(option, value == 1)
         ForcePageReset()
     ElseIf option == selfMilkingActionDiagnosticOption

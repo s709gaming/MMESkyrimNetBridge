@@ -279,6 +279,30 @@ String Function GetArmorTypeLabel(Int armorClass) Global
     Return "Unsupported"
 EndFunction
 
+; Technical match detail used by Skyrim.Net armor diagnostics.
+String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equippedArmor) Global
+    If milkController == None || equippedArmor == None
+        Return "none"
+    EndIf
+    If equippedArmor == milkController.MilkCuirass
+        Return "MilkCuirass"
+    ElseIf equippedArmor == milkController.MilkCuirassFuta
+        Return "MilkCuirassFuta"
+    EndIf
+    String armorName = equippedArmor.GetName()
+    If armorName == "" || armorName == "Empty"
+        Return "none"
+    EndIf
+    If milkController.MilkingEquipment.Find(armorName) >= 0
+        Return "MilkingEquipment"
+    ElseIf milkController.BasicLivingArmor.Find(armorName) >= 0
+        Return "BasicLivingArmor"
+    ElseIf milkController.ParasiteLivingArmor.Find(armorName) >= 0
+        Return "ParasiteLivingArmor"
+    EndIf
+    Return "none"
+EndFunction
+
 ; One per-equip reaction path for every supported MME armor family. Armor type
 ; only selects settings and Standing/Kneeling; safety and playback stay shared.
 Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
@@ -313,11 +337,7 @@ Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
         moanState = "FAILED"
     EndIf
 
-    ; Keep the existing cooldown-limited Milking Armor narration, but remove
-    ; the old first-equip event and all first-equip state.
-    If armorClass == 1
-        MMEAlertsSkyrimNet.NarrateMilkingArmorEquip(wearer)
-    EndIf
+    MMEAlertsSkyrimNet.NarrateArmorEquip(wearer, equippedArmor)
 
     String animationKind = "Standing"
     If armorClass == 2 || armorClass == 3

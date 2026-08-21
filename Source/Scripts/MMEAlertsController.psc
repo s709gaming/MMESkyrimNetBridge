@@ -533,7 +533,7 @@ Function UpdatePolling()
     Else
         NextCapacityUpdate = 0.0
     EndIf
-    If JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1
+    If JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1 || JsonUtil.GetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", 1) == 1
         NextSkyrimNetUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
     Else
         NextSkyrimNetUpdate = 0.0
@@ -1283,7 +1283,9 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     ; Cell.GetNumRefs(43) + Cell.GetNthRef() enumeration previously ran here.
     ; MME validation and all capacity behavior remain in ProcessActor below.
     String milkStatuses = ""
+    String armorStatuses = ""
     Int milkmaidCount = 0
+    Int armorCount = 0
     Actor halfFullNarrationActor = None
     Actor fullNarrationActor = None
     Int i = 0
@@ -1305,10 +1307,21 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
             milkStatuses = milkStatuses + status
             milkmaidCount += 1
         EndIf
+        If publishSkyrimNet
+            String armorStatus = MMEAlertsSkyrimNet.BuildNearbyArmorStatus(candidate)
+            If armorStatus != ""
+                If armorStatuses != ""
+                    armorStatuses = armorStatuses + "\n"
+                EndIf
+                armorStatuses = armorStatuses + armorStatus
+                armorCount += 1
+            EndIf
+        EndIf
         i += 1
     EndWhile
     If publishSkyrimNet
         MMEAlertsSkyrimNet.SendNearbyMilkStatuses(Game.GetPlayer(), milkStatuses, nearbyActors.Length, milkmaidCount)
+        MMEAlertsSkyrimNet.SendNearbyArmorStatuses(Game.GetPlayer(), armorStatuses, armorCount)
     EndIf
     If fullNarrationActor != None
         MMEAlertsSkyrimNet.NarrateMilkFull(fullNarrationActor)
