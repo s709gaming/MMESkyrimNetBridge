@@ -540,7 +540,12 @@ Starts MME self-milking for a valid Milk Maid.
 
 ### `StartBreastfeedingMilkShare`
 
-Starts an MME breastfeeding / milk-sharing scene between two actors.
+Starts an MME breastfeeding / milk-sharing scene with the conversational
+speaker as the Milk Maid/milk source and the selected target as the drinker.
+When the existing OStim breastfeeding option is enabled and OStim is detected,
+the action calls the same `MMEOStimBreastfeeding.StartBreastfeeding()` pipeline
+used by dialogue. That OStim request never falls through to SexLab on failure.
+When OStim breastfeeding is not enabled, the original SexLab backend is used.
 
 ### `GiveMilkToMilkmaid`
 

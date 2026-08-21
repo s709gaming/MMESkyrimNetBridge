@@ -34,8 +34,15 @@ Bool Function IsOStimDetected() Global
     Return Game.GetModByName("OStim.esp") != 255
 EndFunction
 
-Bool Function IsDialogueEnabled() Global
+; Shared framework-selection predicate for every OStim breastfeeding caller.
+; Dialogue and Skyrim.Net deliberately read the same MCM toggle and dependency
+; state so one route cannot select OStim while the other silently selects SexLab.
+Bool Function IsBreastfeedingEnabled() Global
     Return MMEAlertsController.IsExtensionsEnabled() && IsOStimDetected() && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableOStimBreastfeeding", 0) == 1
+EndFunction
+
+Bool Function IsDialogueEnabled() Global
+    Return IsBreastfeedingEnabled()
 EndFunction
 
 Bool Function StartBreastfeeding(Actor milkSource, Actor drinker)

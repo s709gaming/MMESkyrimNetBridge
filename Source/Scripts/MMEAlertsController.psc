@@ -116,6 +116,7 @@ EndFunction
 ; Skyrim.Net resolves quest action scripts from the existing quest instance.
 ; Keep this entry point on the controller so upgrades work in established saves.
 Function StartBreastfeedingMilkShare(Actor milkSource, Actor target)
+    Debug.Trace("[MMEAlert SkyrimNet BF] quest action entry reached | milk source=" + milkSource + " | target/drinker=" + target)
     MMESkyrimNetVoiceControls.StartBreastfeedingMilkShare(milkSource, target)
 EndFunction
 
