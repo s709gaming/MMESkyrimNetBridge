@@ -16,7 +16,7 @@ Bool Function IsExtensionsEnabled() Global
     Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMMEExtensions", 1) == 1
 EndFunction
 
-; Registers the callback used by the optional actor-specific Milkmaid bio prompt.
+; Registers callbacks used by actor-specific MME prompt modules.
 Function RegisterPromptDecorator() Global
     ; Registration may be repeated after load/MCM upgrades. Skyrim.Net's return
     ; code can therefore mean "already registered" and is logged, not fatal.
@@ -40,6 +40,52 @@ Function RegisterPromptDecorator() Global
         EndIf
     EndIf
     Debug.Trace("[MMEAlert SkyrimNet] Milkmaid prompt decorator registration result " + result)
+    Int breastfeedingResult = SkyrimNetApi.RegisterDecorator("mme_breastfeeding_role", "MMEAlertsSkyrimNet", "BreastfeedingPromptRole")
+    Debug.Trace("[MMEAlert SkyrimNet] Breastfeeding prompt decorator registration result " + breastfeedingResult)
+EndFunction
+
+Function SetBreastfeedingPromptState(Actor participant, String role, Int threadID) Global
+    If participant == None || (role != "source" && role != "drinker") || threadID < 0
+        Return
+    EndIf
+    StorageUtil.SetStringValue(participant, "MME.Extensions.SexLabBreastfeeding.Role", role)
+    StorageUtil.SetIntValue(participant, "MME.Extensions.SexLabBreastfeeding.Thread", threadID)
+    Debug.Trace("[MMEAlert SkyrimNet BF Prompt] state SET | actor=" + ResolveActorName(participant, "unnamed actor") + " | role=" + role + " | thread=" + threadID)
+EndFunction
+
+Function ClearBreastfeedingPromptState(Actor participant, Int expectedThreadID = -1) Global
+    If participant == None || !StorageUtil.HasStringValue(participant, "MME.Extensions.SexLabBreastfeeding.Role")
+        Return
+    EndIf
+    Int storedThreadID = StorageUtil.GetIntValue(participant, "MME.Extensions.SexLabBreastfeeding.Thread", -1)
+    If expectedThreadID >= 0 && storedThreadID != expectedThreadID
+        Return
+    EndIf
+    StorageUtil.UnsetStringValue(participant, "MME.Extensions.SexLabBreastfeeding.Role")
+    StorageUtil.UnsetIntValue(participant, "MME.Extensions.SexLabBreastfeeding.Thread")
+    Debug.Trace("[MMEAlert SkyrimNet BF Prompt] state CLEARED | actor=" + ResolveActorName(participant, "unnamed actor") + " | thread=" + storedThreadID)
+EndFunction
+
+String Function BreastfeedingPromptRole(Actor participant) Global
+    If !IsExtensionsEnabled() || participant == None
+        Return ""
+    EndIf
+    String role = StorageUtil.GetStringValue(participant, "MME.Extensions.SexLabBreastfeeding.Role", "")
+    Int threadID = StorageUtil.GetIntValue(participant, "MME.Extensions.SexLabBreastfeeding.Thread", -1)
+    If role == "" || threadID < 0
+        Return ""
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    sslThreadController thread = None
+    If milkController != None && milkController.SexLab != None
+        thread = milkController.SexLab.GetActorController(participant)
+    EndIf
+    If thread == None || thread.tid != threadID || thread.Positions == None || thread.Positions.Find(participant) < 0 || !milkController.SexLab.IsActorActive(participant)
+        ClearBreastfeedingPromptState(participant, threadID)
+        Return ""
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet BF Prompt] prompt rendered | actor=" + ResolveActorName(participant, "unnamed actor") + " | role=" + role + " | thread=" + threadID)
+    Return role
 EndFunction
 
 ; Uses MME's authoritative runtime list rather than an inferred StorageUtil value.
@@ -155,10 +201,10 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
     String content = actorName + " has just equipped Milking Armor. Suction cups settle onto her nipples, ready to milk her."
     If armorClass == 2
         narrationType = "Living Armor"
-        content = actorName + " has just equipped Living Armor. Living tendrils bury into her nipples, injecting stimulants and pleasurably draining milk."
+        content = actorName + " has just equipped Living Armor. Living tendrils bury into her nipples, injecting stimulants and pleasurably draining milk. Nearby onlookers should generally react with curiosity and arousal, not fear, disgust, or hostility."
     ElseIf armorClass == 3
         narrationType = "Living Parasite"
-        content = actorName + " has just equipped Living Parasite armor. Parasitic tendrils bury into her nipples, injecting stimulants and pleasurably draining milk."
+        content = actorName + " has just equipped Living Parasite armor. Parasitic tendrils bury into her nipples, injecting stimulants and pleasurably draining milk. Nearby onlookers should generally react with curiosity and arousal, not fear, disgust, or hostility."
     EndIf
     Int result = SkyrimNetApi.DirectNarration(content, wearer, None)
     If result == 0

@@ -517,6 +517,7 @@ Polling remains available only where useful, with an adjustable interval.
 - `MMEAlert.esp` - plugin containing MME Extensions records.
 - `SKSE/Plugins/StorageUtilData/MMEAlerts/SkyrimNet.json` - editable Skyrim.Net event messages.
 - `SkyrimNetPrompts/0260_mme_extensions_milkmaid.prompt` - actor-specific Milk Maid context.
+- `SkyrimNetPrompts/0950_mme_extensions_breastfeeding.prompt` - temporary, actor-specific SexLab breastfeeding dialogue guidance.
 - `fomod/` - installer metadata and optional defaults.
 - `assets/sounds/` - reaction sound pools.
 - `tools/README.md` - archival xEdit/Pascal tooling guidance.

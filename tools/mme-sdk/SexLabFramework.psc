@@ -7,6 +7,14 @@ sslThreadModel Function NewThread(Float timeout = 30.0)
     Return None
 EndFunction
 
+sslThreadController Function GetController(Int threadID)
+    Return None
+EndFunction
+
+sslThreadController Function GetActorController(Actor actorRef)
+    Return None
+EndFunction
+
 Int Function StartSex(Actor[] positions, sslBaseAnimation[] animations, Actor victim = None, ObjectReference centerOn = None, Bool allowBed = True, String hook = "")
     Return -1
 EndFunction

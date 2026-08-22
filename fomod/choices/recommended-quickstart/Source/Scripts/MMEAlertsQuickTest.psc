@@ -4,6 +4,7 @@ Scriptname MMEAlertsQuickTest extends Quest
 ; duplicate grants when normal startup hooks invoke this helper more than once.
 String QuickStartGrantKey = "MMEExtensions.QuickStart.Granted"
 String QuickStartMilkCuirassGrantKey = "MMEExtensions.QuickStart.MilkCuirassGranted"
+String QuickStartTentacleMeatGrantKey = "MMEExtensions.QuickStart.TentacleMeatGranted"
 Bool milkVarietyGranted = False
 Bool quickStartScheduled = False
 
@@ -19,7 +20,9 @@ Function ScheduleTestSetup()
     If quickStartScheduled
         Return
     EndIf
-    If StorageUtil.GetIntValue(None, QuickStartGrantKey, 0) != 0 && StorageUtil.GetIntValue(None, QuickStartMilkCuirassGrantKey, 0) != 0
+    If StorageUtil.GetIntValue(None, QuickStartGrantKey, 0) != 0 \
+    && StorageUtil.GetIntValue(None, QuickStartMilkCuirassGrantKey, 0) != 0 \
+    && StorageUtil.GetIntValue(None, QuickStartTentacleMeatGrantKey, 0) != 0
         Return
     EndIf
     quickStartScheduled = True
@@ -41,6 +44,7 @@ Function ApplyTestSetup()
         Return
     EndIf
     GrantMilkCuirassOnce(playerActor)
+    GrantOptionalArmorBonuses(playerActor)
     If milkVarietyGranted || StorageUtil.GetIntValue(None, QuickStartGrantKey, 0) != 0
         Return
     EndIf
@@ -57,6 +61,36 @@ Function ApplyTestSetup()
     Potion succubusMilk = Game.GetFormFromFile(0x0394C2, "MilkModNEW.esp") as Potion
 
     GrantMilkVariety(playerActor, lactacid, regularMilk, bretonMilk, succubusMilk)
+EndFunction
+
+; These plugins remain completely optional: their load-order index is checked
+; before any form lookup, and every individual unresolved armor form is skipped.
+Function GrantOptionalArmorBonuses(Actor playerActor)
+    If playerActor == None
+        Return
+    EndIf
+
+    String tentaclePlugin = "C5Kev's Tentacled Terrors Of Tamriel 3BA.esp"
+    If StorageUtil.GetIntValue(None, QuickStartTentacleMeatGrantKey, 0) == 0
+        StorageUtil.SetIntValue(None, QuickStartTentacleMeatGrantKey, 1)
+        If Game.GetModByName(tentaclePlugin) != 255
+            ; The plugin contains two three-piece armor families. Grant only each
+            ; family's Mashed Meat records, never its Slime or Magma alternatives.
+            GrantOptionalArmor(playerActor, tentaclePlugin, 0x0012F0) ; Living Armor cuirass
+            GrantOptionalArmor(playerActor, tentaclePlugin, 0x0012F1) ; Living Armor shoes
+            GrantOptionalArmor(playerActor, tentaclePlugin, 0x0012F2) ; Living Armor gauntlets
+            GrantOptionalArmor(playerActor, tentaclePlugin, 0x00131F) ; Tentacle Parasite cuirass
+            GrantOptionalArmor(playerActor, tentaclePlugin, 0x001320) ; Tentacle Parasite shoes
+            GrantOptionalArmor(playerActor, tentaclePlugin, 0x001321) ; Tentacle Parasite gauntlets
+        EndIf
+    EndIf
+EndFunction
+
+Function GrantOptionalArmor(Actor playerActor, String pluginName, Int localFormID)
+    Armor armorPiece = Game.GetFormFromFile(localFormID, pluginName) as Armor
+    If armorPiece != None
+        playerActor.AddItem(armorPiece, 1, False)
+    EndIf
 EndFunction
 
 ; Separate save latch lets existing Recommended QuickStart users receive this

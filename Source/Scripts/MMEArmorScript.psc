@@ -440,14 +440,32 @@ Int Function ClassifyArmor(MilkQUEST milkController, Armor equippedArmor) Global
         Return 1
     EndIf
     String armorName = equippedArmor.GetName()
-    If armorName != "" && armorName != "Empty" && milkController.MilkingEquipment.Find(armorName) >= 0
+    If armorName != "" && armorName != "Empty" && milkController.MilkingEquipment != None && milkController.MilkingEquipment.Find(armorName) >= 0
         Return 1
     EndIf
-    If armorName != "" && armorName != "Empty" && milkController.BasicLivingArmor.Find(armorName) >= 0
+    If armorName != "" && armorName != "Empty" && milkController.BasicLivingArmor != None && milkController.BasicLivingArmor.Find(armorName) >= 0
         Return 2
     EndIf
-    If armorName != "" && armorName != "Empty" && milkController.ParasiteLivingArmor.Find(armorName) >= 0
+    If armorName != "" && armorName != "Empty" && milkController.ParasiteLivingArmor != None && milkController.ParasiteLivingArmor.Find(armorName) >= 0
         Return 3
+    EndIf
+    Return GetSpecialArmorNameClass(armorName)
+EndFunction
+
+; Mirrors MME's established display-name compatibility after its exact arrays
+; have had priority. Tentacle families use the high-intensity parasite path.
+Int Function GetSpecialArmorNameClass(String armorName) Global
+    If armorName == "" || armorName == "Empty"
+        Return 0
+    EndIf
+    If StringUtil.Find(armorName, "Tentacle Armor") >= 0 || StringUtil.Find(armorName, "Tentacle Parasite") >= 0
+        Return 3
+    EndIf
+    If StringUtil.Find(armorName, "Spriggan") >= 0 \
+    || StringUtil.Find(armorName, "Living Arm") >= 0 \
+    || StringUtil.Find(armorName, "Hermaeus Mora") >= 0 \
+    || StringUtil.Find(armorName, "HM Priestess") >= 0
+        Return 2
     EndIf
     Return 0
 EndFunction
@@ -477,12 +495,25 @@ String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equ
     If armorName == "" || armorName == "Empty"
         Return "none"
     EndIf
-    If milkController.MilkingEquipment.Find(armorName) >= 0
+    If milkController.MilkingEquipment != None && milkController.MilkingEquipment.Find(armorName) >= 0
         Return "MilkingEquipment"
-    ElseIf milkController.BasicLivingArmor.Find(armorName) >= 0
+    ElseIf milkController.BasicLivingArmor != None && milkController.BasicLivingArmor.Find(armorName) >= 0
         Return "BasicLivingArmor"
-    ElseIf milkController.ParasiteLivingArmor.Find(armorName) >= 0
+    ElseIf milkController.ParasiteLivingArmor != None && milkController.ParasiteLivingArmor.Find(armorName) >= 0
         Return "ParasiteLivingArmor"
+    EndIf
+    If StringUtil.Find(armorName, "Tentacle Armor") >= 0
+        Return "MME special name rule=Tentacle Armor"
+    ElseIf StringUtil.Find(armorName, "Tentacle Parasite") >= 0
+        Return "MME special name rule=Tentacle Parasite"
+    ElseIf StringUtil.Find(armorName, "Spriggan") >= 0
+        Return "MME special name rule=Spriggan"
+    ElseIf StringUtil.Find(armorName, "Living Arm") >= 0
+        Return "MME special name rule=Living Arm"
+    ElseIf StringUtil.Find(armorName, "Hermaeus Mora") >= 0
+        Return "MME special name rule=Hermaeus Mora"
+    ElseIf StringUtil.Find(armorName, "HM Priestess") >= 0
+        Return "MME special name rule=HM Priestess"
     EndIf
     Return "none"
 EndFunction

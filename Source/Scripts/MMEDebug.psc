@@ -37,6 +37,7 @@ Int SexLabAttemptSequence = 0
 
 ; Quest startup delegates normal scheduling to the controller.
 Event OnInit()
+    RegisterForModEvent("AnimationEnd", "OnSexLabBreastfeedingEnd")
     UpdateDebugLoop()
 EndEvent
 
@@ -51,6 +52,7 @@ EndFunction
 ; Resume only an exact owned transaction; otherwise discard our bookkeeping
 ; without stopping a thread or removing a spell we can no longer prove we own.
 Function RecoverAfterLoad()
+    RegisterForModEvent("AnimationEnd", "OnSexLabBreastfeedingEnd")
     If !ActiveSession
         Return
     EndIf
@@ -167,6 +169,8 @@ Bool Function StartSexLabBreastfeeding(Actor milkSource, Actor drinker, String c
     EndIf
     ReleaseSexLabPair(milkSource, drinker, requestID)
     SexLabTrace(requestID, diagnostic, "SEXLAB START CONFIRMED | SESSION ACTIVE | thread=" + threadID + " | startup locks released")
+    MMEAlertsSkyrimNet.SetBreastfeedingPromptState(milkSource, "source", threadID)
+    MMEAlertsSkyrimNet.SetBreastfeedingPromptState(drinker, "drinker", threadID)
 
     Spell passive = milkController.BeingMilkedPassive
     checks = 0
@@ -186,21 +190,18 @@ EndFunction
 ; StartSex call. Observe its result without replacing or invoking it again.
 Function ObserveDialogueSexLabBreastfeeding(Actor milkSource, Actor drinker)
     Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
-    If !diagnostic
-        Return
-    EndIf
     SexLabAttemptSequence += 1
     Int requestID = SexLabAttemptSequence
-    SexLabTrace(requestID, True, "REQUEST RECEIVED | ENTRY ROUTE=DIALOGUE | source=" + GetActorName(milkSource) + " " + milkSource + " | drinker=" + GetActorName(drinker) + " " + drinker)
+    SexLabTrace(requestID, diagnostic, "REQUEST RECEIVED | ENTRY ROUTE=DIALOGUE | source=" + GetActorName(milkSource) + " " + milkSource + " | drinker=" + GetActorName(drinker) + " " + drinker)
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkSource == None || drinker == None
-        SexLabTrace(requestID, True, "FAIL: dialogue source or drinker did not resolve")
+        SexLabTrace(requestID, diagnostic, "FAIL: dialogue source or drinker did not resolve")
         Return
     ElseIf milkController == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
-        SexLabTrace(requestID, True, "FAIL: MME/SexLab framework unavailable")
+        SexLabTrace(requestID, diagnostic, "FAIL: MME/SexLab framework unavailable")
         Return
     EndIf
-    SexLabTrace(requestID, True, "SOURCE RESOLVED | DRINKER RESOLVED | SEXLAB AVAILABLE")
+    SexLabTrace(requestID, diagnostic, "SOURCE RESOLVED | DRINKER RESOLVED | SEXLAB AVAILABLE")
     String animationName = "zjBreastFeeding"
     ActorBase drinkerBase = drinker.GetLeveledActorBase()
     If drinkerBase != None && drinkerBase.GetSex() == 0
@@ -208,20 +209,28 @@ Function ObserveDialogueSexLabBreastfeeding(Actor milkSource, Actor drinker)
     EndIf
     sslBaseAnimation animation = milkController.SexLab.AnimSlots.GetbyRegistrar(animationName)
     If animation == None
-        SexLabTrace(requestID, True, "FAIL: no compatible animation selected | registrar=" + animationName)
+        SexLabTrace(requestID, diagnostic, "FAIL: no compatible animation selected | registrar=" + animationName)
         Return
     EndIf
-    SexLabTrace(requestID, True, "ANIMATION SELECTED | registrar=" + animationName + " | animation=" + animation)
+    SexLabTrace(requestID, diagnostic, "ANIMATION SELECTED | registrar=" + animationName + " | animation=" + animation)
     Int checks = 0
     While checks < 20 && (!milkController.SexLab.IsActorActive(milkSource) || !milkController.SexLab.IsActorActive(drinker))
         Utility.Wait(0.1)
         checks += 1
     EndWhile
     If !milkController.SexLab.IsActorActive(milkSource) || !milkController.SexLab.IsActorActive(drinker)
-        SexLabTrace(requestID, True, "FAIL: dialogue SexLab startup not confirmed")
+        SexLabTrace(requestID, diagnostic, "FAIL: dialogue SexLab startup not confirmed")
         Return
     EndIf
-    SexLabTrace(requestID, True, "SEXLAB START CONFIRMED | SESSION ACTIVE")
+    sslThreadController thread = milkController.SexLab.GetActorController(milkSource)
+    If thread == None || thread.Positions == None || thread.Positions.Find(drinker) < 0
+        SexLabTrace(requestID, diagnostic, "FAIL: dialogue SexLab controller did not contain expected pair")
+        Return
+    EndIf
+    Int threadID = thread.tid
+    MMEAlertsSkyrimNet.SetBreastfeedingPromptState(milkSource, "source", threadID)
+    MMEAlertsSkyrimNet.SetBreastfeedingPromptState(drinker, "drinker", threadID)
+    SexLabTrace(requestID, diagnostic, "SEXLAB START CONFIRMED | SESSION ACTIVE | thread=" + threadID)
     Spell passive = milkController.BeingMilkedPassive
     checks = 0
     While checks < 30 && passive != None && !milkSource.HasSpell(passive)
@@ -229,11 +238,28 @@ Function ObserveDialogueSexLabBreastfeeding(Actor milkSource, Actor drinker)
         checks += 1
     EndWhile
     If passive != None && milkSource.HasSpell(passive)
-        SexLabTrace(requestID, True, "MME START CONFIRMED | Mode4 passive active")
+        SexLabTrace(requestID, diagnostic, "MME START CONFIRMED | Mode4 passive active")
     Else
-        SexLabTrace(requestID, True, "FAIL: MME Mode4 did not begin after dialogue SexLab startup")
+        SexLabTrace(requestID, diagnostic, "FAIL: MME Mode4 did not begin after dialogue SexLab startup")
     EndIf
 EndFunction
+
+Event OnSexLabBreastfeedingEnd(String eventName, String threadIDText, Float numArg, Form sender)
+    Int threadID = threadIDText as Int
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None || milkController.SexLab == None || threadID < 0
+        Return
+    EndIf
+    sslThreadController thread = milkController.SexLab.GetController(threadID)
+    If thread == None || thread.Positions == None
+        Return
+    EndIf
+    Int index = 0
+    While index < thread.Positions.Length
+        MMEAlertsSkyrimNet.ClearBreastfeedingPromptState(thread.Positions[index], threadID)
+        index += 1
+    EndWhile
+EndEvent
 
 String Function SexLabPairFailure(Actor milkSource, Actor drinker, MilkQUEST milkController)
     If milkSource == None

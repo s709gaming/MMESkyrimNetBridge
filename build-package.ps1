@@ -166,6 +166,16 @@ foreach ($milkShareAction in $milkShareActions) {
     Copy-Item -LiteralPath $milkShareAction -Destination $actionDestination
 }
 
+# Install the late, actor-specific breastfeeding override after generic SexLab
+# user-final-instruction modules without modifying SkyrimNet_SexLab itself.
+$breastfeedingPrompt = Join-Path $projectRoot "SkyrimNetPrompts\0950_mme_extensions_breastfeeding.prompt"
+if (!(Test-Path -LiteralPath $breastfeedingPrompt)) {
+    throw "Required MME breastfeeding prompt is missing: $breastfeedingPrompt"
+}
+$breastfeedingPromptDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\prompts\submodules\user_final_instructions"
+New-Item -ItemType Directory -Force -Path $breastfeedingPromptDestination | Out-Null
+Copy-Item -LiteralPath $breastfeedingPrompt -Destination $breastfeedingPromptDestination
+
 # Package the SSEEdit-built randomized voice pools and the two legacy test files.
 $testSoundRoot = Join-Path $projectRoot "assets\sounds"
 if (Test-Path -LiteralPath $testSoundRoot) {
