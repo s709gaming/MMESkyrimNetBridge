@@ -932,9 +932,9 @@ Event OnPageReset(String page)
         If JsonUtil.GetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1) != 1
             stripFlags = OPTION_FLAG_DISABLED
         EndIf
-        armorStripHeavyThresholdOption = AddSliderOption("Heavy Armor Milk Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyThreshold", 4.0), "{0} milk", stripFlags)
-        armorStripLightThresholdOption = AddSliderOption("Light Armor Milk Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripLightThreshold", 8.0), "{0} milk", stripFlags)
-        armorStripClothingThresholdOption = AddSliderOption("Clothing Milk Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingThreshold", 12.0), "{0} milk", stripFlags)
+        armorStripHeavyThresholdOption = AddSliderOption("Heavy Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyThreshold", 4.0), "{0}%", stripFlags)
+        armorStripLightThresholdOption = AddSliderOption("Light Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripLightThreshold", 8.0), "{0}%", stripFlags)
+        armorStripClothingThresholdOption = AddSliderOption("Clothing Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingThreshold", 12.0), "{0}%", stripFlags)
         AddHeaderOption("Milking Armor")
         playerMilkingArmorEquipMoanOption = AddToggleOption("Player Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipMoan", 1) == 1)
         playerMilkingArmorEquipAnimationOption = AddToggleOption("Player Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipAnimation", 0) == 1)
@@ -1198,13 +1198,13 @@ Event OnOptionHighlight(Int option)
     ElseIf option == armorStrippingCheckDiagnosticOption
         SetInfoText("Report the full armor stripping transaction: drink attempt, delayed timer, milk values, slot 32, armor type, threshold, override state, protection, and strip result.")
     ElseIf option == extensionsArmorStrippingOption
-        SetInfoText("Take over armor stripping from Milk Mod Economy. While enabled, MME's original stripping is disabled and these thresholds are used instead. Defaults (4/8/12) match MME's normal behavior.")
+        SetInfoText("Take over armor stripping from Milk Mod Economy. While enabled, MME's original stripping is disabled and these fullness thresholds are used instead.")
     ElseIf option == armorStripHeavyThresholdOption
-        SetInfoText("Unequip heavy body armor when the player's milk exceeds this amount.")
+        SetInfoText("Unequip heavy body armor when the player's fullness reaches this percentage. 0 forbids this armor type; 100 strips at full.")
     ElseIf option == armorStripLightThresholdOption
-        SetInfoText("Unequip light body armor when the player's milk exceeds this amount.")
+        SetInfoText("Unequip light body armor when the player's fullness reaches this percentage. 0 forbids this armor type; 100 strips at full.")
     ElseIf option == armorStripClothingThresholdOption
-        SetInfoText("Unequip clothing when the player's milk exceeds this amount.")
+        SetInfoText("Unequip clothing when the player's fullness reaches this percentage. 0 forbids this armor type; 100 strips at full.")
     ElseIf option == armorDebugOption
         SetInfoText("Report armor classification, matched MME list, equip reactions, nearby tracking, narration gates, and Skyrim.Net results.")
     ElseIf option == blacksmithDebugOption
@@ -1797,14 +1797,14 @@ Event OnOptionSliderAccept(Int option, Float value)
     ElseIf option == armorStripHeavyThresholdOption
         JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyThreshold", value)
         JsonUtil.Save(SettingsFile, False)
-        SetSliderOptionValue(option, value, "{0} milk")
+        SetSliderOptionValue(option, value, "{0}%")
     ElseIf option == armorStripLightThresholdOption
         JsonUtil.SetFloatValue(SettingsFile, "armorStripLightThreshold", value)
         JsonUtil.Save(SettingsFile, False)
-        SetSliderOptionValue(option, value, "{0} milk")
+        SetSliderOptionValue(option, value, "{0}%")
     ElseIf option == armorStripClothingThresholdOption
         JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingThreshold", value)
         JsonUtil.Save(SettingsFile, False)
-        SetSliderOptionValue(option, value, "{0} milk")
+        SetSliderOptionValue(option, value, "{0}%")
     EndIf
 EndEvent

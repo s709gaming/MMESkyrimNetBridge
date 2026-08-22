@@ -166,17 +166,23 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
     ElseIf slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD3, "Skyrim.esm") as Keyword)
         armorKind = "light armor"
     EndIf
-    ; A configured threshold of 0 is valid: strip whenever milk > 0. The slot-32
-    ; armor is always classified here (heavy/light/clothing), and the missing-
-    ; armor case was already handled above, so no unclassified guard is needed.
-    If effectiveMilk <= threshold
-        ReportArmorStrip(diagnostic, sourceLabel + " type=" + armorKind + " | milk=" + effectiveMilk + " | threshold=" + threshold + " | decision=BLOCKED")
+    ; Thresholds are fullness percentages (0-100). 0 means the armor type is
+    ; forbidden, 100 means strip at full, and fullness can legitimately exceed
+    ; 100% when MME stores more milk than the current maximum.
+    Float maximum = MME_Storage.getMilkMaximum(target)
+    If maximum <= 0.0
+        ReportArmorStrip(diagnostic, sourceLabel + " decision=BLOCKED | milk maximum unavailable")
+        Return False
+    EndIf
+    Float fullnessPct = (effectiveMilk / maximum) * 100.0
+    If fullnessPct < threshold
+        ReportArmorStrip(diagnostic, sourceLabel + " type=" + armorKind + " | fullness=" + fullnessPct + "% | threshold=" + threshold + "% | decision=KEEP")
         Return False
     EndIf
 
     ; Strip, then verify Skyrim actually changed slot 32. A successful Papyrus
     ; call is not proof: quests or equipment systems may re-equip immediately.
-    ReportArmorStrip(diagnostic, sourceLabel + " type=" + armorKind + " | milk=" + effectiveMilk + " | threshold=" + threshold + " | decision=ALLOWED")
+    ReportArmorStrip(diagnostic, sourceLabel + " type=" + armorKind + " | fullness=" + fullnessPct + "% | threshold=" + threshold + "% | decision=STRIP")
     target.UnequipItem(slotArmor)
     If target.GetWornForm(bodyMask) == slotArmor
         ReportArmorStrip(diagnostic, sourceLabel + " result=BLOCKED | engine retained " + armorKind)
@@ -185,7 +191,7 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
     If target == Game.GetPlayer()
         Debug.Notification("Your breasts are too big to fit into your " + armorKind)
     EndIf
-    ReportArmorStrip(diagnostic, sourceLabel + " result=STRIPPED | " + armorKind + " | milk=" + effectiveMilk + " > " + threshold)
+    ReportArmorStrip(diagnostic, sourceLabel + " result=STRIPPED | " + armorKind + " | fullness=" + fullnessPct + "% > " + threshold + "%")
     Return True
 EndFunction
 
@@ -229,9 +235,9 @@ Function ApplyArmorStrippingMasterToggle() Global
     EndIf
 EndFunction
 
-; Classifies slot-32 armor and returns the active milk threshold. When the
-; configurable stripping feature is enabled the MCM sliders supply the values
-; (defaulting to MME's 4/8/12); otherwise MME's fixed thresholds apply.
+; Classifies slot-32 armor and returns the active fullness-percentage
+; threshold. When the configurable stripping feature is enabled the MCM sliders
+; supply the values; otherwise MME's fixed thresholds apply.
 Float Function GetArmorThreshold(Armor slotArmor) Global
     If slotArmor == None
         Return 0.0
