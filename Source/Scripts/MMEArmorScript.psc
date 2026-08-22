@@ -188,11 +188,98 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
         ReportArmorStrip(diagnostic, sourceLabel + " result=BLOCKED | engine retained " + armorKind)
         Return False
     EndIf
-    If target == Game.GetPlayer()
-        Debug.Notification("Your breasts are too big to fit into your " + armorKind)
-    EndIf
     ReportArmorStrip(diagnostic, sourceLabel + " result=STRIPPED | " + armorKind + " | fullness=" + fullnessPct + "% >= " + threshold + "%")
+    ; Only a verified removal may trigger the optional post-strip reactions.
+    HandleSuccessfulArmorStrip(target, slotArmor, fullnessPct, threshold, sourceLabel)
     Return True
+EndFunction
+
+; Dispatches the optional post-strip reactions once the shared evaluator has
+; verified that the armor actually left slot 32. Reachable from every route
+; (drink/equip/poll) through the one shared evaluator.
+Function HandleSuccessfulArmorStrip(Actor wearer, Armor strippedArmor, Float fullnessPct, Float thresholdPct, String sourceLabel) Global
+    HandleArmorStripNotification(wearer, strippedArmor)
+    PlayArmorStripMoan(wearer)
+    MMEAlertsSkyrimNet.NarrateArmorStrip(wearer, strippedArmor, sourceLabel, fullnessPct, thresholdPct)
+EndFunction
+
+; Normal gameplay notification, independent of diagnostics and Skyrim.Net.
+Function HandleArmorStripNotification(Actor wearer, Armor strippedArmor) Global
+    Bool diagnostic = GetArmorStripNotificationDiagnostic()
+    String armorName = ""
+    If strippedArmor != None
+        armorName = strippedArmor.GetName()
+    EndIf
+    If armorName == ""
+        armorName = "armor"
+    EndIf
+    If diagnostic
+        Debug.Notification("Armor Strip Notification: trigger | " + armorName)
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorStripNotification", 1) != 1
+        If diagnostic
+            Debug.Notification("Armor Strip Notification: skipped - feature disabled")
+        EndIf
+        Return
+    EndIf
+    Debug.Notification("Your " + armorName + " flies off! Your breasts are far too full to fit inside it.")
+    If diagnostic
+        Debug.Notification("Armor Strip Notification: SHOWN | " + armorName)
+    EndIf
+EndFunction
+
+; Strong reaction moan after a verified strip. Reuses the HOT pool and the
+; shared reaction-sounds switch and volume.
+Int Function PlayArmorStripMoan(Actor wearer) Global
+    Bool diagnostic = GetArmorStripMoanDiagnostic()
+    If diagnostic
+        Debug.Notification("Armor Strip Moan: trigger detected")
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorStripMoan", 1) != 1
+        If diagnostic
+            Debug.Notification("Armor Strip Moan: skipped - feature disabled")
+        EndIf
+        Return 0
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableReactionSounds", 1) != 1
+        If diagnostic
+            Debug.Notification("Armor Strip Moan: skipped - global sounds disabled")
+        EndIf
+        Return 0
+    EndIf
+    If wearer == None || wearer.IsDead() || wearer.IsDisabled() || !wearer.Is3DLoaded()
+        If diagnostic
+            Debug.Notification("Armor Strip Moan: failed - actor unavailable")
+        EndIf
+        Return -1
+    EndIf
+    Sound reaction = Game.GetFormFromFile(0x000856, "MMEAlert.esp") as Sound
+    If reaction == None
+        If diagnostic
+            Debug.Notification("Armor Strip Moan: failed - HOT sound unresolved")
+        EndIf
+        Return -1
+    EndIf
+    Int instance = reaction.Play(wearer)
+    If instance > 0
+        Sound.SetInstanceVolume(instance, JsonUtil.GetFloatValue("/MMEAlerts/Settings", "reactionSoundVolume", 100.0) / 100.0)
+        If diagnostic
+            Debug.Notification("Armor Strip Moan: PLAYED | instance=" + instance)
+        EndIf
+        Return 1
+    EndIf
+    If diagnostic
+        Debug.Notification("Armor Strip Moan: failed - Sound.Play returned " + instance)
+    EndIf
+    Return -1
+EndFunction
+
+Bool Function GetArmorStripNotificationDiagnostic() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorStripNotificationDiagnostic", 0) == 1
+EndFunction
+
+Bool Function GetArmorStripMoanDiagnostic() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorStripMoanDiagnostic", 0) == 1
 EndFunction
 
 ; Gated strip reporter. Both the log line and the HUD notification respect the

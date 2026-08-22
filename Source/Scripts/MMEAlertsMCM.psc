@@ -110,10 +110,18 @@ Int extensionsArmorStrippingOption
 Int armorStripHeavyThresholdOption
 Int armorStripLightThresholdOption
 Int armorStripClothingThresholdOption
+Int armorStripNotificationOption
+Int armorStripMoanOption
+Int armorStripNarrationOption
+Int armorStripNarrationChanceOption
+Int armorStripNarrationCooldownOption
+Int armorStripNotificationDiagnosticOption
+Int armorStripMoanDiagnosticOption
+Int armorStripNarrationDiagnosticOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 82
+    Return 83
 EndFunction
 
 Function SetPageNames()
@@ -274,6 +282,14 @@ Function EnsureDefaults()
         JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyPercent", 100.0)
         JsonUtil.SetFloatValue(SettingsFile, "armorStripLightPercent", 100.0)
         JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNotification", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripMoan", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "armorStripNarrationChance", 100)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripNarrationCooldown", 300.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNotificationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripMoanDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNarrationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0)
         JsonUtil.SetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0)
         JsonUtil.SetIntValue(SettingsFile, "playerDrinkNarrationChance", 25)
@@ -730,6 +746,20 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorStrippingPercentMigration82", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Post-strip reactions: notification, HOT moan, and forced Skyrim.Net
+    ; narration with chance/cooldown. One-time defaults; later user choices win.
+    If JsonUtil.GetIntValue(SettingsFile, "armorStripReactionMigration83", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNotification", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripMoan", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "armorStripNarrationChance", 100)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripNarrationCooldown", 300.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNotificationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripMoanDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNarrationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "armorStripReactionMigration83", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -879,6 +909,14 @@ Event OnPageReset(String page)
     armorStripHeavyThresholdOption = -1
     armorStripLightThresholdOption = -1
     armorStripClothingThresholdOption = -1
+    armorStripNotificationOption = -1
+    armorStripMoanOption = -1
+    armorStripNarrationOption = -1
+    armorStripNarrationChanceOption = -1
+    armorStripNarrationCooldownOption = -1
+    armorStripNotificationDiagnosticOption = -1
+    armorStripMoanDiagnosticOption = -1
+    armorStripNarrationDiagnosticOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -944,6 +982,12 @@ Event OnPageReset(String page)
         armorStripHeavyThresholdOption = AddSliderOption("Heavy Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyPercent", 100.0), "{0}%", stripFlags)
         armorStripLightThresholdOption = AddSliderOption("Light Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripLightPercent", 100.0), "{0}%", stripFlags)
         armorStripClothingThresholdOption = AddSliderOption("Clothing Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0), "{0}%", stripFlags)
+        AddHeaderOption("Armor Strip Reactions")
+        armorStripNotificationOption = AddToggleOption("Strip Notification", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNotification", 1) == 1, stripFlags)
+        armorStripMoanOption = AddToggleOption("Strip Moan", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripMoan", 1) == 1, stripFlags)
+        armorStripNarrationOption = AddToggleOption("Skyrim.Net Strip Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarration", 1) == 1, stripFlags)
+        armorStripNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "armorStripNarrationChance", 100), "{0}%", stripFlags)
+        armorStripNarrationCooldownOption = AddSliderOption("Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "armorStripNarrationCooldown", 300.0) / 60.0, "{0} minutes", stripFlags)
         AddHeaderOption("Milking Armor")
         playerMilkingArmorEquipMoanOption = AddToggleOption("Player Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipMoan", 1) == 1)
         playerMilkingArmorEquipAnimationOption = AddToggleOption("Player Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipAnimation", 0) == 1)
@@ -1036,6 +1080,9 @@ Event OnPageReset(String page)
         npcDrinkNotificationsDiagnosticOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1)
         AddHeaderOption("Armor Debug")
         armorStrippingCheckDiagnosticOption = AddToggleOption("Armor Stripping Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0) == 1)
+        armorStripNotificationDiagnosticOption = AddToggleOption("Strip Notification Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNotificationDiagnostic", 0) == 1)
+        armorStripMoanDiagnosticOption = AddToggleOption("Strip Moan Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripMoanDiagnostic", 0) == 1)
+        armorStripNarrationDiagnosticOption = AddToggleOption("Strip Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarrationDiagnostic", 0) == 1)
         armorDebugOption = AddToggleOption("Equip Reaction Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0) == 1)
         blacksmithDebugOption = AddToggleOption("Blacksmith Debug", JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDebug", 0) == 1)
         AddHeaderOption("A" + "nimations ")
@@ -1206,6 +1253,12 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report new-Milk-Maid narration detection, cooldowns, and API results.")
     ElseIf option == armorStrippingCheckDiagnosticOption
         SetInfoText("Report the full armor stripping transaction: drink attempt, delayed timer, milk values, slot 32, armor type, threshold, override state, protection, and strip result.")
+    ElseIf option == armorStripNotificationDiagnosticOption
+        SetInfoText("Report armor-strip notification triggers, feature state, and shown/skipped results.")
+    ElseIf option == armorStripMoanDiagnosticOption
+        SetInfoText("Report armor-strip moan triggers, feature state, sound lookup, and playback results.")
+    ElseIf option == armorStripNarrationDiagnosticOption
+        SetInfoText("Report armor-strip narration triggers, gates, chance, cooldown, and Skyrim.Net results.")
     ElseIf option == extensionsArmorStrippingOption
         SetInfoText("Take over armor stripping from Milk Mod Economy. While enabled, MME's original stripping is disabled and these fullness thresholds are used instead.")
     ElseIf option == armorStripHeavyThresholdOption
@@ -1214,6 +1267,16 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Unequip light body armor when the player's fullness reaches this percentage. 0 forbids this armor type; 100 strips at full.")
     ElseIf option == armorStripClothingThresholdOption
         SetInfoText("Unequip clothing when the player's fullness reaches this percentage. 0 forbids this armor type; 100 strips at full.")
+    ElseIf option == armorStripNotificationOption
+        SetInfoText("Show a notification when milk fullness forces your worn armor or clothing off.")
+    ElseIf option == armorStripMoanOption
+        SetInfoText("Play a strong reaction moan when milk fullness forces your worn armor or clothing off.")
+    ElseIf option == armorStripNarrationOption
+        SetInfoText("Ask Skyrim.Net for an immediate exaggerated reaction when milk fullness forces armor or clothing off. Uses LLM tokens.")
+    ElseIf option == armorStripNarrationChanceOption
+        SetInfoText("Set the chance that an eligible armor-strip event requests Skyrim.Net narration.")
+    ElseIf option == armorStripNarrationCooldownOption
+        SetInfoText("Set the minimum real-time delay between successful armor-strip narrations.")
     ElseIf option == armorDebugOption
         SetInfoText("Report armor classification, matched MME list, equip reactions, nearby tracking, narration gates, and Skyrim.Net results.")
     ElseIf option == blacksmithDebugOption
@@ -1435,6 +1498,30 @@ Event OnOptionSelect(Int option)
         SetToggleOptionValue(option, value == 1)
         MMEArmorScript.ApplyArmorStrippingMasterToggle()
         ForcePageReset()
+    ElseIf option == armorStripNotificationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNotification", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNotification", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == armorStripMoanOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorStripMoan", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripMoan", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == armorStripNarrationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNarration", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == armorStripNotificationDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNotificationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNotificationDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == armorStripMoanDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorStripMoanDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripMoanDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == armorStripNarrationDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarrationDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNarrationDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
     ElseIf option == armorDebugOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorDebug", value)
@@ -1718,6 +1805,16 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(100.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
+    ElseIf option == armorStripNarrationChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "armorStripNarrationChance", 100))
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+    ElseIf option == armorStripNarrationCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripNarrationCooldown", 300.0) / 60.0)
+        SetSliderDialogDefaultValue(5.0)
+        SetSliderDialogRange(0.0, 60.0)
+        SetSliderDialogInterval(5.0)
     EndIf
 EndEvent
 
@@ -1815,5 +1912,13 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingPercent", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0}%")
+    ElseIf option == armorStripNarrationChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "armorStripNarrationChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+    ElseIf option == armorStripNarrationCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripNarrationCooldown", value * 60.0)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} minutes")
     EndIf
 EndEvent

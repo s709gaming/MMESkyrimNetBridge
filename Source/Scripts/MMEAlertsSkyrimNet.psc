@@ -238,6 +238,101 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
     Return result
 EndFunction
 
+; Requests one forced narration after a verified armor strip. The world reacts
+; to the stripped Milk Maid; the player is never forced to speak. Cooldown is
+; committed only after Skyrim.Net accepts the request.
+Int Function NarrateArmorStrip(Actor wearer, Armor strippedArmor, String sourceLabel, Float fullnessPct, Float thresholdPct) Global
+    If !IsExtensionsEnabled() || wearer == None
+        Return -1
+    EndIf
+    String settingsFile = "/MMEAlerts/Settings"
+    Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableArmorStripNarrationDiagnostic", 0) == 1
+    If diagnostic
+        Debug.Notification("Armor Strip Narration: trigger | source=" + sourceLabel)
+    EndIf
+    String armorName = ""
+    If strippedArmor != None
+        armorName = strippedArmor.GetName()
+    EndIf
+    If armorName == ""
+        armorName = "armor"
+    EndIf
+    String actorName = ResolveActorName(wearer, "The Milk Maid")
+    If diagnostic
+        Debug.Notification("Armor Strip Narration: actor=" + actorName + " | armor=" + armorName)
+        Debug.Notification("Armor Strip Narration: fullness=" + (fullnessPct as Int) + "% | threshold=" + (thresholdPct as Int) + "%")
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enableArmorStripNarration", 1) != 1
+        If diagnostic
+            Debug.Notification("Armor Strip Narration: skipped - feature disabled")
+        EndIf
+        Return -2
+    EndIf
+    If !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
+        If diagnostic
+            Debug.Notification("Armor Strip Narration: failed - Skyrim.Net unavailable")
+        EndIf
+        Return -3
+    EndIf
+
+    Int chance = JsonUtil.GetIntValue(settingsFile, "armorStripNarrationChance", 100)
+    If chance < 0
+        chance = 0
+    ElseIf chance > 100
+        chance = 100
+    EndIf
+    If chance == 0
+        If diagnostic
+            Debug.Notification("Armor Strip Narration: skipped - chance 0%")
+        EndIf
+        Return -4
+    EndIf
+    Int roll = Utility.RandomInt(1, 100)
+    If roll > chance
+        If diagnostic
+            Debug.Notification("Armor Strip Narration: skipped - chance roll " + roll + " > " + chance)
+        EndIf
+        Return -5
+    EndIf
+    If diagnostic
+        Debug.Notification("Armor Strip Narration: chance roll " + roll + " <= " + chance + " PASS")
+    EndIf
+
+    Float cooldown = JsonUtil.GetFloatValue(settingsFile, "armorStripNarrationCooldown", 300.0)
+    Float now = Utility.GetCurrentRealTime()
+    Float last = JsonUtil.GetFloatValue(settingsFile, "lastArmorStripNarrationRealTime", -1.0)
+    If last > now
+        last = -1.0
+    EndIf
+    If last >= 0.0 && now - last < cooldown
+        If diagnostic
+            Int remaining = (cooldown - (now - last)) as Int
+            Debug.Notification("Armor Strip Narration: skipped - cooldown " + remaining + "s remaining")
+        EndIf
+        Return -6
+    EndIf
+    If diagnostic
+        Debug.Notification("Armor Strip Narration: cooldown READY")
+    EndIf
+
+    String content = actorName + "'s " + armorName + " has flown right off her body because her milk-swollen breasts are way too big for it! " + actorName + " is at " + (fullnessPct as Int) + "% fullness against a " + (thresholdPct as Int) + "% armor threshold. React immediately in a silly, exaggerated, playful way."
+    If diagnostic
+        Debug.Notification("Armor Strip Narration: sending DirectNarration")
+    EndIf
+    Int result = SkyrimNetApi.DirectNarration(content, None, wearer)
+    If result == 0
+        JsonUtil.SetFloatValue(settingsFile, "lastArmorStripNarrationRealTime", now)
+        JsonUtil.Save(settingsFile, False)
+        If diagnostic
+            Debug.Notification("Armor Strip Narration: ACCEPTED [0] | cooldown started | " + (cooldown as Int) + "s")
+        EndIf
+    ElseIf diagnostic
+        Debug.Notification("Armor Strip Narration: REJECTED [" + result + "]")
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] Armor strip DirectNarration result " + result + " | " + content)
+    Return result
+EndFunction
+
 ; Publishes actor-specific capacity crossings for two minutes without forcing dialogue.
 Function SendCapacityMilestone(Actor milkMaid, Int crossing) Global
     ; Validate feature/plugin state before building payloads. Milestones are
