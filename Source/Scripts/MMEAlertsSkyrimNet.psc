@@ -247,9 +247,7 @@ Int Function NarrateArmorStrip(Actor wearer, Armor strippedArmor, String sourceL
     EndIf
     String settingsFile = "/MMEAlerts/Settings"
     Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableArmorStripNarrationDiagnostic", 0) == 1
-    If diagnostic
-        Debug.Notification("Armor Strip Narration: trigger | source=" + sourceLabel)
-    EndIf
+    ReportArmorStripNarration(diagnostic, "Armor Strip Narration: trigger | source=" + sourceLabel)
     String armorName = ""
     If strippedArmor != None
         armorName = strippedArmor.GetName()
@@ -258,44 +256,15 @@ Int Function NarrateArmorStrip(Actor wearer, Armor strippedArmor, String sourceL
         armorName = "armor"
     EndIf
     String actorName = ResolveActorName(wearer, "The Milk Maid")
-    If diagnostic
-        Debug.Notification("Armor Strip Narration: actor=" + actorName + " | armor=" + armorName)
-        Debug.Notification("Armor Strip Narration: fullness=" + (fullnessPct as Int) + "% | threshold=" + (thresholdPct as Int) + "%")
-    EndIf
+    ReportArmorStripNarration(diagnostic, "Armor Strip Narration: actor=" + actorName + " | armor=" + armorName)
+    ReportArmorStripNarration(diagnostic, "Armor Strip Narration: fullness=" + (fullnessPct as Int) + "% | threshold=" + (thresholdPct as Int) + "%")
     If JsonUtil.GetIntValue(settingsFile, "enableArmorStripNarration", 1) != 1
-        If diagnostic
-            Debug.Notification("Armor Strip Narration: skipped - feature disabled")
-        EndIf
+        ReportArmorStripNarration(diagnostic, "Armor Strip Narration: skipped - feature disabled")
         Return -2
     EndIf
     If !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
-        If diagnostic
-            Debug.Notification("Armor Strip Narration: failed - Skyrim.Net unavailable")
-        EndIf
+        ReportArmorStripNarration(diagnostic, "Armor Strip Narration: failed - Skyrim.Net unavailable")
         Return -3
-    EndIf
-
-    Int chance = JsonUtil.GetIntValue(settingsFile, "armorStripNarrationChance", 100)
-    If chance < 0
-        chance = 0
-    ElseIf chance > 100
-        chance = 100
-    EndIf
-    If chance == 0
-        If diagnostic
-            Debug.Notification("Armor Strip Narration: skipped - chance 0%")
-        EndIf
-        Return -4
-    EndIf
-    Int roll = Utility.RandomInt(1, 100)
-    If roll > chance
-        If diagnostic
-            Debug.Notification("Armor Strip Narration: skipped - chance roll " + roll + " > " + chance)
-        EndIf
-        Return -5
-    EndIf
-    If diagnostic
-        Debug.Notification("Armor Strip Narration: chance roll " + roll + " <= " + chance + " PASS")
     EndIf
 
     Float cooldown = JsonUtil.GetFloatValue(settingsFile, "armorStripNarrationCooldown", 300.0)
@@ -305,32 +274,50 @@ Int Function NarrateArmorStrip(Actor wearer, Armor strippedArmor, String sourceL
         last = -1.0
     EndIf
     If last >= 0.0 && now - last < cooldown
-        If diagnostic
-            Int remaining = (cooldown - (now - last)) as Int
-            Debug.Notification("Armor Strip Narration: skipped - cooldown " + remaining + "s remaining")
-        EndIf
+        Int remaining = (cooldown - (now - last)) as Int
+        ReportArmorStripNarration(diagnostic, "Armor Strip Narration: skipped - cooldown " + remaining + "s remaining")
         Return -6
     EndIf
-    If diagnostic
-        Debug.Notification("Armor Strip Narration: cooldown READY")
+    ReportArmorStripNarration(diagnostic, "Armor Strip Narration: cooldown READY")
+
+    Int chance = JsonUtil.GetIntValue(settingsFile, "armorStripNarrationChance", 100)
+    If chance < 0
+        chance = 0
+    ElseIf chance > 100
+        chance = 100
     EndIf
+    If chance == 0
+        ReportArmorStripNarration(diagnostic, "Armor Strip Narration: skipped - chance 0%")
+        Return -4
+    EndIf
+    Int roll = Utility.RandomInt(1, 100)
+    If roll > chance
+        ReportArmorStripNarration(diagnostic, "Armor Strip Narration: skipped - chance roll " + roll + " > " + chance)
+        Return -5
+    EndIf
+    ReportArmorStripNarration(diagnostic, "Armor Strip Narration: chance roll " + roll + " <= " + chance + " PASS")
 
     String content = actorName + "'s " + armorName + " has flown right off her body because her milk-swollen breasts are way too big for it! " + actorName + " is at " + (fullnessPct as Int) + "% fullness against a " + (thresholdPct as Int) + "% armor threshold. React immediately in a silly, exaggerated, playful way."
-    If diagnostic
-        Debug.Notification("Armor Strip Narration: sending DirectNarration")
-    EndIf
+    ReportArmorStripNarration(diagnostic, "Armor Strip Narration: sending DirectNarration")
     Int result = SkyrimNetApi.DirectNarration(content, None, wearer)
     If result == 0
         JsonUtil.SetFloatValue(settingsFile, "lastArmorStripNarrationRealTime", now)
         JsonUtil.Save(settingsFile, False)
-        If diagnostic
-            Debug.Notification("Armor Strip Narration: ACCEPTED [0] | cooldown started | " + (cooldown as Int) + "s")
-        EndIf
-    ElseIf diagnostic
-        Debug.Notification("Armor Strip Narration: REJECTED [" + result + "]")
+        ReportArmorStripNarration(diagnostic, "Armor Strip Narration: ACCEPTED [0] | cooldown started | " + (cooldown as Int) + "s")
+    Else
+        ReportArmorStripNarration(diagnostic, "Armor Strip Narration: REJECTED [" + result + "]")
     EndIf
     Debug.Trace("[MMEAlert SkyrimNet] Armor strip DirectNarration result " + result + " | " + content)
     Return result
+EndFunction
+
+; Narration diagnostics: log plus HUD only while the dedicated toggle is on.
+Function ReportArmorStripNarration(Bool diagnostic, String reportText) Global
+    If !diagnostic
+        Return
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet Armor Strip] " + reportText)
+    Debug.Notification(reportText)
 EndFunction
 
 ; Publishes actor-specific capacity crossings for two minutes without forcing dialogue.
