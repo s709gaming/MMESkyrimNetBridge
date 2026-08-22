@@ -417,6 +417,8 @@ Int Function ClassifyArmor(MilkQUEST milkController, Armor equippedArmor) Global
     ; Direct form properties identify MME's canonical cuirasses even if renamed.
     ; Array matching intentionally uses the live display name because that is how
     ; MME exposes configurable third-party Milking/Living/Parasite equipment.
+    ; Generic names such as "Clothes" are never trusted for array matching so a
+    ; stale entry cannot turn an ordinary body armor into MME equipment.
     If milkController == None || equippedArmor == None
         Return 0
     EndIf
@@ -424,6 +426,9 @@ Int Function ClassifyArmor(MilkQUEST milkController, Armor equippedArmor) Global
         Return 1
     EndIf
     String armorName = equippedArmor.GetName()
+    If IsAmbiguousOrdinaryArmorName(armorName)
+        Return 0
+    EndIf
     If armorName != "" && armorName != "Empty" && milkController.MilkingEquipment != None && milkController.MilkingEquipment.Find(armorName) >= 0
         Return 1
     EndIf
@@ -477,6 +482,9 @@ String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equ
     EndIf
     String armorName = equippedArmor.GetName()
     If armorName == "" || armorName == "Empty"
+        Return "none"
+    EndIf
+    If IsAmbiguousOrdinaryArmorName(armorName)
         Return "none"
     EndIf
     If milkController.MilkingEquipment != None && milkController.MilkingEquipment.Find(armorName) >= 0

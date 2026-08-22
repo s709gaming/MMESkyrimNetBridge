@@ -1084,7 +1084,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == capacityOption
         SetInfoText("React when a Milkmaid reaches half capacity.")
     ElseIf option == pollingOption
-        SetInfoText("Check nearby Milkmaid capacity on a timer.")
+        SetInfoText("Periodically checks nearby Milkmaid fullness and player armor stripping. Disabling this also disables passive armor stripping checks, but drink and equip checks still work.")
     ElseIf option == pollingIntervalOption
         SetInfoText("Set seconds between capacity checks.")
     ElseIf option == notificationOption
