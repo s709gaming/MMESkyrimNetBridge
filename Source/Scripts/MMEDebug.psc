@@ -29,6 +29,12 @@ Int AttemptSequence = 0
 Int ActiveSessionID = 0
 String ActiveCaller = ""
 
+; SexLab uses short-lived, actor-scoped startup locks. SexLab's own active
+; state becomes authoritative as soon as StartThread succeeds.
+String SexLabLockKey = "MME.Extensions.SexLabBreastfeeding.Lock"
+String SexLabLockTimeKey = "MME.Extensions.SexLabBreastfeeding.LockTime"
+Int SexLabAttemptSequence = 0
+
 ; Quest startup delegates normal scheduling to the controller.
 Event OnInit()
     UpdateDebugLoop()
@@ -60,6 +66,248 @@ Function RecoverAfterLoad()
         TraceActive("resumed owned OStim breastfeeding session after load")
     Else
         EndSession("discarded stale state after load without touching external OStim/MME state")
+    EndIf
+EndFunction
+
+Bool Function StartSexLabBreastfeeding(Actor milkSource, Actor drinker, String caller = "Unknown")
+    SexLabAttemptSequence += 1
+    Int requestID = SexLabAttemptSequence
+    Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
+    If caller == "Skyrim.Net"
+        diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetSexLabTrace", 0) == 1
+    EndIf
+    SexLabTrace(requestID, diagnostic, "REQUEST RECEIVED | ENTRY ROUTE=" + caller + " | source=" + GetActorName(milkSource) + " " + milkSource + " | drinker=" + GetActorName(drinker) + " " + drinker)
+
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    String failure = SexLabPairFailure(milkSource, drinker, milkController)
+    If failure != ""
+        SexLabTrace(requestID, diagnostic, "INITIAL VALIDATION FAIL: " + failure)
+        Return False
+    EndIf
+    SexLabTrace(requestID, diagnostic, "INITIAL VALIDATION PASS")
+
+    If !AcquireSexLabActor(milkSource, requestID)
+        SexLabTrace(requestID, diagnostic, "ACTOR ACQUIRE FAIL: source owned by request #" + StorageUtil.GetIntValue(milkSource, SexLabLockKey, 0))
+        Return False
+    EndIf
+    If !AcquireSexLabActor(drinker, requestID)
+        ReleaseSexLabActor(milkSource, requestID)
+        SexLabTrace(requestID, diagnostic, "ACTOR ACQUIRE FAIL: drinker owned by request #" + StorageUtil.GetIntValue(drinker, SexLabLockKey, 0) + " | source released")
+        Return False
+    EndIf
+    SexLabTrace(requestID, diagnostic, "ACTOR ACQUIRE PASS")
+
+    failure = SexLabPairFailure(milkSource, drinker, milkController)
+    If failure != ""
+        ReleaseSexLabPair(milkSource, drinker, requestID)
+        SexLabTrace(requestID, diagnostic, "PRE-COMMIT VALIDATION FAIL: " + failure + " | actors released")
+        Return False
+    EndIf
+    SexLabTrace(requestID, diagnostic, "PRE-COMMIT VALIDATION PASS | SEXLAB AVAILABLE")
+
+    ActorBase drinkerBase = drinker.GetLeveledActorBase()
+    String animationName = "zjBreastFeeding"
+    If drinkerBase != None && drinkerBase.GetSex() == 0
+        animationName = "zjBreastFeedingVar"
+    EndIf
+    sslBaseAnimation animation = milkController.SexLab.AnimSlots.GetbyRegistrar(animationName)
+    If animation == None
+        ReleaseSexLabPair(milkSource, drinker, requestID)
+        SexLabTrace(requestID, diagnostic, "FAIL: no compatible animation selected | registrar=" + animationName + " | actors released")
+        Return False
+    EndIf
+    sslBaseAnimation[] animations = new sslBaseAnimation[1]
+    animations[0] = animation
+    SexLabTrace(requestID, diagnostic, "ANIMATION SELECTED | registrar=" + animationName + " | animation=" + animation)
+
+    sslThreadModel model = milkController.SexLab.NewThread()
+    If model == None
+        ReleaseSexLabPair(milkSource, drinker, requestID)
+        SexLabTrace(requestID, diagnostic, "FAIL: SexLab NewThread returned None | actors released")
+        Return False
+    EndIf
+    SexLabTrace(requestID, diagnostic, "THREAD CREATED | model=" + model)
+    If model.AddActor(milkSource) < 0
+        model.Initialize()
+        ReleaseSexLabPair(milkSource, drinker, requestID)
+        SexLabTrace(requestID, diagnostic, "FAIL: source AddActor rejected | actors released | SexLab slot initialized")
+        Return False
+    EndIf
+    SexLabTrace(requestID, diagnostic, "SOURCE ADDED")
+    If model.AddActor(drinker) < 0
+        model.Initialize()
+        ReleaseSexLabPair(milkSource, drinker, requestID)
+        SexLabTrace(requestID, diagnostic, "FAIL: drinker AddActor rejected | actors released | SexLab slot initialized")
+        Return False
+    EndIf
+    SexLabTrace(requestID, diagnostic, "DRINKER ADDED")
+    model.SetAnimations(animations)
+    model.SetHook("MMEExtensionsBreastfeeding")
+    SexLabTrace(requestID, diagnostic, "SEXLAB START REQUESTED")
+    sslThreadController thread = model.StartThread()
+    If thread == None
+        model.Initialize()
+        ReleaseSexLabPair(milkSource, drinker, requestID)
+        SexLabTrace(requestID, diagnostic, "FAIL: SexLab StartThread returned None | actors released | SexLab slot initialized")
+        Return False
+    EndIf
+    Int threadID = model.tid
+    SexLabTrace(requestID, diagnostic, "SEXLAB START REQUESTED | thread=" + threadID)
+
+    Int checks = 0
+    While checks < 20 && (!milkController.SexLab.IsActorActive(milkSource) || !milkController.SexLab.IsActorActive(drinker))
+        Utility.Wait(0.1)
+        checks += 1
+    EndWhile
+    If !milkController.SexLab.IsActorActive(milkSource) || !milkController.SexLab.IsActorActive(drinker)
+        thread.EndAnimation(True)
+        ReleaseSexLabPair(milkSource, drinker, requestID)
+        SexLabTrace(requestID, diagnostic, "FAIL: SexLab startup not confirmed | thread=" + threadID + " | owned thread ended | actors released")
+        Return False
+    EndIf
+    ReleaseSexLabPair(milkSource, drinker, requestID)
+    SexLabTrace(requestID, diagnostic, "SEXLAB START CONFIRMED | SESSION ACTIVE | thread=" + threadID + " | startup locks released")
+
+    Spell passive = milkController.BeingMilkedPassive
+    checks = 0
+    While checks < 30 && passive != None && !milkSource.HasSpell(passive)
+        Utility.Wait(0.1)
+        checks += 1
+    EndWhile
+    If passive != None && milkSource.HasSpell(passive)
+        SexLabTrace(requestID, diagnostic, "MME START CONFIRMED | Mode4 passive active")
+    Else
+        SexLabTrace(requestID, diagnostic, "FAIL: MME Mode4 did not begin after SexLab startup | thread=" + threadID)
+    EndIf
+    Return True
+EndFunction
+
+; The original MME dialogue fragment remains the known-good owner of its
+; StartSex call. Observe its result without replacing or invoking it again.
+Function ObserveDialogueSexLabBreastfeeding(Actor milkSource, Actor drinker)
+    Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
+    If !diagnostic
+        Return
+    EndIf
+    SexLabAttemptSequence += 1
+    Int requestID = SexLabAttemptSequence
+    SexLabTrace(requestID, True, "REQUEST RECEIVED | ENTRY ROUTE=DIALOGUE | source=" + GetActorName(milkSource) + " " + milkSource + " | drinker=" + GetActorName(drinker) + " " + drinker)
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkSource == None || drinker == None
+        SexLabTrace(requestID, True, "FAIL: dialogue source or drinker did not resolve")
+        Return
+    ElseIf milkController == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
+        SexLabTrace(requestID, True, "FAIL: MME/SexLab framework unavailable")
+        Return
+    EndIf
+    SexLabTrace(requestID, True, "SOURCE RESOLVED | DRINKER RESOLVED | SEXLAB AVAILABLE")
+    String animationName = "zjBreastFeeding"
+    ActorBase drinkerBase = drinker.GetLeveledActorBase()
+    If drinkerBase != None && drinkerBase.GetSex() == 0
+        animationName = "zjBreastFeedingVar"
+    EndIf
+    sslBaseAnimation animation = milkController.SexLab.AnimSlots.GetbyRegistrar(animationName)
+    If animation == None
+        SexLabTrace(requestID, True, "FAIL: no compatible animation selected | registrar=" + animationName)
+        Return
+    EndIf
+    SexLabTrace(requestID, True, "ANIMATION SELECTED | registrar=" + animationName + " | animation=" + animation)
+    Int checks = 0
+    While checks < 20 && (!milkController.SexLab.IsActorActive(milkSource) || !milkController.SexLab.IsActorActive(drinker))
+        Utility.Wait(0.1)
+        checks += 1
+    EndWhile
+    If !milkController.SexLab.IsActorActive(milkSource) || !milkController.SexLab.IsActorActive(drinker)
+        SexLabTrace(requestID, True, "FAIL: dialogue SexLab startup not confirmed")
+        Return
+    EndIf
+    SexLabTrace(requestID, True, "SEXLAB START CONFIRMED | SESSION ACTIVE")
+    Spell passive = milkController.BeingMilkedPassive
+    checks = 0
+    While checks < 30 && passive != None && !milkSource.HasSpell(passive)
+        Utility.Wait(0.1)
+        checks += 1
+    EndWhile
+    If passive != None && milkSource.HasSpell(passive)
+        SexLabTrace(requestID, True, "MME START CONFIRMED | Mode4 passive active")
+    Else
+        SexLabTrace(requestID, True, "FAIL: MME Mode4 did not begin after dialogue SexLab startup")
+    EndIf
+EndFunction
+
+String Function SexLabPairFailure(Actor milkSource, Actor drinker, MilkQUEST milkController)
+    If milkSource == None
+        Return "source actor is None"
+    ElseIf drinker == None
+        Return "drinker actor is None"
+    ElseIf milkSource == drinker
+        Return "source and drinker are the same actor"
+    ElseIf milkController == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
+        Return "MME/SexLab framework unavailable"
+    ElseIf milkController.MilkMaid == None || milkController.MilkMaid.Find(milkSource) < 0
+        Return "source is not an authoritative MME Milk Maid"
+    ElseIf milkSource.IsDead() || milkSource.IsDisabled() || !milkSource.Is3DLoaded()
+        Return "source is dead, disabled, or unloaded"
+    ElseIf drinker.IsDead() || drinker.IsDisabled() || !drinker.Is3DLoaded()
+        Return "drinker is dead, disabled, or unloaded"
+    ElseIf milkSource.IsChild()
+        Return "source is a child actor"
+    ElseIf drinker.IsChild()
+        Return "drinker is a child actor"
+    ElseIf milkSource.GetParentCell() == None || milkSource.GetParentCell() != drinker.GetParentCell()
+        Return "source and drinker are not in the same valid cell"
+    ElseIf milkSource.IsInCombat()
+        Return "source is in combat"
+    ElseIf drinker.IsInCombat()
+        Return "drinker is in combat"
+    ElseIf milkController.SexLab.IsActorActive(milkSource)
+        Return "source already active in SexLab"
+    ElseIf milkController.SexLab.IsActorActive(drinker)
+        Return "drinker already active in SexLab"
+    ElseIf MMEOStimIntegration.IsActorInScene(milkSource)
+        Return "source already active in OStim"
+    ElseIf MMEOStimIntegration.IsActorInScene(drinker)
+        Return "drinker already active in OStim"
+    EndIf
+    Return ""
+EndFunction
+
+Bool Function AcquireSexLabActor(Actor target, Int requestID)
+    If target == None
+        Return False
+    EndIf
+    If StorageUtil.HasIntValue(target, SexLabLockKey)
+        Float now = Utility.GetCurrentRealTime()
+        Float lockedAt = StorageUtil.GetFloatValue(target, SexLabLockTimeKey, -1.0)
+        ; Real-time resets across game sessions. Also expire an interrupted
+        ; startup after ten seconds so save/load or a killed stack cannot strand it.
+        If lockedAt < 0.0 || now < lockedAt || now - lockedAt > 10.0
+            StorageUtil.UnsetIntValue(target, SexLabLockKey)
+            StorageUtil.UnsetFloatValue(target, SexLabLockTimeKey)
+        Else
+            Return False
+        EndIf
+    EndIf
+    StorageUtil.SetIntValue(target, SexLabLockKey, requestID)
+    StorageUtil.SetFloatValue(target, SexLabLockTimeKey, Utility.GetCurrentRealTime())
+    Return StorageUtil.GetIntValue(target, SexLabLockKey, 0) == requestID
+EndFunction
+
+Function ReleaseSexLabActor(Actor target, Int requestID)
+    If target != None && StorageUtil.GetIntValue(target, SexLabLockKey, 0) == requestID
+        StorageUtil.UnsetIntValue(target, SexLabLockKey)
+        StorageUtil.UnsetFloatValue(target, SexLabLockTimeKey)
+    EndIf
+EndFunction
+
+Function ReleaseSexLabPair(Actor milkSource, Actor drinker, Int requestID)
+    ReleaseSexLabActor(milkSource, requestID)
+    ReleaseSexLabActor(drinker, requestID)
+EndFunction
+
+Function SexLabTrace(Int requestID, Bool enabled, String traceText)
+    If enabled
+        Debug.Trace("[MME SexLab #" + requestID + "] " + traceText)
     EndIf
 EndFunction
 

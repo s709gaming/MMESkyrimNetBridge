@@ -341,6 +341,24 @@ Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float local
     ; evidence that the option was visible. Never schedule another visibility
     ; snapshot here: Skyrim has already advanced beyond the choice list.
     Debug.Trace("[MME Extensions Dialogue] INFO event | topic=" + topicEditorID + " info=" + (localInfoForm as Int) + " speaker=" + sender)
+    ; Observe the two original MME SexLab breastfeeding INFOs after their own
+    ; fragment runs. This deliberately does not call StartSex a second time.
+    Int selectedInfo = localInfoForm as Int
+    If sexLabBFDebug && (selectedInfo == 0x05FE12 || selectedInfo == 0x05FE0E)
+        Actor source = sender as Actor
+        Actor drinker = Game.GetPlayer()
+        If selectedInfo == 0x05FE0E
+            source = Game.GetPlayer()
+            drinker = sender as Actor
+        EndIf
+        MMEDebug service = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
+        If service != None
+            service.ObserveDialogueSexLabBreastfeeding(source, drinker)
+        Else
+            Debug.Trace("[MME SexLab Dialogue] FAIL: persistent diagnostic service unavailable")
+        EndIf
+        Return
+    EndIf
     Bool ostimPlayerSelected = topicEditorID == "MMEExt_OStimBreastfeeding_PlayerDrinksTopic"
     Bool ostimNPCSelected = topicEditorID == "MMEExt_OStimBreastfeeding_NPCDrinksTopic"
     If ostimPlayerSelected || ostimNPCSelected

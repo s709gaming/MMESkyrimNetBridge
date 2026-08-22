@@ -301,59 +301,16 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
         Return
     EndIf
 
-    ; Phase 3: otherwise use MME's original SexLab interface and registrar names.
-    ; Drinker sex selects MME's Var/non-Var animation exactly as the original
-    ; pathway expects; missing registration is a failure, never a generic fallback.
+    ; Phase 3: delegate to the persistent defensive SexLab transaction owner.
     Debug.Trace("[MMEAlert SkyrimNet BF] backend=SexLab | OStim breastfeeding integration not selected")
     If routeDiagnostic
         Debug.Notification("Skyrim.Net BF: backend=SexLab")
     EndIf
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None || milkController.SexLab == None
-        Debug.Trace("[MMEAlert SkyrimNet BF] SexLab rejected | MME or SexLab unavailable")
-        If routeDiagnostic
-            Debug.Notification("Skyrim.Net BF: SexLab unavailable")
-        EndIf
+    MMEDebug service = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
+    If service == None
+        Debug.Trace("[MMEAlert SkyrimNet BF] SexLab rejected | persistent service unavailable")
         Return
     EndIf
-    If !MMEOStimBreastfeeding.ValidateMilkSource(milkSource, milkController, routeDiagnostic)
-        Return
-    EndIf
-    sslBaseAnimation[] animations = new sslBaseAnimation[1]
-    String animationName = "zjBreastFeeding"
-    If drinker.GetLeveledActorBase().GetSex() == 0
-        animationName = "zjBreastFeedingVar"
-        animations[0] = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar")
-    Else
-        animations[0] = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding")
-    EndIf
-    If animations[0] == None
-        Debug.Trace("[MMEAlert SkyrimNet BF] SexLab rejected | animation registrar missing=" + animationName)
-        If routeDiagnostic
-            Debug.Notification("Skyrim.Net BF: missing " + animationName)
-        EndIf
-        Return
-    EndIf
-    Actor[] sceneActors = new Actor[2]
-    ; SexLab's original MME ordering is source first, drinker second. This differs
-    ; from OStim action ordering and must not be "normalized" across frameworks.
-    sceneActors[0] = milkSource
-    sceneActors[1] = drinker
-    If !MMEOStimBreastfeeding.ValidateMilkSource(milkSource, milkController, routeDiagnostic) || !MMEOStimIntegration.ValidatePairForCommit(sceneActors, routeDiagnostic)
-        Return
-    EndIf
-    If diagnostic
-        Debug.Notification("Skyrim.Net BF: SexLab animation=" + animationName)
-    EndIf
-    ; StartSex is the SexLab commit point; diagnostics report its returned thread
-    ; ID but scene lifecycle remains owned by SexLab/MME after this call.
-    Int sceneId = milkController.SexLab.StartSex(sceneActors, animations)
-    If diagnostic
-        If sceneId >= 0
-            Debug.Notification("[MME Debug] SexLab thread result: " + sceneId)
-        Else
-            Debug.Notification("[MME Debug] FAILED: SexLab rejected [" + sceneId + "]")
-        EndIf
-    EndIf
-    Debug.Trace("[MMEAlert SkyrimNet BF] SexLab StartSex result=" + sceneId + " | milk source=" + milkSourceName + " | drinker=" + drinkerName)
+    Bool sexLabStarted = service.StartSexLabBreastfeeding(milkSource, drinker, "Skyrim.Net")
+    Debug.Trace("[MMEAlert SkyrimNet BF] defensive SexLab result=" + sexLabStarted + " | milk source=" + milkSourceName + " | drinker=" + drinkerName)
 EndFunction
