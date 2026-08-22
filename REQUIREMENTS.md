@@ -55,6 +55,7 @@ Required by the MME Extensions CommonLibSSE-NG DLL.
 Tested on:
 
 **Skyrim SE / AE 1.6.1170**
+**1.7.99.0 NOT YET SUPPORTED**
 
 ---
 
@@ -258,7 +259,7 @@ The male/futa-player version of the Elsie / Milk Maid quest setup.
 
 Adds Elsie as a follower along with quests, bimbo like NPC behavior, autonomous breastfeeding, and other MME-related content.
 
-**Warning:** Autonomous breastfeeding may cause issues if activated on followers.
+**Warning:** Autonomous breastfeeding may cause issues if activated on followers. (Bug) Can cause the first dialog attempt to NPC not be responsive, making you talk to them again.
 
 ---
 

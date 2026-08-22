@@ -28,7 +28,7 @@ With **Skyrim.Net**, those reactions can go even further. The AI can understand 
 
 | | |
 |---|---|
-| **Release status** | Beta 0.3.0 |
+| **Release status** | Beta 0.4.0 |
 | **Main requirement** | Milk Mod Economy |
 | **Skyrim.Net** | Optional |
 | **Arousal integration** | Optional |
@@ -165,6 +165,40 @@ The system reacts to the **threshold crossing**, rather than repeatedly triggeri
 Narration cooldowns are adjustable to prevent repetitive dialogue and unnecessary token usage.
 
 **Waiting in-game is an easy way to quickly test fullness reactions.**
+
+---
+
+
+# ❤️ OStim Support
+
+MME Extensions now supports **OStim as an alternative animation framework** for intimate scenes.
+
+- Added a new MCM option to prefer **OStim animations**.
+- Added a new **"Hey, there"** dialogue option with an **(OStim)** tag when a sufficiently full Milk Maid is involved.
+- Skyrim.Net can start OStim scenes when conversation naturally leads to an intimate interaction.
+- Existing SexLab support remains available when OStim is not selected.
+
+---
+
+# 🔒 Devious Devices Support
+
+If **MME's original Devious Devices support** is installed, MME Extensions can now recognize when a Milk Maid is restrained.
+
+- Restrained characters can use **struggle animations** after drinking milk or reaching fullness thresholds.
+- Skyrim.Net receives vague context indicating that the character is restrained, allowing the AI to naturally account for her situation.
+- Uses MME's existing Devious Devices integration rather than replacing it.
+
+---
+
+# 🥛 Milking Armor Reactions
+
+Putting on milking equipment can now trigger additional reactions.
+
+- Equipping milking armor can trigger **moaning** and **animations**.
+- Optional **Skyrim.Net narration** can react to the equipment being attached.
+- Added MCM controls for these reactions.
+
+After all, you're attaching a kinky device to yourself.
 
 ---
 
