@@ -87,7 +87,7 @@ Float Function ApplyMilkDrinkBonusForActor(Actor drinker, Int drinkKind, Bool sh
         If showDebug
             Debug.Notification("Milk Debug: MME add called | " + milkBefore + " -> " + milkAfter + " (wanted +" + milkAdded + ")")
         EndIf
-        Debug.Trace("[MMEAlert MilkBoost] Requested +" + milkAdded + " milk for the player")
+        Debug.Trace("[MMEAlert MilkBoost] milkBefore=" + milkBefore + " | bonus=" + milkAdded + " | attempted=" + attemptedMilk + " | milkAfter=" + milkAfter + " | enforceMilkLimit=" + enforceMilkLimit)
         Return milkAfter - milkBefore
     ElseIf showDebug
         Debug.Notification("Milk Debug: MME add not called (total is zero)")

@@ -10,8 +10,8 @@ Scriptname MMEArmorScript Hidden
 
 ; Records the post-drink value before MME's storage API can clamp it. Rapid
 ; drinks share one debounce window, so retain the highest attempt until the
-; delayed pass consumes it. The overflow bit remains separate because it also
-; controls MME's leak reconciliation.
+; delayed pass consumes it. The overflow bit is diagnostic only: it records
+; whether the attempt exceeded MME capacity without mutating MME state.
 Function MarkPlayerDrinkAttempt(Actor target, Float attemptedMilk, Bool attemptedOverflow) Global
     If target == Game.GetPlayer()
         Float pendingAttempt = StorageUtil.GetFloatValue(target, "MMEExtensions.ArmorCheck.AttemptedMilk", attemptedMilk)
@@ -108,12 +108,10 @@ Function CheckPlayerArmorNow(Actor target) Global
         Return
     EndIf
 
-    ; Reproduce only MilkCycle's over-capacity branch before checking armor.
-    ; Do not run MilkCycle itself: it also generates milk and changes lactacid,
-    ; pain, progression, arousal, effects, events, and messages.
-    ReconcileMMEOverflow(target, milkController, attemptedOverflow, diagnostic)
-
     ; Phase 3: apply MME/global compatibility gates before inspecting thresholds.
+    ; This delayed pass only observes stored and attempted milk. It never
+    ; rewrites MME's MilkCurrent; MME's own MilkCycle owns any real overflow
+    ; or leak reconciliation on its normal schedule.
     ; Protected MME, DD, TITS, SexLab-no-strip, Living, Parasite, and milking
     ; equipment must remain equipped even at extreme milk values.
     If milkController.ArmorStrippingDisabled
@@ -182,71 +180,6 @@ Function CheckPlayerArmorNow(Actor target) Global
     EndIf
     Debug.Notification("Your breasts are too big to fit into your " + armorKind)
     Report(diagnostic, "result=STRIPPED | " + armorKind + " | effectiveMilk=" + effectiveMilk + " > " + threshold)
-EndFunction
-
-; Applies MME MilkCycle's overflow math and leak calls to the current player
-; state after a direct drink. An attempted-overflow marker reconstructs the
-; branch when MME's enforcing storage call already clamped milk to the maximum.
-Function ReconcileMMEOverflow(Actor target, MilkQUEST milkController, Bool attemptedOverflow, Bool diagnostic) Global
-    ; Phase 1: reconstruct only the overflow branch that direct storage writes
-    ; bypass. When BreastScaleLimit clamps the write to exactly maximum, the
-    ; attemptedOverflow marker distinguishes a real overflow from normal fullness.
-    Float milk = MME_Storage.getMilkCurrent(target)
-    Float maximum = MME_Storage.getMilkMaximum(target)
-    If maximum <= 0.0 || milk < maximum || (milk == maximum && !attemptedOverflow)
-        Report(diagnostic, "PLAYER MME overflow skipped: milk " + milk + " / " + maximum)
-        Return
-    EndIf
-    If milkController.PiercingCheck(target) == 2
-        Report(diagnostic, "PLAYER MME overflow skipped: nipple plug blocks leaking")
-        Return
-    EndIf
-
-    ; Phase 2: preserve MME's fixed/dynamic maid-level arithmetic and container
-    ; routing. This math is intentionally not replaced with a simpler clamp.
-    Float reconciledMilk = milk
-    Float overflowMilk = 0.0
-    If milk > maximum
-        If milkController.BreastScaleLimit
-            reconciledMilk = maximum
-        Else
-            Int maidLevel = 0
-            ; MilkCycle leaves MaidLevel at its default zero in fixed mode;
-            ; its dynamic-production path refreshes the real level.
-            If !milkController.FixedMilkGen
-                maidLevel = MME_Storage.getMaidLevel(target)
-            EndIf
-            overflowMilk = milk - maximum - ((milk / maximum) - 1.0) * maidLevel
-            reconciledMilk = milk - overflowMilk
-            Armor wornArmor = target.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
-            If IsMMEOverflowContainerArmor(milkController, wornArmor)
-                StorageUtil.AdjustFloatValue(target, "MME.MilkMaid.MilkingContainerMilksSUM", overflowMilk)
-            EndIf
-        EndIf
-    EndIf
-
-    ; Phase 3: reproduce MME's visible leak/size side effects, then commit the
-    ; reconciled amount through MME_Storage so MME remains state owner.
-    If target.IsNearPlayer()
-        milkController.AddMilkFx(target, 1)
-        milkController.AddLeak(target)
-    EndIf
-    MME_Storage.setMilkCurrent(target, reconciledMilk, milkController.BreastScaleLimit)
-    milkController.CurrentSize(target)
-    Report(diagnostic, "PLAYER MME overflow reconciled | milk " + milk + " -> " + MME_Storage.getMilkCurrent(target) + " | leaked " + overflowMilk)
-EndFunction
-
-; Matches the milking-container classification used by MilkCycle's overflow
-; branch, without broadening it to the armor protection rules below.
-Bool Function IsMMEOverflowContainerArmor(MilkQUEST milkController, Armor wornArmor) Global
-    If milkController == None || wornArmor == None
-        Return False
-    EndIf
-    If wornArmor == milkController.MilkCuirass || wornArmor == milkController.MilkCuirassFuta
-        Return True
-    EndIf
-    String armorName = wornArmor.GetName()
-    Return milkController.MilkingEquipment.Find(armorName) != -1 || StringUtil.Find(armorName, "Milk") >= 0 || StringUtil.Find(armorName, "Cow") >= 0
 EndFunction
 
 ; Classifies slot-32 armor and returns MME's raw-milk overflow threshold.
