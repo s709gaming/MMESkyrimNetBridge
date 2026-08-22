@@ -1574,9 +1574,9 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
                 halfFullNarrationActor = candidate
             EndIf
         EndIf
-        ; Configurable stripping also evaluates every scanned Milk Maid so full
-        ; NPCs and the player lose slot-32 armor between drink checks as well.
-        If processReactions && MMEArmorScript.IsConfigurableArmorStrippingEnabled() && IsMMEMilkMaid(candidate)
+        ; Configurable stripping piggybacks on the shared scan but is player-only
+        ; for now. NPCs keep MME's original stripping until a later version.
+        If processReactions && candidate == Game.GetPlayer() && MMEArmorScript.IsConfigurableArmorStrippingEnabled()
             MMEArmorScript.EvaluateArmorStrippingForActor(candidate, MME_Storage.getMilkCurrent(candidate), "poll")
         EndIf
         String status = EvaluateMilkMaidFlavor(candidate)

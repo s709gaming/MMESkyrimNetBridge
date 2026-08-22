@@ -123,10 +123,10 @@ EndFunction
 ; Reusable configurable strip path shared by the delayed post-drink check and
 ; the capacity polling loop. Observes milk only; never writes MME milk state.
 Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, String sourceLabel) Global
-    Bool diagnostic = GetArmorStrippingDiagnostic()
+    Bool diagnostic = GetDiagnostic()
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None
-        ReportArmorStrip(diagnostic, sourceLabel + " decision=BLOCKED | MME controller unavailable")
+        Debug.Trace("[MMEAlert Armor Stripping] MME controller unavailable; cannot evaluate stripping")
         Return False
     EndIf
     If !IsValidMilkMaid(target, milkController)
@@ -190,28 +190,44 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
     Return True
 EndFunction
 
-; Diagnostic flag for the configurable stripping feature. Log traces always
-; emit through ReportArmorStrip; the flag only gates the HUD notifications.
-Bool Function GetArmorStrippingDiagnostic() Global
-    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorStrippingDiagnostic", 0) == 1
-EndFunction
-
+; Gated strip reporter. Both the log line and the HUD notification respect the
+; single Armor Stripping diagnostic toggle so the polling route stays quiet
+; when diagnostics are disabled.
 Function ReportArmorStrip(Bool showNotification, String reportText) Global
-    Debug.Trace("[MMEAlert Configurable Armor Stripping] " + reportText)
-    If showNotification
-        Debug.Notification("Armor Stripping: " + reportText)
+    If !showNotification
+        Return
     EndIf
+    Debug.Trace("[MMEAlert Armor Stripping] " + reportText)
+    Debug.Notification("Armor Stripping: " + reportText)
 EndFunction
 
-; Applies the master toggle to MME: enabling this feature disables MME's own
-; slot-32 stripping so the two systems never strip the same armor at once.
+; Applies the override master toggle without destroying MME's own setting.
+; While the override is owned, MME stripping is forced off; when ownership ends
+; the previously saved MME ArmorStrippingDisabled state is restored once.
 Function ApplyArmorStrippingMasterToggle() Global
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None
         Return
     EndIf
+    String ownershipKey = "MMEExtensions.ArmorStripping.Overriding"
+    String savedStateKey = "MMEExtensions.ArmorStripping.SavedMMEState"
     Bool extensionsEnabled = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMMEExtensions", 1) == 1
-    milkController.ArmorStrippingDisabled = extensionsEnabled && IsConfigurableArmorStrippingEnabled()
+    Bool overrideActive = extensionsEnabled && IsConfigurableArmorStrippingEnabled()
+    Bool currentlyOwned = StorageUtil.GetIntValue(None, ownershipKey, 0) == 1
+    If overrideActive
+        If !currentlyOwned
+            ; Take ownership exactly once: remember MME's live setting before
+            ; forcing it off. Reloads and re-inits never overwrite the snapshot.
+            StorageUtil.SetIntValue(None, savedStateKey, milkController.ArmorStrippingDisabled as Int)
+            StorageUtil.SetIntValue(None, ownershipKey, 1)
+        EndIf
+        milkController.ArmorStrippingDisabled = True
+    ElseIf currentlyOwned
+        ; Release ownership and restore MME's previous stripping state.
+        milkController.ArmorStrippingDisabled = StorageUtil.GetIntValue(None, savedStateKey, 0) == 1
+        StorageUtil.UnsetIntValue(None, ownershipKey)
+        StorageUtil.UnsetIntValue(None, savedStateKey)
+    EndIf
 EndFunction
 
 ; Classifies slot-32 armor and returns the active milk threshold. When the
@@ -392,16 +408,7 @@ Bool Function GetDiagnostic() Global
 EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
-    Debug.Trace("[MMEAlert Armor Stripping Check] " + reportText)
-EndFunction
-
-; Keep the full trace in Papyrus, but show only the useful threshold decision
-; on the HUD when the diagnostic is enabled.
-Function ReportDecision(Bool showNotification, String reportText) Global
-    Report(False, reportText)
-    If showNotification
-        Debug.Notification("Armor Stripping Check: " + reportText)
-    EndIf
+    Debug.Trace("[MMEAlert Armor Stripping] " + reportText)
 EndFunction
 
 ; MME's own configured armor-name arrays are the source of truth.
