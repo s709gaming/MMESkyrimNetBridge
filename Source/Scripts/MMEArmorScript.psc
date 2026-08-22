@@ -518,6 +518,19 @@ Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
     Int armorClass = ClassifyArmor(milkController, equippedArmor)
     String armorType = GetArmorTypeLabel(armorClass)
     ReportArmor(diagnostic, "identified=" + armorType)
+
+    ; Equip-time configurable stripping for the player. When the override is on,
+    ; a freshly worn ordinary body armor is evaluated immediately so an
+    ; over-threshold player does not wait for the next drink or fullness poll.
+    ; The shared evaluator declines protected MME/special armor, which then
+    ; continues its normal equip reaction path below.
+    If wearer == Game.GetPlayer() && IsConfigurableArmorStrippingEnabled() && equippedArmor == wearer.GetWornForm(Armor.GetMaskForSlot(32))
+        If EvaluateArmorStrippingForActor(wearer, MME_Storage.getMilkCurrent(wearer), "equip")
+            ReportArmor(diagnostic, "equip-time strip removed the body armor; reaction path ends")
+            Return
+        EndIf
+    EndIf
+
     If armorClass == 0
         NotifyArmorDebug(diagnostic, role + " | Unsupported | " + GetArmorName(equippedArmor))
         Return
