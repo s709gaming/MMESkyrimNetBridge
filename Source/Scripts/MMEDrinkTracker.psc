@@ -74,8 +74,10 @@ EndEvent
 
 ; Returns True when this native event is a duplicate within the given window.
 Bool Function IsDuplicateDrink(Actor drinker, Form drinkItem, String keyPrefix, Float window)
-    ; Native and dialogue consumption can describe the same item close together.
-    ; Per-actor form/time keys suppress only that narrow duplicate window.
+    ; Used only by the NPC path, where dialogue-driven consumption and the
+    ; native potion event can describe the same item close together. Per-actor
+    ; form/time keys suppress that narrow duplicate window. The player path no
+    ; longer uses this because its native event is one-per-consumption.
     Float now = Utility.GetCurrentRealTime()
     Float lastTime = StorageUtil.GetFloatValue(drinker, keyPrefix + ".LastTime", -10.0)
     Int lastForm = StorageUtil.GetIntValue(drinker, keyPrefix + ".LastForm", 0)
@@ -89,10 +91,17 @@ EndFunction
 
 ; Handles a supported player drink: effects, then the optional player animation.
 Function HandleNativePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, String pluginName, Float localFormID)
-    ; Phase 1: snapshot established Milk Maid status before Lactacid effects can
-    ; convert the Player. The new-conversion animation owns that transition.
-    If IsDuplicateDrink(drinker, drinkItem, "MMEExtensions.PlayerDrink", 1.0)
-        Return
+    ; Phase 1: the native potion-consumption event is the single authoritative
+    ; player source and fires once per real item consumption, so every event is
+    ; processed. The same-item debounce remains NPC-only because dialogue and
+    ; native paths can both describe one NPC drink there.
+    Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1
+    If diagnostic
+        String traceDrinkName = drinkItem.GetName()
+        If traceDrinkName == ""
+            traceDrinkName = "<unnamed>"
+        EndIf
+        Debug.Trace("[MMEAlert Player Drink] native event accepted | " + pluginName + ":" + (localFormID as Int) + " | " + traceDrinkName + " | t=" + Utility.GetCurrentRealTime())
     EndIf
     ; Snapshot established-Milkmaid state before any effects run, because MME's
     ; Lactacid conversion can add a brand-new Milk Maid during this drink. We
