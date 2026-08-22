@@ -291,8 +291,11 @@ EndFunction
 ; Centralizes drink publication, sound playback, and optional debug output.
 ; Returns the actual milk delta applied, so callers can gate follow-up effects.
 Float Function HandleDrinkDetected(Actor drinker, Form drinkItem, Int drinkKind)
-    Bool addMilkDebug = JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1
-    If addMilkDebug
+    ; Milk Drinking Diagnostics is the single player-drink diagnostic gate. It is
+    ; read once here and propagated to every helper so one toggle reports the
+    ; whole transaction: detection, sound, milk math, arousal, and notification.
+    Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1
+    If diagnostic
         String itemName = drinkItem.GetName()
         If itemName == ""
             itemName = "<unnamed>"
@@ -301,22 +304,21 @@ Float Function HandleDrinkDetected(Actor drinker, Form drinkItem, Int drinkKind)
     EndIf
     ; Phase 1: keep the proven reaction path first so an optional gameplay integration
     ; cannot prevent the consumption sound from running.
-    MMEMilkDrinkEffects.PlayDrinkReaction(drinker, JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1)
+    MMEMilkDrinkEffects.PlayDrinkReaction(drinker, diagnostic)
     ; MME milk and regular milk use the normal formula; Lactacid uses 2x flat.
-    Float milkAdded = MMEMilkBoost.ApplyMilkDrinkBonusForActor(drinker, drinkKind)
+    Float milkAdded = MMEMilkBoost.ApplyMilkDrinkBonusForActor(drinker, drinkKind, diagnostic)
     ; Phase 2: independent integrations observe the same confirmed drink. Their
     ; failures must not roll back MME milk that was already applied.
-    Bool arousalSent = MMEArousalBridge.ApplyMilkDrinkArousalForActor(drinker, drinkItem)
+    Bool arousalSent = MMEArousalBridge.ApplyMilkDrinkArousalForActor(drinker, drinkItem, diagnostic)
     MMEAlertsSkyrimNet.SendMilkDrink(drinker, drinkItem)
     MMEAlertsSkyrimNet.NarratePlayerMilkDrink(drinker, drinkItem)
-    ShowPlayerDrinkNotification(drinker, drinkItem, milkAdded, arousalSent)
+    ShowPlayerDrinkNotification(drinker, drinkItem, milkAdded, arousalSent, diagnostic)
     PublishDrinkEvent(drinker, drinkItem, drinkKind)
     Return milkAdded
 EndFunction
 
-Function ShowPlayerDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded, Bool arousalSent) Global
+Function ShowPlayerDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded, Bool arousalSent, Bool diagnostic = False) Global
     String configFile = "/MMEAlerts/Settings"
-    Bool diagnostic = JsonUtil.GetIntValue(configFile, "enablePlayerDrinkNotificationsDiagnostic", 0) == 1
     If JsonUtil.GetIntValue(configFile, "enablePlayerDrinkNotifications", 1) != 1
         If diagnostic
             Debug.Notification("Player Drink Notification: skipped - feature disabled")

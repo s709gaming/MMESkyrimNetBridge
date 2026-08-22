@@ -34,7 +34,6 @@ Int skyrimNetStatusOption
 Int arousalStatusOption
 Int milkDrinkArousalOption
 Int milkDrinkArousalAmountOption
-Int arousalDiagnosticOption
 Int dialogueDiagnosticOption
 Int sexLabBreastfeedingDebugOption
 Int npcDrinkAnimationOption
@@ -54,7 +53,6 @@ Int npcMilkConsumptionDiagnosticOption
 Int npcDrinkNotificationsOption
 Int npcDrinkNotificationsDiagnosticOption
 Int playerDrinkNotificationsOption
-Int playerDrinkNotificationsDiagnosticOption
 Int armorStrippingCheckDiagnosticOption
 Int lifecycleDiagnosticOption
 Int milkmaidCreationDiagnosticOption
@@ -111,7 +109,7 @@ Int blacksmithDebugOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 78
+    Return 79
 EndFunction
 
 Function SetPageNames()
@@ -687,6 +685,16 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "ostimBreastfeedingDurationMigration78", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Milk Drinking Diagnostics now owns the whole player drink transaction
+    ; (milk math, arousal, and notification reporting). The two narrower toggles
+    ; were removed; force their orphaned keys quiet so stale ON values cannot
+    ; produce leftover output through any older code path.
+    If JsonUtil.GetIntValue(SettingsFile, "milkDrinkDiagnosticsConsolidationMigration79", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "milkDrinkDiagnosticsConsolidationMigration79", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -760,7 +768,6 @@ Event OnPageReset(String page)
     arousalStatusOption = -1
     milkDrinkArousalOption = -1
     milkDrinkArousalAmountOption = -1
-    arousalDiagnosticOption = -1
     dialogueDiagnosticOption = -1
     sexLabBreastfeedingDebugOption = -1
     npcDrinkAnimationOption = -1
@@ -780,7 +787,6 @@ Event OnPageReset(String page)
     npcDrinkNotificationsOption = -1
     npcDrinkNotificationsDiagnosticOption = -1
     playerDrinkNotificationsOption = -1
-    playerDrinkNotificationsDiagnosticOption = -1
     armorStrippingCheckDiagnosticOption = -1
     lifecycleDiagnosticOption = -1
     milkmaidCreationDiagnosticOption = -1
@@ -980,7 +986,6 @@ Event OnPageReset(String page)
         addMilkDebugOption = AddToggleOption("Milk Drinking Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1)
         npcMilkConsumptionDiagnosticOption = AddToggleOption("NPC Milk Consumption", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0) == 1)
         npcDrinkNotificationsDiagnosticOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1)
-        playerDrinkNotificationsDiagnosticOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0) == 1)
         AddHeaderOption("Armor Debug")
         armorStrippingCheckDiagnosticOption = AddToggleOption("Armor Stripping Check", JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0) == 1)
         armorDebugOption = AddToggleOption("Equip Reaction Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0) == 1)
@@ -1004,8 +1009,6 @@ Event OnPageReset(String page)
         playerDrinkNarrationDiagnosticOption = AddToggleOption("Player Drink Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", 0) == 1)
         npcDrinkNarrationDiagnosticOption = AddToggleOption("NPC Drink Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarrationDiagnostic", 0) == 1)
         milkmaidCreatedNarrationDiagnosticOption = AddToggleOption("New Milk Maid Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarrationDiagnostic", 0) == 1)
-        AddHeaderOption("A" + "rousal ")
-        arousalDiagnosticOption = AddToggleOption("Milk Arousal Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 0) == 1)
         AddHeaderOption("Dialogue")
         dialogueDiagnosticOption = AddToggleOption("NPC Dialogue Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1)
         sexLabBreastfeedingDebugOption = AddToggleOption("SexLab Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1)
@@ -1106,7 +1109,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == debugMilkReportOption
         SetInfoText("Report nearby Milkmaid capacity every five seconds.")
     ElseIf option == addMilkDebugOption
-        SetInfoText("Report drink detection, sound, bonus math, and MME add results.")
+        SetInfoText("Report the full player milk-drink transaction: detection, sound, milk bonus math, arousal, notification, and MME add results.")
     ElseIf option == skyrimNetDrinkDiagnosticOption
         SetInfoText("Report SkyrimNet milk-drink payloads and API results.")
     ElseIf option == skyrimNetMilkingDiagnosticOption
@@ -1153,8 +1156,6 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Set the global real-time delay between token-using new-Milk-Maid narrations.")
     ElseIf option == milkmaidCreatedNarrationDiagnosticOption
         SetInfoText("Report new-Milk-Maid narration detection, cooldowns, and API results.")
-    ElseIf option == playerDrinkNotificationsDiagnosticOption
-        SetInfoText("Report player drink notification skips and the effective milk and arousal results shown.")
     ElseIf option == armorStrippingCheckDiagnosticOption
         SetInfoText("Report the delayed Player drink armor check: queue, timer, milk, slot 32, armor type, threshold, decision, and strip result.")
     ElseIf option == armorDebugOption
@@ -1209,8 +1210,6 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Raise player arousal after drinking recognized milk.")
     ElseIf option == milkDrinkArousalAmountOption
         SetInfoText("Set arousal added per recognized milk drink.")
-    ElseIf option == arousalDiagnosticOption
-        SetInfoText("Report actor, milk, amount, detection, and event failures.")
     ElseIf option == dialogueDiagnosticOption
         SetInfoText("Report dialogue target detection and MME Milkmaid validation.")
     ElseIf option == sexLabBreastfeedingDebugOption
@@ -1370,10 +1369,6 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
-    ElseIf option == playerDrinkNotificationsDiagnosticOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", value)
-        SetToggleOptionValue(option, value == 1)
     ElseIf option == armorStrippingCheckDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", value)
@@ -1479,10 +1474,6 @@ Event OnOptionSelect(Int option)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkArousal", value)
         SetToggleOptionValue(option, value == 1)
         ForcePageReset()
-    ElseIf option == arousalDiagnosticOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", value)
-        SetToggleOptionValue(option, value == 1)
     ElseIf option == dialogueDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", value)
