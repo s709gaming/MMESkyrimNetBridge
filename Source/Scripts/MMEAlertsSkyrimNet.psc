@@ -297,7 +297,7 @@ Int Function NarrateArmorStrip(Actor wearer, Armor strippedArmor, String sourceL
     EndIf
     ReportArmorStripNarration(diagnostic, "Armor Strip Narration: chance roll " + roll + " <= " + chance + " PASS")
 
-    String content = actorName + "'s " + armorName + " has flown right off her body! Her milk-swollen tits have gotten so absurdly big that the poor thing simply gave up. React immediately with silly, exaggerated, suggestive humor about her breasts winning the argument with her armor."
+    String content = actorName + "'s " + armorName + " has flown right off her body! Her milk-swollen tits have gotten so absurdly big that the poor thing simply gave up. React immediately with silly, exaggerated, suggestive humor."
     ReportArmorStripNarration(diagnostic, "Armor Strip Narration: sending DirectNarration")
     Int result = SkyrimNetApi.DirectNarration(content, None, wearer)
     If result == 0
