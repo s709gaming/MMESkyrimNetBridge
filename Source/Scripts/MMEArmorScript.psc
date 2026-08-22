@@ -191,7 +191,7 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
     If target == Game.GetPlayer()
         Debug.Notification("Your breasts are too big to fit into your " + armorKind)
     EndIf
-    ReportArmorStrip(diagnostic, sourceLabel + " result=STRIPPED | " + armorKind + " | fullness=" + fullnessPct + "% > " + threshold + "%")
+    ReportArmorStrip(diagnostic, sourceLabel + " result=STRIPPED | " + armorKind + " | fullness=" + fullnessPct + "% >= " + threshold + "%")
     Return True
 EndFunction
 
@@ -245,12 +245,12 @@ Float Function GetArmorThreshold(Armor slotArmor) Global
     String settingsFile = "/MMEAlerts/Settings"
     If JsonUtil.GetIntValue(settingsFile, "enableExtensionsArmorStripping", 1) == 1
         If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD2, "Skyrim.esm") as Keyword)
-            Return JsonUtil.GetFloatValue(settingsFile, "armorStripHeavyThreshold", 4.0)
+            Return JsonUtil.GetFloatValue(settingsFile, "armorStripHeavyPercent", 100.0)
         EndIf
         If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD3, "Skyrim.esm") as Keyword)
-            Return JsonUtil.GetFloatValue(settingsFile, "armorStripLightThreshold", 8.0)
+            Return JsonUtil.GetFloatValue(settingsFile, "armorStripLightPercent", 100.0)
         EndIf
-        Return JsonUtil.GetFloatValue(settingsFile, "armorStripClothingThreshold", 12.0)
+        Return JsonUtil.GetFloatValue(settingsFile, "armorStripClothingPercent", 100.0)
     EndIf
     If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD2, "Skyrim.esm") as Keyword)
         Return 4.0

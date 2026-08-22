@@ -113,7 +113,7 @@ Int armorStripClothingThresholdOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 81
+    Return 82
 EndFunction
 
 Function SetPageNames()
@@ -271,9 +271,9 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyThreshold", 4.0)
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightThreshold", 8.0)
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingThreshold", 12.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyPercent", 100.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightPercent", 100.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0)
         JsonUtil.SetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0)
         JsonUtil.SetIntValue(SettingsFile, "playerDrinkNarrationChance", 25)
@@ -703,14 +703,13 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "milkDrinkDiagnosticsConsolidationMigration79", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
-    ; Configurable armor stripping replaces MME's fixed 4/8/12 thresholds with
-    ; MCM sliders and adds capacity-poll stripping for Player and NPCs. Defaults
-    ; mirror MME so the migration is behavior-preserving.
+    ; Configurable armor stripping adds MCM fullness-percentage sliders and
+    ; capacity-poll stripping for the player. Percent defaults start at 100.
     If JsonUtil.GetIntValue(SettingsFile, "armorStrippingFeatureMigration80", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyThreshold", 4.0)
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightThreshold", 8.0)
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingThreshold", 12.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyPercent", 100.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightPercent", 100.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0)
         JsonUtil.SetIntValue(SettingsFile, "armorStrippingFeatureMigration80", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
@@ -719,6 +718,16 @@ Function EnsureDefaults()
     If JsonUtil.GetIntValue(SettingsFile, "armorStrippingDiagnosticConsolidation81", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableArmorStrippingDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "armorStrippingDiagnosticConsolidation81", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; The stripping thresholds are now fullness percentages. Establish 100/100/100
+    ; once for saves that already carried the earlier absolute keys; the old
+    ; absolute keys are left inert and are no longer read anywhere.
+    If JsonUtil.GetIntValue(SettingsFile, "armorStrippingPercentMigration82", 0) == 0
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyPercent", 100.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightPercent", 100.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0)
+        JsonUtil.SetIntValue(SettingsFile, "armorStrippingPercentMigration82", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
 EndFunction
@@ -932,9 +941,9 @@ Event OnPageReset(String page)
         If JsonUtil.GetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1) != 1
             stripFlags = OPTION_FLAG_DISABLED
         EndIf
-        armorStripHeavyThresholdOption = AddSliderOption("Heavy Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyThreshold", 4.0), "{0}%", stripFlags)
-        armorStripLightThresholdOption = AddSliderOption("Light Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripLightThreshold", 8.0), "{0}%", stripFlags)
-        armorStripClothingThresholdOption = AddSliderOption("Clothing Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingThreshold", 12.0), "{0}%", stripFlags)
+        armorStripHeavyThresholdOption = AddSliderOption("Heavy Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyPercent", 100.0), "{0}%", stripFlags)
+        armorStripLightThresholdOption = AddSliderOption("Light Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripLightPercent", 100.0), "{0}%", stripFlags)
+        armorStripClothingThresholdOption = AddSliderOption("Clothing Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0), "{0}%", stripFlags)
         AddHeaderOption("Milking Armor")
         playerMilkingArmorEquipMoanOption = AddToggleOption("Player Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipMoan", 1) == 1)
         playerMilkingArmorEquipAnimationOption = AddToggleOption("Player Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipAnimation", 0) == 1)
@@ -1695,18 +1704,18 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(10.0, 3600.0)
         SetSliderDialogInterval(10.0)
     ElseIf option == armorStripHeavyThresholdOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyThreshold", 4.0))
-        SetSliderDialogDefaultValue(4.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyPercent", 100.0))
+        SetSliderDialogDefaultValue(100.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == armorStripLightThresholdOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripLightThreshold", 8.0))
-        SetSliderDialogDefaultValue(8.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripLightPercent", 100.0))
+        SetSliderDialogDefaultValue(100.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == armorStripClothingThresholdOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingThreshold", 12.0))
-        SetSliderDialogDefaultValue(12.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0))
+        SetSliderDialogDefaultValue(100.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
     EndIf
@@ -1795,15 +1804,15 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
     ElseIf option == armorStripHeavyThresholdOption
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyThreshold", value)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyPercent", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0}%")
     ElseIf option == armorStripLightThresholdOption
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightThreshold", value)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightPercent", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0}%")
     ElseIf option == armorStripClothingThresholdOption
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingThreshold", value)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingPercent", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0}%")
     EndIf
