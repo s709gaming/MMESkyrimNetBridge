@@ -13,6 +13,7 @@ String MilkingStateKey = "MMEAlerts.IsMilking"
 String KnownMilkmaidKey = "MMEExtensions.KnownMilkmaid"
 String PendingMilkmaidKey = "MMEExtensions.PendingMilkmaid"
 String EffectOwnedMilkmaidKey = "MMEExtensions.PendingMilkmaid.EffectOwned"
+String DhlpSuspendedKey = "MMEExtensions.DhlpSuspended"
 Float NearbyRange = 2000.0
 Float NextCapacityUpdate = 0.0
 Float NextSkyrimNetUpdate = 0.0
@@ -29,6 +30,13 @@ Bool Property OStimDialogueAvailable Auto Conditional
 
 Bool Function IsExtensionsEnabled() Global
     Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMMEExtensions", 1) == 1
+EndFunction
+
+; True while an external mod has sent dhlp-Suspend and has not yet sent
+; dhlp-Resume. DHLP is a player-scoped convention, so NPC reactions do not
+; consult this flag.
+Bool Function IsDhlpSuspended() Global
+    Return StorageUtil.GetIntValue(None, "MMEExtensions.DhlpSuspended", 0) == 1
 EndFunction
 
 ; Quest startup registers MME events and initializes the player monitor/poller.
@@ -53,6 +61,7 @@ Function InitializeController()
     ; and MCM upgrades cannot accumulate duplicate callbacks.
     RefreshMMESexLabAnimationGate("controller initialization")
     RegisterMilkingEvents()
+    RegisterDhlpEvents()
     MMEAlertsSkyrimNet.RegisterPromptDecorator()
     MMESkyrimNetVoiceControls.RegisterSelfMilkingAction()
     UnregisterForModEvent("MMEExtensions_Lifecycle")
@@ -146,6 +155,9 @@ Function DisableController()
     UnregisterForModEvent("MilkQuest.StartMilkingMachine")
     UnregisterForModEvent("MilkQuest.StopMilkingMachine")
     UnregisterForModEvent("MME_MilkingDone")
+    UnregisterForModEvent("dhlp-Suspend")
+    UnregisterForModEvent("dhlp-Resume")
+    StorageUtil.UnsetIntValue(None, DhlpSuspendedKey)
     If MMEAlertsSkyrimNet.IsAvailable()
         SkyrimNetApi.UnregisterAction("StartSelfMilking")
         SkyrimNetApi.UnregisterAction("StartMilkMaidSelfMilking")
@@ -497,6 +509,55 @@ Function RegisterMilkingEvents()
     RegisterForModEvent("MilkQuest.StartMilkingMachine", "OnMMEMilkingStart")
     RegisterForModEvent("MilkQuest.StopMilkingMachine", "OnMMEMilkingStop")
     RegisterForModEvent("MME_MilkingDone", "OnMMEMilkingDone")
+EndFunction
+
+; Subscribes to the DHLP Suspend/Resume convention used by other mods before
+; they temporarily claim the player. MME Extensions only listens: it never
+; sends dhlp-Suspend or dhlp-Resume, so it takes on no ownership or cleanup
+; responsibilities beyond clearing its own transient flag.
+Function RegisterDhlpEvents()
+    ; Registration is idempotent for the same reason as the other controller
+    ; ModEvents: unregister first so reloads and MCM upgrades cannot accumulate
+    ; duplicate callbacks. A fresh registration also clears any stale suspend
+    ; state left behind by a mod that never resumed before the save was loaded.
+    UnregisterForModEvent("dhlp-Suspend")
+    RegisterForModEvent("dhlp-Suspend", "OnDhlpSuspend")
+    UnregisterForModEvent("dhlp-Resume")
+    RegisterForModEvent("dhlp-Resume", "OnDhlpResume")
+    StorageUtil.UnsetIntValue(None, DhlpSuspendedKey)
+EndFunction
+
+; Records an external mod's request to treat the player as temporarily claimed.
+Event OnDhlpSuspend(String eventName, String strArg, Float numArg, Form sender)
+    SetDhlpSuspended(True, sender)
+EndEvent
+
+; Releases the external claim so player reactions may start again.
+Event OnDhlpResume(String eventName, String strArg, Float numArg, Form sender)
+    SetDhlpSuspended(False, sender)
+EndEvent
+
+; Single writer for the transient DHLP flag. StorageUtil keeps the value
+; readable from the Global safety gate without needing a controller reference.
+Function SetDhlpSuspended(Bool suspended, Form sender)
+    If suspended
+        StorageUtil.SetIntValue(None, DhlpSuspendedKey, 1)
+        Debug.Trace("[MME Extensions DHLP] suspended by " + DhlpSenderLabel(sender))
+    Else
+        StorageUtil.UnsetIntValue(None, DhlpSuspendedKey)
+        Debug.Trace("[MME Extensions DHLP] resumed by " + DhlpSenderLabel(sender))
+    EndIf
+EndFunction
+
+String Function DhlpSenderLabel(Form sender)
+    If sender == None
+        Return "<unknown>"
+    EndIf
+    String label = sender.GetName()
+    If label == ""
+        label = "<unnamed form>"
+    EndIf
+    Return label
 EndFunction
 
 ; Accepts only loaded MME Milk Maids within the fixed local reaction radius.

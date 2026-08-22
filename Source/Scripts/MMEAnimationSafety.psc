@@ -53,8 +53,9 @@ String Function GetStartBlockReason(Actor target, MilkQUEST milkController, Bool
     If sitState > 0 && sitState <= 3
         Return "sitting"
     EndIf
-    ; External scene ownership always wins. MME, SexLab, OStim, and DD each have
-    ; independent state, so none of these checks can safely stand in for another.
+    ; External scene ownership always wins. MME, SexLab, OStim, DHLP, and DD
+    ; each have independent state, so none of these checks can safely stand in
+    ; for another.
     If IsMMEMilking(target, milkController)
         Return "MME milking active"
     EndIf
@@ -63,6 +64,11 @@ String Function GetStartBlockReason(Actor target, MilkQUEST milkController, Bool
     EndIf
     If MMEOStimIntegration.IsActorInScene(target)
         Return "OStim scene active"
+    EndIf
+    ; DHLP Suspend/Resume is a player-scoped convention. Only block the player;
+    ; an NPC reaction is unrelated to another mod claiming the player.
+    If target == Game.GetPlayer() && MMEAlertsController.IsDhlpSuspended()
+        Return "DHLP suspended"
     EndIf
     If requireFreeArms && MMEAlertsController.IsFreeArmAnimationBlocked(target)
         Return "arms restrained by Devious Devices"
@@ -99,6 +105,11 @@ String Function GetResetBlockReason(Actor target, MilkQUEST milkController, Stri
     EndIf
     If MMEOStimIntegration.IsActorInScene(target)
         Return "OStim took control"
+    EndIf
+    ; A suspended player is being claimed by another mod; skip the forced
+    ; default-state event so our reset cannot interrupt that external scene.
+    If target == Game.GetPlayer() && MMEAlertsController.IsDhlpSuspended()
+        Return "DHLP took control"
     EndIf
     Return ""
 EndFunction
