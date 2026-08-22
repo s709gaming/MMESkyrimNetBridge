@@ -250,13 +250,15 @@ Function ShowNPCDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded
     If drinkName == ""
         drinkName = "some milk"
     EndIf
-    String notificationText = actorName + " drank " + drinkName + "."
+    String notificationText = ""
     If milkAdded > 0.0 && arousalSent
-        notificationText = notificationText + " She's feeling hornier and heavier."
+        notificationText = actorName + " drank " + drinkName + ". She's hornier, heavier, and looking far too pleased with herself."
     ElseIf milkAdded > 0.0
-        notificationText = notificationText + " She's feeling heavier."
+        notificationText = actorName + " drank " + drinkName + ". She's already feeling heavier. This appears to be going according to plan."
     ElseIf arousalSent
-        notificationText = notificationText + " She's feeling hornier."
+        notificationText = actorName + " drank " + drinkName + ". Her milk didn't budge, but her imagination certainly did."
+    Else
+        notificationText = actorName + " drank " + drinkName + ". Whatever the plan was, she's committed now."
     EndIf
     Debug.Notification(notificationText)
     If diagnostic
@@ -345,13 +347,15 @@ Function ShowPlayerDrinkNotification(Actor drinker, Form drinkItem, Float milkAd
     If drinkName == ""
         drinkName = "some milk"
     EndIf
-    String notificationText = "You drank " + drinkName + "."
+    String notificationText = ""
     If milkAdded > 0.0 && arousalSent
-        notificationText = notificationText + " You're feeling hornier and heavier."
+        notificationText = "You drank " + drinkName + ". Your breasts feel heavier, your thoughts feel dirtier, and this was probably the point."
     ElseIf milkAdded > 0.0
-        notificationText = notificationText + " You're feeling heavier."
+        notificationText = "You drank " + drinkName + ". Your breasts feel heavier. Excellent planning."
     ElseIf arousalSent
-        notificationText = notificationText + " You're feeling hornier."
+        notificationText = "You drank " + drinkName + ". Nothing got heavier, but your thoughts certainly did."
+    Else
+        notificationText = "You drank " + drinkName + ". Bold strategy. Results pending."
     EndIf
     Debug.Notification(notificationText)
     If diagnostic

@@ -203,13 +203,13 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
     ; appropriate to the wearer. Persist cooldown only after Skyrim.Net accepts
     ; the final dialogue request (code 0).
     String narrationType = "Milking Armor"
-    String content = actorName + " has just equipped Milking Armor. Suction cups settle onto her nipples, ready to milk her."
+    String content = actorName + " has just equipped Milking Armor, and she looks absolutely thrilled about it. The suction cups settle onto her nipples and she is already enjoying the ridiculous possibilities of her new hands-free dairy equipment. Focus on her delighted reaction and respond with playful, suggestive humor."
     If armorClass == 2
         narrationType = "Living Armor"
-        content = actorName + " has just equipped Living Armor. Like bondage, it is exotic, kinky, and sexy, but unusual enough to be an acquired taste even among adventurers. Nearby onlookers should generally react with curiosity and arousal, not fear, disgust, or hostility."
+        content = actorName + " has just equipped Living Armor, and she is obviously thrilled with her strange new outfit. Living tendrils curl intimately around her body and tease her breasts, leaving her excited, amused, and enjoying herself far more than anyone wearing normal armor probably should. Treat the situation as exotic, kinky, sexy, and funny rather than frightening or disgusting. Focus on her delighted reaction and respond with playful, suggestive humor."
     ElseIf armorClass == 3
         narrationType = "Living Parasite"
-        content = actorName + " has just equipped Living Parasite armor. Like bondage, it is exotic, kinky, and sexy, but unusual enough to be an acquired taste even among adventurers. Nearby onlookers should generally react with curiosity and arousal, not fear, disgust, or hostility."
+        content = actorName + " has just equipped Living Parasite armor, and she seems suspiciously delighted with her new companion. Its tentacles curl around her body and tease her breasts while she becomes increasingly excited, entertained, and entirely too pleased with the arrangement. Treat the situation as exotic, kinky, sexy, and funny rather than frightening or disgusting. Focus on her thrilled reaction and respond with playful, suggestive humor."
     EndIf
     Int result = 1
     If isPlayer
@@ -297,7 +297,7 @@ Int Function NarrateArmorStrip(Actor wearer, Armor strippedArmor, String sourceL
     EndIf
     ReportArmorStripNarration(diagnostic, "Armor Strip Narration: chance roll " + roll + " <= " + chance + " PASS")
 
-    String content = actorName + "'s " + armorName + " has flown right off her body because her milk-swollen breasts are way too big for it! " + actorName + " is at " + (fullnessPct as Int) + "% fullness against a " + (thresholdPct as Int) + "% armor threshold. React immediately in a silly, exaggerated, playful way."
+    String content = actorName + "'s " + armorName + " has flown right off her body! Her milk-swollen tits have gotten so absurdly big that the poor thing simply gave up. React immediately with silly, exaggerated, suggestive humor about her breasts winning the argument with her armor."
     ReportArmorStripNarration(diagnostic, "Armor Strip Narration: sending DirectNarration")
     Int result = SkyrimNetApi.DirectNarration(content, None, wearer)
     If result == 0
@@ -417,7 +417,7 @@ Function NarrateMilkFull(Actor milkMaid) Global
 
     ; Phase 2: choose restraint-aware prose, submit once, and commit cooldown
     ; only on success so a rejected API call can be retried later.
-    String content = "One or more nearby Milk Maids are completely full and savoring the ultimate pleasure near a boobgasm. React briefly and naturally; fullness may be enjoyed without needing immediate milking."
+    String content = "One or more nearby Milk Maids are completely full. Their breasts are now absurdly large, extremely heavy, and hovering near a boobgasm. Everyday problems like back pain, balance, doorways, tables, and accidentally knocking things over have become genuinely ridiculous. React with playful, exaggerated, suggestive humor. Fullness can be enjoyed without needing immediate milking."
     String restrainedContent = BuildRestrainedCapacityContent(milkMaid, 2)
     If restrainedContent != ""
         content = restrainedContent
@@ -477,7 +477,7 @@ Function NarrateMilkHalfFull(Actor milkMaid) Global
         Return
     EndIf
 
-    String content = "One or more nearby Milk Maids have become half full. Their breasts are getting pleasantly heavier and more sensitive. React briefly and naturally."
+    String content = "One or more nearby Milk Maids have become half full. Their breasts are noticeably heavier, bouncier, and beginning to make ordinary movement a little more entertaining than it should be. React with playful, suggestive humor about the increasingly obvious consequences of having such a large chest."
     String restrainedContent = BuildRestrainedCapacityContent(milkMaid, 1)
     If restrainedContent != ""
         content = restrainedContent
@@ -549,9 +549,9 @@ Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False) Global
         Return
     EndIf
 
-    String content = actorName + " just drank some milk. Her breasts are feeling heavier and more sensitive, and she's getting increasingly aroused and excited. React briefly and naturally."
+    String content = actorName + " just drank some milk. Her breasts are already getting heavier and more sensitive, and she's becoming increasingly aroused. She looks far too pleased with this decision. React with playful, suggestive humor."
     If MMEAlertsController.AreArmsRestrained(drinker)
-        content = actorName + " just drank some milk. With her arms restrained, drinking it was awkward enough that she may have needed help or found some clever way to manage it. Her breasts are already feeling heavier and more sensitive, adding playful erotic anticipation as she fills. React briefly and naturally."
+        content = actorName + " just drank some milk despite having her arms restrained. Getting the drink down was apparently a logistical problem she was far too determined to solve. Her breasts are already getting heavier and more sensitive, and she seems suspiciously pleased with the consequences. React with playful, suggestive humor."
     EndIf
     Int result = SkyrimNetApi.DirectNarration(content, None, None)
     If result == 0
@@ -621,7 +621,7 @@ Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem) Global
     If drinkName == ""
         drinkName = "some milk"
     EndIf
-    String content = "The player just drank " + drinkName + ". They're feeling pleasantly heavier and more sensitive. React briefly and naturally."
+    String content = "The player just drank " + drinkName + ". Their breasts are already feeling heavier and more sensitive. This may have been a very deliberate bad decision. React with playful, suggestive humor."
     String restrainedContent = BuildRestrainedPlayerDrinkContent(drinker, drinkName)
     If restrainedContent != ""
         content = restrainedContent
@@ -680,7 +680,7 @@ Function NarrateMilkmaidCreated(Actor milkMaid) Global
         Return
     EndIf
 
-    String content = actorName + " has just become a Milk Maid. Her body can now produce and store milk, and her breasts are beginning to feel pleasantly sensitive. React briefly and naturally."
+    String content = actorName + " has just become a Milk Maid. Her body can now produce and store milk, her breasts are already becoming more sensitive, and she has officially entered a very strange new line of work. React with playful, congratulatory, suggestive humor."
     If diagnostic
         Debug.Notification("New Milk Maid Narration: sending")
     EndIf
@@ -1112,9 +1112,9 @@ String Function BuildRestrainedCapacityContent(Actor milkMaid, Int crossing) Glo
     EndIf
     String actorName = ResolveActorName(milkMaid, "The Milk Maid")
     If crossing == 2
-        Return actorName + " is completely full and savoring the ultimate pleasure near a boobgasm. Her arms are restrained, leaving her unable to freely touch or relieve her extremely heavy, sensitive breasts. The helplessness turns the fullness into prolonged erotic teasing and edging that she enjoys. React briefly, suggestively, and playfully."
+        Return actorName + " is completely full. Her breasts are absurdly large, extremely heavy, and hovering near a boobgasm, while her restrained arms leave her unable to properly support or adjust them. Between the weight, bouncing, balance problems, and inability to get comfortable, everyday movement has become hilariously impractical. She nevertheless seems to be enjoying herself far too much. React with playful, exaggerated, suggestive humor."
     ElseIf crossing == 1
-        Return actorName + " has become half full. Her breasts are getting pleasantly heavier and more sensitive. Her mind keeps wandering to the growing sensitivity of her breasts, but her restrained arms cannot reach them, turning the temptation into playful erotic teasing. React briefly, suggestively, and playfully."
+        Return actorName + " has become half full. Her breasts are noticeably heavier and bouncier, but with her arms restrained she cannot even conveniently adjust or steady them. Ordinary movement is becoming an increasingly ridiculous exercise in letting physics make the decisions. React with playful, suggestive humor."
     EndIf
     Return ""
 EndFunction
@@ -1146,7 +1146,7 @@ String Function BuildRestrainedPlayerDrinkContent(Actor playerActor, String drin
     If playerActor == None || !MMEAlertsController.AreArmsRestrained(playerActor)
         Return ""
     EndIf
-    Return "The player just drank " + drinkName + ". With their arms restrained, drinking it was awkward enough that they may have needed help or found some clever way to manage it. They can already feel themselves growing heavier and more sensitive, adding playful erotic anticipation as they fill. React briefly and naturally."
+    Return "The player just drank " + drinkName + " despite having their arms restrained. How they accomplished this is either impressive problem solving or evidence of extremely questionable priorities. Their breasts are already feeling heavier and more sensitive. React with playful, suggestive humor."
 EndFunction
 
 String Function ResolveActorName(Actor actorRef, String fallbackName) Global
