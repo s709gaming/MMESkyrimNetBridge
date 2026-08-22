@@ -95,63 +95,70 @@ Function CheckPlayerArmorNow(Actor target) Global
     ClearPendingPlayerDrinkAttempt(target)
     Report(False, "running | actor=PLAYER | storedMilk=" + MME_Storage.getMilkCurrent(target) + " | attemptedMilk=" + attemptedMilk + " | overflowAttempt=" + attemptedOverflow)
 
-    ; Phase 2: resolve live MME state and verify Player membership. MilkQUEST and
-    ; its MilkMaid array are authoritative; a StorageUtil milk value alone does
-    ; not make an actor eligible for MME armor behavior.
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None
-        Report(diagnostic, "decision=BLOCKED | MME controller unavailable")
-        Return
-    EndIf
-    If !IsValidMilkMaid(target, milkController)
-        Report(diagnostic, "decision=BLOCKED | actor is not a valid Milk Maid")
+    ; Phase 2: the configurable stripping feature owns the player strip decision.
+    ; This delayed pass observes stored and attempted milk only; it never writes
+    ; MME's MilkCurrent. MME's own MilkCycle owns any overflow/leak math.
+    If !IsConfigurableArmorStrippingEnabled()
+        Report(diagnostic, "decision=BLOCKED | configurable armor stripping is disabled")
         Return
     EndIf
 
-    ; Phase 3: apply MME/global compatibility gates before inspecting thresholds.
-    ; This delayed pass only observes stored and attempted milk. It never
-    ; rewrites MME's MilkCurrent; MME's own MilkCycle owns any real overflow
-    ; or leak reconciliation on its normal schedule.
-    ; Protected MME, DD, TITS, SexLab-no-strip, Living, Parasite, and milking
-    ; equipment must remain equipped even at extreme milk values.
-    If milkController.ArmorStrippingDisabled
-        Report(diagnostic, "decision=BLOCKED | MME armor stripping disabled")
-        Return
-    EndIf
-
-    Int bodyMask = Armor.GetMaskForSlot(32)
-    Armor slotArmor = target.GetWornForm(bodyMask) as Armor
-    If slotArmor == None
-        Report(diagnostic, "slot=32 | armor=<none> | decision=BLOCKED")
-        Return
-    EndIf
-    Report(diagnostic, "slot=32 | armor=" + GetArmorName(slotArmor))
-    String ignoredRegistration = GetIgnoredAmbiguousRegistration(milkController, slotArmor)
-    If ignoredRegistration != ""
-        Report(False, "ignoring ambiguous generic-name registration | " + ignoredRegistration)
-    EndIf
-    String protectionReason = GetMMEArmorProtectionReason(milkController, slotArmor)
-    If protectionReason != ""
-        ReportDecision(diagnostic, "decision=BLOCKED | protection=" + protectionReason)
-        Return
-    EndIf
-    If milkController.DDi != None && milkController.DDi.IsMilkingBlocked_Suit(target)
-        ReportDecision(diagnostic, "decision=BLOCKED | protection=DD/special armor")
-        Return
-    EndIf
-    If !IsStripSafeByFramework(milkController, slotArmor)
-        ReportDecision(diagnostic, "decision=BLOCKED | protection=SexLab no-strip")
-        Return
-    EndIf
-
-    ; Phase 4: classify the ordinary body armor with MME's original thresholds.
-    ; The strict greater-than comparison is intentional and preserves the
-    ; existing heavy=4, light=8, clothing=12 behavior exactly.
+    ; Phase 3: reuse the same strip path as the capacity polling loop. The
+    ; effective value is the higher of stored and attempted milk so an
+    ; MME-clamped write still triggers the correct threshold decision.
     Float storedMilk = MME_Storage.getMilkCurrent(target)
     Float effectiveMilk = storedMilk
     If attemptedMilk > effectiveMilk
         effectiveMilk = attemptedMilk
     EndIf
+    EvaluateArmorStrippingForActor(target, effectiveMilk, "drink")
+EndFunction
+
+; True when the configurable armor-stripping feature replaces MME's original
+; slot-32 stripping. The same toggle drives ApplyArmorStrippingMasterToggle.
+Bool Function IsConfigurableArmorStrippingEnabled() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableExtensionsArmorStripping", 1) == 1
+EndFunction
+
+; Reusable configurable strip path shared by the delayed post-drink check and
+; the capacity polling loop. Observes milk only; never writes MME milk state.
+Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, String sourceLabel) Global
+    Bool diagnostic = GetArmorStrippingDiagnostic()
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None
+        ReportArmorStrip(diagnostic, sourceLabel + " decision=BLOCKED | MME controller unavailable")
+        Return False
+    EndIf
+    If !IsValidMilkMaid(target, milkController)
+        ReportArmorStrip(diagnostic, sourceLabel + " decision=BLOCKED | actor is not a valid Milk Maid")
+        Return False
+    EndIf
+
+    Int bodyMask = Armor.GetMaskForSlot(32)
+    Armor slotArmor = target.GetWornForm(bodyMask) as Armor
+    If slotArmor == None
+        ReportArmorStrip(diagnostic, sourceLabel + " slot=32 | armor=<none> | decision=BLOCKED")
+        Return False
+    EndIf
+    ReportArmorStrip(diagnostic, sourceLabel + " slot=32 | armor=" + GetArmorName(slotArmor))
+    String ignoredRegistration = GetIgnoredAmbiguousRegistration(milkController, slotArmor)
+    If ignoredRegistration != ""
+        ReportArmorStrip(False, "ignoring ambiguous generic-name registration | " + ignoredRegistration)
+    EndIf
+    String protectionReason = GetMMEArmorProtectionReason(milkController, slotArmor)
+    If protectionReason != ""
+        ReportArmorStrip(diagnostic, sourceLabel + " decision=BLOCKED | protection=" + protectionReason)
+        Return False
+    EndIf
+    If milkController.DDi != None && milkController.DDi.IsMilkingBlocked_Suit(target)
+        ReportArmorStrip(diagnostic, sourceLabel + " decision=BLOCKED | protection=DD/special armor")
+        Return False
+    EndIf
+    If !IsStripSafeByFramework(milkController, slotArmor)
+        ReportArmorStrip(diagnostic, sourceLabel + " decision=BLOCKED | protection=SexLab no-strip")
+        Return False
+    EndIf
+
     Float threshold = GetArmorThreshold(slotArmor)
     String armorKind = "clothes"
     If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD2, "Skyrim.esm") as Keyword)
@@ -160,32 +167,69 @@ Function CheckPlayerArmorNow(Actor target) Global
         armorKind = "light armor"
     EndIf
     If threshold <= 0.0
-        Report(diagnostic, "decision=BLOCKED | unclassified armor")
-        Return
+        ReportArmorStrip(diagnostic, sourceLabel + " decision=BLOCKED | unclassified armor")
+        Return False
     EndIf
     If effectiveMilk <= threshold
-        ReportDecision(diagnostic, "type=" + armorKind + " | storedMilk=" + storedMilk + " | attemptedMilk=" + attemptedMilk + " | effectiveMilk=" + effectiveMilk + " | threshold=" + threshold + " | decision=BLOCKED")
-        Return
+        ReportArmorStrip(diagnostic, sourceLabel + " type=" + armorKind + " | milk=" + effectiveMilk + " | threshold=" + threshold + " | decision=BLOCKED")
+        Return False
     EndIf
 
-    ; Phase 5: request the unequip, then verify Skyrim actually changed slot 32.
-    ; A successful Papyrus call is not proof: quests or equipment systems may
-    ; immediately retain/re-equip an item, which diagnostics must report honestly.
-    ; Exactly one mutually-exclusive strip decision and one notification.
-    ReportDecision(diagnostic, "type=" + armorKind + " | storedMilk=" + storedMilk + " | attemptedMilk=" + attemptedMilk + " | effectiveMilk=" + effectiveMilk + " | threshold=" + threshold + " | decision=ALLOWED")
+    ; Strip, then verify Skyrim actually changed slot 32. A successful Papyrus
+    ; call is not proof: quests or equipment systems may re-equip immediately.
+    ReportArmorStrip(diagnostic, sourceLabel + " type=" + armorKind + " | milk=" + effectiveMilk + " | threshold=" + threshold + " | decision=ALLOWED")
     target.UnequipItem(slotArmor)
     If target.GetWornForm(bodyMask) == slotArmor
-        Report(diagnostic, "result=BLOCKED | engine retained " + armorKind)
-        Return
+        ReportArmorStrip(diagnostic, sourceLabel + " result=BLOCKED | engine retained " + armorKind)
+        Return False
     EndIf
-    Debug.Notification("Your breasts are too big to fit into your " + armorKind)
-    Report(diagnostic, "result=STRIPPED | " + armorKind + " | effectiveMilk=" + effectiveMilk + " > " + threshold)
+    If target == Game.GetPlayer()
+        Debug.Notification("Your breasts are too big to fit into your " + armorKind)
+    EndIf
+    ReportArmorStrip(diagnostic, sourceLabel + " result=STRIPPED | " + armorKind + " | milk=" + effectiveMilk + " > " + threshold)
+    Return True
 EndFunction
 
-; Classifies slot-32 armor and returns MME's raw-milk overflow threshold.
+; Diagnostic flag for the configurable stripping feature. Log traces always
+; emit through ReportArmorStrip; the flag only gates the HUD notifications.
+Bool Function GetArmorStrippingDiagnostic() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorStrippingDiagnostic", 0) == 1
+EndFunction
+
+Function ReportArmorStrip(Bool showNotification, String reportText) Global
+    Debug.Trace("[MMEAlert Configurable Armor Stripping] " + reportText)
+    If showNotification
+        Debug.Notification("Armor Stripping: " + reportText)
+    EndIf
+EndFunction
+
+; Applies the master toggle to MME: enabling this feature disables MME's own
+; slot-32 stripping so the two systems never strip the same armor at once.
+Function ApplyArmorStrippingMasterToggle() Global
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None
+        Return
+    EndIf
+    Bool extensionsEnabled = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMMEExtensions", 1) == 1
+    milkController.ArmorStrippingDisabled = extensionsEnabled && IsConfigurableArmorStrippingEnabled()
+EndFunction
+
+; Classifies slot-32 armor and returns the active milk threshold. When the
+; configurable stripping feature is enabled the MCM sliders supply the values
+; (defaulting to MME's 4/8/12); otherwise MME's fixed thresholds apply.
 Float Function GetArmorThreshold(Armor slotArmor) Global
     If slotArmor == None
         Return 0.0
+    EndIf
+    String settingsFile = "/MMEAlerts/Settings"
+    If JsonUtil.GetIntValue(settingsFile, "enableExtensionsArmorStripping", 1) == 1
+        If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD2, "Skyrim.esm") as Keyword)
+            Return JsonUtil.GetFloatValue(settingsFile, "armorStripHeavyThreshold", 4.0)
+        EndIf
+        If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD3, "Skyrim.esm") as Keyword)
+            Return JsonUtil.GetFloatValue(settingsFile, "armorStripLightThreshold", 8.0)
+        EndIf
+        Return JsonUtil.GetFloatValue(settingsFile, "armorStripClothingThreshold", 12.0)
     EndIf
     If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD2, "Skyrim.esm") as Keyword)
         Return 4.0

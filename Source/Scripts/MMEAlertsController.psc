@@ -56,6 +56,9 @@ Function InitializeController()
         DisableController()
         Return
     EndIf
+    ; Re-apply the configurable stripping master toggle so MME's own stripping
+    ; state stays consistent with this feature after load and init.
+    MMEArmorScript.ApplyArmorStrippingMasterToggle()
     ; Phase 2: refresh framework-derived gates and register integrations. Event
     ; registration is deliberately idempotent: unregister first so save reloads
     ; and MCM upgrades cannot accumulate duplicate callbacks.
@@ -167,6 +170,8 @@ Function DisableController()
     NextDebugUpdate = 0.0
     NextArmorCheck = 0.0
     MMEArmorScript.CancelPlayerArmorCheck(Game.GetPlayer())
+    ; Restore MME's own stripping while MME Extensions is disabled.
+    MMEArmorScript.ApplyArmorStrippingMasterToggle()
     NextDialogueDiagnosticUpdate = 0.0
     NextOStimBreastfeedingWatchdog = 0.0
     LastDialogueDiagnosticActor = None
@@ -1568,6 +1573,11 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
             ElseIf crossing == 1 && halfFullNarrationActor == None
                 halfFullNarrationActor = candidate
             EndIf
+        EndIf
+        ; Configurable stripping also evaluates every scanned Milk Maid so full
+        ; NPCs and the player lose slot-32 armor between drink checks as well.
+        If processReactions && MMEArmorScript.IsConfigurableArmorStrippingEnabled() && IsMMEMilkMaid(candidate)
+            MMEArmorScript.EvaluateArmorStrippingForActor(candidate, MME_Storage.getMilkCurrent(candidate), "poll")
         EndIf
         String status = EvaluateMilkMaidFlavor(candidate)
         If status != ""

@@ -106,10 +106,15 @@ Int playerMilkingArmorNarrationCooldownOption
 Int npcMilkingArmorNarrationCooldownOption
 Int armorDebugOption
 Int blacksmithDebugOption
+Int extensionsArmorStrippingOption
+Int armorStripHeavyThresholdOption
+Int armorStripLightThresholdOption
+Int armorStripClothingThresholdOption
+Int armorStrippingDiagnosticOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 79
+    Return 80
 EndFunction
 
 Function SetPageNames()
@@ -266,6 +271,11 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyThreshold", 4.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightThreshold", 8.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingThreshold", 12.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStrippingDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0)
         JsonUtil.SetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0)
         JsonUtil.SetIntValue(SettingsFile, "playerDrinkNarrationChance", 25)
@@ -695,6 +705,18 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "milkDrinkDiagnosticsConsolidationMigration79", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Configurable armor stripping replaces MME's fixed 4/8/12 thresholds with
+    ; MCM sliders and adds capacity-poll stripping for Player and NPCs. Defaults
+    ; mirror MME so the migration is behavior-preserving.
+    If JsonUtil.GetIntValue(SettingsFile, "armorStrippingFeatureMigration80", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyThreshold", 4.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightThreshold", 8.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingThreshold", 12.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStrippingDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "armorStrippingFeatureMigration80", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -840,6 +862,11 @@ Event OnPageReset(String page)
     npcMilkingArmorNarrationCooldownOption = -1
     armorDebugOption = -1
     blacksmithDebugOption = -1
+    extensionsArmorStrippingOption = -1
+    armorStripHeavyThresholdOption = -1
+    armorStripLightThresholdOption = -1
+    armorStripClothingThresholdOption = -1
+    armorStrippingDiagnosticOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -896,6 +923,15 @@ Event OnPageReset(String page)
         Return
     EndIf
     If page == "Armor"
+        AddHeaderOption("Armor Stripping")
+        extensionsArmorStrippingOption = AddToggleOption("Use MME Extensions Stripping", JsonUtil.GetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1) == 1)
+        Int stripFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1) != 1
+            stripFlags = OPTION_FLAG_DISABLED
+        EndIf
+        armorStripHeavyThresholdOption = AddSliderOption("Heavy Armor Milk Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyThreshold", 4.0), "{0} milk", stripFlags)
+        armorStripLightThresholdOption = AddSliderOption("Light Armor Milk Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripLightThreshold", 8.0), "{0} milk", stripFlags)
+        armorStripClothingThresholdOption = AddSliderOption("Clothing Milk Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingThreshold", 12.0), "{0} milk", stripFlags)
         AddHeaderOption("Milking Armor")
         playerMilkingArmorEquipMoanOption = AddToggleOption("Player Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipMoan", 1) == 1)
         playerMilkingArmorEquipAnimationOption = AddToggleOption("Player Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipAnimation", 0) == 1)
@@ -988,6 +1024,7 @@ Event OnPageReset(String page)
         npcDrinkNotificationsDiagnosticOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1)
         AddHeaderOption("Armor Debug")
         armorStrippingCheckDiagnosticOption = AddToggleOption("Armor Stripping Check", JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0) == 1)
+        armorStrippingDiagnosticOption = AddToggleOption("Configurable Armor Stripping", JsonUtil.GetIntValue(SettingsFile, "enableArmorStrippingDiagnostic", 0) == 1)
         armorDebugOption = AddToggleOption("Equip Reaction Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0) == 1)
         blacksmithDebugOption = AddToggleOption("Blacksmith Debug", JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDebug", 0) == 1)
         AddHeaderOption("A" + "nimations ")
@@ -1158,6 +1195,16 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report new-Milk-Maid narration detection, cooldowns, and API results.")
     ElseIf option == armorStrippingCheckDiagnosticOption
         SetInfoText("Report the delayed Player drink armor check: queue, timer, milk, slot 32, armor type, threshold, decision, and strip result.")
+    ElseIf option == armorStrippingDiagnosticOption
+        SetInfoText("Report configurable armor stripping decisions from the post-drink check and the capacity polling loop.")
+    ElseIf option == extensionsArmorStrippingOption
+        SetInfoText("Strip slot-32 body armor when milk exceeds the thresholds below. Disables MME's own armor stripping while enabled.")
+    ElseIf option == armorStripHeavyThresholdOption
+        SetInfoText("Unequip heavy body armor when the Milk Maid's milk exceeds this amount.")
+    ElseIf option == armorStripLightThresholdOption
+        SetInfoText("Unequip light body armor when the Milk Maid's milk exceeds this amount.")
+    ElseIf option == armorStripClothingThresholdOption
+        SetInfoText("Unequip clothing when the Milk Maid's milk exceeds this amount.")
     ElseIf option == armorDebugOption
         SetInfoText("Report armor classification, matched MME list, equip reactions, nearby tracking, narration gates, and Skyrim.Net results.")
     ElseIf option == blacksmithDebugOption
@@ -1372,6 +1419,16 @@ Event OnOptionSelect(Int option)
     ElseIf option == armorStrippingCheckDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == extensionsArmorStrippingOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableExtensionsArmorStripping", value)
+        SetToggleOptionValue(option, value == 1)
+        MMEArmorScript.ApplyArmorStrippingMasterToggle()
+        ForcePageReset()
+    ElseIf option == armorStrippingDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorStrippingDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStrippingDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == armorDebugOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0)
@@ -1641,6 +1698,21 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(300.0)
         SetSliderDialogRange(10.0, 3600.0)
         SetSliderDialogInterval(10.0)
+    ElseIf option == armorStripHeavyThresholdOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyThreshold", 4.0))
+        SetSliderDialogDefaultValue(4.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == armorStripLightThresholdOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripLightThreshold", 8.0))
+        SetSliderDialogDefaultValue(8.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == armorStripClothingThresholdOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingThreshold", 12.0))
+        SetSliderDialogDefaultValue(12.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
     EndIf
 EndEvent
 
@@ -1726,5 +1798,17 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.SetFloatValue(SettingsFile, "npcMilkingArmorNarrationCooldown", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == armorStripHeavyThresholdOption
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyThreshold", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} milk")
+    ElseIf option == armorStripLightThresholdOption
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightThreshold", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} milk")
+    ElseIf option == armorStripClothingThresholdOption
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingThreshold", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} milk")
     EndIf
 EndEvent
