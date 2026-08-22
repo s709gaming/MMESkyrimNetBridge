@@ -172,6 +172,10 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
         MMEArmorScript.ReportArmor(diagnostic, "equip narration failed: Skyrim.Net unavailable")
         Return -5
     EndIf
+    If isPlayer && !SkyrimNetApi.GetConfigBool("PlayerDialogue", "enabled", True)
+        MMEArmorScript.ReportArmor(diagnostic, "equip narration skipped: Skyrim.Net PlayerDialogue disabled")
+        Return -7
+    EndIf
 
     ; Phase 3: enforce role-specific real-time cooldowns. CurrentRealTime resets
     ; between Skyrim sessions, so a saved future timestamp must be discarded.
@@ -195,18 +199,34 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
         Return -6
     EndIf
 
-    ; Phase 4: build class-specific narration and make exactly one external API
-    ; call. Persist cooldown only after Skyrim.Net accepts the request (code 0).
+    ; Phase 4: build class-specific narration and route it through the API path
+    ; appropriate to the wearer. Persist cooldown only after Skyrim.Net accepts
+    ; the final dialogue request (code 0).
     String narrationType = "Milking Armor"
     String content = actorName + " has just equipped Milking Armor. Suction cups settle onto her nipples, ready to milk her."
     If armorClass == 2
         narrationType = "Living Armor"
-        content = actorName + " has just equipped Living Armor. Living tendrils bury into her nipples, injecting stimulants and pleasurably draining milk. Nearby onlookers should generally react with curiosity and arousal, not fear, disgust, or hostility."
+        content = actorName + " has just equipped Living Armor. Like bondage, it is exotic, kinky, and sexy, but unusual enough to be an acquired taste even among adventurers. Nearby onlookers should generally react with curiosity and arousal, not fear, disgust, or hostility."
     ElseIf armorClass == 3
         narrationType = "Living Parasite"
-        content = actorName + " has just equipped Living Parasite armor. Parasitic tendrils bury into her nipples, injecting stimulants and pleasurably draining milk. Nearby onlookers should generally react with curiosity and arousal, not fear, disgust, or hostility."
+        content = actorName + " has just equipped Living Parasite armor. Like bondage, it is exotic, kinky, and sexy, but unusual enough to be an acquired taste even among adventurers. Nearby onlookers should generally react with curiosity and arousal, not fear, disgust, or hostility."
     EndIf
-    Int result = SkyrimNetApi.DirectNarration(content, wearer, None)
+    Int result = 1
+    If isPlayer
+        ; PlayerDialogue generates the player's own line from current context.
+        ; Publish the equip fact first so the autonomous response knows what
+        ; happened without forcing a prewritten player utterance.
+        Int contextResult = SkyrimNetApi.RegisterShortLivedEvent("mme_armor_equip_player", "mme_armor_equip", content, "{}", 45000, wearer, None)
+        If contextResult == 0
+            result = SkyrimNetApi.TriggerPlayerDialogue()
+        Else
+            MMEArmorScript.ReportArmor(diagnostic, "equip narration failed: player context event rejected | result=" + contextResult)
+        EndIf
+    Else
+        ; Let Skyrim.Net choose a nearby NPC speaker and address the wearer.
+        ; The NPC wearer is never forced to narrate their own equip event.
+        result = SkyrimNetApi.DirectNarration(content, None, wearer)
+    EndIf
     If result == 0
         JsonUtil.SetFloatValue("/MMEAlerts/Settings", lastKey, now)
         JsonUtil.Save("/MMEAlerts/Settings", False)
