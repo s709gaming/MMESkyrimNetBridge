@@ -143,7 +143,7 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
     ReportArmorStrip(diagnostic, sourceLabel + " slot=32 | armor=" + GetArmorName(slotArmor))
     String ignoredRegistration = GetIgnoredAmbiguousRegistration(milkController, slotArmor)
     If ignoredRegistration != ""
-        ReportArmorStrip(False, "ignoring ambiguous generic-name registration | " + ignoredRegistration)
+        ReportArmorStrip(diagnostic, "ignoring ambiguous generic-name registration | " + ignoredRegistration)
     EndIf
     String protectionReason = GetMMEArmorProtectionReason(milkController, slotArmor)
     If protectionReason != ""
@@ -166,10 +166,9 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
     ElseIf slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD3, "Skyrim.esm") as Keyword)
         armorKind = "light armor"
     EndIf
-    If threshold <= 0.0
-        ReportArmorStrip(diagnostic, sourceLabel + " decision=BLOCKED | unclassified armor")
-        Return False
-    EndIf
+    ; A configured threshold of 0 is valid: strip whenever milk > 0. The slot-32
+    ; armor is always classified here (heavy/light/clothing), and the missing-
+    ; armor case was already handled above, so no unclassified guard is needed.
     If effectiveMilk <= threshold
         ReportArmorStrip(diagnostic, sourceLabel + " type=" + armorKind + " | milk=" + effectiveMilk + " | threshold=" + threshold + " | decision=BLOCKED")
         Return False
