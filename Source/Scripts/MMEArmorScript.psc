@@ -508,7 +508,8 @@ Int Function FindArmorNameSafe(String armorName, String[] entries) Global
 EndFunction
 
 ; Single authoritative armor lookup shared by ClassifyArmor,
-; GetArmorClassificationSource, ResolveArmorProtectionReason, and the forensics.
+; ResolveArmorProtectionReason, and the forensics. GetArmorClassificationSource
+; derives its label from the already-computed class instead of re-reading.
 ; Reads each typed MilkQUEST registry exactly once and returns the validated
 ; indices as Int[3] = {MilkingEquipment, BasicLivingArmor, ParasiteLivingArmor},
 ; each -1 unless the armor's display name is a verified match. Direct MME forms
@@ -602,15 +603,24 @@ String Function GetIgnoredAmbiguousRegistration(MilkQUEST milkController, Armor 
     If !IsAmbiguousOrdinaryArmorName(armorName)
         Return ""
     EndIf
-    Int[] idx = ResolveArmorIndices(milkController, slotArmor)
-    If idx[0] >= 0
-        Return "registry=MilkingEquipment | index=" + idx[0] + " | name=" + armorName
+    ; This diagnostic reports stale "clothes"-style entries, which
+    ; ResolveArmorIndices intentionally skips. Search the registries directly,
+    ; but only while the armor-stripping diagnostic is enabled so normal
+    ; gameplay never pays these reads.
+    If !GetDiagnostic()
+        Return ""
     EndIf
-    If idx[1] >= 0
-        Return "registry=BasicLivingArmor | index=" + idx[1] + " | name=" + armorName
+    Int milkingIndex = FindArmorNameSafe(armorName, milkController.MilkingEquipment)
+    If milkingIndex >= 0
+        Return "registry=MilkingEquipment | index=" + milkingIndex + " | name=" + armorName
     EndIf
-    If idx[2] >= 0
-        Return "registry=ParasiteLivingArmor | index=" + idx[2] + " | name=" + armorName
+    Int livingIndex = FindArmorNameSafe(armorName, milkController.BasicLivingArmor)
+    If livingIndex >= 0
+        Return "registry=BasicLivingArmor | index=" + livingIndex + " | name=" + armorName
+    EndIf
+    Int parasiteIndex = FindArmorNameSafe(armorName, milkController.ParasiteLivingArmor)
+    If parasiteIndex >= 0
+        Return "registry=ParasiteLivingArmor | index=" + parasiteIndex + " | name=" + armorName
     EndIf
     Return ""
 EndFunction
@@ -722,7 +732,8 @@ EndFunction
 
 ; Technical match detail used by Skyrim.Net armor diagnostics. Derived from the
 ; armor class already computed by ClassifyArmor, so this performs no MME array
-; reads: direct forms and MME's special name rules are re-derived cheaply.
+; reads and can never contradict the classification (MME registries outrank the
+; special name rules, and the class already reflects that precedence).
 String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equippedArmor, Int armorClass) Global
     If milkController == None || equippedArmor == None
         Return "none"
@@ -738,24 +749,7 @@ String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equ
     EndIf
     If armorClass == 1
         Return "MilkingEquipment"
-    EndIf
-    ; Classes 2 and 3 come from a registry entry or MME's special name rules.
-    ; Re-derive the name-rule branch (no array reads) so the label stays exact,
-    ; then fall back to the registry name for the class.
-    If StringUtil.Find(armorName, "Tentacle Armor") >= 0
-        Return "MME special name rule=Tentacle Armor"
-    ElseIf StringUtil.Find(armorName, "Tentacle Parasite") >= 0
-        Return "MME special name rule=Tentacle Parasite"
-    ElseIf StringUtil.Find(armorName, "Spriggan") >= 0
-        Return "MME special name rule=Spriggan"
-    ElseIf StringUtil.Find(armorName, "Living Arm") >= 0
-        Return "MME special name rule=Living Arm"
-    ElseIf StringUtil.Find(armorName, "Hermaeus Mora") >= 0
-        Return "MME special name rule=Hermaeus Mora"
-    ElseIf StringUtil.Find(armorName, "HM Priestess") >= 0
-        Return "MME special name rule=HM Priestess"
-    EndIf
-    If armorClass == 2
+    ElseIf armorClass == 2
         Return "BasicLivingArmor"
     ElseIf armorClass == 3
         Return "ParasiteLivingArmor"
