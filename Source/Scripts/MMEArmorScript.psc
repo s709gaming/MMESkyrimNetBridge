@@ -418,27 +418,23 @@ String Function ResolveArmorProtectionReason(MilkQUEST milkController, Armor slo
     If IsAmbiguousOrdinaryArmorName(armorName)
         Return ""
     EndIf
-    ; Compute each lookup exactly once. These are the values logged below and
-    ; also the values used for the protection decision.
-    Int milkingIndex = -1
-    If milkController.MilkingEquipment != None
-        milkingIndex = milkController.MilkingEquipment.Find(armorName)
-    EndIf
-    Int basicIndex = -1
-    If milkController.BasicLivingArmor != None
-        basicIndex = milkController.BasicLivingArmor.Find(armorName)
-    EndIf
-    Int parasiteIndex = -1
-    If milkController.ParasiteLivingArmor != None
-        parasiteIndex = milkController.ParasiteLivingArmor.Find(armorName)
-    EndIf
+    ; Compute each lookup exactly once, reading each typed MilkQUEST array
+    ; through a None-safe cast so a missing array never raises a cast error.
+    ; These checks mirror MME's original detection code, which reads each
+    ; String[] property directly and treats Find() >= 0 as a match.
+    String[] milking = milkController.MilkingEquipment as String[]
+    String[] basic = milkController.BasicLivingArmor as String[]
+    String[] parasite = milkController.ParasiteLivingArmor as String[]
+    Int milkingIndex = FindArmorNameSafe(armorName, milking)
+    Int basicIndex = FindArmorNameSafe(armorName, basic)
+    Int parasiteIndex = FindArmorNameSafe(armorName, parasite)
     ; Native arrays and MME's established name rules always outrank the
     ; user-managed MilkingEquipment registry.
     String reason = ""
     If basicIndex >= 0
-        reason = "registry=BasicLivingArmor | index=" + basicIndex + " | storedName=" + milkController.BasicLivingArmor[basicIndex]
+        reason = "registry=BasicLivingArmor | index=" + basicIndex + " | storedName=" + basic[basicIndex]
     ElseIf parasiteIndex >= 0
-        reason = "registry=ParasiteLivingArmor | index=" + parasiteIndex + " | storedName=" + milkController.ParasiteLivingArmor[parasiteIndex]
+        reason = "registry=ParasiteLivingArmor | index=" + parasiteIndex + " | storedName=" + parasite[parasiteIndex]
     ElseIf StringUtil.Find(armorName, "Milk") >= 0
         reason = "MME name rule=Milk"
     ElseIf StringUtil.Find(armorName, "Cow") >= 0
@@ -455,7 +451,7 @@ String Function ResolveArmorProtectionReason(MilkQUEST milkController, Armor slo
     || StringUtil.Find(armorName, "Milker") >= 0
         reason = "MME special name rule"
     ElseIf includeUserRegistry && milkingIndex >= 0
-        reason = "registry=MilkingEquipment | index=" + milkingIndex + " | storedName=" + milkController.MilkingEquipment[milkingIndex]
+        reason = "registry=MilkingEquipment | index=" + milkingIndex + " | storedName=" + milking[milkingIndex]
     EndIf
     If GetArmorLookupDiagnostic()
         ReportArmorLookupForensics(milkController, slotArmor, source, wearer, armorName, milkingIndex, basicIndex, parasiteIndex, reason)
@@ -467,6 +463,34 @@ EndFunction
 ; by default, and independent of the HUD-spamming stripping diagnostics.
 Bool Function GetArmorLookupDiagnostic() Global
     Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorLookupForensics", 0) == 1
+EndFunction
+
+; Mirrors MME's own armor detection, which accesses each typed MilkQUEST
+; String[] directly and calls Find() on it, treating a nonnegative index as a
+; match (see MilkQUEST.psc: MilkingEquipment.Find(name) >= 0, etc.).
+; Cross-script access can resolve a missing array to None, and a failed Find()
+; must never become a bogus index 0. This helper takes an optional String[]
+; parameter (default None), verifies the found slot really holds the searched
+; name, and otherwise returns -1.
+; MME uses "Empty" (some builds "empty") as the unused/removed-slot marker, so
+; those placeholders are never treated as real armor registrations.
+Int Function FindArmorNameSafe(String armorName, String[] entries = None) Global
+    ; A missing array is not an empty-array match. Return no classification.
+    ; Never substitute index 0, because MME uses index 0 as a valid array slot.
+    If entries == None || armorName == "" || armorName == "Empty" || armorName == "empty"
+        Return -1
+    EndIf
+    ; This intentionally follows MME's own detection: Find() on the typed array.
+    Int index = entries.Find(armorName)
+    If index >= 0
+        String stored = entries[index]
+        ; MME uses "Empty" for unused slots and for armor removed by an AM spell.
+        ; Only classify when the found entry is a real armor name, not "Empty".
+        If stored == "" || stored == "Empty" || stored == "empty" || stored != armorName
+            Return -1
+        EndIf
+    EndIf
+    Return index
 EndFunction
 
 ; Forensic log emitted at the exact instant an armor protection/classification
@@ -493,9 +517,9 @@ Function ReportArmorLookupForensics(MilkQUEST milkController, Armor slotArmor, S
         Debug.Trace("[MME Extensions Armor Lookup] armorFormID=" + slotArmor.GetFormID())
     EndIf
     Debug.Trace("[MME Extensions Armor Lookup] milkController=" + controllerIdentity)
-    DumpArmorLookupArray("MilkingEquipment", milkController.MilkingEquipment, armorName, milkingIndex)
-    DumpArmorLookupArray("BasicLivingArmor", milkController.BasicLivingArmor, armorName, basicIndex)
-    DumpArmorLookupArray("ParasiteLivingArmor", milkController.ParasiteLivingArmor, armorName, parasiteIndex)
+    DumpArmorLookupArray("MilkingEquipment", armorName, milkingIndex, milkController.MilkingEquipment)
+    DumpArmorLookupArray("BasicLivingArmor", armorName, basicIndex, milkController.BasicLivingArmor)
+    DumpArmorLookupArray("ParasiteLivingArmor", armorName, parasiteIndex, milkController.ParasiteLivingArmor)
     String decisionLabel = decision
     If decisionLabel == ""
         decisionLabel = "<none>"
@@ -505,7 +529,7 @@ EndFunction
 
 ; Logs one MME string array plus the exact Find() result used for the decision.
 ; Dumps every entry so stale/duplicate array data is visible in one block.
-Function DumpArmorLookupArray(String arrayName, String[] entries, String armorName, Int foundIndex) Global
+Function DumpArmorLookupArray(String arrayName, String armorName, Int foundIndex, String[] entries = None) Global
     If entries == None
         Debug.Trace("[MME Extensions Armor Lookup] " + arrayName + " = <None>")
         Return
@@ -540,23 +564,20 @@ String Function GetIgnoredAmbiguousRegistration(MilkQUEST milkController, Armor 
     If !IsAmbiguousOrdinaryArmorName(armorName)
         Return ""
     EndIf
-    If milkController.MilkingEquipment != None
-        Int milkingIndex = milkController.MilkingEquipment.Find(armorName)
-        If milkingIndex >= 0
-            Return "registry=MilkingEquipment | index=" + milkingIndex + " | name=" + armorName
-        EndIf
+    String[] milking = milkController.MilkingEquipment as String[]
+    String[] basic = milkController.BasicLivingArmor as String[]
+    String[] parasite = milkController.ParasiteLivingArmor as String[]
+    Int milkingIndex = FindArmorNameSafe(armorName, milking)
+    If milkingIndex >= 0
+        Return "registry=MilkingEquipment | index=" + milkingIndex + " | name=" + armorName
     EndIf
-    If milkController.BasicLivingArmor != None
-        Int livingIndex = milkController.BasicLivingArmor.Find(armorName)
-        If livingIndex >= 0
-            Return "registry=BasicLivingArmor | index=" + livingIndex + " | name=" + armorName
-        EndIf
+    Int livingIndex = FindArmorNameSafe(armorName, basic)
+    If livingIndex >= 0
+        Return "registry=BasicLivingArmor | index=" + livingIndex + " | name=" + armorName
     EndIf
-    If milkController.ParasiteLivingArmor != None
-        Int parasiteIndex = milkController.ParasiteLivingArmor.Find(armorName)
-        If parasiteIndex >= 0
-            Return "registry=ParasiteLivingArmor | index=" + parasiteIndex + " | name=" + armorName
-        EndIf
+    Int parasiteIndex = FindArmorNameSafe(armorName, parasite)
+    If parasiteIndex >= 0
+        Return "registry=ParasiteLivingArmor | index=" + parasiteIndex + " | name=" + armorName
     EndIf
     Return ""
 EndFunction
@@ -573,7 +594,14 @@ Bool Function IsStripSafeByFramework(MilkQUEST milkController, Armor slotArmor) 
 EndFunction
 
 Bool Function IsValidMilkMaid(Actor target, MilkQUEST milkController) Global
-    Return target != None && !target.IsDead() && !target.IsDisabled() && milkController.MilkMaid.Find(target) != -1
+    If target == None || target.IsDead() || target.IsDisabled() || milkController == None
+        Return False
+    EndIf
+    ; MME's MilkMaid list is a typed Actor[] on MilkQUEST. Read it once through
+    ; a None-safe cast and guard before Find() so a missing list never yields a
+    ; bogus membership result.
+    Actor[] maids = milkController.MilkMaid as Actor[]
+    Return maids != None && maids.Find(target) != -1
 EndFunction
 
 Bool Function GetDiagnostic() Global
@@ -609,7 +637,7 @@ EndFunction
 
 ; Logs one MME string array safely, including None, zero-length, and empty
 ; entries. Empty strings are rendered distinctly from MME's "Empty" sentinel.
-Function DumpArmorArray(String arrayName, String[] entries) Global
+Function DumpArmorArray(String arrayName, String[] entries = None) Global
     If entries == None
         Debug.Trace("[MME Extensions Armor Array] " + arrayName + " = <None>")
         Return
@@ -647,20 +675,14 @@ Int Function ClassifyArmor(MilkQUEST milkController, Armor equippedArmor, String
     If armorName == "" || armorName == "Empty" || IsAmbiguousOrdinaryArmorName(armorName)
         Return 0
     EndIf
-    ; Compute each lookup exactly once. The same locals drive both the forensic
-    ; log and the classification decision.
-    Int milkingIndex = -1
-    If milkController.MilkingEquipment != None
-        milkingIndex = milkController.MilkingEquipment.Find(armorName)
-    EndIf
-    Int basicIndex = -1
-    If milkController.BasicLivingArmor != None
-        basicIndex = milkController.BasicLivingArmor.Find(armorName)
-    EndIf
-    Int parasiteIndex = -1
-    If milkController.ParasiteLivingArmor != None
-        parasiteIndex = milkController.ParasiteLivingArmor.Find(armorName)
-    EndIf
+    ; Compute each lookup exactly once through a None-safe cast. The same
+    ; locals drive both the forensic log and the classification decision.
+    String[] milking = milkController.MilkingEquipment as String[]
+    String[] basic = milkController.BasicLivingArmor as String[]
+    String[] parasite = milkController.ParasiteLivingArmor as String[]
+    Int milkingIndex = FindArmorNameSafe(armorName, milking)
+    Int basicIndex = FindArmorNameSafe(armorName, basic)
+    Int parasiteIndex = FindArmorNameSafe(armorName, parasite)
     Int armorClass = 0
     If milkingIndex >= 0
         armorClass = 1
@@ -723,11 +745,21 @@ String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equ
     If IsAmbiguousOrdinaryArmorName(armorName)
         Return "none"
     EndIf
-    If milkController.MilkingEquipment != None && milkController.MilkingEquipment.Find(armorName) >= 0
+    ; These checks mirror MME's original detection code: each typed MilkQUEST
+    ; String[] is searched directly and a nonnegative Find() result is a match.
+    String[] milking = milkController.MilkingEquipment as String[]
+    String[] basic = milkController.BasicLivingArmor as String[]
+    String[] parasite = milkController.ParasiteLivingArmor as String[]
+    Int milkingIndex = FindArmorNameSafe(armorName, milking)
+    If milkingIndex >= 0
         Return "MilkingEquipment"
-    ElseIf milkController.BasicLivingArmor != None && milkController.BasicLivingArmor.Find(armorName) >= 0
+    EndIf
+    Int basicIndex = FindArmorNameSafe(armorName, basic)
+    If basicIndex >= 0
         Return "BasicLivingArmor"
-    ElseIf milkController.ParasiteLivingArmor != None && milkController.ParasiteLivingArmor.Find(armorName) >= 0
+    EndIf
+    Int parasiteIndex = FindArmorNameSafe(armorName, parasite)
+    If parasiteIndex >= 0
         Return "ParasiteLivingArmor"
     EndIf
     If StringUtil.Find(armorName, "Tentacle Armor") >= 0
@@ -781,7 +813,13 @@ Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
     EndIf
     ; Phase 2: require real live MilkQUEST membership for both Player and NPC.
     ; Classification says what an item is; it does not establish actor eligibility.
-    If milkController == None || wearer == None || milkController.MilkMaid.Find(wearer) == -1
+    ; Read the typed MilkMaid Actor[] once through a None-safe cast so a missing
+    ; list is treated as "not a Milk Maid" instead of a bogus Find() result.
+    Actor[] maids = None
+    If milkController != None
+        maids = milkController.MilkMaid as Actor[]
+    EndIf
+    If milkController == None || wearer == None || maids == None || maids.Find(wearer) == -1
         ReportArmor(diagnostic, "reaction does not apply: actor is not an MME Milk Maid | " + role + " | " + armorType)
         NotifyArmorDebug(diagnostic, role + " " + armorType + " | reaction=NO (not Milk Maid)")
         Return
