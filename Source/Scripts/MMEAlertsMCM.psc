@@ -120,9 +120,6 @@ Int armorStripNotificationDiagnosticOption
 Int armorStripMoanDiagnosticOption
 Int armorStripNarrationDiagnosticOption
 Int stripAllArmorOverrideOption
-Int monitorMilkingEquipmentOption
-Int monitorBasicLivingArmorOption
-Int monitorParasiteLivingArmorOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
@@ -296,9 +293,6 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableArmorStripMoanDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNarrationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableStripAllArmor", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableArmorArrayMonitorMilking", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableArmorArrayMonitorBasicLiving", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableArmorArrayMonitorParasiteLiving", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0)
         JsonUtil.SetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0)
         JsonUtil.SetIntValue(SettingsFile, "playerDrinkNarrationChance", 25)
@@ -769,14 +763,11 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorStripReactionMigration83", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
-    ; Strip All Armor override and Armor Array Check: brand-new diagnostic
-    ; toggles. All default OFF; seeding once keeps the schema explicit for
-    ; existing saves while never overwriting later user choices.
+    ; Strip All Armor override: brand-new diagnostic toggle. Seeding once keeps
+    ; the schema explicit for existing saves while never overwriting later
+    ; user choices.
     If JsonUtil.GetIntValue(SettingsFile, "armorArrayCheckMigration84", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableStripAllArmor", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableArmorArrayMonitorMilking", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableArmorArrayMonitorBasicLiving", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableArmorArrayMonitorParasiteLiving", 0)
         JsonUtil.SetIntValue(SettingsFile, "armorArrayCheckMigration84", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
@@ -947,9 +938,6 @@ Event OnPageReset(String page)
     armorStripMoanDiagnosticOption = -1
     armorStripNarrationDiagnosticOption = -1
     stripAllArmorOverrideOption = -1
-    monitorMilkingEquipmentOption = -1
-    monitorBasicLivingArmorOption = -1
-    monitorParasiteLivingArmorOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -1124,10 +1112,6 @@ Event OnPageReset(String page)
         armorDebugOption = AddToggleOption("Equip Reaction Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0) == 1)
         blacksmithDebugOption = AddToggleOption("Blacksmith Debug", JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDebug", 0) == 1)
         armorLookupForensicsOption = AddToggleOption("Armor Lookup Forensics", JsonUtil.GetIntValue(SettingsFile, "enableArmorLookupForensics", 0) == 1)
-        AddHeaderOption("Armor Array Check")
-        monitorMilkingEquipmentOption = AddToggleOption("Monitor MilkingEquipment", JsonUtil.GetIntValue(SettingsFile, "enableArmorArrayMonitorMilking", 0) == 1)
-        monitorBasicLivingArmorOption = AddToggleOption("Monitor BasicLivingArmor", JsonUtil.GetIntValue(SettingsFile, "enableArmorArrayMonitorBasicLiving", 0) == 1)
-        monitorParasiteLivingArmorOption = AddToggleOption("Monitor ParasiteLivingArmor", JsonUtil.GetIntValue(SettingsFile, "enableArmorArrayMonitorParasiteLiving", 0) == 1)
         AddHeaderOption("A" + "nimations ")
         milkDrinkAnimationDiagnosticOption = AddToggleOption("Milk Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1)
         fullnessSelfMilkAnimationDiagnosticOption = AddToggleOption("Fullness Animation", JsonUtil.GetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0) == 1)
@@ -1328,12 +1312,6 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report Blacksmith eligibility, worn armor state, supported-milk payment, MilkingEquipment capacity, same-armor checks, and verified add/remove results.")
     ElseIf option == armorLookupForensicsOption
         SetInfoText("Log the live MME armor-name arrays and exact Find() results at the instant each armor protection/classification decision is made. Papyrus log only.")
-    ElseIf option == monitorMilkingEquipmentOption
-        SetInfoText("Log the live MilkingEquipment array to the Papyrus log every 10 seconds.")
-    ElseIf option == monitorBasicLivingArmorOption
-        SetInfoText("Log the live BasicLivingArmor array to the Papyrus log every 10 seconds.")
-    ElseIf option == monitorParasiteLivingArmorOption
-        SetInfoText("Log the live ParasiteLivingArmor array to the Papyrus log every 10 seconds.")
     ElseIf option == playerMilkingArmorEquipMoanOption || option == npcMilkingArmorEquipMoanOption
         SetInfoText("Play the mild equip moan whenever the matching Milk Maid equips supported Milking Armor.")
     ElseIf option == playerMilkingArmorEquipAnimationOption || option == npcMilkingArmorEquipAnimationOption
@@ -1555,21 +1533,6 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableStripAllArmor", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableStripAllArmor", value)
         SetToggleOptionValue(option, value == 1)
-    ElseIf option == monitorMilkingEquipmentOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorArrayMonitorMilking", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableArmorArrayMonitorMilking", value)
-        SetToggleOptionValue(option, value == 1)
-        (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
-    ElseIf option == monitorBasicLivingArmorOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorArrayMonitorBasicLiving", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableArmorArrayMonitorBasicLiving", value)
-        SetToggleOptionValue(option, value == 1)
-        (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
-    ElseIf option == monitorParasiteLivingArmorOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorArrayMonitorParasiteLiving", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableArmorArrayMonitorParasiteLiving", value)
-        SetToggleOptionValue(option, value == 1)
-        (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
     ElseIf option == armorStripNotificationOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNotification", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNotification", value)

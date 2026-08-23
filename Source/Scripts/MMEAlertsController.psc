@@ -19,7 +19,6 @@ Float NextCapacityUpdate = 0.0
 Float NextSkyrimNetUpdate = 0.0
 Float NextDebugUpdate = 0.0
 Float NextArmorCheck = 0.0
-Float NextArmorArrayCheck = 0.0
 Float NextDialogueDiagnosticUpdate = 0.0
 Float NextOStimBreastfeedingWatchdog = 0.0
 Actor LastDialogueDiagnosticActor = None
@@ -170,7 +169,6 @@ Function DisableController()
     NextSkyrimNetUpdate = 0.0
     NextDebugUpdate = 0.0
     NextArmorCheck = 0.0
-    NextArmorArrayCheck = 0.0
     MMEArmorScript.CancelPlayerArmorCheck(Game.GetPlayer())
     ; Restore MME's own stripping while MME Extensions is disabled.
     MMEArmorScript.ApplyArmorStrippingMasterToggle()
@@ -701,11 +699,6 @@ Function UpdatePolling()
     Else
         NextDebugUpdate = 0.0
     EndIf
-    If JsonUtil.GetIntValue(SettingsFile, "enableArmorArrayMonitorMilking", 0) == 1 || JsonUtil.GetIntValue(SettingsFile, "enableArmorArrayMonitorBasicLiving", 0) == 1 || JsonUtil.GetIntValue(SettingsFile, "enableArmorArrayMonitorParasiteLiving", 0) == 1
-        NextArmorArrayCheck = now + 10.0
-    Else
-        NextArmorArrayCheck = 0.0
-    EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
         ; The native TESTopicInfoEvent sink schedules this precisely when the
         ; player selects MME's opening dialogue. No active-INFO polling needed.
@@ -771,15 +764,6 @@ Function ScheduleNextUpdate()
             delay = candidate
         EndIf
     EndIf
-    If NextArmorArrayCheck > 0.0
-        candidate = NextArmorArrayCheck - now
-        If candidate <= 0.0
-            candidate = 0.01
-        EndIf
-        If delay <= 0.0 || candidate < delay
-            delay = candidate
-        EndIf
-    EndIf
     If NextArmorCheck > 0.0
         candidate = NextArmorCheck - now
         If candidate <= 0.0
@@ -834,7 +818,6 @@ Event OnUpdate()
     Bool capacityDue = NextCapacityUpdate > 0.0 && now >= NextCapacityUpdate
     Bool skyrimNetDue = NextSkyrimNetUpdate > 0.0 && now >= NextSkyrimNetUpdate
     Bool debugDue = NextDebugUpdate > 0.0 && now >= NextDebugUpdate
-    Bool armorArrayCheckDue = NextArmorArrayCheck > 0.0 && now >= NextArmorArrayCheck
     Bool dialogueDiagnosticDue = NextDialogueDiagnosticUpdate > 0.0 && now >= NextDialogueDiagnosticUpdate
     Bool ostimBreastfeedingDue = NextOStimBreastfeedingWatchdog > 0.0 && now >= NextOStimBreastfeedingWatchdog
     If capacityDue || skyrimNetDue
@@ -851,10 +834,6 @@ Event OnUpdate()
     If debugDue
         ShowDebugCapacitySnapshot()
         NextDebugUpdate = now + 5.0
-    EndIf
-    If armorArrayCheckDue
-        MMEArmorScript.DumpArmorArrays()
-        NextArmorArrayCheck = now + 10.0
     EndIf
     If dialogueDiagnosticDue
         ; Prefer Skyrim's live speaker at evaluation time. The event sender is a
@@ -1548,7 +1527,7 @@ Int Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactio
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableCapacityNotifications", 1) == 1
         If crossing == 2
-            Debug.Notification(GetActorName(candidate) + "'s tits are full! Them furniture better watch out!")
+            Debug.Notification("Watch out for those watermelons!")
         Else
             Debug.Notification(GetActorName(candidate) + "'s tits are half-full! Walking normally is optional.")
         EndIf

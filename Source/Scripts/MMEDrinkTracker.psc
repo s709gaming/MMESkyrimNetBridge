@@ -285,7 +285,7 @@ Bool Function IsEligibleDrinker(Actor drinker)
 EndFunction
 
 ; Produces safe display text for event notifications and future bridge payloads.
-String Function GetActorName(Actor actorRef)
+String Function GetActorName(Actor actorRef) Global
     String result = actorRef.GetDisplayName()
     If result == ""
         ActorBase baseInfo = actorRef.GetLeveledActorBase()
@@ -347,15 +347,16 @@ Function ShowPlayerDrinkNotification(Actor drinker, Form drinkItem, Float milkAd
     If drinkName == ""
         drinkName = "some milk"
     EndIf
+    String actorName = GetActorName(drinker)
     String notificationText = ""
     If milkAdded > 0.0 && arousalSent
-        notificationText = "You drank " + drinkName + ". Your breasts feel heavier, your thoughts dirtier."
+        notificationText = actorName + " drank " + drinkName + ". " + actorName + "'s breasts feel heavier. " + actorName + " is feeling horny."
     ElseIf milkAdded > 0.0
-        notificationText = "You drank " + drinkName + ". Your breasts feel heavier."
+        notificationText = actorName + " drank " + drinkName + ". " + actorName + "'s breasts feel heavier."
     ElseIf arousalSent
-        notificationText = "You drank " + drinkName + ". Your thoughts feel dirtier."
+        notificationText = actorName + " drank " + drinkName + ". " + actorName + " is feeling horny."
     Else
-        notificationText = "You drank " + drinkName + ". It was great."
+        notificationText = actorName + " drank " + drinkName + ". It was great."
     EndIf
     Debug.Notification(notificationText)
     If diagnostic

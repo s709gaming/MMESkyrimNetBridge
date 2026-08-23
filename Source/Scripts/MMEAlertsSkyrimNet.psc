@@ -97,10 +97,9 @@ Bool Function IsRealMMEMilkmaid(Actor candidate) Global
     If milkController == None
         Return False
     EndIf
-    ; MME's MilkMaid list is a typed Actor[] on MilkQUEST. Read it once through
-    ; a None-safe cast so a missing list is treated as "not a milkmaid".
-    Actor[] maids = milkController.MilkMaid as Actor[]
-    Return maids != None && maids.Find(candidate) != -1
+    ; MME's MilkMaid list is a typed Actor[] on MilkQUEST. Delegate to the
+    ; None-safe membership check shared with armor classification.
+    Return MMEArmorScript.IsMilkMaidMember(candidate, milkController.MilkMaid)
 EndFunction
 
 ; Returns an explicit string gate because prompt values may not preserve Papyrus numeric types.
@@ -147,11 +146,7 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
         Return -1
     EndIf
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    Actor[] maids = None
-    If milkController != None
-        maids = milkController.MilkMaid as Actor[]
-    EndIf
-    If wearer == None || equippedArmor == None || milkController == None || maids == None || maids.Find(wearer) == -1
+    If wearer == None || equippedArmor == None || milkController == None || !MMEArmorScript.IsMilkMaidMember(wearer, milkController.MilkMaid)
         MMEArmorScript.ReportArmor(diagnostic, "equip narration rejected: actor/armor missing or actor not an MME Milk Maid")
         Return -2
     EndIf
