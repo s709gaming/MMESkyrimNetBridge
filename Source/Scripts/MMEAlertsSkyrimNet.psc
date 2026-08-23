@@ -153,7 +153,7 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
 
     Int armorClass = MMEArmorScript.ClassifyArmor(milkController, equippedArmor, "equip-narration", wearer)
     String armorType = MMEArmorScript.GetArmorTypeLabel(armorClass)
-    String matchSource = MMEArmorScript.GetArmorClassificationSource(milkController, equippedArmor)
+    String matchSource = MMEArmorScript.GetArmorClassificationSource(milkController, equippedArmor, armorClass)
     Bool isPlayer = wearer == Game.GetPlayer()
     String role = "NPC"
     String narrationToggle = "enableNPCMilkArmorEquipNarration"
@@ -720,7 +720,7 @@ String Function BuildNearbyArmorStatus(Actor candidate) Global
     Armor wornArmor = candidate.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
     Int armorClass = MMEArmorScript.ClassifyArmor(milkController, wornArmor, "poll", candidate)
     String armorType = MMEArmorScript.GetArmorTypeLabel(armorClass)
-    String matchSource = MMEArmorScript.GetArmorClassificationSource(milkController, wornArmor)
+    String matchSource = MMEArmorScript.GetArmorClassificationSource(milkController, wornArmor, armorClass)
     String actorName = ResolveActorName(candidate, "The Milk Maid")
     String armorName = "<none>"
     If wornArmor != None

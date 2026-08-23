@@ -436,13 +436,12 @@ String Function ResolveArmorProtectionReason(MilkQUEST milkController, Armor slo
     If IsAmbiguousOrdinaryArmorName(armorName)
         Return ""
     EndIf
-    ; Compute each lookup exactly once. Pass each typed MilkQUEST String[] to a
-    ; typed parameter (which resolves MME's live array) so Find() runs on real
-    ; data. FindArmorNameSafe verifies the found slot equals the searched name,
-    ; so a None array or a bogus index can never classify ordinary armor.
-    Int milkingIndex = FindArmorNameSafe(armorName, milkController.MilkingEquipment)
-    Int basicIndex = FindArmorNameSafe(armorName, milkController.BasicLivingArmor)
-    Int parasiteIndex = FindArmorNameSafe(armorName, milkController.ParasiteLivingArmor)
+    ; One authoritative lookup resolves all three registries at once; the same
+    ; indices drive both the decision and the forensic log.
+    Int[] idx = ResolveArmorIndices(milkController, slotArmor)
+    Int milkingIndex = idx[0]
+    Int basicIndex = idx[1]
+    Int parasiteIndex = idx[2]
     ; Native arrays and MME's established name rules always outrank the
     ; user-managed MilkingEquipment registry.
     String reason = ""
@@ -506,6 +505,30 @@ Int Function FindArmorNameSafe(String armorName, String[] entries) Global
         EndIf
     EndIf
     Return index
+EndFunction
+
+; Single authoritative armor lookup shared by ClassifyArmor,
+; GetArmorClassificationSource, ResolveArmorProtectionReason, and the forensics.
+; Reads each typed MilkQUEST registry exactly once and returns the validated
+; indices as Int[3] = {MilkingEquipment, BasicLivingArmor, ParasiteLivingArmor},
+; each -1 unless the armor's display name is a verified match. Direct MME forms
+; and the empty/ambiguous-name guards live in the callers.
+Int[] Function ResolveArmorIndices(MilkQUEST milkController, Armor armorRef) Global
+    Int[] idx = new Int[3]
+    idx[0] = -1
+    idx[1] = -1
+    idx[2] = -1
+    If milkController == None || armorRef == None
+        Return idx
+    EndIf
+    String armorName = armorRef.GetName()
+    If armorName == "" || armorName == "Empty" || IsAmbiguousOrdinaryArmorName(armorName)
+        Return idx
+    EndIf
+    idx[0] = FindArmorNameSafe(armorName, milkController.MilkingEquipment)
+    idx[1] = FindArmorNameSafe(armorName, milkController.BasicLivingArmor)
+    idx[2] = FindArmorNameSafe(armorName, milkController.ParasiteLivingArmor)
+    Return idx
 EndFunction
 
 ; Forensic log emitted at the exact instant an armor protection/classification
@@ -579,17 +602,15 @@ String Function GetIgnoredAmbiguousRegistration(MilkQUEST milkController, Armor 
     If !IsAmbiguousOrdinaryArmorName(armorName)
         Return ""
     EndIf
-    Int milkingIndex = FindArmorNameSafe(armorName, milkController.MilkingEquipment)
-    If milkingIndex >= 0
-        Return "registry=MilkingEquipment | index=" + milkingIndex + " | name=" + armorName
+    Int[] idx = ResolveArmorIndices(milkController, slotArmor)
+    If idx[0] >= 0
+        Return "registry=MilkingEquipment | index=" + idx[0] + " | name=" + armorName
     EndIf
-    Int livingIndex = FindArmorNameSafe(armorName, milkController.BasicLivingArmor)
-    If livingIndex >= 0
-        Return "registry=BasicLivingArmor | index=" + livingIndex + " | name=" + armorName
+    If idx[1] >= 0
+        Return "registry=BasicLivingArmor | index=" + idx[1] + " | name=" + armorName
     EndIf
-    Int parasiteIndex = FindArmorNameSafe(armorName, milkController.ParasiteLivingArmor)
-    If parasiteIndex >= 0
-        Return "registry=ParasiteLivingArmor | index=" + parasiteIndex + " | name=" + armorName
+    If idx[2] >= 0
+        Return "registry=ParasiteLivingArmor | index=" + idx[2] + " | name=" + armorName
     EndIf
     Return ""
 EndFunction
@@ -648,11 +669,12 @@ Int Function ClassifyArmor(MilkQUEST milkController, Armor equippedArmor, String
     If armorName == "" || armorName == "Empty" || IsAmbiguousOrdinaryArmorName(armorName)
         Return 0
     EndIf
-    ; Pass each typed MilkQUEST String[] to a typed parameter so Find() runs on
-    ; MME's live array; FindArmorNameSafe validates the returned index.
-    Int milkingIndex = FindArmorNameSafe(armorName, milkController.MilkingEquipment)
-    Int basicIndex = FindArmorNameSafe(armorName, milkController.BasicLivingArmor)
-    Int parasiteIndex = FindArmorNameSafe(armorName, milkController.ParasiteLivingArmor)
+    ; One authoritative lookup resolves all three registries at once; the same
+    ; indices drive both the classification and the forensic log.
+    Int[] idx = ResolveArmorIndices(milkController, equippedArmor)
+    Int milkingIndex = idx[0]
+    Int basicIndex = idx[1]
+    Int parasiteIndex = idx[2]
     Int armorClass = 0
     If milkingIndex >= 0
         armorClass = 1
@@ -698,8 +720,10 @@ String Function GetArmorTypeLabel(Int armorClass) Global
     Return "Unsupported"
 EndFunction
 
-; Technical match detail used by Skyrim.Net armor diagnostics.
-String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equippedArmor) Global
+; Technical match detail used by Skyrim.Net armor diagnostics. Derived from the
+; armor class already computed by ClassifyArmor, so this performs no MME array
+; reads: direct forms and MME's special name rules are re-derived cheaply.
+String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equippedArmor, Int armorClass) Global
     If milkController == None || equippedArmor == None
         Return "none"
     EndIf
@@ -709,26 +733,15 @@ String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equ
         Return "MilkCuirassFuta"
     EndIf
     String armorName = equippedArmor.GetName()
-    If armorName == "" || armorName == "Empty"
+    If armorName == "" || armorName == "Empty" || IsAmbiguousOrdinaryArmorName(armorName)
         Return "none"
     EndIf
-    If IsAmbiguousOrdinaryArmorName(armorName)
-        Return "none"
-    EndIf
-    ; These checks mirror MME's original detection code: each typed MilkQUEST
-    ; String[] is searched directly and a nonnegative Find() result is a match.
-    Int milkingIndex = FindArmorNameSafe(armorName, milkController.MilkingEquipment)
-    If milkingIndex >= 0
+    If armorClass == 1
         Return "MilkingEquipment"
     EndIf
-    Int basicIndex = FindArmorNameSafe(armorName, milkController.BasicLivingArmor)
-    If basicIndex >= 0
-        Return "BasicLivingArmor"
-    EndIf
-    Int parasiteIndex = FindArmorNameSafe(armorName, milkController.ParasiteLivingArmor)
-    If parasiteIndex >= 0
-        Return "ParasiteLivingArmor"
-    EndIf
+    ; Classes 2 and 3 come from a registry entry or MME's special name rules.
+    ; Re-derive the name-rule branch (no array reads) so the label stays exact,
+    ; then fall back to the registry name for the class.
     If StringUtil.Find(armorName, "Tentacle Armor") >= 0
         Return "MME special name rule=Tentacle Armor"
     ElseIf StringUtil.Find(armorName, "Tentacle Parasite") >= 0
@@ -741,6 +754,11 @@ String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equ
         Return "MME special name rule=Hermaeus Mora"
     ElseIf StringUtil.Find(armorName, "HM Priestess") >= 0
         Return "MME special name rule=HM Priestess"
+    EndIf
+    If armorClass == 2
+        Return "BasicLivingArmor"
+    ElseIf armorClass == 3
+        Return "ParasiteLivingArmor"
     EndIf
     Return "none"
 EndFunction
