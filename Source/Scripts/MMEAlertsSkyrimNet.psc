@@ -146,7 +146,7 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
         Return -2
     EndIf
 
-    Int armorClass = MMEArmorScript.ClassifyArmor(milkController, equippedArmor)
+    Int armorClass = MMEArmorScript.ClassifyArmor(milkController, equippedArmor, "equip-narration", wearer)
     String armorType = MMEArmorScript.GetArmorTypeLabel(armorClass)
     String matchSource = MMEArmorScript.GetArmorClassificationSource(milkController, equippedArmor)
     Bool isPlayer = wearer == Game.GetPlayer()
@@ -713,7 +713,7 @@ String Function BuildNearbyArmorStatus(Actor candidate) Global
         Return ""
     EndIf
     Armor wornArmor = candidate.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
-    Int armorClass = MMEArmorScript.ClassifyArmor(milkController, wornArmor)
+    Int armorClass = MMEArmorScript.ClassifyArmor(milkController, wornArmor, "poll", candidate)
     String armorType = MMEArmorScript.GetArmorTypeLabel(armorClass)
     String matchSource = MMEArmorScript.GetArmorClassificationSource(milkController, wornArmor)
     String actorName = ResolveActorName(candidate, "The Milk Maid")

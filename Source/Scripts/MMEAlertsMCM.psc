@@ -106,6 +106,7 @@ Int playerMilkingArmorNarrationCooldownOption
 Int npcMilkingArmorNarrationCooldownOption
 Int armorDebugOption
 Int blacksmithDebugOption
+Int armorLookupForensicsOption
 Int extensionsArmorStrippingOption
 Int armorStripHeavyThresholdOption
 Int armorStripLightThresholdOption
@@ -125,7 +126,7 @@ Int monitorParasiteLivingArmorOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 84
+    Return 85
 EndFunction
 
 Function SetPageNames()
@@ -779,6 +780,14 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorArrayCheckMigration84", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Point-in-time armor lookup forensics: log-only diagnostic toggle proving
+    ; exactly which array entry a protection/classification decision matched.
+    ; Default OFF; Papyrus log output only, never a HUD notification.
+    If JsonUtil.GetIntValue(SettingsFile, "armorLookupForensicsMigration85", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorLookupForensics", 0)
+        JsonUtil.SetIntValue(SettingsFile, "armorLookupForensicsMigration85", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -924,6 +933,7 @@ Event OnPageReset(String page)
     npcMilkingArmorNarrationCooldownOption = -1
     armorDebugOption = -1
     blacksmithDebugOption = -1
+    armorLookupForensicsOption = -1
     extensionsArmorStrippingOption = -1
     armorStripHeavyThresholdOption = -1
     armorStripLightThresholdOption = -1
@@ -1113,6 +1123,7 @@ Event OnPageReset(String page)
         armorStripNarrationDiagnosticOption = AddToggleOption("Strip Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarrationDiagnostic", 0) == 1)
         armorDebugOption = AddToggleOption("Equip Reaction Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0) == 1)
         blacksmithDebugOption = AddToggleOption("Blacksmith Debug", JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDebug", 0) == 1)
+        armorLookupForensicsOption = AddToggleOption("Armor Lookup Forensics", JsonUtil.GetIntValue(SettingsFile, "enableArmorLookupForensics", 0) == 1)
         AddHeaderOption("Armor Array Check")
         monitorMilkingEquipmentOption = AddToggleOption("Monitor MilkingEquipment", JsonUtil.GetIntValue(SettingsFile, "enableArmorArrayMonitorMilking", 0) == 1)
         monitorBasicLivingArmorOption = AddToggleOption("Monitor BasicLivingArmor", JsonUtil.GetIntValue(SettingsFile, "enableArmorArrayMonitorBasicLiving", 0) == 1)
@@ -1315,6 +1326,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report armor classification, matched MME list, equip reactions, nearby tracking, narration gates, and Skyrim.Net results.")
     ElseIf option == blacksmithDebugOption
         SetInfoText("Report Blacksmith eligibility, worn armor state, supported-milk payment, MilkingEquipment capacity, same-armor checks, and verified add/remove results.")
+    ElseIf option == armorLookupForensicsOption
+        SetInfoText("Log the live MME armor-name arrays and exact Find() results at the instant each armor protection/classification decision is made. Papyrus log only.")
     ElseIf option == monitorMilkingEquipmentOption
         SetInfoText("Log the live MilkingEquipment array to the Papyrus log every 10 seconds.")
     ElseIf option == monitorBasicLivingArmorOption
@@ -1589,6 +1602,10 @@ Event OnOptionSelect(Int option)
     ElseIf option == blacksmithDebugOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableBlacksmithDebug", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == armorLookupForensicsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorLookupForensics", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorLookupForensics", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == playerMilkingArmorEquipMoanOption
         ToggleArmorSetting(option, "enablePlayerMilkingArmorEquipMoan", 1)
