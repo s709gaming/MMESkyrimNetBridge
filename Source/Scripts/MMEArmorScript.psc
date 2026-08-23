@@ -733,7 +733,9 @@ EndFunction
 ; Technical match detail used by Skyrim.Net armor diagnostics. Derived from the
 ; armor class already computed by ClassifyArmor, so this performs no MME array
 ; reads and can never contradict the classification (MME registries outrank the
-; special name rules, and the class already reflects that precedence).
+; special name rules, and the class already reflects that precedence). Classes 2
+; and 3 can come from either a registry match or a special-name rule, so their
+; labels name both possibilities rather than claiming one exact source.
 String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equippedArmor, Int armorClass) Global
     If milkController == None || equippedArmor == None
         Return "none"
@@ -750,9 +752,9 @@ String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equ
     If armorClass == 1
         Return "MilkingEquipment"
     ElseIf armorClass == 2
-        Return "BasicLivingArmor"
+        Return "BasicLivingArmor or MME special-name rule"
     ElseIf armorClass == 3
-        Return "ParasiteLivingArmor"
+        Return "ParasiteLivingArmor or MME special-name rule"
     EndIf
     Return "none"
 EndFunction
