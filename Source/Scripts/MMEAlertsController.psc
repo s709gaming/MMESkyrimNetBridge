@@ -1527,9 +1527,9 @@ Int Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactio
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableCapacityNotifications", 1) == 1
         If crossing == 2
-            Debug.Notification(GetActorName(candidate) + " is completely milky. Watch the furniture, those things have momentum!")
+            Debug.Notification(GetActorName(candidate) + "'s tits are full! Them furniture better watch out!")
         Else
-            Debug.Notification(GetActorName(candidate) + " is half-milky. Her boobs are getting heavy enough that walking normally is becoming optional.")
+            Debug.Notification(GetActorName(candidate) + "'s tits are half-full! Walking normally is optional.")
         EndIf
     EndIf
     Return crossing
