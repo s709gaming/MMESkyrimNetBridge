@@ -120,6 +120,13 @@ Bool Function IsConfigurableArmorStrippingEnabled() Global
     Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableExtensionsArmorStripping", 1) == 1
 EndFunction
 
+; Temporary workaround: when enabled, the configurable strip path ignores MME
+; armor protection classification and strips slot 32 whenever the fullness
+; threshold says strip. Framework safety (DD, SexLab no-strip) still applies.
+Bool Function IsStripAllArmorEnabled() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableStripAllArmor", 0) == 1
+EndFunction
+
 ; Reusable configurable strip path shared by the delayed post-drink check and
 ; the capacity polling loop. Observes milk only; never writes MME milk state.
 Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, String sourceLabel) Global
@@ -145,9 +152,22 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
     If ignoredRegistration != ""
         ReportArmorStrip(diagnostic, "ignoring ambiguous generic-name registration | " + ignoredRegistration)
     EndIf
-    String protectionReason = GetMMEArmorProtectionReason(milkController, slotArmor)
+    String protectionReason = ""
+    If IsStripAllArmorEnabled()
+        ; Temporary override: bypass MME armor protection classification. The
+        ; reason is still resolved so diagnostics can prove what was ignored.
+        String bypassedProtection = GetMMEArmorProtectionReason(milkController, slotArmor)
+        If bypassedProtection != "" && diagnostic
+            Debug.Trace("[MMEAlert Armor Stripping] " + sourceLabel + " override=Strip All Armor | actor=" + GetActorName(target) + " | armor=" + GetArmorName(slotArmor) + " | formID=" + slotArmor.GetFormID() + " | MME protection ignored=" + bypassedProtection)
+        EndIf
+    Else
+        protectionReason = GetMMEArmorProtectionReason(milkController, slotArmor)
+    EndIf
     If protectionReason != ""
         ReportArmorStrip(diagnostic, sourceLabel + " decision=BLOCKED | protection=" + protectionReason)
+        If diagnostic
+            Debug.Trace("[MMEAlert Armor Stripping] " + sourceLabel + " actor=" + GetActorName(target) + " | armor=" + GetArmorName(slotArmor) + " | formID=" + slotArmor.GetFormID() + " | protection=" + protectionReason)
+        EndIf
         Return False
     EndIf
     If milkController.DDi != None && milkController.DDi.IsMilkingBlocked_Suit(target)
@@ -364,7 +384,7 @@ String Function GetMMEArmorProtectionReason(MilkQUEST milkController, Armor slot
     EndIf
     Int registeredIndex = milkController.MilkingEquipment.Find(armorName)
     If registeredIndex >= 0
-        Return "MilkingEquipment | index=" + registeredIndex
+        Return "registry=MilkingEquipment | index=" + registeredIndex + " | storedName=" + milkController.MilkingEquipment[registeredIndex]
     EndIf
     Return ""
 EndFunction
@@ -403,13 +423,13 @@ String Function GetNativeMMEArmorProtectionReason(MilkQUEST milkController, Armo
     If milkController.BasicLivingArmor != None
         Int livingIndex = milkController.BasicLivingArmor.Find(armorName)
         If livingIndex >= 0
-            Return "BasicLivingArmor | index=" + livingIndex
+            Return "registry=BasicLivingArmor | index=" + livingIndex + " | storedName=" + milkController.BasicLivingArmor[livingIndex]
         EndIf
     EndIf
     If milkController.ParasiteLivingArmor != None
         Int parasiteIndex = milkController.ParasiteLivingArmor.Find(armorName)
         If parasiteIndex >= 0
-            Return "ParasiteLivingArmor | index=" + parasiteIndex
+            Return "registry=ParasiteLivingArmor | index=" + parasiteIndex + " | storedName=" + milkController.ParasiteLivingArmor[parasiteIndex]
         EndIf
     EndIf
     If StringUtil.Find(armorName, "Milk") >= 0
@@ -491,6 +511,51 @@ EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
     Debug.Trace("[MMEAlert Armor Stripping] " + reportText)
+EndFunction
+
+; Diagnostic array dump for the Armor Array Check MCM section. Reads the three
+; independent toggles and logs every entry of each enabled MME string array.
+; Strictly read-only: never modifies, repairs, or replaces MME's arrays.
+Function DumpArmorArrays() Global
+    If !MMEAlertsController.IsExtensionsEnabled()
+        Return
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None
+        Debug.Trace("[MME Extensions Armor Array] MilkQUEST unavailable; array dump skipped")
+        Return
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorArrayMonitorMilking", 0) == 1
+        DumpArmorArray("MilkingEquipment", milkController.MilkingEquipment)
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorArrayMonitorBasicLiving", 0) == 1
+        DumpArmorArray("BasicLivingArmor", milkController.BasicLivingArmor)
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorArrayMonitorParasiteLiving", 0) == 1
+        DumpArmorArray("ParasiteLivingArmor", milkController.ParasiteLivingArmor)
+    EndIf
+EndFunction
+
+; Logs one MME string array safely, including None, zero-length, and empty
+; entries. Empty strings are rendered distinctly from MME's "Empty" sentinel.
+Function DumpArmorArray(String arrayName, String[] entries) Global
+    If entries == None
+        Debug.Trace("[MME Extensions Armor Array] " + arrayName + " = <None>")
+        Return
+    EndIf
+    If entries.Length <= 0
+        Debug.Trace("[MME Extensions Armor Array] " + arrayName + " = <empty>")
+        Return
+    EndIf
+    Int i = 0
+    While i < entries.Length
+        String stored = entries[i]
+        If stored == ""
+            stored = "<empty>"
+        EndIf
+        Debug.Trace("[MME Extensions Armor Array] " + arrayName + "[" + i + "] = " + stored)
+        i += 1
+    EndWhile
 EndFunction
 
 ; MME's own configured armor-name arrays are the source of truth.
