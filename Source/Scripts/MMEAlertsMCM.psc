@@ -4,7 +4,7 @@ Scriptname MMEAlertsMCM extends SKI_ConfigBase
 ; MCM settings schema and migrations
 ; ---------------------------------------------------------------------------
 ; JsonUtil is the persistent authority read by runtime scripts. This menu writes
-; settings and asks only affected controllers to refresh; it must not implement
+; settings asks only affected controllers to refresh; it must not implement
 ; gameplay. EnsureDefaults is append-only migration history for existing saves.
 
 String SettingsFile = "/MMEAlerts/Settings"
@@ -1819,7 +1819,7 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripNarrationCooldown", 300.0) / 60.0)
         SetSliderDialogDefaultValue(5.0)
         SetSliderDialogRange(0.0, 60.0)
-        SetSliderDialogInterval(5.0)
+        SetSliderDialogInterval(1.0)
     EndIf
 EndEvent
 
