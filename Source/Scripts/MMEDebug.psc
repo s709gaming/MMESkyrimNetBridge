@@ -11,7 +11,9 @@ String SettingsFile = "/MMEAlerts/Settings"
 ; replace, override, or call through MME's original SexLab dialogue INFOs.
 ; One script instance owns at most one manual OStim thread and one matching MME
 ; Mode 4 milking request. The fields below are a small transaction record used
-; to prove ownership before stopping a scene or removing MME's passive state.
+; to prove ownership before stopping a scene or performing guarded MME cleanup.
+; MME owns normal Mode 4 cleanup; this service intervenes only after a confirmed
+; first deduction or a positively attributed stale-request deadline.
 Int ActiveThreadID = -1
 String ActiveSceneID = ""
 Actor ActiveMilkSource = None
@@ -22,9 +24,10 @@ Bool ActiveOwnsThread = False
 Bool ActiveMMERequested = False
 Bool ActiveMMEStarted = False
 Bool ActiveMMECompleted = False
+Float ActiveMilkBefore = 0.0
+Float ActiveMMEDeadline = 0.0
 Bool ActiveLaunching = False
 Bool ActiveDiagnostic = False
-Bool ActiveIncludesPlayer = False
 Int AttemptSequence = 0
 Int ActiveSessionID = 0
 String ActiveCaller = ""
@@ -48,24 +51,39 @@ Function UpdateDebugLoop()
     EndIf
 EndFunction
 
-; Save/load can restore Papyrus fields after OStim's runtime thread has ended.
-; Resume only an exact owned transaction; otherwise discard our bookkeeping
-; without stopping a thread or removing a spell we can no longer prove we own.
+; Save/load can restore either a live OStim transaction or the intentionally
+; retained MME tail after OStim ended. Resume the latter only when this request
+; was positively observed starting and its exact source still has the passive.
 Function RecoverAfterLoad()
     RegisterForModEvent("AnimationEnd", "OnSexLabBreastfeedingEnd")
     If !ActiveSession
         Return
     EndIf
     UnregisterSessionEvents()
-    If StillOwnsThread()
-        If ActiveMMEStarted && (ActivePassiveSpell == None || ActiveMilkSource == None || !ActiveMilkSource.HasSpell(ActivePassiveSpell))
+    Bool ownsOStim = StillOwnsThread()
+    Bool observedMMEActive = ActiveMMERequested && ActiveMMEStarted && ActiveMilkSource != None && ActivePassiveSpell != None && ActiveMilkSource.HasSpell(ActivePassiveSpell)
+    If ownsOStim
+        If ActiveMMEStarted && !observedMMEActive
             ActiveMMEStarted = False
             ActiveMMECompleted = True
         EndIf
         ActiveLaunching = False
+        If observedMMEActive
+            ResetMMEDeadline()
+        EndIf
         RegisterSessionEvents()
         RequestWatchdog()
         TraceActive("resumed owned OStim breastfeeding session after load")
+    ElseIf observedMMEActive
+        ; The OStim scene may have ended before the save while this transaction
+        ; deliberately waited for MME's first deduction. Do not trust the saved
+        ; real-time deadline because GetCurrentRealTime restarts with Skyrim.
+        ActiveOwnsThread = False
+        ActiveLaunching = False
+        ResetMMEDeadline()
+        RegisterSessionEvents()
+        RequestWatchdog()
+        TraceActive("resumed positively observed MME tail after load without OStim ownership")
     Else
         EndSession("discarded stale state after load without touching external OStim/MME state")
     EndIf
@@ -442,15 +460,20 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
     If milkController != None
         sourceMilk = MME_Storage.getMilkCurrent(milkSource)
     EndIf
-    TraceActive("MME is Milk Maid=" + isMilkMaid + " | milk=" + sourceMilk + " | processing=" + mmeEligible)
+    ActiveMilkBefore = sourceMilk
+    TraceActive("milk before=" + sourceMilk + " | MME is Milk Maid=" + isMilkMaid + " | processing=" + mmeEligible)
     If mmeEligible
         ApplyMMEBreastfeedingParity(milkSource, drinker, milkController)
         If RequestMMEMilking(milkSource)
             ActiveMMERequested = True
-            TraceActive("MME request sent")
+            ; Keep a short observation window even if MME's ModEvent handler is
+            ; delayed beyond WaitForMMEStart or the OStim scene ends unusually
+            ; early. A detected passive replaces this with the full cycle limit.
+            ActiveMMEDeadline = Utility.GetCurrentRealTime() + 30.0
+            TraceActive("MME request sent | source=" + GetActorName(milkSource) + " " + milkSource + " | mode=4 | pump type=0")
             If WaitForMMEStart()
                 If ActiveMMEStarted
-                    TraceActive("MME passive detected")
+                    TraceActive("MME passive detected | source=" + GetActorName(milkSource) + " " + milkSource)
                 ElseIf ActiveMMECompleted
                     TraceActive("MME completed during startup; OStim continues")
                 EndIf
@@ -478,35 +501,32 @@ Function BeginSession(Int sessionID, String caller, Actor milkSource, Actor drin
     ActiveMMERequested = False
     ActiveMMEStarted = False
     ActiveMMECompleted = False
+    ActiveMilkBefore = 0.0
+    ActiveMMEDeadline = 0.0
     ActiveLaunching = True
     ActiveDiagnostic = diagnostic
     ActiveSessionID = sessionID
     ActiveCaller = caller
-    ; No provisional player-thread ID: NPC-only Skyrim.Net pairs must wait for
-    ; the positive ID returned by OStim and ignore legacy player-thread events.
+    ; No provisional thread ID: wait for the positive ID returned by OStim.
     ActiveThreadID = -1
     ActiveSceneID = sceneID
     ActiveMilkSource = milkSource
     ActiveDrinker = drinker
     ActivePassiveSpell = passiveSpell
-    ActiveIncludesPlayer = milkSource == Game.GetPlayer() || drinker == Game.GetPlayer()
-
     RegisterSessionEvents()
 EndFunction
 
 Function RegisterSessionEvents()
     RegisterForModEvent("ostim_thread_scenechanged", "OnOStimThreadSceneChanged")
     RegisterForModEvent("ostim_thread_end", "OnOStimThreadEnd")
-    If ActiveIncludesPlayer
-        RegisterForModEvent("ostim_scenechanged", "OnOStimSceneChanged")
-        RegisterForModEvent("ostim_end", "OnOStimEnd")
-    EndIf
     RegisterForModEvent("MME_MilkingDone", "OnMMEMilkingDone")
 EndFunction
 
 Function UnregisterSessionEvents()
     UnregisterForModEvent("ostim_thread_scenechanged")
     UnregisterForModEvent("ostim_thread_end")
+    ; Clear registrations persisted by versions that listened to the redundant
+    ; player-only legacy events. New sessions use thread-specific events only.
     UnregisterForModEvent("ostim_scenechanged")
     UnregisterForModEvent("ostim_end")
     UnregisterForModEvent("MME_MilkingDone")
@@ -523,9 +543,10 @@ Function ClearSessionState()
     ActiveMMERequested = False
     ActiveMMEStarted = False
     ActiveMMECompleted = False
+    ActiveMilkBefore = 0.0
+    ActiveMMEDeadline = 0.0
     ActiveLaunching = False
     ActiveDiagnostic = False
-    ActiveIncludesPlayer = False
     ActiveSessionID = 0
     ActiveCaller = ""
 EndFunction
@@ -572,6 +593,7 @@ Bool Function WaitForMMEStart()
         EndIf
         If ActiveMilkSource != None && ActivePassiveSpell != None && ActiveMilkSource.HasSpell(ActivePassiveSpell)
             ActiveMMEStarted = True
+            ResetMMEDeadline()
             If !StillOwnsThread()
                 RelinquishOwnership("OStim breastfeeding ended or changed before MME startup completed")
                 Return False
@@ -582,6 +604,22 @@ Bool Function WaitForMMEStart()
         attempt += 1
     EndWhile
     Return ActiveMMECompleted
+EndFunction
+
+Function ResetMMEDeadline()
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Float cycleDuration = 300.0
+    If milkController != None
+        cycleDuration = milkController.Milking_Duration as Float
+        If cycleDuration < 1.0
+            cycleDuration = 1.0
+        ElseIf cycleDuration > 300.0
+            cycleDuration = 300.0
+        EndIf
+    EndIf
+    ; Always rebuild from this process's clock. Utility.GetCurrentRealTime
+    ; restarts with Skyrim, so an absolute deadline must never cross a load.
+    ActiveMMEDeadline = Utility.GetCurrentRealTime() + cycleDuration + 30.0
 EndFunction
 
 Bool Function StillOwnsThread()
@@ -597,11 +635,8 @@ Function RelinquishOwnership(String reason)
     EndIf
     Bool wasOwned = ActiveOwnsThread
     ActiveOwnsThread = False
-    ; Remove only the MME state started for this route. The OStim scene is left
-    ; alone because a changed scene/auto-mode flag means ownership moved away.
-    If ActiveMMERequested && ActiveMilkSource != None && ActivePassiveSpell != None && ActiveMilkSource.HasSpell(ActivePassiveSpell)
-        ActiveMilkSource.RemoveSpell(ActivePassiveSpell)
-    EndIf
+    ; OStim ownership and MME processing are independent after the request.
+    ; Never clear MME's loop guard merely because OStim ownership ended.
     If wasOwned
         TraceActive("ownership relinquished: " + reason + "; external OStim thread left alone")
     EndIf
@@ -612,17 +647,7 @@ Event OnOStimThreadSceneChanged(String eventName, String sceneID, Float threadID
         TraceActive("OStim thread_scenechanged received | scene=" + sceneID)
         RelinquishOwnership("OStim thread changed to " + sceneID)
         If !ActiveLaunching
-            EndSession("OStim scene changed")
-        EndIf
-    EndIf
-EndEvent
-
-Event OnOStimSceneChanged(String eventName, String sceneID, Float numArg, Form sender)
-    If ActiveSession && ActiveIncludesPlayer && ActiveThreadID == 0 && sceneID != ActiveSceneID
-        TraceActive("legacy OStim scenechanged received | scene=" + sceneID)
-        RelinquishOwnership("OStim player thread changed to " + sceneID)
-        If !ActiveLaunching
-            EndSession("OStim player scene changed")
+            FinishOrWatchMME("OStim scene changed")
         EndIf
     EndIf
 EndEvent
@@ -632,17 +657,7 @@ Event OnOStimThreadEnd(String eventName, String json, Float threadID, Form sende
         TraceActive("OStim thread_end received | thread=" + (threadID as Int))
         RelinquishOwnership("OStim breastfeeding thread ended")
         If !ActiveLaunching
-            EndSession("OStim thread ended normally")
-        EndIf
-    EndIf
-EndEvent
-
-Event OnOStimEnd(String eventName, String json, Float numArg, Form sender)
-    If ActiveSession && ActiveIncludesPlayer && ActiveThreadID == 0
-        TraceActive("legacy OStim end received | thread=0")
-        RelinquishOwnership("OStim breastfeeding thread ended")
-        If !ActiveLaunching
-            EndSession("OStim player thread ended normally")
+            FinishOrWatchMME("OStim thread ended normally")
         EndIf
     EndIf
 EndEvent
@@ -656,21 +671,48 @@ Event OnMMEMilkingDone(Form actorForm, Int bottles, Int boobgasmCount, Int cumCo
 
     ActiveMMECompleted = True
     ActiveMMEStarted = False
-    TraceActive("MME_MilkingDone bottles=" + bottles + " | boobgasms=" + boobgasmCount + " | OStim continues")
+    Float milkAfter = MME_Storage.getMilkCurrent(ActiveMilkSource)
+    TraceActive("MME_MilkingDone bottles=" + bottles + " | boobgasms=" + boobgasmCount + " | milk after=" + milkAfter + " | OStim continues")
 EndEvent
 
 Function HandleWatchdogUpdate()
-    ; This one-second watchdog exists only during an active interaction. OStim
-    ; ownership drives its lifetime; MME passive loss is recorded but never
-    ; treated as a reason to stop the animation.
+    ; This one-second watchdog covers both the OStim interaction and a retained
+    ; MME tail. MME state never determines the OStim animation lifetime.
     If !ActiveSession || ActiveLaunching
         Return
     EndIf
 
-    If ActiveMMEStarted && (ActiveMilkSource == None || ActivePassiveSpell == None || !ActiveMilkSource.HasSpell(ActivePassiveSpell))
-        ActiveMMEStarted = False
-        ActiveMMECompleted = True
-        TraceActive("MME passive ended without MME_MilkingDone; OStim continues")
+    Bool passivePresent = ActiveMilkSource != None && ActivePassiveSpell != None && ActiveMilkSource.HasSpell(ActivePassiveSpell)
+    If ActiveMMERequested && !ActiveMMEStarted && !ActiveMMECompleted && passivePresent
+        ; ModEvent delivery can be delayed beyond WaitForMMEStart's bounded
+        ; three-second startup observation. Promote a late passive while this
+        ; exact request transaction is still retained; never issue a retry.
+        ActiveMMEStarted = True
+        ResetMMEDeadline()
+        TraceActive("MME passive detected late by watchdog; request tracking promoted")
+    EndIf
+
+    If ActiveMMEStarted
+        If !passivePresent
+            ActiveMMEStarted = False
+            ActiveMMECompleted = True
+            TraceActive("MME passive ended without MME_MilkingDone; OStim continues")
+        ElseIf !ActiveOwnsThread
+            Float milkNow = MME_Storage.getMilkCurrent(ActiveMilkSource)
+            If milkNow < ActiveMilkBefore
+                ; We observed no passive before our request and observed MME add
+                ; it afterward. Once the first deduction is visible, ending the
+                ; loop matches MME's own animation-end lifecycle without risking
+                ; cancellation before the requested gameplay effect occurs.
+                TraceActive("milk deduction confirmed after OStim end | before=" + ActiveMilkBefore + " | after=" + milkNow + " | ending owned MME loop")
+                ActiveMilkSource.RemoveSpell(ActivePassiveSpell)
+            ElseIf ActiveMMEDeadline > 0.0 && Utility.GetCurrentRealTime() >= ActiveMMEDeadline
+                ; MME exposes a 1..300 second cycle. Continuous ownership beyond
+                ; a full configured cycle plus 30 seconds indicates a stale call.
+                TraceActive("MME passive exceeded owned request deadline without milk deduction; clearing stale passive")
+                ActiveMilkSource.RemoveSpell(ActivePassiveSpell)
+            EndIf
+        EndIf
     EndIf
 
     ; Revalidate ownership before scheduling another watchdog tick. Cleanup is
@@ -678,10 +720,21 @@ Function HandleWatchdogUpdate()
     If ActiveOwnsThread && !StillOwnsThread()
         RelinquishOwnership("OStim breastfeeding scene ended, changed, or entered auto mode")
     EndIf
-    If ActiveSession && ActiveOwnsThread
+    Bool awaitingLateMMEStart = ActiveMMERequested && !ActiveMMEStarted && !ActiveMMECompleted && ActiveMMEDeadline > Utility.GetCurrentRealTime()
+    If ActiveSession && (ActiveOwnsThread || ActiveMMEStarted || awaitingLateMMEStart)
         RequestWatchdog()
     Else
         EndSession("OStim ownership ended or changed")
+    EndIf
+EndFunction
+
+Function FinishOrWatchMME(String reason)
+    Bool awaitingLateMMEStart = ActiveMMERequested && !ActiveMMEStarted && !ActiveMMECompleted && ActiveMMEDeadline > Utility.GetCurrentRealTime()
+    If (ActiveMMEStarted && !ActiveMMECompleted) || awaitingLateMMEStart
+        TraceActive(reason + "; retaining transaction for MME startup/first cycle")
+        RequestWatchdog()
+    Else
+        EndSession(reason)
     EndIf
 EndFunction
 
