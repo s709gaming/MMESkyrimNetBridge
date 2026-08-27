@@ -567,12 +567,12 @@ Bool Function WaitForExpectedScene()
     While ActiveSession && ActiveOwnsThread && attempt < 20
         If MMEOStimIntegration.IsThreadRunning(ActiveThreadID)
             String currentScene = MMEOStimIntegration.GetThreadScene(ActiveThreadID)
-            If currentScene == ActiveSceneID && !MMEOStimIntegration.IsThreadInAutoMode(ActiveThreadID)
+            If MMEOStimIntegration.OwnsManualThreadForActors(ActiveThreadID, ActiveMilkSource, ActiveDrinker)
+                If currentScene != ActiveSceneID
+                    TraceActive("OStim startup accepted live scene ID=" + currentScene + " | selected scene ID=" + ActiveSceneID + " | ownership confirmed by thread actors/manual mode")
+                EndIf
                 Return True
-            ElseIf currentScene != "" && currentScene != ActiveSceneID
-                RelinquishOwnership("OStim entered a different scene during startup: " + currentScene)
-                Return False
-            ElseIf currentScene == ActiveSceneID && MMEOStimIntegration.IsThreadInAutoMode(ActiveThreadID)
+            ElseIf MMEOStimIntegration.IsThreadInAutoMode(ActiveThreadID)
                 RelinquishOwnership("another integration enabled OStim auto mode during startup")
                 Return False
             EndIf
@@ -626,7 +626,7 @@ Bool Function StillOwnsThread()
     If !ActiveSession || !ActiveOwnsThread
         Return False
     EndIf
-    Return MMEOStimIntegration.OwnsManualSceneForActors(ActiveThreadID, ActiveSceneID, ActiveMilkSource, ActiveDrinker)
+    Return MMEOStimIntegration.OwnsManualThreadForActors(ActiveThreadID, ActiveMilkSource, ActiveDrinker)
 EndFunction
 
 Function RelinquishOwnership(String reason)
@@ -645,9 +645,15 @@ EndFunction
 Event OnOStimThreadSceneChanged(String eventName, String sceneID, Float threadID, Form sender)
     If ActiveSession && threadID as Int == ActiveThreadID && sceneID != ActiveSceneID
         TraceActive("OStim thread_scenechanged received | scene=" + sceneID)
-        RelinquishOwnership("OStim thread changed to " + sceneID)
-        If !ActiveLaunching
-            FinishOrWatchMME("OStim scene changed")
+        If ActiveLaunching
+            ; Startup polling owns confirmation while OStim is still populating
+            ; the thread, so a transitional event cannot race actor assignment.
+            TraceActive("OStim startup scene transition deferred to actor/manual verification")
+        ElseIf !MMEOStimIntegration.OwnsManualThreadForActors(ActiveThreadID, ActiveMilkSource, ActiveDrinker)
+            RelinquishOwnership("OStim thread actors changed or thread entered auto mode at scene " + sceneID)
+            FinishOrWatchMME("OStim thread ownership changed")
+        Else
+            TraceActive("OStim scene ID changed but actor/manual ownership remains confirmed")
         EndIf
     EndIf
 EndEvent
