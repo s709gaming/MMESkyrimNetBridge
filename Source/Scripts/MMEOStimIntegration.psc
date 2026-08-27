@@ -166,7 +166,4 @@ EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
     Debug.Trace("[MME Extensions OStim] " + reportText)
-    If showNotification
-        Debug.Notification("OStim Debug: " + reportText)
-    EndIf
 EndFunction

@@ -363,31 +363,37 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
     If semanticIntent != ""
         requestTrace += " | semantic intent=" + semanticIntent
     EndIf
-    TraceAttempt(attemptID, diagnostic, requestTrace + " | normalized source=" + GetActorName(milkSource) + " | normalized drinker=" + GetActorName(drinker))
+    TraceAttempt(attemptID, diagnostic, requestTrace + " | normalized source=" + GetActorName(milkSource) + " " + milkSource + " | normalized drinker=" + GetActorName(drinker) + " " + drinker + " | active session=" + ActiveSession + " | active session ID=" + ActiveSessionID)
 
     ; Reject duplicate requests before any scene or MME work begins.
     If ActiveSession
         TraceAttempt(attemptID, diagnostic, "rejected: breastfeeding session already active | active session=#" + ActiveSessionID)
+        NotifyBreastfeedingResult(diagnostic, attemptID, "Breastfeeding request rejected.", milkSource, drinker, "Another breastfeeding session is already active.", ActiveSessionID)
         Return False
     EndIf
     If !MMEAlertsController.IsExtensionsEnabled()
         TraceAttempt(attemptID, diagnostic, "rejected: MME Extensions is disabled")
+        NotifyBreastfeedingResult(diagnostic, attemptID, "Breastfeeding request rejected.", milkSource, drinker, "MME Extensions is disabled.")
         Return False
     EndIf
     If !MMEOStimBreastfeeding.IsOStimDetected()
         TraceAttempt(attemptID, diagnostic, "rejected: OStim not detected")
+        NotifyBreastfeedingResult(diagnostic, attemptID, "Breastfeeding request rejected.", milkSource, drinker, "OStim is not installed or active.")
         Return False
     EndIf
     If !MMEOStimIntegration.IsSupportedVersion()
         TraceAttempt(attemptID, diagnostic, "rejected: OStim 7.2 or newer is required")
+        NotifyBreastfeedingResult(diagnostic, attemptID, "Breastfeeding request rejected.", milkSource, drinker, "OStim 7.2 or newer is required.")
         Return False
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0) != 1
         TraceAttempt(attemptID, diagnostic, "rejected: OStim breastfeeding toggle is off")
+        NotifyBreastfeedingResult(diagnostic, attemptID, "Breastfeeding request rejected.", milkSource, drinker, "OStim breastfeeding is disabled in MME Extensions.")
         Return False
     EndIf
     If milkSource == None || drinker == None || milkSource == drinker
         TraceAttempt(attemptID, diagnostic, "OStim preflight actors valid=FAIL")
+        NotifyBreastfeedingResult(diagnostic, attemptID, "Breastfeeding request rejected.", milkSource, drinker, "The giver or receiver is missing, or both roles use the same actor.")
         Return False
     EndIf
 
@@ -410,6 +416,7 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
     TraceAttempt(attemptID, diagnostic, "roles actor0/drinker=" + GetActorName(actors[0]) + " | actor1/source=" + GetActorName(actors[1]) + " | player actor0=" + playerIsActor0 + " | player actor1=" + playerIsActor1)
     If !MMEOStimIntegration.ValidatePairForCommit(actors, diagnostic, True, traceContext)
         TraceAttempt(attemptID, diagnostic, "OStim preflight=FAIL; see preceding reason")
+        NotifyBreastfeedingResult(diagnostic, attemptID, "Breastfeeding request rejected.", milkSource, drinker, "The giver or receiver is unavailable, busy, or incompatible with OStim.")
         Return False
     EndIf
     TraceAttempt(attemptID, diagnostic, "OStim preflight actors/same-cell/busy/combat/VerifyActors=PASS")
@@ -417,6 +424,7 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
     String sceneID = MMEOStimIntegration.FindSemanticScene(actors, 0, 1, "suckingnipples", diagnostic, traceContext)
     If sceneID == ""
         TraceAttempt(attemptID, diagnostic, "scene selection=FAIL")
+        NotifyBreastfeedingResult(diagnostic, attemptID, "Breastfeeding request rejected.", milkSource, drinker, "No compatible breastfeeding animation was found.")
         Return False
     EndIf
     TraceAttempt(attemptID, diagnostic, "scene selected=" + sceneID)
@@ -424,6 +432,7 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
     ; Recheck after scene search at the final builder commit boundary.
     If !MMEOStimIntegration.ValidatePairForCommit(actors, diagnostic, True, traceContext)
         TraceAttempt(attemptID, diagnostic, "commit revalidation=FAIL")
+        NotifyBreastfeedingResult(diagnostic, attemptID, "Breastfeeding request rejected.", milkSource, drinker, "The giver or receiver became unavailable before the scene started.")
         Return False
     EndIf
 
@@ -435,6 +444,7 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
     BeginSession(attemptID, caller, milkSource, drinker, passiveSpell, sceneID, diagnostic)
     Int threadID = MMEOStimIntegration.StartManualScene(actors, sceneID, "MMEExtensions,Breastfeeding", suppressPlayerControl, sceneDuration, diagnostic, traceContext)
     If threadID < 0
+        NotifyBreastfeedingResult(diagnostic, attemptID, "Breastfeeding failed to start.", milkSource, drinker, "OStim could not start the animation.")
         EndSession("OStim builder start rejected")
         Return False
     EndIf
@@ -446,11 +456,13 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
             StopOwnedThread("startup verification failed")
         EndIf
         TraceActive("started=false; expected scene was not confirmed")
+        NotifyBreastfeedingResult(diagnostic, attemptID, "Breastfeeding failed to start.", milkSource, drinker, "The OStim scene did not remain active with the expected participants.")
         EndSession("OStim startup verification failed")
         Return False
     EndIf
     String finalSceneID = MMEOStimIntegration.GetThreadScene(threadID)
     TraceActive("OStim thread started | thread=" + threadID + " | selected scene=" + sceneID + " | final current scene=" + finalSceneID + " | NoPlayerControl applied=" + suppressPlayerControl)
+    NotifyBreastfeedingResult(diagnostic, attemptID, "Breastfeeding started.", milkSource, drinker)
 
     ; MME is an optional gameplay sidecar. Its eligibility, startup, completion,
     ; or failure never determines the lifetime of the valid OStim animation.
@@ -554,7 +566,7 @@ EndFunction
 Function EndSession(String reason = "completed")
     ; Cleanup is deliberately idempotent and local. Never stop an OStim thread
     ; here: callers must first prove StillOwnsThread, then stop it explicitly.
-    TraceActive("cleanup reason=" + reason)
+    TraceActive("cleanup reason=" + reason + " | thread=" + ActiveThreadID + " | selected scene=" + ActiveSceneID + " | source=" + GetActorName(ActiveMilkSource) + " " + ActiveMilkSource + " | drinker=" + GetActorName(ActiveDrinker) + " " + ActiveDrinker + " | owns thread=" + ActiveOwnsThread + " | launching=" + ActiveLaunching + " | MME requested=" + ActiveMMERequested + " | MME started=" + ActiveMMEStarted + " | MME completed=" + ActiveMMECompleted + " | milk before=" + ActiveMilkBefore)
     UnregisterSessionEvents()
     ClearSessionState()
 EndFunction
@@ -650,6 +662,7 @@ Event OnOStimThreadSceneChanged(String eventName, String sceneID, Float threadID
             ; the thread, so a transitional event cannot race actor assignment.
             TraceActive("OStim startup scene transition deferred to actor/manual verification")
         ElseIf !MMEOStimIntegration.OwnsManualThreadForActors(ActiveThreadID, ActiveMilkSource, ActiveDrinker)
+            NotifyBreastfeedingResult(ActiveDiagnostic, ActiveSessionID, "Breastfeeding stopped.", ActiveMilkSource, ActiveDrinker, "The OStim thread changed participants or entered automatic mode.")
             RelinquishOwnership("OStim thread actors changed or thread entered auto mode at scene " + sceneID)
             FinishOrWatchMME("OStim thread ownership changed")
         Else
@@ -661,6 +674,9 @@ EndEvent
 Event OnOStimThreadEnd(String eventName, String json, Float threadID, Form sender)
     If ActiveSession && threadID as Int == ActiveThreadID
         TraceActive("OStim thread_end received | thread=" + (threadID as Int))
+        If !ActiveLaunching
+            NotifyBreastfeedingResult(ActiveDiagnostic, ActiveSessionID, "Breastfeeding complete.", ActiveMilkSource, ActiveDrinker)
+        EndIf
         RelinquishOwnership("OStim breastfeeding thread ended")
         If !ActiveLaunching
             FinishOrWatchMME("OStim thread ended normally")
@@ -754,13 +770,32 @@ EndFunction
 Function TraceAttempt(Int attemptID, Bool showNotification, String traceText)
     String line = "BF #" + attemptID + " " + traceText
     Debug.Trace("[MME Extensions OStim] " + line)
-    If showNotification
-        Debug.Notification(line)
-    EndIf
 EndFunction
 
 Function TraceActive(String traceText)
     TraceAttempt(ActiveSessionID, ActiveDiagnostic, traceText)
+EndFunction
+
+Function NotifyBreastfeedingResult(Bool enabled, Int attemptID, String resultText, Actor milkSource, Actor drinker, String reason = "", Int existingSessionID = 0)
+    If !enabled
+        Return
+    EndIf
+    String playerRole = "No"
+    If milkSource == Game.GetPlayer()
+        playerRole = "Yes (giver)"
+    ElseIf drinker == Game.GetPlayer()
+        playerRole = "Yes (receiver)"
+    EndIf
+    String notificationText = "MME BF Debug | Request #" + attemptID + "\n" + resultText
+    notificationText += "\nGiver: " + GetActorName(milkSource) + " | Receiver: " + GetActorName(drinker)
+    notificationText += "\nPlayer involved: " + playerRole
+    If reason != ""
+        notificationText += "\nReason: " + reason
+    EndIf
+    If existingSessionID > 0
+        notificationText += "\nActive session: #" + existingSessionID + " | New request: #" + attemptID
+    EndIf
+    Debug.Notification(notificationText)
 EndFunction
 
 Bool Function IsMMEProcessingEligible(Actor milkSource, MilkQUEST milkController)
@@ -847,7 +882,4 @@ EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
     Debug.Trace("[MME Extensions OStim] " + reportText)
-    If showNotification
-        Debug.Notification("OStim Debug: " + reportText)
-    EndIf
 EndFunction
