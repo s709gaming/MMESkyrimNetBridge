@@ -29,7 +29,6 @@ Float Property BoobMAX Auto
 Float Property BoobIncr Auto
 Float Property BoobPerLvl Auto
 Int Property GushPct Auto
-Int Property Milking_Duration Auto
 Spell Property BeingMilkedPassive Auto
 Spell Property MME_MakeMilkmaid_Spell Auto
 Spell Property MilkSelf Auto

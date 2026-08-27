@@ -249,6 +249,43 @@ A relatively small addition if you want more unpredictable Milk Maid gameplay.
 
 ---
 
+## Elsie LaVache for MME - SE
+
+https://www.loverslab.com/files/file/4310-elsie-lavache-for-mme/
+
+**Major content expansion.**
+
+The male/futa-player version of the Elsie / Milk Maid quest setup.
+
+Adds Elsie as a follower along with quests, bimbo like NPC behavior, autonomous breastfeeding, and other MME-related content.
+
+**Warning:** Autonomous breastfeeding may cause issues if activated on followers. (Bug) Can cause the first dialog attempt to NPC not be responsive, making you talk to them again.
+
+---
+
+## The Milk Maid - SE
+
+https://www.loverslab.com/files/file/10373-the-milk-maid/
+
+Essentially the **female-player version of Elsie LaVache**, placing the player into the Milk Maid role instead of using the male/futa-oriented setup.
+
+If you like the idea behind Elsie but play a female character, this is generally the version to look at.
+
+**Warning:** Autonomous breastfeeding may cause issues if activated on followers. May lack the quest that turns Maven into a busty cougar.
+
+---
+
+## Elsie LaVache - 3BA BodySlide
+
+https://www.loverslab.com/topic/199374-elsie-lavache-3ba-conversion/
+
+3BA BodySlide files for Elsie LaVache.
+
+This is a body conversion for the SE mod, not a separate gameplay version.
+
+Recommended if you use Elsie with a modern 3BA setup.
+
+---
 
 ## Being a Cow - Alternate Version
 

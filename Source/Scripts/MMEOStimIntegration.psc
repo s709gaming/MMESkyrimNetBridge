@@ -85,12 +85,8 @@ Bool Function OwnsManualScene(Int threadID, String expectedSceneID) Global
     Return threadID >= 0 && expectedSceneID != "" && OThread.IsRunning(threadID) && OThread.GetScene(threadID) == expectedSceneID && !OThread.IsInAutoMode(threadID)
 EndFunction
 
-Bool Function OwnsManualThreadForActors(Int threadID, Actor firstActor, Actor secondActor) Global
-    ; OStim may report a transitional or normalized scene ID after Start even
-    ; though the returned thread is the requested fixed/manual interaction.
-    ; Prove ownership using the stable thread facts instead: it is still
-    ; running, remains manual, and contains exactly the actors we committed.
-    If threadID < 0 || firstActor == None || secondActor == None || !OThread.IsRunning(threadID) || OThread.IsInAutoMode(threadID)
+Bool Function OwnsManualSceneForActors(Int threadID, String expectedSceneID, Actor firstActor, Actor secondActor) Global
+    If !OwnsManualScene(threadID, expectedSceneID) || firstActor == None || secondActor == None
         Return False
     EndIf
     Actor[] threadActors = OThread.GetActors(threadID)
@@ -166,4 +162,7 @@ EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
     Debug.Trace("[MME Extensions OStim] " + reportText)
+    If showNotification
+        Debug.Notification("OStim Debug: " + reportText)
+    EndIf
 EndFunction
