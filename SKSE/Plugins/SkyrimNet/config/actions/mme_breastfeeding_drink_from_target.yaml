@@ -1,0 +1,14 @@
+name: StartBreastfeedingDrinkFromTarget
+label: Drink from target's breast
+description: "Dedicated breastfeeding action: the speaker drinks from the selected target's breast. Use this instead of any generic OStim care/sex action whenever that exact consensual nipple-sucking intent is agreed. In this action only, speaker = drinker and target = milk source; use StartBreastfeedingMilkShare when the speaker is the source. The source need not be an MME Milk Maid when the OStim backend is enabled; MME milk effects are optional. The target may be {{ player.name }} or another nearby actor."
+questEditorId: MMEAlertDebugQuest
+scriptName: MMEAlertsController
+executionFunctionName: StartBreastfeedingDrinkFromTarget
+defaultPriority: 9
+parameterMapping:
+  - type: speaker
+    name: drinker
+    description: the speaker who will drink from the target's breast; this actor is the drinker, never the milk source
+  - type: dynamic
+    name: milkSource
+    description: the nearby actor whose breast is being used; this actor is the milk source, never the drinker

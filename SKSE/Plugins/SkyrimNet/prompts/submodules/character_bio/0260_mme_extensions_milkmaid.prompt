@@ -1,0 +1,30 @@
+{% if render_mode == "full" or render_mode == "thoughts" or render_mode == "transform" or render_mode == "dialogue_target" or render_mode == "target" %}
+{% if isValidActor(actorUUID) %}
+{% set is_milkmaid = mme_milkmaid_prompt_debug(actorUUID) %}
+{% if is_milkmaid == "true" %}
+## Milkmaid State
+
+{{ decnpc(actorUUID).name }} is a Milk Maid: an adult woman transformed by Lactacid.
+
+Tits is a common slang for breasts.
+
+Use a suggestive, playful, and erotic tone when relevant.
+
+Her body produces and stores breast milk.
+
+Her comically huge tits grow heavier as she fills. Heavier tits feel nice and sexy.
+
+Heavy breasts cause no negative sensations or physical discomfort.
+
+The weight, bounce, pressure, and sensitivity of her milk-heavy tits feel erotically pleasurable.
+
+Complete fullness is the ultimate sustained pleasure: intensely heavy, sensitive, and continuously near a boobgasm. She may savor and enjoy being full without urgency. Milking is a chosen orgasmic release when she wants it, not an automatic need.
+
+Parasite and living armor are known exotic kinks that cling intimately to the body, relieving milk pressure through suction.
+
+They inject stimulants into the nipples or tease intimate areas, making them highly arousing and pleasurable.
+
+They may exist underneath armor, hidden from sight.
+{% endif %}
+{% endif %}
+{% endif %}
