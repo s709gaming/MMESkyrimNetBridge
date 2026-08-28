@@ -138,7 +138,8 @@ select a playful line from an editable JSON database.
 - Runs on randomized Skyrim game-time intervals (12 +/- 4 hours by default).
 - Randomly chooses one valid nearby Player or NPC Milk Maid.
 - Works without Skyrim.Net and never changes milk or other gameplay state.
-- Can optionally mirror the exact shown line as short-lived Skyrim.Net context.
+- Can optionally request a direct Skyrim.Net narration from the selected Milk
+  Maid's semantic fullness and armor situation.
 - Includes a 15-second testing mode on the controller's shared scheduler plus
   optional HUD diagnostics that explain every skipped Thought attempt.
 
@@ -567,7 +568,7 @@ Polling remains available only where useful, with an adjustable interval.
 
 - `MMEAlert.esp` - plugin containing MME Extensions records.
 - `SKSE/Plugins/StorageUtilData/MMEAlerts/SkyrimNet.json` - editable Skyrim.Net event messages.
-- `SKSE/Plugins/StorageUtilData/MMEAlerts/Thoughts.json` - the single wording source for local Thoughts and optional Skyrim.Net Thought context.
+- `SKSE/Plugins/StorageUtilData/MMEAlerts/Thoughts.json` - the editable wording source for local Thought notifications.
 - `SkyrimNetPrompts/0260_mme_extensions_milkmaid.prompt` - actor-specific Milk Maid context.
 - `SkyrimNetPrompts/0950_mme_extensions_breastfeeding.prompt` - temporary, actor-specific SexLab breastfeeding dialogue guidance.
 - `fomod/` - installer metadata and optional defaults.

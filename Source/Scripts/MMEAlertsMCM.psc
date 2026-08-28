@@ -125,13 +125,13 @@ Int stripAllArmorOverrideOption
 Int milkMaidThoughtsOption
 Int milkMaidThoughtsIntervalOption
 Int milkMaidThoughtsRandomnessOption
-Int mirrorMilkMaidThoughtsOption
+Int milkMaidThoughtNarrationOption
 Int milkMaidThoughtsDebugOption
 Int traceMilkMaidThoughtsLogicOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 89
+    Return 90
 EndFunction
 
 Function SetPageNames()
@@ -823,6 +823,14 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsTraceMigration88", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Preserve the user's former mirror choice while upgrading the output from a
+    ; short-lived context event to token-using direct narration.
+    If JsonUtil.GetIntValue(SettingsFile, "milkMaidThoughtNarrationMigration90", 0) == 0
+        Int previousMirrorValue = JsonUtil.GetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtNarration", previousMirrorValue)
+        JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtNarrationMigration90", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -987,7 +995,7 @@ Event OnPageReset(String page)
     milkMaidThoughtsOption = -1
     milkMaidThoughtsIntervalOption = -1
     milkMaidThoughtsRandomnessOption = -1
-    mirrorMilkMaidThoughtsOption = -1
+    milkMaidThoughtNarrationOption = -1
     milkMaidThoughtsDebugOption = -1
     traceMilkMaidThoughtsLogicOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
@@ -1150,7 +1158,7 @@ Event OnPageReset(String page)
         milkMaidThoughtsOption = AddToggleOption("Milk Maid Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughts", 1) == 1)
         milkMaidThoughtsIntervalOption = AddSliderOption("Poll Interval", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0), "{0} game hours")
         milkMaidThoughtsRandomnessOption = AddSliderOption("Randomness (+/-)", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0), "{0} game hours")
-        mirrorMilkMaidThoughtsOption = AddToggleOption("Mirror to Skyrim.Net", JsonUtil.GetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", 1) == 1)
+        milkMaidThoughtNarrationOption = AddToggleOption("Skyrim.Net Thought Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtNarration", 1) == 1)
         AddHeaderOption("Testing")
         milkMaidThoughtsDebugOption = AddToggleOption("15 Second Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1)
         traceMilkMaidThoughtsLogicOption = AddToggleOption("Trace Thoughts Logic", JsonUtil.GetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0) == 1)
@@ -1440,8 +1448,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Set the base interval in Skyrim game-time hours. Each completed normal poll schedules a fresh interval.")
     ElseIf option == milkMaidThoughtsRandomnessOption
         SetInfoText("Randomly subtract or add up to this many game-time hours. The final interval never falls below two hours.")
-    ElseIf option == mirrorMilkMaidThoughtsOption
-        SetInfoText("Reuse the exact shown Thought as short-lived Skyrim.Net context when Skyrim.Net is available.")
+    ElseIf option == milkMaidThoughtNarrationOption
+        SetInfoText("Ask Skyrim.Net for a direct, AI-generated reaction to each normal game-hour Thought. The 15-second test remains local-only.")
     ElseIf option == milkMaidThoughtsDebugOption
         SetInfoText("Attempt one local Thought notification every 15 real-time seconds using the controller's shared single-update scheduler. Debug Thoughts are not mirrored to Skyrim.Net.")
     ElseIf option == traceMilkMaidThoughtsLogicOption
@@ -1499,9 +1507,9 @@ Event OnOptionSelect(Int option)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughts", value)
         SetToggleOptionValue(option, value == 1)
         RefreshThoughtSchedule()
-    ElseIf option == mirrorMilkMaidThoughtsOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", 1)
-        JsonUtil.SetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", value)
+    ElseIf option == milkMaidThoughtNarrationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtNarration", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == milkMaidThoughtsDebugOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)

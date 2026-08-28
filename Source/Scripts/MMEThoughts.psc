@@ -70,7 +70,7 @@ EndFunction
 ; The one shared normal/debug content pipeline. It performs no gameplay writes:
 ; one valid actor, one authoritative fullness read, one armor classification,
 ; one JSON roll, one placeholder render, and one notification.
-Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowMirror) Global
+Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowNarration) Global
     If scannedActors == None || scannedActors.Length == 0
         ReportFailure("nearby scan returned no actors")
         Return False
@@ -120,13 +120,15 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowMirror) Gl
         Return False
     EndIf
 
-    Int entryCount = JsonUtil.StringListCount("/MMEAlerts/Thoughts", poolName)
-    If entryCount <= 0
+    ; Thoughts.json is ordinary JSON, not a PapyrusUtil StringList database.
+    ; PathStringElements resolves the hand-written array at .<poolName>.
+    String[] entries = JsonUtil.PathStringElements("/MMEAlerts/Thoughts", "." + poolName)
+    If entries == None || entries.Length == 0
         ReportFailure("Thoughts.json pool is missing or empty: " + poolName)
         Return False
     EndIf
-    Int entryIndex = Utility.RandomInt(0, entryCount - 1)
-    String template = JsonUtil.StringListGet("/MMEAlerts/Thoughts", poolName, entryIndex)
+    Int entryIndex = Utility.RandomInt(0, entries.Length - 1)
+    String template = entries[entryIndex]
     If template == ""
         ReportFailure("blank Thoughts.json entry in " + poolName + " at index " + entryIndex)
         Return False
@@ -148,10 +150,10 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowMirror) Gl
     EndIf
 
     Debug.Notification(selectedComment)
-    If allowMirror && JsonUtil.GetIntValue("/MMEAlerts/Settings", "mirrorMilkMaidThoughtsToSkyrimNet", 1) == 1
-        ; The already-resolved string is the only payload. Skyrim.Net never rolls
-        ; or renders a second line, and its helper safely gates API availability.
-        MMEAlertsSkyrimNet.SendMilkMaidThought(selectedActor, selectedComment)
+    If allowNarration && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkMaidThoughtNarration", 1) == 1
+        ; Skyrim.Net receives semantic state, not the prewritten HUD line, and
+        ; generates its own direct narration. Rapid debug passes False here.
+        MMEAlertsSkyrimNet.NarrateMilkMaidThought(selectedActor, halfPlus, armorClass)
     EndIf
     Return True
 EndFunction

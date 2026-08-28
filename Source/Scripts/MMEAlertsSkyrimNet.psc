@@ -772,28 +772,72 @@ Function SendNearbyArmorStatuses(Actor playerActor, String statuses, Int armorCo
     Debug.Trace("[MMEAlert SkyrimNet] Nearby armor status result " + result + " | entries " + armorCount + " | " + statuses)
 EndFunction
 
-; Mirrors the exact already-resolved local Thought as short-lived context. This
-; never generates prose or requests narration, and every direct API call remains
-; behind the existing Skyrim.Net availability boundary.
-Function SendMilkMaidThought(Actor milkMaid, String selectedComment) Global
-    If !IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "mirrorMilkMaidThoughtsToSkyrimNet", 1) != 1
+; Requests one AI-generated reaction to the semantic state selected by a normal
+; game-time Thought. The rapid 15-second test never calls this function.
+Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass) Global
+    String settingsFile = "/MMEAlerts/Settings"
+    Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "traceMilkMaidThoughtsLogic", 0) == 1
+    If !IsExtensionsEnabled() || JsonUtil.GetIntValue(settingsFile, "enableMilkMaidThoughtNarration", 1) != 1
+        If diagnostic
+            Debug.Notification("Thoughts narration: skipped - feature disabled")
+        EndIf
         Return
     EndIf
-    If milkMaid == None || selectedComment == ""
+    If milkMaid == None || armorClass < 0 || armorClass > 3
+        If diagnostic
+            Debug.Notification("Thoughts narration: skipped - invalid actor or armor class")
+        EndIf
         Return
     EndIf
     If !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
-        If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkMaidThoughtsDebug", 0) == 1
-            Debug.Trace("[MMEAlert SkyrimNet] Milk Maid Thought mirror skipped; Skyrim.Net unavailable or disabled")
+        If diagnostic
+            Debug.Notification("Thoughts narration: skipped - Skyrim.Net unavailable or disabled")
         EndIf
         Return
     EndIf
 
-    Int ttlMs = JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "thoughtTtlMs", 60000)
-    Int result = SkyrimNetApi.RegisterShortLivedEvent("milk_maid_thought", "milk_maid_thought", selectedComment, "{}", ttlMs, milkMaid, None)
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkMaidThoughtsDebug", 0) == 1
-        Debug.Trace("[MMEAlert SkyrimNet] Milk Maid Thought result " + result + " | TTL=" + ttlMs + " | " + selectedComment)
+    Float cooldown = JsonUtil.GetFloatValue("/MMEAlerts/SkyrimNet", "thoughtNarrationCooldownSeconds", 60.0)
+    Float now = Utility.GetCurrentRealTime()
+    Float last = JsonUtil.GetFloatValue(settingsFile, "lastMilkMaidThoughtNarrationRealTime", -1.0)
+    If last > now
+        last = -1.0
     EndIf
+    If last >= 0.0 && now - last < cooldown
+        If diagnostic
+            Int remaining = (cooldown - (now - last)) as Int
+            Debug.Notification("Thoughts narration: skipped - cooldown " + remaining + "s")
+        EndIf
+        Return
+    EndIf
+
+    String actorName = ResolveActorName(milkMaid, "The Milk Maid")
+    String fullnessSituation = "is below half capacity, and her milk supply is beginning to build again"
+    If halfPlus
+        fullnessSituation = "is at least half full, with a noticeably heavy and growing milk supply"
+    EndIf
+    String armorSituation = "wearing no milking equipment"
+    If armorClass == 1
+        armorSituation = "wearing fitted milking equipment around her breasts"
+    ElseIf armorClass == 2
+        armorSituation = "wearing living armor whose tendrils eagerly tend her breasts"
+    ElseIf armorClass == 3
+        armorSituation = "wearing possessive parasite armor curled around her breasts"
+    EndIf
+    String content = actorName + " is an MME Milk Maid who " + fullnessSituation + ". She is " + armorSituation + ". React creatively with playful, suggestive humor. Do not simply restate the situation."
+    If diagnostic
+        Debug.Notification("Thoughts narration: sending direct narration")
+    EndIf
+    Int result = SkyrimNetApi.DirectNarration(content, None, None)
+    If result == 0
+        JsonUtil.SetFloatValue(settingsFile, "lastMilkMaidThoughtNarrationRealTime", now)
+        JsonUtil.Save(settingsFile, False)
+        If diagnostic
+            Debug.Notification("Thoughts narration: accepted [0]")
+        EndIf
+    ElseIf diagnostic
+        Debug.Notification("Thoughts narration: rejected [" + result + "]")
+    EndIf
+    Debug.Trace("[MMEAlert SkyrimNet] Milk Maid Thought DirectNarration result " + result + " | " + content)
 EndFunction
 
 ; Publishes one replaceable five-minute summary from the existing capacity scan.

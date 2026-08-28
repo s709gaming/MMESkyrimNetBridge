@@ -7,7 +7,7 @@
   "milkmaidCreatedMessage": "{actor} has become a Milk Maid! Her breasts now feel pleasantly heavy, full, and faintly thrilling.",
   "drinkTtlMs": 90000,
   "milkingTtlMs": 60000,
-  "thoughtTtlMs": 60000,
+  "thoughtNarrationCooldownSeconds": 60.0,
   "milkStatusesTtlMs": 300000,
   "capacityMilestoneTtlMs": 120000
 }
