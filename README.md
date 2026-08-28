@@ -139,8 +139,8 @@ select a playful line from an editable JSON database.
 - Randomly chooses one valid nearby Player or NPC Milk Maid.
 - Works without Skyrim.Net and never changes milk or other gameplay state.
 - Can optionally mirror the exact shown line as short-lived Skyrim.Net context.
-- Includes rapid testing that reuses the existing nearby scan without adding a
-  timer or actor scan.
+- Includes a 15-second testing mode on the controller's shared scheduler plus
+  optional HUD diagnostics that explain every skipped Thought attempt.
 
 ---
 
@@ -544,7 +544,7 @@ Polling remains available only where useful, with an adjustable interval.
 - `MMEAlertsMCM.psc` - MCM pages, settings, defaults, migrations, tooltips, and diagnostics.
 - `MMEAlertsPlayerEffect.psc` - restores the controller after startup and save loading.
 - `MMEAlertsSkyrimNet.psc` - Skyrim.Net checks, prompts, events, nearby summaries, and forced narration.
-- `MMEThoughts.psc` - game-time ambient Thought scheduling, shared normal/debug selection, JSON rendering, and local notifications.
+- `MMEThoughts.psc` - stateless normal/debug Thought selection, JSON rendering, and local notifications; the existing controller owns both schedules for save-upgrade safety.
 - `MMEDrinkTracker.psc` - player and NPC milk-drinking detection.
 - `MMEMilkDrinkEffects.psc` - shared drinking reaction sounds.
 - `MMEMilkBoost.psc` - milk-bonus calculation and capacity-safe application.

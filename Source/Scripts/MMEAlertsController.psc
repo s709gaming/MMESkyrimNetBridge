@@ -18,6 +18,7 @@ Float NearbyRange = 2000.0
 Float NextCapacityUpdate = 0.0
 Float NextSkyrimNetUpdate = 0.0
 Float NextDebugUpdate = 0.0
+Float NextThoughtDebugUpdate = 0.0
 Float NextArmorCheck = 0.0
 Float NextDialogueDiagnosticUpdate = 0.0
 Float NextOStimBreastfeedingWatchdog = 0.0
@@ -169,6 +170,7 @@ Function DisableController()
     NextCapacityUpdate = 0.0
     NextSkyrimNetUpdate = 0.0
     NextDebugUpdate = 0.0
+    NextThoughtDebugUpdate = 0.0
     NextArmorCheck = 0.0
     MMEArmorScript.CancelPlayerArmorCheck(Game.GetPlayer())
     ; Restore MME's own stripping while MME Extensions is disabled.
@@ -183,14 +185,28 @@ Function DisableController()
     MMEOpeningRefreshSnapshotAt = 0.0
 EndFunction
 
-; Keeps the isolated game-time Thoughts chain synchronized with controller
-; startup, load recovery, and the MME Extensions master toggle.
+; Own the game-time registration on this established quest script. Existing
+; saves already have this VM instance, unlike newly attached quest scripts.
 Function RefreshThoughtScheduling()
-    MMEThoughts thoughtService = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEThoughts
-    If thoughtService != None
-        thoughtService.UpdateSchedule()
+    UnregisterForUpdateGameTime()
+    If !MMEThoughts.IsNormalThoughtsEnabled()
+        MMEThoughts.TraceDebug("normal schedule disabled")
+        Return
     EndIf
+    Float baseInterval = JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0)
+    Float randomness = JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0)
+    Float nextInterval = MMEThoughts.CalculateNextInterval(baseInterval, randomness)
+    RegisterForSingleUpdateGameTime(nextInterval)
+    MMEThoughts.TraceDebug("normal schedule armed | next=" + nextInterval + " game hours")
 EndFunction
+
+Event OnUpdateGameTime()
+    If MMEThoughts.IsNormalThoughtsEnabled()
+        Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
+        MMEThoughts.GenerateAndShowThought(nearbyActors, True)
+    EndIf
+    RefreshThoughtScheduling()
+EndEvent
 
 ; Exposes one dependency-free quest condition for the optional dialogue INFOs.
 Function RefreshOStimDialogueAvailability()
@@ -686,6 +702,7 @@ Function UpdatePolling()
         NextCapacityUpdate = 0.0
         NextSkyrimNetUpdate = 0.0
         NextDebugUpdate = 0.0
+        NextThoughtDebugUpdate = 0.0
         NextDialogueDiagnosticUpdate = 0.0
         LastDialogueDiagnosticActor = None
         PendingDialogueDiagnosticActor = None
@@ -709,6 +726,11 @@ Function UpdatePolling()
         NextDebugUpdate = now + 5.0
     Else
         NextDebugUpdate = 0.0
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1
+        NextThoughtDebugUpdate = now + 15.0
+    Else
+        NextThoughtDebugUpdate = 0.0
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
         ; The native TESTopicInfoEvent sink schedules this precisely when the
@@ -775,6 +797,15 @@ Function ScheduleNextUpdate()
             delay = candidate
         EndIf
     EndIf
+    If NextThoughtDebugUpdate > 0.0
+        candidate = NextThoughtDebugUpdate - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
+    EndIf
     If NextArmorCheck > 0.0
         candidate = NextArmorCheck - now
         If candidate <= 0.0
@@ -829,10 +860,11 @@ Event OnUpdate()
     Bool capacityDue = NextCapacityUpdate > 0.0 && now >= NextCapacityUpdate
     Bool skyrimNetDue = NextSkyrimNetUpdate > 0.0 && now >= NextSkyrimNetUpdate
     Bool debugDue = NextDebugUpdate > 0.0 && now >= NextDebugUpdate
+    Bool thoughtDebugDue = NextThoughtDebugUpdate > 0.0 && now >= NextThoughtDebugUpdate
     Bool dialogueDiagnosticDue = NextDialogueDiagnosticUpdate > 0.0 && now >= NextDialogueDiagnosticUpdate
     Bool ostimBreastfeedingDue = NextOStimBreastfeedingWatchdog > 0.0 && now >= NextOStimBreastfeedingWatchdog
-    If capacityDue || skyrimNetDue
-        ScanNearbyMilkMaids(skyrimNetDue, capacityDue)
+    If capacityDue || skyrimNetDue || thoughtDebugDue
+        ScanNearbyMilkMaids(skyrimNetDue, capacityDue, thoughtDebugDue)
     EndIf
     ; Advance recurring deadlines from this callback's timestamp. One-shot
     ; dialogue and armor deadlines are cleared only when their work is consumed.
@@ -845,6 +877,9 @@ Event OnUpdate()
     If debugDue
         ShowDebugCapacitySnapshot()
         NextDebugUpdate = now + 5.0
+    EndIf
+    If thoughtDebugDue
+        NextThoughtDebugUpdate = now + 15.0
     EndIf
     If dialogueDiagnosticDue
         ; Prefer Skyrim's live speaker at evaluation time. The event sender is a
@@ -1547,18 +1582,26 @@ Int Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactio
 EndFunction
 
 ; Scans the current cell and selects one highest-priority capacity sound.
-Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReactions = True)
+Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReactions = True, Bool runRapidThought = False)
     ; Phase 1: scan the player and current cell once for all consumers. Only
     ; loaded actors inside NearbyRange are considered; MME membership is checked
     ; again by ProcessActor/Skyrim.Net helpers before publication.
     Actor[] reactionActors = new Actor[128]
     Int[] reactionKinds = new Int[128]
     Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
+    If runRapidThought
+        MMEThoughts.RunFastDebug(nearbyActors)
+    EndIf
     If nearbyActors == None || nearbyActors.Length == 0
         Debug.Trace("[MME Extensions Native Scan] scanner returned no actors; capacity scan skipped")
         If JsonUtil.GetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0) == 1
             Debug.Notification("Native Scan failed: no actors returned")
         EndIf
+        Return
+    EndIf
+    ; Thought-only deadlines exit after the shared pipeline consumes the native
+    ; result; capacity/status enumeration remains reserved for its own deadlines.
+    If runRapidThought && !publishSkyrimNet && !processReactions
         Return
     EndIf
 
@@ -1610,15 +1653,6 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
         EndIf
         i += 1
     EndWhile
-    ; Rapid Thoughts testing consumes this exact native result. The setting check
-    ; is the only added scan-path overhead while disabled; no timer or scan is
-    ; created for debug mode.
-    If JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1
-        MMEThoughts thoughtService = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEThoughts
-        If thoughtService != None
-            thoughtService.RunFastDebug(nearbyActors)
-        EndIf
-    EndIf
     If publishSkyrimNet
         MMEAlertsSkyrimNet.SendNearbyMilkStatuses(Game.GetPlayer(), milkStatuses, nearbyActors.Length, milkmaidCount)
         MMEAlertsSkyrimNet.SendNearbyArmorStatuses(Game.GetPlayer(), armorStatuses, armorCount)

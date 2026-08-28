@@ -127,10 +127,11 @@ Int milkMaidThoughtsIntervalOption
 Int milkMaidThoughtsRandomnessOption
 Int mirrorMilkMaidThoughtsOption
 Int milkMaidThoughtsDebugOption
+Int traceMilkMaidThoughtsLogicOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 87
+    Return 89
 EndFunction
 
 Function SetPageNames()
@@ -319,6 +320,7 @@ Function EnsureDefaults()
         JsonUtil.SetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0)
         JsonUtil.SetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0)
         JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsMigration87", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
@@ -804,8 +806,8 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "breastfeedingMilkEffectsMigration86", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
-    ; Adds the isolated game-time ambient Thoughts scheduler and its rapid shared-
-    ; scan debug hook. Each value is seeded once so existing user choices remain
+    ; Adds ambient Thoughts and the rapid shared-scan debug hook. Each value is
+    ; seeded once so existing user choices remain
     ; untouched on all later MCM updates.
     If JsonUtil.GetIntValue(SettingsFile, "milkMaidThoughtsMigration87", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughts", 1)
@@ -814,6 +816,11 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsMigration87", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "milkMaidThoughtsTraceMigration88", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsTraceMigration88", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
 EndFunction
@@ -982,6 +989,7 @@ Event OnPageReset(String page)
     milkMaidThoughtsRandomnessOption = -1
     mirrorMilkMaidThoughtsOption = -1
     milkMaidThoughtsDebugOption = -1
+    traceMilkMaidThoughtsLogicOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -1144,7 +1152,8 @@ Event OnPageReset(String page)
         milkMaidThoughtsRandomnessOption = AddSliderOption("Randomness (+/-)", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0), "{0} game hours")
         mirrorMilkMaidThoughtsOption = AddToggleOption("Mirror to Skyrim.Net", JsonUtil.GetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", 1) == 1)
         AddHeaderOption("Testing")
-        milkMaidThoughtsDebugOption = AddToggleOption("Milk Maid Thoughts Debug", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1)
+        milkMaidThoughtsDebugOption = AddToggleOption("15 Second Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1)
+        traceMilkMaidThoughtsLogicOption = AddToggleOption("Trace Thoughts Logic", JsonUtil.GetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0) == 1)
         Return
     EndIf
     If page == "Debug"
@@ -1434,7 +1443,9 @@ Event OnOptionHighlight(Int option)
     ElseIf option == mirrorMilkMaidThoughtsOption
         SetInfoText("Reuse the exact shown Thought as short-lived Skyrim.Net context when Skyrim.Net is available.")
     ElseIf option == milkMaidThoughtsDebugOption
-        SetInfoText("Generate rapid Thoughts from the existing nearby scan. Adds no timer or actor scan and does not mirror debug Thoughts to Skyrim.Net.")
+        SetInfoText("Attempt one local Thought notification every 15 real-time seconds using the controller's shared single-update scheduler. Debug Thoughts are not mirrored to Skyrim.Net.")
+    ElseIf option == traceMilkMaidThoughtsLogicOption
+        SetInfoText("Show an in-game notification explaining why a 15-second Thought attempt was skipped.")
     EndIf
 EndEvent
 
@@ -1496,6 +1507,14 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", value)
         SetToggleOptionValue(option, value == 1)
+        (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
+    ElseIf option == traceMilkMaidThoughtsLogicOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", value)
+        SetToggleOptionValue(option, value == 1)
+        If value == 1 && JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) != 1
+            Debug.Notification("Thoughts trace enabled; turn on 15 Second Thoughts to run checks")
+        EndIf
     ElseIf option == debugMilkReportOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDebugMilkReport", value)
@@ -1826,9 +1845,9 @@ Function ToggleArmorSetting(Int option, String settingKey, Int defaultValue)
 EndFunction
 
 Function RefreshThoughtSchedule()
-    MMEThoughts thoughtService = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEThoughts
-    If thoughtService != None
-        thoughtService.UpdateSchedule()
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller != None
+        controller.RefreshThoughtScheduling()
     EndIf
 EndFunction
 

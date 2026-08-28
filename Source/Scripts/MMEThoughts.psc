@@ -1,68 +1,45 @@
 Scriptname MMEThoughts extends Quest
 
-; Lightweight, non-LLM ambient Milk Maid observations. Normal scheduling uses
-; game-time hours and is deliberately separate from the controller's real-time
-; deadline scheduler. Rapid debug calls enter through RunFastDebug with the
-; controller's already-scanned actor array.
-
-String SettingsFile = "/MMEAlerts/Settings"
-String ThoughtsFile = "/MMEAlerts/Thoughts"
-Float NearbyRange = 2000.0
-
-Event OnInit()
-    UpdateSchedule()
-EndEvent
-
-; Replaces the one pending game-time registration. Calling this repeatedly is
-; safe because unregister happens before every optional re-registration.
-Function UpdateSchedule()
-    UnregisterForUpdateGameTime()
-    If !IsNormalThoughtsEnabled()
-        TraceDebug("normal schedule disabled")
-        Return
-    EndIf
-
-    Float baseInterval = JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0)
-    Float randomness = JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0)
-    Float nextInterval = CalculateNextInterval(baseInterval, randomness)
-    RegisterForSingleUpdateGameTime(nextInterval)
-    TraceDebug("normal schedule armed | next=" + nextInterval + " game hours")
-EndFunction
-
-; A single update consumes its registration. Poll first, then calculate and arm
-; a fresh randomized interval even when no valid actor or JSON line is found.
-Event OnUpdateGameTime()
-    If IsNormalThoughtsEnabled()
-        Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
-        GenerateAndShowThought(nearbyActors, True)
-    EndIf
-    UpdateSchedule()
-EndEvent
+; Stateless, non-LLM Milk Maid Thought selection and rendering. The established
+; controller quest owns scheduling so upgrades work in existing saves where a
+; newly attached quest script would not receive a live VM instance.
 
 ; Fast visible testing only. The caller must pass the array returned by an
 ; existing scan; this function never scans and never schedules an update.
-Function RunFastDebug(Actor[] alreadyScannedActors)
-    If !IsExtensionsEnabled() || JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) != 1
+Function RunFastDebug(Actor[] alreadyScannedActors) Global
+    If !IsExtensionsEnabled()
+        ReportFailure("MME Extensions is disabled")
         Return
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkMaidThoughtsDebug", 0) != 1
+        ReportFailure("15 Second Thoughts is disabled")
+        Return
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "traceMilkMaidThoughtsLogic", 0) == 1
+        Int scannedCount = 0
+        If alreadyScannedActors != None
+            scannedCount = alreadyScannedActors.Length
+        EndIf
+        Debug.Notification("Thoughts trace: 15-second check fired; scanned " + scannedCount + " actor(s)")
     EndIf
     GenerateAndShowThought(alreadyScannedActors, False)
 EndFunction
 
-Bool Function IsExtensionsEnabled()
-    Return JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1) == 1
+Bool Function IsExtensionsEnabled() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMMEExtensions", 1) == 1
 EndFunction
 
-Bool Function IsNormalThoughtsEnabled()
-    Return IsExtensionsEnabled() && JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughts", 1) == 1
+Bool Function IsNormalThoughtsEnabled() Global
+    Return IsExtensionsEnabled() && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkMaidThoughts", 1) == 1
 EndFunction
 
-Bool Function IsDebugEnabled()
-    Return JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1
+Bool Function IsDebugEnabled() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkMaidThoughtsDebug", 0) == 1
 EndFunction
 
 ; effectiveRandomness = Min(randomness, baseInterval - 2). Defensive clamps
 ; preserve the MCM's 2..48 and 0..12 contracts if JSON is edited by hand.
-Float Function CalculateNextInterval(Float baseInterval, Float randomness)
+Float Function CalculateNextInterval(Float baseInterval, Float randomness) Global
     If baseInterval < 2.0
         baseInterval = 2.0
     ElseIf baseInterval > 48.0
@@ -93,23 +70,23 @@ EndFunction
 ; The one shared normal/debug content pipeline. It performs no gameplay writes:
 ; one valid actor, one authoritative fullness read, one armor classification,
 ; one JSON roll, one placeholder render, and one notification.
-Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowMirror)
+Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowMirror) Global
     If scannedActors == None || scannedActors.Length == 0
-        TraceDebug("thought skipped | nearby actor array empty")
+        ReportFailure("nearby scan returned no actors")
         Return False
     EndIf
-    If !JsonUtil.JsonExists(ThoughtsFile)
-        TraceDebug("thought skipped | JSON file missing=" + ThoughtsFile)
+    If !JsonUtil.JsonExists("/MMEAlerts/Thoughts")
+        ReportFailure("Thoughts.json is missing (/MMEAlerts/Thoughts)")
         Return False
     EndIf
-    If !JsonUtil.IsGood(ThoughtsFile)
-        TraceDebug("thought skipped | JSON file failed to parse=" + ThoughtsFile)
+    If !JsonUtil.IsGood("/MMEAlerts/Thoughts")
+        ReportFailure("Thoughts.json failed to parse (/MMEAlerts/Thoughts)")
         Return False
     EndIf
 
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None
-        TraceDebug("thought skipped | MME controller unavailable")
+        ReportFailure("MME_MilkQUEST is unavailable")
         Return False
     EndIf
 
@@ -118,18 +95,18 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowMirror)
     ; candidate array or silently truncating a large native result.
     Int validCount = CountValidCandidates(scannedActors, milkController)
     If validCount <= 0
-        TraceDebug("thought skipped | no valid nearby Milk Maids")
+        ReportFailure("scan found " + scannedActors.Length + " actor(s), but none are loaded valid MME Milk Maids")
         Return False
     EndIf
     Actor selectedActor = SelectRandomCandidate(scannedActors, milkController, validCount)
     If selectedActor == None
-        TraceDebug("thought skipped | random candidate did not resolve")
+        ReportFailure("random Milk Maid selection failed after finding " + validCount + " candidate(s)")
         Return False
     EndIf
 
     Float maximum = MME_Storage.getMilkMaximum(selectedActor)
     If maximum <= 0.0
-        TraceDebug("thought skipped | actor=" + ResolveActorName(selectedActor) + " | invalid maximum=" + maximum)
+        ReportFailure(ResolveActorName(selectedActor) + " has invalid maximum milk: " + maximum)
         Return False
     EndIf
     Float current = MME_Storage.getMilkCurrent(selectedActor)
@@ -139,26 +116,26 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowMirror)
     Int armorClass = MMEArmorScript.ClassifyArmor(milkController, wornArmor, "thought", selectedActor)
     String poolName = GetPoolName(halfPlus, armorClass)
     If poolName == ""
-        TraceDebug("thought skipped | unsupported armor class=" + armorClass)
+        ReportFailure("unsupported armor class " + armorClass + " for " + ResolveActorName(selectedActor))
         Return False
     EndIf
 
-    Int entryCount = JsonUtil.StringListCount(ThoughtsFile, poolName)
+    Int entryCount = JsonUtil.StringListCount("/MMEAlerts/Thoughts", poolName)
     If entryCount <= 0
-        TraceDebug("thought skipped | JSON pool missing or empty=" + poolName)
+        ReportFailure("Thoughts.json pool is missing or empty: " + poolName)
         Return False
     EndIf
     Int entryIndex = Utility.RandomInt(0, entryCount - 1)
-    String template = JsonUtil.StringListGet(ThoughtsFile, poolName, entryIndex)
+    String template = JsonUtil.StringListGet("/MMEAlerts/Thoughts", poolName, entryIndex)
     If template == ""
-        TraceDebug("thought skipped | invalid JSON value | pool=" + poolName + " | index=" + entryIndex)
+        ReportFailure("blank Thoughts.json entry in " + poolName + " at index " + entryIndex)
         Return False
     EndIf
 
     String actorName = ResolveActorName(selectedActor)
     String selectedComment = RenderActorToken(template, actorName)
     If selectedComment == ""
-        TraceDebug("thought skipped | actor placeholder replacement failed | pool=" + poolName + " | index=" + entryIndex)
+        ReportFailure("{actor} replacement failed in " + poolName + " at index " + entryIndex)
         Return False
     EndIf
 
@@ -171,7 +148,7 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowMirror)
     EndIf
 
     Debug.Notification(selectedComment)
-    If allowMirror && JsonUtil.GetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", 1) == 1
+    If allowMirror && JsonUtil.GetIntValue("/MMEAlerts/Settings", "mirrorMilkMaidThoughtsToSkyrimNet", 1) == 1
         ; The already-resolved string is the only payload. Skyrim.Net never rolls
         ; or renders a second line, and its helper safely gates API availability.
         MMEAlertsSkyrimNet.SendMilkMaidThought(selectedActor, selectedComment)
@@ -179,7 +156,7 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowMirror)
     Return True
 EndFunction
 
-Int Function CountValidCandidates(Actor[] scannedActors, MilkQUEST milkController)
+Int Function CountValidCandidates(Actor[] scannedActors, MilkQUEST milkController) Global
     Int validCount = 0
     Int i = 0
     While i < scannedActors.Length
@@ -191,7 +168,7 @@ Int Function CountValidCandidates(Actor[] scannedActors, MilkQUEST milkControlle
     Return validCount
 EndFunction
 
-Actor Function SelectRandomCandidate(Actor[] scannedActors, MilkQUEST milkController, Int validCount)
+Actor Function SelectRandomCandidate(Actor[] scannedActors, MilkQUEST milkController, Int validCount) Global
     If validCount <= 0
         Return None
     EndIf
@@ -211,7 +188,7 @@ Actor Function SelectRandomCandidate(Actor[] scannedActors, MilkQUEST milkContro
     Return None
 EndFunction
 
-Bool Function IsValidCandidate(Actor candidate, MilkQUEST milkController)
+Bool Function IsValidCandidate(Actor candidate, MilkQUEST milkController) Global
     If candidate == None || !candidate.Is3DLoaded()
         Return False
     EndIf
@@ -220,7 +197,7 @@ Bool Function IsValidCandidate(Actor candidate, MilkQUEST milkController)
     Return MMEArmorScript.IsValidMilkMaid(candidate, milkController)
 EndFunction
 
-String Function GetPoolName(Bool halfPlus, Int armorClass)
+String Function GetPoolName(Bool halfPlus, Int armorClass) Global
     If halfPlus
         If armorClass == 0
             Return "halfPlus_noArmor"
@@ -245,7 +222,7 @@ String Function GetPoolName(Bool halfPlus, Int armorClass)
     Return ""
 EndFunction
 
-String Function ResolveActorName(Actor candidate)
+String Function ResolveActorName(Actor candidate) Global
     If candidate == None
         Return "The Milk Maid"
     EndIf
@@ -264,7 +241,7 @@ EndFunction
 
 ; Every shipped entry contains exactly one {actor}. Missing placeholders are
 ; treated as malformed content rather than showing unresolved or unrelated text.
-String Function RenderActorToken(String template, String actorName)
+String Function RenderActorToken(String template, String actorName) Global
     Int tokenIndex = StringUtil.Find(template, "{actor}")
     If tokenIndex < 0
         Return ""
@@ -277,8 +254,15 @@ String Function RenderActorToken(String template, String actorName)
     Return beforeToken + actorName + afterToken
 EndFunction
 
-Function TraceDebug(String traceText)
+Function TraceDebug(String traceText) Global
     If IsDebugEnabled()
         Debug.Trace("[MMEThoughts] " + traceText)
+    EndIf
+EndFunction
+
+Function ReportFailure(String reason) Global
+    TraceDebug("thought skipped | " + reason)
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "traceMilkMaidThoughtsLogic", 0) == 1
+        Debug.Notification("Thoughts trace: " + reason)
     EndIf
 EndFunction
