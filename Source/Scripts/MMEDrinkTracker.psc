@@ -65,6 +65,13 @@ Event OnNativePotionConsumed(String eventName, String pluginName, Float localFor
     If drinkKind == 0
         Return
     EndIf
+    ; MME/OStim breastfeeding equips a real basic-milk item as native parity.
+    ; A validated breastfeeding session owns its narrow completion effects, so
+    ; do not route that synthetic equip through the full ordinary drink pipeline.
+    MMEDebug breastfeedingService = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
+    If breastfeedingService != None && breastfeedingService.ShouldSuppressBreastfeedingDrink(drinker)
+        Return
+    EndIf
     If drinker == Game.GetPlayer()
         HandleNativePlayerDrink(drinker, drinkItem, drinkKind, pluginName, localFormID)
     Else

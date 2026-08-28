@@ -33,6 +33,8 @@ String ActiveCaller = ""
 ; state becomes authoritative as soon as StartThread succeeds.
 String SexLabLockKey = "MME.Extensions.SexLabBreastfeeding.Lock"
 String SexLabLockTimeKey = "MME.Extensions.SexLabBreastfeeding.LockTime"
+String SexLabRoleKey = "MME.Extensions.SexLabBreastfeeding.Role"
+String SexLabThreadKey = "MME.Extensions.SexLabBreastfeeding.Thread"
 Int SexLabAttemptSequence = 0
 
 ; Quest startup delegates normal scheduling to the controller.
@@ -254,12 +256,102 @@ Event OnSexLabBreastfeedingEnd(String eventName, String threadIDText, Float numA
     If thread == None || thread.Positions == None
         Return
     EndIf
+    Actor drinker = None
     Int index = 0
     While index < thread.Positions.Length
+        Actor participant = thread.Positions[index]
+        If participant != None && StorageUtil.GetStringValue(participant, SexLabRoleKey, "") == "drinker" && StorageUtil.GetIntValue(participant, SexLabThreadKey, -1) == threadID
+            drinker = participant
+        EndIf
         MMEAlertsSkyrimNet.ClearBreastfeedingPromptState(thread.Positions[index], threadID)
         index += 1
     EndWhile
+    If drinker != None
+        ApplyBreastfeedingDrinkEffects(drinker)
+    EndIf
 EndEvent
+
+; The native MME SexLab hook and the OStim parity adapter equip basic milk at
+; scene start. Suppress that equip from the ordinary drink transaction so it
+; cannot add the Extensions bonus early or trigger narration, animation, or a
+; drink notification. The validated scene-end path below owns the two effects.
+Bool Function ShouldSuppressBreastfeedingDrink(Actor drinker)
+    If drinker == None
+        Return False
+    EndIf
+    If ActiveSession && ActiveDrinker == drinker
+        Return True
+    EndIf
+    ; The dialogue observer may still be waiting for SexLab startup when MME's
+    ; AnimationStart hook equips the milk. Inspect the live animation as a
+    ; race-free fallback instead of depending only on our later role marker.
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController != None && milkController.SexLab != None && milkController.SexLab.IsActorActive(drinker)
+        sslThreadController thread = milkController.SexLab.GetActorController(drinker)
+        If thread != None
+            If thread.HasTag("Breastfeeding")
+                Return True
+            EndIf
+            If milkController.SexLab.AnimSlots != None && (thread.Animation == milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding") || thread.Animation == milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar"))
+                Return True
+            EndIf
+        EndIf
+    EndIf
+    Return StorageUtil.GetStringValue(drinker, SexLabRoleKey, "") == "drinker" && StorageUtil.GetIntValue(drinker, SexLabThreadKey, -1) >= 0
+EndFunction
+
+; Applies only the two requested actor-safe effects. It deliberately bypasses
+; MMEDrinkTracker's full transaction (sound, dialogue, narration, animation,
+; notifications, publication, and deferred post-drink processing).
+Function ApplyBreastfeedingDrinkEffects(Actor drinker) Global
+    String configFile = "/MMEAlerts/Settings"
+    Bool diagnostic = JsonUtil.GetIntValue(configFile, "enableBreastfeedingMilkEffectsDebug", 0) == 1
+    If JsonUtil.GetIntValue(configFile, "enableBreastfeedingMilkEffects", 1) != 1
+        BreastfeedingDrinkReport(diagnostic, "skipped | toggle off")
+        Return
+    EndIf
+    If drinker == None
+        BreastfeedingDrinkReport(diagnostic, "skipped | no drinker")
+        Return
+    EndIf
+
+    ; Breastfeeding counts as ordinary MME milk, never Lactacid. Disabling the
+    ; drink-attempt marker prevents armor/overflow follow-up outside this scope.
+    Bool isMilkMaid = StorageUtil.HasFloatValue(drinker, "MME.MilkMaid.Level")
+    Float milkAdded = MMEMilkBoost.ApplyMilkDrinkBonusForActor(drinker, 1, False, False)
+    Int arousalBefore = MMEArousalBridge.GetCurrentArousal(drinker)
+    Bool arousalSent = MMEArousalBridge.ApplyMilkDrinkArousalForActor(drinker, None, False)
+    Float arousalAdded = 0.0
+    If arousalSent
+        arousalAdded = JsonUtil.GetFloatValue(configFile, "milkDrinkArousal", 10.0)
+        If arousalAdded < 0.0
+            arousalAdded = 0.0
+        ElseIf arousalAdded > 100.0
+            arousalAdded = 100.0
+        EndIf
+        If arousalBefore >= 0 && arousalBefore as Float + arousalAdded > 100.0
+            arousalAdded = 100.0 - arousalBefore as Float
+        EndIf
+    EndIf
+
+    String actorLabel = "NPC"
+    If drinker == Game.GetPlayer()
+        actorLabel = "Player"
+    EndIf
+    String result = actorLabel + " | milk +" + milkAdded
+    If !isMilkMaid
+        result += " | not Milk Maid"
+    EndIf
+    result += " | arousal +" + arousalAdded
+    BreastfeedingDrinkReport(diagnostic, result)
+EndFunction
+
+Function BreastfeedingDrinkReport(Bool enabled, String result) Global
+    If enabled
+        Debug.Trace("[MME Extensions BF Drink] " + result)
+        Debug.Notification("BF Drink: " + result)
+    EndIf
+EndFunction
 
 String Function SexLabPairFailure(Actor milkSource, Actor drinker, MilkQUEST milkController)
     If milkSource == None
@@ -636,7 +728,12 @@ EndEvent
 Event OnOStimThreadEnd(String eventName, String json, Float threadID, Form sender)
     If ActiveSession && threadID as Int == ActiveThreadID
         TraceActive("OStim thread_end received | thread=" + (threadID as Int))
+        Bool completed = ActiveOwnsThread && !ActiveLaunching
+        Actor drinker = ActiveDrinker
         RelinquishOwnership("OStim breastfeeding thread ended")
+        If completed
+            ApplyBreastfeedingDrinkEffects(drinker)
+        EndIf
         If !ActiveLaunching
             EndSession("OStim thread ended normally")
         EndIf
@@ -646,7 +743,12 @@ EndEvent
 Event OnOStimEnd(String eventName, String json, Float numArg, Form sender)
     If ActiveSession && ActiveIncludesPlayer && ActiveThreadID == 0
         TraceActive("legacy OStim end received | thread=0")
+        Bool completed = ActiveOwnsThread && !ActiveLaunching
+        Actor drinker = ActiveDrinker
         RelinquishOwnership("OStim breastfeeding thread ended")
+        If completed
+            ApplyBreastfeedingDrinkEffects(drinker)
+        EndIf
         If !ActiveLaunching
             EndSession("OStim player thread ended normally")
         EndIf

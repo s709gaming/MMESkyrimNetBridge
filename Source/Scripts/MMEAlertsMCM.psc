@@ -19,6 +19,8 @@ Int debugMilkingEventsOption
 Int milkmaidLevelBonusOption
 Int flatMilkBonusOption
 Int addMilkDebugOption
+Int breastfeedingMilkEffectsOption
+Int breastfeedingMilkEffectsDebugOption
 Int lactacidMultiplierOption
 Int skyrimNetDrinkDiagnosticOption
 Int skyrimNetMilkingDiagnosticOption
@@ -123,7 +125,7 @@ Int stripAllArmorOverrideOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 85
+    Return 86
 EndFunction
 
 Function SetPageNames()
@@ -212,6 +214,9 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1)
         JsonUtil.SetFloatValue(SettingsFile, "flatMilkBonus", 1.0)
         JsonUtil.SetIntValue(SettingsFile, "enableAddMilkDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffectsDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "breastfeedingMilkEffectsMigration86", 1)
         JsonUtil.SetFloatValue(SettingsFile, "lactacidFlatMultiplier", 2.0)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0)
@@ -779,6 +784,14 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorLookupForensicsMigration85", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds the optional scene-completion milk/arousal effect. It starts enabled
+    ; for both new and existing installations; its dedicated diagnostic is quiet.
+    If JsonUtil.GetIntValue(SettingsFile, "breastfeedingMilkEffectsMigration86", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffectsDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "breastfeedingMilkEffectsMigration86", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -837,6 +850,8 @@ Event OnPageReset(String page)
     milkmaidLevelBonusOption = -1
     flatMilkBonusOption = -1
     addMilkDebugOption = -1
+    breastfeedingMilkEffectsOption = -1
+    breastfeedingMilkEffectsDebugOption = -1
     lactacidMultiplierOption = -1
     skyrimNetDrinkDiagnosticOption = -1
     skyrimNetMilkingDiagnosticOption = -1
@@ -944,6 +959,8 @@ Event OnPageReset(String page)
         milkmaidLevelBonusOption = AddToggleOption("MME Level Bonus", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1) == 1)
         flatMilkBonusOption = AddSliderOption("Flat Milk Bonus", JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 1.0), "+{1} milk")
         lactacidMultiplierOption = AddSliderOption("Lactacid Multiplier", JsonUtil.GetFloatValue(SettingsFile, "lactacidFlatMultiplier", 2.0), "x{1}")
+        AddHeaderOption("Breastfeeding")
+        breastfeedingMilkEffectsOption = AddToggleOption("Breastfeeding Gives Milk", JsonUtil.GetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", 1) == 1)
         AddHeaderOption("NPC Milk Drinking")
         npcMilkEffectsOption = AddToggleOption("NPC Milk Effects", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1) == 1)
         npcDrinkNotificationsOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1) == 1)
@@ -1102,6 +1119,7 @@ Event OnPageReset(String page)
         debugMilkReportOption = AddToggleOption("Milk Status Every 5 Seconds", JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0) == 1)
         AddHeaderOption("Milk Drinking")
         addMilkDebugOption = AddToggleOption("Milk Drinking Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1)
+        breastfeedingMilkEffectsDebugOption = AddToggleOption("Breastfeeding Milk Effects", JsonUtil.GetIntValue(SettingsFile, "enableBreastfeedingMilkEffectsDebug", 0) == 1)
         npcMilkConsumptionDiagnosticOption = AddToggleOption("NPC Milk Consumption", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0) == 1)
         npcDrinkNotificationsDiagnosticOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1)
         AddHeaderOption("Armor Debug")
@@ -1232,6 +1250,10 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report nearby Milkmaid capacity every five seconds.")
     ElseIf option == addMilkDebugOption
         SetInfoText("Report the full player milk-drink transaction: detection, sound, milk bonus math, arousal, notification, and MME add results.")
+    ElseIf option == breastfeedingMilkEffectsOption
+        SetInfoText("After a validated OStim or SexLab breastfeeding scene completes, apply only the milk and milk-drink arousal bonuses to the drinker.")
+    ElseIf option == breastfeedingMilkEffectsDebugOption
+        SetInfoText("Show one short result when breastfeeding milk and arousal effects apply or are skipped.")
     ElseIf option == skyrimNetDrinkDiagnosticOption
         SetInfoText("Report SkyrimNet milk-drink payloads and API results.")
     ElseIf option == skyrimNetMilkingDiagnosticOption
@@ -1485,6 +1507,14 @@ Event OnOptionSelect(Int option)
     ElseIf option == addMilkDebugOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableAddMilkDebug", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == breastfeedingMilkEffectsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == breastfeedingMilkEffectsDebugOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBreastfeedingMilkEffectsDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffectsDebug", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == npcMilkEffectsOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1)

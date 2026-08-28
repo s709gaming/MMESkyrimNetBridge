@@ -17,7 +17,7 @@ Function ApplyMilkDrinkBonus(Actor drinker, Int drinkKind) Global
 EndFunction
 
 ; Shared actor-safe calculation used by validated player and NPC entry points.
-Float Function ApplyMilkDrinkBonusForActor(Actor drinker, Int drinkKind, Bool showDebug = False) Global
+Float Function ApplyMilkDrinkBonusForActor(Actor drinker, Int drinkKind, Bool showDebug = False, Bool recordDrinkAttempt = True) Global
     ; Phase 1: require MME's level key, then calculate the configured flat,
     ; Lactacid, and optional maid-level components without changing state.
     String settingsFile = "/MMEAlerts/Settings"
@@ -74,7 +74,9 @@ Float Function ApplyMilkDrinkBonusForActor(Actor drinker, Int drinkKind, Bool sh
         EndIf
         ; Preserve the attempted post-drink value independently of MME's real
         ; stored value. Only the delayed armor threshold check uses this value.
-        MMEArmorScript.MarkPlayerDrinkAttempt(drinker, attemptedMilk, attemptedOverflow)
+        If recordDrinkAttempt
+            MMEArmorScript.MarkPlayerDrinkAttempt(drinker, attemptedMilk, attemptedOverflow)
+        EndIf
         MME_Storage.changeMilkCurrent(drinker, milkAdded, enforceMilkLimit)
         ; Phase 3: refresh MME visual size only after a real stored increase and
         ; return the actual delta, not the requested amount.
