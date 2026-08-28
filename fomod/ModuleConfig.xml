@@ -16,7 +16,7 @@
   <installSteps order="Explicit">
     <installStep name="Quick Start and MME Defaults">
       <optionalFileGroups order="Explicit">
-        <group name="Choose a startup profile" type="SelectExactlyOne">
+        <group name="MAKE SURE MME EXTENSIONS LOADS AFTER THE ORIGINAL MILK MOD ECONOMY&#10;Choose a startup profile" type="SelectExactlyOne">
           <plugins order="Explicit">
 
             <plugin name="(Quick Start) Convenience MCM Defaults + Free milk on start">
