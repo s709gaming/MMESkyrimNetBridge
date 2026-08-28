@@ -101,6 +101,7 @@ Function InitializeController()
     ; Phase 4: start shared schedules, then baseline existing Milk Maids. The
     ; baseline prevents established actors from being narrated as new creations.
     UpdatePolling()
+    RefreshThoughtScheduling()
     BaselineKnownMilkmaids()
 EndFunction
 
@@ -174,11 +175,21 @@ Function DisableController()
     MMEArmorScript.ApplyArmorStrippingMasterToggle()
     NextDialogueDiagnosticUpdate = 0.0
     NextOStimBreastfeedingWatchdog = 0.0
+    RefreshThoughtScheduling()
     LastDialogueDiagnosticActor = None
     PendingDialogueDiagnosticActor = None
     LastDialogueDiagnosticState = ""
     MMEOpeningRefreshObserved = False
     MMEOpeningRefreshSnapshotAt = 0.0
+EndFunction
+
+; Keeps the isolated game-time Thoughts chain synchronized with controller
+; startup, load recovery, and the MME Extensions master toggle.
+Function RefreshThoughtScheduling()
+    MMEThoughts thoughtService = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEThoughts
+    If thoughtService != None
+        thoughtService.UpdateSchedule()
+    EndIf
 EndFunction
 
 ; Exposes one dependency-free quest condition for the optional dialogue INFOs.
@@ -1599,6 +1610,15 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
         EndIf
         i += 1
     EndWhile
+    ; Rapid Thoughts testing consumes this exact native result. The setting check
+    ; is the only added scan-path overhead while disabled; no timer or scan is
+    ; created for debug mode.
+    If JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1
+        MMEThoughts thoughtService = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEThoughts
+        If thoughtService != None
+            thoughtService.RunFastDebug(nearbyActors)
+        EndIf
+    EndIf
     If publishSkyrimNet
         MMEAlertsSkyrimNet.SendNearbyMilkStatuses(Game.GetPlayer(), milkStatuses, nearbyActors.Length, milkmaidCount)
         MMEAlertsSkyrimNet.SendNearbyArmorStatuses(Game.GetPlayer(), armorStatuses, armorCount)

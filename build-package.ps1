@@ -17,7 +17,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $gameRoot "Data\SEQ\MMEAlert.seq"
-$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEArmorScript", "MMENPCDialog", "MMEVendorServices", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMEExtensionsNative")
+$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEThoughts", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEArmorScript", "MMENPCDialog", "MMEVendorServices", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
@@ -135,12 +135,16 @@ $packageOStimScene = Join-Path $stageDir "SKSE\Plugins\OStim\scenes\MMEExtension
 New-Item -ItemType Directory -Force -Path $packageOStimScene | Out-Null
 Copy-Item -LiteralPath $ostimBreastfeedingScene -Destination $packageOStimScene
 
-# Install the editable SkyrimNet message configuration at PapyrusUtil's JSON path.
-$skyrimNetConfig = Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\SkyrimNet.json"
-if (Test-Path -LiteralPath $skyrimNetConfig) {
-    $packageConfig = Join-Path $stageDir "SKSE\Plugins\StorageUtilData\MMEAlerts"
-    New-Item -ItemType Directory -Force -Path $packageConfig | Out-Null
-    Copy-Item -LiteralPath $skyrimNetConfig -Destination $packageConfig
+# Install editable PapyrusUtil JSON databases. Thoughts.json is the sole wording
+# source for local notifications and optional Skyrim.Net Thought context.
+$packageConfig = Join-Path $stageDir "SKSE\Plugins\StorageUtilData\MMEAlerts"
+New-Item -ItemType Directory -Force -Path $packageConfig | Out-Null
+foreach ($configName in @("SkyrimNet.json", "Thoughts.json")) {
+    $configPath = Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\$configName"
+    if (!(Test-Path -LiteralPath $configPath)) {
+        throw "Required JSON configuration is missing: $configPath"
+    }
+    Copy-Item -LiteralPath $configPath -Destination $packageConfig
 }
 
 # Install the additive actor-bio prompt without replacing any SkyrimNet-owned template.

@@ -772,6 +772,30 @@ Function SendNearbyArmorStatuses(Actor playerActor, String statuses, Int armorCo
     Debug.Trace("[MMEAlert SkyrimNet] Nearby armor status result " + result + " | entries " + armorCount + " | " + statuses)
 EndFunction
 
+; Mirrors the exact already-resolved local Thought as short-lived context. This
+; never generates prose or requests narration, and every direct API call remains
+; behind the existing Skyrim.Net availability boundary.
+Function SendMilkMaidThought(Actor milkMaid, String selectedComment) Global
+    If !IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "mirrorMilkMaidThoughtsToSkyrimNet", 1) != 1
+        Return
+    EndIf
+    If milkMaid == None || selectedComment == ""
+        Return
+    EndIf
+    If !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
+        If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkMaidThoughtsDebug", 0) == 1
+            Debug.Trace("[MMEAlert SkyrimNet] Milk Maid Thought mirror skipped; Skyrim.Net unavailable or disabled")
+        EndIf
+        Return
+    EndIf
+
+    Int ttlMs = JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "thoughtTtlMs", 60000)
+    Int result = SkyrimNetApi.RegisterShortLivedEvent("milk_maid_thought", "milk_maid_thought", selectedComment, "{}", ttlMs, milkMaid, None)
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkMaidThoughtsDebug", 0) == 1
+        Debug.Trace("[MMEAlert SkyrimNet] Milk Maid Thought result " + result + " | TTL=" + ttlMs + " | " + selectedComment)
+    EndIf
+EndFunction
+
 ; Publishes one replaceable five-minute summary from the existing capacity scan.
 Function SendNearbyMilkStatuses(Actor playerActor, String statuses, Int scannedCount, Int milkmaidCount) Global
     ; This is the milk-state sibling of nearby armor context. It consumes the

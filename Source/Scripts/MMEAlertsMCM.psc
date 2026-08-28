@@ -122,14 +122,19 @@ Int armorStripNotificationDiagnosticOption
 Int armorStripMoanDiagnosticOption
 Int armorStripNarrationDiagnosticOption
 Int stripAllArmorOverrideOption
+Int milkMaidThoughtsOption
+Int milkMaidThoughtsIntervalOption
+Int milkMaidThoughtsRandomnessOption
+Int mirrorMilkMaidThoughtsOption
+Int milkMaidThoughtsDebugOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 86
+    Return 87
 EndFunction
 
 Function SetPageNames()
-    Pages = new String[7]
+    Pages = new String[8]
     Pages[0] = "General"
     Pages[1] = "Milk Drinking"
     ; Build these page names at runtime so Papyrus's case-insensitive string
@@ -141,6 +146,7 @@ Function SetPageNames()
     Pages[4] = "Armor"
     Pages[5] = "Skyrim.Net"
     Pages[6] = "Debug"
+    Pages[7] = "Thoughts"
 EndFunction
 
 ; Creates the MCM pages and initializes controllers on first registration.
@@ -308,6 +314,12 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughts", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0)
+        JsonUtil.SetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsMigration87", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "lifecycleDiagnosticMigration35", 0) == 0
@@ -792,6 +804,18 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "breastfeedingMilkEffectsMigration86", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds the isolated game-time ambient Thoughts scheduler and its rapid shared-
+    ; scan debug hook. Each value is seeded once so existing user choices remain
+    ; untouched on all later MCM updates.
+    If JsonUtil.GetIntValue(SettingsFile, "milkMaidThoughtsMigration87", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughts", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0)
+        JsonUtil.SetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsMigration87", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -953,6 +977,11 @@ Event OnPageReset(String page)
     armorStripMoanDiagnosticOption = -1
     armorStripNarrationDiagnosticOption = -1
     stripAllArmorOverrideOption = -1
+    milkMaidThoughtsOption = -1
+    milkMaidThoughtsIntervalOption = -1
+    milkMaidThoughtsRandomnessOption = -1
+    mirrorMilkMaidThoughtsOption = -1
+    milkMaidThoughtsDebugOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -1106,6 +1135,16 @@ Event OnPageReset(String page)
             narrationFlags = OPTION_FLAG_DISABLED
         EndIf
         npcDrinkNarrationCooldownOption = AddSliderOption("NPC Drink Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "npcDrinkNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
+        Return
+    EndIf
+    If page == "Thoughts"
+        AddHeaderOption("Milk Maid Thoughts")
+        milkMaidThoughtsOption = AddToggleOption("Milk Maid Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughts", 1) == 1)
+        milkMaidThoughtsIntervalOption = AddSliderOption("Poll Interval", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0), "{0} game hours")
+        milkMaidThoughtsRandomnessOption = AddSliderOption("Randomness (+/-)", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0), "{0} game hours")
+        mirrorMilkMaidThoughtsOption = AddToggleOption("Mirror to Skyrim.Net", JsonUtil.GetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", 1) == 1)
+        AddHeaderOption("Testing")
+        milkMaidThoughtsDebugOption = AddToggleOption("Milk Maid Thoughts Debug", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1)
         Return
     EndIf
     If page == "Debug"
@@ -1386,6 +1425,16 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report dialogue target detection and MME Milkmaid validation.")
     ElseIf option == sexLabBreastfeedingDebugOption
         SetInfoText("Diagnose MME's original SexLab breastfeeding route when Hey there executes. Never changes eligibility.")
+    ElseIf option == milkMaidThoughtsOption
+        SetInfoText("Show occasional non-LLM flavor notifications about one nearby Milk Maid.")
+    ElseIf option == milkMaidThoughtsIntervalOption
+        SetInfoText("Set the base interval in Skyrim game-time hours. Each completed normal poll schedules a fresh interval.")
+    ElseIf option == milkMaidThoughtsRandomnessOption
+        SetInfoText("Randomly subtract or add up to this many game-time hours. The final interval never falls below two hours.")
+    ElseIf option == mirrorMilkMaidThoughtsOption
+        SetInfoText("Reuse the exact shown Thought as short-lived Skyrim.Net context when Skyrim.Net is available.")
+    ElseIf option == milkMaidThoughtsDebugOption
+        SetInfoText("Generate rapid Thoughts from the existing nearby scan. Adds no timer or actor scan and does not mirror debug Thoughts to Skyrim.Net.")
     EndIf
 EndEvent
 
@@ -1433,6 +1482,19 @@ Event OnOptionSelect(Int option)
     ElseIf option == notificationOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableCapacityNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableCapacityNotifications", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == milkMaidThoughtsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughts", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughts", value)
+        SetToggleOptionValue(option, value == 1)
+        RefreshThoughtSchedule()
+    ElseIf option == mirrorMilkMaidThoughtsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", 1)
+        JsonUtil.SetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == milkMaidThoughtsDebugOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == debugMilkReportOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0)
@@ -1763,6 +1825,13 @@ Function ToggleArmorSetting(Int option, String settingKey, Int defaultValue)
     SetToggleOptionValue(option, value == 1)
 EndFunction
 
+Function RefreshThoughtSchedule()
+    MMEThoughts thoughtService = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEThoughts
+    If thoughtService != None
+        thoughtService.UpdateSchedule()
+    EndIf
+EndFunction
+
 ; Configures the shared sound-volume and capacity-interval slider dialogs.
 Event OnOptionSliderOpen(Int option)
     If option == volumeOption
@@ -1774,6 +1843,16 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 15.0))
         SetSliderDialogDefaultValue(5.0)
         SetSliderDialogRange(3.0, 30.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == milkMaidThoughtsIntervalOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0))
+        SetSliderDialogDefaultValue(12.0)
+        SetSliderDialogRange(2.0, 48.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == milkMaidThoughtsRandomnessOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0))
+        SetSliderDialogDefaultValue(4.0)
+        SetSliderDialogRange(0.0, 12.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == skyrimNetStatusIntervalOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0))
@@ -1901,6 +1980,16 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
         (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
+    ElseIf option == milkMaidThoughtsIntervalOption
+        JsonUtil.SetFloatValue(SettingsFile, "milkMaidThoughtsInterval", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        RefreshThoughtSchedule()
+    ElseIf option == milkMaidThoughtsRandomnessOption
+        JsonUtil.SetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        RefreshThoughtSchedule()
     ElseIf option == skyrimNetStatusIntervalOption
         JsonUtil.SetFloatValue(SettingsFile, "skyrimNetStatusInterval", value)
         JsonUtil.Save(SettingsFile, False)

@@ -129,6 +129,21 @@ The NPC actually consumes the drink and receives the same enabled:
 
 ---
 
+# 💭 Milk Maid Thoughts
+
+Milk Maid Thoughts add occasional non-LLM flavor notifications about one nearby
+Milk Maid. Thoughts use her current MME fullness and worn MME armor category to
+select a playful line from an editable JSON database.
+
+- Runs on randomized Skyrim game-time intervals (12 +/- 4 hours by default).
+- Randomly chooses one valid nearby Player or NPC Milk Maid.
+- Works without Skyrim.Net and never changes milk or other gameplay state.
+- Can optionally mirror the exact shown line as short-lived Skyrim.Net context.
+- Includes rapid testing that reuses the existing nearby scan without adding a
+  timer or actor scan.
+
+---
+
 # 💦 Milk Fullness Reactions
 
 Milk Maids react as their breasts fill.
@@ -352,6 +367,7 @@ MCM pages include:
 - Arousal
 - Skyrim.Net
 - Debug
+- Thoughts
 
 Controls include:
 
@@ -528,6 +544,7 @@ Polling remains available only where useful, with an adjustable interval.
 - `MMEAlertsMCM.psc` - MCM pages, settings, defaults, migrations, tooltips, and diagnostics.
 - `MMEAlertsPlayerEffect.psc` - restores the controller after startup and save loading.
 - `MMEAlertsSkyrimNet.psc` - Skyrim.Net checks, prompts, events, nearby summaries, and forced narration.
+- `MMEThoughts.psc` - game-time ambient Thought scheduling, shared normal/debug selection, JSON rendering, and local notifications.
 - `MMEDrinkTracker.psc` - player and NPC milk-drinking detection.
 - `MMEMilkDrinkEffects.psc` - shared drinking reaction sounds.
 - `MMEMilkBoost.psc` - milk-bonus calculation and capacity-safe application.
@@ -550,6 +567,7 @@ Polling remains available only where useful, with an adjustable interval.
 
 - `MMEAlert.esp` - plugin containing MME Extensions records.
 - `SKSE/Plugins/StorageUtilData/MMEAlerts/SkyrimNet.json` - editable Skyrim.Net event messages.
+- `SKSE/Plugins/StorageUtilData/MMEAlerts/Thoughts.json` - the single wording source for local Thoughts and optional Skyrim.Net Thought context.
 - `SkyrimNetPrompts/0260_mme_extensions_milkmaid.prompt` - actor-specific Milk Maid context.
 - `SkyrimNetPrompts/0950_mme_extensions_breastfeeding.prompt` - temporary, actor-specific SexLab breastfeeding dialogue guidance.
 - `fomod/` - installer metadata and optional defaults.
