@@ -823,7 +823,7 @@ Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass) G
     ElseIf armorClass == 3
         armorSituation = "wearing possessive parasite armor curled around her breasts"
     EndIf
-    String content = actorName + " is an MME Milk Maid who " + fullnessSituation + ". She is " + armorSituation + ". React creatively with playful, suggestive humor. Do not simply restate the situation."
+    String content = actorName + " is an MME Milk Maid who " + fullnessSituation + ". She is " + armorSituation + ". React creatively with playful, humorous, and suggestive commentary. Do not simply restate the situation."
     If diagnostic
         Debug.Notification("Thoughts narration: sending direct narration")
     EndIf
