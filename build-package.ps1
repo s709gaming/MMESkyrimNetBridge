@@ -17,7 +17,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $gameRoot "Data\SEQ\MMEAlert.seq"
-$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEThoughts", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEArmorScript", "MMENPCDialog", "MMEVendorServices", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMEExtensionsNative")
+$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEThoughts", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEArmorScript", "MMENPCDialog", "MMEVendorServices", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
@@ -221,6 +221,10 @@ if (Test-Path -LiteralPath $pluginPath) {
     if (!$pluginText.Contains("MMEExt_OStimBreastfeeding_PlayerDrinksTopic") -or
         !$pluginText.Contains("MMEExt_OStimBreastfeeding_NPCDrinksTopic")) {
         throw "MMEAlert.esp still contains the obsolete same-DIAL OStim breastfeeding routes. Run the updated tools\AddMMEExtensionsOStimBreastfeedingDialogue.pas in SSEEdit and save the plugin before packaging."
+    }
+    if (!$pluginText.Contains("MMEExt_NewMilkMaidTopic") -or
+        !$pluginText.Contains("MMEExt_NewMilkMaid")) {
+        throw "MMEAlert.esp is missing the breastfeeding-to-Milk-Maid dialogue. Run tools\AddMMEExtensionsNewMilkMaidDialogue.pas in SSEEdit and save the plugin before packaging."
     }
     if (!$pluginText.Contains("HearthFires.esm")) {
         throw "MMEAlert.esp is missing the supported-milk dialogue eligibility update. Run the updated tools\AddMMEExtensionsMilkDialogue.pas in SSEEdit and save the plugin before packaging."

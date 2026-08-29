@@ -9,6 +9,7 @@ The `.pas` files are retained for archival and reproducibility purposes. Run the
 These scripts modify plugin records:
 
 - `AddMMEExtensionsMilkDialogue.pas`
+- `AddMMEExtensionsNewMilkMaidDialogue.pas`
 - `AttachMMESkyrimNetVoiceControls.pas`
 - `CreateMMEAlertMinimalSounds.pas`
 - `CreateMMEAlertSoundMarkers.pas`
@@ -47,6 +48,7 @@ INFO children produced by the earlier deep-copy implementation.
 These scripts inspect records without intentionally changing them:
 
 - `InspectMMEAlertSounds.pas`
+- `InspectMMEExtensionsNewMilkMaidSource.pas`
 - `InspectSkyrimNetPlayerAlias.pas`
 
 The PowerShell and batch files in this folder are developer maintenance helpers and are not included in the game package.

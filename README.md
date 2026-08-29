@@ -67,6 +67,16 @@ Instead of characters agreeing to something and then doing nothing:
 
 These gameplay actions are optional and can be disabled through the MCM.
 
+### Breastfeeding Creates a New Milk Maid
+
+When the player is an eligible MME Milk Maid with milk available, the **Hey
+there** dialogue includes **Wanna become a Milk Maid? Have a taste! Straight
+from the tap.** for an eligible NPC who is not already a Milk Maid. The option
+runs the existing OStim breastfeeding scene with the player as the source and
+the NPC as the drinker. Only a normally completed, owned scene can hand the NPC
+to MME's native Lactacid conversion effect, preserving MME's own eligibility,
+slot-assignment, confirmation, and creation sequence.
+
 ---
 
 ## 🥛 Drink ANY Milk (now powerful aphrodisiacs)
@@ -551,6 +561,7 @@ Polling remains available only where useful, with an adjustable interval.
 - `MMEMilkBoost.psc` - milk-bonus calculation and capacity-safe application.
 - `MMEArousalBridge.psc` - optional arousal integration.
 - `MMENPCDialog.psc` - Milk Maid dialogue, inventory selection, consumption, effects, and animation.
+- `MMENewMilkMaid.psc` - isolated breastfeeding-to-Milk-Maid request, completion validation, and canonical MME Lactacid creation trigger.
 - `MMEVendorServices.psc` - Blacksmith armor-service state, milk payment, and verified `MilkingEquipment` add/remove transactions.
 - `MMEAlertsFlatRateDefaults.psc` - optional FOMOD-selected MME preset.
 - `MMEAlertsQuickTest.psc` - compatibility/testing helper.

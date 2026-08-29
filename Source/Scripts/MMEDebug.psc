@@ -28,6 +28,7 @@ Bool ActiveIncludesPlayer = False
 Int AttemptSequence = 0
 Int ActiveSessionID = 0
 String ActiveCaller = ""
+String ActiveSemanticIntent = ""
 
 ; SexLab uses short-lived, actor-scoped startup locks. SexLab's own active
 ; state becomes authoritative as soon as StartThread succeeds.
@@ -506,7 +507,7 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
     If milkController != None
         passiveSpell = milkController.BeingMilkedPassive
     EndIf
-    BeginSession(attemptID, caller, milkSource, drinker, passiveSpell, sceneID, diagnostic)
+    BeginSession(attemptID, caller, semanticIntent, milkSource, drinker, passiveSpell, sceneID, diagnostic)
     Int threadID = MMEOStimIntegration.StartManualScene(actors, sceneID, "MMEExtensions,Breastfeeding", suppressPlayerControl, sceneDuration, diagnostic, traceContext)
     If threadID < 0
         EndSession("OStim builder start rejected")
@@ -561,7 +562,7 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
     Return True
 EndFunction
 
-Function BeginSession(Int sessionID, String caller, Actor milkSource, Actor drinker, Spell passiveSpell, String sceneID, Bool diagnostic)
+Function BeginSession(Int sessionID, String caller, String semanticIntent, Actor milkSource, Actor drinker, Spell passiveSpell, String sceneID, Bool diagnostic)
     ; Initialize every state flag as one atomic logical session before events
     ; are registered. ActiveLaunching prevents asynchronous completion from
     ; clearing fields while StartBreastfeeding is still on its startup stack.
@@ -574,6 +575,7 @@ Function BeginSession(Int sessionID, String caller, Actor milkSource, Actor drin
     ActiveDiagnostic = diagnostic
     ActiveSessionID = sessionID
     ActiveCaller = caller
+    ActiveSemanticIntent = semanticIntent
     ; No provisional player-thread ID: NPC-only Skyrim.Net pairs must wait for
     ; the positive ID returned by OStim and ignore legacy player-thread events.
     ActiveThreadID = -1
@@ -620,6 +622,7 @@ Function ClearSessionState()
     ActiveIncludesPlayer = False
     ActiveSessionID = 0
     ActiveCaller = ""
+    ActiveSemanticIntent = ""
 EndFunction
 
 Function EndSession(String reason = "completed")
@@ -729,10 +732,14 @@ Event OnOStimThreadEnd(String eventName, String json, Float threadID, Form sende
     If ActiveSession && threadID as Int == ActiveThreadID
         TraceActive("OStim thread_end received | thread=" + (threadID as Int))
         Bool completed = ActiveOwnsThread && !ActiveLaunching
+        Bool mmeProcessed = ActiveMMERequested && (ActiveMMEStarted || ActiveMMECompleted)
+        Actor milkSource = ActiveMilkSource
         Actor drinker = ActiveDrinker
+        String semanticIntent = ActiveSemanticIntent
         RelinquishOwnership("OStim breastfeeding thread ended")
         If completed
             ApplyBreastfeedingDrinkEffects(drinker)
+            MMENewMilkMaid.HandleBreastfeedingCompleted(milkSource, drinker, semanticIntent, mmeProcessed)
         EndIf
         If !ActiveLaunching
             EndSession("OStim thread ended normally")
@@ -744,10 +751,14 @@ Event OnOStimEnd(String eventName, String json, Float numArg, Form sender)
     If ActiveSession && ActiveIncludesPlayer && ActiveThreadID == 0
         TraceActive("legacy OStim end received | thread=0")
         Bool completed = ActiveOwnsThread && !ActiveLaunching
+        Bool mmeProcessed = ActiveMMERequested && (ActiveMMEStarted || ActiveMMECompleted)
+        Actor milkSource = ActiveMilkSource
         Actor drinker = ActiveDrinker
+        String semanticIntent = ActiveSemanticIntent
         RelinquishOwnership("OStim breastfeeding thread ended")
         If completed
             ApplyBreastfeedingDrinkEffects(drinker)
+            MMENewMilkMaid.HandleBreastfeedingCompleted(milkSource, drinker, semanticIntent, mmeProcessed)
         EndIf
         If !ActiveLaunching
             EndSession("OStim player thread ended normally")
