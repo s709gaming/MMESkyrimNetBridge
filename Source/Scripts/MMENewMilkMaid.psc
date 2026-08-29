@@ -13,6 +13,11 @@ Bool Function StartRequest(Actor milkSource, Actor candidate) Global
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableOStimDebug", 0) == 1
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
 
+    TraceStep("request target=" + GetActorIdentity(candidate))
+    If milkController != None && candidate != None
+        TraceStep("target state: maidSlot=" + FindMaidSlot(milkController, candidate) + " slaveSlot=" + FindSlaveSlot(milkController, candidate))
+    EndIf
+
     If milkSource != Game.GetPlayer()
         TraceStep("player is not the milk source", True)
         Report(diagnostic, "request rejected: the player must be the milk source")
@@ -164,11 +169,13 @@ String Function GetEligibilityFailure(Actor candidate, MilkQUEST milkController)
     If milkController.MilkMaid == None
         Return "Milk Maid array unavailable"
     EndIf
-    If milkController.MilkMaid.Find(candidate) != -1
-        Return "already a Milk Maid"
+    Int maidSlot = milkController.MilkMaid.Find(candidate)
+    If maidSlot != -1
+        Return "already a Milk Maid; slot=" + maidSlot + " target=" + GetActorIdentity(candidate)
     EndIf
-    If milkController.MilkSlave != None && milkController.MilkSlave.Find(candidate) != -1
-        Return "target is a Milk Slave"
+    Int slaveSlot = FindSlaveSlot(milkController, candidate)
+    If slaveSlot != -1
+        Return "target is a Milk Slave; slot=" + slaveSlot + " target=" + GetActorIdentity(candidate)
     EndIf
 
     ActorBase candidateBase = candidate.GetLeveledActorBase()
@@ -234,6 +241,27 @@ String Function GetActorName(Actor target) Global
         result = "Unknown actor"
     EndIf
     Return result
+EndFunction
+
+String Function GetActorIdentity(Actor target) Global
+    If target == None
+        Return "<no actor>"
+    EndIf
+    Return GetActorName(target) + " formID=" + target.GetFormID()
+EndFunction
+
+Int Function FindMaidSlot(MilkQUEST milkController, Actor target) Global
+    If milkController == None || milkController.MilkMaid == None || target == None
+        Return -1
+    EndIf
+    Return milkController.MilkMaid.Find(target)
+EndFunction
+
+Int Function FindSlaveSlot(MilkQUEST milkController, Actor target) Global
+    If milkController == None || milkController.MilkSlave == None || target == None
+        Return -1
+    EndIf
+    Return milkController.MilkSlave.Find(target)
 EndFunction
 
 Function Report(Bool showNotification, String reportText) Global

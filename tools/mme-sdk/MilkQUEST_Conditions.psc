@@ -4,5 +4,6 @@ Bool Property MME_BreasfeedingAnimationsCheck Auto Conditional
 Bool Property MME_DialogueMilking Auto Conditional
 Bool Property MME_SubjectMaid Auto Conditional
 Bool Property MME_SubjectSlave Auto Conditional
+Int Property MME_FreeMaidSlots Auto Conditional
 Float Property MME_SubjectMilk Auto Conditional
 Float Property MME_TargetMilk Auto Conditional

@@ -17,7 +17,7 @@ EndFunction
 String Function GetInstallStatus() Global
     If Game.GetFormFromFile(0x000800, "MMEAlert.esp") == None
         Return "QUEST MISSING"
-    ElseIf Game.GetFormFromFile(0x00087A, "MMEAlert.esp") == None || Game.GetFormFromFile(0x00087B, "MMEAlert.esp") == None
+    ElseIf Game.GetFormFromFile(0x00087A, "MMEAlert.esp") == None || Game.GetFormFromFile(0x00087C, "MMEAlert.esp") == None
         Return "DIALOGUE MISSING"
     EndIf
     Return "RECORDS READY"
@@ -51,13 +51,15 @@ Function RunInstallAudit() Global
     Bool controllerReady = Game.GetFormFromFile(0x000800, "MMEAlert.esp") != None
     Bool gateReady = Game.GetFormFromFile(0x00085A, "MMEAlert.esp") != None
     Bool oldOStimReady = Game.GetFormFromFile(0x00085B, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00085D, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00085F, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000860, "MMEAlert.esp") != None
-    Bool newMaidReady = Game.GetFormFromFile(0x00087A, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00087B, "MMEAlert.esp") != None
+    Bool newMaidReady = Game.GetFormFromFile(0x00087A, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00087C, "MMEAlert.esp") != None
+    Bool retiredNewMaidInfoPresent = Game.GetFormFromFile(0x00087B, "MMEAlert.esp") != None
     Bool mmeReady = Quest.GetQuest("MME_MilkQUEST") != None
     Bool ostimReady = MMEOStimBreastfeeding.IsOStimDetected()
     Bool settingReady = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableOStimBreastfeeding", 0) == 1
 
     Report("Install: controller=" + YesNo(controllerReady) + " MME=" + YesNo(mmeReady) + " OStim=" + YesNo(ostimReady))
     Report("Records: gate=" + YesNo(gateReady) + " OStim choices=" + YesNo(oldOStimReady) + " new maid=" + YesNo(newMaidReady))
+    Report("Build fingerprint: INFO 87C=" + YesNo(newMaidReady) + " retired 87B=" + YesNo(retiredNewMaidInfoPresent))
     Report("Runtime: setting=" + YesNo(settingReady) + " dialogue gate=" + GetGateStatus())
     If controllerReady && gateReady && oldOStimReady && newMaidReady && mmeReady && ostimReady && settingReady && GetGateStatus() == "ON"
         Report("PASS: installed dialogue runtime is ready")
@@ -137,8 +139,27 @@ Function RunCrosshairDialogueAudit() Global
         Return
     EndIf
 
-    Bool playerMaid = StorageUtil.HasFloatValue(playerActor, "MME.MilkMaid.Level")
-    Bool candidateMaid = StorageUtil.HasFloatValue(candidate, "MME.MilkMaid.Level")
+    Int playerMaidIndex = -1
+    Int candidateMaidIndex = -1
+    Int candidateSlaveIndex = -1
+    If milkController.MilkMaid != None
+        playerMaidIndex = milkController.MilkMaid.Find(playerActor)
+        candidateMaidIndex = milkController.MilkMaid.Find(candidate)
+    EndIf
+    If milkController.MilkSlave != None
+        candidateSlaveIndex = milkController.MilkSlave.Find(candidate)
+    EndIf
+    Bool playerMaid = playerMaidIndex != -1
+    Bool candidateMaid = candidateMaidIndex != -1
+    Bool candidateStorage = StorageUtil.HasFloatValue(candidate, "MME.MilkMaid.Level")
+    Bool candidateMaidFaction = milkController.MilkMaidFaction != None && candidate.IsInFaction(milkController.MilkMaidFaction)
+    Bool candidateSlaveFaction = milkController.MilkSlaveFaction != None && candidate.IsInFaction(milkController.MilkSlaveFaction)
+    Bool cachedSubjectMaid = milkController.MilkQC != None && milkController.MilkQC.MME_SubjectMaid
+    Bool cachedSubjectSlave = milkController.MilkQC != None && milkController.MilkQC.MME_SubjectSlave
+    Int cachedFreeSlots = -1
+    If milkController.MilkQC != None
+        cachedFreeSlots = milkController.MilkQC.MME_FreeMaidSlots
+    EndIf
     Bool candidateAvailable = MMEDebug.IsActorAvailable(candidate)
     Float playerMilk = MME_Storage.getMilkCurrent(playerActor)
     Float candidateMilk = MME_Storage.getMilkCurrent(candidate)
@@ -162,8 +183,16 @@ Function RunCrosshairDialogueAudit() Global
         blocker = "crosshair NPC is already a Milk Maid"
     EndIf
 
-    Report("Target: " + MMENewMilkMaid.GetActorName(candidate) + " available=" + YesNo(candidateAvailable) + " already maid=" + YesNo(candidateMaid))
-    Report("Player: maid=" + YesNo(playerMaid) + " milk=" + playerMilk + " source valid=" + YesNo(playerSourceValid))
+    Report("Target: " + MMENewMilkMaid.GetActorName(candidate) + " formID=" + candidate.GetFormID() + " available=" + YesNo(candidateAvailable))
+    Report("Target maid truth: arraySlot=" + candidateMaidIndex + " faction=" + YesNo(candidateMaidFaction) + " storage=" + YesNo(candidateStorage))
+    Report("Target slave truth: arraySlot=" + candidateSlaveIndex + " faction=" + YesNo(candidateSlaveFaction))
+    Report("Dialogue cache: subjectMaid=" + YesNo(cachedSubjectMaid) + " subjectSlave=" + YesNo(cachedSubjectSlave) + " freeSlots=" + cachedFreeSlots)
+    If candidateMaid != cachedSubjectMaid || (candidateSlaveIndex != -1) != cachedSubjectSlave
+        Report("CACHE MISMATCH: MME opening dialogue state disagrees with its live arrays", 2)
+    Else
+        Report("Cache check PASS: dialogue state agrees with live arrays")
+    EndIf
+    Report("Player: arraySlot=" + playerMaidIndex + " milk=" + playerMilk + " source valid=" + YesNo(playerSourceValid))
     Report("NPC: milk=" + candidateMilk + " source valid=" + YesNo(candidateSourceValid))
     Report("OStim choices: player drinks=" + PassFail(ostimPlayerDrinksEligible) + " NPC drinks=" + PassFail(ostimNPCDrinksEligible))
     If blocker == "none"

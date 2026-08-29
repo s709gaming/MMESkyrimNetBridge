@@ -4,6 +4,8 @@ MME_DDi Property DDi Auto
 Actor Property PlayerREF Auto
 Actor[] Property MilkMaid Auto
 Actor[] Property MilkSlave Auto
+Faction Property MilkMaidFaction Auto
+Faction Property MilkSlaveFaction Auto
 MilkQUEST_Conditions Property MilkQC Auto
 FormList Property MME_Milk_Basic Auto
 FormList Property MME_Milk_Race Auto
