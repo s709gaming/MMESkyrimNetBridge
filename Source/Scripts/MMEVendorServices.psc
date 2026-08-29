@@ -373,12 +373,29 @@ Function ClearPendingService() Global
 EndFunction
 
 Function SetGlobalValue(String editorID, Int value) Global
-    GlobalVariable targetGlobal = MMEExtensionsNative.GetFormByEditorID(editorID) as GlobalVariable
+    Int localFormID = GetGlobalFormID(editorID)
+    GlobalVariable targetGlobal = None
+    If localFormID != 0
+        targetGlobal = Game.GetFormFromFile(localFormID, "MMEAlert.esp") as GlobalVariable
+    EndIf
     If targetGlobal != None
         targetGlobal.SetValue(value as Float)
     Else
         Debug.Trace("[MME Extensions Blacksmith] missing dialogue global " + editorID)
     EndIf
+EndFunction
+
+Int Function GetGlobalFormID(String editorID) Global
+    If editorID == "MMEExt_BlacksmithServiceAvailable"
+        Return 0x000861
+    ElseIf editorID == "MMEExt_BlacksmithServiceState"
+        Return 0x000862
+    ElseIf editorID == "MMEExt_BlacksmithHasMilk"
+        Return 0x000863
+    ElseIf editorID == "MMEExt_BlacksmithHasFreeSlot"
+        Return 0x000864
+    EndIf
+    Return 0
 EndFunction
 
 Bool Function GetDiagnostic() Global

@@ -363,7 +363,7 @@ String Function SexLabPairFailure(Actor milkSource, Actor drinker, MilkQUEST mil
         Return "source and drinker are the same actor"
     ElseIf milkController == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
         Return "MME/SexLab framework unavailable"
-    ElseIf milkController.MilkMaid == None || milkController.MilkMaid.Find(milkSource) < 0
+    ElseIf !StorageUtil.HasFloatValue(milkSource, "MME.MilkMaid.Level")
         Return "source is not an authoritative MME Milk Maid"
     ElseIf milkSource.IsDead() || milkSource.IsDisabled() || !milkSource.Is3DLoaded()
         Return "source is dead, disabled, or unloaded"
@@ -529,7 +529,7 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
 
     ; MME is an optional gameplay sidecar. Its eligibility, startup, completion,
     ; or failure never determines the lifetime of the valid OStim animation.
-    Bool isMilkMaid = milkController != None && milkController.MilkMaid != None && milkController.MilkMaid.Find(milkSource) >= 0
+    Bool isMilkMaid = milkController != None && StorageUtil.HasFloatValue(milkSource, "MME.MilkMaid.Level")
     Bool mmeEligible = IsMMEProcessingEligible(milkSource, milkController)
     Float sourceMilk = 0.0
     If milkController != None
@@ -824,7 +824,7 @@ Function TraceActive(String traceText)
 EndFunction
 
 Bool Function IsMMEProcessingEligible(Actor milkSource, MilkQUEST milkController)
-    If milkSource == None || milkController == None || milkController.MilkMaid == None || milkController.MilkMaid.Find(milkSource) < 0
+    If milkSource == None || milkController == None || !StorageUtil.HasFloatValue(milkSource, "MME.MilkMaid.Level")
         Return False
     EndIf
     ActorBase milkSourceBase = milkSource.GetLeveledActorBase()

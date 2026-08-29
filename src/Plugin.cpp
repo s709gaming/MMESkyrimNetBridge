@@ -639,11 +639,13 @@ namespace
             if (!event || !event->equipped || !event->actor) {
                 return RE::BSEventNotifyControl::kContinue;
             }
-            // One global equip sink covers both consumable potions and supported
-            // armor candidates. Papyrus performs final item/actor classification.
+            // Player potion consumption is owned by the quest alias because the
+            // engine does not consistently publish it through TESEquipEvent.
+            // This global sink covers NPC consumables plus all armor candidates.
             auto* actor = event->actor->As<RE::Actor>();
             auto* item = RE::TESForm::LookupByID(event->baseObject);
-            if (actor && item && item->GetFormType() == RE::FormType::AlchemyItem) {
+            if (actor && item && item->GetFormType() == RE::FormType::AlchemyItem &&
+                actor != RE::PlayerCharacter::GetSingleton()) {
                 SendPotionEvent(actor, item);
             } else if (actor && item && item->GetFormType() == RE::FormType::Armor) {
                 SendArmorEvent(actor, item);

@@ -483,6 +483,13 @@ Most features can be disabled mid-game through the MCM.
 
 Major systems include focused optional diagnostics.
 
+The MCM also includes a dedicated **Diagnostics** page with player-triggered
+checks. It can refresh the shared OStim dialogue gate, audit the installed
+quest/dialogue forms and runtime settings, and test the NPC under the
+crosshair against the New Milk Maid requirements. Short in-game notifications
+are enabled by default; the matching `[MME Extensions Diagnostics]` Papyrus
+trace is opt-in.
+
 Depending on the feature, debug output can report:
 
 - Event detected.
@@ -553,6 +560,7 @@ Polling remains available only where useful, with an adjustable interval.
 
 - `MMEAlertsController.psc` - startup, MME events, capacity scheduling, nearby Milk Maid validation, creation detection, and milking events.
 - `MMEAlertsMCM.psc` - MCM pages, settings, defaults, migrations, tooltips, and diagnostics.
+- `MMEDiagnostics.psc` - dependency-light install, dialogue-gate, and crosshair eligibility audits with optional HUD and Papyrus output.
 - `MMEAlertsPlayerEffect.psc` - restores the controller after startup and save loading.
 - `MMEAlertsSkyrimNet.psc` - Skyrim.Net checks, prompts, events, nearby summaries, and forced narration.
 - `MMEThoughts.psc` - stateless normal/debug Thought selection, JSON rendering, and local notifications; the existing controller owns both schedules for save-upgrade safety.

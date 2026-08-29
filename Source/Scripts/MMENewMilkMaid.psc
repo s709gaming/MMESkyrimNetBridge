@@ -28,7 +28,7 @@ Bool Function StartRequest(Actor milkSource, Actor candidate) Global
         Report(diagnostic, "request rejected: candidate is dead, disabled, or unloaded")
         Return False
     EndIf
-    If milkController.MilkMaid != None && milkController.MilkMaid.Find(candidate) >= 0
+    If StorageUtil.HasFloatValue(candidate, "MME.MilkMaid.Level")
         Report(diagnostic, "request rejected: candidate is already an MME Milk Maid")
         Return False
     EndIf
@@ -63,7 +63,7 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
         Report(diagnostic, "conversion skipped: candidate is dead, disabled, or unloaded")
         Return
     EndIf
-    If milkController.MilkMaid != None && milkController.MilkMaid.Find(candidate) >= 0
+    If StorageUtil.HasFloatValue(candidate, "MME.MilkMaid.Level")
         Report(diagnostic, "conversion skipped: candidate became a Milk Maid before completion dispatch")
         Return
     EndIf

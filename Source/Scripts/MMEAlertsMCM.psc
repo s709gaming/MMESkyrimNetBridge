@@ -128,14 +128,22 @@ Int milkMaidThoughtsRandomnessOption
 Int milkMaidThoughtNarrationOption
 Int milkMaidThoughtsDebugOption
 Int traceMilkMaidThoughtsLogicOption
+Int diagnosticNotificationsOption
+Int diagnosticPapyrusTraceOption
+Int diagnosticRefreshGateOption
+Int diagnosticInstallAuditOption
+Int diagnosticDialogueAuditOption
+Int diagnosticInstallStatusOption
+Int diagnosticOStimStatusOption
+Int diagnosticGateStatusOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 90
+    Return 91
 EndFunction
 
 Function SetPageNames()
-    Pages = new String[8]
+    Pages = new String[9]
     Pages[0] = "General"
     Pages[1] = "Milk Drinking"
     ; Build these page names at runtime so Papyrus's case-insensitive string
@@ -148,6 +156,7 @@ Function SetPageNames()
     Pages[5] = "Skyrim.Net"
     Pages[6] = "Debug"
     Pages[7] = "Thoughts"
+    Pages[8] = "Diagnostics"
 EndFunction
 
 ; Creates the MCM pages and initializes controllers on first registration.
@@ -322,6 +331,9 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0)
         JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsMigration87", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "diagnosticsPageMigration91", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "lifecycleDiagnosticMigration35", 0) == 0
@@ -831,6 +843,14 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtNarrationMigration90", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds a focused, player-triggered audit page. HUD summaries start on while
+    ; the more verbose Papyrus trace remains explicitly opt-in.
+    If JsonUtil.GetIntValue(SettingsFile, "diagnosticsPageMigration91", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "diagnosticsPageMigration91", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -998,6 +1018,14 @@ Event OnPageReset(String page)
     milkMaidThoughtNarrationOption = -1
     milkMaidThoughtsDebugOption = -1
     traceMilkMaidThoughtsLogicOption = -1
+    diagnosticNotificationsOption = -1
+    diagnosticPapyrusTraceOption = -1
+    diagnosticRefreshGateOption = -1
+    diagnosticInstallAuditOption = -1
+    diagnosticDialogueAuditOption = -1
+    diagnosticInstallStatusOption = -1
+    diagnosticOStimStatusOption = -1
+    diagnosticGateStatusOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -1162,6 +1190,20 @@ Event OnPageReset(String page)
         AddHeaderOption("Testing")
         milkMaidThoughtsDebugOption = AddToggleOption("15 Second Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1)
         traceMilkMaidThoughtsLogicOption = AddToggleOption("Trace Thoughts Logic", JsonUtil.GetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0) == 1)
+        Return
+    EndIf
+    If page == "Diagnostics"
+        AddHeaderOption("Output")
+        diagnosticNotificationsOption = AddToggleOption("In-Game Audit Notifications", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticNotifications", 1) == 1)
+        diagnosticPapyrusTraceOption = AddToggleOption("Papyrus Audit Trace", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0) == 1)
+        AddHeaderOption("Actions")
+        diagnosticRefreshGateOption = AddTextOption("Refresh OStim Dialogue Gate", "RUN")
+        diagnosticInstallAuditOption = AddTextOption("Run Install Audit", "RUN")
+        diagnosticDialogueAuditOption = AddTextOption("Run Crosshair Dialogue Audit", "RUN")
+        AddHeaderOption("Live Status")
+        diagnosticInstallStatusOption = AddTextOption("MME Extensions Records", MMEDiagnostics.GetInstallStatus(), OPTION_FLAG_DISABLED)
+        diagnosticOStimStatusOption = AddTextOption("OStim Integration", MMEDiagnostics.GetOStimStatus(), OPTION_FLAG_DISABLED)
+        diagnosticGateStatusOption = AddTextOption("OStim Dialogue Gate", MMEDiagnostics.GetGateStatus(), OPTION_FLAG_DISABLED)
         Return
     EndIf
     If page == "Debug"
@@ -1454,6 +1496,22 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Attempt one local Thought notification every 15 real-time seconds using the controller's shared single-update scheduler. Debug Thoughts are not mirrored to Skyrim.Net.")
     ElseIf option == traceMilkMaidThoughtsLogicOption
         SetInfoText("Show an in-game notification explaining why a 15-second Thought attempt was skipped.")
+    ElseIf option == diagnosticNotificationsOption
+        SetInfoText("Show short audit results as in-game notifications. Enabled by default.")
+    ElseIf option == diagnosticPapyrusTraceOption
+        SetInfoText("Write the same audit results to Papyrus.0.log with the [MME Extensions Diagnostics] prefix.")
+    ElseIf option == diagnosticRefreshGateOption
+        SetInfoText("Recalculate the shared OStim dialogue gate without relying on the optional native DLL.")
+    ElseIf option == diagnosticInstallAuditOption
+        SetInfoText("Check the controller, MME, OStim, dialogue records, setting, and live dialogue gate.")
+    ElseIf option == diagnosticDialogueAuditOption
+        SetInfoText("Check whether the NPC under your crosshair and the player satisfy the New Milk Maid runtime requirements.")
+    ElseIf option == diagnosticInstallStatusOption
+        SetInfoText("Read-only status for the quest and New Milk Maid dialogue records in MMEAlert.esp.")
+    ElseIf option == diagnosticOStimStatusOption
+        SetInfoText("Read-only OStim plugin and MCM setting status.")
+    ElseIf option == diagnosticGateStatusOption
+        SetInfoText("Read-only value used by the original OStim and New Milk Maid dialogue choices.")
     EndIf
 EndEvent
 
@@ -1523,6 +1581,21 @@ Event OnOptionSelect(Int option)
         If value == 1 && JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) != 1
             Debug.Notification("Thoughts trace enabled; turn on 15 Second Thoughts to run checks")
         EndIf
+    ElseIf option == diagnosticNotificationsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticNotifications", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == diagnosticPapyrusTraceOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == diagnosticRefreshGateOption
+        MMEDiagnostics.RefreshDialogueGate()
+        ForcePageReset()
+    ElseIf option == diagnosticInstallAuditOption
+        MMEDiagnostics.RunInstallAudit()
+    ElseIf option == diagnosticDialogueAuditOption
+        MMEDiagnostics.RunCrosshairDialogueAudit()
     ElseIf option == debugMilkReportOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDebugMilkReport", value)

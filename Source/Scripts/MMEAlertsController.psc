@@ -226,7 +226,10 @@ Function RefreshOStimDialogueAvailability()
 EndFunction
 
 GlobalVariable Function GetOStimDialogueAvailabilityGlobal() Global
-    Return MMEExtensionsNative.GetFormByEditorID("MMEExt_OStimDialogueAvailable") as GlobalVariable
+    ; This gate controls every extension OStim choice, including New Milk Maid.
+    ; Resolve it through SKSE's stable file/local-ID API so dialogue remains
+    ; available even if the optional native bridge fails to load for a session.
+    Return Game.GetFormFromFile(0x00085A, "MMEAlert.esp") as GlobalVariable
 EndFunction
 
 ; Records Milkmaids already present when this version starts to avoid false creation reports.
@@ -1104,8 +1107,8 @@ Function ReportDialogueStructure(Actor subject, Actor playerActor)
     Form npcDrinksTopic = Game.GetFormFromFile(0x062E8F, "MilkModNEW.esp")
     Form playerDrinksSexLab = Game.GetFormFromFile(0x05FE12, "MilkModNEW.esp")
     Form npcDrinksSexLab = Game.GetFormFromFile(0x05FE0E, "MilkModNEW.esp")
-    Form playerDrinksOStim = MMEExtensionsNative.GetFormByEditorID("MMEExt_OStimBreastfeeding_PlayerDrinks")
-    Form npcDrinksOStim = MMEExtensionsNative.GetFormByEditorID("MMEExt_OStimBreastfeeding_NPCDrinks")
+    Form playerDrinksOStim = Game.GetFormFromFile(0x00085F, "MMEAlert.esp")
+    Form npcDrinksOStim = Game.GetFormFromFile(0x000860, "MMEAlert.esp")
     Form[] playerDrinksInfos = MMEExtensionsNative.GetTopicInfos(playerDrinksTopic)
     Form[] npcDrinksInfos = MMEExtensionsNative.GetTopicInfos(npcDrinksTopic)
     Int playerDrinksCount = 0
@@ -1305,8 +1308,8 @@ Function ShowOStimBreastfeedingDiagnostic(Actor subject)
     EndIf
     Form originalPlayerTopic = Game.GetFormFromFile(0x062E91, "MilkModNEW.esp")
     Form originalNPCTopic = Game.GetFormFromFile(0x062E8F, "MilkModNEW.esp")
-    Form playerInfo = MMEExtensionsNative.GetFormByEditorID("MMEExt_OStimBreastfeeding_PlayerDrinks")
-    Form npcInfo = MMEExtensionsNative.GetFormByEditorID("MMEExt_OStimBreastfeeding_NPCDrinks")
+    Form playerInfo = Game.GetFormFromFile(0x00085F, "MMEAlert.esp")
+    Form npcInfo = Game.GetFormFromFile(0x000860, "MMEAlert.esp")
     Form playerTopic = MMEExtensionsNative.GetParentTopic(playerInfo)
     Form npcTopic = MMEExtensionsNative.GetParentTopic(npcInfo)
     Bool playerIndependent = playerTopic != None && playerTopic != originalPlayerTopic
@@ -1398,7 +1401,7 @@ Function ShowDialogueEligibilitySnapshot(Actor subject, Bool postRefresh = False
     String playerBlockers = GetMilkBlockers(playerActor, milkController)
     Bool subjectShared = conditions.MME_SubjectMilk >= 1.0 && subjectBlockers == "none"
     Bool playerShared = conditions.MME_TargetMilk >= 1.0 && playerBlockers == "none"
-    Bool subjectMaid = milkController.MilkMaid != None && milkController.MilkMaid.Find(subject) >= 0
+    Bool subjectMaid = StorageUtil.HasFloatValue(subject, "MME.MilkMaid.Level")
     ActorBase subjectBase = subject.GetLeveledActorBase()
     ActorBase playerBase = playerActor.GetLeveledActorBase()
     Bool subjectRefreshAllowed = subjectBase != None && (subjectBase.GetSex() == 1 || (subjectBase.GetSex() == 0 && milkController.MaleMaids))

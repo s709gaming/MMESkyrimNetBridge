@@ -47,6 +47,90 @@ begin
     end;
 end;
 
+function FindOpeningInfo(aElement: IInterface): IInterface;
+var
+  i: Integer;
+  vmad: IInterface;
+begin
+  Result := nil;
+  if not Assigned(aElement) then
+    Exit;
+  if Signature(aElement) = 'INFO' then begin
+    vmad := ElementBySignature(aElement, 'VMAD');
+    if Assigned(vmad) and TreeHasExactValue(vmad, 'MME_Dialogues') and
+       TreeHasExactValue(vmad, 'Fragment_00') then begin
+      Result := aElement;
+      Exit;
+    end;
+  end;
+  for i := 0 to ElementCount(aElement) - 1 do begin
+    Result := FindOpeningInfo(ElementByIndex(aElement, i));
+    if Assigned(Result) then
+      Exit;
+  end;
+end;
+
+function DumpWinningOpening(aOpening, aPlayerTopic, aNPCTopic,
+  aNewMaidTopic: IInterface): Boolean;
+var
+  winner, links, linkElement, linkedTopic: IInterface;
+  i: Integer;
+  hasPlayerTopic, hasNPCTopic, hasNewMaidTopic: Boolean;
+begin
+  Result := False;
+  if not Assigned(aOpening) then begin
+    AddMessage('ERROR: MME Hey there opening INFO was not found.');
+    Exit;
+  end;
+  winner := WinningOverride(aOpening);
+  AddMessage('OPENING_SOURCE=' + Name(aOpening) + ' file=' +
+    GetFileName(GetFile(aOpening)));
+  AddMessage('OPENING_WINNER=' + Name(winner) + ' file=' +
+    GetFileName(GetFile(winner)));
+  links := ElementByName(winner, 'Link To');
+  if not Assigned(links) then begin
+    AddMessage('ERROR: Winning Hey there INFO has no Link To array.');
+    Exit;
+  end;
+  hasPlayerTopic := False;
+  hasNPCTopic := False;
+  hasNewMaidTopic := False;
+  AddMessage('OPENING_WINNER_LINK_COUNT=' + IntToStr(ElementCount(links)));
+  for i := 0 to ElementCount(links) - 1 do begin
+    linkElement := ElementByIndex(links, i);
+    linkedTopic := LinksTo(linkElement);
+    if Assigned(linkedTopic) then begin
+      AddMessage('  LINK[' + IntToStr(i) + ']=' + Name(linkedTopic));
+      if Assigned(aPlayerTopic) and
+         Equals(MasterOrSelf(linkedTopic), MasterOrSelf(aPlayerTopic)) then
+        hasPlayerTopic := True;
+      if Assigned(aNPCTopic) and
+         Equals(MasterOrSelf(linkedTopic), MasterOrSelf(aNPCTopic)) then
+        hasNPCTopic := True;
+      if Assigned(aNewMaidTopic) and
+         Equals(MasterOrSelf(linkedTopic), MasterOrSelf(aNewMaidTopic)) then
+        hasNewMaidTopic := True;
+    end;
+  end;
+  if hasPlayerTopic then
+    AddMessage('OPENING_HAS_OSTIM_PLAYER=True')
+  else
+    AddMessage('OPENING_HAS_OSTIM_PLAYER=False');
+  if hasNPCTopic then
+    AddMessage('OPENING_HAS_OSTIM_NPC=True')
+  else
+    AddMessage('OPENING_HAS_OSTIM_NPC=False');
+  if hasNewMaidTopic then
+    AddMessage('OPENING_HAS_NEW_MILK_MAID=True')
+  else
+    AddMessage('OPENING_HAS_NEW_MILK_MAID=False');
+  Result := hasPlayerTopic and hasNPCTopic and hasNewMaidTopic;
+  if Result then
+    AddMessage('OPENING_REACHABILITY_VALIDATION=PASS')
+  else
+    AddMessage('OPENING_REACHABILITY_VALIDATION=FAIL');
+end;
+
 function ValidateInstalledRoute(aTopic, aInfo: IInterface): Boolean;
 var
   topicElement, responses, conditions, condition, vmad: IInterface;
@@ -155,7 +239,8 @@ end;
 
 function Initialize: Integer;
 var
-  targetFile, mmeFile, sourceInfo, targetTopic, targetInfo: IInterface;
+  targetFile, mmeFile, sourceInfo, targetTopic, targetInfo,
+    playerTopic, npcTopic, openingInfo: IInterface;
 begin
   Result := 1;
   targetFile := FindFileByName(TargetPluginName);
@@ -178,6 +263,14 @@ begin
   targetInfo := FindRecordRecursive(GroupBySignature(targetFile, 'DIAL'),
     'INFO', TargetInfoEditorID);
   if not ValidateInstalledRoute(targetTopic, targetInfo) then
+    Exit;
+  playerTopic := FindRecordRecursive(GroupBySignature(targetFile, 'DIAL'),
+    'DIAL', 'MMEExt_OStimBreastfeeding_PlayerDrinksTopic');
+  npcTopic := FindRecordRecursive(GroupBySignature(targetFile, 'DIAL'),
+    'DIAL', 'MMEExt_OStimBreastfeeding_NPCDrinksTopic');
+  openingInfo := FindOpeningInfo(GroupBySignature(mmeFile, 'DIAL'));
+  if not DumpWinningOpening(openingInfo, playerTopic, npcTopic,
+    targetTopic) then
     Exit;
   Result := 0;
 end;

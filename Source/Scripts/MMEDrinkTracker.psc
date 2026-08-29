@@ -27,27 +27,41 @@ Function RegisterNativeDrink()
     RegisterForModEvent("MMEExtensions_PotionConsumed", "OnNativePotionConsumed")
 EndFunction
 
-; ---------------------------------------------------------------------------
-; Old player tracking through the ESP player alias. Kept as a temporary
-; rollback/reference path until CommonLib player tracking is fully verified.
-; ---------------------------------------------------------------------------
-;Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
-;    If !MMEAlertsController.IsExtensionsEnabled()
-;        Return
-;    EndIf
-;    Actor drinker = GetActorReference()
-;    If drinker == None || akBaseObject == None
-;        Return
-;    EndIf
-;    Int drinkKind = GetSupportedDrinkKind(akBaseObject)
-;    If drinkKind == 0
-;        Return
-;    EndIf
-;    If !IsEligibleDrinker(drinker)
-;        Return
-;    EndIf
-;    HandleDrinkDetected(drinker, akBaseObject, drinkKind)
-;EndEvent
+; Player consumption is observed by the player quest alias. Skyrim reliably
+; sends OnObjectEquipped for a consumed potion to this alias, while the global
+; TESEquipEvent source does not publish player potion use on every runtime/menu
+; path. The native bridge remains the NPC source only.
+Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
+    If !MMEAlertsController.IsExtensionsEnabled()
+        Return
+    EndIf
+    Actor drinker = GetActorReference()
+    Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1
+    If drinker == None || akBaseObject == None
+        If diagnostic
+            Debug.Trace("[MMEAlert Player Drink] alias event rejected | missing player or equipped form")
+        EndIf
+        Return
+    EndIf
+    Int drinkKind = GetSupportedDrinkKind(akBaseObject)
+    If drinkKind == 0
+        If diagnostic && (akBaseObject as Potion) != None
+            Debug.Trace("[MMEAlert Player Drink] alias potion ignored | unsupported | " + akBaseObject.GetName() + " | form=" + akBaseObject.GetFormID())
+        EndIf
+        Return
+    EndIf
+    If !IsEligibleDrinker(drinker)
+        If diagnostic
+            Debug.Notification("Milk Debug: drink detected but player is not an eligible MME Milk Maid")
+            Debug.Trace("[MMEAlert Player Drink] alias milk rejected | ineligible player | " + akBaseObject.GetName())
+        EndIf
+        Return
+    EndIf
+    If diagnostic
+        Debug.Trace("[MMEAlert Player Drink] alias milk accepted | " + akBaseObject.GetName() + " | form=" + akBaseObject.GetFormID())
+    EndIf
+    HandlePlayerDrink(drinker, akBaseObject, drinkKind, "PapyrusAlias", akBaseObject.GetFormID() as Float)
+EndEvent
 
 ; Native CommonLib entry point for both player and NPC potion consumption.
 Event OnNativePotionConsumed(String eventName, String pluginName, Float localFormID, Form sender)
@@ -73,7 +87,9 @@ Event OnNativePotionConsumed(String eventName, String pluginName, Float localFor
         Return
     EndIf
     If drinker == Game.GetPlayer()
-        HandleNativePlayerDrink(drinker, drinkItem, drinkKind, pluginName, localFormID)
+        ; Defensive compatibility only. The native bridge intentionally filters
+        ; the player so this branch should not run in the deployed build.
+        HandlePlayerDrink(drinker, drinkItem, drinkKind, pluginName, localFormID)
     Else
         HandleNativeNPCDrink(drinker, drinkItem, drinkKind, pluginName, localFormID)
     EndIf
@@ -97,18 +113,16 @@ Bool Function IsDuplicateDrink(Actor drinker, Form drinkItem, String keyPrefix, 
 EndFunction
 
 ; Handles a supported player drink: effects, then the optional player animation.
-Function HandleNativePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, String pluginName, Float localFormID)
-    ; Phase 1: the native potion-consumption event is the single authoritative
-    ; player source and fires once per real item consumption, so every event is
-    ; processed. The same-item debounce remains NPC-only because dialogue and
-    ; native paths can both describe one NPC drink there.
+Function HandlePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, String eventSource, Float eventFormID)
+    ; Phase 1: player alias consumption is authoritative. eventSource is retained
+    ; in diagnostics so a stray native callback is immediately distinguishable.
     Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1
     If diagnostic
         String traceDrinkName = drinkItem.GetName()
         If traceDrinkName == ""
             traceDrinkName = "<unnamed>"
         EndIf
-        Debug.Trace("[MMEAlert Player Drink] native event accepted | " + pluginName + ":" + (localFormID as Int) + " | " + traceDrinkName + " | t=" + Utility.GetCurrentRealTime())
+        Debug.Trace("[MMEAlert Player Drink] event accepted | " + eventSource + ":" + (eventFormID as Int) + " | " + traceDrinkName + " | t=" + Utility.GetCurrentRealTime())
     EndIf
     ; Snapshot established-Milkmaid state before any effects run, because MME's
     ; Lactacid conversion can add a brand-new Milk Maid during this drink. We
@@ -132,7 +146,7 @@ Function HandleNativePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, S
     If milkDelta > 0.0 || MMEArmorScript.HasPendingPlayerDrinkAttempt(drinker)
         MMEArmorScript.SchedulePlayerArmorCheck(drinker)
     EndIf
-    Debug.Trace("[MMEAlert Player Drink] processed player | " + pluginName + ":" + localFormID)
+    Debug.Trace("[MMEAlert Player Drink] processed player | " + eventSource + ":" + eventFormID)
 EndFunction
 
 ; Resets a pending player drink animation.

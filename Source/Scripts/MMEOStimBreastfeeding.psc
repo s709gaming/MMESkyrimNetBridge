@@ -36,7 +36,7 @@ Bool Function ValidateMilkSource(Actor milkSource, MilkQUEST milkController, Boo
         Report(diagnostic, "MME backend unavailable")
         Return False
     EndIf
-    If milkController.MilkMaid == None || milkController.MilkMaid.Find(milkSource) == -1
+    If !StorageUtil.HasFloatValue(milkSource, "MME.MilkMaid.Level")
         Report(diagnostic, GetActorName(milkSource) + " is not an MME Milk Maid")
         Return False
     EndIf
