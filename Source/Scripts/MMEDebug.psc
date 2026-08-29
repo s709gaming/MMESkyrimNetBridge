@@ -526,6 +526,9 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
     EndIf
     String finalSceneID = MMEOStimIntegration.GetThreadScene(threadID)
     TraceActive("OStim thread started | thread=" + threadID + " | selected scene=" + sceneID + " | final current scene=" + finalSceneID + " | NoPlayerControl applied=" + suppressPlayerControl)
+    If semanticIntent == "CreateMilkMaid"
+        MMENewMilkMaid.TraceStep("scene started")
+    EndIf
 
     ; MME is an optional gameplay sidecar. Its eligibility, startup, completion,
     ; or failure never determines the lifetime of the valid OStim animation.
@@ -538,6 +541,9 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
     TraceActive("MME is Milk Maid=" + isMilkMaid + " | milk=" + sourceMilk + " | processing=" + mmeEligible)
     If mmeEligible
         ApplyMMEBreastfeedingParity(milkSource, drinker, milkController)
+        If semanticIntent == "CreateMilkMaid"
+            MMENewMilkMaid.TraceStep("Mode 4 requested")
+        EndIf
         If RequestMMEMilking(milkSource)
             ActiveMMERequested = True
             TraceActive("MME request sent")
@@ -549,12 +555,21 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
                 EndIf
             Else
                 TraceActive("MME passive not detected; OStim continues")
+                If semanticIntent == "CreateMilkMaid"
+                    MMENewMilkMaid.TraceStep("Mode 4 did not start; creation continues", True)
+                EndIf
             EndIf
         Else
             TraceActive("MME request failed; OStim continues")
+            If semanticIntent == "CreateMilkMaid"
+                MMENewMilkMaid.TraceStep("Mode 4 request failed; creation continues", True)
+            EndIf
         EndIf
     Else
         TraceActive("MME processing skipped; OStim continues")
+        If semanticIntent == "CreateMilkMaid"
+            MMENewMilkMaid.TraceStep("Mode 4 skipped; creation continues")
+        EndIf
     EndIf
 
     ActiveLaunching = False
@@ -667,6 +682,9 @@ Bool Function WaitForMMEStart()
         EndIf
         If ActiveMilkSource != None && ActivePassiveSpell != None && ActiveMilkSource.HasSpell(ActivePassiveSpell)
             ActiveMMEStarted = True
+            If ActiveSemanticIntent == "CreateMilkMaid"
+                MMENewMilkMaid.TraceStep("Mode 4 started")
+            EndIf
             If !StillOwnsThread()
                 RelinquishOwnership("OStim breastfeeding ended or changed before MME startup completed")
                 Return False
@@ -739,6 +757,9 @@ Event OnOStimThreadEnd(String eventName, String json, Float threadID, Form sende
         RelinquishOwnership("OStim breastfeeding thread ended")
         If completed
             ApplyBreastfeedingDrinkEffects(drinker)
+            If semanticIntent == "CreateMilkMaid"
+                MMENewMilkMaid.TraceStep("scene complete")
+            EndIf
             MMENewMilkMaid.HandleBreastfeedingCompleted(milkSource, drinker, semanticIntent, mmeProcessed)
         EndIf
         If !ActiveLaunching
@@ -758,6 +779,9 @@ Event OnOStimEnd(String eventName, String json, Float numArg, Form sender)
         RelinquishOwnership("OStim breastfeeding thread ended")
         If completed
             ApplyBreastfeedingDrinkEffects(drinker)
+            If semanticIntent == "CreateMilkMaid"
+                MMENewMilkMaid.TraceStep("scene complete")
+            EndIf
             MMENewMilkMaid.HandleBreastfeedingCompleted(milkSource, drinker, semanticIntent, mmeProcessed)
         EndIf
         If !ActiveLaunching
@@ -776,6 +800,9 @@ Event OnMMEMilkingDone(Form actorForm, Int bottles, Int boobgasmCount, Int cumCo
     ActiveMMECompleted = True
     ActiveMMEStarted = False
     TraceActive("MME_MilkingDone bottles=" + bottles + " | boobgasms=" + boobgasmCount + " | OStim continues")
+    If ActiveSemanticIntent == "CreateMilkMaid"
+        MMENewMilkMaid.TraceStep("Mode 4 completed")
+    EndIf
 EndEvent
 
 Function HandleWatchdogUpdate()
@@ -790,6 +817,9 @@ Function HandleWatchdogUpdate()
         ActiveMMEStarted = False
         ActiveMMECompleted = True
         TraceActive("MME passive ended without MME_MilkingDone; OStim continues")
+        If ActiveSemanticIntent == "CreateMilkMaid"
+            MMENewMilkMaid.TraceStep("Mode 4 completed")
+        EndIf
     EndIf
 
     ; Revalidate ownership before scheduling another watchdog tick. Cleanup is

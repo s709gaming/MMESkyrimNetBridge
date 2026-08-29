@@ -490,6 +490,12 @@ crosshair against the New Milk Maid requirements. Short in-game notifications
 are enabled by default; the matching `[MME Extensions Diagnostics]` Papyrus
 trace is opt-in.
 
+Under **Debug > Dialogue**, **New Milkmaid Dialogue Trace** follows the
+breastfeeding creation route from eligibility through OStim, MME Mode 4, the
+post-scene native Lactacid effect, slot confirmation, and final initialization.
+The internal creation dose never comes from the player's inventory; MME's
+original post-creation reaction animation still runs after breastfeeding.
+
 Depending on the feature, debug output can report:
 
 - Event detected.
@@ -570,7 +576,6 @@ Polling remains available only where useful, with an adjustable interval.
 - `MMEArousalBridge.psc` - optional arousal integration.
 - `MMENPCDialog.psc` - Milk Maid dialogue, inventory selection, consumption, effects, and animation.
 - `MMENewMilkMaid.psc` - isolated breastfeeding-to-Milk-Maid request, completion validation, and canonical MME Lactacid creation trigger.
-- `MMEVendorServices.psc` - Blacksmith armor-service state, milk payment, and verified `MilkingEquipment` add/remove transactions.
 - `MMEAlertsFlatRateDefaults.psc` - optional FOMOD-selected MME preset.
 - `MMEAlertsQuickTest.psc` - compatibility/testing helper.
 - `MMEDebug.psc` - troubleshooting helper.

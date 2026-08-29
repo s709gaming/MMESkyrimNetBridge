@@ -71,9 +71,9 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
     Report(diagnostic, "inventory: Lactacid " + lactacidCount + " | Normal " + normalCount + " | Racial " + racialCount + " | Supernatural " + supernaturalCount)
     ReportNormalMilkInventory(giver, hearthfireMilk, milkController.MME_Milk_Basic, diagnostic)
 
-    ; Phase 2: use the shared supported-milk selector. Blacksmith payment calls
-    ; this same helper, keeping category membership, fallback records, and the
-    ; Lactacid -> normal -> racial -> supernatural priority in one place.
+    ; Phase 2: use the shared supported-milk selector, keeping category
+    ; membership, fallback records, and the Lactacid -> normal -> racial ->
+    ; supernatural priority in one place.
     Form selectedItem = FindFirstSupportedMilk(giver, milkController)
     String selectedType = GetSupportedMilkType(selectedItem, milkController)
 

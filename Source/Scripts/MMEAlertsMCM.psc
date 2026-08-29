@@ -38,6 +38,7 @@ Int milkDrinkArousalOption
 Int milkDrinkArousalAmountOption
 Int dialogueDiagnosticOption
 Int sexLabBreastfeedingDebugOption
+Int newMilkmaidDialogueTraceOption
 Int npcDrinkAnimationOption
 Int npcDrinkAnimationDurationOption
 Int playerDrinkAnimationOption
@@ -107,7 +108,6 @@ Int npcMilkArmorEquipNarrationOption
 Int playerMilkingArmorNarrationCooldownOption
 Int npcMilkingArmorNarrationCooldownOption
 Int armorDebugOption
-Int blacksmithDebugOption
 Int armorLookupForensicsOption
 Int extensionsArmorStrippingOption
 Int armorStripHeavyThresholdOption
@@ -140,7 +140,7 @@ Int diagnosticGateStatusOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 91
+    Return 92
 EndFunction
 
 Function SetPageNames()
@@ -248,8 +248,6 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkArmorEquipNarration", 1)
         JsonUtil.SetIntValue(SettingsFile, "skyrimNetArmorMigration75", 1)
-        JsonUtil.SetIntValue(SettingsFile, "enableBlacksmithDebug", 0)
-        JsonUtil.SetIntValue(SettingsFile, "blacksmithServiceMigration77", 1)
         JsonUtil.SetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingAction", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
@@ -280,6 +278,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
         JsonUtil.SetFloatValue(SettingsFile, "npcDrinkAnimationDuration", 3.0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkAnimation", 0)
@@ -729,14 +728,6 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "skyrimNetArmorMigration75", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
-    ; Adds diagnostics for the Blacksmith vendor-service transaction. Gameplay
-    ; remains enabled with the MME Extensions master toggle; this controls only
-    ; the short HUD checkpoints requested for testing.
-    If JsonUtil.GetIntValue(SettingsFile, "blacksmithServiceMigration77", 0) == 0
-        JsonUtil.SetIntValue(SettingsFile, "enableBlacksmithDebug", 0)
-        JsonUtil.SetIntValue(SettingsFile, "blacksmithServiceMigration77", 1)
-        JsonUtil.Save(SettingsFile, False)
-    EndIf
     ; Dedicated OStim breastfeeding scenes suppress navigation, so their safe
     ; OStim-owned end condition has its own gameplay-independent duration.
     If JsonUtil.GetIntValue(SettingsFile, "ostimBreastfeedingDurationMigration78", 0) == 0
@@ -852,6 +843,13 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "diagnosticsPageMigration91", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Dedicated breadcrumb trail for the breastfeeding-to-Milk-Maid route.
+    ; It is intentionally independent of the broad OStim diagnostic.
+    If JsonUtil.GetIntValue(SettingsFile, "newMilkmaidDialogueTraceMigration92", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "newMilkmaidDialogueTraceMigration92", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -929,6 +927,7 @@ Event OnPageReset(String page)
     milkDrinkArousalAmountOption = -1
     dialogueDiagnosticOption = -1
     sexLabBreastfeedingDebugOption = -1
+    newMilkmaidDialogueTraceOption = -1
     npcDrinkAnimationOption = -1
     npcDrinkAnimationDurationOption = -1
     playerDrinkAnimationOption = -1
@@ -998,7 +997,6 @@ Event OnPageReset(String page)
     playerMilkingArmorNarrationCooldownOption = -1
     npcMilkingArmorNarrationCooldownOption = -1
     armorDebugOption = -1
-    blacksmithDebugOption = -1
     armorLookupForensicsOption = -1
     extensionsArmorStrippingOption = -1
     armorStripHeavyThresholdOption = -1
@@ -1228,7 +1226,6 @@ Event OnPageReset(String page)
         armorStripMoanDiagnosticOption = AddToggleOption("Strip Moan Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripMoanDiagnostic", 0) == 1)
         armorStripNarrationDiagnosticOption = AddToggleOption("Strip Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarrationDiagnostic", 0) == 1)
         armorDebugOption = AddToggleOption("Equip Reaction Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0) == 1)
-        blacksmithDebugOption = AddToggleOption("Blacksmith Debug", JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDebug", 0) == 1)
         armorLookupForensicsOption = AddToggleOption("Armor Lookup Forensics", JsonUtil.GetIntValue(SettingsFile, "enableArmorLookupForensics", 0) == 1)
         AddHeaderOption("A" + "nimations ")
         milkDrinkAnimationDiagnosticOption = AddToggleOption("Milk Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1)
@@ -1253,6 +1250,7 @@ Event OnPageReset(String page)
         dialogueDiagnosticOption = AddToggleOption("NPC Dialogue Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1)
         sexLabBreastfeedingDebugOption = AddToggleOption("SexLab Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1)
         ostimDebugOption = AddToggleOption("OStim Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1)
+        newMilkmaidDialogueTraceOption = AddToggleOption("New Milkmaid Dialogue Trace", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0) == 1)
         Return
     EndIf
     AddHeaderOption("Sounds")
@@ -1324,6 +1322,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Read-only. Enabled when OStim.esp is active in the load order.")
     ElseIf option == ostimDebugOption
         SetInfoText("Show in-game reasons when OStim breastfeeding is unavailable, blocked, or fails to start.")
+    ElseIf option == newMilkmaidDialogueTraceOption
+        SetInfoText("Show concise in-game and Papyrus breadcrumbs for the breastfeeding-to-Milk-Maid creation route.")
     ElseIf option == npcMilkEffectsOption
         SetInfoText("Apply milk, arousal, and moan effects when an MME Milkmaid consumes recognized milk.")
     ElseIf option == npcDrinkNotificationsOption
@@ -1430,8 +1430,6 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Set the minimum real-time delay between successful armor-strip narrations.")
     ElseIf option == armorDebugOption
         SetInfoText("Report armor classification, matched MME list, equip reactions, nearby tracking, narration gates, and Skyrim.Net results.")
-    ElseIf option == blacksmithDebugOption
-        SetInfoText("Report Blacksmith eligibility, worn armor state, supported-milk payment, MilkingEquipment capacity, same-armor checks, and verified add/remove results.")
     ElseIf option == armorLookupForensicsOption
         SetInfoText("Log the live MME armor-name arrays and exact Find() results at the instant each armor protection/classification decision is made. Papyrus log only.")
     ElseIf option == playerMilkingArmorEquipMoanOption || option == npcMilkingArmorEquipMoanOption
@@ -1760,10 +1758,6 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorDebug", value)
         SetToggleOptionValue(option, value == 1)
-    ElseIf option == blacksmithDebugOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDebug", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableBlacksmithDebug", value)
-        SetToggleOptionValue(option, value == 1)
     ElseIf option == armorLookupForensicsOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorLookupForensics", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorLookupForensics", value)
@@ -1876,6 +1870,10 @@ Event OnOptionSelect(Int option)
     ElseIf option == sexLabBreastfeedingDebugOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == newMilkmaidDialogueTraceOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == ostimBreastfeedingOption && MMEOStimBreastfeeding.IsOStimDetected()
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0)

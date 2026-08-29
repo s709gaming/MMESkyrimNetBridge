@@ -51,7 +51,6 @@ Function InitializeController()
     ; before honoring the master toggle. The OStim Global must also be correct
     ; while disabled so Skyrim cannot retain a stale dialogue choice.
     RefreshOStimDialogueAvailability()
-    MMEVendorServices.RefreshAvailability()
     MMEArmorScript.RestorePlayerMovementIfNeeded(Game.GetPlayer(), MMEArmorScript.GetArmorDiagnostic())
     If !IsExtensionsEnabled()
         DisableController()
@@ -149,7 +148,6 @@ Function DisableController()
     ; Symmetric teardown for every registration and deadline owned by this quest.
     ; Saved gameplay data is preserved; only active observation/scheduling stops.
     OStimDialogueAvailable = False
-    MMEVendorServices.DisableAvailability()
     UnregisterForUpdate()
     UnregisterForModEvent("MMEExtensions_Lifecycle")
     UnregisterForModEvent("MMEExtensions_MMEEffectApplied")

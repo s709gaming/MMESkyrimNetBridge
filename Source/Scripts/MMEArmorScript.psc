@@ -379,42 +379,25 @@ EndFunction
 ; Framework-neutral overflow gate: protects MME's milking/living/special armor.
 Bool Function IsSpecialMMEArmor(MilkQUEST milkController, Armor slotArmor) Global
     ; User-added MilkingEquipment entries are protected just like MME's native
-    ; armor. Vendor services need to distinguish these removable entries from
-    ; inherent MME recognition, so the native portion lives in the helper below.
+    ; armor.
     Return GetMMEArmorProtectionReason(milkController, slotArmor) != ""
 EndFunction
 
 ; Returns a stable diagnostic reason for the first applicable MME protection.
-; MME's arrays intentionally use display-name identity, including names added
-; by the Blacksmith service. Empty names and MME's "Empty" sentinel are never
+; MME's arrays intentionally use display-name identity. Empty names and MME's
+; "Empty" sentinel are never
 ; armor identities and must not match malformed or unused array entries.
 ; `source`/`wearer` are forensic labels only: they tag the Papyrus log with the
 ; caller path (drink/poll/equip) and the actor being evaluated, without
 ; changing the decision.
 String Function GetMMEArmorProtectionReason(MilkQUEST milkController, Armor slotArmor, String source = "unknown", Actor wearer = None) Global
-    Return ResolveArmorProtectionReason(milkController, slotArmor, source, wearer, True)
+    Return ResolveArmorProtectionReason(milkController, slotArmor, source, wearer)
 EndFunction
 
-; Returns only armor MME already recognizes without a user MilkingEquipment
-; registration. Blacksmith removal must never erase BasicLivingArmor or
-; ParasiteLivingArmor, and adding any of these names would waste array capacity.
-Bool Function IsNativeOrSpecialMMEArmor(MilkQUEST milkController, Armor slotArmor) Global
-    ; Explicit quest properties and MME-configured living-armor arrays come
-    ; first. Name fragments reproduce the checks in MME's MilkPlayerLoadGame
-    ; and overflow paths, including long-established third-party integrations.
-    Return GetNativeMMEArmorProtectionReason(milkController, slotArmor) != ""
-EndFunction
-
-String Function GetNativeMMEArmorProtectionReason(MilkQUEST milkController, Armor slotArmor, String source = "unknown", Actor wearer = None) Global
-    Return ResolveArmorProtectionReason(milkController, slotArmor, source, wearer, False)
-EndFunction
-
-; Single implementation behind both protection entry points. includeUserRegistry
-; only gates the trailing MilkingEquipment decision; the native/special checks
-; are identical in both. Every array lookup happens exactly once here, and the
+; Every array lookup happens exactly once here, and the
 ; exact same local variables drive both the forensic log and the decision, so
 ; the evidence can never disagree with the code path that actually ran.
-String Function ResolveArmorProtectionReason(MilkQUEST milkController, Armor slotArmor, String source, Actor wearer, Bool includeUserRegistry) Global
+String Function ResolveArmorProtectionReason(MilkQUEST milkController, Armor slotArmor, String source, Actor wearer) Global
     If milkController == None || slotArmor == None
         Return "invalid MME/armor state"
     EndIf
@@ -465,7 +448,7 @@ String Function ResolveArmorProtectionReason(MilkQUEST milkController, Armor slo
     || StringUtil.Find(armorName, "Milking Cuirass") >= 0 \
     || StringUtil.Find(armorName, "Milker") >= 0
         reason = "MME special name rule"
-    ElseIf includeUserRegistry && milkingIndex >= 0
+    ElseIf milkingIndex >= 0
         reason = "registry=MilkingEquipment | index=" + milkingIndex + " | storedName=" + armorName
     EndIf
     If GetArmorLookupDiagnostic()
@@ -570,7 +553,7 @@ Bool Function IsAmbiguousOrdinaryArmorName(String armorName) Global
 EndFunction
 
 ; Diagnostic-only evidence explaining when a bad generic-name array entry was
-; ignored. This never mutates MME's authoritative arrays or Blacksmith state.
+; ignored. This never mutates MME's authoritative arrays.
 String Function GetIgnoredAmbiguousRegistration(MilkQUEST milkController, Armor slotArmor) Global
     If milkController == None || slotArmor == None
         Return ""

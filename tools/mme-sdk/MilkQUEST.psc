@@ -3,6 +3,7 @@ SexLabFramework Property SexLab Auto
 MME_DDi Property DDi Auto
 Actor Property PlayerREF Auto
 Actor[] Property MilkMaid Auto
+Actor[] Property MilkSlave Auto
 MilkQUEST_Conditions Property MilkQC Auto
 FormList Property MME_Milk_Basic Auto
 FormList Property MME_Milk_Race Auto
@@ -40,6 +41,9 @@ EndFunction
 Function AddLeak(Actor akActor)
 EndFunction
 Int Function PiercingCheck(Actor akActor)
+    Return 0
+EndFunction
+Int Function Milklvl0fix()
     Return 0
 EndFunction
 Function AssignSlot(Actor akActor)

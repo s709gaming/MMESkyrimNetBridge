@@ -16,6 +16,8 @@ const
   PlayerPrompt = 'Wanna become a Milk Maid? Have a taste! Straight from the tap.';
   NPCResponse = 'I''d love a sip! Yummy!';
   SubjectMaidVariable = '::MME_SubjectMaid_var';
+  SubjectSlaveVariable = '::MME_SubjectSlave_var';
+  FreeMaidSlotsVariable = '::MME_FreeMaidSlots_var';
 
 function FindFileByName(aName: string): IInterface;
 var
@@ -134,7 +136,7 @@ end;
 function ValidateInstalledRoute(aTopic, aInfo: IInterface): Boolean;
 var
   topicElement, responses, conditions, condition, vmad: IInterface;
-  i, subjectMaidCount: Integer;
+  i, subjectMaidCount, subjectSlaveCount, freeMaidSlotsCount: Integer;
 begin
   Result := False;
   if not Assigned(aTopic) or not Assigned(aInfo) then begin
@@ -152,7 +154,7 @@ begin
      not Assigned(responses) or (ElementCount(responses) <> 1) or
      not SameText(GetElementEditValues(ElementByIndex(responses, 0), 'NAM1'),
        NPCResponse) or
-     not Assigned(conditions) or (ElementCount(conditions) <> 7) or
+     not Assigned(conditions) or (ElementCount(conditions) <> 9) or
      not Assigned(vmad) or not TreeHasExactValue(vmad, HandlerScriptName) or
      not TreeHasExactValue(vmad, HandlerFragmentName) then begin
     AddMessage('ERROR: Installed Milk Maid route failed structural validation.');
@@ -160,6 +162,8 @@ begin
   end;
 
   subjectMaidCount := 0;
+  subjectSlaveCount := 0;
+  freeMaidSlotsCount := 0;
   for i := 0 to ElementCount(conditions) - 1 do begin
     condition := ElementByIndex(conditions, i);
     if SameText(GetElementEditValues(condition, 'CIS2'),
@@ -167,9 +171,27 @@ begin
        (GetElementNativeValues(condition,
         'CTDA\Comparison Value - Float') = 0.0) then
       Inc(subjectMaidCount);
+    if SameText(GetElementEditValues(condition, 'CIS2'),
+        SubjectSlaveVariable) and
+       (GetElementNativeValues(condition,
+        'CTDA\Comparison Value - Float') = 0.0) then
+      Inc(subjectSlaveCount);
+    if SameText(GetElementEditValues(condition, 'CIS2'),
+        FreeMaidSlotsVariable) and
+       (GetElementNativeValues(condition,
+        'CTDA\Comparison Value - Float') = 0.0) then
+      Inc(freeMaidSlotsCount);
   end;
   if subjectMaidCount <> 1 then begin
     AddMessage('ERROR: Installed route does not contain exactly one inverted SubjectMaid gate.');
+    Exit;
+  end;
+  if subjectSlaveCount <> 1 then begin
+    AddMessage('ERROR: Installed route does not contain exactly one inverted SubjectSlave gate.');
+    Exit;
+  end;
+  if freeMaidSlotsCount <> 1 then begin
+    AddMessage('ERROR: Installed route does not contain exactly one FreeMaidSlots gate.');
     Exit;
   end;
   if (Check(aTopic) <> '') or (Check(aInfo) <> '') then begin

@@ -3,9 +3,9 @@ unit UserScript;
 {
   Adds the isolated "breastfeeding creates a Milk Maid" choice under MME's
   existing Hey there dialogue. The working MME Extensions OStim NPC-drinks
-  route is copied as the structural and validation source; one verified MME
-  SubjectMaid CTDA is cloned and inverted to hide the option for existing
-  Milk Maids. Safe to rerun by stable EditorID.
+  route is copied as the structural and validation source. Verified MME quest
+  variable CTDAs hide it for existing Milk Maids, Milk Slaves, invalid-sex
+  targets, and full Milk Maid capacity. Safe to rerun by stable EditorID.
 
   Required loaded files:
     Skyrim.esm
@@ -20,7 +20,10 @@ const
   SourceTopicEditorID = 'MMEExt_OStimBreastfeeding_NPCDrinksTopic';
   SourceInfoEditorID = 'MMEExt_OStimBreastfeeding_NPCDrinks';
   SubjectMaidGateTopicEditorID = 'MME_BreastEPotion_Topic';
+  FreeMaidGateTopicEditorID = 'MME_Maid_Making_Topic';
   SubjectMaidVariable = '::MME_SubjectMaid_var';
+  SubjectSlaveVariable = '::MME_SubjectSlave_var';
+  FreeMaidSlotsVariable = '::MME_FreeMaidSlots_var';
   OpeningFragment = 'Fragment_00';
 
   TargetTopicEditorID = 'MMEExt_NewMilkMaidTopic';
@@ -33,9 +36,9 @@ const
 var
   TargetFile, MMEFile: IInterface;
   SourceTopic, SourceInfo, OpeningSource: IInterface;
-  SubjectMaidCondition: IInterface;
+  SubjectMaidCondition, FreeMaidSlotsCondition: IInterface;
   SourceTopicCount, SourceInfoCount, OpeningSourceCount: Integer;
-  SubjectMaidConditionCount: Integer;
+  SubjectMaidConditionCount, FreeMaidSlotsConditionCount: Integer;
   ExistingTopic, ExistingInfo: IInterface;
   ExistingTopicCount, ExistingInfoCount: Integer;
 
@@ -160,6 +163,37 @@ begin
     FindSubjectMaidCondition(ElementByIndex(aElement, i), aGateTopic);
 end;
 
+procedure FindFreeMaidSlotsCondition(aElement, aGateTopic: IInterface);
+var
+  i, j: Integer;
+  topicElement, conditions, condition: IInterface;
+begin
+  if not Assigned(aElement) then
+    Exit;
+  if Signature(aElement) = 'INFO' then begin
+    topicElement := ElementByName(aElement, 'Topic');
+    if Assigned(topicElement) and Assigned(LinksTo(topicElement)) and
+       Equals(MasterOrSelf(LinksTo(topicElement)), MasterOrSelf(aGateTopic)) then begin
+      conditions := ElementByPath(aElement, 'Conditions');
+      if Assigned(conditions) then
+        for j := 0 to ElementCount(conditions) - 1 do begin
+          condition := ElementByIndex(conditions, j);
+          if SameText(GetElementEditValues(condition, 'CTDA\Function'),
+              'GetVMQuestVariable') and
+             SameText(GetElementEditValues(condition, 'CIS2'),
+              FreeMaidSlotsVariable) and
+             (GetElementNativeValues(condition,
+              'CTDA\Comparison Value - Float') = 0.0) then begin
+            Inc(FreeMaidSlotsConditionCount);
+            FreeMaidSlotsCondition := condition;
+          end;
+        end;
+    end;
+  end;
+  for i := 0 to ElementCount(aElement) - 1 do
+    FindFreeMaidSlotsCondition(ElementByIndex(aElement, i), aGateTopic);
+end;
+
 function FindRecordByEditorIDRecursive(aElement: IInterface;
   aSignature, aEditorID: string): IInterface;
 var
@@ -259,7 +293,7 @@ end;
 function RebuildConditions(aInfo: IInterface): Boolean;
 var
   sourceConditions, targetConditions, sourceCondition,
-    newCondition: IInterface;
+    newMaidCondition, newSlaveCondition, newFreeCondition: IInterface;
   i: Integer;
 begin
   Result := False;
@@ -278,27 +312,52 @@ begin
 
   for i := 0 to ElementCount(sourceConditions) - 1 do begin
     sourceCondition := ElementByIndex(sourceConditions, i);
-    if SameText(GetElementEditValues(sourceCondition, 'CIS2'),
-        SubjectMaidVariable) then begin
-      AddMessage('ERROR: OStim source unexpectedly already has a SubjectMaid condition.');
+    if SameText(GetElementEditValues(sourceCondition, 'CIS2'), SubjectMaidVariable) or
+       SameText(GetElementEditValues(sourceCondition, 'CIS2'), SubjectSlaveVariable) or
+       SameText(GetElementEditValues(sourceCondition, 'CIS2'), FreeMaidSlotsVariable) then begin
+      AddMessage('ERROR: OStim source unexpectedly already has a Milk Maid eligibility condition.');
       Exit;
     end;
     ElementAssign(targetConditions, HighInteger, sourceCondition, False);
   end;
 
-  newCondition := ElementAssign(targetConditions, HighInteger,
-    SubjectMaidCondition, False);
-  if not Assigned(newCondition) then
+  newFreeCondition := ElementAssign(targetConditions, HighInteger,
+    FreeMaidSlotsCondition, False);
+  if not Assigned(newFreeCondition) then
     Exit;
-  SetElementNativeValues(newCondition, 'CTDA\Comparison Value - Float', 0.0);
 
-  Result := SameText(GetElementEditValues(newCondition, 'CTDA\Function'),
+  newMaidCondition := ElementAssign(targetConditions, HighInteger,
+    SubjectMaidCondition, False);
+  if not Assigned(newMaidCondition) then
+    Exit;
+  SetElementNativeValues(newMaidCondition, 'CTDA\Comparison Value - Float', 0.0);
+
+  newSlaveCondition := ElementAssign(targetConditions, HighInteger,
+    SubjectMaidCondition, False);
+  if not Assigned(newSlaveCondition) then
+    Exit;
+  SetElementEditValues(newSlaveCondition, 'CIS2', SubjectSlaveVariable);
+  SetElementNativeValues(newSlaveCondition, 'CTDA\Comparison Value - Float', 0.0);
+
+  Result := SameText(GetElementEditValues(newFreeCondition, 'CTDA\Function'),
       'GetVMQuestVariable') and
-    SameText(GetElementEditValues(newCondition, 'CIS2'),
-      SubjectMaidVariable) and
-    (GetElementNativeValues(newCondition,
+    SameText(GetElementEditValues(newFreeCondition, 'CIS2'),
+      FreeMaidSlotsVariable) and
+    (GetElementNativeValues(newFreeCondition,
       'CTDA\Comparison Value - Float') = 0.0) and
-    (ElementCount(targetConditions) = ElementCount(sourceConditions) + 1);
+    SameText(GetElementEditValues(newMaidCondition, 'CTDA\Function'),
+      'GetVMQuestVariable') and
+    SameText(GetElementEditValues(newMaidCondition, 'CIS2'),
+      SubjectMaidVariable) and
+    (GetElementNativeValues(newMaidCondition,
+      'CTDA\Comparison Value - Float') = 0.0) and
+    SameText(GetElementEditValues(newSlaveCondition, 'CTDA\Function'),
+      'GetVMQuestVariable') and
+    SameText(GetElementEditValues(newSlaveCondition, 'CIS2'),
+      SubjectSlaveVariable) and
+    (GetElementNativeValues(newSlaveCondition,
+      'CTDA\Comparison Value - Float') = 0.0) and
+    (ElementCount(targetConditions) = ElementCount(sourceConditions) + 3);
 end;
 
 function InstallHandler(aInfo: IInterface): Boolean;
@@ -409,7 +468,7 @@ end;
 
 function Initialize: Integer;
 var
-  subjectGateTopic: IInterface;
+  subjectGateTopic, freeGateTopic: IInterface;
 begin
   Result := 1;
   TargetFile := FindFileByName(TargetPluginName);
@@ -454,6 +513,22 @@ begin
     Exit;
   end;
 
+  freeGateTopic := FindRecordByEditorIDRecursive(
+    GroupBySignature(MMEFile, 'DIAL'), 'DIAL',
+    FreeMaidGateTopicEditorID);
+  if not Assigned(freeGateTopic) then begin
+    AddMessage('ERROR: Verified MME FreeMaidSlots gate topic was not found.');
+    Exit;
+  end;
+  FreeMaidSlotsConditionCount := 0;
+  FindFreeMaidSlotsCondition(GroupBySignature(MMEFile, 'DIAL'),
+    freeGateTopic);
+  if FreeMaidSlotsConditionCount <> 1 then begin
+    AddMessage('ERROR: Expected exactly one verified FreeMaidSlots condition; found ' +
+      IntToStr(FreeMaidSlotsConditionCount) + '.');
+    Exit;
+  end;
+
   ExistingTopicCount := 0;
   ExistingInfoCount := 0;
   FindExistingRecords(GroupBySignature(TargetFile, 'DIAL'));
@@ -467,7 +542,7 @@ begin
 
   AddMessage('MME Extensions breastfeeding-to-Milk-Maid dialogue installed successfully.');
   AddMessage('The ordinary OStim/SexLab breastfeeding routes remain unchanged.');
-  AddMessage('The new route is visible only while MME SubjectMaid is false and revalidates at runtime.');
+  AddMessage('The new route requires free capacity and false SubjectMaid/SubjectSlave, then revalidates at runtime.');
   Result := 0;
 end;
 
