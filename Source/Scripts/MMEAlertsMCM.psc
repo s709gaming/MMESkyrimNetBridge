@@ -132,6 +132,7 @@ Int diagnosticNotificationsOption
 Int diagnosticPapyrusTraceOption
 Int diagnosticRefreshGateOption
 Int diagnosticInstallAuditOption
+Int diagnosticMilkDrinkAuditOption
 Int diagnosticDialogueAuditOption
 Int diagnosticInstallStatusOption
 Int diagnosticOStimStatusOption
@@ -1199,6 +1200,7 @@ Event OnPageReset(String page)
         AddHeaderOption("Actions")
         diagnosticRefreshGateOption = AddTextOption("Refresh OStim Dialogue Gate", "RUN")
         diagnosticInstallAuditOption = AddTextOption("Run Install Audit", "RUN")
+        diagnosticMilkDrinkAuditOption = AddTextOption("Run Milk Drink Audit", "RUN")
         diagnosticDialogueAuditOption = AddTextOption("Run Crosshair Dialogue Audit", "RUN")
         AddHeaderOption("Live Status")
         diagnosticInstallStatusOption = AddTextOption("MME Extensions Records", MMEDiagnostics.GetInstallStatus(), OPTION_FLAG_DISABLED)
@@ -1504,6 +1506,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Recalculate the shared OStim dialogue gate without relying on the optional native DLL.")
     ElseIf option == diagnosticInstallAuditOption
         SetInfoText("Check the controller, MME, OStim, dialogue records, setting, and live dialogue gate.")
+    ElseIf option == diagnosticMilkDrinkAuditOption
+        SetInfoText("Trace the player milk-drink route through quest, alias, tracker attachment, settings, supported forms, equip event, and accepted drink stages.")
     ElseIf option == diagnosticDialogueAuditOption
         SetInfoText("Check whether the NPC under your crosshair and the player satisfy the New Milk Maid runtime requirements.")
     ElseIf option == diagnosticInstallStatusOption
@@ -1594,6 +1598,8 @@ Event OnOptionSelect(Int option)
         ForcePageReset()
     ElseIf option == diagnosticInstallAuditOption
         MMEDiagnostics.RunInstallAudit()
+    ElseIf option == diagnosticMilkDrinkAuditOption
+        MMEDiagnostics.RunMilkDrinkAudit()
     ElseIf option == diagnosticDialogueAuditOption
         MMEDiagnostics.RunCrosshairDialogueAudit()
     ElseIf option == debugMilkReportOption

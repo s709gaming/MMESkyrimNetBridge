@@ -66,6 +66,63 @@ Function RunInstallAudit() Global
     EndIf
 EndFunction
 
+; Reports each player-drink intake stage separately. This is intentionally
+; read-only and event-driven: it does not consume inventory or poll the player.
+Function RunMilkDrinkAudit() Global
+    Quest controllerQuest = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as Quest
+    If controllerQuest == None
+        Report("Drink stop 1 FAIL: MMEAlertDebugQuest is missing", 2)
+        Return
+    EndIf
+    Report("Drink stop 1 PASS: controller quest resolved")
+
+    ReferenceAlias playerAlias = controllerQuest.GetAlias(1) as ReferenceAlias
+    If playerAlias == None
+        Report("Drink stop 2 FAIL: player alias ID 1 is missing", 2)
+        Return
+    EndIf
+    Actor aliasActor = playerAlias.GetActorReference()
+    If aliasActor != Game.GetPlayer()
+        Report("Drink stop 3 FAIL: alias ID 1 is not filled by the player", 2)
+        Return
+    EndIf
+    Report("Drink stop 2-3 PASS: alias ID 1 contains the player")
+
+    MMEDrinkTracker tracker = playerAlias as MMEDrinkTracker
+    If tracker == None
+        Report("Drink stop 4 FAIL: MMEDrinkTracker is not attached to alias ID 1", 2)
+        Return
+    EndIf
+    Report("Drink stop 4 PASS: MMEDrinkTracker is attached")
+
+    Bool masterEnabled = MMEAlertsController.IsExtensionsEnabled()
+    Bool debugEnabled = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableAddMilkDebug", 0) == 1
+    Report("Drink stop 5: extensions=" + YesNo(masterEnabled) + " diagnostics=" + YesNo(debugEnabled))
+
+    Form lactacid = Game.GetFormFromFile(0x0343F2, "MilkModNEW.esp")
+    Form hearthfireMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
+    FormList mmeMilks = Game.GetFormFromFile(0x05C81C, "MilkModNEW.esp") as FormList
+    Bool formsReady = lactacid != None && hearthfireMilk != None && mmeMilks != None
+    Report("Drink stop 6: Lactacid=" + YesNo(lactacid != None) + " HearthFires milk=" + YesNo(hearthfireMilk != None) + " MME milk list=" + YesNo(mmeMilks != None))
+    If !formsReady
+        Report("Drink stop 6 FAIL: supported milk forms did not resolve", 2)
+        Return
+    EndIf
+
+    Float lastEventTime = StorageUtil.GetFloatValue(None, "MMEExtensions.PlayerDrink.LastAliasEventTime", -1.0)
+    Float lastAcceptedTime = StorageUtil.GetFloatValue(None, "MMEExtensions.PlayerDrink.LastAcceptedTime", -1.0)
+    If lastEventTime < 0.0
+        Report("Drink stop 7 WAITING: no player equip event observed yet")
+    Else
+        Report("Drink stop 7 PASS: equip event observed " + (Utility.GetCurrentRealTime() - lastEventTime) + " seconds ago; form=" + StorageUtil.GetIntValue(None, "MMEExtensions.PlayerDrink.LastAliasEventForm", 0))
+    EndIf
+    If lastAcceptedTime < 0.0
+        Report("Drink stop 8 WAITING: no supported milk accepted yet")
+    Else
+        Report("Drink stop 8 PASS: milk accepted " + (Utility.GetCurrentRealTime() - lastAcceptedTime) + " seconds ago; form=" + StorageUtil.GetIntValue(None, "MMEExtensions.PlayerDrink.LastAcceptedForm", 0))
+    EndIf
+EndFunction
+
 Function RunCrosshairDialogueAudit() Global
     Actor candidate = Game.GetCurrentCrosshairRef() as Actor
     Actor playerActor = Game.GetPlayer()

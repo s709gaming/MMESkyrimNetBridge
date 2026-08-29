@@ -10,10 +10,14 @@ Scriptname MMEDrinkTracker extends ReferenceAlias
 String SettingsFile = "/MMEAlerts/Settings"
 
 Event OnInit()
+    StorageUtil.SetIntValue(None, "MMEExtensions.PlayerDrink.TrackerInitialized", 1)
+    StorageUtil.SetFloatValue(None, "MMEExtensions.PlayerDrink.TrackerInitTime", Utility.GetCurrentRealTime())
     RegisterNativeDrink()
 EndEvent
 
 Event OnPlayerLoadGame()
+    StorageUtil.SetIntValue(None, "MMEExtensions.PlayerDrink.TrackerInitialized", 1)
+    StorageUtil.SetFloatValue(None, "MMEExtensions.PlayerDrink.TrackerLoadTime", Utility.GetCurrentRealTime())
     RegisterNativeDrink()
 EndEvent
 
@@ -32,6 +36,13 @@ EndFunction
 ; TESEquipEvent source does not publish player potion use on every runtime/menu
 ; path. The native bridge remains the NPC source only.
 Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
+    ; Always leave a low-cost breadcrumb before any setting or item filter. The
+    ; staged MCM audit can therefore distinguish a missing alias attachment from
+    ; a supported-milk classification or gameplay rejection.
+    StorageUtil.SetFloatValue(None, "MMEExtensions.PlayerDrink.LastAliasEventTime", Utility.GetCurrentRealTime())
+    If akBaseObject != None
+        StorageUtil.SetIntValue(None, "MMEExtensions.PlayerDrink.LastAliasEventForm", akBaseObject.GetFormID())
+    EndIf
     If !MMEAlertsController.IsExtensionsEnabled()
         Return
     EndIf
@@ -117,6 +128,8 @@ Function HandlePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, String 
     ; Phase 1: player alias consumption is authoritative. eventSource is retained
     ; in diagnostics so a stray native callback is immediately distinguishable.
     Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1
+    StorageUtil.SetFloatValue(None, "MMEExtensions.PlayerDrink.LastAcceptedTime", Utility.GetCurrentRealTime())
+    StorageUtil.SetIntValue(None, "MMEExtensions.PlayerDrink.LastAcceptedForm", drinkItem.GetFormID())
     If diagnostic
         String traceDrinkName = drinkItem.GetName()
         If traceDrinkName == ""
