@@ -24,6 +24,8 @@ Make Milk Maid gameplay feel more alive, reactive, and a little more shameless.
 
 - Drinking milk can increase a Milk Maid's milk amount, temporarily inflate her breasts, raise arousal, and trigger moans, animations, or reactions.
 
+- Arousal is meant to trigger your other arousal mods, like animations or events. 
+
 - Milk can come from bottles... or straight from the tap~
 
 - Nearby Milk Maids react as they become heavy, full, leaking, milked, or fitted with questionable milking equipment.

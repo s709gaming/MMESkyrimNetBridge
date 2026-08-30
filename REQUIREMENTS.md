@@ -411,9 +411,6 @@ Useful if you want an exaggerated body shape where Milk Mod Economy's breast sca
 
 - Breast Controls / Scaling for MME
 - The LactTAT
-- Elsie LaVache for MME - SE
-- The Milk Maid - SE
-- Elsie LaVache 3BA BodySlide
 - Being a Cow - Alternate Version
 - Milk Addict
 
