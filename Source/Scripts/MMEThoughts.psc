@@ -150,12 +150,41 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowNarration)
     EndIf
 
     Debug.Notification(selectedComment)
+    PlayThoughtReaction(selectedActor, armorClass)
     If allowNarration && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkMaidThoughtNarration", 1) == 1
         ; Reuse the exact rendered HUD Thought as Skyrim.Net's factual anchor.
         ; Rapid debug passes False here and therefore remains local-only.
         MMEAlertsSkyrimNet.NarrateMilkMaidThought(selectedActor, halfPlus, armorClass, selectedComment)
     EndIf
     Return True
+EndFunction
+
+; Plays the existing mild/hot SOUN pools for a successfully shown Thought.
+; This is intentionally independent of drink and armor-equip moan toggles.
+Function PlayThoughtReaction(Actor selectedActor, Int armorClass) Global
+    String settingsFile = "/MMEAlerts/Settings"
+    If selectedActor == None
+        Return
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enableReactionSounds", 1) != 1 || JsonUtil.GetIntValue(settingsFile, "enableArmorThoughtSounds", 1) != 1
+        Return
+    EndIf
+
+    Int localFormID = 0x000854 ; Mild/low SOUN marker
+    If armorClass == 2 || armorClass == 3
+        localFormID = 0x000856 ; Hot/high SOUN marker
+    ElseIf armorClass != 0 && armorClass != 1
+        Return
+    EndIf
+
+    Sound reaction = Game.GetFormFromFile(localFormID, "MMEAlert.esp") as Sound
+    If reaction == None
+        Return
+    EndIf
+    Int instance = reaction.Play(selectedActor)
+    If instance > 0
+        Sound.SetInstanceVolume(instance, JsonUtil.GetFloatValue(settingsFile, "reactionSoundVolume", 100.0) / 100.0)
+    EndIf
 EndFunction
 
 Int Function CountValidCandidates(Actor[] scannedActors, MilkQUEST milkController) Global

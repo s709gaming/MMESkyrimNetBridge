@@ -127,6 +127,7 @@ Int milkMaidThoughtsOption
 Int milkMaidThoughtsIntervalOption
 Int milkMaidThoughtsRandomnessOption
 Int milkMaidThoughtNarrationOption
+Int armorThoughtSoundsOption
 Int milkMaidThoughtsDebugOption
 Int traceMilkMaidThoughtsLogicOption
 Int diagnosticNotificationsOption
@@ -148,7 +149,7 @@ Int diagnosticSexLabBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 96
+    Return 97
 EndFunction
 
 Function SetPageNames()
@@ -337,6 +338,8 @@ Function EnsureDefaults()
         JsonUtil.SetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0)
         JsonUtil.SetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0)
         JsonUtil.SetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorThoughtSounds", 1)
+        JsonUtil.SetIntValue(SettingsFile, "armorThoughtSoundsMigration94", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0)
         JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsMigration87", 1)
@@ -864,6 +867,13 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "newMilkmaidSexLabTraceMigration93", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds an independent default-on sound gate for Armor Thoughts while the
+    ; existing reaction-sound setting remains the global master switch.
+    If JsonUtil.GetIntValue(SettingsFile, "armorThoughtSoundsMigration94", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorThoughtSounds", 1)
+        JsonUtil.SetIntValue(SettingsFile, "armorThoughtSoundsMigration94", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1030,6 +1040,7 @@ Event OnPageReset(String page)
     milkMaidThoughtsIntervalOption = -1
     milkMaidThoughtsRandomnessOption = -1
     milkMaidThoughtNarrationOption = -1
+    armorThoughtSoundsOption = -1
     milkMaidThoughtsDebugOption = -1
     traceMilkMaidThoughtsLogicOption = -1
     diagnosticNotificationsOption = -1
@@ -1208,6 +1219,7 @@ Event OnPageReset(String page)
         milkMaidThoughtsIntervalOption = AddSliderOption("Poll Interval", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0), "{0} game hours")
         milkMaidThoughtsRandomnessOption = AddSliderOption("Randomness (+/-)", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0), "{0} game hours")
         milkMaidThoughtNarrationOption = AddToggleOption("Skyrim.Net Thought Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtNarration", 1) == 1)
+        armorThoughtSoundsOption = AddToggleOption("Armor Thought Sounds", JsonUtil.GetIntValue(SettingsFile, "enableArmorThoughtSounds", 1) == 1)
         Return
     EndIf
     If page == "Troubleshoot"
@@ -1524,6 +1536,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Randomly subtract or add up to this many game-time hours. The final interval never falls below two hours.")
     ElseIf option == milkMaidThoughtNarrationOption
         SetInfoText("Ask Skyrim.Net for a direct, AI-generated reaction to each normal game-hour Thought. The 15-second test remains local-only.")
+    ElseIf option == armorThoughtSoundsOption
+        SetInfoText("Play a mild or hot reaction sound on the selected Milk Maid when an Armor Thought appears. The global reaction-sound setting must also be enabled.")
     ElseIf option == milkMaidThoughtsDebugOption
         SetInfoText("Attempt one local Thought notification every 15 real-time seconds using the controller's shared single-update scheduler. Debug Thoughts are not mirrored to Skyrim.Net.")
     ElseIf option == traceMilkMaidThoughtsLogicOption
@@ -1616,6 +1630,10 @@ Event OnOptionSelect(Int option)
     ElseIf option == milkMaidThoughtNarrationOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtNarration", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtNarration", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == armorThoughtSoundsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorThoughtSounds", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorThoughtSounds", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == milkMaidThoughtsDebugOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
