@@ -1,4 +1,4 @@
-Scriptname MMENewMilkMaid extends TopicInfo Hidden
+Scriptname MMENewMilkMaid extends MME_Dialogues Hidden
 
 ; Isolated dialogue/result adapter for the breastfeeding-to-Milk-Maid route.
 ; The persistent MMEDebug service owns scene tracking; this script owns the
@@ -7,6 +7,34 @@ Scriptname MMENewMilkMaid extends TopicInfo Hidden
 
 Function Fragment_CreateMilkMaid(ObjectReference akSpeakerRef)
     StartRequest(Game.GetPlayer(), akSpeakerRef as Actor)
+EndFunction
+
+; SexLab-specific result fragment. Arm Extensions first, then deliberately
+; enter MME's own player-source/NPC-drinker fragment. MME remains responsible
+; for registrar selection, StartSex, and Mode 4 startup.
+Function Fragment_CreateMilkMaidSexLab(ObjectReference akSpeakerRef)
+    Actor milkSource = Game.GetPlayer()
+    Actor candidate = akSpeakerRef as Actor
+    TraceSexLabStop(1, "ENTRY | target=" + GetActorIdentity(candidate))
+    If !ValidateSexLabRequest(milkSource, candidate)
+        Return
+    EndIf
+
+    MMEDebug service = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
+    If service == None
+        TraceSexLabStop(6, "persistent breastfeeding service unavailable", True)
+        Return
+    EndIf
+    If !service.ArmMMENewMilkMaidSexLab(milkSource, candidate)
+        TraceSexLabStop(6, "CreateMilkMaid intent rejected", True)
+        Return
+    EndIf
+
+    TraceSexLabStop(7, "MME breastfeeding requested")
+    Parent.Fragment_02(akSpeakerRef)
+    If !service.ClaimArmedMMENewMilkMaidSexLab()
+        TraceSexLabStop(8, "MME-created SexLab thread was not claimed", True)
+    EndIf
 EndFunction
 
 Bool Function StartRequest(Actor milkSource, Actor candidate) Global
@@ -50,17 +78,14 @@ Bool Function StartRequest(Actor milkSource, Actor candidate) Global
     EndIf
 
     TraceStep("scene requested")
-    Bool started = False
-    ; Preserve the configured framework preference. OStim remains authoritative
-    ; when enabled; SexLab is selected only when the supported OStim lane is not.
-    ; A failed OStim launch never falls through into a second framework.
-    If MMEOStimBreastfeeding.IsBreastfeedingEnabled()
-        TraceStep("backend=OStim")
-        started = service.StartBreastfeeding(milkSource, candidate, diagnostic, "Dialogue", "CreateMilkMaid")
-    Else
-        TraceStep("backend=SexLab")
-        started = service.StartSexLabBreastfeeding(milkSource, candidate, "Dialogue", "CreateMilkMaid")
+    ; This is the established OStim INFO lane. The independent SexLab INFO uses
+    ; Fragment_CreateMilkMaidSexLab and never falls through this function.
+    If !MMEOStimBreastfeeding.IsBreastfeedingEnabled()
+        TraceStep("OStim breastfeeding is disabled", True)
+        Return False
     EndIf
+    TraceStep("backend=OStim")
+    Bool started = service.StartBreastfeeding(milkSource, candidate, diagnostic, "Dialogue", "CreateMilkMaid")
     If !started
         TraceStep("scene did not start", True)
     EndIf
@@ -71,7 +96,8 @@ EndFunction
 ; scene ended normally. Mode 4 is useful milk-processing telemetry, but it is
 ; not a prerequisite for the separate native MME Milk Maid creation transaction.
 Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String semanticIntent, Bool mmeProcessed) Global
-    If semanticIntent != "CreateMilkMaid"
+    Bool sexLabRoute = semanticIntent == "CreateMilkMaidSexLab"
+    If semanticIntent != "CreateMilkMaid" && !sexLabRoute
         Return
     EndIf
 
@@ -110,6 +136,9 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
     EndIf
 
     TraceStep("native creation requested")
+    If sexLabRoute
+        TraceSexLabStop(13, "native Milk Maid creation requested")
+    EndIf
     Int beforeCount = candidate.GetItemCount(lactacid)
     candidate.AddItem(lactacid, 1, True)
     Int stagedCount = candidate.GetItemCount(lactacid)
@@ -148,6 +177,9 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
         Return
     EndIf
     TraceStep("slot confirmed")
+    If sexLabRoute
+        TraceSexLabStop(14, "Milk Maid slot confirmed")
+    EndIf
 
     ; MilkLactacidScr waits one second after AssignSlotMaid before adding its
     ; first Lactacid point. Observe that final native initialization boundary.
@@ -164,7 +196,47 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
 
     TraceStep("initialized")
     TraceStep("created")
+    If sexLabRoute
+        TraceSexLabStop(15, "Lactacid initialized")
+        TraceSexLabStop(16, "COMPLETE")
+    EndIf
     Report(diagnostic, "canonical MME Lactacid creation effect confirmed for " + GetActorName(candidate))
+EndFunction
+
+Bool Function ValidateSexLabRequest(Actor milkSource, Actor candidate) Global
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkSource != Game.GetPlayer() || !MMEOStimBreastfeeding.ValidateMilkSource(milkSource, milkController, False) || MME_Storage.getMilkCurrent(milkSource) < 1.0
+        TraceSexLabStop(2, "player/source invalid", True)
+        Return False
+    EndIf
+    TraceSexLabStop(2, "player/source valid")
+
+    String eligibilityFailure = GetEligibilityFailure(candidate, milkController)
+    If eligibilityFailure != ""
+        TraceSexLabStop(3, eligibilityFailure, True)
+        Return False
+    EndIf
+    TraceSexLabStop(3, "candidate eligible")
+
+    If MMEOStimBreastfeeding.IsBreastfeedingEnabled()
+        TraceSexLabStop(4, "OStim breastfeeding is ON", True)
+        Return False
+    EndIf
+    TraceSexLabStop(4, "OStim OFF")
+
+    If !MMEAlertsController.IsExtensionsEnabled() || !MMEDebug.IsOriginalMMESexLabBreastfeedingAvailable(milkController)
+        TraceSexLabStop(5, "original MME SexLab route unavailable", True)
+        Return False
+    EndIf
+    TraceSexLabStop(5, "original MME SexLab route available")
+    Return True
+EndFunction
+
+Function RunSexLabBusPreflight(Actor candidate) Global
+    TraceSexLabStop(1, "ENTRY | crosshair=" + GetActorIdentity(candidate))
+    If ValidateSexLabRequest(Game.GetPlayer(), candidate)
+        TraceSexLabMessage("PRE-FLIGHT COMPLETE | select the SexLab New Milk Maid dialogue for stops 06-16")
+    EndIf
 EndFunction
 
 ; Returns a short failure reason, or an empty string when the original MME
@@ -206,6 +278,33 @@ EndFunction
 
 Bool Function IsTraceEnabled() Global
     Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableNewMilkmaidDialogueTrace", 0) == 1
+EndFunction
+
+Bool Function IsSexLabTraceEnabled() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableNewMilkmaidSexLabTrace", 0) == 1
+EndFunction
+
+Function TraceSexLabStop(Int stopNumber, String traceText, Bool failed = False) Global
+    If !IsSexLabTraceEnabled()
+        Return
+    EndIf
+    String stopLabel = stopNumber as String
+    If stopNumber < 10
+        stopLabel = "0" + stopLabel
+    EndIf
+    String line = "NMM SexLab " + stopLabel + " " + traceText
+    If failed
+        line = "NMM SexLab " + stopLabel + " FAIL: " + traceText
+    EndIf
+    Debug.Trace("[MME Extensions New Milkmaid SexLab] " + line)
+    Debug.Notification(line)
+EndFunction
+
+Function TraceSexLabMessage(String traceText) Global
+    If IsSexLabTraceEnabled()
+        Debug.Trace("[MME Extensions New Milkmaid SexLab] " + traceText)
+        Debug.Notification("NMM SexLab: " + traceText)
+    EndIf
 EndFunction
 
 Function TraceStep(String traceText, Bool failed = False) Global

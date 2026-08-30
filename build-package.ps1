@@ -224,8 +224,10 @@ if (Test-Path -LiteralPath $pluginPath) {
     }
     if (!$pluginText.Contains("MMEExt_NewMilkMaidTopic") -or
         !$pluginText.Contains("MMEExt_NewMilkMaid") -or
-        !$pluginText.Contains("MMEExt_NewMilkMaidDialogueAvailable")) {
-        throw "MMEAlert.esp is missing the breastfeeding-to-Milk-Maid dialogue. Run tools\AddMMEExtensionsNewMilkMaidDialogue.pas in SSEEdit and save the plugin before packaging."
+        !$pluginText.Contains("MMEExt_SexLabNewMilkMaidTopic") -or
+        !$pluginText.Contains("MMEExt_SexLabNewMilkMaid") -or
+        !$pluginText.Contains("MMEExt_SexLabNewMilkMaidDialogueAvailable")) {
+        throw "MMEAlert.esp is missing the separate OStim/SexLab New Milk Maid dialogue entrances. Run tools\AddMMEExtensionsSexLabNewMilkMaidDialogue.pas in SSEEdit and save the plugin before packaging."
     }
     if (!$pluginText.Contains("HearthFires.esm")) {
         throw "MMEAlert.esp is missing the supported-milk dialogue eligibility update. Run the updated tools\AddMMEExtensionsMilkDialogue.pas in SSEEdit and save the plugin before packaging."

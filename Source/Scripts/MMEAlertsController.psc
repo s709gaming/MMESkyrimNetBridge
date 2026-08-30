@@ -239,17 +239,14 @@ EndFunction
 
 Bool Function IsMMESexLabBreastfeedingAvailable()
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
-        Return False
-    EndIf
-    Return milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar") != None && milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding") != None
+    Return MMEDebug.IsOriginalMMESexLabBreastfeedingAvailable(milkController)
 EndFunction
 
-; The New Milk Maid choice is framework-neutral. It is available when the
-; selected OStim lane is enabled, or when MME's complete SexLab registrar pair
-; is live. OStim-only choices continue to use their original dedicated Global.
+; This gate belongs only to the separate SexLab New Milk Maid INFO. The working
+; OStim New Milk Maid INFO continues to use the original OStim gate (00085A).
+; The two choices therefore remain mutually exclusive in the same choice list.
 Function RefreshNewMilkMaidDialogueAvailability(Bool sexLabAvailable)
-    Bool available = IsExtensionsEnabled() && (MMEOStimBreastfeeding.IsBreastfeedingEnabled() || sexLabAvailable)
+    Bool available = IsExtensionsEnabled() && !MMEOStimBreastfeeding.IsBreastfeedingEnabled() && sexLabAvailable
     GlobalVariable dialogueGate = GetNewMilkMaidDialogueAvailabilityGlobal()
     If dialogueGate != None
         If available
@@ -258,7 +255,7 @@ Function RefreshNewMilkMaidDialogueAvailability(Bool sexLabAvailable)
             dialogueGate.SetValue(0.0)
         EndIf
     Else
-        Debug.Trace("[MME Extensions Dialogue] New Milk Maid availability GlobalVariable is missing")
+        Debug.Trace("[MME Extensions Dialogue] SexLab New Milk Maid availability GlobalVariable is missing")
     EndIf
 EndFunction
 

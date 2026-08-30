@@ -39,6 +39,7 @@ Int milkDrinkArousalAmountOption
 Int dialogueDiagnosticOption
 Int sexLabBreastfeedingDebugOption
 Int newMilkmaidDialogueTraceOption
+Int newMilkmaidSexLabTraceOption
 Int npcDrinkAnimationOption
 Int npcDrinkAnimationDurationOption
 Int playerDrinkAnimationOption
@@ -134,13 +135,14 @@ Int diagnosticRefreshGateOption
 Int diagnosticInstallAuditOption
 Int diagnosticMilkDrinkAuditOption
 Int diagnosticDialogueAuditOption
+Int diagnosticNewMilkmaidSexLabBusOption
 Int diagnosticInstallStatusOption
 Int diagnosticOStimStatusOption
 Int diagnosticGateStatusOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 92
+    Return 93
 EndFunction
 
 Function SetPageNames()
@@ -279,6 +281,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidSexLabTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
         JsonUtil.SetFloatValue(SettingsFile, "npcDrinkAnimationDuration", 3.0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkAnimation", 0)
@@ -850,6 +853,11 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "newMilkmaidDialogueTraceMigration92", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "newMilkmaidSexLabTraceMigration93", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidSexLabTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "newMilkmaidSexLabTraceMigration93", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -928,6 +936,7 @@ Event OnPageReset(String page)
     dialogueDiagnosticOption = -1
     sexLabBreastfeedingDebugOption = -1
     newMilkmaidDialogueTraceOption = -1
+    newMilkmaidSexLabTraceOption = -1
     npcDrinkAnimationOption = -1
     npcDrinkAnimationDurationOption = -1
     playerDrinkAnimationOption = -1
@@ -1022,6 +1031,7 @@ Event OnPageReset(String page)
     diagnosticRefreshGateOption = -1
     diagnosticInstallAuditOption = -1
     diagnosticDialogueAuditOption = -1
+    diagnosticNewMilkmaidSexLabBusOption = -1
     diagnosticInstallStatusOption = -1
     diagnosticOStimStatusOption = -1
     diagnosticGateStatusOption = -1
@@ -1200,6 +1210,7 @@ Event OnPageReset(String page)
         diagnosticInstallAuditOption = AddTextOption("Run Install Audit", "RUN")
         diagnosticMilkDrinkAuditOption = AddTextOption("Run Milk Drink Audit", "RUN")
         diagnosticDialogueAuditOption = AddTextOption("Run Crosshair Dialogue Audit", "RUN")
+        diagnosticNewMilkmaidSexLabBusOption = AddTextOption("Run New Milk Maid SexLab Bus Test", "RUN")
         AddHeaderOption("Live Status")
         diagnosticInstallStatusOption = AddTextOption("MME Extensions Records", MMEDiagnostics.GetInstallStatus(), OPTION_FLAG_DISABLED)
         diagnosticOStimStatusOption = AddTextOption("OStim Integration", MMEDiagnostics.GetOStimStatus(), OPTION_FLAG_DISABLED)
@@ -1251,6 +1262,7 @@ Event OnPageReset(String page)
         sexLabBreastfeedingDebugOption = AddToggleOption("SexLab Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1)
         ostimDebugOption = AddToggleOption("OStim Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1)
         newMilkmaidDialogueTraceOption = AddToggleOption("New Milkmaid Dialogue Trace", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0) == 1)
+        newMilkmaidSexLabTraceOption = AddToggleOption("New Milk Maid SexLab Trace", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidSexLabTrace", 0) == 1)
         Return
     EndIf
     AddHeaderOption("Sounds")
@@ -1324,6 +1336,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Show in-game reasons when OStim breastfeeding is unavailable, blocked, or fails to start.")
     ElseIf option == newMilkmaidDialogueTraceOption
         SetInfoText("Show concise in-game and Papyrus breadcrumbs for the breastfeeding-to-Milk-Maid creation route.")
+    ElseIf option == newMilkmaidSexLabTraceOption
+        SetInfoText("Show numbered 01-16 bus stops for the dedicated SexLab breastfeeding-to-Milk-Maid transaction.")
     ElseIf option == npcMilkEffectsOption
         SetInfoText("Apply milk, arousal, and moan effects when an MME Milkmaid consumes recognized milk.")
     ElseIf option == npcDrinkNotificationsOption
@@ -1508,6 +1522,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Trace the player milk-drink route through quest, alias, tracker attachment, settings, supported forms, equip event, and accepted drink stages.")
     ElseIf option == diagnosticDialogueAuditOption
         SetInfoText("Check whether the NPC under your crosshair and the player satisfy the New Milk Maid runtime requirements.")
+    ElseIf option == diagnosticNewMilkmaidSexLabBusOption
+        SetInfoText("Run stops 01-05 against the crosshair NPC. If they pass, select the SexLab New Milk Maid dialogue to trace stops 06-16.")
     ElseIf option == diagnosticInstallStatusOption
         SetInfoText("Read-only status for the quest and New Milk Maid dialogue records in MMEAlert.esp.")
     ElseIf option == diagnosticOStimStatusOption
@@ -1600,6 +1616,8 @@ Event OnOptionSelect(Int option)
         MMEDiagnostics.RunMilkDrinkAudit()
     ElseIf option == diagnosticDialogueAuditOption
         MMEDiagnostics.RunCrosshairDialogueAudit()
+    ElseIf option == diagnosticNewMilkmaidSexLabBusOption
+        MMEDiagnostics.RunNewMilkMaidSexLabBusTest()
     ElseIf option == debugMilkReportOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDebugMilkReport", value)
@@ -1874,6 +1892,10 @@ Event OnOptionSelect(Int option)
     ElseIf option == newMilkmaidDialogueTraceOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == newMilkmaidSexLabTraceOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidSexLabTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidSexLabTrace", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == ostimBreastfeedingOption && MMEOStimBreastfeeding.IsOStimDetected()
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0)
