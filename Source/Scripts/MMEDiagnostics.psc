@@ -32,6 +32,16 @@ String Function GetOStimStatus() Global
     Return "ENABLED"
 EndFunction
 
+String Function GetSexLabStatus() Global
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None || milkController.SexLab == None
+        Return "NOT DETECTED"
+    ElseIf !milkController.SexLab.Enabled
+        Return "NOT ACTIVATED"
+    EndIf
+    Return "ACTIVE"
+EndFunction
+
 MMEDebug Function GetDebugService() Global
     Return Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
 EndFunction

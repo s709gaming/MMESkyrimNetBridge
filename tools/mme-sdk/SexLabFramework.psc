@@ -2,6 +2,7 @@ Scriptname SexLabFramework extends Quest
 
 ; Compile-time shim only. The installed SexLab framework provides the runtime API.
 sslAnimationSlots Property AnimSlots Auto
+Bool Property Enabled Auto
 
 sslThreadModel Function NewThread(Float timeout = 30.0)
     Return None

@@ -140,6 +140,7 @@ Int diagnosticRefreshSexLabBusOption
 Int diagnosticShowSexLabBusOption
 Int diagnosticInstallStatusOption
 Int diagnosticOStimStatusOption
+Int diagnosticSexLabStatusOption
 Int diagnosticGateStatusOption
 Int diagnosticSexLabBusStateOption
 Int diagnosticSexLabBusStopOption
@@ -147,7 +148,7 @@ Int diagnosticSexLabBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 95
+    Return 96
 EndFunction
 
 Function SetPageNames()
@@ -162,7 +163,7 @@ Function SetPageNames()
     Pages[3] = "A" + "rousal "
     Pages[4] = "Armor"
     Pages[5] = "Skyrim.Net"
-    Pages[6] = "Thoughts"
+    Pages[6] = "Milk Armor Thoughts"
     Pages[7] = "Debug"
     Pages[8] = "Troubleshoot"
 EndFunction
@@ -1041,6 +1042,7 @@ Event OnPageReset(String page)
     diagnosticShowSexLabBusOption = -1
     diagnosticInstallStatusOption = -1
     diagnosticOStimStatusOption = -1
+    diagnosticSexLabStatusOption = -1
     diagnosticGateStatusOption = -1
     diagnosticSexLabBusStateOption = -1
     diagnosticSexLabBusStopOption = -1
@@ -1200,15 +1202,12 @@ Event OnPageReset(String page)
         npcDrinkNarrationCooldownOption = AddSliderOption("NPC Drink Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "npcDrinkNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
         Return
     EndIf
-    If page == "Thoughts"
-        AddHeaderOption("Milk Maid Thoughts")
-        milkMaidThoughtsOption = AddToggleOption("Milk Maid Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughts", 1) == 1)
+    If page == "Milk Armor Thoughts"
+        AddHeaderOption("Milk Armor Thoughts")
+        milkMaidThoughtsOption = AddToggleOption("Enable Milk Armor Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughts", 1) == 1)
         milkMaidThoughtsIntervalOption = AddSliderOption("Poll Interval", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0), "{0} game hours")
         milkMaidThoughtsRandomnessOption = AddSliderOption("Randomness (+/-)", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0), "{0} game hours")
         milkMaidThoughtNarrationOption = AddToggleOption("Skyrim.Net Thought Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtNarration", 1) == 1)
-        AddHeaderOption("Testing")
-        milkMaidThoughtsDebugOption = AddToggleOption("15 Second Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1)
-        traceMilkMaidThoughtsLogicOption = AddToggleOption("Trace Thoughts Logic", JsonUtil.GetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0) == 1)
         Return
     EndIf
     If page == "Troubleshoot"
@@ -1226,6 +1225,7 @@ Event OnPageReset(String page)
         AddHeaderOption("Live Status")
         diagnosticInstallStatusOption = AddTextOption("MME Extensions Records", MMEDiagnostics.GetInstallStatus(), OPTION_FLAG_DISABLED)
         diagnosticOStimStatusOption = AddTextOption("OStim Integration", MMEDiagnostics.GetOStimStatus(), OPTION_FLAG_DISABLED)
+        diagnosticSexLabStatusOption = AddTextOption("SexLab Framework", MMEDiagnostics.GetSexLabStatus(), OPTION_FLAG_DISABLED)
         diagnosticGateStatusOption = AddTextOption("OStim Dialogue Gate", MMEDiagnostics.GetGateStatus(), OPTION_FLAG_DISABLED)
         diagnosticSexLabBusStateOption = AddTextOption("New Milk Maid SexLab Bus", MMEDiagnostics.GetNewMilkMaidSexLabBusState(), OPTION_FLAG_DISABLED)
         diagnosticSexLabBusStopOption = AddTextOption("Last SexLab Bus Stop", MMEDiagnostics.GetNewMilkMaidSexLabBusStop(), OPTION_FLAG_DISABLED)
@@ -1278,6 +1278,9 @@ Event OnPageReset(String page)
         ostimDebugOption = AddToggleOption("OStim Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1)
         newMilkmaidDialogueTraceOption = AddToggleOption("New Milkmaid Dialogue Trace", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0) == 1)
         newMilkmaidSexLabTraceOption = AddToggleOption("New Milk Maid SexLab Trace", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidSexLabTrace", 0) == 1)
+        AddHeaderOption("Milk Armor Thoughts")
+        milkMaidThoughtsDebugOption = AddToggleOption("15 Second Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1)
+        traceMilkMaidThoughtsLogicOption = AddToggleOption("Trace Thoughts Logic", JsonUtil.GetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0) == 1)
         Return
     EndIf
     AddHeaderOption("Sounds")
@@ -1547,6 +1550,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Read-only status for the quest and New Milk Maid dialogue records in MMEAlert.esp.")
     ElseIf option == diagnosticOStimStatusOption
         SetInfoText("Read-only OStim plugin and MCM setting status.")
+    ElseIf option == diagnosticSexLabStatusOption
+        SetInfoText("Read-only SexLab status. NOT ACTIVATED means SexLab is installed but still needs activation in its own MCM.")
     ElseIf option == diagnosticGateStatusOption
         SetInfoText("Read-only value used by the original OStim and New Milk Maid dialogue choices.")
     ElseIf option == diagnosticSexLabBusStateOption
