@@ -114,6 +114,7 @@ Bool Function RefreshMMESexLabAnimationGate(String reason = "event")
     ; never a reason to force the original dialogue gate open.
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None || milkController.MilkQC == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
+        RefreshNewMilkMaidDialogueAvailability(False)
         Debug.Trace("[MME Extensions SexLab BF] gate refresh skipped: MME/SexLab interface unavailable | " + reason)
         Return False
     EndIf
@@ -124,6 +125,7 @@ Bool Function RefreshMMESexLabAnimationGate(String reason = "event")
     ; state but does not relax registration or gameplay conditions.
     Bool oldGate = milkController.MilkQC.MME_BreasfeedingAnimationsCheck
     milkController.MilkQC.MME_BreasfeedingAnimationsCheck = liveGate
+    RefreshNewMilkMaidDialogueAvailability(liveGate)
     Debug.Trace("[MME Extensions SexLab BF] refreshed MME gate " + DiagnosticBool(oldGate) + " -> " + DiagnosticBool(liveGate) + " | zjBreastFeedingVar(Straight)=" + DiagnosticBool(straightFound) + " zjBreastFeeding(Lesbian)=" + DiagnosticBool(lesbianFound) + " | " + reason)
     Return liveGate
 EndFunction
@@ -148,6 +150,10 @@ Function DisableController()
     ; Symmetric teardown for every registration and deadline owned by this quest.
     ; Saved gameplay data is preserved; only active observation/scheduling stops.
     OStimDialogueAvailable = False
+    GlobalVariable newMilkMaidGate = GetNewMilkMaidDialogueAvailabilityGlobal()
+    If newMilkMaidGate != None
+        newMilkMaidGate.SetValue(0.0)
+    EndIf
     UnregisterForUpdate()
     UnregisterForModEvent("MMEExtensions_Lifecycle")
     UnregisterForModEvent("MMEExtensions_MMEEffectApplied")
@@ -221,13 +227,43 @@ Function RefreshOStimDialogueAvailability()
     Else
         Debug.Trace("[MME Extensions Dialogue] OStim availability GlobalVariable is missing")
     EndIf
+    RefreshNewMilkMaidDialogueAvailability(IsMMESexLabBreastfeedingAvailable())
 EndFunction
 
 GlobalVariable Function GetOStimDialogueAvailabilityGlobal() Global
-    ; This gate controls every extension OStim choice, including New Milk Maid.
+    ; This gate controls only the extension choices that require OStim.
     ; Resolve it through SKSE's stable file/local-ID API so dialogue remains
     ; available even if the optional native bridge fails to load for a session.
     Return Game.GetFormFromFile(0x00085A, "MMEAlert.esp") as GlobalVariable
+EndFunction
+
+Bool Function IsMMESexLabBreastfeedingAvailable()
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
+        Return False
+    EndIf
+    Return milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar") != None && milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding") != None
+EndFunction
+
+; The New Milk Maid choice is framework-neutral. It is available when the
+; selected OStim lane is enabled, or when MME's complete SexLab registrar pair
+; is live. OStim-only choices continue to use their original dedicated Global.
+Function RefreshNewMilkMaidDialogueAvailability(Bool sexLabAvailable)
+    Bool available = IsExtensionsEnabled() && (MMEOStimBreastfeeding.IsBreastfeedingEnabled() || sexLabAvailable)
+    GlobalVariable dialogueGate = GetNewMilkMaidDialogueAvailabilityGlobal()
+    If dialogueGate != None
+        If available
+            dialogueGate.SetValue(1.0)
+        Else
+            dialogueGate.SetValue(0.0)
+        EndIf
+    Else
+        Debug.Trace("[MME Extensions Dialogue] New Milk Maid availability GlobalVariable is missing")
+    EndIf
+EndFunction
+
+GlobalVariable Function GetNewMilkMaidDialogueAvailabilityGlobal() Global
+    Return Game.GetFormFromFile(0x00087D, "MMEAlert.esp") as GlobalVariable
 EndFunction
 
 ; Records Milkmaids already present when this version starts to avoid false creation reports.

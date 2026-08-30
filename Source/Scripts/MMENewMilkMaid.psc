@@ -50,16 +50,26 @@ Bool Function StartRequest(Actor milkSource, Actor candidate) Global
     EndIf
 
     TraceStep("scene requested")
-    Bool started = service.StartBreastfeeding(milkSource, candidate, diagnostic, "Dialogue", "CreateMilkMaid")
+    Bool started = False
+    ; Preserve the configured framework preference. OStim remains authoritative
+    ; when enabled; SexLab is selected only when the supported OStim lane is not.
+    ; A failed OStim launch never falls through into a second framework.
+    If MMEOStimBreastfeeding.IsBreastfeedingEnabled()
+        TraceStep("backend=OStim")
+        started = service.StartBreastfeeding(milkSource, candidate, diagnostic, "Dialogue", "CreateMilkMaid")
+    Else
+        TraceStep("backend=SexLab")
+        started = service.StartSexLabBreastfeeding(milkSource, candidate, "Dialogue", "CreateMilkMaid")
+    EndIf
     If !started
         TraceStep("scene did not start", True)
     EndIf
     Return started
 EndFunction
 
-; Called only by MMEDebug after it proves that the exact owned OStim scene
-; ended normally. Mode 4 is useful milk-processing telemetry, but it is not a
-; prerequisite for the separate native MME Milk Maid creation transaction.
+; Called only by MMEDebug after it proves that the exact owned OStim or SexLab
+; scene ended normally. Mode 4 is useful milk-processing telemetry, but it is
+; not a prerequisite for the separate native MME Milk Maid creation transaction.
 Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String semanticIntent, Bool mmeProcessed) Global
     If semanticIntent != "CreateMilkMaid"
         Return

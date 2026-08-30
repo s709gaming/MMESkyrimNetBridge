@@ -38,6 +38,15 @@ String SexLabRoleKey = "MME.Extensions.SexLabBreastfeeding.Role"
 String SexLabThreadKey = "MME.Extensions.SexLabBreastfeeding.Thread"
 Int SexLabAttemptSequence = 0
 
+; A special SexLab request carries a persistent, exact transaction identity.
+; Ordinary breastfeeding never populates these fields and therefore cannot
+; reach the Milk Maid conversion callback.
+Int ActiveSexLabIntentThreadID = -1
+Actor ActiveSexLabIntentSource = None
+Actor ActiveSexLabIntentDrinker = None
+String ActiveSexLabSemanticIntent = ""
+Bool ActiveSexLabMMEStarted = False
+
 ; Quest startup delegates normal scheduling to the controller.
 Event OnInit()
     RegisterForModEvent("AnimationEnd", "OnSexLabBreastfeedingEnd")
@@ -56,6 +65,7 @@ EndFunction
 ; without stopping a thread or removing a spell we can no longer prove we own.
 Function RecoverAfterLoad()
     RegisterForModEvent("AnimationEnd", "OnSexLabBreastfeedingEnd")
+    RecoverSexLabIntentAfterLoad()
     If !ActiveSession
         Return
     EndIf
@@ -74,7 +84,7 @@ Function RecoverAfterLoad()
     EndIf
 EndFunction
 
-Bool Function StartSexLabBreastfeeding(Actor milkSource, Actor drinker, String caller = "Unknown")
+Bool Function StartSexLabBreastfeeding(Actor milkSource, Actor drinker, String caller = "Unknown", String semanticIntent = "")
     SexLabAttemptSequence += 1
     Int requestID = SexLabAttemptSequence
     Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
@@ -82,6 +92,14 @@ Bool Function StartSexLabBreastfeeding(Actor milkSource, Actor drinker, String c
         diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetSexLabTrace", 0) == 1
     EndIf
     SexLabTrace(requestID, diagnostic, "REQUEST RECEIVED | ENTRY ROUTE=" + caller + " | source=" + GetActorName(milkSource) + " " + milkSource + " | drinker=" + GetActorName(drinker) + " " + drinker)
+
+    If semanticIntent != "" && ActiveSexLabSemanticIntent != ""
+        If SexLabIntentStillOwned()
+            SexLabTrace(requestID, diagnostic, "INITIAL VALIDATION FAIL: another semantic SexLab transaction is active | thread=" + ActiveSexLabIntentThreadID)
+            Return False
+        EndIf
+        ClearSexLabIntent()
+    EndIf
 
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     String failure = SexLabPairFailure(milkSource, drinker, milkController)
@@ -174,6 +192,16 @@ Bool Function StartSexLabBreastfeeding(Actor milkSource, Actor drinker, String c
     SexLabTrace(requestID, diagnostic, "SEXLAB START CONFIRMED | SESSION ACTIVE | thread=" + threadID + " | startup locks released")
     MMEAlertsSkyrimNet.SetBreastfeedingPromptState(milkSource, "source", threadID)
     MMEAlertsSkyrimNet.SetBreastfeedingPromptState(drinker, "drinker", threadID)
+    If semanticIntent != ""
+        ActiveSexLabIntentThreadID = threadID
+        ActiveSexLabIntentSource = milkSource
+        ActiveSexLabIntentDrinker = drinker
+        ActiveSexLabSemanticIntent = semanticIntent
+        ActiveSexLabMMEStarted = False
+        If semanticIntent == "CreateMilkMaid"
+            MMENewMilkMaid.TraceStep("SexLab transaction owned")
+        EndIf
+    EndIf
 
     Spell passive = milkController.BeingMilkedPassive
     checks = 0
@@ -182,7 +210,13 @@ Bool Function StartSexLabBreastfeeding(Actor milkSource, Actor drinker, String c
         checks += 1
     EndWhile
     If passive != None && milkSource.HasSpell(passive)
+        If ActiveSexLabIntentThreadID == threadID && ActiveSexLabIntentSource == milkSource && ActiveSexLabIntentDrinker == drinker && ActiveSexLabSemanticIntent == semanticIntent
+            ActiveSexLabMMEStarted = True
+        EndIf
         SexLabTrace(requestID, diagnostic, "MME START CONFIRMED | Mode4 passive active")
+        If semanticIntent == "CreateMilkMaid"
+            MMENewMilkMaid.TraceStep("Mode 4 started")
+        EndIf
     Else
         SexLabTrace(requestID, diagnostic, "FAIL: MME Mode4 did not begin after SexLab startup | thread=" + threadID)
     EndIf
@@ -251,12 +285,26 @@ Event OnSexLabBreastfeedingEnd(String eventName, String threadIDText, Float numA
     Int threadID = threadIDText as Int
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None || milkController.SexLab == None || threadID < 0
+        If threadID == ActiveSexLabIntentThreadID
+            MMENewMilkMaid.TraceStep("SexLab completion could not resolve MME", True)
+            ClearSexLabIntent()
+        EndIf
         Return
     EndIf
     sslThreadController thread = milkController.SexLab.GetController(threadID)
     If thread == None || thread.Positions == None
+        If threadID == ActiveSexLabIntentThreadID
+            MMENewMilkMaid.TraceStep("SexLab completion lost its owned thread", True)
+            ClearSexLabIntent()
+        EndIf
         Return
     EndIf
+    Bool completesSemanticIntent = SexLabIntentMatches(threadID, thread)
+    Bool rejectedSemanticIntent = threadID == ActiveSexLabIntentThreadID && !completesSemanticIntent
+    Actor semanticSource = ActiveSexLabIntentSource
+    Actor semanticDrinker = ActiveSexLabIntentDrinker
+    String semanticIntent = ActiveSexLabSemanticIntent
+    Bool mmeProcessed = ActiveSexLabMMEStarted
     Actor drinker = None
     Int index = 0
     While index < thread.Positions.Length
@@ -270,7 +318,64 @@ Event OnSexLabBreastfeedingEnd(String eventName, String threadIDText, Float numA
     If drinker != None
         ApplyBreastfeedingDrinkEffects(drinker)
     EndIf
+    If rejectedSemanticIntent
+        MMENewMilkMaid.TraceStep("SexLab completion actor order did not match the owned transaction", True)
+        ClearSexLabIntent()
+    ElseIf completesSemanticIntent
+        ; Clear before handing off so no re-entrant callback can reuse this end.
+        ClearSexLabIntent()
+        If semanticIntent == "CreateMilkMaid"
+            MMENewMilkMaid.TraceStep("scene complete")
+        EndIf
+        MMENewMilkMaid.HandleBreastfeedingCompleted(semanticSource, semanticDrinker, semanticIntent, mmeProcessed)
+    EndIf
 EndEvent
+
+Bool Function SexLabIntentMatches(Int threadID, sslThreadController thread)
+    If ActiveSexLabSemanticIntent == "" || ActiveSexLabIntentThreadID != threadID || thread == None || thread.Positions == None || thread.Positions.Length < 2
+        Return False
+    EndIf
+    ; Match MME's original contract exactly: source/being-sucked is position 0,
+    ; drinker/sucking is position 1.
+    Return thread.Positions[0] == ActiveSexLabIntentSource && thread.Positions[1] == ActiveSexLabIntentDrinker
+EndFunction
+
+Bool Function SexLabIntentStillOwned()
+    If ActiveSexLabSemanticIntent == "" || ActiveSexLabIntentThreadID < 0
+        Return False
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None || milkController.SexLab == None
+        Return False
+    EndIf
+    sslThreadController thread = milkController.SexLab.GetController(ActiveSexLabIntentThreadID)
+    Return SexLabIntentMatches(ActiveSexLabIntentThreadID, thread)
+EndFunction
+
+Function RecoverSexLabIntentAfterLoad()
+    If ActiveSexLabSemanticIntent == ""
+        Return
+    EndIf
+    If !SexLabIntentStillOwned()
+        MMENewMilkMaid.TraceStep("discarded stale SexLab transaction after load", True)
+        ClearSexLabIntent()
+        Return
+    EndIf
+    MMEAlertsSkyrimNet.SetBreastfeedingPromptState(ActiveSexLabIntentSource, "source", ActiveSexLabIntentThreadID)
+    MMEAlertsSkyrimNet.SetBreastfeedingPromptState(ActiveSexLabIntentDrinker, "drinker", ActiveSexLabIntentThreadID)
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Spell passive = milkController.BeingMilkedPassive
+    ActiveSexLabMMEStarted = passive != None && ActiveSexLabIntentSource.HasSpell(passive)
+    MMENewMilkMaid.TraceStep("resumed owned SexLab transaction after load")
+EndFunction
+
+Function ClearSexLabIntent()
+    ActiveSexLabIntentThreadID = -1
+    ActiveSexLabIntentSource = None
+    ActiveSexLabIntentDrinker = None
+    ActiveSexLabSemanticIntent = ""
+    ActiveSexLabMMEStarted = False
+EndFunction
 
 ; The native MME SexLab hook and the OStim parity adapter equip basic milk at
 ; scene start. Suppress that equip from the ordinary drink transaction so it

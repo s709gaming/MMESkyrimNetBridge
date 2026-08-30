@@ -223,7 +223,8 @@ if (Test-Path -LiteralPath $pluginPath) {
         throw "MMEAlert.esp still contains the obsolete same-DIAL OStim breastfeeding routes. Run the updated tools\AddMMEExtensionsOStimBreastfeedingDialogue.pas in SSEEdit and save the plugin before packaging."
     }
     if (!$pluginText.Contains("MMEExt_NewMilkMaidTopic") -or
-        !$pluginText.Contains("MMEExt_NewMilkMaid")) {
+        !$pluginText.Contains("MMEExt_NewMilkMaid") -or
+        !$pluginText.Contains("MMEExt_NewMilkMaidDialogueAvailable")) {
         throw "MMEAlert.esp is missing the breastfeeding-to-Milk-Maid dialogue. Run tools\AddMMEExtensionsNewMilkMaidDialogue.pas in SSEEdit and save the plugin before packaging."
     }
     if (!$pluginText.Contains("HearthFires.esm")) {

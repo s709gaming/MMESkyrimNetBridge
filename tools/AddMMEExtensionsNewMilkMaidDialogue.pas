@@ -19,6 +19,7 @@ const
 
   SourceTopicEditorID = 'MMEExt_OStimBreastfeeding_NPCDrinksTopic';
   SourceInfoEditorID = 'MMEExt_OStimBreastfeeding_NPCDrinks';
+  SourceGateEditorID = 'MMEExt_OStimDialogueAvailable';
   SubjectMaidGateTopicEditorID = 'MME_BreastEPotion_Topic';
   FreeMaidGateTopicEditorID = 'MME_Maid_Making_Topic';
   SubjectMaidVariable = '::MME_SubjectMaid_var';
@@ -28,6 +29,7 @@ const
 
   TargetTopicEditorID = 'MMEExt_NewMilkMaidTopic';
   TargetInfoEditorID = 'MMEExt_NewMilkMaid';
+  TargetGateEditorID = 'MMEExt_NewMilkMaidDialogueAvailable';
   HandlerScriptName = 'MMENewMilkMaid';
   HandlerFragmentName = 'Fragment_CreateMilkMaid';
   PlayerPrompt = 'Wanna become a Milk Maid? Have a taste! Straight from the tap.';
@@ -35,7 +37,8 @@ const
 
 var
   TargetFile, MMEFile: IInterface;
-  SourceTopic, SourceInfo, OpeningSource: IInterface;
+  SourceTopic, SourceInfo, SourceGate, OpeningSource: IInterface;
+  TargetGate: IInterface;
   SubjectMaidCondition, FreeMaidSlotsCondition: IInterface;
   SourceTopicCount, SourceInfoCount, OpeningSourceCount: Integer;
   SubjectMaidConditionCount, FreeMaidSlotsConditionCount: Integer;
@@ -215,6 +218,26 @@ begin
   end;
 end;
 
+function EnsureTargetGate: Boolean;
+begin
+  Result := False;
+  TargetGate := FindRecordByEditorIDRecursive(
+    GroupBySignature(TargetFile, 'GLOB'), 'GLOB', TargetGateEditorID);
+  if Assigned(TargetGate) then begin
+    SetElementNativeValues(TargetGate, 'FLTV', 0.0);
+    Result := True;
+    Exit;
+  end;
+  TargetGate := wbCopyElementToFile(SourceGate, TargetFile, True, True);
+  if not Assigned(TargetGate) then begin
+    AddMessage('ERROR: Could not create framework-neutral New Milk Maid Global.');
+    Exit;
+  end;
+  SetEditorID(TargetGate, TargetGateEditorID);
+  SetElementNativeValues(TargetGate, 'FLTV', 0.0);
+  Result := SameText(EditorID(TargetGate), TargetGateEditorID);
+end;
+
 function EnsureChoiceLink(aOpeningInfo, aTopic: IInterface): Boolean;
 var
   links, linkElement, template: IInterface;
@@ -293,7 +316,8 @@ end;
 function RebuildConditions(aInfo: IInterface): Boolean;
 var
   sourceConditions, targetConditions, sourceCondition,
-    newMaidCondition, newSlaveCondition, newFreeCondition: IInterface;
+    newMaidCondition, newSlaveCondition, newFreeCondition,
+    globalParameter: IInterface;
   i: Integer;
 begin
   Result := False;
@@ -318,7 +342,23 @@ begin
       AddMessage('ERROR: OStim source unexpectedly already has a Milk Maid eligibility condition.');
       Exit;
     end;
-    ElementAssign(targetConditions, HighInteger, sourceCondition, False);
+    sourceCondition := ElementAssign(targetConditions, HighInteger,
+      sourceCondition, False);
+    if SameText(GetElementEditValues(sourceCondition, 'CTDA\Function'),
+        'GetGlobalValue') then begin
+      globalParameter := ElementByPath(sourceCondition, 'CTDA\Parameter #1');
+      if not Assigned(globalParameter) then begin
+        AddMessage('ERROR: OStim gate condition exposes no Global parameter.');
+        Exit;
+      end;
+      SetEditValue(globalParameter, Name(TargetGate));
+      if not Assigned(LinksTo(globalParameter)) or
+         not Equals(MasterOrSelf(LinksTo(globalParameter)),
+           MasterOrSelf(TargetGate)) then begin
+        AddMessage('ERROR: New Milk Maid condition could not use its framework-neutral Global.');
+        Exit;
+      end;
+    end;
   end;
 
   newFreeCondition := ElementAssign(targetConditions, HighInteger,
@@ -483,6 +523,15 @@ begin
       MMEPluginName + '.');
     Exit;
   end;
+
+  SourceGate := FindRecordByEditorIDRecursive(
+    GroupBySignature(TargetFile, 'GLOB'), 'GLOB', SourceGateEditorID);
+  if not Assigned(SourceGate) then begin
+    AddMessage('ERROR: Existing OStim availability Global was not found.');
+    Exit;
+  end;
+  if not EnsureTargetGate then
+    Exit;
 
   SourceTopicCount := 0;
   SourceInfoCount := 0;
