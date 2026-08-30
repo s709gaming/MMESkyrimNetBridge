@@ -181,7 +181,7 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
     EndIf
 
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None || milkController.MilkMaid.Find(drinker) == -1
+    If milkController == None || !MMEArmorScript.IsMMEMilkMaid(drinker, milkController)
         If diagnostic
             Debug.Notification("NPC Milk: ignored " + actorName + " - not an MME Milkmaid")
         EndIf

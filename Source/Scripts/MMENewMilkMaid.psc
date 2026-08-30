@@ -15,7 +15,7 @@ Bool Function StartRequest(Actor milkSource, Actor candidate) Global
 
     TraceStep("request target=" + GetActorIdentity(candidate))
     If milkController != None && candidate != None
-        TraceStep("target state: maidSlot=" + FindMaidSlot(milkController, candidate) + " slaveSlot=" + FindSlaveSlot(milkController, candidate))
+        TraceStep("target state: maid=" + YesNo(MMEArmorScript.IsMMEMilkMaid(candidate, milkController)) + " slave=" + YesNo(MMEArmorScript.IsMMEMilkSlave(candidate, milkController)))
     EndIf
 
     If milkSource != Game.GetPlayer()
@@ -128,11 +128,11 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
     TraceStep("native effect started")
     TraceStep("assigning slot")
     Int assignmentAttempt = 0
-    While assignmentAttempt < 60 && milkController.MilkMaid.Find(candidate) == -1
+    While assignmentAttempt < 60 && !MMEArmorScript.IsMMEMilkMaid(candidate, milkController)
         Utility.Wait(0.25)
         assignmentAttempt += 1
     EndWhile
-    If milkController.MilkMaid.Find(candidate) == -1
+    If !MMEArmorScript.IsMMEMilkMaid(candidate, milkController)
         TraceStep("assignment failed", True)
         Report(diagnostic, "conversion failed: native MME effect did not assign a Milk Maid slot")
         Return
@@ -166,16 +166,11 @@ String Function GetEligibilityFailure(Actor candidate, MilkQUEST milkController)
     If !MMEDebug.IsActorAvailable(candidate) || candidate == Game.GetPlayer()
         Return "target invalid"
     EndIf
-    If milkController.MilkMaid == None
-        Return "Milk Maid array unavailable"
+    If MMEArmorScript.IsMMEMilkMaid(candidate, milkController)
+        Return "already a Milk Maid; target=" + GetActorIdentity(candidate)
     EndIf
-    Int maidSlot = milkController.MilkMaid.Find(candidate)
-    If maidSlot != -1
-        Return "already a Milk Maid; slot=" + maidSlot + " target=" + GetActorIdentity(candidate)
-    EndIf
-    Int slaveSlot = FindSlaveSlot(milkController, candidate)
-    If slaveSlot != -1
-        Return "target is a Milk Slave; slot=" + slaveSlot + " target=" + GetActorIdentity(candidate)
+    If MMEArmorScript.IsMMEMilkSlave(candidate, milkController)
+        Return "target is a Milk Slave; target=" + GetActorIdentity(candidate)
     EndIf
 
     ActorBase candidateBase = candidate.GetLeveledActorBase()
@@ -192,21 +187,10 @@ String Function GetEligibilityFailure(Actor candidate, MilkQUEST milkController)
     If candidate.IsOnMount()
         Return "target is mounted"
     EndIf
-    If milkController.MilkMaid.Find(None, 1) == -1
-        Return "no physical Milk Maid slot"
-    EndIf
-
-    Int occupied = 0
-    Int index = 1
-    While index < milkController.MilkMaid.Length
-        If milkController.MilkMaid[index] != None
-            occupied += 1
-        EndIf
-        index += 1
-    EndWhile
-    If occupied >= milkController.Milklvl0fix()
-        Return "no free slot"
-    EndIf
+    ; Do not inspect MilkQUEST.MilkMaid from an external script. Some MME
+    ; builds return None for that array even though MilkQUEST itself owns a
+    ; valid live registry. The native Lactacid effect performs the definitive
+    ; capacity check and AssignSlotMaid transaction after the scene.
     Return ""
 EndFunction
 
@@ -250,18 +234,11 @@ String Function GetActorIdentity(Actor target) Global
     Return GetActorName(target) + " formID=" + target.GetFormID()
 EndFunction
 
-Int Function FindMaidSlot(MilkQUEST milkController, Actor target) Global
-    If milkController == None || milkController.MilkMaid == None || target == None
-        Return -1
+String Function YesNo(Bool value) Global
+    If value
+        Return "yes"
     EndIf
-    Return milkController.MilkMaid.Find(target)
-EndFunction
-
-Int Function FindSlaveSlot(MilkQUEST milkController, Actor target) Global
-    If milkController == None || milkController.MilkSlave == None || target == None
-        Return -1
-    EndIf
-    Return milkController.MilkSlave.Find(target)
+    Return "no"
 EndFunction
 
 Function Report(Bool showNotification, String reportText) Global

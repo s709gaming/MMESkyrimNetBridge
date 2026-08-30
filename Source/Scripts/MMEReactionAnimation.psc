@@ -34,7 +34,7 @@ Bool Function StartSelected(Actor target, String owner, String requestLabel, Str
         Report(diagnostic, requestLabel, "rejected: MME controller unavailable")
         Return False
     EndIf
-    If milkController.MilkMaid.Find(target) == -1
+    If !MMEArmorScript.IsMMEMilkMaid(target, milkController)
         Report(diagnostic, requestLabel, "rejected: not an MME Milk Maid")
         Return False
     EndIf

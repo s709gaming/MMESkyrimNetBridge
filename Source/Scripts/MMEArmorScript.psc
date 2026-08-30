@@ -588,21 +588,42 @@ Bool Function IsStripSafeByFramework(MilkQUEST milkController, Armor slotArmor) 
     Return milkController.SexLab.IsStrippable(slotArmor)
 EndFunction
 
-Bool Function IsMilkMaidMember(Actor target, Actor[] maids) Global
-    If target == None || maids == None
+; MME's Actor[] registries are reliable inside MilkQUEST, but some installed
+; MME builds do not expose those arrays safely to other Papyrus scripts. Use
+; the public state written by AssignSlotMaid/MaidRemove instead: the faction is
+; authoritative when available and the initialized StorageUtil level is the
+; compatibility fallback used throughout MME itself.
+Bool Function IsMMEMilkMaid(Actor target, MilkQUEST milkController = None) Global
+    If target == None
         Return False
     EndIf
-    Return maids.Find(target) != -1
+    If milkController == None
+        milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    EndIf
+    If milkController != None && milkController.MilkMaidFaction != None && target.IsInFaction(milkController.MilkMaidFaction)
+        Return True
+    EndIf
+    Return StorageUtil.HasFloatValue(target, "MME.MilkMaid.Level")
+EndFunction
+
+Bool Function IsMMEMilkSlave(Actor target, MilkQUEST milkController = None) Global
+    If target == None
+        Return False
+    EndIf
+    If milkController == None
+        milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    EndIf
+    If milkController != None && milkController.MilkSlaveFaction != None && target.IsInFaction(milkController.MilkSlaveFaction)
+        Return True
+    EndIf
+    Return IsMMEMilkMaid(target, milkController) && StorageUtil.GetIntValue(target, "MME.MilkMaid.IsSlave", 0) == 1
 EndFunction
 
 Bool Function IsValidMilkMaid(Actor target, MilkQUEST milkController) Global
     If target == None || target.IsDead() || target.IsDisabled() || milkController == None
         Return False
     EndIf
-    ; MME's MilkMaid list is a typed Actor[] on MilkQUEST. Pass it straight to
-    ; a typed parameter so Find() runs on MME's live list; a missing list is
-    ; treated as "not a milkmaid" instead of a bogus membership result.
-    Return IsMilkMaidMember(target, milkController.MilkMaid)
+    Return IsMMEMilkMaid(target, milkController)
 EndFunction
 
 Bool Function GetDiagnostic() Global
@@ -763,7 +784,7 @@ Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
     EndIf
     ; Phase 2: require real live MilkQUEST membership for both Player and NPC.
     ; Classification says what an item is; it does not establish actor eligibility.
-    If milkController == None || wearer == None || !IsMilkMaidMember(wearer, milkController.MilkMaid)
+    If milkController == None || wearer == None || !IsMMEMilkMaid(wearer, milkController)
         ReportArmor(diagnostic, "reaction does not apply: actor is not an MME Milk Maid | " + role + " | " + armorType)
         NotifyArmorDebug(diagnostic, role + " " + armorType + " | reaction=NO (not Milk Maid)")
         Return

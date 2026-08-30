@@ -139,18 +139,12 @@ Function RunCrosshairDialogueAudit() Global
         Return
     EndIf
 
-    Int playerMaidIndex = -1
-    Int candidateMaidIndex = -1
-    Int candidateSlaveIndex = -1
-    If milkController.MilkMaid != None
-        playerMaidIndex = milkController.MilkMaid.Find(playerActor)
-        candidateMaidIndex = milkController.MilkMaid.Find(candidate)
-    EndIf
-    If milkController.MilkSlave != None
-        candidateSlaveIndex = milkController.MilkSlave.Find(candidate)
-    EndIf
-    Bool playerMaid = playerMaidIndex != -1
-    Bool candidateMaid = candidateMaidIndex != -1
+    ; External reads of MilkQUEST's private Actor[] registries can return None
+    ; even while MME's own quest sees valid arrays. Diagnose the public state
+    ; AssignSlotMaid and MaidRemove maintain instead.
+    Bool playerMaid = MMEArmorScript.IsMMEMilkMaid(playerActor, milkController)
+    Bool candidateMaid = MMEArmorScript.IsMMEMilkMaid(candidate, milkController)
+    Bool candidateSlave = MMEArmorScript.IsMMEMilkSlave(candidate, milkController)
     Bool candidateStorage = StorageUtil.HasFloatValue(candidate, "MME.MilkMaid.Level")
     Bool candidateMaidFaction = milkController.MilkMaidFaction != None && candidate.IsInFaction(milkController.MilkMaidFaction)
     Bool candidateSlaveFaction = milkController.MilkSlaveFaction != None && candidate.IsInFaction(milkController.MilkSlaveFaction)
@@ -184,17 +178,18 @@ Function RunCrosshairDialogueAudit() Global
     EndIf
 
     Report("Target: " + MMENewMilkMaid.GetActorName(candidate) + " formID=" + candidate.GetFormID() + " available=" + YesNo(candidateAvailable))
-    Report("Target maid truth: arraySlot=" + candidateMaidIndex + " faction=" + YesNo(candidateMaidFaction) + " storage=" + YesNo(candidateStorage))
-    Report("Target slave truth: arraySlot=" + candidateSlaveIndex + " faction=" + YesNo(candidateSlaveFaction))
+    Report("Target maid truth: resolved=" + YesNo(candidateMaid) + " faction=" + YesNo(candidateMaidFaction) + " storage=" + YesNo(candidateStorage))
+    Report("Target slave truth: resolved=" + YesNo(candidateSlave) + " faction=" + YesNo(candidateSlaveFaction) + " storageFlag=" + StorageUtil.GetIntValue(candidate, "MME.MilkMaid.IsSlave", 0))
     Report("Dialogue cache: subjectMaid=" + YesNo(cachedSubjectMaid) + " subjectSlave=" + YesNo(cachedSubjectSlave) + " freeSlots=" + cachedFreeSlots)
-    If candidateMaid != cachedSubjectMaid || (candidateSlaveIndex != -1) != cachedSubjectSlave
-        Report("CACHE MISMATCH: MME opening dialogue state disagrees with its live arrays", 2)
+    If candidateMaid != cachedSubjectMaid || candidateSlave != cachedSubjectSlave
+        Report("CACHE MISMATCH: MME opening dialogue state disagrees with faction/storage state", 2)
     Else
-        Report("Cache check PASS: dialogue state agrees with live arrays")
+        Report("Cache check PASS: dialogue state agrees with faction/storage state")
     EndIf
-    Report("Player: arraySlot=" + playerMaidIndex + " milk=" + playerMilk + " source valid=" + YesNo(playerSourceValid))
+    Report("Player: maid=" + YesNo(playerMaid) + " milk=" + playerMilk + " source valid=" + YesNo(playerSourceValid))
     Report("NPC: milk=" + candidateMilk + " source valid=" + YesNo(candidateSourceValid))
     Report("OStim choices: player drinks=" + PassFail(ostimPlayerDrinksEligible) + " NPC drinks=" + PassFail(ostimNPCDrinksEligible))
+    Report("New Milk Maid capacity: delegated to native MME Lactacid effect")
     If blocker == "none"
         Report("PASS: New Milk Maid route is runtime-eligible")
     Else

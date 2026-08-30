@@ -36,7 +36,7 @@ Bool Function SelfMilkingIsEligible(Actor candidate, String contextJson, String 
         Return False
     EndIf
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None || milkController.MilkMaid.Find(candidate) == -1
+    If milkController == None || !MMEArmorScript.IsMMEMilkMaid(candidate, milkController)
         If diagnostic
             Debug.Notification("Self-Milking Action: rejected - not an MME Milkmaid")
         EndIf
@@ -68,7 +68,7 @@ Function SelfMilkingExecute(Actor candidate, String contextJson, String paramsJs
         Return
     EndIf
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If candidate == None || milkController == None || milkController.MilkMaid.Find(candidate) == -1 || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
+    If candidate == None || milkController == None || !MMEArmorScript.IsMMEMilkMaid(candidate, milkController) || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
         If diagnostic
             Debug.Notification("Self-Milking Action: execution rejected - invalid target")
         EndIf

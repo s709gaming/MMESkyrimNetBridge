@@ -40,7 +40,7 @@ Bool Function GiveMilkToTarget(Actor target, Bool diagnostic = False) Global
         Return False
     EndIf
 
-    Bool isMilkmaid = milkController.MilkMaid.Find(target) != -1
+    Bool isMilkmaid = MMEArmorScript.IsMMEMilkMaid(target, milkController)
     If !isMilkmaid
         Report(diagnostic, targetName + " is not an MME Milkmaid; request rejected")
         Return False
@@ -229,7 +229,7 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
         Report(diagnostic, "transfer failed: missing giver, target, or item")
         Return False
     EndIf
-    If milkController.MilkMaid.Find(target) == -1
+    If !MMEArmorScript.IsMMEMilkMaid(target, milkController)
         Report(diagnostic, "transfer rejected: target is no longer an MME Milkmaid")
         Return False
     EndIf
