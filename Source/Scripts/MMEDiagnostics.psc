@@ -1,6 +1,6 @@
 Scriptname MMEDiagnostics Hidden
 
-; Dependency-light, player-triggered audits for the MCM Diagnostics page.
+; Dependency-light, player-triggered audits for the MCM Troubleshoot page.
 ; Every MME Extensions form is resolved by plugin-local FormID so these checks
 ; keep working when the optional MMEExtensions.dll native bridge is unavailable.
 
@@ -30,6 +30,52 @@ String Function GetOStimStatus() Global
         Return "DISABLED"
     EndIf
     Return "ENABLED"
+EndFunction
+
+MMEDebug Function GetDebugService() Global
+    Return Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
+EndFunction
+
+String Function GetNewMilkMaidSexLabBusState() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return "SERVICE MISSING"
+    EndIf
+    Return service.GetNewMilkMaidSexLabBusState()
+EndFunction
+
+String Function GetNewMilkMaidSexLabBusStop() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return "none"
+    EndIf
+    Return service.GetNewMilkMaidSexLabBusStop()
+EndFunction
+
+String Function GetNewMilkMaidSexLabBusFailure() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return "service missing"
+    EndIf
+    Return service.GetNewMilkMaidSexLabBusFailure()
+EndFunction
+
+Function RefreshNewMilkMaidSexLabBus() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Report("SexLab bus FAIL: persistent service is missing", 2)
+        Return
+    EndIf
+    service.EnsureNewMilkMaidSexLabListeners(True)
+EndFunction
+
+Function ShowNewMilkMaidSexLabBusReport() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Report("SexLab bus FAIL: persistent service is missing", 2)
+        Return
+    EndIf
+    service.ShowNewMilkMaidSexLabBusReport()
 EndFunction
 
 Function RefreshDialogueGate() Global
@@ -208,6 +254,7 @@ Function RunNewMilkMaidSexLabBusTest() Global
         Report("Close MCM, aim at the NPC, reopen, then run the bus test")
         Return
     EndIf
+    RefreshNewMilkMaidSexLabBus()
     MMENewMilkMaid.RunSexLabBusPreflight(candidate)
 EndFunction
 

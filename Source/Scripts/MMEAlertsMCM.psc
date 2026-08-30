@@ -136,13 +136,18 @@ Int diagnosticInstallAuditOption
 Int diagnosticMilkDrinkAuditOption
 Int diagnosticDialogueAuditOption
 Int diagnosticNewMilkmaidSexLabBusOption
+Int diagnosticRefreshSexLabBusOption
+Int diagnosticShowSexLabBusOption
 Int diagnosticInstallStatusOption
 Int diagnosticOStimStatusOption
 Int diagnosticGateStatusOption
+Int diagnosticSexLabBusStateOption
+Int diagnosticSexLabBusStopOption
+Int diagnosticSexLabBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 93
+    Return 95
 EndFunction
 
 Function SetPageNames()
@@ -157,9 +162,9 @@ Function SetPageNames()
     Pages[3] = "A" + "rousal "
     Pages[4] = "Armor"
     Pages[5] = "Skyrim.Net"
-    Pages[6] = "Debug"
-    Pages[7] = "Thoughts"
-    Pages[8] = "Diagnostics"
+    Pages[6] = "Thoughts"
+    Pages[7] = "Debug"
+    Pages[8] = "Troubleshoot"
 EndFunction
 
 ; Creates the MCM pages and initializes controllers on first registration.
@@ -1032,9 +1037,14 @@ Event OnPageReset(String page)
     diagnosticInstallAuditOption = -1
     diagnosticDialogueAuditOption = -1
     diagnosticNewMilkmaidSexLabBusOption = -1
+    diagnosticRefreshSexLabBusOption = -1
+    diagnosticShowSexLabBusOption = -1
     diagnosticInstallStatusOption = -1
     diagnosticOStimStatusOption = -1
     diagnosticGateStatusOption = -1
+    diagnosticSexLabBusStateOption = -1
+    diagnosticSexLabBusStopOption = -1
+    diagnosticSexLabBusFailureOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -1201,7 +1211,7 @@ Event OnPageReset(String page)
         traceMilkMaidThoughtsLogicOption = AddToggleOption("Trace Thoughts Logic", JsonUtil.GetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0) == 1)
         Return
     EndIf
-    If page == "Diagnostics"
+    If page == "Troubleshoot"
         AddHeaderOption("Output")
         diagnosticNotificationsOption = AddToggleOption("In-Game Audit Notifications", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticNotifications", 1) == 1)
         diagnosticPapyrusTraceOption = AddToggleOption("Papyrus Audit Trace", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0) == 1)
@@ -1211,10 +1221,15 @@ Event OnPageReset(String page)
         diagnosticMilkDrinkAuditOption = AddTextOption("Run Milk Drink Audit", "RUN")
         diagnosticDialogueAuditOption = AddTextOption("Run Crosshair Dialogue Audit", "RUN")
         diagnosticNewMilkmaidSexLabBusOption = AddTextOption("Run New Milk Maid SexLab Bus Test", "RUN")
+        diagnosticRefreshSexLabBusOption = AddTextOption("Refresh SexLab Bus Listeners", "RUN")
+        diagnosticShowSexLabBusOption = AddTextOption("Show Last SexLab Bus Report", "RUN")
         AddHeaderOption("Live Status")
         diagnosticInstallStatusOption = AddTextOption("MME Extensions Records", MMEDiagnostics.GetInstallStatus(), OPTION_FLAG_DISABLED)
         diagnosticOStimStatusOption = AddTextOption("OStim Integration", MMEDiagnostics.GetOStimStatus(), OPTION_FLAG_DISABLED)
         diagnosticGateStatusOption = AddTextOption("OStim Dialogue Gate", MMEDiagnostics.GetGateStatus(), OPTION_FLAG_DISABLED)
+        diagnosticSexLabBusStateOption = AddTextOption("New Milk Maid SexLab Bus", MMEDiagnostics.GetNewMilkMaidSexLabBusState(), OPTION_FLAG_DISABLED)
+        diagnosticSexLabBusStopOption = AddTextOption("Last SexLab Bus Stop", MMEDiagnostics.GetNewMilkMaidSexLabBusStop(), OPTION_FLAG_DISABLED)
+        diagnosticSexLabBusFailureOption = AddTextOption("Last SexLab Bus Failure", MMEDiagnostics.GetNewMilkMaidSexLabBusFailure(), OPTION_FLAG_DISABLED)
         Return
     EndIf
     If page == "Debug"
@@ -1524,12 +1539,22 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Check whether the NPC under your crosshair and the player satisfy the New Milk Maid runtime requirements.")
     ElseIf option == diagnosticNewMilkmaidSexLabBusOption
         SetInfoText("Run stops 01-05 against the crosshair NPC. If they pass, select the SexLab New Milk Maid dialogue to trace stops 06-16.")
+    ElseIf option == diagnosticRefreshSexLabBusOption
+        SetInfoText("Repair AnimationEnding, AnimationEnd, and timeout listeners on an existing save.")
+    ElseIf option == diagnosticShowSexLabBusOption
+        SetInfoText("Show the persistent last bus stop or failure as one in-game notification and Papyrus trace line.")
     ElseIf option == diagnosticInstallStatusOption
         SetInfoText("Read-only status for the quest and New Milk Maid dialogue records in MMEAlert.esp.")
     ElseIf option == diagnosticOStimStatusOption
         SetInfoText("Read-only OStim plugin and MCM setting status.")
     ElseIf option == diagnosticGateStatusOption
         SetInfoText("Read-only value used by the original OStim and New Milk Maid dialogue choices.")
+    ElseIf option == diagnosticSexLabBusStateOption
+        SetInfoText("Persistent SexLab New Milk Maid route state: IDLE, RUNNING, FAILED, or COMPLETE.")
+    ElseIf option == diagnosticSexLabBusStopOption
+        SetInfoText("The latest persisted bus stop and message, retained after the scene ends.")
+    ElseIf option == diagnosticSexLabBusFailureOption
+        SetInfoText("The last persisted failing stop, or none when the current test has not failed.")
     EndIf
 EndEvent
 
@@ -1618,6 +1643,13 @@ Event OnOptionSelect(Int option)
         MMEDiagnostics.RunCrosshairDialogueAudit()
     ElseIf option == diagnosticNewMilkmaidSexLabBusOption
         MMEDiagnostics.RunNewMilkMaidSexLabBusTest()
+        ForcePageReset()
+    ElseIf option == diagnosticRefreshSexLabBusOption
+        MMEDiagnostics.RefreshNewMilkMaidSexLabBus()
+        ForcePageReset()
+    ElseIf option == diagnosticShowSexLabBusOption
+        MMEDiagnostics.ShowNewMilkMaidSexLabBusReport()
+        ForcePageReset()
     ElseIf option == debugMilkReportOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDebugMilkReport", value)

@@ -32,9 +32,9 @@ Function Fragment_CreateMilkMaidSexLab(ObjectReference akSpeakerRef)
 
     TraceSexLabStop(7, "MME breastfeeding requested")
     Parent.Fragment_02(akSpeakerRef)
-    If !service.ClaimArmedMMENewMilkMaidSexLab()
-        TraceSexLabStop(8, "MME-created SexLab thread was not claimed", True)
-    EndIf
+    ; MME's StartSex call is asynchronous. The persistent service claims the
+    ; exact resulting thread from SexLab's AnimationEnding event, before its
+    ; controller resets the ordered Positions used by MME.
 EndFunction
 
 Bool Function StartRequest(Actor milkSource, Actor candidate) Global
@@ -108,6 +108,9 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
     EndIf
     If milkSource != Game.GetPlayer()
         TraceStep("player source changed", True)
+        If sexLabRoute
+            TraceSexLabStop(13, "player is no longer the stored milk source", True)
+        EndIf
         Report(diagnostic, "conversion skipped: player is no longer the milk source")
         Return
     EndIf
@@ -115,11 +118,17 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
     String eligibilityFailure = GetEligibilityFailure(candidate, milkController)
     If eligibilityFailure != ""
         TraceStep(eligibilityFailure, True)
+        If sexLabRoute
+            TraceSexLabStop(13, eligibilityFailure, True)
+        EndIf
         Report(diagnostic, "conversion skipped: " + eligibilityFailure)
         Return
     EndIf
     If milkController.MME_Util_Potions == None
         TraceStep("MME potion list unavailable", True)
+        If sexLabRoute
+            TraceSexLabStop(13, "MME potion list unavailable", True)
+        EndIf
         Report(diagnostic, "conversion skipped: MME potion list is unavailable")
         Return
     EndIf
@@ -131,6 +140,9 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
     Form lactacid = milkController.MME_Util_Potions.GetAt(0)
     If lactacid == None
         TraceStep("MME Lactacid form missing", True)
+        If sexLabRoute
+            TraceSexLabStop(13, "MME Lactacid form missing", True)
+        EndIf
         Report(diagnostic, "conversion skipped: MME Lactacid form did not resolve")
         Return
     EndIf
@@ -144,6 +156,9 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
     Int stagedCount = candidate.GetItemCount(lactacid)
     If stagedCount != beforeCount + 1
         TraceStep("internal Lactacid could not be staged", True)
+        If sexLabRoute
+            TraceSexLabStop(13, "internal Lactacid could not be staged", True)
+        EndIf
         Report(diagnostic, "conversion skipped: internal Lactacid dose could not be staged")
         Return
     EndIf
@@ -160,6 +175,9 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
     If candidate.GetItemCount(lactacid) >= stagedCount
         candidate.RemoveItem(lactacid, 1, True)
         TraceStep("native Lactacid effect did not start", True)
+        If sexLabRoute
+            TraceSexLabStop(13, "native Lactacid consumption was blocked", True)
+        EndIf
         Report(diagnostic, "conversion failed: native Lactacid consumption was blocked; internal dose removed")
         Return
     EndIf
@@ -173,6 +191,9 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
     EndWhile
     If !MMEArmorScript.IsMMEMilkMaid(candidate, milkController)
         TraceStep("assignment failed", True)
+        If sexLabRoute
+            TraceSexLabStop(14, "native MME effect did not assign a Milk Maid slot", True)
+        EndIf
         Report(diagnostic, "conversion failed: native MME effect did not assign a Milk Maid slot")
         Return
     EndIf
@@ -190,6 +211,9 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
     EndWhile
     If MME_Storage.getLactacidCurrent(candidate) < 1.0
         TraceStep("Lactacid state was not initialized", True)
+        If sexLabRoute
+            TraceSexLabStop(15, "slot exists but Lactacid state was not initialized", True)
+        EndIf
         Report(diagnostic, "conversion incomplete: slot exists but native Lactacid state was not initialized")
         Return
     EndIf
@@ -285,6 +309,10 @@ Bool Function IsSexLabTraceEnabled() Global
 EndFunction
 
 Function TraceSexLabStop(Int stopNumber, String traceText, Bool failed = False) Global
+    MMEDebug service = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
+    If service != None
+        service.RecordNewMilkMaidSexLabBusStop(stopNumber, traceText, failed)
+    EndIf
     If !IsSexLabTraceEnabled()
         Return
     EndIf
@@ -297,7 +325,12 @@ Function TraceSexLabStop(Int stopNumber, String traceText, Bool failed = False) 
         line = "NMM SexLab " + stopLabel + " FAIL: " + traceText
     EndIf
     Debug.Trace("[MME Extensions New Milkmaid SexLab] " + line)
-    Debug.Notification(line)
+    ; Rapid one-line notifications overwrite one another. Report grouped route
+    ; boundaries in game while preserving every stop in the persistent report
+    ; and Papyrus trace.
+    If failed || stopNumber == 7 || stopNumber == 9 || stopNumber == 12 || stopNumber == 16
+        Debug.Notification(line)
+    EndIf
 EndFunction
 
 Function TraceSexLabMessage(String traceText) Global
