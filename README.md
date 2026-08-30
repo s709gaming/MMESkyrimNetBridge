@@ -1,7 +1,8 @@
 # MME Extensions
 
-**Release status:** Beta 0.4.0  
+**Release status:** Beta 0.5.0  
 **Main requirement:** Milk Mod Economy (and its requirements)
+IMPORTANT: Skyrim SE/AE 1.7.9.9 is not yet supported.
 
 **See:**  
 [Full Requirements & Recommended Setup](REQUIREMENTS.md)
