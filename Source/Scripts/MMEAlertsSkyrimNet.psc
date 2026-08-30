@@ -175,11 +175,6 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
         MMEArmorScript.ReportArmor(diagnostic, "equip narration failed: Skyrim.Net unavailable")
         Return -5
     EndIf
-    If isPlayer && !SkyrimNetApi.GetConfigBool("PlayerDialogue", "enabled", True)
-        MMEArmorScript.ReportArmor(diagnostic, "equip narration skipped: Skyrim.Net PlayerDialogue disabled")
-        Return -7
-    EndIf
-
     ; Phase 3: enforce role-specific real-time cooldowns. CurrentRealTime resets
     ; between Skyrim sessions, so a saved future timestamp must be discarded.
     String cooldownKey = "npcMilkingArmorNarrationCooldown"
@@ -202,34 +197,21 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
         Return -6
     EndIf
 
-    ; Phase 4: build class-specific narration and route it through the API path
-    ; appropriate to the wearer. Persist cooldown only after Skyrim.Net accepts
-    ; the final dialogue request (code 0).
+    ; Phase 4: build class-specific narration around the exact equip event.
+    ; Targeted DirectNarration keeps Player and NPC equips equally grounded while
+    ; allowing Skyrim.Net to choose an appropriate nearby speaker. Persist the
+    ; cooldown only after Skyrim.Net accepts the request (code 0).
     String narrationType = "Milking Armor"
-    String content = actorName + " has equipped Milking Armor. The suction cups are on her breasts and she looks thrilled with the hands-free attention. React creatively with playful, suggestive humor. Don't simply restate the event."
+    String content = actorName + " has just equipped Milking Armor, sealing its suction cups over her breasts ready to milk them. Generate a short, humorous, suggestive, and playful reaction specifically about this equip event. Stay focused on her breasts, milk, suction, and the newly attached cups. Create a fresh reaction; do not merely repeat this description or change subjects."
     If armorClass == 2
         narrationType = "Living Armor"
-        content = actorName + " has equipped Living Armor. Its living tendrils tease her body and breasts, and she is clearly thrilled by the experience. Treat it as kinky and fun, not frightening. React creatively with playful, suggestive humor. Don't simply restate the event."
+        content = actorName + " has just equipped Living Armor. Its living tendrils tease and stimulate her breasts and nipples while pleasurably drawing out her milk. Treat the armor's behavior as kinky and fun, not frightening. Generate a short, humorous, suggestive, and playful reaction specifically about this equip event. Create a fresh reaction; do not merely repeat this description or change subjects."
     ElseIf armorClass == 3
         narrationType = "Living Parasite"
-        content = actorName + " has equipped Living Parasite armor. Its tentacles tease her body and breasts, and she seems delighted with the arrangement. Treat it as kinky and fun, not frightening. React creatively with playful, suggestive humor. Don't simply restate the event."
+        content = actorName + " has just equipped Living Parasite armor. Its parasitic tentacles tease and stimulate her breasts while pleasurably drawing out her milk. Treat the parasite's behavior as kinky and fun, not frightening. Generate a short, humorous, suggestive, and playful reaction specifically about this equip event. Create a fresh reaction; do not merely repeat this description or change subjects."
     EndIf
-    Int result = 1
-    If isPlayer
-        ; PlayerDialogue generates the player's own line from current context.
-        ; Publish the equip fact first so the autonomous response knows what
-        ; happened without forcing a prewritten player utterance.
-        Int contextResult = SkyrimNetApi.RegisterShortLivedEvent("mme_armor_equip_player", "mme_armor_equip", content, "{}", 45000, wearer, None)
-        If contextResult == 0
-            result = SkyrimNetApi.TriggerPlayerDialogue()
-        Else
-            MMEArmorScript.ReportArmor(diagnostic, "equip narration failed: player context event rejected | result=" + contextResult)
-        EndIf
-    Else
-        ; Let Skyrim.Net choose a nearby NPC speaker and address the wearer.
-        ; The NPC wearer is never forced to narrate their own equip event.
-        result = SkyrimNetApi.DirectNarration(content, None, wearer)
-    EndIf
+    MMEArmorScript.ReportArmor(diagnostic, "equip narration sending | api=targeted DirectNarration | target=" + actorName + " | role=" + role + " | type=" + narrationType + " | tone=humorous/suggestive/playful")
+    Int result = SkyrimNetApi.DirectNarration(content, None, wearer)
     If result == 0
         JsonUtil.SetFloatValue("/MMEAlerts/Settings", lastKey, now)
         JsonUtil.Save("/MMEAlerts/Settings", False)
@@ -770,9 +752,9 @@ Function SendNearbyArmorStatuses(Actor playerActor, String statuses, Int armorCo
     Debug.Trace("[MMEAlert SkyrimNet] Nearby armor status result " + result + " | entries " + armorCount + " | " + statuses)
 EndFunction
 
-; Requests one AI-generated reaction to the semantic state selected by a normal
-; game-time Thought. The rapid 15-second test never calls this function.
-Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass) Global
+; Requests one AI-generated reaction to the exact rendered situation selected
+; by a normal game-time Thought. The rapid 15-second test never calls this.
+Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass, String renderedThought) Global
     String settingsFile = "/MMEAlerts/Settings"
     Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "traceMilkMaidThoughtsLogic", 0) == 1
     If !IsExtensionsEnabled() || JsonUtil.GetIntValue(settingsFile, "enableMilkMaidThoughtNarration", 1) != 1
@@ -781,9 +763,9 @@ Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass) G
         EndIf
         Return
     EndIf
-    If milkMaid == None || armorClass < 0 || armorClass > 3
+    If milkMaid == None || armorClass < 0 || armorClass > 3 || renderedThought == ""
         If diagnostic
-            Debug.Notification("Thoughts narration: skipped - invalid actor or armor class")
+            Debug.Notification("Thoughts narration: skipped - invalid actor, armor class, or Thought")
         EndIf
         Return
     EndIf
@@ -809,23 +791,20 @@ Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass) G
     EndIf
 
     String actorName = ResolveActorName(milkMaid, "The Milk Maid")
-    String fullnessSituation = "is below half capacity, and her milk supply is beginning to build again"
+    String fullnessState = "belowHalf"
     If halfPlus
-        fullnessSituation = "is at least half full, with a noticeably heavy and growing milk supply"
+        fullnessState = "halfPlus"
     EndIf
-    String armorSituation = "wearing no milking equipment"
-    If armorClass == 1
-        armorSituation = "wearing fitted milking equipment around her breasts"
-    ElseIf armorClass == 2
-        armorSituation = "wearing living armor whose tendrils eagerly tend her breasts"
-    ElseIf armorClass == 3
-        armorSituation = "wearing possessive parasite armor curled around her breasts"
+    String armorType = "No special armor"
+    If armorClass > 0
+        armorType = MMEArmorScript.GetArmorTypeLabel(armorClass)
     EndIf
-    String content = actorName + " is an MME Milk Maid who " + fullnessSituation + ". She is " + armorSituation + ". React creatively with playful, humorous, and suggestive commentary. Do not simply restate the situation."
+    String content = "Immediate situation: " + renderedThought + " Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on " + actorName + " and the milk, breast, fullness, or armor details actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
     If diagnostic
-        Debug.Notification("Thoughts narration: sending direct narration")
+        Debug.Notification("Thoughts narration: targeted DirectNarration for " + actorName)
+        Debug.Trace("[MMEThoughts] narration target=" + actorName + " | fullness=" + fullnessState + " | armor=" + armorType + " | tone=humorous/suggestive/playful | grounding=" + renderedThought)
     EndIf
-    Int result = SkyrimNetApi.DirectNarration(content, None, None)
+    Int result = SkyrimNetApi.DirectNarration(content, None, milkMaid)
     If result == 0
         JsonUtil.SetFloatValue(settingsFile, "lastMilkMaidThoughtNarrationRealTime", now)
         JsonUtil.Save(settingsFile, False)
@@ -835,7 +814,7 @@ Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass) G
     ElseIf diagnostic
         Debug.Notification("Thoughts narration: rejected [" + result + "]")
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Milk Maid Thought DirectNarration result " + result + " | " + content)
+    Debug.Trace("[MMEAlert SkyrimNet] Milk Maid Thought DirectNarration result " + result + " | target=" + actorName + " | " + content)
 EndFunction
 
 ; Publishes one replaceable five-minute summary from the existing capacity scan.

@@ -151,9 +151,9 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowNarration)
 
     Debug.Notification(selectedComment)
     If allowNarration && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkMaidThoughtNarration", 1) == 1
-        ; Skyrim.Net receives semantic state, not the prewritten HUD line, and
-        ; generates its own direct narration. Rapid debug passes False here.
-        MMEAlertsSkyrimNet.NarrateMilkMaidThought(selectedActor, halfPlus, armorClass)
+        ; Reuse the exact rendered HUD Thought as Skyrim.Net's factual anchor.
+        ; Rapid debug passes False here and therefore remains local-only.
+        MMEAlertsSkyrimNet.NarrateMilkMaidThought(selectedActor, halfPlus, armorClass, selectedComment)
     EndIf
     Return True
 EndFunction

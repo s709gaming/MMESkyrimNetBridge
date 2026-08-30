@@ -148,8 +148,8 @@ select a playful line from an editable JSON database.
 - Runs on randomized Skyrim game-time intervals (12 +/- 4 hours by default).
 - Randomly chooses one valid nearby Player or NPC Milk Maid.
 - Works without Skyrim.Net and never changes milk or other gameplay state.
-- Can optionally request a direct Skyrim.Net narration from the selected Milk
-  Maid's semantic fullness and armor situation.
+- Can optionally request a direct Skyrim.Net narration grounded in the exact
+  rendered Thought and targeted at the selected Milk Maid.
 - Includes a 15-second testing mode on the controller's shared scheduler plus
   optional HUD diagnostics that explain every skipped Thought attempt.
 
