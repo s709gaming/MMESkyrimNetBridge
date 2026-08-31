@@ -659,6 +659,79 @@ Int Function CountMilkingEquipmentMatchesDirect(MilkQUEST milkController, String
     Return matches
 EndFunction
 
+; OG AM Basic Living Armor purges when this registry has fewer than five
+; entries. Vendor dialogue must not schedule that purge, so fail closed at the
+; same boundary and leave every MME array untouched.
+Bool Function IsBasicLivingArmorRegistrySafeForManagement(MilkQUEST milkController) Global
+    If milkController == None
+        Return False
+    EndIf
+    Return milkController.BasicLivingArmor.Length >= 5
+EndFunction
+
+Int Function FindBasicLivingArmorEmptySlotDirect(MilkQUEST milkController) Global
+    If !IsBasicLivingArmorRegistrySafeForManagement(milkController)
+        Return -1
+    EndIf
+    Int index = milkController.BasicLivingArmor.Find("Empty")
+    If index < 0 || index >= milkController.BasicLivingArmor.Length || milkController.BasicLivingArmor[index] != "Empty"
+        Return -1
+    EndIf
+    Return index
+EndFunction
+
+Int Function CountBasicLivingArmorMatchesDirect(MilkQUEST milkController, String armorName) Global
+    If !IsBasicLivingArmorRegistrySafeForManagement(milkController) || armorName == "" \
+        || armorName == "Empty" || armorName == "empty"
+        Return -1
+    EndIf
+    Int matches = 0
+    Int index = 0
+    While index < milkController.BasicLivingArmor.Length
+        If milkController.BasicLivingArmor[index] == armorName
+            matches += 1
+        EndIf
+        index += 1
+    EndWhile
+    Return matches
+EndFunction
+
+; Living Armor management deliberately excludes BasicLivingArmor itself from
+; protection so an exactly-once entry can be removed. Every incompatible MME
+; category remains fail-closed, including MilkingEquipment, parasite armor,
+; native MME forms, and MME's established special-name rules.
+String Function GetMMEProtectedForBasicLivingArmorReason(MilkQUEST milkController, Armor slotArmor) Global
+    If milkController == None || slotArmor == None
+        Return "invalid MME/armor state"
+    EndIf
+    If slotArmor == milkController.MilkCuirass
+        Return "MilkCuirass"
+    ElseIf slotArmor == milkController.MilkCuirassFuta
+        Return "MilkCuirassFuta"
+    ElseIf slotArmor == milkController.TITS4 || slotArmor == milkController.TITS6 || slotArmor == milkController.TITS8
+        Return "MME breast armor"
+    EndIf
+    String armorName = slotArmor.GetName()
+    If armorName == "" || armorName == "Empty" || armorName == "empty"
+        Return ""
+    EndIf
+    Int milkingIndex = FindMilkingEquipmentNameDirect(milkController, armorName)
+    Int parasiteIndex = FindParasiteLivingArmorNameDirect(milkController, armorName)
+    If milkingIndex >= 0
+        Return "registry=MilkingEquipment | index=" + milkingIndex
+    ElseIf parasiteIndex >= 0
+        Return "registry=ParasiteLivingArmor | index=" + parasiteIndex
+    ElseIf StringUtil.Find(armorName, "Milk") >= 0 || StringUtil.Find(armorName, "Cow") >= 0 \
+        || StringUtil.Find(armorName, "Spriggan") >= 0 || StringUtil.Find(armorName, "Living Arm") >= 0 \
+        || StringUtil.Find(armorName, "Hermaeus Mora") >= 0 || StringUtil.Find(armorName, "HM Priestess") >= 0 \
+        || StringUtil.Find(armorName, "Tentacle Armor") >= 0 || StringUtil.Find(armorName, "Tentacle Parasite") >= 0 \
+        || StringUtil.Find(armorName, "Dwemer milking device") >= 0 || StringUtil.Find(armorName, "Cow Harness") >= 0 \
+        || StringUtil.Find(armorName, "Milking Cuirass") >= 0 || StringUtil.Find(armorName, "Milker") >= 0
+        Return "MME special name rule"
+    EndIf
+    Return ""
+EndFunction
+
 Bool Function IsMMEMilkSlave(Actor target, MilkQUEST milkController = None) Global
     If target == None
         Return False

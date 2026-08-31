@@ -21,6 +21,7 @@ The installer adds one Global, two DIALs, two INFOs, and two links. It reuses MM
 These scripts modify plugin records:
 
 - `AddMMEExtensionsBlacksmithDialogue.pas` (prepared but must be run manually in SSEEdit; load all MME Hey there dialogue conflicts and require `MMEAlert.esp` to win)
+- `AddMMEExtensionsAlchemistDialogue.pas` (run after the Blacksmith installer; extends its existing opening wrapper with the Alchemist Living Armor state and choices)
 - `AddMMEExtensionsMilkDialogue.pas`
 - `AddMMEExtensionsNewMilkMaidDialogue.pas`
 - `AttachMMESkyrimNetVoiceControls.pas`
