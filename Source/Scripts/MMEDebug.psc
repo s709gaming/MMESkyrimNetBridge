@@ -70,6 +70,11 @@ String LastAlchemistDialogueBusState = "IDLE"
 String LastAlchemistDialogueBusMessage = "No Alchemist dialogue test has run"
 String LastAlchemistDialogueBusFailure = "none"
 
+Int LastMageDialogueBusStop = 0
+String LastMageDialogueBusState = "IDLE"
+String LastMageDialogueBusMessage = "No Mage dialogue test has run"
+String LastMageDialogueBusFailure = "none"
+
 ; Quest startup delegates normal scheduling to the controller.
 Event OnInit()
     EnsureNewMilkMaidSexLabListeners()
@@ -624,6 +629,57 @@ Function ShowAlchemistDialogueBusReport(Bool useMessageBox = False)
         Debug.Notification(report)
     EndIf
     Debug.Trace("[MME Extensions Alchemist Bus] " + report)
+EndFunction
+
+Function RecordMageDialogueBusStop(Int stopNumber, String busMessage, Bool failed = False, Bool blocked = False, Bool waiting = False, Bool completed = False, Bool writeTrace = False)
+    If stopNumber == 1
+        LastMageDialogueBusFailure = "none"
+    EndIf
+    LastMageDialogueBusStop = stopNumber
+    LastMageDialogueBusMessage = busMessage
+    If failed
+        LastMageDialogueBusState = "FAILED"
+        LastMageDialogueBusFailure = "stop " + stopNumber + "/13: " + busMessage
+    ElseIf blocked
+        LastMageDialogueBusState = "BLOCKED"
+    ElseIf waiting
+        LastMageDialogueBusState = "WAITING"
+    ElseIf completed || stopNumber >= 13
+        LastMageDialogueBusState = "COMPLETE"
+    Else
+        LastMageDialogueBusState = "RUNNING"
+    EndIf
+    If writeTrace
+        Debug.Trace("[MME Extensions Mage Bus] stop " + stopNumber + "/13 | " + LastMageDialogueBusState + " | " + busMessage)
+    EndIf
+EndFunction
+
+String Function GetMageDialogueBusState()
+    Return LastMageDialogueBusState
+EndFunction
+
+String Function GetMageDialogueBusStop()
+    If LastMageDialogueBusStop <= 0
+        Return "none"
+    EndIf
+    Return LastMageDialogueBusStop + "/13 | " + LastMageDialogueBusMessage
+EndFunction
+
+String Function GetMageDialogueBusFailure()
+    Return LastMageDialogueBusFailure
+EndFunction
+
+Function ShowMageDialogueBusReport(Bool useMessageBox = False)
+    String report = "Mage Bus " + LastMageDialogueBusState + " | stop " + LastMageDialogueBusStop + "/13 | " + LastMageDialogueBusMessage
+    If LastMageDialogueBusState == "FAILED"
+        report = "Mage Bus FAILED | " + LastMageDialogueBusFailure
+    EndIf
+    If useMessageBox
+        Debug.MessageBox(report)
+    Else
+        Debug.Notification(report)
+    EndIf
+    Debug.Trace("[MME Extensions Mage Bus] " + report)
 EndFunction
 
 Function ClearSexLabIntent()

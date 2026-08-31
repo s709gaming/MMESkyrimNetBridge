@@ -42,6 +42,7 @@ Int newMilkmaidDialogueTraceOption
 Int newMilkmaidSexLabTraceOption
 Int blacksmithDialogueTraceOption
 Int alchemistDialogueTraceOption
+Int mageDialogueTraceOption
 Int npcDrinkAnimationOption
 Int npcDrinkAnimationDurationOption
 Int playerDrinkAnimationOption
@@ -145,6 +146,8 @@ Int diagnosticBlacksmithBusOption
 Int diagnosticShowBlacksmithBusOption
 Int diagnosticAlchemistBusOption
 Int diagnosticShowAlchemistBusOption
+Int diagnosticMageBusOption
+Int diagnosticShowMageBusOption
 Int diagnosticInstallStatusOption
 Int diagnosticOStimStatusOption
 Int diagnosticSexLabStatusOption
@@ -158,10 +161,13 @@ Int diagnosticBlacksmithBusFailureOption
 Int diagnosticAlchemistBusStateOption
 Int diagnosticAlchemistBusStopOption
 Int diagnosticAlchemistBusFailureOption
+Int diagnosticMageBusStateOption
+Int diagnosticMageBusStopOption
+Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 99
+    Return 100
 EndFunction
 
 Function SetPageNames()
@@ -897,6 +903,11 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "alchemistDialogueTraceMigration99", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "mageDialogueTraceMigration100", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableMageDialogueTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "mageDialogueTraceMigration100", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -978,6 +989,7 @@ Event OnPageReset(String page)
     newMilkmaidSexLabTraceOption = -1
     blacksmithDialogueTraceOption = -1
     alchemistDialogueTraceOption = -1
+    mageDialogueTraceOption = -1
     npcDrinkAnimationOption = -1
     npcDrinkAnimationDurationOption = -1
     playerDrinkAnimationOption = -1
@@ -1080,6 +1092,8 @@ Event OnPageReset(String page)
     diagnosticShowBlacksmithBusOption = -1
     diagnosticAlchemistBusOption = -1
     diagnosticShowAlchemistBusOption = -1
+    diagnosticMageBusOption = -1
+    diagnosticShowMageBusOption = -1
     diagnosticInstallStatusOption = -1
     diagnosticOStimStatusOption = -1
     diagnosticSexLabStatusOption = -1
@@ -1093,6 +1107,9 @@ Event OnPageReset(String page)
     diagnosticAlchemistBusStateOption = -1
     diagnosticAlchemistBusStopOption = -1
     diagnosticAlchemistBusFailureOption = -1
+    diagnosticMageBusStateOption = -1
+    diagnosticMageBusStopOption = -1
+    diagnosticMageBusFailureOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
@@ -1273,6 +1290,8 @@ Event OnPageReset(String page)
         diagnosticShowBlacksmithBusOption = AddTextOption("Show Last Blacksmith Bus Report", "RUN")
         diagnosticAlchemistBusOption = AddTextOption("Run Alchemist Dialogue Bus Test", "RUN")
         diagnosticShowAlchemistBusOption = AddTextOption("Show Last Alchemist Bus Report", "RUN")
+        diagnosticMageBusOption = AddTextOption("Run Mage Dialogue Bus Test", "RUN")
+        diagnosticShowMageBusOption = AddTextOption("Show Last Mage Bus Report", "RUN")
         AddHeaderOption("Live Status")
         diagnosticInstallStatusOption = AddTextOption("MME Extensions Records", MMEDiagnostics.GetInstallStatus(), OPTION_FLAG_DISABLED)
         diagnosticOStimStatusOption = AddTextOption("OStim Integration", MMEDiagnostics.GetOStimStatus(), OPTION_FLAG_DISABLED)
@@ -1287,6 +1306,9 @@ Event OnPageReset(String page)
         diagnosticAlchemistBusStateOption = AddTextOption("Alchemist Dialogue Bus", MMEDiagnostics.GetAlchemistDialogueBusState(), OPTION_FLAG_DISABLED)
         diagnosticAlchemistBusStopOption = AddTextOption("Last Alchemist Bus Stop", MMEDiagnostics.GetAlchemistDialogueBusStop(), OPTION_FLAG_DISABLED)
         diagnosticAlchemistBusFailureOption = AddTextOption("Last Alchemist Bus Failure", MMEDiagnostics.GetAlchemistDialogueBusFailure(), OPTION_FLAG_DISABLED)
+        diagnosticMageBusStateOption = AddTextOption("Mage Dialogue Bus", MMEDiagnostics.GetMageDialogueBusState(), OPTION_FLAG_DISABLED)
+        diagnosticMageBusStopOption = AddTextOption("Last Mage Bus Stop", MMEDiagnostics.GetMageDialogueBusStop(), OPTION_FLAG_DISABLED)
+        diagnosticMageBusFailureOption = AddTextOption("Last Mage Bus Failure", MMEDiagnostics.GetMageDialogueBusFailure(), OPTION_FLAG_DISABLED)
         Return
     EndIf
     If page == "Debug"
@@ -1337,6 +1359,7 @@ Event OnPageReset(String page)
         newMilkmaidSexLabTraceOption = AddToggleOption("New Milk Maid SexLab Trace", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidSexLabTrace", 0) == 1)
         blacksmithDialogueTraceOption = AddToggleOption("Blacksmith Dialogue Live Trace", JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDialogueTrace", 0) == 1)
         alchemistDialogueTraceOption = AddToggleOption("Alchemist Dialogue Live Trace", JsonUtil.GetIntValue(SettingsFile, "enableAlchemistDialogueTrace", 0) == 1)
+        mageDialogueTraceOption = AddToggleOption("Mage Dialogue Live Trace", JsonUtil.GetIntValue(SettingsFile, "enableMageDialogueTrace", 0) == 1)
         AddHeaderOption("Milk Armor Thoughts")
         milkMaidThoughtsDebugOption = AddToggleOption("15 Second Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1)
         traceMilkMaidThoughtsLogicOption = AddToggleOption("Trace Thoughts Logic", JsonUtil.GetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0) == 1)
@@ -1615,6 +1638,10 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Audit the crosshair Alchemist, player Milk Maid state, slot-32 armor, protected precedence, and BasicLivingArmor registry without changing anything.")
     ElseIf option == diagnosticShowAlchemistBusOption
         SetInfoText("Show the persistent Alchemist dialogue bus state, last stop, or failure as one readable notification.")
+    ElseIf option == diagnosticMageBusOption
+        SetInfoText("Audit the crosshair court wizard, player Milk Maid state, slot-32 armor, protected precedence, and ParasiteLivingArmor registry without changing anything.")
+    ElseIf option == diagnosticShowMageBusOption
+        SetInfoText("Show the persistent Mage dialogue bus state, last stop, or failure as one readable notification.")
     ElseIf option == diagnosticInstallStatusOption
         SetInfoText("Read-only status for the quest and New Milk Maid dialogue records in MMEAlert.esp.")
     ElseIf option == diagnosticOStimStatusOption
@@ -1641,10 +1668,18 @@ Event OnOptionHighlight(Int option)
         SetInfoText("The latest Alchemist bus stop. Stops 12-13 require selecting [MME] Hey there! while the live trace is enabled.")
     ElseIf option == diagnosticAlchemistBusFailureOption
         SetInfoText("The last Alchemist structural or runtime failure. Eligibility exclusions are BLOCKED.")
+    ElseIf option == diagnosticMageBusStateOption
+        SetInfoText("Persistent Mage route state: IDLE, RUNNING, WAITING, BLOCKED, FAILED, or COMPLETE.")
+    ElseIf option == diagnosticMageBusStopOption
+        SetInfoText("The latest Mage bus stop. Stops 12-13 require selecting [MME] Hey there! while the live trace is enabled.")
+    ElseIf option == diagnosticMageBusFailureOption
+        SetInfoText("The last Mage structural or runtime failure. Eligibility exclusions are BLOCKED.")
     ElseIf option == blacksmithDialogueTraceOption
         SetInfoText("Trace the Blacksmith Add/Remove route when [MME] Hey there! opens, then report whether the expected INFO became visible. Default off.")
     ElseIf option == alchemistDialogueTraceOption
         SetInfoText("Trace the Alchemist Living Armor Add/Remove route when [MME] Hey there! opens. Default off.")
+    ElseIf option == mageDialogueTraceOption
+        SetInfoText("Trace the Mage Parasite Armor Add/Remove route when [MME] Hey there! opens. Default off.")
     EndIf
 EndEvent
 
@@ -1755,6 +1790,12 @@ Event OnOptionSelect(Int option)
         ForcePageReset()
     ElseIf option == diagnosticShowAlchemistBusOption
         MMEDiagnostics.ShowAlchemistDialogueBusReport(True)
+        ForcePageReset()
+    ElseIf option == diagnosticMageBusOption
+        MMEDiagnostics.RunMageDialogueBusTest()
+        ForcePageReset()
+    ElseIf option == diagnosticShowMageBusOption
+        MMEDiagnostics.ShowMageDialogueBusReport(True)
         ForcePageReset()
     ElseIf option == debugMilkReportOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0)
@@ -1925,6 +1966,10 @@ Event OnOptionSelect(Int option)
     ElseIf option == alchemistDialogueTraceOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableAlchemistDialogueTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableAlchemistDialogueTrace", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == mageDialogueTraceOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMageDialogueTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMageDialogueTrace", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == playerMilkingArmorEquipMoanOption
         ToggleArmorSetting(option, "enablePlayerMilkingArmorEquipMoan", 1)

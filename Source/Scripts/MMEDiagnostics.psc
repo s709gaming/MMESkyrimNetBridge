@@ -510,6 +510,225 @@ Function RunAlchemistDialogueBus(Actor candidate, Bool openingObserved = False, 
     service.RecordAlchemistDialogueBusStop(13, expectedRoute + " INFO is visible", False, False, False, True, writeTrace)
 EndFunction
 
+Bool Function IsMageDialogueTraceEnabled() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMageDialogueTrace", 0) == 1
+EndFunction
+
+String Function GetMageDialogueBusState() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return "SERVICE MISSING"
+    EndIf
+    Return service.GetMageDialogueBusState()
+EndFunction
+
+String Function GetMageDialogueBusStop() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return "none"
+    EndIf
+    Return service.GetMageDialogueBusStop()
+EndFunction
+
+String Function GetMageDialogueBusFailure() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return "service missing"
+    EndIf
+    Return service.GetMageDialogueBusFailure()
+EndFunction
+
+Function ShowMageDialogueBusReport(Bool useMessageBox = False) Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Report("Mage bus FAIL: persistent service is missing", 2)
+        Return
+    EndIf
+    service.ShowMageDialogueBusReport(useMessageBox)
+EndFunction
+
+Function RunMageDialogueBusTest() Global
+    Actor candidate = Game.GetCurrentCrosshairRef() as Actor
+    MMEDebug service = GetDebugService()
+    If service == None
+        Report("Mage bus FAIL: persistent service is missing", 2)
+        Return
+    EndIf
+    RunMageDialogueBus(candidate, False, False)
+    service.ShowMageDialogueBusReport(True)
+EndFunction
+
+; Called immediately after the Mage opening wrapper publishes its state.
+; Visibility is intentionally deferred until Skyrim finishes constructing the
+; dialogue choice list.
+Function ObserveMageDialogueState(Actor candidate) Global
+    If IsMageDialogueTraceEnabled()
+        RunMageDialogueBus(candidate, True, False)
+    EndIf
+EndFunction
+
+; Called from the controller's existing post-opening snapshot. This is the only
+; phase that treats Skyrim's live visible INFO list as authoritative.
+Function ObserveMageDialogueVisibility(Actor candidate) Global
+    If !IsMageDialogueTraceEnabled()
+        Return
+    EndIf
+    RunMageDialogueBus(candidate, True, True)
+    ShowMageDialogueBusReport()
+EndFunction
+
+; Read-only 13-stop audit. No branch writes the Global, registers armor, removes
+; armor, casts MME's toggle spell, or changes the player's equipment.
+Function RunMageDialogueBus(Actor candidate, Bool openingObserved = False, Bool checkVisibility = False) Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return
+    EndIf
+    Bool writeTrace = IsMageDialogueTraceEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDiagnosticPapyrusTrace", 0) == 1
+    GlobalVariable stateGlobal = Game.GetFormFromFile(0x00088B, "MMEAlert.esp") as GlobalVariable
+    Form addTopic = Game.GetFormFromFile(0x00088C, "MMEAlert.esp")
+    Form removeTopic = Game.GetFormFromFile(0x00088D, "MMEAlert.esp")
+    Form addInfo = Game.GetFormFromFile(0x00088E, "MMEAlert.esp")
+    Form removeInfo = Game.GetFormFromFile(0x00088F, "MMEAlert.esp")
+    If stateGlobal == None || addTopic == None || removeTopic == None || addInfo == None || removeInfo == None
+        service.RecordMageDialogueBusStop(1, "production Global/DIAL/INFO records are missing", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordMageDialogueBusStop(1, "production records resolved", False, False, False, False, writeTrace)
+
+    If !MMEAlertsController.IsExtensionsEnabled()
+        service.RecordMageDialogueBusStop(2, "MME Extensions master toggle is off", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordMageDialogueBusStop(2, "MME Extensions enabled", False, False, False, False, writeTrace)
+
+    If candidate == None
+        service.RecordMageDialogueBusStop(3, "no NPC under the crosshair/dialogue target unavailable", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordMageDialogueBusStop(3, "target=" + candidate.GetName(), False, False, False, False, writeTrace)
+
+    Faction mageFaction = Game.GetFormFromFile(0x05091E, "Skyrim.esm") as Faction
+    If mageFaction == None
+        service.RecordMageDialogueBusStop(4, "JobCourtWizardFaction form is missing", True, False, False, False, writeTrace)
+        Return
+    ElseIf !candidate.IsInFaction(mageFaction)
+        service.RecordMageDialogueBusStop(4, "target is not in JobCourtWizardFaction", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordMageDialogueBusStop(4, "JobCourtWizardFaction PASS", False, False, False, False, writeTrace)
+
+    Faction merchantFaction = Game.GetFormFromFile(0x051596, "Skyrim.esm") as Faction
+    If merchantFaction == None
+        service.RecordMageDialogueBusStop(5, "JobMerchantFaction form is missing", True, False, False, False, writeTrace)
+        Return
+    ElseIf !candidate.IsInFaction(merchantFaction)
+        service.RecordMageDialogueBusStop(5, "target is not in JobMerchantFaction", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordMageDialogueBusStop(5, "JobMerchantFaction PASS", False, False, False, False, writeTrace)
+
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Actor playerActor = Game.GetPlayer()
+    If milkController == None || playerActor == None || milkController.MilkMaidFaction == None || milkController.MilkSlaveFaction == None
+        service.RecordMageDialogueBusStop(6, "MME controller/player/faction properties unavailable", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordMageDialogueBusStop(6, "MME controller and faction properties PASS", False, False, False, False, writeTrace)
+
+    If !playerActor.IsInFaction(milkController.MilkMaidFaction)
+        service.RecordMageDialogueBusStop(7, "player is not in MME MilkMaidFaction", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordMageDialogueBusStop(7, "player Milk Maid PASS", False, False, False, False, writeTrace)
+
+    If playerActor.IsInFaction(milkController.MilkSlaveFaction)
+        service.RecordMageDialogueBusStop(8, "player is an MME Milk Slave", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordMageDialogueBusStop(8, "player non-Slave PASS", False, False, False, False, writeTrace)
+
+    Armor wornArmor = playerActor.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
+    If wornArmor == None
+        service.RecordMageDialogueBusStop(9, "no slot-32 armor is equipped", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordMageDialogueBusStop(9, "slot-32 armor=" + wornArmor.GetName(), False, False, False, False, writeTrace)
+
+    String armorName = wornArmor.GetName()
+    If armorName == "" || armorName == "Empty" || armorName == "empty"
+        service.RecordMageDialogueBusStop(10, "armor has an unusable display name", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordMageDialogueBusStop(10, "armor identity PASS", False, False, False, False, writeTrace)
+
+    If !MMEArmorScript.IsParasiteLivingArmorRegistrySafeForManagement(milkController)
+        service.RecordMageDialogueBusStop(11, "ParasiteLivingArmor length=" + milkController.ParasiteLivingArmor.Length + "; OG requires at least 5", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    String protectedReason = MMEArmorScript.GetMMEProtectedForParasiteLivingArmorReason(milkController, wornArmor)
+    If protectedReason != ""
+        service.RecordMageDialogueBusStop(11, "protected armor: " + protectedReason, False, True, False, False, writeTrace)
+        Return
+    EndIf
+    Int matches = MMEArmorScript.CountParasiteLivingArmorMatchesDirect(milkController, armorName)
+    Int expectedState = 0
+    String expectedRoute = ""
+    If matches == 1
+        expectedState = 2
+        expectedRoute = "REMOVE"
+    ElseIf matches == 0 && MMEArmorScript.FindParasiteLivingArmorEmptySlotDirect(milkController) >= 0
+        expectedState = 1
+        expectedRoute = "ADD"
+    ElseIf matches == 0
+        service.RecordMageDialogueBusStop(11, "ParasiteLivingArmor is full", False, True, False, False, writeTrace)
+        Return
+    Else
+        service.RecordMageDialogueBusStop(11, "registration match count is invalid: " + matches, True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordMageDialogueBusStop(11, "preflight expects " + expectedRoute, False, False, False, False, writeTrace)
+
+    If !openingObserved
+        service.RecordMageDialogueBusStop(11, "preflight expects " + expectedRoute + "; open [MME] Hey there! with live trace enabled", False, False, True, False, writeTrace)
+        Return
+    EndIf
+    Int publishedState = stateGlobal.GetValue() as Int
+    If publishedState != expectedState
+        service.RecordMageDialogueBusStop(12, "opening state mismatch: expected " + expectedState + " (" + expectedRoute + ") got " + publishedState, True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordMageDialogueBusStop(12, "opening state=" + publishedState + " (" + expectedRoute + ") PASS", False, False, False, False, writeTrace)
+
+    If !checkVisibility
+        Return
+    EndIf
+    Form expectedTopic = addTopic
+    Form expectedInfo = addInfo
+    If expectedState == 2
+        expectedTopic = removeTopic
+        expectedInfo = removeInfo
+    EndIf
+    Form[] topicInfos = MMEExtensionsNative.GetTopicInfos(expectedTopic)
+    If topicInfos == None || topicInfos.Find(expectedInfo) < 0 || MMEExtensionsNative.GetParentTopic(expectedInfo) != expectedTopic
+        service.RecordMageDialogueBusStop(13, expectedRoute + " INFO is not attached to its runtime DIAL", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    If !MMEExtensionsNative.EvaluateTopicInfo(expectedInfo, candidate, playerActor)
+        service.RecordMageDialogueBusStop(13, expectedRoute + " INFO runtime conditions failed", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    Form[] visibleInfos = MMEExtensionsNative.GetVisibleDialogueInfos()
+    If visibleInfos == None
+        service.RecordMageDialogueBusStop(13, "visible INFO snapshot unavailable", True, False, False, False, writeTrace)
+        Return
+    ElseIf visibleInfos.Find(expectedInfo) < 0
+        service.RecordMageDialogueBusStop(13, expectedRoute + " conditions PASS but INFO is not visible", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordMageDialogueBusStop(13, expectedRoute + " INFO is visible", False, False, False, True, writeTrace)
+EndFunction
+
 Function RefreshNewMilkMaidSexLabBus() Global
     MMEDebug service = GetDebugService()
     If service == None

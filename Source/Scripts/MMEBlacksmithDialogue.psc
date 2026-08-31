@@ -5,19 +5,23 @@ Scriptname MMEBlacksmithDialogue extends MME_Dialogues Hidden
 ; The Global controls visibility only. Action fragments never trust it.
 GlobalVariable Property MMEExt_BlacksmithArmorState Auto
 GlobalVariable Property MMEExt_AlchemistLivingArmorState Auto
+GlobalVariable Property MMEExt_MageParasiteArmorState Auto
 
 Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
     SetDialogueState(0)
     MMEAlchemistDialogue.SetDialogueState(MMEExt_AlchemistLivingArmorState, 0)
+    MMEMageDialogue.SetDialogueState(MMEExt_MageParasiteArmorState, 0)
     ; Preserve MME's complete opening behavior exactly once before its existing
     ; linked choices and our two new choices evaluate their conditions.
     Parent.Fragment_00(akSpeakerRef)
     SetDialogueState(GetLiveServiceState(akSpeakerRef as Actor))
     MMEAlchemistDialogue.SetDialogueState(MMEExt_AlchemistLivingArmorState, MMEAlchemistDialogue.GetLiveServiceState(akSpeakerRef as Actor))
+    MMEMageDialogue.SetDialogueState(MMEExt_MageParasiteArmorState, MMEMageDialogue.GetLiveServiceState(akSpeakerRef as Actor))
     ; The live trace records the published state here, before the controller's
     ; deferred snapshot checks whether Skyrim actually exposed the expected INFO.
     MMEDiagnostics.ObserveBlacksmithDialogueState(akSpeakerRef as Actor)
     MMEDiagnostics.ObserveAlchemistDialogueState(akSpeakerRef as Actor)
+    MMEDiagnostics.ObserveMageDialogueState(akSpeakerRef as Actor)
 EndFunction
 
 Function Fragment_AddLivingArmor(ObjectReference akSpeakerRef)
@@ -26,6 +30,14 @@ EndFunction
 
 Function Fragment_RemoveLivingArmor(ObjectReference akSpeakerRef)
     MMEAlchemistDialogue.TryRemoveLivingArmor(akSpeakerRef as Actor, MMEExt_AlchemistLivingArmorState)
+EndFunction
+
+Function Fragment_AddParasiteArmor(ObjectReference akSpeakerRef)
+    MMEMageDialogue.TryAddParasiteArmor(akSpeakerRef as Actor, MMEExt_MageParasiteArmorState)
+EndFunction
+
+Function Fragment_RemoveParasiteArmor(ObjectReference akSpeakerRef)
+    MMEMageDialogue.TryRemoveParasiteArmor(akSpeakerRef as Actor, MMEExt_MageParasiteArmorState)
 EndFunction
 
 Function Fragment_AddMilkArmor(ObjectReference akSpeakerRef)
