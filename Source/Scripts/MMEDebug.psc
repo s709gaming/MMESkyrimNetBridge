@@ -65,6 +65,11 @@ String LastBlacksmithDialogueBusState = "IDLE"
 String LastBlacksmithDialogueBusMessage = "No Blacksmith dialogue test has run"
 String LastBlacksmithDialogueBusFailure = "none"
 
+Int LastAlchemistDialogueBusStop = 0
+String LastAlchemistDialogueBusState = "IDLE"
+String LastAlchemistDialogueBusMessage = "No Alchemist dialogue test has run"
+String LastAlchemistDialogueBusFailure = "none"
+
 ; Quest startup delegates normal scheduling to the controller.
 Event OnInit()
     EnsureNewMilkMaidSexLabListeners()
@@ -568,6 +573,57 @@ Function ShowBlacksmithDialogueBusReport(Bool useMessageBox = False)
         Debug.Notification(report)
     EndIf
     Debug.Trace("[MME Extensions Blacksmith Bus] " + report)
+EndFunction
+
+Function RecordAlchemistDialogueBusStop(Int stopNumber, String busMessage, Bool failed = False, Bool blocked = False, Bool waiting = False, Bool completed = False, Bool writeTrace = False)
+    If stopNumber == 1
+        LastAlchemistDialogueBusFailure = "none"
+    EndIf
+    LastAlchemistDialogueBusStop = stopNumber
+    LastAlchemistDialogueBusMessage = busMessage
+    If failed
+        LastAlchemistDialogueBusState = "FAILED"
+        LastAlchemistDialogueBusFailure = "stop " + stopNumber + "/13: " + busMessage
+    ElseIf blocked
+        LastAlchemistDialogueBusState = "BLOCKED"
+    ElseIf waiting
+        LastAlchemistDialogueBusState = "WAITING"
+    ElseIf completed || stopNumber >= 13
+        LastAlchemistDialogueBusState = "COMPLETE"
+    Else
+        LastAlchemistDialogueBusState = "RUNNING"
+    EndIf
+    If writeTrace
+        Debug.Trace("[MME Extensions Alchemist Bus] stop " + stopNumber + "/13 | " + LastAlchemistDialogueBusState + " | " + busMessage)
+    EndIf
+EndFunction
+
+String Function GetAlchemistDialogueBusState()
+    Return LastAlchemistDialogueBusState
+EndFunction
+
+String Function GetAlchemistDialogueBusStop()
+    If LastAlchemistDialogueBusStop <= 0
+        Return "none"
+    EndIf
+    Return LastAlchemistDialogueBusStop + "/13 | " + LastAlchemistDialogueBusMessage
+EndFunction
+
+String Function GetAlchemistDialogueBusFailure()
+    Return LastAlchemistDialogueBusFailure
+EndFunction
+
+Function ShowAlchemistDialogueBusReport(Bool useMessageBox = False)
+    String report = "Alchemist Bus " + LastAlchemistDialogueBusState + " | stop " + LastAlchemistDialogueBusStop + "/13 | " + LastAlchemistDialogueBusMessage
+    If LastAlchemistDialogueBusState == "FAILED"
+        report = "Alchemist Bus FAILED | " + LastAlchemistDialogueBusFailure
+    EndIf
+    If useMessageBox
+        Debug.MessageBox(report)
+    Else
+        Debug.Notification(report)
+    EndIf
+    Debug.Trace("[MME Extensions Alchemist Bus] " + report)
 EndFunction
 
 Function ClearSexLabIntent()

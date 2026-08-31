@@ -409,6 +409,7 @@ Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float local
     Bool sexLabBFDebug = JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
     Bool ostimBFDebug = JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1
     Bool blacksmithDebug = JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDialogueTrace", 0) == 1
+    Bool alchemistDebug = JsonUtil.GetIntValue(SettingsFile, "enableAlchemistDialogueTrace", 0) == 1
     If !IsExtensionsEnabled()
         Return
     EndIf
@@ -429,7 +430,7 @@ Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float local
         EndIf
         Return
     EndIf
-    If !dialogueDebug && !sexLabBFDebug && !ostimBFDebug && !blacksmithDebug
+    If !dialogueDebug && !sexLabBFDebug && !ostimBFDebug && !blacksmithDebug && !alchemistDebug
         Return
     EndIf
     ; Phase 2: treat selection of either independent OStim DIAL as terminal
@@ -940,6 +941,9 @@ Event OnUpdate()
             EndIf
             If JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDialogueTrace", 0) == 1
                 MMEDiagnostics.ObserveBlacksmithDialogueVisibility(dialogueTarget)
+            EndIf
+            If JsonUtil.GetIntValue(SettingsFile, "enableAlchemistDialogueTrace", 0) == 1
+                MMEDiagnostics.ObserveAlchemistDialogueVisibility(dialogueTarget)
             EndIf
         EndIf
         NextDialogueDiagnosticUpdate = 0.0

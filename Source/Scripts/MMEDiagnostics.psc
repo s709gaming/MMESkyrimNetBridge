@@ -291,6 +291,225 @@ Function RunBlacksmithDialogueBus(Actor candidate, Bool openingObserved = False,
     service.RecordBlacksmithDialogueBusStop(13, expectedRoute + " INFO is visible", False, False, False, True, writeTrace)
 EndFunction
 
+Bool Function IsAlchemistDialogueTraceEnabled() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableAlchemistDialogueTrace", 0) == 1
+EndFunction
+
+String Function GetAlchemistDialogueBusState() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return "SERVICE MISSING"
+    EndIf
+    Return service.GetAlchemistDialogueBusState()
+EndFunction
+
+String Function GetAlchemistDialogueBusStop() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return "none"
+    EndIf
+    Return service.GetAlchemistDialogueBusStop()
+EndFunction
+
+String Function GetAlchemistDialogueBusFailure() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return "service missing"
+    EndIf
+    Return service.GetAlchemistDialogueBusFailure()
+EndFunction
+
+Function ShowAlchemistDialogueBusReport(Bool useMessageBox = False) Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Report("Alchemist bus FAIL: persistent service is missing", 2)
+        Return
+    EndIf
+    service.ShowAlchemistDialogueBusReport(useMessageBox)
+EndFunction
+
+Function RunAlchemistDialogueBusTest() Global
+    Actor candidate = Game.GetCurrentCrosshairRef() as Actor
+    MMEDebug service = GetDebugService()
+    If service == None
+        Report("Alchemist bus FAIL: persistent service is missing", 2)
+        Return
+    EndIf
+    RunAlchemistDialogueBus(candidate, False, False)
+    service.ShowAlchemistDialogueBusReport(True)
+EndFunction
+
+; Called immediately after the Alchemist opening wrapper publishes its state.
+; Visibility is intentionally deferred until Skyrim finishes constructing the
+; dialogue choice list.
+Function ObserveAlchemistDialogueState(Actor candidate) Global
+    If IsAlchemistDialogueTraceEnabled()
+        RunAlchemistDialogueBus(candidate, True, False)
+    EndIf
+EndFunction
+
+; Called from the controller's existing post-opening snapshot. This is the only
+; phase that treats Skyrim's live visible INFO list as authoritative.
+Function ObserveAlchemistDialogueVisibility(Actor candidate) Global
+    If !IsAlchemistDialogueTraceEnabled()
+        Return
+    EndIf
+    RunAlchemistDialogueBus(candidate, True, True)
+    ShowAlchemistDialogueBusReport()
+EndFunction
+
+; Read-only 13-stop audit. No branch writes the Global, registers armor, removes
+; armor, casts MME's toggle spell, or changes the player's equipment.
+Function RunAlchemistDialogueBus(Actor candidate, Bool openingObserved = False, Bool checkVisibility = False) Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return
+    EndIf
+    Bool writeTrace = IsAlchemistDialogueTraceEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDiagnosticPapyrusTrace", 0) == 1
+    GlobalVariable stateGlobal = Game.GetFormFromFile(0x000886, "MMEAlert.esp") as GlobalVariable
+    Form addTopic = Game.GetFormFromFile(0x000887, "MMEAlert.esp")
+    Form removeTopic = Game.GetFormFromFile(0x000888, "MMEAlert.esp")
+    Form addInfo = Game.GetFormFromFile(0x000889, "MMEAlert.esp")
+    Form removeInfo = Game.GetFormFromFile(0x00088A, "MMEAlert.esp")
+    If stateGlobal == None || addTopic == None || removeTopic == None || addInfo == None || removeInfo == None
+        service.RecordAlchemistDialogueBusStop(1, "production Global/DIAL/INFO records are missing", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordAlchemistDialogueBusStop(1, "production records resolved", False, False, False, False, writeTrace)
+
+    If !MMEAlertsController.IsExtensionsEnabled()
+        service.RecordAlchemistDialogueBusStop(2, "MME Extensions master toggle is off", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordAlchemistDialogueBusStop(2, "MME Extensions enabled", False, False, False, False, writeTrace)
+
+    If candidate == None
+        service.RecordAlchemistDialogueBusStop(3, "no NPC under the crosshair/dialogue target unavailable", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordAlchemistDialogueBusStop(3, "target=" + candidate.GetName(), False, False, False, False, writeTrace)
+
+    Faction alchemistFaction = Game.GetFormFromFile(0x05091C, "Skyrim.esm") as Faction
+    If alchemistFaction == None
+        service.RecordAlchemistDialogueBusStop(4, "JobApothecaryFaction form is missing", True, False, False, False, writeTrace)
+        Return
+    ElseIf !candidate.IsInFaction(alchemistFaction)
+        service.RecordAlchemistDialogueBusStop(4, "target is not in JobApothecaryFaction", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordAlchemistDialogueBusStop(4, "JobApothecaryFaction PASS", False, False, False, False, writeTrace)
+
+    Faction merchantFaction = Game.GetFormFromFile(0x051596, "Skyrim.esm") as Faction
+    If merchantFaction == None
+        service.RecordAlchemistDialogueBusStop(5, "JobMerchantFaction form is missing", True, False, False, False, writeTrace)
+        Return
+    ElseIf !candidate.IsInFaction(merchantFaction)
+        service.RecordAlchemistDialogueBusStop(5, "target is not in JobMerchantFaction", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordAlchemistDialogueBusStop(5, "JobMerchantFaction PASS", False, False, False, False, writeTrace)
+
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Actor playerActor = Game.GetPlayer()
+    If milkController == None || playerActor == None || milkController.MilkMaidFaction == None || milkController.MilkSlaveFaction == None
+        service.RecordAlchemistDialogueBusStop(6, "MME controller/player/faction properties unavailable", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordAlchemistDialogueBusStop(6, "MME controller and faction properties PASS", False, False, False, False, writeTrace)
+
+    If !playerActor.IsInFaction(milkController.MilkMaidFaction)
+        service.RecordAlchemistDialogueBusStop(7, "player is not in MME MilkMaidFaction", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordAlchemistDialogueBusStop(7, "player Milk Maid PASS", False, False, False, False, writeTrace)
+
+    If playerActor.IsInFaction(milkController.MilkSlaveFaction)
+        service.RecordAlchemistDialogueBusStop(8, "player is an MME Milk Slave", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordAlchemistDialogueBusStop(8, "player non-Slave PASS", False, False, False, False, writeTrace)
+
+    Armor wornArmor = playerActor.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
+    If wornArmor == None
+        service.RecordAlchemistDialogueBusStop(9, "no slot-32 armor is equipped", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordAlchemistDialogueBusStop(9, "slot-32 armor=" + wornArmor.GetName(), False, False, False, False, writeTrace)
+
+    String armorName = wornArmor.GetName()
+    If armorName == "" || armorName == "Empty" || armorName == "empty"
+        service.RecordAlchemistDialogueBusStop(10, "armor has an unusable display name", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordAlchemistDialogueBusStop(10, "armor identity PASS", False, False, False, False, writeTrace)
+
+    If !MMEArmorScript.IsBasicLivingArmorRegistrySafeForManagement(milkController)
+        service.RecordAlchemistDialogueBusStop(11, "BasicLivingArmor length=" + milkController.BasicLivingArmor.Length + "; OG requires at least 5", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    String protectedReason = MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor)
+    If protectedReason != ""
+        service.RecordAlchemistDialogueBusStop(11, "protected armor: " + protectedReason, False, True, False, False, writeTrace)
+        Return
+    EndIf
+    Int matches = MMEArmorScript.CountBasicLivingArmorMatchesDirect(milkController, armorName)
+    Int expectedState = 0
+    String expectedRoute = ""
+    If matches == 1
+        expectedState = 2
+        expectedRoute = "REMOVE"
+    ElseIf matches == 0 && MMEArmorScript.FindBasicLivingArmorEmptySlotDirect(milkController) >= 0
+        expectedState = 1
+        expectedRoute = "ADD"
+    ElseIf matches == 0
+        service.RecordAlchemistDialogueBusStop(11, "BasicLivingArmor is full", False, True, False, False, writeTrace)
+        Return
+    Else
+        service.RecordAlchemistDialogueBusStop(11, "registration match count is invalid: " + matches, True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordAlchemistDialogueBusStop(11, "preflight expects " + expectedRoute, False, False, False, False, writeTrace)
+
+    If !openingObserved
+        service.RecordAlchemistDialogueBusStop(11, "preflight expects " + expectedRoute + "; open [MME] Hey there! with live trace enabled", False, False, True, False, writeTrace)
+        Return
+    EndIf
+    Int publishedState = stateGlobal.GetValue() as Int
+    If publishedState != expectedState
+        service.RecordAlchemistDialogueBusStop(12, "opening state mismatch: expected " + expectedState + " (" + expectedRoute + ") got " + publishedState, True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordAlchemistDialogueBusStop(12, "opening state=" + publishedState + " (" + expectedRoute + ") PASS", False, False, False, False, writeTrace)
+
+    If !checkVisibility
+        Return
+    EndIf
+    Form expectedTopic = addTopic
+    Form expectedInfo = addInfo
+    If expectedState == 2
+        expectedTopic = removeTopic
+        expectedInfo = removeInfo
+    EndIf
+    Form[] topicInfos = MMEExtensionsNative.GetTopicInfos(expectedTopic)
+    If topicInfos == None || topicInfos.Find(expectedInfo) < 0 || MMEExtensionsNative.GetParentTopic(expectedInfo) != expectedTopic
+        service.RecordAlchemistDialogueBusStop(13, expectedRoute + " INFO is not attached to its runtime DIAL", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    If !MMEExtensionsNative.EvaluateTopicInfo(expectedInfo, candidate, playerActor)
+        service.RecordAlchemistDialogueBusStop(13, expectedRoute + " INFO runtime conditions failed", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    Form[] visibleInfos = MMEExtensionsNative.GetVisibleDialogueInfos()
+    If visibleInfos == None
+        service.RecordAlchemistDialogueBusStop(13, "visible INFO snapshot unavailable", True, False, False, False, writeTrace)
+        Return
+    ElseIf visibleInfos.Find(expectedInfo) < 0
+        service.RecordAlchemistDialogueBusStop(13, expectedRoute + " conditions PASS but INFO is not visible", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordAlchemistDialogueBusStop(13, expectedRoute + " INFO is visible", False, False, False, True, writeTrace)
+EndFunction
+
 Function RefreshNewMilkMaidSexLabBus() Global
     MMEDebug service = GetDebugService()
     If service == None

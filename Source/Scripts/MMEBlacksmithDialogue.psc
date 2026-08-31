@@ -17,6 +17,7 @@ Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
     ; The live trace records the published state here, before the controller's
     ; deferred snapshot checks whether Skyrim actually exposed the expected INFO.
     MMEDiagnostics.ObserveBlacksmithDialogueState(akSpeakerRef as Actor)
+    MMEDiagnostics.ObserveAlchemistDialogueState(akSpeakerRef as Actor)
 EndFunction
 
 Function Fragment_AddLivingArmor(ObjectReference akSpeakerRef)
