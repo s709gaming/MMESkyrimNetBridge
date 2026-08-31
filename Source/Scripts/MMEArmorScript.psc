@@ -391,13 +391,25 @@ EndFunction
 ; caller path (drink/poll/equip) and the actor being evaluated, without
 ; changing the decision.
 String Function GetMMEArmorProtectionReason(MilkQUEST milkController, Armor slotArmor, String source = "unknown", Actor wearer = None) Global
-    Return ResolveArmorProtectionReason(milkController, slotArmor, source, wearer)
+    Return ResolveArmorProtectionReason(milkController, slotArmor, source, wearer, True)
 EndFunction
 
+; Returns only protection that is inherent to MME: its direct armor forms,
+; Basic/Parasite registries, and established special-name rules. The removable
+; MilkingEquipment registry is deliberately excluded. This lets management
+; front-ends preserve protected armor even if malformed data also registers the
+; same display name as ordinary MilkingEquipment.
+String Function GetMMEProtectedArmorReason(MilkQUEST milkController, Armor slotArmor, String source = "unknown", Actor wearer = None) Global
+    Return ResolveArmorProtectionReason(milkController, slotArmor, source, wearer, False)
+EndFunction
+
+; Single implementation behind both protection entry points. The final flag
+; gates only the removable MilkingEquipment result; every stronger protection
+; uses the exact same classifier and precedence as the stripping path.
 ; Every array lookup happens exactly once here, and the
 ; exact same local variables drive both the forensic log and the decision, so
 ; the evidence can never disagree with the code path that actually ran.
-String Function ResolveArmorProtectionReason(MilkQUEST milkController, Armor slotArmor, String source, Actor wearer) Global
+String Function ResolveArmorProtectionReason(MilkQUEST milkController, Armor slotArmor, String source, Actor wearer, Bool includeMilkingEquipment) Global
     If milkController == None || slotArmor == None
         Return "invalid MME/armor state"
     EndIf
@@ -448,7 +460,7 @@ String Function ResolveArmorProtectionReason(MilkQUEST milkController, Armor slo
     || StringUtil.Find(armorName, "Milking Cuirass") >= 0 \
     || StringUtil.Find(armorName, "Milker") >= 0
         reason = "MME special name rule"
-    ElseIf milkingIndex >= 0
+    ElseIf includeMilkingEquipment && milkingIndex >= 0
         reason = "registry=MilkingEquipment | index=" + milkingIndex + " | storedName=" + armorName
     EndIf
     If GetArmorLookupDiagnostic()
@@ -606,6 +618,64 @@ Bool Function IsMMEMilkMaid(Actor target, MilkQUEST milkController = None) Globa
     Return StorageUtil.HasFloatValue(target, "MME.MilkMaid.Level")
 EndFunction
 
+; AM Milk Armor accepts arrays with at least five entries before it invokes its
+; purge spell. Extensions never purges MME data. It accepts that same native
+; non-purge range (including 5-9 and arrays larger than 10), but fails closed on
+; None, blank cells, or a noncanonical lowercase sentinel.
+Bool Function IsArmorRegistrySafeForManagement(String[] entries) Global
+    If entries == None
+        Return False
+    EndIf
+    If entries.Length < 5
+        Return False
+    EndIf
+    If entries.Find("") >= 0 || entries.Find("empty") >= 0
+        Return False
+    EndIf
+    Return True
+EndFunction
+
+; All three arrays must be readable because Basic/Parasite protection wins over
+; removable MilkingEquipment membership.
+Bool Function AreArmorRegistriesSafeForManagement(MilkQUEST milkController) Global
+    If milkController == None
+        Return False
+    EndIf
+    Return IsArmorRegistrySafeForManagement(milkController.MilkingEquipment) \
+        && IsArmorRegistrySafeForManagement(milkController.BasicLivingArmor) \
+        && IsArmorRegistrySafeForManagement(milkController.ParasiteLivingArmor)
+EndFunction
+
+; Returns the first exact native sentinel only after validating its live array.
+Int Function FindArmorEmptySlotSafe(String[] entries) Global
+    If !IsArmorRegistrySafeForManagement(entries)
+        Return -1
+    EndIf
+    Int index = entries.Find("Empty")
+    If index < 0 || index >= entries.Length || entries[index] != "Empty"
+        Return -1
+    EndIf
+    Return index
+EndFunction
+
+; Count exact display-name registrations so management refuses malformed
+; duplicates instead of partially removing one and leaving another active.
+Int Function CountArmorNameMatchesSafe(String armorName, String[] entries) Global
+    If !IsArmorRegistrySafeForManagement(entries) || armorName == "" \
+        || armorName == "Empty" || armorName == "empty"
+        Return -1
+    EndIf
+    Int matches = 0
+    Int index = 0
+    While index < entries.Length
+        If entries[index] == armorName
+            matches += 1
+        EndIf
+        index += 1
+    EndWhile
+    Return matches
+EndFunction
+
 Bool Function IsMMEMilkSlave(Actor target, MilkQUEST milkController = None) Global
     If target == None
         Return False
@@ -658,12 +728,12 @@ Int Function ClassifyArmor(MilkQUEST milkController, Armor equippedArmor, String
     Int basicIndex = FindArmorNameSafe(armorName, milkController.BasicLivingArmor)
     Int parasiteIndex = FindArmorNameSafe(armorName, milkController.ParasiteLivingArmor)
     Int armorClass = 0
-    If milkingIndex >= 0
-        armorClass = 1
-    ElseIf basicIndex >= 0
+    If basicIndex >= 0
         armorClass = 2
     ElseIf parasiteIndex >= 0
         armorClass = 3
+    ElseIf milkingIndex >= 0
+        armorClass = 1
     Else
         armorClass = GetSpecialArmorNameClass(armorName)
     EndIf
@@ -721,10 +791,6 @@ String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equ
     EndIf
     ; These checks mirror MME's original detection code: each typed MilkQUEST
     ; String[] is searched directly and a nonnegative Find() result is a match.
-    Int milkingIndex = FindArmorNameSafe(armorName, milkController.MilkingEquipment)
-    If milkingIndex >= 0
-        Return "MilkingEquipment"
-    EndIf
     Int basicIndex = FindArmorNameSafe(armorName, milkController.BasicLivingArmor)
     If basicIndex >= 0
         Return "BasicLivingArmor"
@@ -732,6 +798,10 @@ String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equ
     Int parasiteIndex = FindArmorNameSafe(armorName, milkController.ParasiteLivingArmor)
     If parasiteIndex >= 0
         Return "ParasiteLivingArmor"
+    EndIf
+    Int milkingIndex = FindArmorNameSafe(armorName, milkController.MilkingEquipment)
+    If milkingIndex >= 0
+        Return "MilkingEquipment"
     EndIf
     If StringUtil.Find(armorName, "Tentacle Armor") >= 0
         Return "MME special name rule=Tentacle Armor"

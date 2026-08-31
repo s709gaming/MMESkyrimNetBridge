@@ -17,7 +17,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $gameRoot "Data\SEQ\MMEAlert.seq"
-$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEArmorScript", "MMENPCDialog", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEExtensionsNative")
+$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEArmorScript", "MMEBlacksmithDialogue", "MMENPCDialog", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
@@ -231,6 +231,13 @@ if (Test-Path -LiteralPath $pluginPath) {
     }
     if (!$pluginText.Contains("HearthFires.esm")) {
         throw "MMEAlert.esp is missing the supported-milk dialogue eligibility update. Run the updated tools\AddMMEExtensionsMilkDialogue.pas in SSEEdit and save the plugin before packaging."
+    }
+    if (!$pluginText.Contains("MMEExt_BlacksmithArmorState") -or
+        !$pluginText.Contains("MMEExt_BlacksmithAddMilkArmorTopic") -or
+        !$pluginText.Contains("MMEExt_BlacksmithRemoveMilkArmorTopic") -or
+        !$pluginText.Contains("MMEBlacksmithDialogue") -or
+        !$pluginText.Contains("Fragment_RefreshBlacksmithArmorState")) {
+        throw "MMEAlert.esp is missing the Blacksmith armor-service records or opening wrapper. Run tools\AddMMEExtensionsBlacksmithDialogue.pas in SSEEdit, save MMEAlert.esp, and copy the Vortex-deployed saved plugin into the project root before packaging."
     }
     Copy-Item -LiteralPath $pluginPath -Destination $stageDir
 } else {
