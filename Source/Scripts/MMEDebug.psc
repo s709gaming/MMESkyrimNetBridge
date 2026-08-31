@@ -57,6 +57,14 @@ String LastNewMilkMaidSexLabBusMessage = "No SexLab New Milk Maid test has run"
 String LastNewMilkMaidSexLabBusFailure = "none"
 Int LastNewMilkMaidSexLabBusThreadID = -1
 
+; Persistent Blacksmith dialogue route report. The manual Troubleshoot audit
+; reaches the safe preflight boundary; the live trace advances through opening
+; state publication and the final visible-INFO snapshot.
+Int LastBlacksmithDialogueBusStop = 0
+String LastBlacksmithDialogueBusState = "IDLE"
+String LastBlacksmithDialogueBusMessage = "No Blacksmith dialogue test has run"
+String LastBlacksmithDialogueBusFailure = "none"
+
 ; Quest startup delegates normal scheduling to the controller.
 Event OnInit()
     EnsureNewMilkMaidSexLabListeners()
@@ -509,6 +517,57 @@ Function ShowNewMilkMaidSexLabBusReport()
     EndIf
     Debug.Notification(report)
     Debug.Trace("[MME Extensions New Milkmaid SexLab] " + report + " | thread=" + LastNewMilkMaidSexLabBusThreadID)
+EndFunction
+
+Function RecordBlacksmithDialogueBusStop(Int stopNumber, String busMessage, Bool failed = False, Bool blocked = False, Bool waiting = False, Bool completed = False, Bool writeTrace = False)
+    If stopNumber == 1
+        LastBlacksmithDialogueBusFailure = "none"
+    EndIf
+    LastBlacksmithDialogueBusStop = stopNumber
+    LastBlacksmithDialogueBusMessage = busMessage
+    If failed
+        LastBlacksmithDialogueBusState = "FAILED"
+        LastBlacksmithDialogueBusFailure = "stop " + stopNumber + "/13: " + busMessage
+    ElseIf blocked
+        LastBlacksmithDialogueBusState = "BLOCKED"
+    ElseIf waiting
+        LastBlacksmithDialogueBusState = "WAITING"
+    ElseIf completed || stopNumber >= 13
+        LastBlacksmithDialogueBusState = "COMPLETE"
+    Else
+        LastBlacksmithDialogueBusState = "RUNNING"
+    EndIf
+    If writeTrace
+        Debug.Trace("[MME Extensions Blacksmith Bus] stop " + stopNumber + "/13 | " + LastBlacksmithDialogueBusState + " | " + busMessage)
+    EndIf
+EndFunction
+
+String Function GetBlacksmithDialogueBusState()
+    Return LastBlacksmithDialogueBusState
+EndFunction
+
+String Function GetBlacksmithDialogueBusStop()
+    If LastBlacksmithDialogueBusStop <= 0
+        Return "none"
+    EndIf
+    Return LastBlacksmithDialogueBusStop + "/13 | " + LastBlacksmithDialogueBusMessage
+EndFunction
+
+String Function GetBlacksmithDialogueBusFailure()
+    Return LastBlacksmithDialogueBusFailure
+EndFunction
+
+Function ShowBlacksmithDialogueBusReport(Bool useMessageBox = False)
+    String report = "Blacksmith Bus " + LastBlacksmithDialogueBusState + " | stop " + LastBlacksmithDialogueBusStop + "/13 | " + LastBlacksmithDialogueBusMessage
+    If LastBlacksmithDialogueBusState == "FAILED"
+        report = "Blacksmith Bus FAILED | " + LastBlacksmithDialogueBusFailure
+    EndIf
+    If useMessageBox
+        Debug.MessageBox(report)
+    Else
+        Debug.Notification(report)
+    EndIf
+    Debug.Trace("[MME Extensions Blacksmith Bus] " + report)
 EndFunction
 
 Function ClearSexLabIntent()

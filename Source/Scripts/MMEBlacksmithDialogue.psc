@@ -11,6 +11,9 @@ Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
     ; linked choices and our two new choices evaluate their conditions.
     Parent.Fragment_00(akSpeakerRef)
     SetDialogueState(GetLiveServiceState(akSpeakerRef as Actor))
+    ; The live trace records the published state here, before the controller's
+    ; deferred snapshot checks whether Skyrim actually exposed the expected INFO.
+    MMEDiagnostics.ObserveBlacksmithDialogueState(akSpeakerRef as Actor)
 EndFunction
 
 Function Fragment_AddMilkArmor(ObjectReference akSpeakerRef)
@@ -38,13 +41,13 @@ Int Function GetLiveServiceState(Actor blacksmith)
         Return 3
     EndIf
     String armorName = wornArmor.GetName()
-    Int matches = MMEArmorScript.CountArmorNameMatchesSafe(armorName, milkController.MilkingEquipment)
+    Int matches = MMEArmorScript.CountMilkingEquipmentMatchesDirect(milkController, armorName)
     If matches == 1
         Return 2
     ElseIf matches != 0
         Return 0
     EndIf
-    If MMEArmorScript.FindArmorEmptySlotSafe(milkController.MilkingEquipment) >= 0
+    If MMEArmorScript.FindMilkingEquipmentEmptySlotDirect(milkController) >= 0
         Return 1
     EndIf
     Return 4
@@ -71,11 +74,11 @@ Bool Function TryAddMilkArmor(Actor blacksmith)
         Reject("protected armor cannot be registered", False)
         Return False
     EndIf
-    If MMEArmorScript.CountArmorNameMatchesSafe(armorName, milkController.MilkingEquipment) != 0
+    If MMEArmorScript.CountMilkingEquipmentMatchesDirect(milkController, armorName) != 0
         Reject("armor is already registered or registration data is ambiguous")
         Return False
     EndIf
-    Int emptyIndex = MMEArmorScript.FindArmorEmptySlotSafe(milkController.MilkingEquipment)
+    Int emptyIndex = MMEArmorScript.FindMilkingEquipmentEmptySlotDirect(milkController)
     If emptyIndex < 0
         Debug.Notification("Error: Milking Equipment is full")
         Reject("MilkingEquipment has no Empty slot", False)
@@ -87,7 +90,7 @@ Bool Function TryAddMilkArmor(Actor blacksmith)
     If GetWornBodyArmor(playerActor) != wornArmor \
         || !MMEArmorScript.AreArmorRegistriesSafeForManagement(milkController) \
         || MMEArmorScript.GetMMEProtectedArmorReason(milkController, wornArmor, "blacksmith-add-final", playerActor) != "" \
-        || MMEArmorScript.CountArmorNameMatchesSafe(armorName, milkController.MilkingEquipment) != 0 \
+        || MMEArmorScript.CountMilkingEquipmentMatchesDirect(milkController, armorName) != 0 \
         || emptyIndex >= milkController.MilkingEquipment.Length \
         || milkController.MilkingEquipment[emptyIndex] != "Empty"
         Reject("live armor or registry changed before Add")
@@ -98,7 +101,7 @@ Bool Function TryAddMilkArmor(Actor blacksmith)
     ; the first exact "Empty" cell of MilkQ.MilkingEquipment.
     milkController.MilkingEquipment[emptyIndex] = armorName
     If milkController.MilkingEquipment[emptyIndex] != armorName \
-        || MMEArmorScript.CountArmorNameMatchesSafe(armorName, milkController.MilkingEquipment) != 1
+        || MMEArmorScript.CountMilkingEquipmentMatchesDirect(milkController, armorName) != 1
         Reject("MME did not retain the added registration")
         Return False
     EndIf
@@ -128,11 +131,11 @@ Bool Function TryRemoveMilkArmor(Actor blacksmith)
         Reject("protected armor cannot be removed", False)
         Return False
     EndIf
-    If MMEArmorScript.CountArmorNameMatchesSafe(armorName, milkController.MilkingEquipment) != 1
+    If MMEArmorScript.CountMilkingEquipmentMatchesDirect(milkController, armorName) != 1
         Reject("armor is not registered exactly once")
         Return False
     EndIf
-    Int registeredIndex = MMEArmorScript.FindArmorNameSafe(armorName, milkController.MilkingEquipment)
+    Int registeredIndex = MMEArmorScript.FindMilkingEquipmentNameDirect(milkController, armorName)
     If registeredIndex < 0
         Reject("exact registration index was unavailable")
         Return False
@@ -142,7 +145,7 @@ Bool Function TryRemoveMilkArmor(Actor blacksmith)
     If GetWornBodyArmor(playerActor) != wornArmor \
         || !MMEArmorScript.AreArmorRegistriesSafeForManagement(milkController) \
         || MMEArmorScript.GetMMEProtectedArmorReason(milkController, wornArmor, "blacksmith-remove-final", playerActor) != "" \
-        || MMEArmorScript.CountArmorNameMatchesSafe(armorName, milkController.MilkingEquipment) != 1 \
+        || MMEArmorScript.CountMilkingEquipmentMatchesDirect(milkController, armorName) != 1 \
         || registeredIndex >= milkController.MilkingEquipment.Length \
         || milkController.MilkingEquipment[registeredIndex] != armorName
         Reject("live armor or registry changed before Remove")
@@ -151,7 +154,7 @@ Bool Function TryRemoveMilkArmor(Actor blacksmith)
 
     milkController.MilkingEquipment[registeredIndex] = "Empty"
     If milkController.MilkingEquipment[registeredIndex] != "Empty" \
-        || MMEArmorScript.CountArmorNameMatchesSafe(armorName, milkController.MilkingEquipment) != 0
+        || MMEArmorScript.CountMilkingEquipmentMatchesDirect(milkController, armorName) != 0
         Reject("MME did not retain the removed registration")
         Return False
     EndIf
@@ -194,8 +197,7 @@ Bool Function IsManageableArmorIdentity(Armor wornArmor)
         Return False
     EndIf
     String armorName = wornArmor.GetName()
-    Return armorName != "" && armorName != "Empty" && armorName != "empty" \
-        && !MMEArmorScript.IsAmbiguousOrdinaryArmorName(armorName)
+    Return armorName != "" && armorName != "Empty" && armorName != "empty"
 EndFunction
 
 Function SetDialogueState(Int value)

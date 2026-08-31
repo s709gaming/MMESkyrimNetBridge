@@ -19,6 +19,8 @@ String Function GetInstallStatus() Global
         Return "QUEST MISSING"
     ElseIf Game.GetFormFromFile(0x00087A, "MMEAlert.esp") == None || Game.GetFormFromFile(0x00087E, "MMEAlert.esp") == None || Game.GetFormFromFile(0x00087D, "MMEAlert.esp") == None || Game.GetFormFromFile(0x00087F, "MMEAlert.esp") == None || Game.GetFormFromFile(0x000880, "MMEAlert.esp") == None
         Return "DIALOGUE MISSING"
+    ElseIf Game.GetFormFromFile(0x000881, "MMEAlert.esp") == None || Game.GetFormFromFile(0x000882, "MMEAlert.esp") == None || Game.GetFormFromFile(0x000883, "MMEAlert.esp") == None || Game.GetFormFromFile(0x000884, "MMEAlert.esp") == None || Game.GetFormFromFile(0x000885, "MMEAlert.esp") == None
+        Return "BLACKSMITH MISSING"
     EndIf
     Return "RECORDS READY"
 EndFunction
@@ -70,6 +72,225 @@ String Function GetNewMilkMaidSexLabBusFailure() Global
     Return service.GetNewMilkMaidSexLabBusFailure()
 EndFunction
 
+Bool Function IsBlacksmithDialogueTraceEnabled() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableBlacksmithDialogueTrace", 0) == 1
+EndFunction
+
+String Function GetBlacksmithDialogueBusState() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return "SERVICE MISSING"
+    EndIf
+    Return service.GetBlacksmithDialogueBusState()
+EndFunction
+
+String Function GetBlacksmithDialogueBusStop() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return "none"
+    EndIf
+    Return service.GetBlacksmithDialogueBusStop()
+EndFunction
+
+String Function GetBlacksmithDialogueBusFailure() Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return "service missing"
+    EndIf
+    Return service.GetBlacksmithDialogueBusFailure()
+EndFunction
+
+Function ShowBlacksmithDialogueBusReport(Bool useMessageBox = False) Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Report("Blacksmith bus FAIL: persistent service is missing", 2)
+        Return
+    EndIf
+    service.ShowBlacksmithDialogueBusReport(useMessageBox)
+EndFunction
+
+Function RunBlacksmithDialogueBusTest() Global
+    Actor candidate = Game.GetCurrentCrosshairRef() as Actor
+    MMEDebug service = GetDebugService()
+    If service == None
+        Report("Blacksmith bus FAIL: persistent service is missing", 2)
+        Return
+    EndIf
+    RunBlacksmithDialogueBus(candidate, False, False)
+    service.ShowBlacksmithDialogueBusReport(True)
+EndFunction
+
+; Called immediately after the Blacksmith opening wrapper publishes its state.
+; Visibility is intentionally deferred until Skyrim finishes constructing the
+; dialogue choice list.
+Function ObserveBlacksmithDialogueState(Actor candidate) Global
+    If IsBlacksmithDialogueTraceEnabled()
+        RunBlacksmithDialogueBus(candidate, True, False)
+    EndIf
+EndFunction
+
+; Called from the controller's existing post-opening snapshot. This is the only
+; phase that treats Skyrim's live visible INFO list as authoritative.
+Function ObserveBlacksmithDialogueVisibility(Actor candidate) Global
+    If !IsBlacksmithDialogueTraceEnabled()
+        Return
+    EndIf
+    RunBlacksmithDialogueBus(candidate, True, True)
+    ShowBlacksmithDialogueBusReport()
+EndFunction
+
+; Read-only 13-stop audit. No branch writes the Global, registers armor, removes
+; armor, casts MME's toggle spell, or changes the player's equipment.
+Function RunBlacksmithDialogueBus(Actor candidate, Bool openingObserved = False, Bool checkVisibility = False) Global
+    MMEDebug service = GetDebugService()
+    If service == None
+        Return
+    EndIf
+    Bool writeTrace = IsBlacksmithDialogueTraceEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDiagnosticPapyrusTrace", 0) == 1
+    GlobalVariable stateGlobal = Game.GetFormFromFile(0x000881, "MMEAlert.esp") as GlobalVariable
+    Form addTopic = Game.GetFormFromFile(0x000882, "MMEAlert.esp")
+    Form removeTopic = Game.GetFormFromFile(0x000883, "MMEAlert.esp")
+    Form addInfo = Game.GetFormFromFile(0x000884, "MMEAlert.esp")
+    Form removeInfo = Game.GetFormFromFile(0x000885, "MMEAlert.esp")
+    If stateGlobal == None || addTopic == None || removeTopic == None || addInfo == None || removeInfo == None
+        service.RecordBlacksmithDialogueBusStop(1, "production Global/DIAL/INFO records are missing", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordBlacksmithDialogueBusStop(1, "production records resolved", False, False, False, False, writeTrace)
+
+    If !MMEAlertsController.IsExtensionsEnabled()
+        service.RecordBlacksmithDialogueBusStop(2, "MME Extensions master toggle is off", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordBlacksmithDialogueBusStop(2, "MME Extensions enabled", False, False, False, False, writeTrace)
+
+    If candidate == None
+        service.RecordBlacksmithDialogueBusStop(3, "no NPC under the crosshair/dialogue target unavailable", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordBlacksmithDialogueBusStop(3, "target=" + candidate.GetName(), False, False, False, False, writeTrace)
+
+    Faction blacksmithFaction = Game.GetFormFromFile(0x05091D, "Skyrim.esm") as Faction
+    If blacksmithFaction == None
+        service.RecordBlacksmithDialogueBusStop(4, "JobBlacksmithFaction form is missing", True, False, False, False, writeTrace)
+        Return
+    ElseIf !candidate.IsInFaction(blacksmithFaction)
+        service.RecordBlacksmithDialogueBusStop(4, "target is not in JobBlacksmithFaction", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordBlacksmithDialogueBusStop(4, "JobBlacksmithFaction PASS", False, False, False, False, writeTrace)
+
+    Faction merchantFaction = Game.GetFormFromFile(0x051596, "Skyrim.esm") as Faction
+    If merchantFaction == None
+        service.RecordBlacksmithDialogueBusStop(5, "JobMerchantFaction form is missing", True, False, False, False, writeTrace)
+        Return
+    ElseIf !candidate.IsInFaction(merchantFaction)
+        service.RecordBlacksmithDialogueBusStop(5, "target is not in JobMerchantFaction", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordBlacksmithDialogueBusStop(5, "JobMerchantFaction PASS", False, False, False, False, writeTrace)
+
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Actor playerActor = Game.GetPlayer()
+    If milkController == None || playerActor == None || milkController.MilkMaidFaction == None || milkController.MilkSlaveFaction == None
+        service.RecordBlacksmithDialogueBusStop(6, "MME controller/player/faction properties unavailable", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordBlacksmithDialogueBusStop(6, "MME controller and faction properties PASS", False, False, False, False, writeTrace)
+
+    If !playerActor.IsInFaction(milkController.MilkMaidFaction)
+        service.RecordBlacksmithDialogueBusStop(7, "player is not in MME MilkMaidFaction", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordBlacksmithDialogueBusStop(7, "player Milk Maid PASS", False, False, False, False, writeTrace)
+
+    If playerActor.IsInFaction(milkController.MilkSlaveFaction)
+        service.RecordBlacksmithDialogueBusStop(8, "player is an MME Milk Slave", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordBlacksmithDialogueBusStop(8, "player non-Slave PASS", False, False, False, False, writeTrace)
+
+    Armor wornArmor = playerActor.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
+    If wornArmor == None
+        service.RecordBlacksmithDialogueBusStop(9, "no slot-32 armor is equipped", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordBlacksmithDialogueBusStop(9, "slot-32 armor=" + wornArmor.GetName(), False, False, False, False, writeTrace)
+
+    String armorName = wornArmor.GetName()
+    If armorName == "" || armorName == "Empty" || armorName == "empty"
+        service.RecordBlacksmithDialogueBusStop(10, "armor has an unusable display name", False, True, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordBlacksmithDialogueBusStop(10, "armor identity PASS", False, False, False, False, writeTrace)
+
+    If !MMEArmorScript.AreArmorRegistriesSafeForManagement(milkController)
+        service.RecordBlacksmithDialogueBusStop(11, "MilkingEquipment length=" + milkController.MilkingEquipment.Length + "; OG requires at least 5", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    String protectedReason = MMEArmorScript.GetMMEProtectedArmorReason(milkController, wornArmor, "blacksmith-bus", playerActor)
+    If protectedReason != ""
+        service.RecordBlacksmithDialogueBusStop(11, "protected armor: " + protectedReason, False, True, False, False, writeTrace)
+        Return
+    EndIf
+    Int matches = MMEArmorScript.CountMilkingEquipmentMatchesDirect(milkController, armorName)
+    Int expectedState = 0
+    String expectedRoute = ""
+    If matches == 1
+        expectedState = 2
+        expectedRoute = "REMOVE"
+    ElseIf matches == 0 && MMEArmorScript.FindMilkingEquipmentEmptySlotDirect(milkController) >= 0
+        expectedState = 1
+        expectedRoute = "ADD"
+    ElseIf matches == 0
+        service.RecordBlacksmithDialogueBusStop(11, "MilkingEquipment is full", False, True, False, False, writeTrace)
+        Return
+    Else
+        service.RecordBlacksmithDialogueBusStop(11, "registration match count is invalid: " + matches, True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordBlacksmithDialogueBusStop(11, "preflight expects " + expectedRoute, False, False, False, False, writeTrace)
+
+    If !openingObserved
+        service.RecordBlacksmithDialogueBusStop(11, "preflight expects " + expectedRoute + "; open [MME] Hey there! with live trace enabled", False, False, True, False, writeTrace)
+        Return
+    EndIf
+    Int publishedState = stateGlobal.GetValue() as Int
+    If publishedState != expectedState
+        service.RecordBlacksmithDialogueBusStop(12, "opening state mismatch: expected " + expectedState + " (" + expectedRoute + ") got " + publishedState, True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordBlacksmithDialogueBusStop(12, "opening state=" + publishedState + " (" + expectedRoute + ") PASS", False, False, False, False, writeTrace)
+
+    If !checkVisibility
+        Return
+    EndIf
+    Form expectedTopic = addTopic
+    Form expectedInfo = addInfo
+    If expectedState == 2
+        expectedTopic = removeTopic
+        expectedInfo = removeInfo
+    EndIf
+    Form[] topicInfos = MMEExtensionsNative.GetTopicInfos(expectedTopic)
+    If topicInfos == None || topicInfos.Find(expectedInfo) < 0 || MMEExtensionsNative.GetParentTopic(expectedInfo) != expectedTopic
+        service.RecordBlacksmithDialogueBusStop(13, expectedRoute + " INFO is not attached to its runtime DIAL", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    If !MMEExtensionsNative.EvaluateTopicInfo(expectedInfo, candidate, playerActor)
+        service.RecordBlacksmithDialogueBusStop(13, expectedRoute + " INFO runtime conditions failed", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    Form[] visibleInfos = MMEExtensionsNative.GetVisibleDialogueInfos()
+    If visibleInfos == None
+        service.RecordBlacksmithDialogueBusStop(13, "visible INFO snapshot unavailable", True, False, False, False, writeTrace)
+        Return
+    ElseIf visibleInfos.Find(expectedInfo) < 0
+        service.RecordBlacksmithDialogueBusStop(13, expectedRoute + " conditions PASS but INFO is not visible", True, False, False, False, writeTrace)
+        Return
+    EndIf
+    service.RecordBlacksmithDialogueBusStop(13, expectedRoute + " INFO is visible", False, False, False, True, writeTrace)
+EndFunction
+
 Function RefreshNewMilkMaidSexLabBus() Global
     MMEDebug service = GetDebugService()
     If service == None
@@ -108,6 +329,7 @@ Function RunInstallAudit() Global
     Bool gateReady = Game.GetFormFromFile(0x00085A, "MMEAlert.esp") != None
     Bool oldOStimReady = Game.GetFormFromFile(0x00085B, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00085D, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00085F, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000860, "MMEAlert.esp") != None
     Bool newMaidReady = Game.GetFormFromFile(0x00087A, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00087E, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00087D, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00087F, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000880, "MMEAlert.esp") != None
+    Bool blacksmithReady = Game.GetFormFromFile(0x000881, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000882, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000883, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000884, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000885, "MMEAlert.esp") != None
     Bool retiredNewMaidInfoPresent = Game.GetFormFromFile(0x00087B, "MMEAlert.esp") != None
     Bool mmeReady = Quest.GetQuest("MME_MilkQUEST") != None
     Bool ostimReady = MMEOStimBreastfeeding.IsOStimDetected()
@@ -115,9 +337,10 @@ Function RunInstallAudit() Global
 
     Report("Install: controller=" + YesNo(controllerReady) + " MME=" + YesNo(mmeReady) + " OStim=" + YesNo(ostimReady))
     Report("Records: gate=" + YesNo(gateReady) + " OStim choices=" + YesNo(oldOStimReady) + " new maid=" + YesNo(newMaidReady))
+    Report("Records: Blacksmith dialogue=" + YesNo(blacksmithReady))
     Report("Build fingerprint: OStim INFO 87E + SexLab INFO 880=" + YesNo(newMaidReady) + " retired 87B=" + YesNo(retiredNewMaidInfoPresent))
     Report("Runtime: setting=" + YesNo(settingReady) + " dialogue gate=" + GetGateStatus())
-    If controllerReady && gateReady && oldOStimReady && newMaidReady && mmeReady && ostimReady && settingReady && GetGateStatus() == "ON"
+    If controllerReady && gateReady && oldOStimReady && newMaidReady && blacksmithReady && mmeReady && ostimReady && settingReady && GetGateStatus() == "ON"
         Report("PASS: installed dialogue runtime is ready")
     Else
         Report("FAIL: install/runtime audit found a blocker", 2)
