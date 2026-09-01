@@ -43,7 +43,14 @@ https://www.loverslab.com/topic/156760-milk-mod-economy-mme-cbbebhunp3ba-leseae-
 
 https://www.loverslab.com/files/file/20058-sexlab-se-sex-animation-framework-v166b-01182024/
 
-Required by Milk Mod Economy and its SexLab-based scenes.
+Required by **Milk Mod Economy as a MASTER**. The very popular but optional **Devious Devices** ecosystem also depends on it. The original was designed that way.
+
+Used for small but essential background functions and compatibility.
+
+**OStim Compatibility:** MME Extensions allows Milk Mod Economy to use the OStim ecosystem and animations.
+
+**OStim and SexLab can coexist.** OStim can handle the animations for this mod, while SexLab remains in the background for required MME functions and backwards compatibility with Devious Devices and other mods in the MME ecosystem.
+
 
 ---
 
