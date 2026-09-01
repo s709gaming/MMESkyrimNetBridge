@@ -27,8 +27,8 @@ Actor PendingDialogueDiagnosticActor = None
 String LastDialogueDiagnosticState = ""
 Bool MMEOpeningRefreshObserved = False
 Float MMEOpeningRefreshSnapshotAt = 0.0
-Bool ArmorCheckReminderSessionOpen = False
-Bool ArmorCheckReminderEvaluated = False
+String ArmorCheckReminderShownAtKey = "MMEExtensions.ArmorReminder.ShownAt"
+String ArmorCheckReminderAttemptAtKey = "MMEExtensions.ArmorReminder.AttemptAt"
 Bool Property OStimDialogueAvailable Auto Conditional
 
 Bool Function IsExtensionsEnabled() Global
@@ -77,12 +77,8 @@ Function InitializeController()
     RegisterForModEvent("MMEExtensions_MMEEffectRemoved", "OnMMEEffectRemoved")
     UnregisterForModEvent("MMEExtensions_DialogueInfo")
     RegisterForModEvent("MMEExtensions_DialogueInfo", "OnDialogueInfoSelected")
-    ; SKSE menu registrations must be refreshed after every game load. The
-    ; established player monitor calls InitializeController on load.
-    UnregisterForMenu("Dialogue Menu")
-    RegisterForMenu("Dialogue Menu")
-    ArmorCheckReminderSessionOpen = False
-    ArmorCheckReminderEvaluated = False
+    ; Reminder timestamps are shared through StorageUtil so redundant controller
+    ; initialization cannot clear an active cooldown.
     UnregisterForModEvent("MMEExtensions_ArmorEquipped")
     RegisterForModEvent("MMEExtensions_ArmorEquipped", "OnArmorEquipped")
     UnregisterForModEvent("MME_AddMilkMaid")
@@ -167,7 +163,6 @@ Function DisableController()
     UnregisterForModEvent("MMEExtensions_MMEEffectApplied")
     UnregisterForModEvent("MMEExtensions_MMEEffectRemoved")
     UnregisterForModEvent("MMEExtensions_DialogueInfo")
-    UnregisterForMenu("Dialogue Menu")
     UnregisterForModEvent("MMEExtensions_ArmorEquipped")
     UnregisterForModEvent("MME_AddMilkMaid")
     UnregisterForModEvent("MilkQuest.StartMilkingMachine")
@@ -196,26 +191,7 @@ Function DisableController()
     LastDialogueDiagnosticState = ""
     MMEOpeningRefreshObserved = False
     MMEOpeningRefreshSnapshotAt = 0.0
-    ArmorCheckReminderSessionOpen = False
-    ArmorCheckReminderEvaluated = False
 EndFunction
-
-; The native INFO stream also observes ambient NPC dialogue. Menu state makes
-; the reminder player-conversation-only, while the evaluated flag limits the
-; feature to one cheap attempt per dialogue session.
-Event OnMenuOpen(String menuName)
-    If menuName == "Dialogue Menu"
-        ArmorCheckReminderSessionOpen = True
-        ArmorCheckReminderEvaluated = False
-    EndIf
-EndEvent
-
-Event OnMenuClose(String menuName)
-    If menuName == "Dialogue Menu"
-        ArmorCheckReminderSessionOpen = False
-        ArmorCheckReminderEvaluated = False
-    EndIf
-EndEvent
 
 ; Own the game-time registration on this established quest script. Existing
 ; saves already have this VM instance, unlike newly attached quest scripts.
@@ -443,16 +419,46 @@ Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float local
         Return
     EndIf
     ; This gameplay reminder is independent of every diagnostic toggle and must
-    ; run before the diagnostic-only early return below. Mark the session as
-    ; evaluated even for an expected skip so later INFOs never repeat work.
-    If ArmorCheckReminderSessionOpen && !ArmorCheckReminderEvaluated
-        ArmorCheckReminderEvaluated = True
-        If JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) == 1
-            Actor reminderSpeaker = sender as Actor
-            If reminderSpeaker == None
-                reminderSpeaker = MMEExtensionsNative.GetDialogueTarget()
+    ; run before the diagnostic-only early return below. A successful notice
+    ; starts a configurable real-time cooldown; it does not depend on the
+    ; Dialogue Menu close event, which is not reliable on every dialogue path.
+    If JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) == 1
+        ; Do not depend on OnMenuOpen ordering. Both resolvers return None for
+        ; ambient NPC chatter and identify only the player's live conversation.
+        Actor reminderSpeaker = MMEExtensionsNative.GetDialogueTarget()
+        If reminderSpeaker == None
+            reminderSpeaker = Game.GetDialogueTarget() as Actor
+        EndIf
+        If reminderSpeaker != None
+            Float reminderNow = Utility.GetCurrentRealTime()
+            Float reminderCooldown = JsonUtil.GetFloatValue(SettingsFile, "armorCheckReminderCooldown", 60.0)
+            If reminderCooldown < 0.0
+                reminderCooldown = 0.0
+            ElseIf reminderCooldown > 300.0
+                reminderCooldown = 300.0
             EndIf
-            MMEServiceArmorReminder.TryShow(reminderSpeaker)
+            ; StorageUtil makes these guards shared across controller instances.
+            ; This matters if an obsolete test plugin and production plugin are
+            ; both active and have each registered the same native event.
+            Float lastReminderShown = StorageUtil.GetFloatValue(None, ArmorCheckReminderShownAtKey, -1000.0)
+            Float lastReminderAttempt = StorageUtil.GetFloatValue(None, ArmorCheckReminderAttemptAtKey, -1000.0)
+            ; GetCurrentRealTime restarts with Skyrim. Ignore timestamps saved by
+            ; a previous process instead of resetting them during every init.
+            If lastReminderShown > reminderNow
+                lastReminderShown = -1000.0
+            EndIf
+            If lastReminderAttempt > reminderNow
+                lastReminderAttempt = -1000.0
+            EndIf
+            Bool attemptAllowed = reminderNow - lastReminderShown >= reminderCooldown && reminderNow - lastReminderAttempt >= 2.0
+            If attemptAllowed
+                ; Reserve before classification so a second controller cannot
+                ; enter TryShow while this event is still being processed.
+                StorageUtil.SetFloatValue(None, ArmorCheckReminderAttemptAtKey, reminderNow)
+                If MMEServiceArmorReminder.TryShow(reminderSpeaker)
+                    StorageUtil.SetFloatValue(None, ArmorCheckReminderShownAtKey, reminderNow)
+                EndIf
+            EndIf
         EndIf
     EndIf
     RefreshMMESexLabAnimationGate("dialogue event " + topicEditorID)

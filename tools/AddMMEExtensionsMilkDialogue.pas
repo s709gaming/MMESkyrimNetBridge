@@ -5,9 +5,11 @@ unit UserScript;
 
   Adds one new player response beneath the same MME dialogue topic used by
   MME_Dialogues.Fragment_03 (MME's existing give-Lactacid response). The
-  source INFO is copied as a new record so its Milkmaid conditions and
-  dialogue routing are retained. Its Lactacid-only inventory condition is
-  replaced by the supported Lactacid/normal/racial/special milk OR group.
+  source INFO is copied as a new record so its dialogue routing is retained.
+  Its conditions are replaced by only the supported
+  Lactacid/normal/racial/special milk inventory OR group. The source INFO's
+  sex, race, relationship, and Milk Maid restrictions do not apply: any NPC
+  can offer the dialogue while the player has a supported milk item.
 
   Required loaded files:
     Skyrim.esm
@@ -32,8 +34,8 @@ const
   RaceMilkListFormID = $00071C2B;
   SpecialMilkListFormID = $00071C2D;
   NewInfoEditorID = 'MMEExt_DialogueDrinkMilk';
-  PlayerPrompt = 'Drink this, it will make you milky!';
-  NPCResponse = 'Yes! I can''t wait to be nice and heavy!';
+  PlayerPrompt = 'I''d love some. Bet I know where that came from!';
+  NPCResponse = 'Would you like to drink some milk?';
   CopiedUnwantedResponse = 'I hope you will give me some good milking soon!';
 
 var
@@ -193,15 +195,12 @@ begin
     Exit;
   end;
 
-  for i := 0 to ElementCount(sourceConditions) - 1 do begin
-    sourceCondition := ElementByIndex(sourceConditions, i);
-    if not SameText(GetElementEditValues(sourceCondition, 'CTDA\Function'),
-        'GetItemCount') then
-      ElementAssign(targetConditions, HighInteger, sourceCondition, False);
-  end;
-
-  Result := ElementCount(targetConditions) =
-    ElementCount(sourceConditions) + 4;
+  // Do not copy the source INFO's actor eligibility conditions. They belong
+  // to MME's original Milk Maid dialogue and unnecessarily restrict which
+  // NPC can offer this option. The inventory OR group is the only condition
+  // needed here: Fragment_0 validates and consumes the selected milk at
+  // runtime.
+  Result := ElementCount(targetConditions) = 5;
   if Result then
     AddMessage('Inventory eligibility: Lactacid OR HearthFires milk OR ' +
       BasicMilkListEditorID + ' OR ' + RaceMilkListEditorID + ' OR ' +

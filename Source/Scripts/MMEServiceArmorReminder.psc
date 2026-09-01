@@ -43,7 +43,10 @@ Bool Function TryShow(Actor speaker) Global
 
     Armor wornArmor = playerActor.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
     Int armorClass = 0
-    String poolName = "noArmor"
+    ; Papyrus string identifiers are case-insensitive and can normalize a value
+    ; to an already-interned lowercase spelling. JsonUtil paths are case-
+    ; sensitive, so every shipped pool key is deliberately lowercase.
+    String poolName = "noarmor"
     If wornArmor != None
         armorClass = MMEArmorScript.ClassifyArmor(milkController, wornArmor, "service-reminder", playerActor)
         ; Tentacle/Spriggan and the three configured arrays receive a concrete
@@ -54,13 +57,13 @@ Bool Function TryShow(Actor speaker) Global
             Return False
         EndIf
         If armorClass == 1
-            poolName = "milkingArmor"
+            poolName = "milkingarmor"
         ElseIf armorClass == 2
-            poolName = "livingArmor"
+            poolName = "livingarmor"
         ElseIf armorClass == 3
-            poolName = "parasiteArmor"
+            poolName = "parasitearmor"
         Else
-            poolName = "regularArmor"
+            poolName = "regulararmor"
         EndIf
     EndIf
 
@@ -149,15 +152,15 @@ String Function ResolveActorName(Actor speaker) Global
 EndFunction
 
 String Function GetCompactObservation(String poolName) Global
-    If poolName == "noArmor"
+    If poolName == "noarmor"
         Return "notices you're bare"
-    ElseIf poolName == "regularArmor"
+    ElseIf poolName == "regulararmor"
         Return "eyes your armor"
-    ElseIf poolName == "milkingArmor"
+    ElseIf poolName == "milkingarmor"
         Return "notices your milking gear"
-    ElseIf poolName == "livingArmor"
+    ElseIf poolName == "livingarmor"
         Return "watches your living armor stir"
-    ElseIf poolName == "parasiteArmor"
+    ElseIf poolName == "parasitearmor"
         Return "notices the parasite"
     EndIf
     Return "studies your equipment"

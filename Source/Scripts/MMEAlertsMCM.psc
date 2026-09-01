@@ -127,6 +127,7 @@ Int armorStripMoanDiagnosticOption
 Int armorStripNarrationDiagnosticOption
 Int stripAllArmorOverrideOption
 Int armorCheckReminderOption
+Int armorCheckReminderCooldownOption
 Int milkMaidThoughtsOption
 Int milkMaidThoughtsIntervalOption
 Int milkMaidThoughtsRandomnessOption
@@ -168,7 +169,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 101
+    Return 103
 EndFunction
 
 Function SetPageNames()
@@ -345,6 +346,9 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableStripAllArmor", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorCheckReminder", 1)
         JsonUtil.SetIntValue(SettingsFile, "armorCheckReminderMigration101", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "armorCheckReminderCooldown", 60.0)
+        JsonUtil.SetIntValue(SettingsFile, "armorCheckReminderCooldownMigration102", 1)
+        JsonUtil.SetIntValue(SettingsFile, "armorCheckReminderCooldownMigration103", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0)
         JsonUtil.SetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0)
         JsonUtil.SetIntValue(SettingsFile, "playerDrinkNarrationChance", 25)
@@ -918,6 +922,20 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorCheckReminderMigration101", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Replaces the unreliable dialogue-menu session guard with a predictable
+    ; real-time cooldown while preserving the reminder toggle on existing saves.
+    If JsonUtil.GetIntValue(SettingsFile, "armorCheckReminderCooldownMigration102", 0) == 0
+        JsonUtil.SetFloatValue(SettingsFile, "armorCheckReminderCooldown", 15.0)
+        JsonUtil.SetIntValue(SettingsFile, "armorCheckReminderCooldownMigration102", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; The original 15-second value could repeat during one long conversation.
+    ; Upgrade existing installations to the safer one-minute default.
+    If JsonUtil.GetIntValue(SettingsFile, "armorCheckReminderCooldownMigration103", 0) == 0
+        JsonUtil.SetFloatValue(SettingsFile, "armorCheckReminderCooldown", 60.0)
+        JsonUtil.SetIntValue(SettingsFile, "armorCheckReminderCooldownMigration103", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1084,6 +1102,7 @@ Event OnPageReset(String page)
     armorStripNarrationDiagnosticOption = -1
     stripAllArmorOverrideOption = -1
     armorCheckReminderOption = -1
+    armorCheckReminderCooldownOption = -1
     milkMaidThoughtsOption = -1
     milkMaidThoughtsIntervalOption = -1
     milkMaidThoughtsRandomnessOption = -1
@@ -1181,6 +1200,11 @@ Event OnPageReset(String page)
     If page == "Armor"
         AddHeaderOption("Service Armor Checks")
         armorCheckReminderOption = AddToggleOption("Armor Check Reminder", JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) == 1)
+        Int reminderFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) != 1
+            reminderFlags = OPTION_FLAG_DISABLED
+        EndIf
+        armorCheckReminderCooldownOption = AddSliderOption("Reminder Cooldown", JsonUtil.GetFloatValue(SettingsFile, "armorCheckReminderCooldown", 60.0), "{0} seconds", reminderFlags)
         AddHeaderOption("Armor Stripping")
         extensionsArmorStrippingOption = AddToggleOption("Override MME Armor Stripping", JsonUtil.GetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1) == 1)
         Int stripFlags = OPTION_FLAG_NONE
@@ -1539,6 +1563,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Take over armor stripping from Milk Mod Economy. While enabled, MME's original stripping is disabled and these fullness thresholds are used instead.")
     ElseIf option == armorCheckReminderOption
         SetInfoText("Show one brief notification when an eligible blacksmith, alchemist, or court wizard notices the armor state recognized by MME.")
+    ElseIf option == armorCheckReminderCooldownOption
+        SetInfoText("Set the real-time delay after a service armor reminder appears before another eligible conversation can show one.")
     ElseIf option == stripAllArmorOverrideOption
         SetInfoText("Temporary workaround: ignore MME armor protection classification and strip whatever is in slot 32 when the fullness threshold says strip. Devious Devices and SexLab no-strip protections still apply.")
     ElseIf option == armorStripHeavyThresholdOption
@@ -1941,6 +1967,7 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorCheckReminder", value)
         SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
     ElseIf option == stripAllArmorOverrideOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableStripAllArmor", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableStripAllArmor", value)
@@ -2180,6 +2207,11 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(5.0)
         SetSliderDialogRange(3.0, 30.0)
         SetSliderDialogInterval(1.0)
+    ElseIf option == armorCheckReminderCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorCheckReminderCooldown", 60.0))
+        SetSliderDialogDefaultValue(60.0)
+        SetSliderDialogRange(0.0, 300.0)
+        SetSliderDialogInterval(5.0)
     ElseIf option == milkMaidThoughtsIntervalOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0))
         SetSliderDialogDefaultValue(12.0)
@@ -2316,6 +2348,10 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
         (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
+    ElseIf option == armorCheckReminderCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "armorCheckReminderCooldown", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
     ElseIf option == milkMaidThoughtsIntervalOption
         JsonUtil.SetFloatValue(SettingsFile, "milkMaidThoughtsInterval", value)
         JsonUtil.Save(SettingsFile, False)
