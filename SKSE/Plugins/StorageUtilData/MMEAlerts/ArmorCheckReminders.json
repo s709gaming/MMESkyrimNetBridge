@@ -1,0 +1,45 @@
+{
+  "noArmor": [
+    "notices you're bare",
+    "notices your lack of armor",
+    "glances over your bare figure",
+    "takes note of your bare skin",
+    "eyes your uncovered figure"
+  ],
+  "regularArmor": [
+    "eyes your armor, considering alterations",
+    "studies how your armor might be altered",
+    "spots room for changes in your armor",
+    "examines your armor with professional interest",
+    "considers altering your armor"
+  ],
+  "milkingArmor": [
+    "notices your milking equipment",
+    "recognizes your milking gear",
+    "eyes your milking fittings",
+    "notices your specialized equipment",
+    "examines your milking gear"
+  ],
+  "livingArmor": [
+    "notices your living armor shift",
+    "watches your living armor stir",
+    "eyes your living armor curiously",
+    "notices your armor moving",
+    "watches your armor twitch"
+  ],
+  "parasiteArmor": [
+    "notices the parasite clinging to you",
+    "eyes your parasitic armor",
+    "watches the parasite twitch",
+    "notices the parasite stirring",
+    "eyes the creature clinging to you"
+  ],
+  "reaction": [
+    "and smirks.",
+    "and grins.",
+    "and raises an eyebrow.",
+    "and gives an amused nod.",
+    "and suppresses a grin.",
+    "and gives a knowing look."
+  ]
+}

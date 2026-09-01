@@ -44,6 +44,7 @@ Depending on your MCM settings, AI narration, lewd sounds, animations, or notifi
 - Reaching 50% or 100% milk fullness.
 - A new Milk Maid discovering her newfound gifts.
 - Equipping milking devices such as milk cuirasses, parasite armor, and similar equipment.
+- Talking to blacksmiths, alchemists, or court wizards while wearing armor recognized by MME—or no body armor at all.
 - Periodically wearing those questionable devices around Skyrim.
 - Being milked or breastfeeding lovers.
 - Clothes flying off your body from overly large assets or other important MME events.

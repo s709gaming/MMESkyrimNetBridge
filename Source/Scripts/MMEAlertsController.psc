@@ -27,6 +27,8 @@ Actor PendingDialogueDiagnosticActor = None
 String LastDialogueDiagnosticState = ""
 Bool MMEOpeningRefreshObserved = False
 Float MMEOpeningRefreshSnapshotAt = 0.0
+Bool ArmorCheckReminderSessionOpen = False
+Bool ArmorCheckReminderEvaluated = False
 Bool Property OStimDialogueAvailable Auto Conditional
 
 Bool Function IsExtensionsEnabled() Global
@@ -75,6 +77,12 @@ Function InitializeController()
     RegisterForModEvent("MMEExtensions_MMEEffectRemoved", "OnMMEEffectRemoved")
     UnregisterForModEvent("MMEExtensions_DialogueInfo")
     RegisterForModEvent("MMEExtensions_DialogueInfo", "OnDialogueInfoSelected")
+    ; SKSE menu registrations must be refreshed after every game load. The
+    ; established player monitor calls InitializeController on load.
+    UnregisterForMenu("Dialogue Menu")
+    RegisterForMenu("Dialogue Menu")
+    ArmorCheckReminderSessionOpen = False
+    ArmorCheckReminderEvaluated = False
     UnregisterForModEvent("MMEExtensions_ArmorEquipped")
     RegisterForModEvent("MMEExtensions_ArmorEquipped", "OnArmorEquipped")
     UnregisterForModEvent("MME_AddMilkMaid")
@@ -159,6 +167,7 @@ Function DisableController()
     UnregisterForModEvent("MMEExtensions_MMEEffectApplied")
     UnregisterForModEvent("MMEExtensions_MMEEffectRemoved")
     UnregisterForModEvent("MMEExtensions_DialogueInfo")
+    UnregisterForMenu("Dialogue Menu")
     UnregisterForModEvent("MMEExtensions_ArmorEquipped")
     UnregisterForModEvent("MME_AddMilkMaid")
     UnregisterForModEvent("MilkQuest.StartMilkingMachine")
@@ -187,7 +196,26 @@ Function DisableController()
     LastDialogueDiagnosticState = ""
     MMEOpeningRefreshObserved = False
     MMEOpeningRefreshSnapshotAt = 0.0
+    ArmorCheckReminderSessionOpen = False
+    ArmorCheckReminderEvaluated = False
 EndFunction
+
+; The native INFO stream also observes ambient NPC dialogue. Menu state makes
+; the reminder player-conversation-only, while the evaluated flag limits the
+; feature to one cheap attempt per dialogue session.
+Event OnMenuOpen(String menuName)
+    If menuName == "Dialogue Menu"
+        ArmorCheckReminderSessionOpen = True
+        ArmorCheckReminderEvaluated = False
+    EndIf
+EndEvent
+
+Event OnMenuClose(String menuName)
+    If menuName == "Dialogue Menu"
+        ArmorCheckReminderSessionOpen = False
+        ArmorCheckReminderEvaluated = False
+    EndIf
+EndEvent
 
 ; Own the game-time registration on this established quest script. Existing
 ; saves already have this VM instance, unlike newly attached quest scripts.
@@ -413,6 +441,19 @@ Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float local
     Bool mageDebug = JsonUtil.GetIntValue(SettingsFile, "enableMageDialogueTrace", 0) == 1
     If !IsExtensionsEnabled()
         Return
+    EndIf
+    ; This gameplay reminder is independent of every diagnostic toggle and must
+    ; run before the diagnostic-only early return below. Mark the session as
+    ; evaluated even for an expected skip so later INFOs never repeat work.
+    If ArmorCheckReminderSessionOpen && !ArmorCheckReminderEvaluated
+        ArmorCheckReminderEvaluated = True
+        If JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) == 1
+            Actor reminderSpeaker = sender as Actor
+            If reminderSpeaker == None
+                reminderSpeaker = MMEExtensionsNative.GetDialogueTarget()
+            EndIf
+            MMEServiceArmorReminder.TryShow(reminderSpeaker)
+        EndIf
     EndIf
     RefreshMMESexLabAnimationGate("dialogue event " + topicEditorID)
     Int selectedInfo = localInfoForm as Int
