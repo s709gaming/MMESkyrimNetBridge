@@ -9,7 +9,7 @@ IMPORTANT: Skyrim SE/AE 1.7.9.9 is not yet supported.
 The Tentacle Effects page now has a **Skyrim.Net Narration** section. Narration
 defaults to enabled with a **100% chance**, adjustable from 0-100% in 5% steps.
 After a successful check and its usual HUD notification, at most one request
-selects one successfully affected NPC wearer as its speaker. No timer, detection, armor rules,
+uses one successfully affected wearer as its subject. No timer, detection, armor rules,
 milk/arousal calculations, or original HUD lines are changed.
 
 Non-graphic narration text lives in
@@ -40,11 +40,21 @@ An accepted API request does not guarantee generated dialogue or voice playback.
 Automated source/JSON and bytecode checks are included in the build; Skyrim.Net
 playback and asynchronous SLA timing still require in-game validation.
 
-Skyrim.Net special-cases the player in its originator slot as player input, then
-chooses a nearby NPC to respond. To prevent unrelated bystander dialogue, this
-feature narrates only through an affected NPC wearer. If the player is the only
-affected wearer, narration is skipped and diagnostics explain why. The local
-effect and HUD notification are unchanged.
+**Enable Player Narration** defaults to enabled under Skyrim.Net Narration.
+When an affected player is selected, a private custom LLM request generates a
+self-comment and its callback uses Skyrim.Net's player-only TTS endpoint. It
+does not publish player dialogue or request bystander reactions. The supplied
+`mme_wearer_self_comment.prompt` uses non-graphic, first-person output instructions;
+the three existing JSON situation templates remain unchanged. Configure a working
+player voice in Skyrim.Net. Generation failure has no bystander fallback.
+When this toggle is off, a player-focused check sends no narration request, even
+if NPCs were also affected. The callback rechecks toggles before delayed playback.
+NPC-only checks explicitly pass the affected NPC as the DirectNarration speaker,
+per the installed API contract; this route still needs in-game speaker verification.
+Child speakers are rejected. The main
+narration toggle gates both routes, and both share the 100% default chance and
+one-request-per-check limit. The local effects and HUD notification are unchanged.
+Independent Skyrim.Net conversations/world reactions are not globally disabled.
 
 ### September 6, 2026: Tentacle Effects scan hotfix
 

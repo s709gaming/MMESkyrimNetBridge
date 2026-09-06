@@ -142,6 +142,7 @@ Int armorInjectionChanceOption
 Int armorInjectionNotificationOption
 Int armorInjectionDiagnosticOption
 Int armorInjectionNarrationOption
+Int armorInjectionPlayerNarrationOption
 Int armorInjectionNarrationChanceOption
 Int runArmorInjectionCheckOption
 Int diagnosticNotificationsOption
@@ -178,7 +179,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 106
+    Return 107
 EndFunction
 
 Function SetPageNames()
@@ -975,6 +976,11 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationMigration105", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "armorInjectionPlayerNarrationMigration107", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionPlayerNarration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionPlayerNarration", 1))
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionPlayerNarrationMigration107", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
     ; Raise the former 10% default without overwriting a custom percentage.
     If JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationMigration106", 0) == 0
         If JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationChance", 10) == 10
@@ -1164,6 +1170,7 @@ Event OnPageReset(String page)
     armorInjectionNotificationOption = -1
     armorInjectionDiagnosticOption = -1
     armorInjectionNarrationOption = -1
+    armorInjectionPlayerNarrationOption = -1
     armorInjectionNarrationChanceOption = -1
     runArmorInjectionCheckOption = -1
     diagnosticNotificationsOption = -1
@@ -1376,6 +1383,7 @@ Event OnPageReset(String page)
         armorInjectionNotificationOption = AddToggleOption("Show Effect Notifications", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNotifications", 1) == 1)
         AddHeaderOption("Skyrim.Net Narration")
         armorInjectionNarrationOption = AddToggleOption("Enable Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNarration", 1) == 1)
+        armorInjectionPlayerNarrationOption = AddToggleOption("Enable Player Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionPlayerNarration", 1) == 1)
         armorInjectionNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationChance", 100), "{0}%")
         AddHeaderOption("Debug")
         armorInjectionDiagnosticOption = AddToggleOption("Enable Effect Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", 0) == 1)
@@ -1738,6 +1746,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report nearby Milk Maids, armor classes, effects, focus, and narration chance/results or skip reasons.")
     ElseIf option == armorInjectionNarrationOption
         SetInfoText("Let the focused armor wearer react through Skyrim.Net after a successful check. Gameplay and HUD notifications are independent.")
+    ElseIf option == armorInjectionPlayerNarrationOption
+        SetInfoText("Let the affected player speak about herself. When off, a check focused on the player sends no narration and does not select an NPC instead. Requires Skyrim.Net Narration above.")
     ElseIf option == armorInjectionNarrationChanceOption
         SetInfoText("Chance of one Skyrim.Net request per successful effect check. Only confirmed milk/arousal increases are described. Default 100%.")
     ElseIf option == runArmorInjectionCheckOption
@@ -1899,6 +1909,10 @@ Event OnOptionSelect(Int option)
     ElseIf option == armorInjectionNarrationOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNarration", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionNarration", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == armorInjectionPlayerNarrationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionPlayerNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionPlayerNarration", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == runArmorInjectionCheckOption
         MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController

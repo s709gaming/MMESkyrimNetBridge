@@ -152,6 +152,14 @@ foreach ($configName in @("SkyrimNet.json", "Thoughts.json", "Injection.json", "
 }
 
 # Install the additive actor-bio prompt without replacing any SkyrimNet-owned template.
+$selfCommentPrompt = Join-Path $projectRoot "SkyrimNetPrompts\mme_wearer_self_comment.prompt"
+if (!(Test-Path -LiteralPath $selfCommentPrompt)) {
+    throw "Required wearer self-comment prompt is missing: $selfCommentPrompt"
+}
+$selfCommentDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\prompts"
+New-Item -ItemType Directory -Force -Path $selfCommentDestination | Out-Null
+Copy-Item -LiteralPath $selfCommentPrompt -Destination $selfCommentDestination
+
 $milkmaidPrompt = Join-Path $projectRoot "SkyrimNetPrompts\0260_mme_extensions_milkmaid.prompt"
 if (Test-Path -LiteralPath $milkmaidPrompt) {
     $promptDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\prompts\submodules\character_bio"

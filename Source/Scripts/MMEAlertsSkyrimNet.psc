@@ -34,11 +34,16 @@ Function NarrateTentacleEffect(Actor wearer, Float milkAdded, Int arousalBefore,
         Return
     EndIf
     If wearer == None
-        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: no affected NPC wearer; Skyrim.Net cannot speak as the player; roll not made")
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: no affected narration candidate; roll not made")
         Return
     EndIf
-    If wearer == Game.GetPlayer()
-        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: Skyrim.Net treats a player originator as player input and selects a bystander")
+    If wearer.IsChild()
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: child actors cannot be speakers")
+        Return
+    EndIf
+    Bool isPlayer = wearer == Game.GetPlayer()
+    If isPlayer && JsonUtil.GetIntValue(settingsFile, "enableArmorInjectionPlayerNarration", 1) != 1
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: player narration disabled; roll not made")
         Return
     EndIf
     If !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
@@ -69,15 +74,53 @@ Function NarrateTentacleEffect(Actor wearer, Float milkAdded, Int arousalBefore,
         MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: invalid JSON actor template")
         Return
     EndIf
-    ; Runtime logs confirm an NPC originator is the speaker. The player is
-    ; excluded above because Skyrim.Net special-cases it as user input.
-    Debug.Trace("[MMEAlert SkyrimNet] Tentacle Effects DirectNarration | speaker=" + actorName + " | listener=Player | " + content)
+    If isPlayer
+        ; DirectNarration treats a player originator as player input, and a
+        ; missing originator invites speaker selection. Neither is player speech.
+        ; Generate privately, then play ONLY through the player TTS endpoint.
+        MMEAlertsController bridge = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+        If bridge == None
+            MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: player callback script unavailable; no fallback")
+            Return
+        EndIf
+        String contextJson = "{\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
+        Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnTentaclePlayerLine")
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "player-only generation queue result=" + queued + " (1=queued); no bystander fallback")
+        Return
+    EndIf
+    content += " React from your own perspective as the affected armor wearer."
+    Debug.Trace("[MMEAlert SkyrimNet] Tentacle Effects DirectNarration | speaker=" + actorName)
     Int result = SkyrimNetApi.DirectNarration(content, wearer, Game.GetPlayer())
     If result == 0
-        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration request accepted [0] | speaker=" + actorName)
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration request accepted [0] | NPC wearer=" + actorName)
     Else
-        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration request rejected [" + result + "] | speaker=" + actorName)
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration request rejected [" + result + "] | NPC wearer=" + actorName + "; no fallback")
     EndIf
+EndFunction
+
+; Called by the existing controller quest callback. No shared pending actor or
+; prompt state: every response is player-only, even when requests overlap.
+Function PlayTentaclePlayerLine(String response, Int success) Global
+    Bool diagnostic = MMETentacleEffects.IsDiagnosticEnabled()
+    If success != 1 || response == ""
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "player-only generation failed; no fallback")
+        Return
+    EndIf
+    ; Settings can change while the asynchronous LLM request is in flight.
+    If !IsExtensionsEnabled() || !IsAvailable() || !MMETentacleEffects.IsEnabled()
+        Return
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorInjectionNarration", 1) != 1 || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorInjectionPlayerNarration", 1) != 1 || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "player-only playback cancelled: narration disabled")
+        Return
+    EndIf
+    If Game.GetPlayer().IsChild()
+        Return
+    EndIf
+    ; Unlike TransformDialogue, this does not register a dialogue event or ask
+    ; NPCs to respond. Never use DirectNarration as an error fallback here.
+    Int result = SkyrimNetApi.TriggerPlayerTTS(response)
+    MMETentacleEffects.TraceDiagnostic(diagnostic, "player-only TTS result=" + result + " (0=accepted)")
 EndFunction
 
 ; Configurable non-graphic wording. Like the armor Thought pools, each actual
@@ -104,7 +147,7 @@ String Function BuildTentacleEffectNarration(String actorName, Bool milkIncrease
     EndIf
     ; Mirror the proven Armor Thoughts grounding: name the immediate situation,
     ; bind it to the selected actor, and explicitly forbid a subject change.
-    Return "Immediate situation affecting YOU, " + actorName + ": " + content + " Your next response must be from your own perspective and specifically about this event. Stay focused on the armor and the effects stated here; do not change subjects or invent additional effects."
+    Return "Immediate situation involving " + actorName + ": " + content + " Your next response must be specifically about this event. Stay focused on the armor and the effects stated here; do not change subjects or invent additional effects."
 EndFunction
 
 ; MMEThoughts uses {actor}; older/user-authored narration JSON may use {ACTOR}.
@@ -1068,6 +1111,9 @@ EndFunction
 String Function EscapeJsonString(String value) Global
     value = ReplaceAll(value, "\\", "\\\\")
     value = ReplaceAll(value, "\"", "\\\"")
+    value = ReplaceAll(value, "\n", "\\n")
+    value = ReplaceAll(value, StringUtil.AsChar(13), "\\r")
+    value = ReplaceAll(value, "\t", "\\t")
     Return value
 EndFunction
 

@@ -1,5 +1,11 @@
 Scriptname MMEAlertsController extends Quest
 
+; Skyrim.Net requires an instance callback on an attached quest script.
+; Keep all API calls and playback gates inside the publication boundary.
+Function OnTentaclePlayerLine(String response, Int success)
+    MMEAlertsSkyrimNet.PlayTentaclePlayerLine(response, success)
+EndFunction
+
 ; ---------------------------------------------------------------------------
 ; Controller-owned persistent state
 ; ---------------------------------------------------------------------------

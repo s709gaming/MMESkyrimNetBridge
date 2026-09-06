@@ -108,7 +108,8 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
                     EndIf
                     ; Observe only; never infer success from the configured bonus.
                     ; Capture the baseline before the existing asynchronous SLA call.
-                    If diagnostic || (trackNarration && narrationActor == None && candidate != playerActor)
+                    Bool selectForNarration = focusActor == None || candidate == playerActor
+                    If diagnostic || (trackNarration && selectForNarration)
                         arousalBefore = MMEArousalBridge.GetCurrentArousal(candidate)
                     EndIf
 
@@ -126,10 +127,9 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
                         focusActor = candidate
                         focusArmorClass = armorClass
                     EndIf
-                    ; Skyrim.Net treats the player in the originator slot as
-                    ; player input and chooses a bystander to answer. Retain one
-                    ; affected NPC so narration can guarantee the wearer speaks.
-                    If narrationActor == None && candidate != playerActor
+                    ; Keep the exact HUD wearer and its results. Disabling player
+                    ; speech must not substitute an NPC for the selected player.
+                    If selectForNarration
                         narrationActor = candidate
                         narrationMilkAdded = milkAdded
                         narrationArousalBefore = arousalBefore
@@ -168,7 +168,7 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
     If narrationActor != None
         Report(diagnostic, "narration wearer=" + MMEThoughts.ResolveActorName(narrationActor) + " | HUD focus=" + focusName)
     Else
-        Report(diagnostic, "narration wearer unavailable: no affected NPC; Skyrim.Net cannot speak as the player")
+        Report(diagnostic, "narration skipped: no affected narration candidate")
     EndIf
     MMEAlertsSkyrimNet.NarrateTentacleEffect(narrationActor, narrationMilkAdded, narrationArousalBefore, narrationArousalSent, diagnostic)
     Return True
