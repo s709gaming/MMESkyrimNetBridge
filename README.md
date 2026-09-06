@@ -41,6 +41,12 @@ Automated source/JSON and bytecode checks are included in the build; Skyrim.Net
 playback and asynchronous SLA timing still require in-game validation.
 
 **Enable Player Narration** defaults to enabled under Skyrim.Net Narration.
+Tentacle Effects also has a default-on **Notification Sound** toggle immediately
+below **Show Effect Notifications**. It reuses the existing randomized low sound
+pool on the notification's affected wearer, once per displayed notification,
+respecting the global sound enable and volume settings. No displayed notification
+means no sound. This is independent of Skyrim.Net and its player narration toggle.
+
 When an affected player is selected, a private custom LLM request generates a
 self-comment and its callback uses Skyrim.Net's player-only TTS endpoint. It
 does not publish player dialogue or request bystander reactions. The supplied

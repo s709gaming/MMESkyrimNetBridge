@@ -160,6 +160,7 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
         String notificationText = BuildNotification(focusName, injectedCount)
         If notificationText != ""
             Debug.Notification(notificationText)
+            PlayNotificationSound(focusActor)
         EndIf
     EndIf
 
@@ -172,6 +173,26 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
     EndIf
     MMEAlertsSkyrimNet.NarrateTentacleEffect(narrationActor, narrationMilkAdded, narrationArousalBefore, narrationArousalSent, diagnostic)
     Return True
+EndFunction
+
+; Reuse the packaged low sound pool; the sound descriptor owns random selection.
+; One playback on the notification wearer, independent of Skyrim.Net narration.
+Function PlayNotificationSound(Actor wearer) Global
+    If wearer == None || wearer.IsChild()
+        Return
+    EndIf
+    String settingsFile = GetSettingsFile()
+    If JsonUtil.GetIntValue(settingsFile, "enableArmorInjectionSounds", 1) != 1 || JsonUtil.GetIntValue(settingsFile, "enableReactionSounds", 1) != 1
+        Return
+    EndIf
+    Sound reaction = Game.GetFormFromFile(0x000854, "MMEAlert.esp") as Sound
+    If reaction == None
+        Return
+    EndIf
+    Int instance = reaction.Play(wearer)
+    If instance > 0
+        Sound.SetInstanceVolume(instance, JsonUtil.GetFloatValue(settingsFile, "reactionSoundVolume", 100.0) / 100.0)
+    EndIf
 EndFunction
 
 Bool Function IsValidCandidate(Actor candidate, MilkQUEST milkController) Global

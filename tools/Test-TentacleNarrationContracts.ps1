@@ -11,6 +11,9 @@ function Assert-Contract([bool]$Condition, [string]$Message) {
 }
 
 # Source/JSON contract checks, not a substitute for a Skyrim runtime test.
+$sound = [regex]::Match($effects, '(?s)Function PlayNotificationSound\(.*?EndFunction').Value
+Assert-Contract ($effects -match '(?s)If notificationText != ""\s+Debug.Notification\(notificationText\)\s+PlayNotificationSound\(focusActor\)\s+EndIf') 'sound plays only with a displayed notification on its wearer'
+Assert-Contract ($sound.Contains('0x000854') -and $sound.Contains('enableArmorInjectionSounds') -and $sound.Contains('enableReactionSounds') -and $sound.Contains('reactionSoundVolume')) 'notification reuses low sound pool with feature/master/volume gates'
 $sender = [regex]::Match($bridge, '(?s)Function NarrateTentacleEffect\(.*?EndFunction').Value
 $builder = [regex]::Match($bridge, '(?s)String Function BuildTentacleEffectNarration\(.*?EndFunction').Value
 Assert-Contract ($sender.Length -gt 0 -and $builder.Length -gt 0) 'bridge helper and result builder exist'
@@ -45,6 +48,6 @@ foreach ($key in @('milk', 'arousal', 'milkAndArousal')) {
     Assert-Contract ([regex]::Matches($value, '\{(?:actor|ACTOR)\}').Count -eq 1) "JSON $key has one supported actor token"
 }
 Assert-Contract ($bridge.Contains('String Function RenderTentacleNarrationActorToken') -and $bridge.Contains('"{ACTOR}"')) 'renderer accepts existing uppercase actor token'
-Assert-Contract ($mcm.Contains('Return 107') -and $mcm.Contains('armorInjectionPlayerNarrationMigration107')) 'MCM upgrades existing saves'
+Assert-Contract ($mcm.Contains('Return 108') -and $mcm.Contains('armorInjectionPlayerNarrationMigration107') -and $mcm.Contains('armorInjectionSoundsMigration108')) 'MCM upgrades existing saves'
 Assert-Contract ($mcm.Contains('AddHeaderOption("Skyrim.Net Narration")')) 'section stays on Tentacle Effects page'
 Assert-Contract ($mcm -match '(?s)ElseIf option == armorInjectionNarrationChanceOption\s+SetSliderDialogStartValue\(JsonUtil.GetIntValue\(SettingsFile, "armorInjectionNarrationChance", 100\)\)\s+SetSliderDialogDefaultValue\(100.0\)\s+SetSliderDialogRange\(0.0, 100.0\)\s+SetSliderDialogInterval\(5.0\)') 'chance defaults to 100%, ranges 0-100%, steps 5%'

@@ -140,6 +140,7 @@ Int armorInjectionIntervalOption
 Int armorInjectionVariationOption
 Int armorInjectionChanceOption
 Int armorInjectionNotificationOption
+Int armorInjectionSoundOption
 Int armorInjectionDiagnosticOption
 Int armorInjectionNarrationOption
 Int armorInjectionPlayerNarrationOption
@@ -179,7 +180,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 107
+    Return 108
 EndFunction
 
 Function SetPageNames()
@@ -384,6 +385,7 @@ Function EnsureDefaults()
         JsonUtil.SetFloatValue(SettingsFile, "armorInjectionVariation", 4.0)
         JsonUtil.SetIntValue(SettingsFile, "armorInjectionChance", 100)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionSounds", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", 0)
         JsonUtil.SetIntValue(SettingsFile, "armorInjectionMigration104", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionNarration", 1)
@@ -976,6 +978,11 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationMigration105", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "armorInjectionSoundsMigration108", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionSounds", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionSounds", 1))
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionSoundsMigration108", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
     If JsonUtil.GetIntValue(SettingsFile, "armorInjectionPlayerNarrationMigration107", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionPlayerNarration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionPlayerNarration", 1))
         JsonUtil.SetIntValue(SettingsFile, "armorInjectionPlayerNarrationMigration107", 1)
@@ -1168,6 +1175,7 @@ Event OnPageReset(String page)
     armorInjectionVariationOption = -1
     armorInjectionChanceOption = -1
     armorInjectionNotificationOption = -1
+    armorInjectionSoundOption = -1
     armorInjectionDiagnosticOption = -1
     armorInjectionNarrationOption = -1
     armorInjectionPlayerNarrationOption = -1
@@ -1381,6 +1389,7 @@ Event OnPageReset(String page)
         armorInjectionVariationOption = AddSliderOption("Interval Variation (+/-)", JsonUtil.GetFloatValue(SettingsFile, "armorInjectionVariation", 4.0), "{0} game hours")
         armorInjectionChanceOption = AddSliderOption("Injection Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionChance", 100), "{0}%")
         armorInjectionNotificationOption = AddToggleOption("Show Effect Notifications", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNotifications", 1) == 1)
+        armorInjectionSoundOption = AddToggleOption("Notification Sound", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionSounds", 1) == 1)
         AddHeaderOption("Skyrim.Net Narration")
         armorInjectionNarrationOption = AddToggleOption("Enable Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNarration", 1) == 1)
         armorInjectionPlayerNarrationOption = AddToggleOption("Enable Player Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionPlayerNarration", 1) == 1)
@@ -1742,6 +1751,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Set each eligible Milk Maid's independent chance to be affected during a check.")
     ElseIf option == armorInjectionNotificationOption
         SetInfoText("Show one flavor notification per successful cycle, with '...and others.' when several Milk Maids are affected.")
+    ElseIf option == armorInjectionSoundOption
+        SetInfoText("Play the existing random low sound on the affected wearer when an effect notification appears. Uses the global sound toggle and volume. Independent of Skyrim.Net narration.")
     ElseIf option == armorInjectionDiagnosticOption
         SetInfoText("Report nearby Milk Maids, armor classes, effects, focus, and narration chance/results or skip reasons.")
     ElseIf option == armorInjectionNarrationOption
@@ -1898,6 +1909,10 @@ Event OnOptionSelect(Int option)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorInjections", value)
         SetToggleOptionValue(option, value == 1)
         RefreshArmorInjectionSchedule()
+    ElseIf option == armorInjectionSoundOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionSounds", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionSounds", value)
+        SetToggleOptionValue(option, value == 1)
     ElseIf option == armorInjectionNotificationOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionNotifications", value)
