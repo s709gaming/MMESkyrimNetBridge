@@ -16,10 +16,7 @@ Function RunFastDebug(Actor[] alreadyScannedActors) Global
         Return
     EndIf
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "traceMilkMaidThoughtsLogic", 0) == 1
-        Int scannedCount = 0
-        If alreadyScannedActors != None
-            scannedCount = alreadyScannedActors.Length
-        EndIf
+        Int scannedCount = alreadyScannedActors.Length
         Debug.Notification("Thoughts trace: 15-second check fired; scanned " + scannedCount + " actor(s)")
     EndIf
     GenerateAndShowThought(alreadyScannedActors, False)
@@ -71,7 +68,8 @@ EndFunction
 ; one valid actor, one authoritative fullness read, one armor classification,
 ; one JSON roll, one placeholder render, and one notification.
 Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowNarration) Global
-    If scannedActors == None || scannedActors.Length == 0
+    ; Use Length rather than an invalid None-to-array cast (also safe if unset).
+    If scannedActors.Length == 0
         ReportFailure("nearby scan returned no actors")
         Return False
     EndIf
@@ -123,7 +121,7 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowNarration)
     ; Thoughts.json is ordinary JSON, not a PapyrusUtil StringList database.
     ; PathStringElements resolves the hand-written array at .<poolName>.
     String[] entries = JsonUtil.PathStringElements("/MMEAlerts/Thoughts", "." + poolName)
-    If entries == None || entries.Length == 0
+    If entries.Length == 0
         ReportFailure("Thoughts.json pool is missing or empty: " + poolName)
         Return False
     EndIf

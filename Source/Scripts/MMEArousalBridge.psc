@@ -23,14 +23,25 @@ Function ApplyMilkDrinkArousal(Actor drinker, Form drinkItem) Global
     ApplyMilkDrinkArousalForActor(drinker, drinkItem, diagnostic)
 EndFunction
 
-; Actor-safe implementation shared by player drinking and explicit NPC interactions.
+; Drink-facing compatibility wrapper. The neutral implementation below lets
+; non-drink systems reuse the same MCM amount, cap, and SLA event contract
+; without writing false drink wording to the Papyrus log.
 Bool Function ApplyMilkDrinkArousalForActor(Actor drinker, Form drinkItem, Bool showDiagnostic = False) Global
+    String itemName = "<unnamed milk>"
+    If drinkItem != None && drinkItem.GetName() != ""
+        itemName = drinkItem.GetName()
+    EndIf
+    Return ApplyConfiguredMilkArousalForActor(drinker, "drank " + itemName, showDiagnostic)
+EndFunction
+
+; Actor-safe implementation shared by milk drinking and armor injections.
+Bool Function ApplyConfiguredMilkArousalForActor(Actor target, String sourceLabel, Bool showDiagnostic = False) Global
     ; Phase 1: enforce master/feature/dependency/actor gates before resolving the
     ; configured amount. A missing optional framework is a clean no-op.
     String settingsFile = GetSettingsFile()
-    String actorName = GetActorName(drinker)
-    If drinker == None
-        Report(showDiagnostic, "skipped: drinker not found")
+    String actorName = GetActorName(target)
+    If target == None
+        Report(showDiagnostic, "skipped: actor not found | source=" + sourceLabel)
         Return False
     EndIf
     If !IsAvailable()
@@ -48,17 +59,12 @@ Bool Function ApplyMilkDrinkArousalForActor(Actor drinker, Form drinkItem, Bool 
     ElseIf configuredAmount > 100.0
         configuredAmount = 100.0
     EndIf
-    String itemName = "<unnamed milk>"
-    If drinkItem != None && drinkItem.GetName() != ""
-        itemName = drinkItem.GetName()
-    EndIf
-
-    Int arousalBefore = GetCurrentArousal(drinker)
+    Int arousalBefore = GetCurrentArousal(target)
     Float amountToSend = configuredAmount
     If arousalBefore >= 0 && arousalBefore as Float + amountToSend > 100.0
         amountToSend = 100.0 - arousalBefore as Float
     EndIf
-    Report(showDiagnostic, actorName + " drank " + itemName + "; arousal " + arousalBefore + ", sending +" + amountToSend)
+    Report(showDiagnostic, actorName + " " + sourceLabel + "; arousal " + arousalBefore + ", sending +" + amountToSend)
 
     If amountToSend <= 0.0
         If arousalBefore >= 100
@@ -75,17 +81,17 @@ Bool Function ApplyMilkDrinkArousalForActor(Actor drinker, Form drinkItem, Bool 
         Report(showDiagnostic, "failed: slaUpdateExposure event creation returned 0")
         Return False
     EndIf
-    ModEvent.PushForm(handle, drinker)
+    ModEvent.PushForm(handle, target)
     ModEvent.PushFloat(handle, amountToSend)
     Bool sent = ModEvent.Send(handle)
     If sent
         If showDiagnostic
             ; ModEvents are asynchronous; allow SLA to consume the event before reading its faction value.
             Utility.Wait(0.25)
-            Int arousalAfter = GetCurrentArousal(drinker)
-            Report(True, "slaUpdateExposure sent: " + actorName + " " + arousalBefore + " -> " + arousalAfter)
+            Int arousalAfter = GetCurrentArousal(target)
+            Report(True, "slaUpdateExposure sent: " + actorName + " " + arousalBefore + " -> " + arousalAfter + " | source=" + sourceLabel)
         Else
-            Report(False, "slaUpdateExposure sent for " + actorName + " (+" + amountToSend + ")")
+            Report(False, "slaUpdateExposure sent for " + actorName + " (+" + amountToSend + ") | source=" + sourceLabel)
         EndIf
         Return True
     Else

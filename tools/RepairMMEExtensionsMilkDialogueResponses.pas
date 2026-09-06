@@ -11,7 +11,7 @@ unit UserScript;
 const
   TargetPluginName = 'MMEAlert.esp';
   TargetEditorID = 'MMEExt_DialogueDrinkMilk';
-  WantedResponse = 'Yes! I can''t wait to be nice and heavy!';
+  WantedResponse = 'I''d love some. Bet I know where that came from!';
   UnwantedResponse = 'I hope you will give me some good milking soon!';
 
 var

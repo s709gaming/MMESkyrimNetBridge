@@ -16,6 +16,90 @@ Bool Function IsExtensionsEnabled() Global
     Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMMEExtensions", 1) == 1
 EndFunction
 
+; One post-gameplay request for the HUD's focused wearer. No gameplay writes,
+; drink events, extra scan, or timer registration belong in this helper.
+Function NarrateTentacleEffect(Actor wearer, Float milkAdded, Int arousalBefore, Bool arousalSent, Bool diagnostic = False) Global
+    String settingsFile = "/MMEAlerts/Settings"
+    Bool enabled = JsonUtil.GetIntValue(settingsFile, "enableArmorInjectionNarration", 1) == 1
+    Int chance = JsonUtil.GetIntValue(settingsFile, "armorInjectionNarrationChance", 10)
+    If chance < 0
+        chance = 0
+    ElseIf chance > 100
+        chance = 100
+    EndIf
+    String actorName = MMEThoughts.ResolveActorName(wearer)
+    MMETentacleEffects.TraceDiagnostic(diagnostic, "narration | enabled=" + enabled + " | chance=" + chance + "% | wearer=" + actorName + " | milk delta=" + milkAdded + " | arousal event=" + arousalSent)
+    If !enabled || !IsExtensionsEnabled()
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: feature or master disabled; roll not made")
+        Return
+    EndIf
+    If wearer == None
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: no affected wearer; roll not made")
+        Return
+    EndIf
+    If !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: Skyrim.Net unavailable or disabled; roll not made")
+        Return
+    EndIf
+    Int roll = Utility.RandomInt(1, 100)
+    MMETentacleEffects.TraceDiagnostic(diagnostic, "narration roll=" + roll + "/" + chance)
+    If roll > chance
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: chance failed")
+        Return
+    EndIf
+
+    ; SLA's Send success is not an acknowledgement. Read once after the HUD;
+    ; do not block gameplay/menu handlers waiting for another mod. Pending or
+    ; unreadable results are conservatively omitted, never presented as gains.
+    Int arousalAfter = -1
+    If arousalSent && arousalBefore >= 0
+        arousalAfter = MMEArousalBridge.GetCurrentArousal(wearer)
+    EndIf
+    Bool arousalIncreased = arousalSent && arousalBefore >= 0 && arousalAfter > arousalBefore
+    MMETentacleEffects.TraceDiagnostic(diagnostic, "narration results | milk delta=" + milkAdded + " | arousal=" + arousalBefore + " -> " + arousalAfter + " | confirmed increase=" + arousalIncreased)
+    If !arousalIncreased
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration: arousal omitted (not sent, capped, pending, or unconfirmed)")
+    EndIf
+    String content = BuildTentacleEffectNarration(actorName, milkAdded > 0.0, arousalIncreased, diagnostic)
+    If content == ""
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: invalid JSON actor template")
+        Return
+    EndIf
+    ; Installed SkyrimNetApi.psc: originatorActor selects the SPEAKER;
+    ; targetActor is the listener. Do not put the wearer in the listener slot.
+    Int result = SkyrimNetApi.DirectNarration(content, wearer, None)
+    If result == 0
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration request accepted [0] | speaker=" + actorName)
+    Else
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration request rejected [" + result + "] | speaker=" + actorName)
+    EndIf
+EndFunction
+
+; Configurable non-graphic wording. Like the armor Thought pools, each actual
+; outcome selects one complete template instead of assembling prompt fragments.
+String Function BuildTentacleEffectNarration(String actorName, Bool milkIncreased, Bool arousalIncreased, Bool diagnostic = False) Global
+    String configFile = "/MMEAlerts/TentacleEffectNarration"
+    If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration JSON missing or malformed: using non-graphic defaults")
+    EndIf
+    String promptTemplate = ""
+    If milkIncreased && arousalIncreased
+        promptTemplate = JsonUtil.GetPathStringValue(configFile, ".milkAndArousal", "{actor}'s living armor shifts beneath her clothes. Her milk reserves and arousal both increase. React as the armor wearer in one short, lighthearted, non-graphic line about what just happened.")
+    ElseIf milkIncreased
+        promptTemplate = JsonUtil.GetPathStringValue(configFile, ".milkOnly", "{actor}'s living armor shifts beneath her clothes and stimulates increased milk production. React as the armor wearer in one short, lighthearted, non-graphic line about what just happened.")
+    ElseIf arousalIncreased
+        promptTemplate = JsonUtil.GetPathStringValue(configFile, ".arousalOnly", "{actor}'s living armor shifts beneath her clothes and leaves her more aroused. React as the armor wearer in one short, lighthearted, non-graphic line about what just happened.")
+    Else
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: neither milk nor arousal increase was confirmed")
+        Return ""
+    EndIf
+    String content = MMEThoughts.RenderActorToken(promptTemplate, actorName)
+    If content == ""
+        Return ""
+    EndIf
+    Return content + " Mention only the changes stated above; do not invent additional effects."
+EndFunction
+
 ; Registers callbacks used by actor-specific MME prompt modules.
 Function RegisterPromptDecorator() Global
     ; Registration may be repeated after load/MCM upgrades. Skyrim.Net's return

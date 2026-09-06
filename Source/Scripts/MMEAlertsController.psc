@@ -22,6 +22,8 @@ Float NextThoughtDebugUpdate = 0.0
 Float NextArmorCheck = 0.0
 Float NextDialogueDiagnosticUpdate = 0.0
 Float NextOStimBreastfeedingWatchdog = 0.0
+Float NextThoughtGameTime = 0.0
+Float NextInjectionGameTime = 0.0
 Actor LastDialogueDiagnosticActor = None
 Actor PendingDialogueDiagnosticActor = None
 String LastDialogueDiagnosticState = ""
@@ -105,7 +107,7 @@ Function InitializeController()
     ; Phase 4: start shared schedules, then baseline existing Milk Maids. The
     ; baseline prevents established actors from being narrated as new creations.
     UpdatePolling()
-    RefreshThoughtScheduling()
+    RefreshGameTimeScheduling()
     BaselineKnownMilkmaids()
 EndFunction
 
@@ -185,7 +187,7 @@ Function DisableController()
     MMEArmorScript.ApplyArmorStrippingMasterToggle()
     NextDialogueDiagnosticUpdate = 0.0
     NextOStimBreastfeedingWatchdog = 0.0
-    RefreshThoughtScheduling()
+    StopGameTimeScheduling()
     LastDialogueDiagnosticActor = None
     PendingDialogueDiagnosticActor = None
     LastDialogueDiagnosticState = ""
@@ -193,28 +195,110 @@ Function DisableController()
     MMEOpeningRefreshSnapshotAt = 0.0
 EndFunction
 
-; Own the game-time registration on this established quest script. Existing
-; saves already have this VM instance, unlike newly attached quest scripts.
+; Own the one game-time registration on this established quest script. Thoughts
+; and armor injections keep independent deadlines, but whichever is due first
+; owns the next single update. Existing saves already have this VM instance,
+; unlike a newly attached timer quest script.
+Function RefreshGameTimeScheduling()
+    Float now = Utility.GetCurrentGameTime()
+    ScheduleNextThought(now)
+    ScheduleNextInjection(now)
+    ArmNextGameTimeUpdate(now)
+EndFunction
+
+; MCM changes refresh only the affected feature's deadline, preserving the
+; other feature's already-randomized interval.
 Function RefreshThoughtScheduling()
-    UnregisterForUpdateGameTime()
+    Float now = Utility.GetCurrentGameTime()
+    ScheduleNextThought(now)
+    ArmNextGameTimeUpdate(now)
+EndFunction
+
+Function RefreshInjectionScheduling()
+    Float now = Utility.GetCurrentGameTime()
+    ScheduleNextInjection(now)
+    ArmNextGameTimeUpdate(now)
+EndFunction
+
+Function ScheduleNextThought(Float now)
     If !MMEThoughts.IsNormalThoughtsEnabled()
+        NextThoughtGameTime = 0.0
         MMEThoughts.TraceDebug("normal schedule disabled")
         Return
     EndIf
     Float baseInterval = JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0)
     Float randomness = JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0)
     Float nextInterval = MMEThoughts.CalculateNextInterval(baseInterval, randomness)
-    RegisterForSingleUpdateGameTime(nextInterval)
+    NextThoughtGameTime = now + (nextInterval / 24.0)
     MMEThoughts.TraceDebug("normal schedule armed | next=" + nextInterval + " game hours")
 EndFunction
 
-Event OnUpdateGameTime()
-    If MMEThoughts.IsNormalThoughtsEnabled()
-        Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
-        MMEThoughts.GenerateAndShowThought(nearbyActors, True)
+Function ScheduleNextInjection(Float now)
+    If !MMETentacleEffects.IsEnabled()
+        NextInjectionGameTime = 0.0
+        MMETentacleEffects.TraceDiagnostic(False, "schedule disabled")
+        Return
     EndIf
-    RefreshThoughtScheduling()
+    Float baseInterval = JsonUtil.GetFloatValue(SettingsFile, "armorInjectionInterval", 12.0)
+    Float variation = JsonUtil.GetFloatValue(SettingsFile, "armorInjectionVariation", 4.0)
+    Float nextInterval = MMETentacleEffects.CalculateNextInterval(baseInterval, variation)
+    NextInjectionGameTime = now + (nextInterval / 24.0)
+    MMETentacleEffects.TraceDiagnostic(False, "schedule armed | next=" + nextInterval + " game hours")
+EndFunction
+
+Function ArmNextGameTimeUpdate(Float now)
+    UnregisterForUpdateGameTime()
+    Float nextDeadline = 0.0
+    If NextThoughtGameTime > 0.0
+        nextDeadline = NextThoughtGameTime
+    EndIf
+    If NextInjectionGameTime > 0.0 && (nextDeadline <= 0.0 || NextInjectionGameTime < nextDeadline)
+        nextDeadline = NextInjectionGameTime
+    EndIf
+    If nextDeadline <= 0.0
+        Return
+    EndIf
+    Float delayHours = (nextDeadline - now) * 24.0
+    If delayHours < 0.01
+        delayHours = 0.01
+    EndIf
+    RegisterForSingleUpdateGameTime(delayHours)
+EndFunction
+
+Function StopGameTimeScheduling()
+    UnregisterForUpdateGameTime()
+    NextThoughtGameTime = 0.0
+    NextInjectionGameTime = 0.0
+EndFunction
+
+Event OnUpdateGameTime()
+    Float now = Utility.GetCurrentGameTime()
+    Bool thoughtDue = NextThoughtGameTime > 0.0 && now >= NextThoughtGameTime
+    Bool injectionDue = NextInjectionGameTime > 0.0 && now >= NextInjectionGameTime
+    If !thoughtDue && !injectionDue
+        ArmNextGameTimeUpdate(now)
+        Return
+    EndIf
+    ; Never cast None to an array: the VM rejects that cast, and the compiler
+    ; can reuse its temporary for the native result, causing a type mismatch.
+    Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
+    If thoughtDue
+        MMEThoughts.GenerateAndShowThought(nearbyActors, True)
+        ScheduleNextThought(now)
+    EndIf
+    If injectionDue
+        MMETentacleEffects.RunInjectionCheck(nearbyActors, False)
+        ScheduleNextInjection(now)
+    EndIf
+    ArmNextGameTimeUpdate(now)
 EndEvent
+
+; Manual MCM action: bypasses only the timer wait and otherwise executes the
+; same production validation, chance, effects, and notification path.
+Function RunArmorInjectionCheckNow()
+    Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
+    MMETentacleEffects.RunInjectionCheck(nearbyActors, True)
+EndFunction
 
 ; Exposes one dependency-free quest condition for the optional dialogue INFOs.
 Function RefreshOStimDialogueAvailability()
@@ -1685,7 +1769,7 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     If runRapidThought
         MMEThoughts.RunFastDebug(nearbyActors)
     EndIf
-    If nearbyActors == None || nearbyActors.Length == 0
+    If nearbyActors.Length == 0
         Debug.Trace("[MME Extensions Native Scan] scanner returned no actors; capacity scan skipped")
         If JsonUtil.GetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0) == 1
             Debug.Notification("Native Scan failed: no actors returned")

@@ -135,6 +135,15 @@ Int milkMaidThoughtNarrationOption
 Int armorThoughtSoundsOption
 Int milkMaidThoughtsDebugOption
 Int traceMilkMaidThoughtsLogicOption
+Int armorInjectionOption
+Int armorInjectionIntervalOption
+Int armorInjectionVariationOption
+Int armorInjectionChanceOption
+Int armorInjectionNotificationOption
+Int armorInjectionDiagnosticOption
+Int armorInjectionNarrationOption
+Int armorInjectionNarrationChanceOption
+Int runArmorInjectionCheckOption
 Int diagnosticNotificationsOption
 Int diagnosticPapyrusTraceOption
 Int diagnosticRefreshGateOption
@@ -169,11 +178,11 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 103
+    Return 105
 EndFunction
 
 Function SetPageNames()
-    Pages = new String[9]
+    Pages = new String[10]
     Pages[0] = "General"
     Pages[1] = "Milk Drinking"
     ; Build these page names at runtime so Papyrus's case-insensitive string
@@ -185,8 +194,9 @@ Function SetPageNames()
     Pages[4] = "Armor"
     Pages[5] = "Skyrim.Net"
     Pages[6] = "Milk Armor Thoughts"
-    Pages[7] = "Debug"
-    Pages[8] = "Troubleshoot"
+    Pages[7] = "Tentacle Effects"
+    Pages[8] = "Debug"
+    Pages[9] = "Troubleshoot"
 EndFunction
 
 ; Creates the MCM pages and initializes controllers on first registration.
@@ -368,6 +378,16 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0)
         JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsMigration87", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjections", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "armorInjectionInterval", 12.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorInjectionVariation", 4.0)
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionChance", 100)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", 0)
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionMigration104", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationChance", 10)
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationMigration105", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "diagnosticsPageMigration91", 1)
@@ -936,6 +956,24 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorCheckReminderCooldownMigration103", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds the local Living/Parasite armor gameplay and notification system.
+    ; Narration is initialized separately without resetting these gameplay settings.
+    If JsonUtil.GetIntValue(SettingsFile, "armorInjectionMigration104", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjections", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "armorInjectionInterval", 12.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorInjectionVariation", 4.0)
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionChance", 100)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", 0)
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionMigration104", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationMigration105", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionNarration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNarration", 1))
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationChance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationChance", 10))
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationMigration105", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1110,6 +1148,15 @@ Event OnPageReset(String page)
     armorThoughtSoundsOption = -1
     milkMaidThoughtsDebugOption = -1
     traceMilkMaidThoughtsLogicOption = -1
+    armorInjectionOption = -1
+    armorInjectionIntervalOption = -1
+    armorInjectionVariationOption = -1
+    armorInjectionChanceOption = -1
+    armorInjectionNotificationOption = -1
+    armorInjectionDiagnosticOption = -1
+    armorInjectionNarrationOption = -1
+    armorInjectionNarrationChanceOption = -1
+    runArmorInjectionCheckOption = -1
     diagnosticNotificationsOption = -1
     diagnosticPapyrusTraceOption = -1
     diagnosticRefreshGateOption = -1
@@ -1309,6 +1356,21 @@ Event OnPageReset(String page)
         milkMaidThoughtsRandomnessOption = AddSliderOption("Randomness (+/-)", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0), "{0} game hours")
         milkMaidThoughtNarrationOption = AddToggleOption("Skyrim.Net Thought Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtNarration", 1) == 1)
         armorThoughtSoundsOption = AddToggleOption("Armor Thought Sounds", JsonUtil.GetIntValue(SettingsFile, "enableArmorThoughtSounds", 1) == 1)
+        Return
+    EndIf
+    If page == "Tentacle Effects"
+        AddHeaderOption("Living and Parasite Armor")
+        armorInjectionOption = AddToggleOption("Enable Tentacle Effects", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjections", 1) == 1)
+        armorInjectionIntervalOption = AddSliderOption("Base Effect Interval", JsonUtil.GetFloatValue(SettingsFile, "armorInjectionInterval", 12.0), "{0} game hours")
+        armorInjectionVariationOption = AddSliderOption("Interval Variation (+/-)", JsonUtil.GetFloatValue(SettingsFile, "armorInjectionVariation", 4.0), "{0} game hours")
+        armorInjectionChanceOption = AddSliderOption("Injection Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionChance", 100), "{0}%")
+        armorInjectionNotificationOption = AddToggleOption("Show Effect Notifications", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNotifications", 1) == 1)
+        AddHeaderOption("Skyrim.Net Narration")
+        armorInjectionNarrationOption = AddToggleOption("Enable Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNarration", 1) == 1)
+        armorInjectionNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationChance", 10), "{0}%")
+        AddHeaderOption("Debug")
+        armorInjectionDiagnosticOption = AddToggleOption("Enable Effect Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", 0) == 1)
+        runArmorInjectionCheckOption = AddTextOption("Run Effect Check Now", "RUN")
         Return
     EndIf
     If page == "Troubleshoot"
@@ -1653,6 +1715,24 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Attempt one local Thought notification every 15 real-time seconds using the controller's shared single-update scheduler. Debug Thoughts are not mirrored to Skyrim.Net.")
     ElseIf option == traceMilkMaidThoughtsLogicOption
         SetInfoText("Show an in-game notification explaining why a 15-second Thought attempt was skipped.")
+    ElseIf option == armorInjectionOption
+        SetInfoText("Periodically let nearby Milk Maids wearing Living or Parasite Armor receive the configured milk and arousal bonuses.")
+    ElseIf option == armorInjectionIntervalOption
+        SetInfoText("Set the base delay between checks in game-time hours. The maximum is 36 game days.")
+    ElseIf option == armorInjectionVariationOption
+        SetInfoText("Randomly subtract or add up to this many game-time hours. The final interval never falls below one hour.")
+    ElseIf option == armorInjectionChanceOption
+        SetInfoText("Set each eligible Milk Maid's independent chance to be affected during a check.")
+    ElseIf option == armorInjectionNotificationOption
+        SetInfoText("Show one flavor notification per successful cycle, with '...and others.' when several Milk Maids are affected.")
+    ElseIf option == armorInjectionDiagnosticOption
+        SetInfoText("Report nearby Milk Maids, armor classes, effects, focus, and narration chance/results or skip reasons.")
+    ElseIf option == armorInjectionNarrationOption
+        SetInfoText("Let the focused armor wearer react through Skyrim.Net after a successful check. Gameplay and HUD notifications are independent.")
+    ElseIf option == armorInjectionNarrationChanceOption
+        SetInfoText("Chance of one Skyrim.Net request per successful effect check. Only confirmed milk/arousal increases are described. Default 10%.")
+    ElseIf option == runArmorInjectionCheckOption
+        SetInfoText("Run the real Tentacle Effects production path immediately without waiting for its timer.")
     ElseIf option == diagnosticNotificationsOption
         SetInfoText("Show short audit results as in-game notifications. Enabled by default.")
     ElseIf option == diagnosticPapyrusTraceOption
@@ -1793,6 +1873,30 @@ Event OnOptionSelect(Int option)
         SetToggleOptionValue(option, value == 1)
         If value == 1 && JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) != 1
             Debug.Notification("Thoughts trace enabled; turn on 15 Second Thoughts to run checks")
+        EndIf
+    ElseIf option == armorInjectionOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorInjections", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjections", value)
+        SetToggleOptionValue(option, value == 1)
+        RefreshArmorInjectionSchedule()
+    ElseIf option == armorInjectionNotificationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionNotifications", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == armorInjectionDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == armorInjectionNarrationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionNarration", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == runArmorInjectionCheckOption
+        MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+        If controller != None
+            controller.RunArmorInjectionCheckNow()
+        Else
+            Debug.Notification("Tentacle Effects: controller unavailable")
         EndIf
     ElseIf option == diagnosticNotificationsOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticNotifications", 1)
@@ -2195,6 +2299,13 @@ Function RefreshThoughtSchedule()
     EndIf
 EndFunction
 
+Function RefreshArmorInjectionSchedule()
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller != None
+        controller.RefreshInjectionScheduling()
+    EndIf
+EndFunction
+
 ; Configures the shared sound-volume and capacity-interval slider dialogs.
 Event OnOptionSliderOpen(Int option)
     If option == volumeOption
@@ -2222,6 +2333,26 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(4.0)
         SetSliderDialogRange(0.0, 12.0)
         SetSliderDialogInterval(1.0)
+    ElseIf option == armorInjectionIntervalOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorInjectionInterval", 12.0))
+        SetSliderDialogDefaultValue(12.0)
+        SetSliderDialogRange(1.0, 864.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == armorInjectionVariationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorInjectionVariation", 4.0))
+        SetSliderDialogDefaultValue(4.0)
+        SetSliderDialogRange(0.0, 12.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == armorInjectionChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "armorInjectionChance", 100))
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+    ElseIf option == armorInjectionNarrationChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationChance", 10))
+        SetSliderDialogDefaultValue(10.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
     ElseIf option == skyrimNetStatusIntervalOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0))
         SetSliderDialogDefaultValue(15.0)
@@ -2362,6 +2493,24 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} game hours")
         RefreshThoughtSchedule()
+    ElseIf option == armorInjectionIntervalOption
+        JsonUtil.SetFloatValue(SettingsFile, "armorInjectionInterval", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        RefreshArmorInjectionSchedule()
+    ElseIf option == armorInjectionVariationOption
+        JsonUtil.SetFloatValue(SettingsFile, "armorInjectionVariation", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        RefreshArmorInjectionSchedule()
+    ElseIf option == armorInjectionChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+    ElseIf option == armorInjectionNarrationChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
     ElseIf option == skyrimNetStatusIntervalOption
         JsonUtil.SetFloatValue(SettingsFile, "skyrimNetStatusInterval", value)
         JsonUtil.Save(SettingsFile, False)

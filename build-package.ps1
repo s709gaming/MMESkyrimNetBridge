@@ -17,7 +17,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $gameRoot "Data\SEQ\MMEAlert.seq"
-$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMENPCDialog", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEExtensionsNative")
+$scriptNames = @("MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMETentacleEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMENPCDialog", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
@@ -60,6 +60,7 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 }
 
 # Compile the debug scripts against the installed SKSE and Skyrim sources.
+& (Join-Path $projectRoot "tools\Test-TentacleNarrationContracts.ps1")
 New-Item -ItemType Directory -Force -Path $compiledDir | Out-Null
 $imports = "$sourceDir;$skyUiSdkSource;$mmeSdkSource;$ostimSdkSource;$skseSource;$vanillaSource"
 foreach ($scriptName in $scriptNames) {
@@ -69,6 +70,9 @@ foreach ($scriptName in $scriptNames) {
         throw "Compilation failed for $scriptName.psc"
     }
 }
+
+# Reject the compiled array-cast regression before replacing the release ZIP.
+& (Join-Path $projectRoot "tools\Test-ScanArrayContracts.ps1") -CompiledDirectory $compiledDir -Assembler (Join-Path (Split-Path -Parent $compiler) "PapyrusAssembler.exe")
 
 # The base package is inert; compile the Recommended-only QuickStart override
 # into its FOMOD choice folder with the same script name.
@@ -139,7 +143,7 @@ Copy-Item -LiteralPath $ostimBreastfeedingScene -Destination $packageOStimScene
 # wording stay data-driven, while SkyrimNet.json owns integration messages.
 $packageConfig = Join-Path $stageDir "SKSE\Plugins\StorageUtilData\MMEAlerts"
 New-Item -ItemType Directory -Force -Path $packageConfig | Out-Null
-foreach ($configName in @("SkyrimNet.json", "Thoughts.json", "ArmorCheckReminders.json")) {
+foreach ($configName in @("SkyrimNet.json", "Thoughts.json", "Injection.json", "TentacleEffectNarration.json", "ArmorCheckReminders.json")) {
     $configPath = Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\$configName"
     if (!(Test-Path -LiteralPath $configPath)) {
         throw "Required JSON configuration is missing: $configPath"
@@ -201,7 +205,8 @@ if (Test-Path -LiteralPath $pluginPath) {
     # older local ESP if the one-time response repair was not actually saved
     # back into the project after a successful SSEEdit run.
     $pluginText = [System.Text.Encoding]::UTF8.GetString([System.IO.File]::ReadAllBytes($pluginPath))
-    $wantedMilkResponse = "Yes! I can't wait to be nice and heavy!"
+    $wantedMilkPrompt = "Would you like to drink some milk?"
+    $wantedMilkResponse = "I'd love some. Bet I know where that came from!"
     $staleMilkResponses = @(
         "I hope you will give me some good milking soon!",
         "I hope you will give me a good milking."
@@ -210,6 +215,9 @@ if (Test-Path -LiteralPath $pluginPath) {
         if ($pluginText.Contains($staleMilkResponse)) {
             throw "MMEAlert.esp still contains the stale milk-dialogue response '$staleMilkResponse'. Run tools\RepairMMEExtensionsMilkDialogueResponses.pas in SSEEdit, save MMEAlert.esp, and copy that saved file into the project root before packaging."
         }
+    }
+    if (!$pluginText.Contains($wantedMilkPrompt)) {
+        throw "MMEAlert.esp is missing the intended milk-dialogue prompt '$wantedMilkPrompt'. Repair the target INFO in SSEEdit before packaging."
     }
     if (!$pluginText.Contains($wantedMilkResponse)) {
         throw "MMEAlert.esp is missing the intended milk-dialogue response '$wantedMilkResponse'. Repair the target INFO in SSEEdit before packaging."

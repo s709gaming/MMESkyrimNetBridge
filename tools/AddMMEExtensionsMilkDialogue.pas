@@ -5,11 +5,10 @@ unit UserScript;
 
   Adds one new player response beneath the same MME dialogue topic used by
   MME_Dialogues.Fragment_03 (MME's existing give-Lactacid response). The
-  source INFO is copied as a new record so its dialogue routing is retained.
-  Its conditions are replaced by only the supported
-  Lactacid/normal/racial/special milk inventory OR group. The source INFO's
-  sex, race, relationship, and Milk Maid restrictions do not apply: any NPC
-  can offer the dialogue while the player has a supported milk item.
+  source INFO is copied as a new record so its dialogue routing and original
+  Milk Maid eligibility are retained. Its Lactacid-only inventory condition
+  is expanded to the supported Lactacid/normal/racial/special milk OR group.
+  The result fragment and milk-drinking mechanics remain unchanged.
 
   Required loaded files:
     Skyrim.esm
@@ -34,8 +33,8 @@ const
   RaceMilkListFormID = $00071C2B;
   SpecialMilkListFormID = $00071C2D;
   NewInfoEditorID = 'MMEExt_DialogueDrinkMilk';
-  PlayerPrompt = 'I''d love some. Bet I know where that came from!';
-  NPCResponse = 'Would you like to drink some milk?';
+  PlayerPrompt = 'Would you like to drink some milk?';
+  NPCResponse = 'I''d love some. Bet I know where that came from!';
   CopiedUnwantedResponse = 'I hope you will give me some good milking soon!';
 
 var
@@ -190,21 +189,29 @@ begin
      not AddSupportedMilkCondition(targetConditions, inventoryTemplate,
       raceMilk, True) or
      not AddSupportedMilkCondition(targetConditions, inventoryTemplate,
-      specialMilk, True) then begin
+      specialMilk, False) then begin
     AddMessage('ERROR: Supported-milk inventory OR group could not be built.');
     Exit;
   end;
 
-  // Do not copy the source INFO's actor eligibility conditions. They belong
-  // to MME's original Milk Maid dialogue and unnecessarily restrict which
-  // NPC can offer this option. The inventory OR group is the only condition
-  // needed here: Fragment_0 validates and consumes the selected milk at
-  // runtime.
-  Result := ElementCount(targetConditions) = 5;
+  // Preserve MME's original Milk Maid and non-slave eligibility. Fragment_0
+  // enforces the same Milk Maid policy at runtime, so exposing the option to
+  // other NPCs would create a visible choice that can only be rejected.
+  for i := 0 to ElementCount(sourceConditions) - 1 do begin
+    sourceCondition := ElementByIndex(sourceConditions, i);
+    if not SameText(GetElementEditValues(sourceCondition, 'CTDA\Function'),
+        'GetItemCount') then
+      ElementAssign(targetConditions, HighInteger, sourceCondition, False);
+  end;
+
+  Result := ElementCount(targetConditions) =
+    ElementCount(sourceConditions) + 4;
   if Result then
     AddMessage('Inventory eligibility: Lactacid OR HearthFires milk OR ' +
       BasicMilkListEditorID + ' OR ' + RaceMilkListEditorID + ' OR ' +
       SpecialMilkListEditorID + '.');
+  if Result then
+    AddMessage('Speaker eligibility: original MME Milk Maid/non-slave conditions preserved.');
 end;
 
 function TreeContains(aElement: IInterface; aNeedle: string): Boolean;
