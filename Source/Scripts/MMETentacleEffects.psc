@@ -79,9 +79,10 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
     Actor playerActor = Game.GetPlayer()
     Actor focusActor = None
     Int focusArmorClass = 0
-    Float focusMilkAdded = 0.0
-    Int focusArousalBefore = -1
-    Bool focusArousalSent = False
+    Actor narrationActor = None
+    Float narrationMilkAdded = 0.0
+    Int narrationArousalBefore = -1
+    Bool narrationArousalSent = False
     Bool trackNarration = JsonUtil.GetIntValue(GetSettingsFile(), "enableArmorInjectionNarration", 1) == 1
     Int validMaidCount = 0
     Int eligibleCount = 0
@@ -107,7 +108,7 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
                     EndIf
                     ; Observe only; never infer success from the configured bonus.
                     ; Capture the baseline before the existing asynchronous SLA call.
-                    If diagnostic || (trackNarration && (focusActor == None || candidate == playerActor))
+                    If diagnostic || (trackNarration && narrationActor == None && candidate != playerActor)
                         arousalBefore = MMEArousalBridge.GetCurrentArousal(candidate)
                     EndIf
 
@@ -124,9 +125,15 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
                     If focusActor == None || candidate == playerActor
                         focusActor = candidate
                         focusArmorClass = armorClass
-                        focusMilkAdded = milkAdded
-                        focusArousalBefore = arousalBefore
-                        focusArousalSent = arousalSent
+                    EndIf
+                    ; Skyrim.Net treats the player in the originator slot as
+                    ; player input and chooses a bystander to answer. Retain one
+                    ; affected NPC so narration can guarantee the wearer speaks.
+                    If narrationActor == None && candidate != playerActor
+                        narrationActor = candidate
+                        narrationMilkAdded = milkAdded
+                        narrationArousalBefore = arousalBefore
+                        narrationArousalSent = arousalSent
                     EndIf
                     If diagnostic
                         Float milkAfter = MME_Storage.getMilkCurrent(candidate)
@@ -158,7 +165,12 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
 
     ; Exactly one optional request, after all gameplay and the unchanged HUD.
     ; The bridge owns gates, chance, result-aware JSON, and wearer-as-speaker.
-    MMEAlertsSkyrimNet.NarrateTentacleEffect(focusActor, focusMilkAdded, focusArousalBefore, focusArousalSent, diagnostic)
+    If narrationActor != None
+        Report(diagnostic, "narration wearer=" + MMEThoughts.ResolveActorName(narrationActor) + " | HUD focus=" + focusName)
+    Else
+        Report(diagnostic, "narration wearer unavailable: no affected NPC; Skyrim.Net cannot speak as the player")
+    EndIf
+    MMEAlertsSkyrimNet.NarrateTentacleEffect(narrationActor, narrationMilkAdded, narrationArousalBefore, narrationArousalSent, diagnostic)
     Return True
 EndFunction
 

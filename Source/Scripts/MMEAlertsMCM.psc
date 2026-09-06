@@ -178,7 +178,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 105
+    Return 106
 EndFunction
 
 Function SetPageNames()
@@ -386,8 +386,9 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", 0)
         JsonUtil.SetIntValue(SettingsFile, "armorInjectionMigration104", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionNarration", 1)
-        JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationChance", 10)
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationChance", 100)
         JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationMigration105", 1)
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationMigration106", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "diagnosticsPageMigration91", 1)
@@ -974,6 +975,14 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationMigration105", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Raise the former 10% default without overwriting a custom percentage.
+    If JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationMigration106", 0) == 0
+        If JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationChance", 10) == 10
+            JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationChance", 100)
+        EndIf
+        JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationMigration106", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1367,7 +1376,7 @@ Event OnPageReset(String page)
         armorInjectionNotificationOption = AddToggleOption("Show Effect Notifications", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNotifications", 1) == 1)
         AddHeaderOption("Skyrim.Net Narration")
         armorInjectionNarrationOption = AddToggleOption("Enable Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNarration", 1) == 1)
-        armorInjectionNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationChance", 10), "{0}%")
+        armorInjectionNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationChance", 100), "{0}%")
         AddHeaderOption("Debug")
         armorInjectionDiagnosticOption = AddToggleOption("Enable Effect Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", 0) == 1)
         runArmorInjectionCheckOption = AddTextOption("Run Effect Check Now", "RUN")
@@ -1730,7 +1739,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == armorInjectionNarrationOption
         SetInfoText("Let the focused armor wearer react through Skyrim.Net after a successful check. Gameplay and HUD notifications are independent.")
     ElseIf option == armorInjectionNarrationChanceOption
-        SetInfoText("Chance of one Skyrim.Net request per successful effect check. Only confirmed milk/arousal increases are described. Default 10%.")
+        SetInfoText("Chance of one Skyrim.Net request per successful effect check. Only confirmed milk/arousal increases are described. Default 100%.")
     ElseIf option == runArmorInjectionCheckOption
         SetInfoText("Run the real Tentacle Effects production path immediately without waiting for its timer.")
     ElseIf option == diagnosticNotificationsOption
@@ -2349,8 +2358,8 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(5.0)
     ElseIf option == armorInjectionNarrationChanceOption
-        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationChance", 10))
-        SetSliderDialogDefaultValue(10.0)
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationChance", 100))
+        SetSliderDialogDefaultValue(100.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(5.0)
     ElseIf option == skyrimNetStatusIntervalOption

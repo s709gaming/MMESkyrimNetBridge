@@ -21,7 +21,7 @@ EndFunction
 Function NarrateTentacleEffect(Actor wearer, Float milkAdded, Int arousalBefore, Bool arousalSent, Bool diagnostic = False) Global
     String settingsFile = "/MMEAlerts/Settings"
     Bool enabled = JsonUtil.GetIntValue(settingsFile, "enableArmorInjectionNarration", 1) == 1
-    Int chance = JsonUtil.GetIntValue(settingsFile, "armorInjectionNarrationChance", 10)
+    Int chance = JsonUtil.GetIntValue(settingsFile, "armorInjectionNarrationChance", 100)
     If chance < 0
         chance = 0
     ElseIf chance > 100
@@ -34,7 +34,11 @@ Function NarrateTentacleEffect(Actor wearer, Float milkAdded, Int arousalBefore,
         Return
     EndIf
     If wearer == None
-        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: no affected wearer; roll not made")
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: no affected NPC wearer; Skyrim.Net cannot speak as the player; roll not made")
+        Return
+    EndIf
+    If wearer == Game.GetPlayer()
+        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: Skyrim.Net treats a player originator as player input and selects a bystander")
         Return
     EndIf
     If !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
@@ -65,9 +69,10 @@ Function NarrateTentacleEffect(Actor wearer, Float milkAdded, Int arousalBefore,
         MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: invalid JSON actor template")
         Return
     EndIf
-    ; Installed SkyrimNetApi.psc: originatorActor selects the SPEAKER;
-    ; targetActor is the listener. Do not put the wearer in the listener slot.
-    Int result = SkyrimNetApi.DirectNarration(content, wearer, None)
+    ; Runtime logs confirm an NPC originator is the speaker. The player is
+    ; excluded above because Skyrim.Net special-cases it as user input.
+    Debug.Trace("[MMEAlert SkyrimNet] Tentacle Effects DirectNarration | speaker=" + actorName + " | listener=Player | " + content)
+    Int result = SkyrimNetApi.DirectNarration(content, wearer, Game.GetPlayer())
     If result == 0
         MMETentacleEffects.TraceDiagnostic(diagnostic, "narration request accepted [0] | speaker=" + actorName)
     Else
@@ -84,20 +89,41 @@ String Function BuildTentacleEffectNarration(String actorName, Bool milkIncrease
     EndIf
     String promptTemplate = ""
     If milkIncreased && arousalIncreased
-        promptTemplate = JsonUtil.GetPathStringValue(configFile, ".milkAndArousal", "{actor}'s living armor shifts beneath her clothes. Her milk reserves and arousal both increase. React as the armor wearer in one short, lighthearted, non-graphic line about what just happened.")
+        promptTemplate = JsonUtil.GetPathStringValue(configFile, ".milkAndArousal", "{actor}'s living armor shifts beneath her clothes. Her milk reserves and arousal both increase.")
     ElseIf milkIncreased
-        promptTemplate = JsonUtil.GetPathStringValue(configFile, ".milkOnly", "{actor}'s living armor shifts beneath her clothes and stimulates increased milk production. React as the armor wearer in one short, lighthearted, non-graphic line about what just happened.")
+        promptTemplate = JsonUtil.GetPathStringValue(configFile, ".milk", "{actor}'s living armor shifts beneath her clothes and stimulates increased milk production.")
     ElseIf arousalIncreased
-        promptTemplate = JsonUtil.GetPathStringValue(configFile, ".arousalOnly", "{actor}'s living armor shifts beneath her clothes and leaves her more aroused. React as the armor wearer in one short, lighthearted, non-graphic line about what just happened.")
+        promptTemplate = JsonUtil.GetPathStringValue(configFile, ".arousal", "{actor}'s living armor shifts beneath her clothes and leaves her more aroused.")
     Else
         MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: neither milk nor arousal increase was confirmed")
         Return ""
     EndIf
-    String content = MMEThoughts.RenderActorToken(promptTemplate, actorName)
+    String content = RenderTentacleNarrationActorToken(promptTemplate, actorName)
     If content == ""
         Return ""
     EndIf
-    Return content + " Mention only the changes stated above; do not invent additional effects."
+    ; Mirror the proven Armor Thoughts grounding: name the immediate situation,
+    ; bind it to the selected actor, and explicitly forbid a subject change.
+    Return "Immediate situation affecting YOU, " + actorName + ": " + content + " Your next response must be from your own perspective and specifically about this event. Stay focused on the armor and the effects stated here; do not change subjects or invent additional effects."
+EndFunction
+
+; MMEThoughts uses {actor}; older/user-authored narration JSON may use {ACTOR}.
+; Accept both while still requiring exactly one recognizable actor placeholder.
+String Function RenderTentacleNarrationActorToken(String promptTemplate, String actorName) Global
+    String rendered = MMEThoughts.RenderActorToken(promptTemplate, actorName)
+    If rendered != ""
+        Return rendered
+    EndIf
+    Int tokenIndex = StringUtil.Find(promptTemplate, "{ACTOR}")
+    If tokenIndex < 0
+        Return ""
+    EndIf
+    String beforeToken = ""
+    If tokenIndex > 0
+        beforeToken = StringUtil.Substring(promptTemplate, 0, tokenIndex)
+    EndIf
+    String afterToken = StringUtil.Substring(promptTemplate, tokenIndex + StringUtil.GetLength("{ACTOR}"))
+    Return beforeToken + actorName + afterToken
 EndFunction
 
 ; Registers callbacks used by actor-specific MME prompt modules.

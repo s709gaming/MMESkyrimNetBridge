@@ -7,16 +7,16 @@ IMPORTANT: Skyrim SE/AE 1.7.9.9 is not yet supported.
 ### Tentacle Effects: optional Skyrim.Net reactions
 
 The Tentacle Effects page now has a **Skyrim.Net Narration** section. Narration
-defaults to enabled with a **10% chance**, adjustable from 0-100% in 5% steps.
+defaults to enabled with a **100% chance**, adjustable from 0-100% in 5% steps.
 After a successful check and its usual HUD notification, at most one request
-uses the same focused wearer as its speaker. No timer, detection, armor rules,
+selects one successfully affected NPC wearer as its speaker. No timer, detection, armor rules,
 milk/arousal calculations, or original HUD lines are changed.
 
 Non-graphic narration text lives in
 `SKSE/Plugins/StorageUtilData/MMEAlerts/TentacleEffectNarration.json`. This is
 ordinary JSON, following Thoughts' path-based loading and `{actor}` rendering.
-It contains three complete outcome templates: `milkOnly`, `arousalOnly`, and
-`milkAndArousal`. Each must contain one `{actor}` token. The matching template
+It contains three complete outcome templates: `milk`, `arousal`, and
+`milkAndArousal`. Each must contain one `{actor}` or `{ACTOR}` token. The matching template
 is selected only from confirmed positive results; missing keys/files use
 built-in defaults, while a selected template missing its actor token skips
 narration. Restart Skyrim after editing the JSON so PapyrusUtil's cached
@@ -39,6 +39,12 @@ Finally restore your preferred chance. These checks apply real gameplay effects.
 An accepted API request does not guarantee generated dialogue or voice playback.
 Automated source/JSON and bytecode checks are included in the build; Skyrim.Net
 playback and asynchronous SLA timing still require in-game validation.
+
+Skyrim.Net special-cases the player in its originator slot as player input, then
+chooses a nearby NPC to respond. To prevent unrelated bystander dialogue, this
+feature narrates only through an affected NPC wearer. If the player is the only
+affected wearer, narration is skipped and diagnostics explain why. The local
+effect and HUD notification are unchanged.
 
 ### September 6, 2026: Tentacle Effects scan hotfix
 
