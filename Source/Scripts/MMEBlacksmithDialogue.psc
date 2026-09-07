@@ -6,14 +6,22 @@ Scriptname MMEBlacksmithDialogue extends MME_Dialogues Hidden
 GlobalVariable Property MMEExt_BlacksmithArmorState Auto
 GlobalVariable Property MMEExt_AlchemistLivingArmorState Auto
 GlobalVariable Property MMEExt_MageParasiteArmorState Auto
+GlobalVariable Property MMEExt_MageReverseLevelAvailable Auto
+Bool serviceSucceeded = False
 
 Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
     SetDialogueState(0)
     MMEAlchemistDialogue.SetDialogueState(MMEExt_AlchemistLivingArmorState, 0)
     MMEMageDialogue.SetDialogueState(MMEExt_MageParasiteArmorState, 0)
+    If MMEExt_MageReverseLevelAvailable != None
+        MMEExt_MageReverseLevelAvailable.SetValue(0.0)
+    EndIf
     ; Preserve MME's complete opening behavior exactly once before its existing
     ; linked choices and our two new choices evaluate their conditions.
     Parent.Fragment_00(akSpeakerRef)
+    If MMEExt_MageReverseLevelAvailable != None && MMEMageDialogue.CanOfferReverseLeveling(akSpeakerRef as Actor)
+        MMEExt_MageReverseLevelAvailable.SetValue(1.0)
+    EndIf
     SetDialogueState(GetLiveServiceState(akSpeakerRef as Actor))
     MMEAlchemistDialogue.SetDialogueState(MMEExt_AlchemistLivingArmorState, MMEAlchemistDialogue.GetLiveServiceState(akSpeakerRef as Actor))
     MMEMageDialogue.SetDialogueState(MMEExt_MageParasiteArmorState, MMEMageDialogue.GetLiveServiceState(akSpeakerRef as Actor))
@@ -25,27 +33,44 @@ Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
 EndFunction
 
 Function Fragment_AddLivingArmor(ObjectReference akSpeakerRef)
-    MMEAlchemistDialogue.TryAddLivingArmor(akSpeakerRef as Actor, MMEExt_AlchemistLivingArmorState)
+    serviceSucceeded = MMEAlchemistDialogue.TryAddLivingArmor(akSpeakerRef as Actor, MMEExt_AlchemistLivingArmorState)
 EndFunction
 
 Function Fragment_RemoveLivingArmor(ObjectReference akSpeakerRef)
-    MMEAlchemistDialogue.TryRemoveLivingArmor(akSpeakerRef as Actor, MMEExt_AlchemistLivingArmorState)
+    serviceSucceeded = MMEAlchemistDialogue.TryRemoveLivingArmor(akSpeakerRef as Actor, MMEExt_AlchemistLivingArmorState)
 EndFunction
 
 Function Fragment_AddParasiteArmor(ObjectReference akSpeakerRef)
-    MMEMageDialogue.TryAddParasiteArmor(akSpeakerRef as Actor, MMEExt_MageParasiteArmorState)
+    serviceSucceeded = MMEMageDialogue.TryAddParasiteArmor(akSpeakerRef as Actor, MMEExt_MageParasiteArmorState)
+EndFunction
+
+Function Fragment_ApplyReverseLeveling(ObjectReference akSpeakerRef)
+    serviceSucceeded = MMEMageDialogue.TryApplyReverseLeveling(akSpeakerRef as Actor)
 EndFunction
 
 Function Fragment_RemoveParasiteArmor(ObjectReference akSpeakerRef)
-    MMEMageDialogue.TryRemoveParasiteArmor(akSpeakerRef as Actor, MMEExt_MageParasiteArmorState)
+    serviceSucceeded = MMEMageDialogue.TryRemoveParasiteArmor(akSpeakerRef as Actor, MMEExt_MageParasiteArmorState)
 EndFunction
 
 Function Fragment_AddMilkArmor(ObjectReference akSpeakerRef)
-    TryAddMilkArmor(akSpeakerRef as Actor)
+    serviceSucceeded = TryAddMilkArmor(akSpeakerRef as Actor)
 EndFunction
 
 Function Fragment_RemoveMilkArmor(ObjectReference akSpeakerRef)
-    TryRemoveMilkArmor(akSpeakerRef as Actor)
+    serviceSucceeded = TryRemoveMilkArmor(akSpeakerRef as Actor)
+EndFunction
+
+; Bound only to the service INFOs' OnEnd, after their final response finishes.
+Function Fragment_ServiceCompleted(ObjectReference akSpeakerRef)
+    If !serviceSucceeded
+        Return
+    EndIf
+    serviceSucceeded = False
+    Actor vendor = akSpeakerRef as Actor
+    Idle giveIdle = Game.GetFormFromFile(0x0B5E20, "Skyrim.esm") as Idle
+    If vendor != None && giveIdle != None && !vendor.IsDead() && vendor.Is3DLoaded()
+        vendor.PlayIdle(giveIdle)
+    EndIf
 EndFunction
 
 Int Function GetLiveServiceState(Actor blacksmith)

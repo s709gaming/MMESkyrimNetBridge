@@ -16,6 +16,10 @@ Event OnInit()
 EndEvent
 
 Event OnPlayerLoadGame()
+    MMEReverseLevel reverseService = MMEReverseLevel.GetService()
+    If reverseService != None
+        reverseService.RecoverAfterLoad()
+    EndIf
     StorageUtil.SetIntValue(None, "MMEExtensions.PlayerDrink.TrackerInitialized", 1)
     StorageUtil.SetFloatValue(None, "MMEExtensions.PlayerDrink.TrackerLoadTime", Utility.GetCurrentRealTime())
     RegisterNativeDrink()

@@ -8,6 +8,11 @@ Scriptname MMEAlertsMCM extends SKI_ConfigBase
 ; gameplay. EnsureDefaults is append-only migration history for existing saves.
 
 String SettingsFile = "/MMEAlerts/Settings"
+Int reverseDurationOption
+Int reversePlayerLevelOption
+Int reverseApplyOption
+Int reverseRemoveOption
+Int reverseTraceOption
 Int soundsOption
 Int volumeOption
 Int capacityOption
@@ -180,11 +185,11 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 108
+    Return 110
 EndFunction
 
 Function SetPageNames()
-    Pages = new String[10]
+    Pages = new String[11]
     Pages[0] = "General"
     Pages[1] = "Milk Drinking"
     ; Build these page names at runtime so Papyrus's case-insensitive string
@@ -197,8 +202,9 @@ Function SetPageNames()
     Pages[5] = "Skyrim.Net"
     Pages[6] = "Milk Armor Thoughts"
     Pages[7] = "Tentacle Effects"
-    Pages[8] = "Debug"
-    Pages[9] = "Troubleshoot"
+    Pages[8] = "Misc"
+    Pages[9] = "Debug"
+    Pages[10] = "Troubleshoot"
 EndFunction
 
 ; Creates the MCM pages and initializes controllers on first registration.
@@ -1040,6 +1046,11 @@ EndFunction
 
 ; Renders the selected SkyUI page from persisted JContainers settings.
 Event OnPageReset(String page)
+    reverseDurationOption = -1
+    reversePlayerLevelOption = -1
+    reverseApplyOption = -1
+    reverseRemoveOption = -1
+    reverseTraceOption = -1
     ; Rebuild option IDs on every page render; SkyUI IDs are ephemeral and must
     ; never be persisted. Runtime values are always reread from JsonUtil.
     EnsureDefaults()
@@ -1212,6 +1223,17 @@ Event OnPageReset(String page)
     diagnosticMageBusStopOption = -1
     diagnosticMageBusFailureOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
+    If page == "Misc"
+        AddHeaderOption("Reverse Milk Maid Leveling")
+        reverseDurationOption = AddSliderOption("Reverse Leveling Duration", MMEReverseLevel.GetDuration(), "{0} game hours")
+        reversePlayerLevelOption = AddSliderOption("Minimum Milk Maid Level", MMEReverseLevel.GetRequiredLevel(), "{0}")
+        SetCursorPosition(1)
+        AddHeaderOption("Debug")
+        reverseApplyOption = AddTextOption("Apply Reverse Leveling", "APPLY")
+        reverseRemoveOption = AddTextOption("Remove Reverse Leveling", "REMOVE")
+        reverseTraceOption = AddToggleOption("Reverse Leveling Trace", JsonUtil.GetIntValue(SettingsFile, "enableReverseLevelTrace", 0) == 1)
+        Return
+    EndIf
     If page == "Milk Drinking"
         AddHeaderOption("Milk Gain Per Drink")
         milkmaidLevelBonusOption = AddToggleOption("MME Level Bonus", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1) == 1)
@@ -1505,6 +1527,23 @@ EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
+    If option == reverseTraceOption
+        SetInfoText("Log reverse-leveling application, milking completion, level changes and skipped writes to the Papyrus log. Default off.")
+        Return
+    EndIf
+    If option == reverseDurationOption
+        SetInfoText("Duration in game hours. Applying again refreshes the duration. Default 24, range 1-72.")
+        Return
+    ElseIf option == reversePlayerLevelOption
+        SetInfoText("Minimum player Milk Maid level required to see the Court Wizard dialogue. Default 5, range 1-10. This setting never changes your actual level.")
+        Return
+    ElseIf option == reverseApplyOption
+        SetInfoText("Apply or refresh the same reverse-leveling ability offered by Court Wizards.")
+        Return
+    ElseIf option == reverseRemoveOption
+        SetInfoText("Remove reverse leveling immediately. Progress already lost stays lost.")
+        Return
+    EndIf
     If option == masterEnableOption
         SetInfoText("Turn MME Extensions on or off.")
     ElseIf option == soundsOption
@@ -1836,6 +1875,24 @@ EndEvent
 
 ; Persists toggle changes and refreshes only controllers affected by that option.
 Event OnOptionSelect(Int option)
+    If option == reverseTraceOption
+        Int traceValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableReverseLevelTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableReverseLevelTrace", traceValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, traceValue == 1)
+        Return
+    EndIf
+    If option == reverseApplyOption || option == reverseRemoveOption
+        MMEReverseLevel reverseService = MMEReverseLevel.GetService()
+        If reverseService == None
+            Debug.Notification("Reverse leveling requires the SSEEdit installer step.")
+        ElseIf option == reverseApplyOption
+            reverseService.ApplyReverseLeveling()
+        Else
+            reverseService.RemoveReverseLeveling()
+        EndIf
+        Return
+    EndIf
     ; Each branch commits one setting and performs only the minimal live refresh
     ; required by that feature (controller polling, action registration, etc.).
     If option == masterEnableOption
@@ -1848,6 +1905,10 @@ Event OnOptionSelect(Int option)
                 controller.InitializeController()
             Else
                 controller.DisableController()
+                MMEReverseLevel reverseService = MMEReverseLevel.GetService()
+                If reverseService != None
+                    reverseService.RemoveReverseLeveling(False)
+                EndIf
             EndIf
         EndIf
     ElseIf option == soundsOption
@@ -2346,6 +2407,19 @@ EndFunction
 
 ; Configures the shared sound-volume and capacity-interval slider dialogs.
 Event OnOptionSliderOpen(Int option)
+    If option == reverseDurationOption
+        SetSliderDialogStartValue(MMEReverseLevel.GetDuration())
+        SetSliderDialogDefaultValue(24.0)
+        SetSliderDialogRange(1.0, 72.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == reversePlayerLevelOption
+        SetSliderDialogStartValue(MMEReverseLevel.GetRequiredLevel())
+        SetSliderDialogDefaultValue(5.0)
+        SetSliderDialogRange(1.0, 10.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    EndIf
     If option == volumeOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0))
         SetSliderDialogDefaultValue(100.0)
@@ -2506,6 +2580,17 @@ EndEvent
 
 ; Saves accepted slider values and reschedules polling when its interval changes.
 Event OnOptionSliderAccept(Int option, Float value)
+    If option == reverseDurationOption
+        JsonUtil.SetIntValue(SettingsFile, "reverseLevelingDuration", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, MMEReverseLevel.GetDuration(), "{0} game hours")
+        Return
+    ElseIf option == reversePlayerLevelOption
+        JsonUtil.SetIntValue(SettingsFile, "reversePlayerMaidLevel", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, MMEReverseLevel.GetRequiredLevel(), "{0}")
+        Return
+    EndIf
     ; Slider values are clamped by their dialog ranges. Persist the accepted value
     ; immediately so runtime scripts and subsequent page renders agree.
     If option == volumeOption

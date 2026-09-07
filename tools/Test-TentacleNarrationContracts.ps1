@@ -55,6 +55,7 @@ Assert-Contract ([regex]::Matches($builder, 'SelectTentacleNarrationTemplate\(')
 Assert-Contract ($selector.Contains('JsonUtil.PathStringElements(configFile, path)') -and $selector -match '(?s)If entries.Length > 0.*?entries\[Utility.RandomInt\(0, entries.Length - 1\)\]') 'random pool index is guarded and covers every entry'
 Assert-Contract ($selector.Contains('JsonUtil.GetPathStringValue(configFile, path, fallback)')) 'legacy single-string templates remain supported'
 Assert-Contract ($bridge.Contains('String Function RenderTentacleNarrationActorToken') -and $bridge.Contains('"{ACTOR}"')) 'renderer accepts existing uppercase actor token'
-Assert-Contract ($mcm.Contains('Return 108') -and $mcm.Contains('armorInjectionPlayerNarrationMigration107') -and $mcm.Contains('armorInjectionSoundsMigration108')) 'MCM upgrades existing saves'
+$mcmVersionMatch = [regex]::Match($mcm, '(?s)Int Function GetVersion\(\)\s+Return (\d+)')
+Assert-Contract ($mcmVersionMatch.Success -and [int]$mcmVersionMatch.Groups[1].Value -ge 108 -and $mcm.Contains('armorInjectionPlayerNarrationMigration107') -and $mcm.Contains('armorInjectionSoundsMigration108')) 'MCM upgrades existing saves'
 Assert-Contract ($mcm.Contains('AddHeaderOption("Skyrim.Net Narration")')) 'section stays on Tentacle Effects page'
 Assert-Contract ($mcm -match '(?s)ElseIf option == armorInjectionNarrationChanceOption\s+SetSliderDialogStartValue\(JsonUtil.GetIntValue\(SettingsFile, "armorInjectionNarrationChance", 100\)\)\s+SetSliderDialogDefaultValue\(100.0\)\s+SetSliderDialogRange\(0.0, 100.0\)\s+SetSliderDialogInterval\(5.0\)') 'chance defaults to 100%, ranges 0-100%, steps 5%'

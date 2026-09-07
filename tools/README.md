@@ -4,6 +4,14 @@ This folder contains build helpers and historical xEdit scripts used while creat
 
 ## Pascal/xEdit Scripts
 
+### Reverse Milk Maid Leveling (installed)
+
+`AddMMEExtensionsReverseLeveling.pas` extends the Mage choices under MME's
+**[MME] Hey there!** tree and creates the dedicated reverse-level quest, ability,
+and magic effect. Revision 3 was applied successfully on 2026-09-07; SSEEdit
+reported zero errors. The repository contains the saved ESP and regenerated SEQ.
+See [the installation and testing notes](REVERSE-LEVELING-HANDOFF.md).
+
 The `.pas` files are retained for archival and reproducibility purposes. Run them only from SSEEdit with the required plugins loaded, and make a backup of `MMEAlert.esp` first.
 
 ### Deferred Blacksmith dialogue step (Vortex)

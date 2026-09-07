@@ -1,5 +1,24 @@
 Scriptname MMEMageDialogue Hidden
 
+Bool Function CanOfferReverseLeveling(Actor mage) Global
+    Faction courtWizards = Game.GetFormFromFile(0x05091E, "Skyrim.esm") as Faction
+    MMEReverseLevel service = MMEReverseLevel.GetService()
+    If mage == None || courtWizards == None || service == None
+        Return False
+    EndIf
+    Return MMEAlertsController.IsExtensionsEnabled() && mage.IsInFaction(courtWizards) \
+        && MMEReverseLevel.IsPlayerMaid() && service.ReverseAbility != None \
+        && MME_Storage.getMaidLevel(Game.GetPlayer()) >= MMEReverseLevel.GetRequiredLevel()
+EndFunction
+
+Bool Function TryApplyReverseLeveling(Actor mage) Global
+    If !CanOfferReverseLeveling(mage)
+        Debug.Notification("Reverse leveling is not available right now.")
+        Return False
+    EndIf
+    Return MMEReverseLevel.GetService().ApplyReverseLeveling()
+EndFunction
+
 ; State values: 0 unavailable/invalid, 1 Add, 2 Remove, 3 protected,
 ; 4 registry full. The Global controls visibility only; actions revalidate.
 Int Function GetLiveServiceState(Actor mage) Global

@@ -1,4 +1,9 @@
 Scriptname MME_Storage Hidden
+; Declaration only, verified against the original MME 20220522 source.
+; This SDK file must NEVER be compiled/shipped as an MME replacement.
+Int Function setMaidLevel(Actor akActor, Int Value) Global
+    Return Value
+EndFunction
 Float Function getMilkCurrent(Actor akActor) Global
     Return 0.0
 EndFunction
