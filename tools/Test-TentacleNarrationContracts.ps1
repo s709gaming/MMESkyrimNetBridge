@@ -43,10 +43,17 @@ Assert-Contract ($builder.Contains('narration skipped: neither milk nor arousal 
 Assert-Contract ($builder.Contains('Immediate situation involving ') -and $builder.Contains('do not change subjects')) 'prompt mirrors Armor Thoughts grounding'
 Assert-Contract ($builder -notmatch 'JsonUtil\.GetStringValue') 'ordinary JSON uses path API, like Thoughts'
 foreach ($key in @('milk', 'arousal', 'milkAndArousal')) {
-    $value = $config.$key
-    Assert-Contract ($value -is [string] -and $value.Trim().Length -gt 0) "JSON $key is a nonempty string"
-    Assert-Contract ([regex]::Matches($value, '\{(?:actor|ACTOR)\}').Count -eq 1) "JSON $key has one supported actor token"
+    $values = @($config.$key)
+    Assert-Contract ($values.Count -gt 0) "JSON $key has at least one template"
+    foreach ($value in $values) {
+        Assert-Contract ($value -is [string] -and $value.Trim().Length -gt 0) "JSON $key entry is a nonempty string"
+        Assert-Contract ([regex]::Matches($value, '\{(?:actor|ACTOR)\}').Count -eq 1) "JSON $key entry has one supported actor token"
+    }
 }
+$selector = [regex]::Match($bridge, '(?s)String Function SelectTentacleNarrationTemplate\(.*?EndFunction').Value
+Assert-Contract ([regex]::Matches($builder, 'SelectTentacleNarrationTemplate\(').Count -eq 3) 'all three outcome branches use pool selection'
+Assert-Contract ($selector.Contains('JsonUtil.PathStringElements(configFile, path)') -and $selector -match '(?s)If entries.Length > 0.*?entries\[Utility.RandomInt\(0, entries.Length - 1\)\]') 'random pool index is guarded and covers every entry'
+Assert-Contract ($selector.Contains('JsonUtil.GetPathStringValue(configFile, path, fallback)')) 'legacy single-string templates remain supported'
 Assert-Contract ($bridge.Contains('String Function RenderTentacleNarrationActorToken') -and $bridge.Contains('"{ACTOR}"')) 'renderer accepts existing uppercase actor token'
 Assert-Contract ($mcm.Contains('Return 108') -and $mcm.Contains('armorInjectionPlayerNarrationMigration107') -and $mcm.Contains('armorInjectionSoundsMigration108')) 'MCM upgrades existing saves'
 Assert-Contract ($mcm.Contains('AddHeaderOption("Skyrim.Net Narration")')) 'section stays on Tentacle Effects page'

@@ -1,7 +1,25 @@
 {
-  "arousal": "{ACTOR} feels a pleasant sting from the tentacles and becomes pleasantly excited by it. React positively, humorously and playfully in character. Reply in one short sentence.",
+  "arousal": [
+    "{ACTOR} gasps at a pleasant sting from the tentacles and enjoys the rush of excitement that follows. React positively and playfully in character. Reply in one short sentence.",
+    "{ACTOR} feels a teasing prick from the tendrils and finds herself pleasantly excited by it. React positively and playfully in character. Reply in one short sentence.",
+    "{ACTOR} shivers as the tentacles give her a warm little sting that feels surprisingly nice. React positively and playfully in character. Reply in one short sentence.",
+    "{ACTOR} lets out a pleased gasp when the tendrils prick her and leave her happily excited. React positively and playfully in character. Reply in one short sentence.",
+    "{ACTOR} feels the tentacles give her a playful nip of sensation and clearly enjoys how good it feels. React positively and playfully in character. Reply in one short sentence."
+  ],
 
-  "milk": "{ACTOR} feels a pleasant sting from the tentacles, then enjoys the feeling of her breasts becoming fuller and heavier. React positively, humorously and playfully in character. Reply in one short sentence.",
+  "milk": [
+    "{ACTOR} gasps at a pleasant sting from the tentacles, then enjoys the growing fullness and weight in her breasts. React positively and playfully in character. Reply in one short sentence.",
+    "{ACTOR} feels a gentle prick from the tendrils and happily notices her breasts becoming fuller and heavier. React positively and playfully in character. Reply in one short sentence.",
+    "{ACTOR} shivers at the tentacles' pleasant sting as a satisfying heaviness builds in her breasts. React positively and playfully in character. Reply in one short sentence.",
+    "{ACTOR} gives a pleased little gasp when the tendrils prick her and her breasts begin to feel pleasantly full. React positively and playfully in character. Reply in one short sentence.",
+    "{ACTOR} feels a warm sting from the tentacles and enjoys the soft, heavy fullness that follows. React positively and playfully in character. Reply in one short sentence."
+  ],
 
-  "milkAndArousal": "{ACTOR} feels a pleasant sting from the tentacles, enjoys her breasts becoming fuller and heavier, and feels pleasantly excited. React positively, humorously and playfully in character. Reply in one short sentence."
+  "milkAndArousal": [
+    "{ACTOR} gasps at a pleasant sting from the tentacles as her breasts grow fuller and a happy rush of excitement follows. React positively and playfully in character. Reply in one short sentence.",
+    "{ACTOR} feels a teasing prick from the tendrils, enjoying both the growing heaviness in her breasts and the excitement it brings. React positively and playfully in character. Reply in one short sentence.",
+    "{ACTOR} shivers pleasantly as the tentacles sting her, leaving her breasts fuller and her mood much more excited. React positively and playfully in character. Reply in one short sentence.",
+    "{ACTOR} lets out a pleased gasp when the tendrils prick her, enjoying the fullness in her breasts and the warm excitement that follows. React positively and playfully in character. Reply in one short sentence.",
+    "{ACTOR} feels the tentacles give her a playful sting, then smiles at the pleasant heaviness in her breasts and the excitement building with it. React positively and playfully in character. Reply in one short sentence."
+  ]
 }

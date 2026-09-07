@@ -1,93 +1,13 @@
 # MME Extensions
 
-**Release status:** Beta 0.5.0  
+**Release status:** Beta 0.6.0  
 **Main requirement:** Milk Mod Economy (and its requirements)
-IMPORTANT: Skyrim SE/AE 1.7.9.9 is not yet supported.
+**DOWNLOAD**:https://www.loverslab.com/files/file/50820-mme-milk-mod-economy-extensions/
 
-### Tentacle Effects: optional Skyrim.Net reactions
+> **IMPORTANT:** Skyrim SE/AE **1.7.9.9 is not yet supported.**
 
-The Tentacle Effects page now has a **Skyrim.Net Narration** section. Narration
-defaults to enabled with a **100% chance**, adjustable from 0-100% in 5% steps.
-After a successful check and its usual HUD notification, at most one request
-uses one successfully affected wearer as its subject. No timer, detection, armor rules,
-milk/arousal calculations, or original HUD lines are changed.
-
-Non-graphic narration text lives in
-`SKSE/Plugins/StorageUtilData/MMEAlerts/TentacleEffectNarration.json`. This is
-ordinary JSON, following Thoughts' path-based loading and `{actor}` rendering.
-It contains three complete outcome templates: `milk`, `arousal`, and
-`milkAndArousal`. Each must contain one `{actor}` or `{ACTOR}` token. The matching template
-is selected only from confirmed positive results; missing keys/files use
-built-in defaults, while a selected template missing its actor token skips
-narration. Restart Skyrim after editing the JSON so PapyrusUtil's cached
-configuration is refreshed.
-
-The milk result uses the existing helper's actual delta. Arousal requires both
-a successfully sent SLA event and a readable increase over the pre-event value.
-Sending an event alone is not proof: pending, capped, disabled, or unreadable
-arousal is omitted. No new delay or polling is introduced to await SLA.
-When neither increase is confirmed, narration is skipped.
-Skyrim.Net must also be installed and enabled in the existing bridge settings.
-
-For in-game validation, enable Effect Diagnostics, set narration chance to 100%,
-and run a successful effect check; close MCM to allow gameplay/voice playback.
-Check the selected wearer and accepted/rejected request result. Test milk-only,
-arousal-only, both, and neither; capped/unconfirmed effects must not be claimed.
-With multiple affected Maids, expect one request, not one per actor. Repeat at
-0% and with narration disabled: effects and HUD must still run, without a request.
-Finally restore your preferred chance. These checks apply real gameplay effects.
-An accepted API request does not guarantee generated dialogue or voice playback.
-Automated source/JSON and bytecode checks are included in the build; Skyrim.Net
-playback and asynchronous SLA timing still require in-game validation.
-
-**Enable Player Narration** defaults to enabled under Skyrim.Net Narration.
-Tentacle Effects also has a default-on **Notification Sound** toggle immediately
-below **Show Effect Notifications**. It reuses the existing randomized low sound
-pool on the notification's affected wearer, once per displayed notification,
-respecting the global sound enable and volume settings. No displayed notification
-means no sound. This is independent of Skyrim.Net and its player narration toggle.
-
-When an affected player is selected, a private custom LLM request generates a
-self-comment and its callback uses Skyrim.Net's player-only TTS endpoint. It
-does not publish player dialogue or request bystander reactions. The supplied
-`mme_wearer_self_comment.prompt` uses non-graphic, first-person output instructions;
-the three existing JSON situation templates remain unchanged. Configure a working
-player voice in Skyrim.Net. Generation failure has no bystander fallback.
-When this toggle is off, a player-focused check sends no narration request, even
-if NPCs were also affected. The callback rechecks toggles before delayed playback.
-NPC-only checks explicitly pass the affected NPC as the DirectNarration speaker,
-per the installed API contract; this route still needs in-game speaker verification.
-Child speakers are rejected. The main
-narration toggle gates both routes, and both share the 100% default chance and
-one-request-per-check limit. The local effects and HUD notification are unchanged.
-Independent Skyrim.Net conversations/world reactions are not globally disabled.
-
-### September 6, 2026: Tentacle Effects scan hotfix
-
-Fixed false "nearby scan returned no actors" skips. The native scan was finding
-actors, but array comparisons/initialization with `None` generated rejected
-Papyrus casts. The scheduled/manual Tentacle Effects path and shared
-Thoughts/capacity scan now use array lengths without those casts. Packaging
-checks the compiled bytecode to prevent this regression.
-
-The ESP, native DLL, timer settings, and original Injection.json wording are
-unchanged by the scan hotfix. Optional Skyrim.Net integration is described above.
-
-To test: exit Skyrim, install this ZIP over the previous version with the same
-installer choices, restart and load your save. With an eligible MME Milk Maid
-wearing supported Living/Parasite armor, enable Tentacle Effects, set chance to
-100%, and run its MCM debug check. Confirm a nonzero nearby-actor count and the
-normal eligibility/effect report. Close the MCM so gameplay and notifications
-can resume. Also test a scheduled cycle (1 game-hour interval, zero variation),
-then restore your preferred settings. These checks apply real configured effects.
-Compilation and bytecode checks are automated; in-game confirmation is still
-required.
-
-**See:**  
-[Full Requirements & Recommended Setup](REQUIREMENTS.md)
-
-**LoversLab Download Page:**  
-https://www.loverslab.com/files/file/50820-mme-milk-mod-economy-extensions/
+**Full Requirements & Recommended Setup:**  
+[REQUIREMENTS.md](https://github.com/s709gaming/MMESkyrimNetBridge/blob/main/REQUIREMENTS.md)
 
 ---
 
@@ -97,50 +17,88 @@ Milk Mod Economy Extensions modernizes and expands ed86's popular **Milk Mod Eco
 
 Make Milk Maid gameplay feel more alive, reactive, and a little more shameless.
 
-## KEY FEATURES
+## Key Features
 
-- **Optional (but major) Skyrim.Net integration** gives nearby NPCs AI-generated voice reactions to major MME events and can turn certain conversations into actual gameplay actions.
-
-- Drinking milk can increase a Milk Maid's milk amount, temporarily inflate her breasts, raise arousal, and trigger moans, animations, or reactions.
-
-- Arousal is meant to trigger your other arousal mods, like animations or events. 
-
+- **Optional, but major, Skyrim.Net integration** gives nearby NPCs AI-generated voice reactions to major MME events and can turn certain conversations into actual gameplay actions.
+- Drinking milk can increase a Milk Maid's milk level, temporarily inflate her breasts, raise arousal, and trigger moans, animations, or reactions.
+- Arousal from drinking milk is meant to trigger your other arousal mods, such as animations or events.
 - Milk can come from bottles... or straight from the tap~
-
-- Nearby Milk Maids react as they become heavy, full, leaking, milked, or fitted with questionable milking equipment.
-
+- Nearby Milk Maids react as they become heavy, full, milked, or fitted with questionable milking equipment.
+- Blacksmiths, Alchemists, and Court Wizards can modify your slot 32 chest armor with hidden milking equipment or kinky, milk-hungry tentacles, depending on their profession.
 - Create new Milk Maids through a simple, erotic breastfeeding ritual.
-
 - Supports the modern **OStim animation framework** while retaining existing SexLab support.
 
 **In short: MME still handles the milk. MME Extensions makes Skyrim notice.**
 
-## WHAT CAN TRIGGER REACTIONS?
+## OStim and SexLab Can Coexist
 
-Depending on your MCM settings, AI narration, lewd sounds, animations, or notifications can react to:
+SexLab is a master of the original MME and is needed for essential background functions and animations.
+
+SexLab is also required by the insanely popular Devious Devices and other major add-ons in the MME ecosystem.
+
+MME Extensions allows OStim to take over the animation side and interact with the OStim ecosystem instead.
+
+## What Can Trigger Reactions?
+
+Depending on your MCM settings, AI narration, lewd sound effects, animations, or notifications can react to:
 
 - Drinking milk and becoming aroused and bustier.
 - Reaching 50% or 100% milk fullness.
 - A new Milk Maid discovering her newfound gifts.
 - Equipping milking devices such as milk cuirasses, parasite armor, and similar equipment.
-- Talking to blacksmiths, alchemists, or court wizards while wearing armor recognized by MME—or no body armor at all.
 - Periodically wearing those questionable devices around Skyrim.
-- Being milked or breastfeeding lovers.
-- Clothes flying off your body from overly large assets or other important MME events.
+- Being milked or breastfeeding another character.
+- Clothes flying off when breasts grow too large, along with other important MME events.
+- Try wearing **TENTACLE ARMOR**:  
+  [Tentacle Armor on Nexus Mods](https://www.nexusmods.com/skyrimspecialedition/mods/62644?tab=description)
 
-## OPTIONAL MME SETTINGS
+## Erotic Armor Modifications
 
-The FOMOD can optionally preload my preferred **Milk Mod Economy settings**.
+Blacksmiths can modify your armor to fit big tits and install hidden milking equipment underneath, free of charge.
+
+More kinky adventurers can have tentacles fitted underneath their armor by Alchemists or Court Wizards. This also modifies the armor to accommodate big tits.
+
+The catch? The tentacles won't share their milk. Instead, they'll periodically sting and inject you with an aphrodisiac that makes you even more... productive.
+
+All of the above can come with in-game notifications, sound effects, and optional Skyrim.Net AI narration.
+
+**Up to a limit of 10 modifications of each type.**
+
+**Unlock via "Hey, there!"**
+
+## Milk Maid Thoughts
+
+A recurring reaction system comments on a Milk Maid's currently worn equipment, or lack of specialized milking equipment.
+
+Depending on your settings, the system can periodically trigger:
+
+- In-game flavor notifications.
+- Reaction sounds.
+- Optional Skyrim.Net AI voice narration.
+
+Reactions can reference worn milking equipment, parasite or living armor, or the absence of specialized milking equipment.
+
+## New Milk Maid Creation
+
+A new Milk Maid can now be created through the existing **"Hey, there"** dialogue.
+
+If the player has at least 1 milk available and the NPC is eligible, the dialogue can start a breastfeeding scene.
+
+After the scene completes successfully, the NPC can become a new Milk Maid using MME's existing creation system.
+
+## Optional MME Settings
+
+The FOMOD can optionally preload my preferred Milk Mod Economy settings.
 
 These remain normal MME settings and can be changed afterward through MME's own MCM.
 
 The recommended profile provides:
 
-- Natural milk production without mandatory Lactacid
-- Roughly daily milking cycles
-- Novice progression
-- 3BA-friendly breast scaling
-- 100% gush chance to avoid additional milking delay
+- Natural milk production without mandatory Lactacid.
+- Roughly daily milking cycles.
+- Novice progression.
+- 3BA-friendly breast scaling.
+- 100% gush chance to avoid additional milking delay.
 
 The installer offers three startup profiles:
 
@@ -156,13 +114,11 @@ Applies the same recommended settings without starter items.
 
 Leaves MME's original settings and starter behavior unchanged.
 
-## INSTALLATION
+## Installation
 
 For the complete dependency list, Skyrim VR setup, BodySlide instructions, breast-scaling setup, optional integrations, and visual recommendations, see:
 
-[Full Requirements & Recommended Setup](REQUIREMENTS.md)
-
-Basic installation:
+[Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESkyrimNetBridge/blob/main/REQUIREMENTS.md)
 
 1. Install Milk Mod Economy and verify that it works.
 2. Install its required dependencies.
@@ -172,11 +128,11 @@ Basic installation:
 6. Deploy or sort your load order.
 7. Start Skyrim through SKSE.
 
-## SOURCE CODE
+## Source Code
 
-https://github.com/s709gaming/MMESkyrimNetBridge
+[GitHub - MME Extensions](https://github.com/s709gaming/MMESkyrimNetBridge)
 
-## CREDITS
+## Credits
 
 - **Ed86** - Milk Mod Economy
 - **MinLL and contributors** - Skyrim.Net
@@ -184,9 +140,9 @@ https://github.com/s709gaming/MMESkyrimNetBridge
 - **Tetherball88** - Reference for OStim implementation
 - **GoodProvider** - Reference for SexLab implementation
 
-## LICENSE / PERMISSIONS
+## License / Permissions
 
-Released under the **MIT License**.
+Released under the MIT License.
 
 Feel free to use, modify, redistribute, or build on MME Extensions under the MIT License.
 
@@ -195,7 +151,3 @@ Credit is appreciated.
 Third-party dependencies and assets remain subject to their own permissions.
 
 MME Extensions is an independent add-on and is not an official Milk Mod Economy, Skyrim, SKSE, SexLab, SexLab Aroused, OSLAroused, or Skyrim.Net release.
-
-## CHANGELOG
-
-See [GitHub Releases](https://github.com/s709gaming/MMESkyrimNetBridge/releases) for version history and detailed changes.

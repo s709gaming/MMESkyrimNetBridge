@@ -132,11 +132,11 @@ String Function BuildTentacleEffectNarration(String actorName, Bool milkIncrease
     EndIf
     String promptTemplate = ""
     If milkIncreased && arousalIncreased
-        promptTemplate = JsonUtil.GetPathStringValue(configFile, ".milkAndArousal", "{actor}'s living armor shifts beneath her clothes. Her milk reserves and arousal both increase.")
+        promptTemplate = SelectTentacleNarrationTemplate(configFile, ".milkAndArousal", "{actor}'s living armor shifts beneath her clothes. Her milk reserves and arousal both increase.")
     ElseIf milkIncreased
-        promptTemplate = JsonUtil.GetPathStringValue(configFile, ".milk", "{actor}'s living armor shifts beneath her clothes and stimulates increased milk production.")
+        promptTemplate = SelectTentacleNarrationTemplate(configFile, ".milk", "{actor}'s living armor shifts beneath her clothes and stimulates increased milk production.")
     ElseIf arousalIncreased
-        promptTemplate = JsonUtil.GetPathStringValue(configFile, ".arousal", "{actor}'s living armor shifts beneath her clothes and leaves her more aroused.")
+        promptTemplate = SelectTentacleNarrationTemplate(configFile, ".arousal", "{actor}'s living armor shifts beneath her clothes and leaves her more aroused.")
     Else
         MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: neither milk nor arousal increase was confirmed")
         Return ""
@@ -148,6 +148,20 @@ String Function BuildTentacleEffectNarration(String actorName, Bool milkIncrease
     ; Mirror the proven Armor Thoughts grounding: name the immediate situation,
     ; bind it to the selected actor, and explicitly forbid a subject change.
     Return "Immediate situation involving " + actorName + ": " + content + " Your next response must be specifically about this event. Stay focused on the armor and the effects stated here; do not change subjects or invent additional effects."
+EndFunction
+
+; Choose uniformly within the matching outcome only. Consecutive repeats are
+; allowed. Retain compatibility with older single-string configuration files.
+String Function SelectTentacleNarrationTemplate(String configFile, String path, String fallback) Global
+    String[] entries = JsonUtil.PathStringElements(configFile, path)
+    If entries.Length > 0
+        String selected = entries[Utility.RandomInt(0, entries.Length - 1)]
+        If selected != ""
+            Return selected
+        EndIf
+        Return fallback
+    EndIf
+    Return JsonUtil.GetPathStringValue(configFile, path, fallback)
 EndFunction
 
 ; MMEThoughts uses {actor}; older/user-authored narration JSON may use {ACTOR}.
