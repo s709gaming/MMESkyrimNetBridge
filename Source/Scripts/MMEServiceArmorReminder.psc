@@ -97,7 +97,7 @@ Bool Function TryShow(Actor speaker) Global
     If wornArmor != None
         armorName = wornArmor.GetName()
     EndIf
-    Debug.Trace("[MME Extensions Armor Reminder] PASS | role=" + serviceRole + " | speaker=" + actorName + " | armor=" + armorName + " | class=" + armorClass + " | pool=" + poolName + " | notification=" + reminderText)
+    MMELog.Diagnostic("[MME Extensions Armor Reminder] PASS | role=" + serviceRole + " | speaker=" + actorName + " | armor=" + armorName + " | class=" + armorClass + " | pool=" + poolName + " | notification=" + reminderText)
     Return True
 EndFunction
 
@@ -110,7 +110,7 @@ String Function ResolveServiceRole(Actor speaker) Global
     EndIf
     Faction merchantFaction = Game.GetFormFromFile(0x051596, "Skyrim.esm") as Faction
     If merchantFaction == None
-        Debug.Trace("[MME Extensions Armor Reminder] STOP | Skyrim merchant faction unavailable", 2)
+        MMELog.Alarm("[MME Extensions Armor Reminder] STOP | Skyrim merchant faction unavailable", 2)
         Return ""
     EndIf
     If !speaker.IsInFaction(merchantFaction)
@@ -121,7 +121,7 @@ String Function ResolveServiceRole(Actor speaker) Global
     Faction apothecaryFaction = Game.GetFormFromFile(0x05091C, "Skyrim.esm") as Faction
     Faction courtWizardFaction = Game.GetFormFromFile(0x05091E, "Skyrim.esm") as Faction
     If blacksmithFaction == None || apothecaryFaction == None || courtWizardFaction == None
-        Debug.Trace("[MME Extensions Armor Reminder] STOP | Skyrim service faction unavailable", 2)
+        MMELog.Alarm("[MME Extensions Armor Reminder] STOP | Skyrim service faction unavailable", 2)
         Return ""
     EndIf
     If speaker.IsInFaction(blacksmithFaction)
@@ -167,5 +167,5 @@ String Function GetCompactObservation(String poolName) Global
 EndFunction
 
 Function ReportStop(String reason, Actor speaker, String serviceRole) Global
-    Debug.Trace("[MME Extensions Armor Reminder] STOP | role=" + serviceRole + " | speaker=" + ResolveActorName(speaker) + " | reason=" + reason, 2)
+    MMELog.Diagnostic("[MME Extensions Armor Reminder] STOP | role=" + serviceRole + " | speaker=" + ResolveActorName(speaker) + " | reason=" + reason, 2)
 EndFunction

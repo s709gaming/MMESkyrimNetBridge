@@ -28,12 +28,12 @@ Int Function PlayDrinkReaction(Actor drinker, Bool showDiagnostic = False) Globa
     EndIf
     Float volume = JsonUtil.GetFloatValue(settingsFile, "reactionSoundVolume", 100.0)
     Sound.SetInstanceVolume(instance, volume / 100.0)
-    Debug.Trace("[MMEAlert Drink] reaction sound " + instance + " played on " + drinker)
+    MMELog.Diagnostic("[MMEAlert Drink] reaction sound " + instance + " played on " + drinker)
     Return instance
 EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
-    Debug.Trace("[MMEAlert Drink] " + reportText)
+    MMELog.Diagnostic("[MMEAlert Drink] " + reportText)
     If showNotification
         Debug.Notification("Milk Debug: " + reportText)
     EndIf

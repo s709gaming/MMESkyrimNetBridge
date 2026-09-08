@@ -89,7 +89,7 @@ Function NarrateTentacleEffect(Actor wearer, Float milkAdded, Int arousalBefore,
         Return
     EndIf
     content += " React from your own perspective as the affected armor wearer."
-    Debug.Trace("[MMEAlert SkyrimNet] Tentacle Effects DirectNarration | speaker=" + actorName)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Tentacle Effects DirectNarration | speaker=" + actorName)
     Int result = SkyrimNetApi.DirectNarration(content, wearer, Game.GetPlayer())
     If result == 0
         MMETentacleEffects.TraceDiagnostic(diagnostic, "narration request accepted [0] | NPC wearer=" + actorName)
@@ -195,7 +195,7 @@ Function RegisterPromptDecorator() Global
         If diagnostic
             Debug.Notification("Skyrim.Net Prompt: registration skipped - SkyrimNet not detected")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] Milkmaid prompt decorator skipped; SkyrimNet not detected")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid prompt decorator skipped; SkyrimNet not detected")
         Return
     EndIf
     Int result = SkyrimNetApi.RegisterDecorator("mme_milkmaid_prompt_debug", "MMEAlertsSkyrimNet", "MilkmaidPromptDebug")
@@ -206,9 +206,9 @@ Function RegisterPromptDecorator() Global
             Debug.Notification("Skyrim.Net Prompt: registration returned [" + result + "] - it may already be registered")
         EndIf
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Milkmaid prompt decorator registration result " + result)
+    MMELog.Status("[MMEAlert SkyrimNet] Milkmaid prompt decorator registration result " + result)
     Int breastfeedingResult = SkyrimNetApi.RegisterDecorator("mme_breastfeeding_role", "MMEAlertsSkyrimNet", "BreastfeedingPromptRole")
-    Debug.Trace("[MMEAlert SkyrimNet] Breastfeeding prompt decorator registration result " + breastfeedingResult)
+    MMELog.Status("[MMEAlert SkyrimNet] Breastfeeding prompt decorator registration result " + breastfeedingResult)
 EndFunction
 
 Function SetBreastfeedingPromptState(Actor participant, String role, Int threadID) Global
@@ -217,7 +217,7 @@ Function SetBreastfeedingPromptState(Actor participant, String role, Int threadI
     EndIf
     StorageUtil.SetStringValue(participant, "MME.Extensions.SexLabBreastfeeding.Role", role)
     StorageUtil.SetIntValue(participant, "MME.Extensions.SexLabBreastfeeding.Thread", threadID)
-    Debug.Trace("[MMEAlert SkyrimNet BF Prompt] state SET | actor=" + ResolveActorName(participant, "unnamed actor") + " | role=" + role + " | thread=" + threadID)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet BF Prompt] state SET | actor=" + ResolveActorName(participant, "unnamed actor") + " | role=" + role + " | thread=" + threadID)
 EndFunction
 
 Function ClearBreastfeedingPromptState(Actor participant, Int expectedThreadID = -1) Global
@@ -230,7 +230,7 @@ Function ClearBreastfeedingPromptState(Actor participant, Int expectedThreadID =
     EndIf
     StorageUtil.UnsetStringValue(participant, "MME.Extensions.SexLabBreastfeeding.Role")
     StorageUtil.UnsetIntValue(participant, "MME.Extensions.SexLabBreastfeeding.Thread")
-    Debug.Trace("[MMEAlert SkyrimNet BF Prompt] state CLEARED | actor=" + ResolveActorName(participant, "unnamed actor") + " | thread=" + storedThreadID)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet BF Prompt] state CLEARED | actor=" + ResolveActorName(participant, "unnamed actor") + " | thread=" + storedThreadID)
 EndFunction
 
 String Function BreastfeedingPromptRole(Actor participant) Global
@@ -251,7 +251,7 @@ String Function BreastfeedingPromptRole(Actor participant) Global
         ClearBreastfeedingPromptState(participant, threadID)
         Return ""
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet BF Prompt] prompt rendered | actor=" + ResolveActorName(participant, "unnamed actor") + " | role=" + role + " | thread=" + threadID)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet BF Prompt] prompt rendered | actor=" + ResolveActorName(participant, "unnamed actor") + " | role=" + role + " | thread=" + threadID)
     Return role
 EndFunction
 
@@ -287,7 +287,7 @@ String Function MilkmaidPromptDebug(Actor milkMaid) Global
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 1) == 1
         Debug.Notification("Skyrim.Net Prompt: Milkmaid lore rendered for " + actorName + " | MME level " + level)
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Milkmaid lore rendered for " + actorName + " | MME level " + level)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid lore rendered for " + actorName + " | MME level " + level)
     Return "true"
 EndFunction
 
@@ -386,7 +386,7 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
     Else
         MMEArmorScript.ReportArmor(diagnostic, "equip narration failed | actor=" + actorName + " | role=" + role + " | type=" + narrationType + " | result=" + result)
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Armor equip narration result " + result + " | " + role + " | " + narrationType + " | cooldown " + cooldown + " | " + content)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Armor equip narration result " + result + " | " + role + " | " + narrationType + " | cooldown " + cooldown + " | " + content)
     Return result
 EndFunction
 
@@ -459,7 +459,7 @@ Int Function NarrateArmorStrip(Actor wearer, Armor strippedArmor, String sourceL
     Else
         ReportArmorStripNarration(diagnostic, "Armor Strip Narration: REJECTED [" + result + "]")
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Armor strip DirectNarration result " + result + " | " + content)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Armor strip DirectNarration result " + result + " | " + content)
     Return result
 EndFunction
 
@@ -468,7 +468,7 @@ Function ReportArmorStripNarration(Bool diagnostic, String reportText) Global
     If !diagnostic
         Return
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet Armor Strip] " + reportText)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet Armor Strip] " + reportText)
     Debug.Notification(reportText)
 EndFunction
 
@@ -524,7 +524,7 @@ Function SendCapacityMilestone(Actor milkMaid, Int crossing) Global
             Debug.Notification("Skyrim.Net Milestone: " + tag + " rejected [" + result + "]")
         EndIf
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Capacity milestone " + eventType + " result " + result + " | " + actorName + " | " + content)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Capacity milestone " + eventType + " result " + result + " | " + actorName + " | " + content)
 EndFunction
 
 ; Makes at most one token-using narration request for a completed scan's full crossings.
@@ -590,7 +590,7 @@ Function NarrateMilkFull(Actor milkMaid) Global
             Debug.Notification("Milk Full Narration: rejected [" + result + "]")
         EndIf
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Milk Full DirectNarration result " + result + " | cooldown " + cooldown + " | " + content)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Milk Full DirectNarration result " + result + " | cooldown " + cooldown + " | " + content)
 EndFunction
 
 ; Makes at most one token-using narration request for a completed scan's half-full crossings.
@@ -649,7 +649,7 @@ Function NarrateMilkHalfFull(Actor milkMaid) Global
     ElseIf diagnostic
         Debug.Notification("Half-Full Narration: rejected [" + result + "]")
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Half-Full DirectNarration result " + result + " | cooldown " + cooldown + " | " + content)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Half-Full DirectNarration result " + result + " | cooldown " + cooldown + " | " + content)
 EndFunction
 
 ; Requests one actor-specific narration after a verified NPC Milkmaid drink.
@@ -717,7 +717,7 @@ Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False) Global
     ElseIf diagnostic
         Debug.Notification("NPC Drink Narration: rejected [" + result + "]")
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] NPC drink DirectNarration result " + result + " | " + actorName + " | " + content)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] NPC drink DirectNarration result " + result + " | " + actorName + " | " + content)
 EndFunction
 
 ; Requests an opt-in narration after a confirmed player milk drink.
@@ -790,7 +790,7 @@ Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem) Global
     ElseIf diagnostic
         Debug.Notification("Player Drink Narration: rejected [" + result + "]")
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Player drink DirectNarration result " + result + " | " + content)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Player drink DirectNarration result " + result + " | " + content)
 EndFunction
 
 ; Requests one narration after the controller confirms a new Milk Maid transition.
@@ -848,7 +848,7 @@ Function NarrateMilkmaidCreated(Actor milkMaid) Global
     ElseIf diagnostic
         Debug.Notification("New Milk Maid Narration: rejected [" + result + "]")
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] New Milk Maid DirectNarration result " + result + " | " + content)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] New Milk Maid DirectNarration result " + result + " | " + content)
 EndFunction
 
 ; Builds one line for the existing nearby scan. This never publishes or calls
@@ -916,7 +916,7 @@ Function SendNearbyArmorStatuses(Actor playerActor, String statuses, Int armorCo
     ; Never split this into per-NPC events and never call DirectNarration here.
     Int result = SkyrimNetApi.RegisterShortLivedEvent("nearby_milk_armor_status_player", "nearby_milk_armor_status", statuses, "{}", 45000, playerActor, None)
     MMEArmorScript.ReportArmor(diagnostic, "nearby tracker publish result=" + result + " | entries=" + armorCount + " | attached=Player | TTL=45s")
-    Debug.Trace("[MMEAlert SkyrimNet] Nearby armor status result " + result + " | entries " + armorCount + " | " + statuses)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Nearby armor status result " + result + " | entries " + armorCount + " | " + statuses)
 EndFunction
 
 ; Requests one AI-generated reaction to the exact rendered situation selected
@@ -969,7 +969,7 @@ Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass, S
     String content = "Immediate situation: " + renderedThought + " Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on " + actorName + " and the milk, breast, fullness, or armor details actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
     If diagnostic
         Debug.Notification("Thoughts narration: targeted DirectNarration for " + actorName)
-        Debug.Trace("[MMEThoughts] narration target=" + actorName + " | fullness=" + fullnessState + " | armor=" + armorType + " | tone=humorous/suggestive/playful | grounding=" + renderedThought)
+        MMELog.Diagnostic("[MMEThoughts] narration target=" + actorName + " | fullness=" + fullnessState + " | armor=" + armorType + " | tone=humorous/suggestive/playful | grounding=" + renderedThought)
     EndIf
     Int result = SkyrimNetApi.DirectNarration(content, None, milkMaid)
     If result == 0
@@ -981,7 +981,7 @@ Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass, S
     ElseIf diagnostic
         Debug.Notification("Thoughts narration: rejected [" + result + "]")
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Milk Maid Thought DirectNarration result " + result + " | target=" + actorName + " | " + content)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Milk Maid Thought DirectNarration result " + result + " | target=" + actorName + " | " + content)
 EndFunction
 
 ; Publishes one replaceable five-minute summary from the existing capacity scan.
@@ -1000,14 +1000,14 @@ Function SendNearbyMilkStatuses(Actor playerActor, String statuses, Int scannedC
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: milk statuses failed - SkyrimNet not detected")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] SkyrimNet.esp is not enabled; milk statuses skipped")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet.esp is not enabled; milk statuses skipped")
         Return
     EndIf
     If JsonUtil.GetIntValue(settingsFile, "enabled", 1) != 1
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: milk statuses failed - bridge disabled in JSON")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] Milk statuses skipped; JSON bridge disabled")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] Milk statuses skipped; JSON bridge disabled")
         Return
     EndIf
     If playerActor == None
@@ -1020,25 +1020,25 @@ Function SendNearbyMilkStatuses(Actor playerActor, String statuses, Int scannedC
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: milk statuses skipped - no nearby Milkmaids")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] Milk statuses skipped; no nearby Milkmaids")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] Milk statuses skipped; no nearby Milkmaids")
         Return
     EndIf
 
     String content = "**Current milk levels:** " + statuses
     Float interval = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "skyrimNetStatusInterval", 15.0)
     Int ttlMs = (interval * 1000.0) as Int
-    Debug.Trace("[MMEAlert SkyrimNet] Calling milk_statuses_player | interval " + interval + " | TTL " + ttlMs + " | " + content)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Calling milk_statuses_player | interval " + interval + " | TTL " + ttlMs + " | " + content)
     Int result = SkyrimNetApi.RegisterShortLivedEvent("milk_statuses_player", "milk_statuses", content, "{}", ttlMs, playerActor, None)
     If result != 0
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: milk statuses rejected [" + result + "]")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] SkyrimNet rejected milk statuses (code " + result + ")")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet rejected milk statuses (code " + result + ")")
     Else
         If diagnostic
             Debug.Notification("Skyrim.Net Status: accepted | " + milkmaidCount + " Milkmaids | " + interval + "s")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] Sent timed milk statuses event: " + content)
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] Sent timed milk statuses event: " + content)
     EndIf
 EndFunction
 
@@ -1061,21 +1061,21 @@ Function SendMilkmaidCreated(Actor milkMaid) Global
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: milkmaid_created failed - SkyrimNet not detected")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] SkyrimNet.esp is not enabled; Milkmaid creation event skipped")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet.esp is not enabled; Milkmaid creation event skipped")
         Return
     EndIf
     If milkMaid == None
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: milkmaid_created failed - actor missing")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] Milkmaid creation event skipped; actor was None")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid creation event skipped; actor was None")
         Return
     EndIf
     If JsonUtil.GetIntValue(settingsFile, "enabled", 1) != 1
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: milkmaid_created failed - bridge disabled in JSON")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] Milkmaid creation event skipped; JSON bridge disabled")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid creation event skipped; JSON bridge disabled")
         Return
     EndIf
 
@@ -1089,7 +1089,7 @@ Function SendMilkmaidCreated(Actor milkMaid) Global
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: milkmaid_created failed - message empty")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] Milkmaid creation event skipped; message was empty")
+        MMELog.Alarm("[MMEAlert SkyrimNet] Milkmaid creation event skipped; message was empty")
         Return
     EndIf
     String content = RenderMessage(template, actorName)
@@ -1106,18 +1106,18 @@ Function SendMilkmaidCreated(Actor milkMaid) Global
     If diagnostic
         Debug.Notification("Skyrim.Net Diagnostic event data: " + eventData)
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Calling persistent milkmaid_created | actor " + actorName + " | UUID " + actorUuid + " | " + eventData)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Calling persistent milkmaid_created | actor " + actorName + " | UUID " + actorUuid + " | " + eventData)
     Int result = SkyrimNetApi.RegisterEvent("milkmaid_created", eventData, milkMaid, None)
     If result != 0
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: persistent event rejected [" + result + "]")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] SkyrimNet rejected milkmaid_created for " + actorName + " (code " + result + ")")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet rejected milkmaid_created for " + actorName + " (code " + result + ")")
     Else
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: persistent event accepted [0]")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] Sent persistent milkmaid_created event: " + content)
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] Sent persistent milkmaid_created event: " + content)
     EndIf
 EndFunction
 
@@ -1164,7 +1164,7 @@ Function EnsureMilkmaidCreatedSchema(Bool diagnostic) Global
             Debug.Notification("Skyrim.Net Diagnostic: milkmaid schema rejected [" + result + "]")
         EndIf
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] milkmaid_created schema result " + result)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] milkmaid_created schema result " + result)
 EndFunction
 
 ; Publishes the player's latest drink into scene context for ninety seconds.
@@ -1183,7 +1183,7 @@ Function SendMilkDrink(Actor drinker, Form drinkItem) Global
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: SkyrimNet not detected")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] SkyrimNet.esp is not enabled; drink event skipped")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet.esp is not enabled; drink event skipped")
         Return
     EndIf
     If drinker == None || drinkItem == None
@@ -1231,12 +1231,12 @@ Function SendMilkDrink(Actor drinker, Form drinkItem) Global
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: short-lived event rejected [" + result + "]")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] SkyrimNet rejected milk drink event for " + actorName + " (code " + result + ")")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet rejected milk drink event for " + actorName + " (code " + result + ")")
     Else
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: short-lived event accepted [0]")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] Sent 90-second milk drink event: " + content)
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] Sent 90-second milk drink event: " + content)
     EndIf
 EndFunction
 
@@ -1263,7 +1263,7 @@ Function SendMilkingEvent(Actor milkMaid, String messageKey) Global
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " failed - SkyrimNet not detected")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] SkyrimNet.esp is not enabled; milking event skipped")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet.esp is not enabled; milking event skipped")
         Return
     EndIf
     String settingsFile = "/MMEAlerts/SkyrimNet"
@@ -1271,14 +1271,14 @@ Function SendMilkingEvent(Actor milkMaid, String messageKey) Global
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " failed - actor missing")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] " + eventType + " skipped; actor was None")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] " + eventType + " skipped; actor was None")
         Return
     EndIf
     If JsonUtil.GetIntValue(settingsFile, "enabled", 1) != 1
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " failed - bridge disabled in JSON")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] " + eventType + " skipped; JSON bridge disabled")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] " + eventType + " skipped; JSON bridge disabled")
         Return
     EndIf
 
@@ -1296,7 +1296,7 @@ Function SendMilkingEvent(Actor milkMaid, String messageKey) Global
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " failed - message empty")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] Empty message for " + messageKey + "; event skipped")
+        MMELog.Alarm("[MMEAlert SkyrimNet] Empty message for " + messageKey + "; event skipped")
         Return
     EndIf
 
@@ -1311,18 +1311,18 @@ Function SendMilkingEvent(Actor milkMaid, String messageKey) Global
         Debug.Notification("Skyrim.Net Diagnostic payload: " + content)
         Debug.Notification("Skyrim.Net Diagnostic: calling short-lived API")
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Calling " + eventType + " | actor " + actorName + " | UUID " + actorUuid + " | TTL " + ttlMs + " | " + content)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Calling " + eventType + " | actor " + actorName + " | UUID " + actorUuid + " | TTL " + ttlMs + " | " + content)
     Int result = SkyrimNetApi.RegisterShortLivedEvent(eventId, eventType, content, "{}", ttlMs, milkMaid, None)
     If result != 0
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " rejected [" + result + "]")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] SkyrimNet rejected " + messageKey + " for " + actorName + " (code " + result + ")")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet rejected " + messageKey + " for " + actorName + " (code " + result + ")")
     Else
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " accepted [0]")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet] Sent 60-second " + eventType + " event: " + content)
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] Sent 60-second " + eventType + " event: " + content)
     EndIf
 EndFunction
 

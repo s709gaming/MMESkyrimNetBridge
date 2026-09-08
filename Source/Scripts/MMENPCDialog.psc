@@ -412,7 +412,7 @@ String Function GetActorName(Actor target) Global
 EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
-    Debug.Trace("[MME Extensions Dialogue] " + reportText)
+    MMELog.Diagnostic("[MME Extensions Dialogue] " + reportText)
     If showNotification
         Debug.Notification("Dialogue Debug: " + reportText)
     EndIf

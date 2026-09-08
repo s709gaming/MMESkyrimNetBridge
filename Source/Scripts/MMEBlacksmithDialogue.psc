@@ -77,7 +77,7 @@ Function CompleteVendorService(ObjectReference akSpeakerRef, String route, Bool 
     If service != None
         service.HandleVendorServiceResult(akSpeakerRef as Actor, route, succeeded)
     ElseIf JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePapyrusTrace", 0) == 1 && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVendorAnimationTrace", 0) == 1
-        Debug.Trace("[MME Extensions Vendor Animation Bus] STOP: persistent MMEDebug service unavailable | route=" + route)
+        MMELog.Alarm("[MME Extensions Vendor Animation Bus] STOP: persistent MMEDebug service unavailable | route=" + route)
     EndIf
 EndFunction
 
@@ -163,7 +163,7 @@ Bool Function TryAddMilkArmor(Actor blacksmith)
         Return False
     EndIf
     Debug.Notification(armorName + " Added to Milking Equipment")
-    Debug.Trace("[MME Extensions Blacksmith] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
+    MMELog.Diagnostic("[MME Extensions Blacksmith] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
     Return True
 EndFunction
 
@@ -216,7 +216,7 @@ Bool Function TryRemoveMilkArmor(Actor blacksmith)
         Return False
     EndIf
     Debug.Notification(armorName + " Removed from Milking Equipment")
-    Debug.Trace("[MME Extensions Blacksmith] REMOVE complete | armor=" + armorName + " | index=" + registeredIndex)
+    MMELog.Diagnostic("[MME Extensions Blacksmith] REMOVE complete | armor=" + armorName + " | index=" + registeredIndex)
     Return True
 EndFunction
 
@@ -261,7 +261,7 @@ Function SetDialogueState(Int value)
     If MMEExt_BlacksmithArmorState != None
         MMEExt_BlacksmithArmorState.SetValue(value as Float)
     Else
-        Debug.Trace("[MME Extensions Blacksmith] ERROR: dialogue-state Global is unbound", 2)
+        MMELog.Alarm("[MME Extensions Blacksmith] ERROR: dialogue-state Global is unbound", 2)
     EndIf
 EndFunction
 
@@ -269,5 +269,5 @@ Function Reject(String reason, Bool notifyPlayer = True)
     If notifyPlayer
         Debug.Notification("Armor state changed; no changes made")
     EndIf
-    Debug.Trace("[MME Extensions Blacksmith] REJECTED: " + reason, 1)
+    MMELog.Diagnostic("[MME Extensions Blacksmith] REJECTED: " + reason, 1)
 EndFunction

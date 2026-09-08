@@ -133,7 +133,7 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
     Bool diagnostic = GetDiagnostic()
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None
-        Debug.Trace("[MMEAlert Armor Stripping] MME controller unavailable; cannot evaluate stripping")
+        MMELog.Alarm("[MMEAlert Armor Stripping] MME controller unavailable; cannot evaluate stripping")
         Return False
     EndIf
     If !IsValidMilkMaid(target, milkController)
@@ -154,7 +154,7 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
         ; reason is still resolved so diagnostics can prove what was ignored.
         String bypassedProtection = GetMMEArmorProtectionReason(milkController, slotArmor, sourceLabel, target)
         If bypassedProtection != "" && diagnostic
-            Debug.Trace("[MMEAlert Armor Stripping] " + sourceLabel + " override=Strip All Armor | actor=" + GetActorName(target) + " | armor=" + GetArmorName(slotArmor) + " | formID=" + slotArmor.GetFormID() + " | MME protection ignored=" + bypassedProtection)
+            MMELog.Diagnostic("[MMEAlert Armor Stripping] " + sourceLabel + " override=Strip All Armor | actor=" + GetActorName(target) + " | armor=" + GetArmorName(slotArmor) + " | formID=" + slotArmor.GetFormID() + " | MME protection ignored=" + bypassedProtection)
         EndIf
     Else
         protectionReason = GetMMEArmorProtectionReason(milkController, slotArmor, sourceLabel, target)
@@ -162,7 +162,7 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
     If protectionReason != ""
         ReportArmorStrip(diagnostic, sourceLabel + " decision=BLOCKED | protection=" + protectionReason)
         If diagnostic
-            Debug.Trace("[MMEAlert Armor Stripping] " + sourceLabel + " actor=" + GetActorName(target) + " | armor=" + GetArmorName(slotArmor) + " | formID=" + slotArmor.GetFormID() + " | protection=" + protectionReason)
+            MMELog.Diagnostic("[MMEAlert Armor Stripping] " + sourceLabel + " actor=" + GetActorName(target) + " | armor=" + GetArmorName(slotArmor) + " | formID=" + slotArmor.GetFormID() + " | protection=" + protectionReason)
         EndIf
         Return False
     EndIf
@@ -284,7 +284,7 @@ Function ReportArmorStripReaction(Bool diagnostic, String logChannel, String rep
     If !diagnostic
         Return
     EndIf
-    Debug.Trace(logChannel + " | " + reportText)
+    MMELog.Diagnostic(logChannel + " | " + reportText)
     Debug.Notification(reportText)
 EndFunction
 
@@ -295,7 +295,7 @@ Function ReportArmorStrip(Bool showNotification, String reportText) Global
     If !showNotification
         Return
     EndIf
-    Debug.Trace("[MMEAlert Armor Stripping] " + reportText)
+    MMELog.Diagnostic("[MMEAlert Armor Stripping] " + reportText)
     Debug.Notification("Armor Stripping: " + reportText)
 EndFunction
 
@@ -496,14 +496,14 @@ Function ReportArmorLookupForensics(MilkQUEST milkController, Armor slotArmor, S
     If milkController != None
         controllerIdentity = milkController.GetName() + " | formID=" + milkController.GetFormID()
     EndIf
-    Debug.Trace("[MME Extensions Armor Lookup]")
-    Debug.Trace("[MME Extensions Armor Lookup] source=" + source)
-    Debug.Trace("[MME Extensions Armor Lookup] actor=" + actorLabel)
-    Debug.Trace("[MME Extensions Armor Lookup] armor=" + armorName)
+    MMELog.Diagnostic("[MME Extensions Armor Lookup]")
+    MMELog.Diagnostic("[MME Extensions Armor Lookup] source=" + source)
+    MMELog.Diagnostic("[MME Extensions Armor Lookup] actor=" + actorLabel)
+    MMELog.Diagnostic("[MME Extensions Armor Lookup] armor=" + armorName)
     If slotArmor != None
-        Debug.Trace("[MME Extensions Armor Lookup] armorFormID=" + slotArmor.GetFormID())
+        MMELog.Diagnostic("[MME Extensions Armor Lookup] armorFormID=" + slotArmor.GetFormID())
     EndIf
-    Debug.Trace("[MME Extensions Armor Lookup] milkController=" + controllerIdentity)
+    MMELog.Diagnostic("[MME Extensions Armor Lookup] milkController=" + controllerIdentity)
     DumpArmorLookupArray("MilkingEquipment", armorName, milkingIndex, milkController)
     DumpArmorLookupArray("BasicLivingArmor", armorName, basicIndex, milkController)
     DumpArmorLookupArray("ParasiteLivingArmor", armorName, parasiteIndex, milkController)
@@ -511,14 +511,14 @@ Function ReportArmorLookupForensics(MilkQUEST milkController, Armor slotArmor, S
     If decisionLabel == ""
         decisionLabel = "<none>"
     EndIf
-    Debug.Trace("[MME Extensions Armor Lookup] decision=" + decisionLabel)
+    MMELog.Diagnostic("[MME Extensions Armor Lookup] decision=" + decisionLabel)
 EndFunction
 
 ; Logs one MME string array plus the exact Find() result used for the decision.
 ; Dumps every entry so stale/duplicate array data is visible in one block.
 Function DumpArmorLookupArray(String arrayName, String armorName, Int foundIndex, MilkQUEST milkController) Global
     If milkController == None
-        Debug.Trace("[MME Extensions Armor Lookup] " + arrayName + " = <controller missing>")
+        MMELog.Diagnostic("[MME Extensions Armor Lookup] " + arrayName + " = <controller missing>")
         Return
     EndIf
     Int entryCount = milkController.MilkingEquipment.Length
@@ -527,7 +527,7 @@ Function DumpArmorLookupArray(String arrayName, String armorName, Int foundIndex
     ElseIf arrayName == "ParasiteLivingArmor"
         entryCount = milkController.ParasiteLivingArmor.Length
     EndIf
-    Debug.Trace("[MME Extensions Armor Lookup] " + arrayName + ".length=" + entryCount)
+    MMELog.Diagnostic("[MME Extensions Armor Lookup] " + arrayName + ".length=" + entryCount)
     Int i = 0
     While i < entryCount
         String stored = milkController.MilkingEquipment[i]
@@ -539,10 +539,10 @@ Function DumpArmorLookupArray(String arrayName, String armorName, Int foundIndex
         If stored == ""
             stored = "<empty>"
         EndIf
-        Debug.Trace("[MME Extensions Armor Lookup] " + arrayName + "[" + i + "]=" + stored)
+        MMELog.Diagnostic("[MME Extensions Armor Lookup] " + arrayName + "[" + i + "]=" + stored)
         i += 1
     EndWhile
-    Debug.Trace("[MME Extensions Armor Lookup] " + arrayName + ".Find(\"" + armorName + "\")=" + foundIndex)
+    MMELog.Diagnostic("[MME Extensions Armor Lookup] " + arrayName + ".Find(\"" + armorName + "\")=" + foundIndex)
 EndFunction
 
 ; These three helpers intentionally take MilkQUEST, not String[]. Runtime logs
@@ -830,7 +830,7 @@ Bool Function GetDiagnostic() Global
 EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
-    Debug.Trace("[MMEAlert Armor Stripping] " + reportText)
+    MMELog.Diagnostic("[MMEAlert Armor Stripping] " + reportText)
 EndFunction
 
 ; MME's own configured armor-name arrays are the source of truth.
@@ -1139,13 +1139,13 @@ Function ReportArmor(Bool diagnostic, String reportText) Global
     If !diagnostic
         Return
     EndIf
-    Debug.Trace("[MME Extensions Armor] " + reportText)
+    MMELog.Diagnostic("[MME Extensions Armor] " + reportText)
 EndFunction
 
 Function NotifyArmorDebug(Bool diagnostic, String reportText) Global
     If !diagnostic
         Return
     EndIf
-    Debug.Trace("[MME Extensions Armor] " + reportText)
+    MMELog.Diagnostic("[MME Extensions Armor] " + reportText)
     Debug.Notification("Armor Debug: " + reportText)
 EndFunction

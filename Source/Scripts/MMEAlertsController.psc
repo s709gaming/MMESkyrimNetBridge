@@ -125,7 +125,7 @@ Bool Function RefreshMMESexLabAnimationGate(String reason = "event")
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None || milkController.MilkQC == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
         RefreshNewMilkMaidDialogueAvailability(False)
-        Debug.Trace("[MME Extensions SexLab BF] gate refresh skipped: MME/SexLab interface unavailable | " + reason)
+        MMELog.Diagnostic("[MME Extensions SexLab BF] gate refresh skipped: MME/SexLab interface unavailable | " + reason)
         Return False
     EndIf
     Bool straightFound = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar") != None
@@ -136,14 +136,14 @@ Bool Function RefreshMMESexLabAnimationGate(String reason = "event")
     Bool oldGate = milkController.MilkQC.MME_BreasfeedingAnimationsCheck
     milkController.MilkQC.MME_BreasfeedingAnimationsCheck = liveGate
     RefreshNewMilkMaidDialogueAvailability(liveGate)
-    Debug.Trace("[MME Extensions SexLab BF] refreshed MME gate " + DiagnosticBool(oldGate) + " -> " + DiagnosticBool(liveGate) + " | zjBreastFeedingVar(Straight)=" + DiagnosticBool(straightFound) + " zjBreastFeeding(Lesbian)=" + DiagnosticBool(lesbianFound) + " | " + reason)
+    MMELog.Diagnostic("[MME Extensions SexLab BF] refreshed MME gate " + DiagnosticBool(oldGate) + " -> " + DiagnosticBool(liveGate) + " | zjBreastFeedingVar(Straight)=" + DiagnosticBool(straightFound) + " zjBreastFeeding(Lesbian)=" + DiagnosticBool(lesbianFound) + " | " + reason)
     Return liveGate
 EndFunction
 
 ; Skyrim.Net resolves quest action scripts from the existing quest instance.
 ; Keep this entry point on the controller so upgrades work in established saves.
 Function StartBreastfeedingMilkShare(Actor milkSource, Actor target)
-    Debug.Trace("[MMEAlert SkyrimNet BF] dedicated action selected | semantic intent=speaker offers breast to target | speaker/source=" + milkSource + " | target/drinker=" + target)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet BF] dedicated action selected | semantic intent=speaker offers breast to target | speaker/source=" + milkSource + " | target/drinker=" + target)
     MMESkyrimNetVoiceControls.StartBreastfeedingMilkShare(milkSource, target, "speaker/source=" + MMEOStimBreastfeeding.GetActorName(milkSource) + " | target/drinker=" + MMEOStimBreastfeeding.GetActorName(target))
 EndFunction
 
@@ -151,7 +151,7 @@ EndFunction
 ; the selected target is the source. Normalize it before entering the one shared
 ; OStim/SexLab backend so animation and gameplay logic are never duplicated.
 Function StartBreastfeedingDrinkFromTarget(Actor drinker, Actor milkSource)
-    Debug.Trace("[MMEAlert SkyrimNet BF] dedicated action selected | semantic intent=speaker drinks from target | speaker/drinker=" + drinker + " | target/source=" + milkSource)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet BF] dedicated action selected | semantic intent=speaker drinks from target | speaker/drinker=" + drinker + " | target/source=" + milkSource)
     MMESkyrimNetVoiceControls.StartBreastfeedingMilkShare(milkSource, drinker, "speaker/drinker=" + MMEOStimBreastfeeding.GetActorName(drinker) + " | target/source=" + MMEOStimBreastfeeding.GetActorName(milkSource))
 EndFunction
 
@@ -362,7 +362,7 @@ Function RefreshOStimDialogueAvailability()
             dialogueGate.SetValue(0.0)
         EndIf
     Else
-        Debug.Trace("[MME Extensions Dialogue] OStim availability GlobalVariable is missing")
+        MMELog.Alarm("[MME Extensions Dialogue] OStim availability GlobalVariable is missing")
     EndIf
     RefreshNewMilkMaidDialogueAvailability(IsMMESexLabBreastfeedingAvailable())
 EndFunction
@@ -392,7 +392,7 @@ Function RefreshNewMilkMaidDialogueAvailability(Bool sexLabAvailable)
             dialogueGate.SetValue(0.0)
         EndIf
     Else
-        Debug.Trace("[MME Extensions Dialogue] SexLab New Milk Maid availability GlobalVariable is missing")
+        MMELog.Alarm("[MME Extensions Dialogue] SexLab New Milk Maid availability GlobalVariable is missing")
     EndIf
 EndFunction
 
@@ -532,7 +532,7 @@ Event OnMMEEffectRemoved(String eventName, String pluginName, Float localEffectF
     If candidate != None && IsMilkmaidCreationEffect(localEffectForm as Int)
         StorageUtil.UnsetIntValue(candidate, PendingMilkmaidKey)
         StorageUtil.UnsetIntValue(candidate, EffectOwnedMilkmaidKey)
-        Debug.Trace("[MME Extensions] MME Milkmaid conversion effect ended for " + GetActorName(candidate))
+        MMELog.Diagnostic("[MME Extensions] MME Milkmaid conversion effect ended for " + GetActorName(candidate))
     EndIf
 EndEvent
 
@@ -629,7 +629,7 @@ Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form send
     RefreshCapacity(reason)
     If JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0) == 1
         Debug.Notification("MME Extensions: detected " + reason)
-        Debug.Trace("[MME Extensions Lifecycle] detected " + reason)
+        MMELog.Diagnostic("[MME Extensions Lifecycle] detected " + reason)
         ShowDebugCapacitySnapshot()
     EndIf
 EndEvent
@@ -677,10 +677,10 @@ EndEvent
 Function SetDhlpSuspended(Bool suspended, Form sender)
     If suspended
         StorageUtil.SetIntValue(None, DhlpSuspendedKey, 1)
-        Debug.Trace("[MME Extensions DHLP] suspended by " + DhlpSenderLabel(sender))
+        MMELog.Diagnostic("[MME Extensions DHLP] suspended by " + DhlpSenderLabel(sender))
     Else
         StorageUtil.UnsetIntValue(None, DhlpSuspendedKey)
-        Debug.Trace("[MME Extensions DHLP] resumed by " + DhlpSenderLabel(sender))
+        MMELog.Diagnostic("[MME Extensions DHLP] resumed by " + DhlpSenderLabel(sender))
     EndIf
 EndFunction
 
@@ -719,7 +719,7 @@ Event OnMMEMilkingStart(Form actorForm, Int animationSpeed, Int milkingType)
     StorageUtil.SetIntValue(milkMaid, MilkingStateKey, 1)
     If JsonUtil.GetIntValue(SettingsFile, "enableMilkingEventDebug", 1) == 1
         Debug.Notification("MME Alerts - MILKING START: " + GetActorName(milkMaid))
-        Debug.Trace("[MMEAlert] MILKING START: " + GetActorName(milkMaid))
+        MMELog.Diagnostic("[MMEAlert] MILKING START: " + GetActorName(milkMaid))
     EndIf
     PlayMilkingReaction(milkMaid, True)
     MMEAlertsSkyrimNet.SendMilkingStart(milkMaid)
@@ -755,7 +755,7 @@ Function FinishMilking(Actor milkMaid)
     If IsNearbyMilkMaid(milkMaid)
         If JsonUtil.GetIntValue(SettingsFile, "enableMilkingEventDebug", 1) == 1
             Debug.Notification("MME Alerts - MILKING END: " + GetActorName(milkMaid))
-            Debug.Trace("[MMEAlert] MILKING END: " + GetActorName(milkMaid))
+            MMELog.Diagnostic("[MMEAlert] MILKING END: " + GetActorName(milkMaid))
         EndIf
         PlayMilkingReaction(milkMaid, False)
         MMEAlertsSkyrimNet.SendMilkingEnd(milkMaid)
@@ -775,14 +775,14 @@ Function PlayMilkingReaction(Actor sourceActor, Bool starting)
     localFormID = MMEReactionSounds.GetMarkerFormID(sourceActor, localFormID)
     Sound reaction = Game.GetFormFromFile(localFormID, "MMEAlert.esp") as Sound
     If reaction == None
-        Debug.Trace("[MMEAlert] milking sound marker did not resolve: " + localFormID)
+        MMELog.Alarm("[MMEAlert] milking sound marker did not resolve: " + localFormID)
         Return
     EndIf
     Int instance = reaction.Play(sourceActor)
     If instance > 0
         Sound.SetInstanceVolume(instance, JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0) / 100.0)
     Else
-        Debug.Trace("[MMEAlert] milking Sound.Play returned " + instance)
+        MMELog.Diagnostic("[MMEAlert] milking Sound.Play returned " + instance)
     EndIf
 EndFunction
 
@@ -1160,7 +1160,7 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
         MMEThoughts.RunFastDebug(nearbyActors)
     EndIf
     If nearbyActors.Length == 0
-        Debug.Trace("[MME Extensions Native Scan] scanner returned no actors; capacity scan skipped")
+        MMELog.Diagnostic("[MME Extensions Native Scan] scanner returned no actors; capacity scan skipped")
         If JsonUtil.GetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0) == 1
             Debug.Notification("Native Scan failed: no actors returned")
         EndIf
@@ -1283,13 +1283,13 @@ Function PlayCapacityReaction(Actor sourceActor, Int crossing)
     localFormID = MMEReactionSounds.GetMarkerFormID(sourceActor, localFormID)
     Sound reaction = Game.GetFormFromFile(localFormID, "MMEAlert.esp") as Sound
     If reaction == None
-        Debug.Trace("[MMEAlert] capacity sound marker did not resolve: " + localFormID)
+        MMELog.Alarm("[MMEAlert] capacity sound marker did not resolve: " + localFormID)
         Return
     EndIf
     Int instance = reaction.Play(sourceActor)
     If instance > 0
         Sound.SetInstanceVolume(instance, JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0) / 100.0)
     Else
-        Debug.Trace("[MMEAlert] capacity Sound.Play returned " + instance)
+        MMELog.Diagnostic("[MMEAlert] capacity Sound.Play returned " + instance)
     EndIf
 EndFunction

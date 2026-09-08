@@ -324,7 +324,7 @@ Function TraceSexLabStop(Int stopNumber, String traceText, Bool failed = False) 
     If failed
         line = "NMM SexLab " + stopLabel + " FAIL: " + traceText
     EndIf
-    Debug.Trace("[MME Extensions New Milkmaid SexLab] " + line)
+    MMELog.Diagnostic("[MME Extensions New Milkmaid SexLab] " + line)
     ; Rapid one-line notifications overwrite one another. Report grouped route
     ; boundaries in game while preserving every stop in the persistent report
     ; and Papyrus trace.
@@ -335,7 +335,7 @@ EndFunction
 
 Function TraceSexLabMessage(String traceText) Global
     If IsSexLabTraceEnabled()
-        Debug.Trace("[MME Extensions New Milkmaid SexLab] " + traceText)
+        MMELog.Diagnostic("[MME Extensions New Milkmaid SexLab] " + traceText)
         Debug.Notification("NMM SexLab: " + traceText)
     EndIf
 EndFunction
@@ -348,7 +348,7 @@ Function TraceStep(String traceText, Bool failed = False) Global
     If failed
         line = "New Milkmaid FAIL: " + traceText
     EndIf
-    Debug.Trace("[MME Extensions New Milkmaid] " + line)
+    MMELog.Diagnostic("[MME Extensions New Milkmaid] " + line)
     Debug.Notification(line)
 EndFunction
 
@@ -384,7 +384,7 @@ String Function YesNo(Bool value) Global
 EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
-    Debug.Trace("[MME Extensions New Milk Maid] " + reportText)
+    MMELog.Diagnostic("[MME Extensions New Milk Maid] " + reportText)
     If showNotification
         Debug.Notification("New Milk Maid: " + reportText)
     EndIf

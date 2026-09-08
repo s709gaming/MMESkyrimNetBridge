@@ -165,7 +165,7 @@ Bool Function ValidatePairForCommit(Actor[] actors, Bool diagnostic = False, Boo
 EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
-    Debug.Trace("[MME Extensions OStim] " + reportText)
+    MMELog.Diagnostic("[MME Extensions OStim] " + reportText)
     If showNotification
         Debug.Notification("OStim Debug: " + reportText)
     EndIf

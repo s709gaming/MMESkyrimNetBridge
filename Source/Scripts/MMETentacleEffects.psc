@@ -236,7 +236,7 @@ Function Report(Bool showNotification, String reportText) Global
     If !showNotification && !IsDiagnosticEnabled()
         Return
     EndIf
-    Debug.Trace("[MME Extensions Armor Injection] " + reportText)
+    MMELog.Diagnostic("[MME Extensions Armor Injection] " + reportText)
     If showNotification
         Debug.Notification("Tentacle Effects: " + reportText)
     EndIf

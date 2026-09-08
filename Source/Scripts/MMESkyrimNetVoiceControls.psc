@@ -16,7 +16,7 @@ Function RegisterSelfMilkingAction() Global
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingActionDiagnostic", 0) == 1
         Debug.Notification("Self-Milking Action: registration returned [" + result + "]")
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Self-milking action registration result " + result)
+    MMELog.Status("[MMEAlert SkyrimNet] Self-milking action registration result " + result)
 EndFunction
 
 Bool Function SelfMilkingIsEligible(Actor candidate, String contextJson, String paramsJson) Global
@@ -88,7 +88,7 @@ Function SelfMilkingExecute(Actor candidate, String contextJson, String paramsJs
     If diagnostic
         Debug.Notification("[MME Debug] MME MilkSelf cast requested")
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Self-milking action cast MME MilkSelf on " + candidate)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Self-milking action cast MME MilkSelf on " + candidate)
 EndFunction
 
 ; Fullness-specific trigger adapter. The shared reaction executor owns actor
@@ -154,7 +154,7 @@ Function RegisterGiveMilkAction() Global
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceGiveMilkDiagnostic", 1) == 1
         Debug.Notification("Give Milk Voice: registration returned [" + result + "]")
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Give Milk action registration result " + result)
+    MMELog.Status("[MMEAlert SkyrimNet] Give Milk action registration result " + result)
 EndFunction
 
 ; SkyrimNet checks each conversational actor before exposing the action.
@@ -202,7 +202,7 @@ Function VoiceGiveMilkExecute(Actor candidate) Global
             Debug.Notification("Give Milk Voice: failed; see preceding reason")
         EndIf
     EndIf
-    Debug.Trace("[MMEAlert SkyrimNet] Give Milk action completed | success=" + success)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Give Milk action completed | success=" + success)
 EndFunction
 
 ; Skyrim.Net resolves its conversational second actor through the target parameter.
@@ -216,7 +216,7 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
     Actor drinker = target
     String milkSourceName = MMEOStimBreastfeeding.GetActorName(milkSource)
     String drinkerName = MMEOStimBreastfeeding.GetActorName(drinker)
-    Debug.Trace("[MMEAlert SkyrimNet BF] action received | semantic intent=" + semanticIntent + " | normalized milk source=" + milkSourceName + " " + milkSource + " | normalized drinker=" + drinkerName + " " + drinker)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet BF] action received | semantic intent=" + semanticIntent + " | normalized milk source=" + milkSourceName + " " + milkSource + " | normalized drinker=" + drinkerName + " " + drinker)
     If routeDiagnostic
         Debug.Notification("Skyrim.Net BF: action received")
     EndIf
@@ -224,21 +224,21 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
         Debug.Notification("SN BF intent: " + semanticIntent)
     EndIf
     If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingAction", 1) != 1
-        Debug.Trace("[MMEAlert SkyrimNet BF] rejected | MME Extensions or paired milking action disabled")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet BF] rejected | MME Extensions or paired milking action disabled")
         If routeDiagnostic
             Debug.Notification("Skyrim.Net BF: rejected - action disabled")
         EndIf
         Return
     EndIf
     If milkSource == None || drinker == None
-        Debug.Trace("[MMEAlert SkyrimNet BF] rejected | milk source or drinker did not resolve")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet BF] rejected | milk source or drinker did not resolve")
         If routeDiagnostic
             Debug.Notification("Skyrim.Net BF: rejected - actor unresolved")
         EndIf
         Return
     EndIf
     If milkSource == drinker || milkSource.IsDead() || milkSource.IsDisabled() || !milkSource.Is3DLoaded() || drinker.IsDead() || drinker.IsDisabled() || !drinker.Is3DLoaded()
-        Debug.Trace("[MMEAlert SkyrimNet BF] rejected | actors must be different, alive, enabled, and loaded")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet BF] rejected | actors must be different, alive, enabled, and loaded")
         If routeDiagnostic
             Debug.Notification("Skyrim.Net BF: rejected - actors unavailable")
         EndIf
@@ -261,7 +261,7 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
     ; OStim route owns this request completely; a failed OStim start must not
     ; silently begin a SexLab scene instead.
     If MMEOStimBreastfeeding.IsBreastfeedingEnabled()
-        Debug.Trace("[MMEAlert SkyrimNet BF] backend=OStim | calling persistent shared breastfeeding service | milk source=" + milkSourceName + " | drinker=" + drinkerName)
+        MMELog.Diagnostic("[MMEAlert SkyrimNet BF] backend=OStim | calling persistent shared breastfeeding service | milk source=" + milkSourceName + " | drinker=" + drinkerName)
         If routeDiagnostic
             Debug.Notification("Skyrim.Net BF: backend=OStim")
         EndIf
@@ -269,12 +269,12 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
         ; be used safely as an external API. Resolve the persistent quest script
         ; that now owns the same pipeline used by those dialogue fragments.
         Form ostimServiceForm = Game.GetFormFromFile(0x000800, "MMEAlert.esp")
-        Debug.Trace("[MMEAlert SkyrimNet BF] OStim service raw form=" + ostimServiceForm)
+        MMELog.Diagnostic("[MMEAlert SkyrimNet BF] OStim service raw form=" + ostimServiceForm)
         If skyrimNetOStimTrace
             Debug.Notification("SN OStim Trace: service form=" + ostimServiceForm)
         EndIf
         MMEDebug ostimService = ostimServiceForm as MMEDebug
-        Debug.Trace("[MMEAlert SkyrimNet BF] OStim service script=" + ostimService)
+        MMELog.Diagnostic("[MMEAlert SkyrimNet BF] OStim service script=" + ostimService)
         If skyrimNetOStimTrace
             Debug.Notification("SN OStim Trace: service script=" + ostimService)
         EndIf
@@ -282,7 +282,7 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
             MMEOStimBreastfeeding.Report(routeDiagnostic, "Skyrim.Net breastfeeding rejected: persistent OStim breastfeeding service could not resolve")
             Return
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet BF] calling StartBreastfeeding")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet BF] calling StartBreastfeeding")
         If skyrimNetOStimTrace
             Debug.Notification("SN OStim Trace: calling shared StartBreastfeeding")
         EndIf
@@ -297,20 +297,20 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
         If skyrimNetOStimTrace
             Debug.Notification("SN OStim Trace: start result=" + ostimStarted + " | SexLab fallback blocked")
         EndIf
-        Debug.Trace("[MMEAlert SkyrimNet BF] OStim StartBreastfeeding result=" + ostimStarted + " | milk source=" + milkSourceName + " | drinker=" + drinkerName + " | SexLab fallback=blocked")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet BF] OStim StartBreastfeeding result=" + ostimStarted + " | milk source=" + milkSourceName + " | drinker=" + drinkerName + " | SexLab fallback=blocked")
         Return
     EndIf
 
     ; Phase 3: delegate to the persistent defensive SexLab transaction owner.
-    Debug.Trace("[MMEAlert SkyrimNet BF] backend=SexLab | OStim breastfeeding integration not selected")
+    MMELog.Diagnostic("[MMEAlert SkyrimNet BF] backend=SexLab | OStim breastfeeding integration not selected")
     If routeDiagnostic
         Debug.Notification("Skyrim.Net BF: backend=SexLab")
     EndIf
     MMEDebug service = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
     If service == None
-        Debug.Trace("[MMEAlert SkyrimNet BF] SexLab rejected | persistent service unavailable")
+        MMELog.Alarm("[MMEAlert SkyrimNet BF] SexLab rejected | persistent service unavailable")
         Return
     EndIf
     Bool sexLabStarted = service.StartSexLabBreastfeeding(milkSource, drinker, "Skyrim.Net")
-    Debug.Trace("[MMEAlert SkyrimNet BF] defensive SexLab result=" + sexLabStarted + " | milk source=" + milkSourceName + " | drinker=" + drinkerName)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet BF] defensive SexLab result=" + sexLabStarted + " | milk source=" + milkSourceName + " | drinker=" + drinkerName)
 EndFunction

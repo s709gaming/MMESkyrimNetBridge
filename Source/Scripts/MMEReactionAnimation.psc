@@ -141,7 +141,7 @@ String Function GetActorName(Actor target) Global
 EndFunction
 
 Function Report(Bool showNotification, String requestLabel, String reportText) Global
-    Debug.Trace("[MME Extensions Reaction Animation] [" + requestLabel + "] " + reportText)
+    MMELog.Diagnostic("[MME Extensions Reaction Animation] [" + requestLabel + "] " + reportText)
     If showNotification
         Debug.Notification("Reaction Animation [" + requestLabel + "]: " + reportText)
     EndIf

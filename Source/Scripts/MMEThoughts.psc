@@ -144,7 +144,7 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowNarration)
         If halfPlus
             fullnessState = "halfPlus"
         EndIf
-        Debug.Trace("[MMEThoughts] actor=" + actorName + " | current=" + current + " | maximum=" + maximum + " | fullness=" + fullnessState + " | armorClass=" + armorClass + " | pool=" + poolName + " | comment=" + selectedComment)
+        MMELog.Diagnostic("[MMEThoughts] actor=" + actorName + " | current=" + current + " | maximum=" + maximum + " | fullness=" + fullnessState + " | armorClass=" + armorClass + " | pool=" + poolName + " | comment=" + selectedComment)
     EndIf
 
     Debug.Notification(selectedComment)
@@ -285,7 +285,7 @@ EndFunction
 
 Function TraceDebug(String traceText) Global
     If IsDebugEnabled()
-        Debug.Trace("[MMEThoughts] " + traceText)
+        MMELog.Diagnostic("[MMEThoughts] " + traceText)
     EndIf
 EndFunction
 

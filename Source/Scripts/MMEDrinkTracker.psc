@@ -54,26 +54,26 @@ Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
     Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1
     If drinker == None || akBaseObject == None
         If diagnostic
-            Debug.Trace("[MMEAlert Player Drink] alias event rejected | missing player or equipped form")
+            MMELog.Diagnostic("[MMEAlert Player Drink] alias event rejected | missing player or equipped form")
         EndIf
         Return
     EndIf
     Int drinkKind = GetSupportedDrinkKind(akBaseObject)
     If drinkKind == 0
         If diagnostic && (akBaseObject as Potion) != None
-            Debug.Trace("[MMEAlert Player Drink] alias potion ignored | unsupported | " + akBaseObject.GetName() + " | form=" + akBaseObject.GetFormID())
+            MMELog.Diagnostic("[MMEAlert Player Drink] alias potion ignored | unsupported | " + akBaseObject.GetName() + " | form=" + akBaseObject.GetFormID())
         EndIf
         Return
     EndIf
     If !IsEligibleDrinker(drinker)
         If diagnostic
             Debug.Notification("Milk Debug: drink detected but player is not an eligible MME Milk Maid")
-            Debug.Trace("[MMEAlert Player Drink] alias milk rejected | ineligible player | " + akBaseObject.GetName())
+            MMELog.Diagnostic("[MMEAlert Player Drink] alias milk rejected | ineligible player | " + akBaseObject.GetName())
         EndIf
         Return
     EndIf
     If diagnostic
-        Debug.Trace("[MMEAlert Player Drink] alias milk accepted | " + akBaseObject.GetName() + " | form=" + akBaseObject.GetFormID())
+        MMELog.Diagnostic("[MMEAlert Player Drink] alias milk accepted | " + akBaseObject.GetName() + " | form=" + akBaseObject.GetFormID())
     EndIf
     HandlePlayerDrink(drinker, akBaseObject, drinkKind, "PapyrusAlias", akBaseObject.GetFormID() as Float)
 EndEvent
@@ -139,7 +139,7 @@ Function HandlePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, String 
         If traceDrinkName == ""
             traceDrinkName = "<unnamed>"
         EndIf
-        Debug.Trace("[MMEAlert Player Drink] event accepted | " + eventSource + ":" + (eventFormID as Int) + " | " + traceDrinkName + " | t=" + Utility.GetCurrentRealTime())
+        MMELog.Diagnostic("[MMEAlert Player Drink] event accepted | " + eventSource + ":" + (eventFormID as Int) + " | " + traceDrinkName + " | t=" + Utility.GetCurrentRealTime())
     EndIf
     ; Snapshot established-Milkmaid state before any effects run, because MME's
     ; Lactacid conversion can add a brand-new Milk Maid during this drink. We
@@ -163,7 +163,7 @@ Function HandlePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, String 
     If milkDelta > 0.0 || MMEArmorScript.HasPendingPlayerDrinkAttempt(drinker)
         MMEArmorScript.SchedulePlayerArmorCheck(drinker)
     EndIf
-    Debug.Trace("[MMEAlert Player Drink] processed player | " + eventSource + ":" + eventFormID)
+    MMELog.Diagnostic("[MMEAlert Player Drink] processed player | " + eventSource + ":" + eventFormID)
 EndFunction
 
 ; Resets a pending player drink animation.
@@ -241,7 +241,7 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
         EndIf
         Debug.Notification("NPC Milk: applied to " + actorName + " | milk " + milkBefore + " -> " + milkAfter + " (+" + milkAdded + ") | arousal " + arousalResult)
     EndIf
-    Debug.Trace("[MMEAlert NPC Drink] processed " + actorName + " | " + pluginName + ":" + localFormID)
+    MMELog.Diagnostic("[MMEAlert NPC Drink] processed " + actorName + " | " + pluginName + ":" + localFormID)
 EndFunction
 
 ; Classifies drinks: 0 unsupported, 1 MME milk, 2 Lactacid, 3 HearthFires milk.

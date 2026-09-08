@@ -342,7 +342,7 @@ EndFunction
 
 Function VendorAnimationTrace(Int requestID, String route, String stop, String detail)
     If JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) == 1 && JsonUtil.GetIntValue(SettingsFile, "enableVendorAnimationTrace", 0) == 1
-        Debug.Trace("[MME Extensions Vendor Animation Bus #" + requestID + "] stop " + stop + " | route=" + route + " | " + detail)
+        MMELog.Diagnostic("[MME Extensions Vendor Animation Bus #" + requestID + "] stop " + stop + " | route=" + route + " | " + detail)
     EndIf
 EndFunction
 
@@ -604,7 +604,7 @@ Function EnsureNewMilkMaidSexLabListeners(Bool report = False)
     RegisterForModEvent("MMEExtensionsNewMilkMaidSexLabTimeout", "OnNewMilkMaidSexLabTimeout")
     If report
         Debug.Notification("NMM SexLab bus listeners refreshed")
-        Debug.Trace("[MME Extensions New Milkmaid SexLab] listeners refreshed: AnimationEnding + AnimationEnd + timeout")
+        MMELog.Diagnostic("[MME Extensions New Milkmaid SexLab] listeners refreshed: AnimationEnding + AnimationEnd + timeout")
     EndIf
 EndFunction
 
@@ -646,7 +646,7 @@ Function ShowNewMilkMaidSexLabBusReport()
         report = "NMM Bus FAILED | " + LastNewMilkMaidSexLabBusFailure
     EndIf
     Debug.Notification(report)
-    Debug.Trace("[MME Extensions New Milkmaid SexLab] " + report + " | thread=" + LastNewMilkMaidSexLabBusThreadID)
+    MMELog.Diagnostic("[MME Extensions New Milkmaid SexLab] " + report + " | thread=" + LastNewMilkMaidSexLabBusThreadID)
 EndFunction
 
 Function RecordBlacksmithDialogueBusStop(Int stopNumber, String busMessage, Bool failed = False, Bool blocked = False, Bool waiting = False, Bool completed = False, Bool writeTrace = False)
@@ -668,7 +668,7 @@ Function RecordBlacksmithDialogueBusStop(Int stopNumber, String busMessage, Bool
         LastBlacksmithDialogueBusState = "RUNNING"
     EndIf
     If writeTrace
-        Debug.Trace("[MME Extensions Blacksmith Bus] stop " + stopNumber + "/13 | " + LastBlacksmithDialogueBusState + " | " + busMessage)
+        MMELog.Diagnostic("[MME Extensions Blacksmith Bus] stop " + stopNumber + "/13 | " + LastBlacksmithDialogueBusState + " | " + busMessage)
     EndIf
 EndFunction
 
@@ -697,7 +697,7 @@ Function ShowBlacksmithDialogueBusReport(Bool useMessageBox = False)
     Else
         Debug.Notification(report)
     EndIf
-    Debug.Trace("[MME Extensions Blacksmith Bus] " + report)
+    MMELog.Diagnostic("[MME Extensions Blacksmith Bus] " + report)
 EndFunction
 
 Function RecordAlchemistDialogueBusStop(Int stopNumber, String busMessage, Bool failed = False, Bool blocked = False, Bool waiting = False, Bool completed = False, Bool writeTrace = False)
@@ -719,7 +719,7 @@ Function RecordAlchemistDialogueBusStop(Int stopNumber, String busMessage, Bool 
         LastAlchemistDialogueBusState = "RUNNING"
     EndIf
     If writeTrace
-        Debug.Trace("[MME Extensions Alchemist Bus] stop " + stopNumber + "/13 | " + LastAlchemistDialogueBusState + " | " + busMessage)
+        MMELog.Diagnostic("[MME Extensions Alchemist Bus] stop " + stopNumber + "/13 | " + LastAlchemistDialogueBusState + " | " + busMessage)
     EndIf
 EndFunction
 
@@ -748,7 +748,7 @@ Function ShowAlchemistDialogueBusReport(Bool useMessageBox = False)
     Else
         Debug.Notification(report)
     EndIf
-    Debug.Trace("[MME Extensions Alchemist Bus] " + report)
+    MMELog.Diagnostic("[MME Extensions Alchemist Bus] " + report)
 EndFunction
 
 Function RecordMageDialogueBusStop(Int stopNumber, String busMessage, Bool failed = False, Bool blocked = False, Bool waiting = False, Bool completed = False, Bool writeTrace = False)
@@ -770,7 +770,7 @@ Function RecordMageDialogueBusStop(Int stopNumber, String busMessage, Bool faile
         LastMageDialogueBusState = "RUNNING"
     EndIf
     If writeTrace
-        Debug.Trace("[MME Extensions Mage Bus] stop " + stopNumber + "/13 | " + LastMageDialogueBusState + " | " + busMessage)
+        MMELog.Diagnostic("[MME Extensions Mage Bus] stop " + stopNumber + "/13 | " + LastMageDialogueBusState + " | " + busMessage)
     EndIf
 EndFunction
 
@@ -799,7 +799,7 @@ Function ShowMageDialogueBusReport(Bool useMessageBox = False)
     Else
         Debug.Notification(report)
     EndIf
-    Debug.Trace("[MME Extensions Mage Bus] " + report)
+    MMELog.Diagnostic("[MME Extensions Mage Bus] " + report)
 EndFunction
 
 Function ClearSexLabIntent()
@@ -898,7 +898,7 @@ EndFunction
 
 Function BreastfeedingDrinkReport(Bool enabled, String result) Global
     If enabled
-        Debug.Trace("[MME Extensions BF Drink] " + result)
+        MMELog.Diagnostic("[MME Extensions BF Drink] " + result)
         Debug.Notification("BF Drink: " + result)
     EndIf
 EndFunction
@@ -975,7 +975,7 @@ EndFunction
 
 Function SexLabTrace(Int requestID, Bool enabled, String traceText)
     If enabled
-        Debug.Trace("[MME SexLab #" + requestID + "] " + traceText)
+        MMELog.Diagnostic("[MME SexLab #" + requestID + "] " + traceText)
     EndIf
 EndFunction
 
@@ -1392,7 +1392,7 @@ EndFunction
 
 Function TraceAttempt(Int attemptID, Bool showNotification, String traceText)
     String line = "BF #" + attemptID + " " + traceText
-    Debug.Trace("[MME Extensions OStim] " + line)
+    MMELog.Diagnostic("[MME Extensions OStim] " + line)
     If showNotification
         Debug.Notification(line)
     EndIf
@@ -1485,7 +1485,7 @@ String Function GetActorName(Actor target) Global
 EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
-    Debug.Trace("[MME Extensions OStim] " + reportText)
+    MMELog.Diagnostic("[MME Extensions OStim] " + reportText)
     If showNotification
         Debug.Notification("OStim Debug: " + reportText)
     EndIf

@@ -823,7 +823,7 @@ Function Report(String reportText, Int severity = 0) Global
         Debug.Notification("MME Diagnostics: " + reportText)
     EndIf
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDiagnosticPapyrusTrace", 0) == 1
-        Debug.Trace("[MME Extensions Diagnostics] " + reportText, severity)
+        MMELog.Diagnostic("[MME Extensions Diagnostics] " + reportText, severity)
     EndIf
 EndFunction
 

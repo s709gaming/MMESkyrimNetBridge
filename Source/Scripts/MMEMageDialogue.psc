@@ -95,7 +95,7 @@ Bool Function TryAddParasiteArmor(Actor mage, GlobalVariable stateGlobal) Global
         Return False
     EndIf
     Debug.Notification(armorName + " Added to Parasite Living Armor")
-    Debug.Trace("[MME Extensions Mage] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
+    MMELog.Diagnostic("[MME Extensions Mage] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
     Return True
 EndFunction
 
@@ -145,7 +145,7 @@ Bool Function TryRemoveParasiteArmor(Actor mage, GlobalVariable stateGlobal) Glo
         Return False
     EndIf
     Debug.Notification(armorName + " Removed from Parasite Living Armor")
-    Debug.Trace("[MME Extensions Mage] REMOVE complete | armor=" + armorName + " | index=" + registeredIndex)
+    MMELog.Diagnostic("[MME Extensions Mage] REMOVE complete | armor=" + armorName + " | index=" + registeredIndex)
     Return True
 EndFunction
 
@@ -187,7 +187,7 @@ Function SetDialogueState(GlobalVariable stateGlobal, Int value) Global
     If stateGlobal != None
         stateGlobal.SetValue(value as Float)
     Else
-        Debug.Trace("[MME Extensions Mage] ERROR: dialogue-state Global is unbound", 2)
+        MMELog.Alarm("[MME Extensions Mage] ERROR: dialogue-state Global is unbound", 2)
     EndIf
 EndFunction
 
@@ -195,5 +195,5 @@ Function Reject(String reason, Bool notifyPlayer = True) Global
     If notifyPlayer
         Debug.Notification("Armor state changed; no changes made")
     EndIf
-    Debug.Trace("[MME Extensions Mage] REJECTED: " + reason, 1)
+    MMELog.Diagnostic("[MME Extensions Mage] REJECTED: " + reason, 1)
 EndFunction

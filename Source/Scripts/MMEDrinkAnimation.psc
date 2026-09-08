@@ -29,7 +29,7 @@ Function ResetAnimation(Actor target, String roleLabel, Bool diagnostic) Global
 EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
-    Debug.Trace("[MMEAlert Drink Animation] " + reportText)
+    MMELog.Diagnostic("[MMEAlert Drink Animation] " + reportText)
     If showNotification
         Debug.Notification("Milk Drink Animation: " + reportText)
     EndIf

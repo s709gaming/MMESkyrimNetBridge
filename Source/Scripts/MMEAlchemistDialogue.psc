@@ -76,7 +76,7 @@ Bool Function TryAddLivingArmor(Actor alchemist, GlobalVariable stateGlobal) Glo
         Return False
     EndIf
     Debug.Notification(armorName + " Added to Basic Living Armor")
-    Debug.Trace("[MME Extensions Alchemist] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
+    MMELog.Diagnostic("[MME Extensions Alchemist] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
     Return True
 EndFunction
 
@@ -126,7 +126,7 @@ Bool Function TryRemoveLivingArmor(Actor alchemist, GlobalVariable stateGlobal) 
         Return False
     EndIf
     Debug.Notification(armorName + " Removed from Basic Living Armor")
-    Debug.Trace("[MME Extensions Alchemist] REMOVE complete | armor=" + armorName + " | index=" + registeredIndex)
+    MMELog.Diagnostic("[MME Extensions Alchemist] REMOVE complete | armor=" + armorName + " | index=" + registeredIndex)
     Return True
 EndFunction
 
@@ -168,7 +168,7 @@ Function SetDialogueState(GlobalVariable stateGlobal, Int value) Global
     If stateGlobal != None
         stateGlobal.SetValue(value as Float)
     Else
-        Debug.Trace("[MME Extensions Alchemist] ERROR: dialogue-state Global is unbound", 2)
+        MMELog.Alarm("[MME Extensions Alchemist] ERROR: dialogue-state Global is unbound", 2)
     EndIf
 EndFunction
 
@@ -176,5 +176,5 @@ Function Reject(String reason, Bool notifyPlayer = True) Global
     If notifyPlayer
         Debug.Notification("Armor state changed; no changes made")
     EndIf
-    Debug.Trace("[MME Extensions Alchemist] REJECTED: " + reason, 1)
+    MMELog.Diagnostic("[MME Extensions Alchemist] REJECTED: " + reason, 1)
 EndFunction

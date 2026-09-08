@@ -45,7 +45,7 @@ EndFunction
 
 Function TraceState(String traceMessage)
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableReverseLevelTrace", 0) == 1
-        Debug.Trace("[MME Reverse Level] " + traceMessage)
+        MMELog.Diagnostic("[MME Reverse Level] " + traceMessage)
     EndIf
 EndFunction
 

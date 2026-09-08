@@ -136,7 +136,7 @@ String Function GetActorName(Actor actorRef) Global
 EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
-    Debug.Trace("[MMEAlert Arousal] " + reportText)
+    MMELog.Diagnostic("[MMEAlert Arousal] " + reportText)
     If showNotification
         Debug.Notification("Arousal Debug: " + reportText)
     EndIf

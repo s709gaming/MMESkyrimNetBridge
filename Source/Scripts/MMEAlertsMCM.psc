@@ -153,6 +153,7 @@ Int runArmorInjectionCheckOption
 Int diagnosticNotificationsOption
 Int diagnosticPapyrusTraceOption
 Int papyrusTraceOption
+Int specificDiagnosticTraceOption
 Int vendorAnimationTraceOption
 Int diagnosticRefreshGateOption
 Int diagnosticInstallAuditOption
@@ -1000,6 +1001,14 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "vendorAnimationTraceMigration111", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds a shared parent gate for routine, problem-specific Papyrus output.
+    ; Existing feature trace choices are preserved but remain inert until both
+    ; logging parents are enabled.
+    If JsonUtil.GetIntValue(SettingsFile, "specificDiagnosticTraceMigration112", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableSpecificDiagnosticTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "specificDiagnosticTraceMigration112", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1192,6 +1201,7 @@ Event OnPageReset(String page)
     diagnosticNotificationsOption = -1
     diagnosticPapyrusTraceOption = -1
     papyrusTraceOption = -1
+    specificDiagnosticTraceOption = -1
     vendorAnimationTraceOption = -1
     diagnosticRefreshGateOption = -1
     diagnosticInstallAuditOption = -1
@@ -1456,12 +1466,18 @@ Event OnPageReset(String page)
         diagnosticMageBusFailureOption = AddTextOption("Last Mage Bus Failure", MMEDiagnostics.GetMageDialogueBusFailure(), OPTION_FLAG_DISABLED)
         SetCursorPosition(1)
         AddHeaderOption("Papyrus Trace")
-        diagnosticPapyrusTraceOption = AddToggleOption("Papyrus Audit Trace", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0) == 1)
         papyrusTraceOption = AddToggleOption("Master Papyrus Logging", JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) == 1)
-        Int vendorTraceFlags = OPTION_FLAG_NONE
+        Int specificTraceFlags = OPTION_FLAG_NONE
         If JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) != 1
-            vendorTraceFlags = OPTION_FLAG_DISABLED
+            specificTraceFlags = OPTION_FLAG_DISABLED
         EndIf
+        specificDiagnosticTraceOption = AddToggleOption("Specific Diagnostic Traces", JsonUtil.GetIntValue(SettingsFile, "enableSpecificDiagnosticTrace", 0) == 1, specificTraceFlags)
+        Int diagnosticTraceFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) != 1 || JsonUtil.GetIntValue(SettingsFile, "enableSpecificDiagnosticTrace", 0) != 1
+            diagnosticTraceFlags = OPTION_FLAG_DISABLED
+        EndIf
+        diagnosticPapyrusTraceOption = AddToggleOption("Papyrus Audit Trace", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0) == 1, diagnosticTraceFlags)
+        Int vendorTraceFlags = diagnosticTraceFlags
         vendorAnimationTraceOption = AddToggleOption("Vendor Animation", JsonUtil.GetIntValue(SettingsFile, "enableVendorAnimationTrace", 0) == 1, vendorTraceFlags)
         Return
     EndIf
@@ -1812,6 +1828,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Write the same audit results to Papyrus.0.log with the [MME Extensions Diagnostics] prefix.")
     ElseIf option == papyrusTraceOption
         SetInfoText("Master switch for the focused Papyrus trace categories below. Logging is off by default and does not control gameplay.")
+    ElseIf option == specificDiagnosticTraceOption
+        SetInfoText("Allow detailed problem-specific Papyrus traces. Requires Master Papyrus Logging. Gameplay notifications, sparse status messages, and serious failure alarms are independent.")
     ElseIf option == vendorAnimationTraceOption
         SetInfoText("Trace every vendor-animation bus stop from the selected final service INFO through Dialogue Menu close, PlayIdle acceptance, and reset.")
     ElseIf option == diagnosticRefreshGateOption
@@ -2016,6 +2034,11 @@ Event OnOptionSelect(Int option)
     ElseIf option == papyrusTraceOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePapyrusTrace", value)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
+    ElseIf option == specificDiagnosticTraceOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSpecificDiagnosticTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableSpecificDiagnosticTrace", value)
         SetToggleOptionValue(option, value == 1)
         ForcePageReset()
     ElseIf option == vendorAnimationTraceOption
