@@ -175,7 +175,7 @@ Function PlayThoughtReaction(Actor selectedActor, Int armorClass) Global
         Return
     EndIf
 
-    Sound reaction = Game.GetFormFromFile(localFormID, "MMEAlert.esp") as Sound
+    Sound reaction = MMEReactionSounds.Resolve(selectedActor, localFormID)
     If reaction == None
         Return
     EndIf

@@ -772,6 +772,7 @@ Function PlayMilkingReaction(Actor sourceActor, Bool starting)
     If starting
         localFormID = 0x000856 ; Hot SOUN marker for start
     EndIf
+    localFormID = MMEReactionSounds.GetMarkerFormID(sourceActor, localFormID)
     Sound reaction = Game.GetFormFromFile(localFormID, "MMEAlert.esp") as Sound
     If reaction == None
         Debug.Trace("[MMEAlert] milking sound marker did not resolve: " + localFormID)
@@ -1279,6 +1280,7 @@ Function PlayCapacityReaction(Actor sourceActor, Int crossing)
     If crossing == 2
         localFormID = 0x000856 ; Hot SOUN marker
     EndIf
+    localFormID = MMEReactionSounds.GetMarkerFormID(sourceActor, localFormID)
     Sound reaction = Game.GetFormFromFile(localFormID, "MMEAlert.esp") as Sound
     If reaction == None
         Debug.Trace("[MMEAlert] capacity sound marker did not resolve: " + localFormID)

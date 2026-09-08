@@ -255,7 +255,7 @@ Int Function PlayArmorStripMoan(Actor wearer) Global
         ReportArmorStripReaction(diagnostic, "[MME Extensions Armor Strip Moan]", "Armor Strip Moan: failed - actor unavailable")
         Return -1
     EndIf
-    Sound reaction = Game.GetFormFromFile(0x000856, "MMEAlert.esp") as Sound
+    Sound reaction = MMEReactionSounds.Resolve(wearer, 0x000856)
     If reaction == None
         ReportArmorStripReaction(diagnostic, "[MME Extensions Armor Strip Moan]", "Armor Strip Moan: failed - HOT sound unresolved")
         Return -1
@@ -1072,7 +1072,7 @@ Int Function PlayArmorEquipMoan(Actor wearer, String moanKey, String role, Strin
         ReportArmor(diagnostic, "equip moan failed: actor unavailable | pool=" + soundPool + " | " + role + " | " + armorType)
         Return -1
     EndIf
-    Sound reaction = Game.GetFormFromFile(localSoundForm, "MMEAlert.esp") as Sound
+    Sound reaction = MMEReactionSounds.Resolve(wearer, localSoundForm)
     If reaction == None
         ReportArmor(diagnostic, "equip moan failed: " + soundPool + " sound form unresolved | " + role + " | " + armorType)
         Return -1

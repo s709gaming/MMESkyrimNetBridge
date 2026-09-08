@@ -16,9 +16,9 @@ Int Function PlayDrinkReaction(Actor drinker, Bool showDiagnostic = False) Globa
         Return 0
     EndIf
 
-    Sound reaction = Game.GetFormFromFile(0x000854, "MMEAlert.esp") as Sound
+    Sound reaction = MMEReactionSounds.Resolve(drinker, 0x000854)
     If reaction == None
-        Report(showDiagnostic, "sound failed: marker 000854 missing")
+        Report(showDiagnostic, "sound failed: sex-specific mild marker missing")
         Return -1
     EndIf
     Int instance = reaction.Play(drinker)

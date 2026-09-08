@@ -73,7 +73,42 @@ begin
   Inc(SoundCount);
 end;
 
-function MakePool(aEditorID: string): IInterface;
+function LocalFormID(aRecord: IInterface): Cardinal;
+begin
+  { FixedFormID is relative to this plugin's master list; mask to the object ID. }
+  Result := FixedFormID(aRecord) and $00FFFFFF;
+end;
+
+function FindRecordByLocalFormID(aLocalFormID: Cardinal): IInterface;
+var fileFormID: Cardinal;
+begin
+  { RecordByFormID expects an ID in the target file's master-index space. }
+  fileFormID := (MasterCount(TargetFile) shl 24) or aLocalFormID;
+  Result := RecordByFormID(TargetFile, fileFormID, False);
+end;
+
+procedure AssignLocalFormID(aRecord: IInterface; aLocalFormID: Cardinal);
+var occupant: IInterface; loadOrderPrefix: Cardinal;
+begin
+  if LocalFormID(aRecord) = aLocalFormID then Exit;
+  occupant := FindRecordByLocalFormID(aLocalFormID);
+  if Assigned(occupant) then
+    raise Exception.Create('FormID ' + IntToHex(aLocalFormID, 6) +
+      ' is already occupied by ' + EditorID(occupant) + '.');
+  loadOrderPrefix := GetLoadOrderFormID(aRecord) and $FF000000;
+  SetLoadOrderFormID(aRecord, loadOrderPrefix or aLocalFormID);
+end;
+
+procedure ValidateLocalFormID(aEditorID: string; aLocalFormID: Cardinal);
+var occupant: IInterface;
+begin
+  occupant := FindRecordByLocalFormID(aLocalFormID);
+  if Assigned(occupant) and (EditorID(occupant) <> aEditorID) then
+    raise Exception.Create('Required FormID ' + IntToHex(aLocalFormID, 6) +
+      ' is occupied by ' + EditorID(occupant) + '; expected ' + aEditorID + '.');
+end;
+
+function MakePool(aEditorID: string; aLocalFormID: Cardinal): IInterface;
 begin
   Result := MainRecordByEditorID(GroupBySignature(TargetFile, 'SNDR'), aEditorID);
   if not Assigned(Result) then begin
@@ -81,10 +116,11 @@ begin
     Inc(DescriptorCount);
   end;
   SetEditorID(Result, aEditorID);
+  if aLocalFormID <> 0 then AssignLocalFormID(Result, aLocalFormID);
   ClearSoundFiles(Result);
 end;
 
-procedure MakeMarker(aDescriptor, aMarkerID: string);
+procedure MakeMarker(aDescriptor: IInterface; aMarkerID: string; aLocalFormID: Cardinal);
 var marker: IInterface;
 begin
   marker := MainRecordByEditorID(GroupBySignature(TargetFile, 'SOUN'), aMarkerID);
@@ -93,11 +129,13 @@ begin
     Inc(MarkerCount);
   end;
   SetEditorID(marker, aMarkerID);
+  if aLocalFormID <> 0 then AssignLocalFormID(marker, aLocalFormID);
   SetElementEditValues(marker, 'SDSC', Name(aDescriptor));
 end;
 
 function Initialize: Integer;
-var PoolMild, PoolMedium, PoolHot: IInterface;
+var PoolMild, PoolMedium, PoolHot, PoolMaleMild, PoolMaleMedium,
+  PoolMaleHot: IInterface;
 begin
   Result := 1;
   TargetFile := FindFileByName('MMEAlert.esp');
@@ -108,25 +146,50 @@ begin
   end;
   DescriptorTemplate := RecordByFormID(SkyrimFile, $00000E48, True);
   MarkerTemplate := RecordByFormID(SkyrimFile, $00000E06, True);
+  ValidateLocalFormID('MMEAlerts_SNDR_Male_Mild', $000896);
+  ValidateLocalFormID('MMEAlerts_SNDR_Male_Medium', $000897);
+  ValidateLocalFormID('MMEAlerts_SNDR_Male_Hot', $000898);
+  ValidateLocalFormID('MMEAlerts_SOUN_Male_Mild', $000899);
+  ValidateLocalFormID('MMEAlerts_SOUN_Male_Medium', $00089A);
+  ValidateLocalFormID('MMEAlerts_SOUN_Male_Hot', $00089B);
   RemoveOldVoiceRecords;
-  PoolHot := MakePool('MMEAlerts_SNDR_Hot');
+  PoolHot := MakePool('MMEAlerts_SNDR_Hot', 0);
 '@ -split "`r?`n" | ForEach-Object { $lines.Add($_) }
 
 foreach ($groupName in @('Hot Sounds','Medium Sounds','Mild Sounds')) {
     $variable = switch ($groupName) { 'Hot Sounds' {'PoolHot'} 'Medium Sounds' {'PoolMedium'} 'Mild Sounds' {'PoolMild'} }
-    if ($groupName -eq 'Medium Sounds') { $lines.Add("  PoolMedium := MakePool('MMEAlerts_SNDR_Medium');") }
-    if ($groupName -eq 'Mild Sounds') { $lines.Add("  PoolMild := MakePool('MMEAlerts_SNDR_Mild');") }
+    if ($groupName -eq 'Medium Sounds') { $lines.Add("  PoolMedium := MakePool('MMEAlerts_SNDR_Medium', 0);") }
+    if ($groupName -eq 'Mild Sounds') { $lines.Add("  PoolMild := MakePool('MMEAlerts_SNDR_Mild', 0);") }
     $group = $groups | Where-Object Name -eq $groupName
     foreach ($file in $group.Group) {
-        $path = 'Data\Sound\fx\MMESkyrimNetBridge\' + $groupName + '\' + $file.Name
+        $path = 'fx\MMESkyrimNetBridge\' + $groupName + '\' + $file.Name
         $lines.Add('  AddSoundFile(' + $variable + ', ' + (Q $path) + ');')
     }
 }
 
+$maleGroups = @(
+    @{ Folder = 'mild'; Variable = 'PoolMaleMild'; EditorID = 'MMEAlerts_SNDR_Male_Mild'; FormID = '$000896' },
+    @{ Folder = 'medium'; Variable = 'PoolMaleMedium'; EditorID = 'MMEAlerts_SNDR_Male_Medium'; FormID = '$000897' },
+    @{ Folder = 'hot'; Variable = 'PoolMaleHot'; EditorID = 'MMEAlerts_SNDR_Male_Hot'; FormID = '$000898' }
+)
+foreach ($maleGroup in $maleGroups) {
+    $lines.Add("  $($maleGroup.Variable) := MakePool('$($maleGroup.EditorID)', $($maleGroup.FormID));")
+    $folderPath = Join-Path (Join-Path $soundRoot 'Male sounds') $maleGroup.Folder
+    $groupFiles = Get-ChildItem -LiteralPath $folderPath -File -Filter '*.wav' | Sort-Object Name
+    if ($groupFiles.Count -eq 0) { throw "No male $($maleGroup.Folder) WAV files found below $folderPath" }
+    foreach ($file in $groupFiles) {
+        $path = 'fx\MMESkyrimNetBridge\Male sounds\' + $maleGroup.Folder + '\' + $file.Name
+        $lines.Add('  AddSoundFile(' + $maleGroup.Variable + ', ' + (Q $path) + ');')
+    }
+}
+
 @'
-  MakeMarker(PoolMild, 'MMEAlerts_SOUN_Mild');
-  MakeMarker(PoolMedium, 'MMEAlerts_SOUN_Medium');
-  MakeMarker(PoolHot, 'MMEAlerts_SOUN_Hot');
+  MakeMarker(PoolMild, 'MMEAlerts_SOUN_Mild', 0);
+  MakeMarker(PoolMedium, 'MMEAlerts_SOUN_Medium', 0);
+  MakeMarker(PoolHot, 'MMEAlerts_SOUN_Hot', 0);
+  MakeMarker(PoolMaleMild, 'MMEAlerts_SOUN_Male_Mild', $000899);
+  MakeMarker(PoolMaleMedium, 'MMEAlerts_SOUN_Male_Medium', $00089A);
+  MakeMarker(PoolMaleHot, 'MMEAlerts_SOUN_Male_Hot', $00089B);
   AddMessage('MME Alerts minimal sounds complete.');
   AddMessage('Old records removed: ' + IntToStr(RemovedCount));
   AddMessage('Descriptors created: ' + IntToStr(DescriptorCount));

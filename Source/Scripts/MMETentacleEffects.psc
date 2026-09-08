@@ -185,7 +185,7 @@ Function PlayNotificationSound(Actor wearer) Global
     If JsonUtil.GetIntValue(settingsFile, "enableArmorInjectionSounds", 1) != 1 || JsonUtil.GetIntValue(settingsFile, "enableReactionSounds", 1) != 1
         Return
     EndIf
-    Sound reaction = Game.GetFormFromFile(0x000854, "MMEAlert.esp") as Sound
+    Sound reaction = MMEReactionSounds.Resolve(wearer, 0x000854)
     If reaction == None
         Return
     EndIf
