@@ -75,6 +75,16 @@ String LastMageDialogueBusState = "IDLE"
 String LastMageDialogueBusMessage = "No Mage dialogue test has run"
 String LastMageDialogueBusFailure = "none"
 
+; Vendor animation bus. Service INFO fragments publish here while Dialogue Menu
+; is open; this persistent quest waits for the menu-close event before touching
+; the vendor's animation graph.
+Actor PendingVendorAnimationActor = None
+String PendingVendorAnimationRoute = ""
+Int VendorAnimationSequence = 0
+Int PendingVendorAnimationRequestID = 0
+Bool VendorAnimationPending = False
+Actor VendorAnimationMovementLockActor = None
+
 ; Quest startup delegates normal scheduling to the controller.
 Event OnInit()
     EnsureNewMilkMaidSexLabListeners()
@@ -94,6 +104,7 @@ EndFunction
 Function RecoverAfterLoad()
     EnsureNewMilkMaidSexLabListeners()
     RecoverSexLabIntentAfterLoad()
+    RecoverVendorAnimationAfterLoad()
     If !ActiveSession
         Return
     EndIf
@@ -224,6 +235,115 @@ Bool Function StartSexLabBreastfeeding(Actor milkSource, Actor drinker, String c
         SexLabTrace(requestID, diagnostic, "FAIL: MME Mode4 did not begin after SexLab startup | thread=" + threadID)
     EndIf
     Return True
+EndFunction
+
+Function HandleVendorServiceResult(Actor vendor, String route, Bool succeeded)
+    VendorAnimationSequence += 1
+    Int requestID = VendorAnimationSequence
+    VendorAnimationTrace(requestID, route, "01", "final vendor service INFO selected | vendor=" + GetActorName(vendor) + " " + vendor)
+    If !succeeded
+        VendorAnimationTrace(requestID, route, "02", "STOP: service action rejected; animation not queued")
+        Return
+    EndIf
+    If vendor == None
+        VendorAnimationTrace(requestID, route, "02", "STOP: speaker did not resolve to an Actor")
+        Return
+    EndIf
+    If VendorAnimationPending
+        VendorAnimationTrace(requestID, route, "02", "STOP: request #" + PendingVendorAnimationRequestID + " is already waiting for Dialogue Menu to close")
+        Return
+    EndIf
+    PendingVendorAnimationActor = vendor
+    PendingVendorAnimationRoute = route
+    PendingVendorAnimationRequestID = requestID
+    VendorAnimationPending = True
+    RegisterForMenu("Dialogue Menu")
+    VendorAnimationTrace(requestID, route, "02", "service committed; registered for Dialogue Menu close")
+EndFunction
+
+Function ObserveVendorServiceInfoEnd(Actor vendor)
+    If !VendorAnimationPending
+        Return
+    EndIf
+    VendorAnimationTrace(PendingVendorAnimationRequestID, PendingVendorAnimationRoute, "03", "final INFO OnEnd received | speaker=" + GetActorName(vendor) + " " + vendor)
+EndFunction
+
+Event OnMenuClose(String menuName)
+    If menuName != "Dialogue Menu" || !VendorAnimationPending
+        Return
+    EndIf
+    UnregisterForMenu("Dialogue Menu")
+    Int requestID = PendingVendorAnimationRequestID
+    String route = PendingVendorAnimationRoute
+    Actor vendor = PendingVendorAnimationActor
+    ClearVendorAnimationBus(False)
+    VendorAnimationTrace(requestID, route, "04", "Dialogue Menu closed; vendor animation graph released")
+
+    If vendor == None || vendor.IsDead() || !vendor.Is3DLoaded()
+        VendorAnimationTrace(requestID, route, "05", "STOP: vendor missing, dead, or not 3D loaded")
+        Return
+    EndIf
+    Idle giveIdle = Game.GetFormFromFile(0x0B5E20, "Skyrim.esm") as Idle
+    Idle stopIdle = Game.GetFormFromFile(0x10D9EE, "Skyrim.esm") as Idle
+    If giveIdle == None
+        VendorAnimationTrace(requestID, route, "05", "STOP: vanilla IdleGive 000B5E20 could not be resolved")
+        Return
+    EndIf
+    VendorAnimationTrace(requestID, route, "05", "calling Actor.PlayIdle with vanilla IdleGive 000B5E20")
+    ; Once dialogue releases the vendor, their AI package may immediately choose
+    ; locomotion and replace IdleGive. Hold movement only for the gesture window.
+    VendorAnimationMovementLockActor = vendor
+    vendor.SetDontMove(True)
+    Bool accepted = vendor.PlayIdle(giveIdle)
+    If !accepted
+        ReleaseVendorAnimationMovementLock()
+        VendorAnimationTrace(requestID, route, "06", "STOP: Actor.PlayIdle returned false")
+        Return
+    EndIf
+    VendorAnimationTrace(requestID, route, "06", "animation accepted by vendor graph")
+    Utility.Wait(2.0)
+    If stopIdle != None && vendor != None && !vendor.IsDead() && vendor.Is3DLoaded()
+        vendor.PlayIdle(stopIdle)
+        VendorAnimationTrace(requestID, route, "07", "vanilla IdleStop_Loose 0010D9EE sent")
+    Else
+        VendorAnimationTrace(requestID, route, "07", "reset idle unavailable or vendor no longer valid")
+    EndIf
+    ReleaseVendorAnimationMovementLock()
+    VendorAnimationTrace(requestID, route, "08", "vendor movement released; route complete")
+EndEvent
+
+Function RecoverVendorAnimationAfterLoad()
+    UnregisterForMenu("Dialogue Menu")
+    ReleaseVendorAnimationMovementLock()
+    If VendorAnimationPending
+        VendorAnimationTrace(PendingVendorAnimationRequestID, PendingVendorAnimationRoute, "LOAD", "STOP: discarded stale menu-close request after save load")
+    EndIf
+    ClearVendorAnimationBus(False)
+EndFunction
+
+Function ReleaseVendorAnimationMovementLock()
+    Actor vendor = VendorAnimationMovementLockActor
+    VendorAnimationMovementLockActor = None
+    If vendor != None
+        vendor.SetDontMove(False)
+        vendor.EvaluatePackage()
+    EndIf
+EndFunction
+
+Function ClearVendorAnimationBus(Bool unregisterMenu = True)
+    If unregisterMenu
+        UnregisterForMenu("Dialogue Menu")
+    EndIf
+    PendingVendorAnimationActor = None
+    PendingVendorAnimationRoute = ""
+    PendingVendorAnimationRequestID = 0
+    VendorAnimationPending = False
+EndFunction
+
+Function VendorAnimationTrace(Int requestID, String route, String stop, String detail)
+    If JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) == 1 && JsonUtil.GetIntValue(SettingsFile, "enableVendorAnimationTrace", 0) == 1
+        Debug.Trace("[MME Extensions Vendor Animation Bus #" + requestID + "] stop " + stop + " | route=" + route + " | " + detail)
+    EndIf
 EndFunction
 
 ; Two-phase semantic ownership for the dedicated New Milk Maid INFO. The INFO

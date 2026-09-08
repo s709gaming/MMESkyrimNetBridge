@@ -153,6 +153,8 @@ Int armorInjectionNarrationChanceOption
 Int runArmorInjectionCheckOption
 Int diagnosticNotificationsOption
 Int diagnosticPapyrusTraceOption
+Int papyrusTraceOption
+Int vendorAnimationTraceOption
 Int diagnosticRefreshGateOption
 Int diagnosticInstallAuditOption
 Int diagnosticMilkDrinkAuditOption
@@ -185,7 +187,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 110
+    Return 111
 EndFunction
 
 Function SetPageNames()
@@ -1002,6 +1004,13 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationMigration106", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Master/subsystem Papyrus tracing for the post-dialogue vendor animation bus.
+    If JsonUtil.GetIntValue(SettingsFile, "vendorAnimationTraceMigration111", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enablePapyrusTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableVendorAnimationTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "vendorAnimationTraceMigration111", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1194,6 +1203,8 @@ Event OnPageReset(String page)
     runArmorInjectionCheckOption = -1
     diagnosticNotificationsOption = -1
     diagnosticPapyrusTraceOption = -1
+    papyrusTraceOption = -1
+    vendorAnimationTraceOption = -1
     diagnosticRefreshGateOption = -1
     diagnosticInstallAuditOption = -1
     diagnosticDialogueAuditOption = -1
@@ -1456,6 +1467,14 @@ Event OnPageReset(String page)
         diagnosticMageBusStateOption = AddTextOption("Mage Dialogue Bus", MMEDiagnostics.GetMageDialogueBusState(), OPTION_FLAG_DISABLED)
         diagnosticMageBusStopOption = AddTextOption("Last Mage Bus Stop", MMEDiagnostics.GetMageDialogueBusStop(), OPTION_FLAG_DISABLED)
         diagnosticMageBusFailureOption = AddTextOption("Last Mage Bus Failure", MMEDiagnostics.GetMageDialogueBusFailure(), OPTION_FLAG_DISABLED)
+        SetCursorPosition(1)
+        AddHeaderOption("Papyrus Trace")
+        papyrusTraceOption = AddToggleOption("Master Papyrus Logging", JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) == 1)
+        Int vendorTraceFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) != 1
+            vendorTraceFlags = OPTION_FLAG_DISABLED
+        EndIf
+        vendorAnimationTraceOption = AddToggleOption("Vendor Animation", JsonUtil.GetIntValue(SettingsFile, "enableVendorAnimationTrace", 0) == 1, vendorTraceFlags)
         Return
     EndIf
     If page == "Debug"
@@ -1806,6 +1825,10 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Show short audit results as in-game notifications. Enabled by default.")
     ElseIf option == diagnosticPapyrusTraceOption
         SetInfoText("Write the same audit results to Papyrus.0.log with the [MME Extensions Diagnostics] prefix.")
+    ElseIf option == papyrusTraceOption
+        SetInfoText("Master switch for the focused Papyrus trace categories below. Logging is off by default and does not control gameplay.")
+    ElseIf option == vendorAnimationTraceOption
+        SetInfoText("Trace every vendor-animation bus stop from the selected final service INFO through Dialogue Menu close, PlayIdle acceptance, and reset.")
     ElseIf option == diagnosticRefreshGateOption
         SetInfoText("Recalculate the shared OStim dialogue gate without relying on the optional native DLL.")
     ElseIf option == diagnosticInstallAuditOption
@@ -2004,6 +2027,15 @@ Event OnOptionSelect(Int option)
     ElseIf option == diagnosticPapyrusTraceOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == papyrusTraceOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePapyrusTrace", value)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
+    ElseIf option == vendorAnimationTraceOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableVendorAnimationTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableVendorAnimationTrace", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == diagnosticRefreshGateOption
         MMEDiagnostics.RefreshDialogueGate()

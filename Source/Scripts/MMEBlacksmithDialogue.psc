@@ -33,43 +33,51 @@ Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
 EndFunction
 
 Function Fragment_AddLivingArmor(ObjectReference akSpeakerRef)
-    serviceSucceeded = MMEAlchemistDialogue.TryAddLivingArmor(akSpeakerRef as Actor, MMEExt_AlchemistLivingArmorState)
+    CompleteVendorService(akSpeakerRef, "Alchemist/AddLivingArmor", MMEAlchemistDialogue.TryAddLivingArmor(akSpeakerRef as Actor, MMEExt_AlchemistLivingArmorState))
 EndFunction
 
 Function Fragment_RemoveLivingArmor(ObjectReference akSpeakerRef)
-    serviceSucceeded = MMEAlchemistDialogue.TryRemoveLivingArmor(akSpeakerRef as Actor, MMEExt_AlchemistLivingArmorState)
+    CompleteVendorService(akSpeakerRef, "Alchemist/RemoveLivingArmor", MMEAlchemistDialogue.TryRemoveLivingArmor(akSpeakerRef as Actor, MMEExt_AlchemistLivingArmorState))
 EndFunction
 
 Function Fragment_AddParasiteArmor(ObjectReference akSpeakerRef)
-    serviceSucceeded = MMEMageDialogue.TryAddParasiteArmor(akSpeakerRef as Actor, MMEExt_MageParasiteArmorState)
+    CompleteVendorService(akSpeakerRef, "Mage/AddParasiteArmor", MMEMageDialogue.TryAddParasiteArmor(akSpeakerRef as Actor, MMEExt_MageParasiteArmorState))
 EndFunction
 
 Function Fragment_ApplyReverseLeveling(ObjectReference akSpeakerRef)
-    serviceSucceeded = MMEMageDialogue.TryApplyReverseLeveling(akSpeakerRef as Actor)
+    CompleteVendorService(akSpeakerRef, "Mage/ApplyReverseLeveling", MMEMageDialogue.TryApplyReverseLeveling(akSpeakerRef as Actor))
 EndFunction
 
 Function Fragment_RemoveParasiteArmor(ObjectReference akSpeakerRef)
-    serviceSucceeded = MMEMageDialogue.TryRemoveParasiteArmor(akSpeakerRef as Actor, MMEExt_MageParasiteArmorState)
+    CompleteVendorService(akSpeakerRef, "Mage/RemoveParasiteArmor", MMEMageDialogue.TryRemoveParasiteArmor(akSpeakerRef as Actor, MMEExt_MageParasiteArmorState))
 EndFunction
 
 Function Fragment_AddMilkArmor(ObjectReference akSpeakerRef)
-    serviceSucceeded = TryAddMilkArmor(akSpeakerRef as Actor)
+    CompleteVendorService(akSpeakerRef, "Blacksmith/AddMilkArmor", TryAddMilkArmor(akSpeakerRef as Actor))
 EndFunction
 
 Function Fragment_RemoveMilkArmor(ObjectReference akSpeakerRef)
-    serviceSucceeded = TryRemoveMilkArmor(akSpeakerRef as Actor)
+    CompleteVendorService(akSpeakerRef, "Blacksmith/RemoveMilkArmor", TryRemoveMilkArmor(akSpeakerRef as Actor))
 EndFunction
 
 ; Bound only to the service INFOs' OnEnd, after their final response finishes.
 Function Fragment_ServiceCompleted(ObjectReference akSpeakerRef)
-    If !serviceSucceeded
-        Return
+    If serviceSucceeded
+        MMEDebug service = MMEDiagnostics.GetDebugService()
+        If service != None
+            service.ObserveVendorServiceInfoEnd(akSpeakerRef as Actor)
+        EndIf
     EndIf
     serviceSucceeded = False
-    Actor vendor = akSpeakerRef as Actor
-    Idle giveIdle = Game.GetFormFromFile(0x0B5E20, "Skyrim.esm") as Idle
-    If vendor != None && giveIdle != None && !vendor.IsDead() && vendor.Is3DLoaded()
-        vendor.PlayIdle(giveIdle)
+EndFunction
+
+Function CompleteVendorService(ObjectReference akSpeakerRef, String route, Bool succeeded)
+    serviceSucceeded = succeeded
+    MMEDebug service = MMEDiagnostics.GetDebugService()
+    If service != None
+        service.HandleVendorServiceResult(akSpeakerRef as Actor, route, succeeded)
+    ElseIf JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePapyrusTrace", 0) == 1 && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVendorAnimationTrace", 0) == 1
+        Debug.Trace("[MME Extensions Vendor Animation Bus] STOP: persistent MMEDebug service unavailable | route=" + route)
     EndIf
 EndFunction
 
