@@ -82,65 +82,6 @@ namespace
         return RE::TESForm::LookupByEditorID(editorID.data());
     }
 
-    RE::Actor* GetDialogueTarget(RE::StaticFunctionTag*)
-    {
-        auto* manager = RE::MenuTopicManager::GetSingleton();
-        if (!manager) {
-            return nullptr;
-        }
-
-        // speaker is authoritative while the menu is active; lastSpeaker is a
-        // diagnostic fallback for the short transition after an INFO executes.
-        auto speaker = manager->speaker.get();
-        if (!speaker) {
-            speaker = manager->lastSpeaker.get();
-        }
-        return speaker ? speaker->As<RE::Actor>() : nullptr;
-    }
-
-    std::vector<RE::TESForm*> GetActiveDialogueInfos(RE::StaticFunctionTag*)
-    {
-        std::vector<RE::TESForm*> result;
-        auto* manager = RE::MenuTopicManager::GetSingleton();
-        if (!manager) {
-            return result;
-        }
-
-        // These are execution-chain INFOs, not the visible choice list. Keep the
-        // two concepts separate because dialogue diagnostics compare both.
-        const auto appendUnique = [&](RE::TESTopicInfo* info) {
-            if (info && std::find(result.begin(), result.end(), info) == result.end()) {
-                result.push_back(info);
-            }
-        };
-        appendUnique(manager->currentTopicInfo);
-        appendUnique(manager->rootTopicInfo);
-        if (manager->lastSelectedDialogue) {
-            appendUnique(manager->lastSelectedDialogue->parentTopicInfo);
-        }
-        return result;
-    }
-
-    std::vector<RE::TESForm*> GetVisibleDialogueInfos(RE::StaticFunctionTag*)
-    {
-        std::vector<RE::TESForm*> result;
-        auto* manager = RE::MenuTopicManager::GetSingleton();
-        if (!manager || !manager->dialogueList) {
-            return result;
-        }
-
-        // dialogueList is Skyrim's currently enumerated menu. An empty vector
-        // after selection means visibility is unavailable, not historical proof
-        // that an INFO was absent before the menu advanced.
-        for (auto* dialogue : *manager->dialogueList) {
-            auto* info = dialogue ? dialogue->parentTopicInfo : nullptr;
-            if (info && std::find(result.begin(), result.end(), info) == result.end()) {
-                result.push_back(info);
-            }
-        }
-        return result;
-    }
-
     std::vector<RE::TESForm*> GetTopicInfos(RE::StaticFunctionTag*, RE::TESForm* form)
     {
         std::vector<RE::TESForm*> result;
@@ -321,9 +262,6 @@ namespace
         // Renaming either side is an API break for existing compiled scripts.
         vm->RegisterFunction("GetNearbyActors", "MMEExtensionsNative", GetNearbyActors);
         vm->RegisterFunction("GetFormByEditorID", "MMEExtensionsNative", GetFormByEditorID);
-        vm->RegisterFunction("GetDialogueTarget", "MMEExtensionsNative", GetDialogueTarget);
-        vm->RegisterFunction("GetActiveDialogueInfos", "MMEExtensionsNative", GetActiveDialogueInfos);
-        vm->RegisterFunction("GetVisibleDialogueInfos", "MMEExtensionsNative", GetVisibleDialogueInfos);
         vm->RegisterFunction("GetTopicInfos", "MMEExtensionsNative", GetTopicInfos);
         vm->RegisterFunction("GetPreviousTopicInfo", "MMEExtensionsNative", GetPreviousTopicInfo);
         vm->RegisterFunction("EvaluateTopicInfo", "MMEExtensionsNative", EvaluateTopicInfo);
@@ -331,7 +269,7 @@ namespace
         vm->RegisterFunction("DescribeTopicInfoConditions", "MMEExtensionsNative", DescribeTopicInfoConditions);
         vm->RegisterFunction("GetFormSourceFiles", "MMEExtensionsNative", GetFormSourceFiles);
         vm->RegisterFunction("GetParentTopic", "MMEExtensionsNative", GetParentTopic);
-        SKSE::log::info("Native scanner and dialogue diagnostics registered");
+        SKSE::log::info("Native scanner registered");
         return true;
     }
 

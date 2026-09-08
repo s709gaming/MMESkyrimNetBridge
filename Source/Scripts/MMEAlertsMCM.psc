@@ -41,7 +41,6 @@ Int skyrimNetStatusOption
 Int arousalStatusOption
 Int milkDrinkArousalOption
 Int milkDrinkArousalAmountOption
-Int dialogueDiagnosticOption
 Int sexLabBreastfeedingDebugOption
 Int newMilkmaidDialogueTraceOption
 Int newMilkmaidSexLabTraceOption
@@ -325,7 +324,6 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkArousal", 1)
         JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 10.0)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidSexLabTrace", 0)
@@ -477,7 +475,6 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "voiceMilkingTestMigration47", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
@@ -539,14 +536,12 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableVoiceGiveMilkDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkFullNarrationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "releaseDefaultsMigration51", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
     ; Applies quieter release defaults once without overriding later player choices.
     If JsonUtil.GetIntValue(SettingsFile, "quietDiagnosticsMigration32", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "quietDiagnosticsMigration32", 1)
         JsonUtil.Save(SettingsFile, False)
@@ -554,11 +549,6 @@ Function EnsureDefaults()
     If JsonUtil.GetIntValue(SettingsFile, "npcDrinkAnimationMigration31", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 1)
         JsonUtil.SetIntValue(SettingsFile, "npcDrinkAnimationMigration31", 1)
-        JsonUtil.Save(SettingsFile, False)
-    EndIf
-    If JsonUtil.GetIntValue(SettingsFile, "dialogueDiagnosticMigration30", 0) == 0
-        JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 1)
-        JsonUtil.SetIntValue(SettingsFile, "dialogueDiagnosticMigration30", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "arousalIntegrationMigration27", 0) == 0
@@ -668,7 +658,6 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkFullNarrationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0)
         JsonUtil.SetIntValue(SettingsFile, "releaseDiagnosticsFinalMigration52", 1)
         JsonUtil.Save(SettingsFile, False)
@@ -1091,7 +1080,6 @@ Event OnPageReset(String page)
     arousalStatusOption = -1
     milkDrinkArousalOption = -1
     milkDrinkArousalAmountOption = -1
-    dialogueDiagnosticOption = -1
     sexLabBreastfeedingDebugOption = -1
     newMilkmaidDialogueTraceOption = -1
     newMilkmaidSexLabTraceOption = -1
@@ -1518,7 +1506,6 @@ Event OnPageReset(String page)
         npcDrinkNarrationDiagnosticOption = AddToggleOption("NPC Drink Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarrationDiagnostic", 0) == 1)
         milkmaidCreatedNarrationDiagnosticOption = AddToggleOption("New Milk Maid Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarrationDiagnostic", 0) == 1)
         AddHeaderOption("Dialogue")
-        dialogueDiagnosticOption = AddToggleOption("NPC Dialogue Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1)
         sexLabBreastfeedingDebugOption = AddToggleOption("SexLab Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1)
         ostimDebugOption = AddToggleOption("OStim Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1)
         newMilkmaidDialogueTraceOption = AddToggleOption("New Milkmaid Dialogue Trace", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0) == 1)
@@ -1781,8 +1768,6 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Raise player arousal after drinking recognized milk.")
     ElseIf option == milkDrinkArousalAmountOption
         SetInfoText("Set arousal added per recognized milk drink.")
-    ElseIf option == dialogueDiagnosticOption
-        SetInfoText("Report dialogue target detection and MME Milkmaid validation.")
     ElseIf option == sexLabBreastfeedingDebugOption
         SetInfoText("Diagnose MME's original SexLab breastfeeding route when Hey there executes. Never changes eligibility.")
     ElseIf option == milkMaidThoughtsOption
@@ -2345,14 +2330,6 @@ Event OnOptionSelect(Int option)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkArousal", value)
         SetToggleOptionValue(option, value == 1)
         ForcePageReset()
-    ElseIf option == dialogueDiagnosticOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableDialogueDiagnostic", value)
-        SetToggleOptionValue(option, value == 1)
-        MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
-        If controller != None
-            controller.UpdatePolling()
-        EndIf
     ElseIf option == skyrimNetSexLabTraceOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetSexLabTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetSexLabTrace", value)

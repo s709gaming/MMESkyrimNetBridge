@@ -116,7 +116,7 @@ Function RunBlacksmithDialogueBusTest() Global
         Report("Blacksmith bus FAIL: persistent service is missing", 2)
         Return
     EndIf
-    RunBlacksmithDialogueBus(candidate, False, False)
+    RunBlacksmithDialogueBus(candidate, False)
     service.ShowBlacksmithDialogueBusReport(True)
 EndFunction
 
@@ -125,23 +125,13 @@ EndFunction
 ; dialogue choice list.
 Function ObserveBlacksmithDialogueState(Actor candidate) Global
     If IsBlacksmithDialogueTraceEnabled()
-        RunBlacksmithDialogueBus(candidate, True, False)
+        RunBlacksmithDialogueBus(candidate, True)
     EndIf
 EndFunction
 
-; Called from the controller's existing post-opening snapshot. This is the only
-; phase that treats Skyrim's live visible INFO list as authoritative.
-Function ObserveBlacksmithDialogueVisibility(Actor candidate) Global
-    If !IsBlacksmithDialogueTraceEnabled()
-        Return
-    EndIf
-    RunBlacksmithDialogueBus(candidate, True, True)
-    ShowBlacksmithDialogueBusReport()
-EndFunction
-
-; Read-only 13-stop audit. No branch writes the Global, registers armor, removes
+; Read-only 12-stop audit. No branch writes the Global, registers armor, removes
 ; armor, casts MME's toggle spell, or changes the player's equipment.
-Function RunBlacksmithDialogueBus(Actor candidate, Bool openingObserved = False, Bool checkVisibility = False) Global
+Function RunBlacksmithDialogueBus(Actor candidate, Bool openingObserved = False) Global
     MMEDebug service = GetDebugService()
     If service == None
         Return
@@ -262,33 +252,6 @@ Function RunBlacksmithDialogueBus(Actor candidate, Bool openingObserved = False,
     EndIf
     service.RecordBlacksmithDialogueBusStop(12, "opening state=" + publishedState + " (" + expectedRoute + ") PASS", False, False, False, False, writeTrace)
 
-    If !checkVisibility
-        Return
-    EndIf
-    Form expectedTopic = addTopic
-    Form expectedInfo = addInfo
-    If expectedState == 2
-        expectedTopic = removeTopic
-        expectedInfo = removeInfo
-    EndIf
-    Form[] topicInfos = MMEExtensionsNative.GetTopicInfos(expectedTopic)
-    If topicInfos == None || topicInfos.Find(expectedInfo) < 0 || MMEExtensionsNative.GetParentTopic(expectedInfo) != expectedTopic
-        service.RecordBlacksmithDialogueBusStop(13, expectedRoute + " INFO is not attached to its runtime DIAL", True, False, False, False, writeTrace)
-        Return
-    EndIf
-    If !MMEExtensionsNative.EvaluateTopicInfo(expectedInfo, candidate, playerActor)
-        service.RecordBlacksmithDialogueBusStop(13, expectedRoute + " INFO runtime conditions failed", True, False, False, False, writeTrace)
-        Return
-    EndIf
-    Form[] visibleInfos = MMEExtensionsNative.GetVisibleDialogueInfos()
-    If visibleInfos == None
-        service.RecordBlacksmithDialogueBusStop(13, "visible INFO snapshot unavailable", True, False, False, False, writeTrace)
-        Return
-    ElseIf visibleInfos.Find(expectedInfo) < 0
-        service.RecordBlacksmithDialogueBusStop(13, expectedRoute + " conditions PASS but INFO is not visible", True, False, False, False, writeTrace)
-        Return
-    EndIf
-    service.RecordBlacksmithDialogueBusStop(13, expectedRoute + " INFO is visible", False, False, False, True, writeTrace)
 EndFunction
 
 Bool Function IsAlchemistDialogueTraceEnabled() Global
@@ -335,7 +298,7 @@ Function RunAlchemistDialogueBusTest() Global
         Report("Alchemist bus FAIL: persistent service is missing", 2)
         Return
     EndIf
-    RunAlchemistDialogueBus(candidate, False, False)
+    RunAlchemistDialogueBus(candidate, False)
     service.ShowAlchemistDialogueBusReport(True)
 EndFunction
 
@@ -344,23 +307,13 @@ EndFunction
 ; dialogue choice list.
 Function ObserveAlchemistDialogueState(Actor candidate) Global
     If IsAlchemistDialogueTraceEnabled()
-        RunAlchemistDialogueBus(candidate, True, False)
+        RunAlchemistDialogueBus(candidate, True)
     EndIf
 EndFunction
 
-; Called from the controller's existing post-opening snapshot. This is the only
-; phase that treats Skyrim's live visible INFO list as authoritative.
-Function ObserveAlchemistDialogueVisibility(Actor candidate) Global
-    If !IsAlchemistDialogueTraceEnabled()
-        Return
-    EndIf
-    RunAlchemistDialogueBus(candidate, True, True)
-    ShowAlchemistDialogueBusReport()
-EndFunction
-
-; Read-only 13-stop audit. No branch writes the Global, registers armor, removes
+; Read-only 12-stop audit. No branch writes the Global, registers armor, removes
 ; armor, casts MME's toggle spell, or changes the player's equipment.
-Function RunAlchemistDialogueBus(Actor candidate, Bool openingObserved = False, Bool checkVisibility = False) Global
+Function RunAlchemistDialogueBus(Actor candidate, Bool openingObserved = False) Global
     MMEDebug service = GetDebugService()
     If service == None
         Return
@@ -481,33 +434,6 @@ Function RunAlchemistDialogueBus(Actor candidate, Bool openingObserved = False, 
     EndIf
     service.RecordAlchemistDialogueBusStop(12, "opening state=" + publishedState + " (" + expectedRoute + ") PASS", False, False, False, False, writeTrace)
 
-    If !checkVisibility
-        Return
-    EndIf
-    Form expectedTopic = addTopic
-    Form expectedInfo = addInfo
-    If expectedState == 2
-        expectedTopic = removeTopic
-        expectedInfo = removeInfo
-    EndIf
-    Form[] topicInfos = MMEExtensionsNative.GetTopicInfos(expectedTopic)
-    If topicInfos == None || topicInfos.Find(expectedInfo) < 0 || MMEExtensionsNative.GetParentTopic(expectedInfo) != expectedTopic
-        service.RecordAlchemistDialogueBusStop(13, expectedRoute + " INFO is not attached to its runtime DIAL", True, False, False, False, writeTrace)
-        Return
-    EndIf
-    If !MMEExtensionsNative.EvaluateTopicInfo(expectedInfo, candidate, playerActor)
-        service.RecordAlchemistDialogueBusStop(13, expectedRoute + " INFO runtime conditions failed", True, False, False, False, writeTrace)
-        Return
-    EndIf
-    Form[] visibleInfos = MMEExtensionsNative.GetVisibleDialogueInfos()
-    If visibleInfos == None
-        service.RecordAlchemistDialogueBusStop(13, "visible INFO snapshot unavailable", True, False, False, False, writeTrace)
-        Return
-    ElseIf visibleInfos.Find(expectedInfo) < 0
-        service.RecordAlchemistDialogueBusStop(13, expectedRoute + " conditions PASS but INFO is not visible", True, False, False, False, writeTrace)
-        Return
-    EndIf
-    service.RecordAlchemistDialogueBusStop(13, expectedRoute + " INFO is visible", False, False, False, True, writeTrace)
 EndFunction
 
 Bool Function IsMageDialogueTraceEnabled() Global
@@ -554,7 +480,7 @@ Function RunMageDialogueBusTest() Global
         Report("Mage bus FAIL: persistent service is missing", 2)
         Return
     EndIf
-    RunMageDialogueBus(candidate, False, False)
+    RunMageDialogueBus(candidate, False)
     service.ShowMageDialogueBusReport(True)
 EndFunction
 
@@ -563,23 +489,13 @@ EndFunction
 ; dialogue choice list.
 Function ObserveMageDialogueState(Actor candidate) Global
     If IsMageDialogueTraceEnabled()
-        RunMageDialogueBus(candidate, True, False)
+        RunMageDialogueBus(candidate, True)
     EndIf
 EndFunction
 
-; Called from the controller's existing post-opening snapshot. This is the only
-; phase that treats Skyrim's live visible INFO list as authoritative.
-Function ObserveMageDialogueVisibility(Actor candidate) Global
-    If !IsMageDialogueTraceEnabled()
-        Return
-    EndIf
-    RunMageDialogueBus(candidate, True, True)
-    ShowMageDialogueBusReport()
-EndFunction
-
-; Read-only 13-stop audit. No branch writes the Global, registers armor, removes
+; Read-only 12-stop audit. No branch writes the Global, registers armor, removes
 ; armor, casts MME's toggle spell, or changes the player's equipment.
-Function RunMageDialogueBus(Actor candidate, Bool openingObserved = False, Bool checkVisibility = False) Global
+Function RunMageDialogueBus(Actor candidate, Bool openingObserved = False) Global
     MMEDebug service = GetDebugService()
     If service == None
         Return
@@ -700,33 +616,6 @@ Function RunMageDialogueBus(Actor candidate, Bool openingObserved = False, Bool 
     EndIf
     service.RecordMageDialogueBusStop(12, "opening state=" + publishedState + " (" + expectedRoute + ") PASS", False, False, False, False, writeTrace)
 
-    If !checkVisibility
-        Return
-    EndIf
-    Form expectedTopic = addTopic
-    Form expectedInfo = addInfo
-    If expectedState == 2
-        expectedTopic = removeTopic
-        expectedInfo = removeInfo
-    EndIf
-    Form[] topicInfos = MMEExtensionsNative.GetTopicInfos(expectedTopic)
-    If topicInfos == None || topicInfos.Find(expectedInfo) < 0 || MMEExtensionsNative.GetParentTopic(expectedInfo) != expectedTopic
-        service.RecordMageDialogueBusStop(13, expectedRoute + " INFO is not attached to its runtime DIAL", True, False, False, False, writeTrace)
-        Return
-    EndIf
-    If !MMEExtensionsNative.EvaluateTopicInfo(expectedInfo, candidate, playerActor)
-        service.RecordMageDialogueBusStop(13, expectedRoute + " INFO runtime conditions failed", True, False, False, False, writeTrace)
-        Return
-    EndIf
-    Form[] visibleInfos = MMEExtensionsNative.GetVisibleDialogueInfos()
-    If visibleInfos == None
-        service.RecordMageDialogueBusStop(13, "visible INFO snapshot unavailable", True, False, False, False, writeTrace)
-        Return
-    ElseIf visibleInfos.Find(expectedInfo) < 0
-        service.RecordMageDialogueBusStop(13, expectedRoute + " conditions PASS but INFO is not visible", True, False, False, False, writeTrace)
-        Return
-    EndIf
-    service.RecordMageDialogueBusStop(13, expectedRoute + " INFO is visible", False, False, False, True, writeTrace)
 EndFunction
 
 Function RefreshNewMilkMaidSexLabBus() Global

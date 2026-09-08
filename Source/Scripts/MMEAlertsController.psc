@@ -12,7 +12,7 @@ EndFunction
 ; This quest is the long-lived coordinator for native events and periodic work.
 ; All timed features share one OnUpdate schedule below; adding an independent
 ; polling quest should be a last resort. Each Next* value is an absolute real-
-; time deadline, while dialogue fields form one debounced post-INFO snapshot.
+; time deadline.
 String SettingsFile = "/MMEAlerts/Settings"
 String StateKey = "MMEAlerts.CapacityState"
 String MilkingStateKey = "MMEAlerts.IsMilking"
@@ -28,15 +28,9 @@ Float NextThoughtDebugUpdate = 0.0
 Float NextArmorCheck = 0.0
 Float NextArmorReminder = 0.0
 Int ArmorReminderRetries = 0
-Float NextDialogueDiagnosticUpdate = 0.0
 Float NextOStimBreastfeedingWatchdog = 0.0
 Float NextThoughtGameTime = 0.0
 Float NextInjectionGameTime = 0.0
-Actor LastDialogueDiagnosticActor = None
-Actor PendingDialogueDiagnosticActor = None
-String LastDialogueDiagnosticState = ""
-Bool MMEOpeningRefreshObserved = False
-Float MMEOpeningRefreshSnapshotAt = 0.0
 String ArmorCheckReminderShownAtKey = "MMEExtensions.ArmorReminder.ShownAt"
 String ArmorCheckReminderAttemptAtKey = "MMEExtensions.ArmorReminder.AttemptAt"
 Bool Property OStimDialogueAvailable Auto Conditional
@@ -85,8 +79,6 @@ Function InitializeController()
     RegisterForModEvent("MMEExtensions_MMEEffectApplied", "OnMMEEffectApplied")
     UnregisterForModEvent("MMEExtensions_MMEEffectRemoved")
     RegisterForModEvent("MMEExtensions_MMEEffectRemoved", "OnMMEEffectRemoved")
-    UnregisterForModEvent("MMEExtensions_DialogueInfo")
-    RegisterForModEvent("MMEExtensions_DialogueInfo", "OnDialogueInfoSelected")
     ; The service reminder uses Papyrus's menu event instead of the native
     ; TESTopicInfoEvent observer. Refresh this registration after every load.
     UnregisterForMenu("Dialogue Menu")
@@ -176,7 +168,6 @@ Function DisableController()
     UnregisterForModEvent("MMEExtensions_Lifecycle")
     UnregisterForModEvent("MMEExtensions_MMEEffectApplied")
     UnregisterForModEvent("MMEExtensions_MMEEffectRemoved")
-    UnregisterForModEvent("MMEExtensions_DialogueInfo")
     UnregisterForMenu("Dialogue Menu")
     UnregisterForModEvent("MMEExtensions_ArmorEquipped")
     UnregisterForModEvent("MME_AddMilkMaid")
@@ -200,14 +191,8 @@ Function DisableController()
     MMEArmorScript.CancelPlayerArmorCheck(Game.GetPlayer())
     ; Restore MME's own stripping while MME Extensions is disabled.
     MMEArmorScript.ApplyArmorStrippingMasterToggle()
-    NextDialogueDiagnosticUpdate = 0.0
     NextOStimBreastfeedingWatchdog = 0.0
     StopGameTimeScheduling()
-    LastDialogueDiagnosticActor = None
-    PendingDialogueDiagnosticActor = None
-    LastDialogueDiagnosticState = ""
-    MMEOpeningRefreshObserved = False
-    MMEOpeningRefreshSnapshotAt = 0.0
 EndFunction
 
 ; Menu-open is safe but may arrive just before Skyrim publishes its dialogue
@@ -551,80 +536,6 @@ Event OnMMEEffectRemoved(String eventName, String pluginName, Float localEffectF
     EndIf
 EndEvent
 
-; Native TESTopicInfoEvent observation schedules the snapshot after MME
-; Fragment_00. Raw events stay in the log; the HUD reports only the resulting
-; route state.
-Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float localInfoForm, Form sender)
-    ; Phase 1: resolve enabled diagnostics.
-    ; The native event is observational; it never changes INFO eligibility.
-    Bool dialogueDebug = JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
-    Bool sexLabBFDebug = JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
-    Bool ostimBFDebug = JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1
-    Bool blacksmithDebug = JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDialogueTrace", 0) == 1
-    Bool alchemistDebug = JsonUtil.GetIntValue(SettingsFile, "enableAlchemistDialogueTrace", 0) == 1
-    Bool mageDebug = JsonUtil.GetIntValue(SettingsFile, "enableMageDialogueTrace", 0) == 1
-    If !IsExtensionsEnabled()
-        Return
-    EndIf
-    Int selectedInfo = localInfoForm as Int
-    If selectedInfo == 0x05FE12 || selectedInfo == 0x05FE0E
-        Actor source = sender as Actor
-        Actor drinker = Game.GetPlayer()
-        If selectedInfo == 0x05FE0E
-            source = Game.GetPlayer()
-            drinker = sender as Actor
-        EndIf
-        MMEDebug breastfeedingService = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
-        If breastfeedingService != None
-            breastfeedingService.ObserveDialogueSexLabBreastfeeding(source, drinker)
-        Else
-            Debug.Trace("[MME SexLab Dialogue] FAIL: persistent breastfeeding service unavailable")
-        EndIf
-        Return
-    EndIf
-    If !dialogueDebug && !sexLabBFDebug && !ostimBFDebug && !blacksmithDebug && !alchemistDebug && !mageDebug
-        Return
-    EndIf
-    ; Phase 2: treat selection of either independent OStim DIAL as terminal
-    ; evidence that the option was visible. Never schedule another visibility
-    ; snapshot here: Skyrim has already advanced beyond the choice list.
-    Debug.Trace("[MME Extensions Dialogue] INFO event | topic=" + topicEditorID + " info=" + (localInfoForm as Int) + " speaker=" + sender)
-    ; Observe the two original MME SexLab breastfeeding INFOs after their own
-    ; fragment runs. This deliberately does not call StartSex a second time.
-    Bool ostimPlayerSelected = topicEditorID == "MMEExt_OStimBreastfeeding_PlayerDrinksTopic"
-    Bool ostimNPCSelected = topicEditorID == "MMEExt_OStimBreastfeeding_NPCDrinksTopic"
-    If ostimPlayerSelected || ostimNPCSelected
-        String selectedRoute = "Player drinks from NPC"
-        If ostimNPCSelected
-            selectedRoute = "NPC drinks from Player"
-        EndIf
-        Debug.Trace("[MME Extensions OStim BF Dialogue] option SELECTED | " + selectedRoute + " | INFO=" + (localInfoForm as Int))
-        If ostimBFDebug
-            Debug.Notification("OStim BF DEBUG: option SELECTED; starting scene")
-        EndIf
-        Return
-    EndIf
-    ; Only the MME opening INFO constructs the choice list we are auditing.
-    ; Scheduling from later INFOs observes an already-advanced/closed menu and
-    ; turns a successful selection into a false NOT SHOWN verdict.
-    If topicEditorID != "MME_Hello_Dialogue_Topic"
-        Return
-    EndIf
-    ; Phase 3: the MME opening fragment refreshes shared MilkQC values and then
-    ; constructs the menu. Debounce one short post-fragment snapshot through the
-    ; controller scheduler; this avoids dialogue polling and repeated HUD spam.
-    Actor dialogueActor = sender as Actor
-    If dialogueActor == None
-        dialogueActor = MMEExtensionsNative.GetDialogueTarget()
-    EndIf
-    MMEOpeningRefreshObserved = True
-    PendingDialogueDiagnosticActor = dialogueActor
-    MMEOpeningRefreshSnapshotAt = Utility.GetCurrentRealTime() + 0.25
-    NextDialogueDiagnosticUpdate = MMEOpeningRefreshSnapshotAt
-    Debug.Trace("[MME Extensions Dialogue] MME opening refresh INFO executed; scheduling authoritative post-Fragment_00 snapshot")
-    ScheduleNextUpdate()
-EndEvent
-
 ; Resolves the exact equipped ARMO published by the native global equip sink.
 Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm, Form sender)
     ; Native events cross the DLL/Papyrus boundary as plugin name + local ID so
@@ -887,20 +798,14 @@ EndFunction
 ; Synchronizes optional capacity polling with its persisted MCM toggle.
 Function UpdatePolling()
     ; Rebuild absolute deadlines from MCM settings. This function owns the only
-    ; recurring capacity/Skyrim.Net/debug schedules; dialogue and armor checks
-    ; remain event-driven one-shots inserted into the same deadline set.
+    ; recurring capacity/Skyrim.Net/debug schedules; armor checks remain
+    ; event-driven one-shots inserted into the same deadline set.
     UnregisterForUpdate()
     If !IsExtensionsEnabled()
         NextCapacityUpdate = 0.0
         NextSkyrimNetUpdate = 0.0
         NextDebugUpdate = 0.0
         NextThoughtDebugUpdate = 0.0
-        NextDialogueDiagnosticUpdate = 0.0
-        LastDialogueDiagnosticActor = None
-        PendingDialogueDiagnosticActor = None
-        LastDialogueDiagnosticState = ""
-        MMEOpeningRefreshObserved = False
-        MMEOpeningRefreshSnapshotAt = 0.0
         Return
     EndIf
     Float now = Utility.GetCurrentRealTime()
@@ -923,18 +828,6 @@ Function UpdatePolling()
         NextThoughtDebugUpdate = now + 15.0
     Else
         NextThoughtDebugUpdate = 0.0
-    EndIf
-    If JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
-        ; The native TESTopicInfoEvent sink schedules this precisely when the
-        ; player selects MME's opening dialogue. No active-INFO polling needed.
-        NextDialogueDiagnosticUpdate = 0.0
-    Else
-        NextDialogueDiagnosticUpdate = 0.0
-        LastDialogueDiagnosticActor = None
-        PendingDialogueDiagnosticActor = None
-        LastDialogueDiagnosticState = ""
-        MMEOpeningRefreshObserved = False
-        MMEOpeningRefreshSnapshotAt = 0.0
     EndIf
     ScheduleNextUpdate()
 EndFunction
@@ -1016,15 +909,6 @@ Function ScheduleNextUpdate()
             delay = candidate
         EndIf
     EndIf
-    If NextDialogueDiagnosticUpdate > 0.0
-        candidate = NextDialogueDiagnosticUpdate - now
-        If candidate <= 0.0
-            candidate = 0.01
-        EndIf
-        If delay <= 0.0 || candidate < delay
-            delay = candidate
-        EndIf
-    EndIf
     If NextOStimBreastfeedingWatchdog > 0.0
         candidate = NextOStimBreastfeedingWatchdog - now
         If candidate <= 0.0
@@ -1035,10 +919,10 @@ Function ScheduleNextUpdate()
         EndIf
     EndIf
     If delay > 0.0
-        ; Dialogue needs a quarter-second post-fragment snapshot. All other work
+        ; The dialogue-menu armor reminder needs a short retry. All other work
         ; is intentionally throttled to one second to avoid tight Papyrus loops.
         Float minimumDelay = 1.0
-        If NextDialogueDiagnosticUpdate > 0.0 || NextArmorReminder > 0.0
+        If NextArmorReminder > 0.0
             minimumDelay = 0.25
         EndIf
         If delay < minimumDelay
@@ -1065,13 +949,12 @@ Event OnUpdate()
     Bool debugDue = NextDebugUpdate > 0.0 && now >= NextDebugUpdate
     Bool thoughtDebugDue = NextThoughtDebugUpdate > 0.0 && now >= NextThoughtDebugUpdate
     Bool armorReminderDue = NextArmorReminder > 0.0 && now >= NextArmorReminder
-    Bool dialogueDiagnosticDue = NextDialogueDiagnosticUpdate > 0.0 && now >= NextDialogueDiagnosticUpdate
     Bool ostimBreastfeedingDue = NextOStimBreastfeedingWatchdog > 0.0 && now >= NextOStimBreastfeedingWatchdog
     If capacityDue || skyrimNetDue || thoughtDebugDue
         ScanNearbyMilkMaids(skyrimNetDue, capacityDue, thoughtDebugDue)
     EndIf
     ; Advance recurring deadlines from this callback's timestamp. One-shot
-    ; dialogue and armor deadlines are cleared only when their work is consumed.
+    ; armor deadlines are cleared only when their work is consumed.
     If capacityDue
         NextCapacityUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 15.0)
     EndIf
@@ -1087,42 +970,6 @@ Event OnUpdate()
     EndIf
     If armorReminderDue
         TryShowServiceArmorReminder()
-    EndIf
-    If dialogueDiagnosticDue
-        ; Prefer Skyrim's live speaker at evaluation time. The event sender is a
-        ; fallback because noisy INFO transitions may report a stale lastSpeaker.
-        Actor dialogueTarget = PendingDialogueDiagnosticActor
-        ; At evaluation time Skyrim's menu speaker is the CTDA Subject. Prefer
-        ; that live value over a speaker captured by an earlier noisy event.
-        Actor liveDialogueTarget = MMEExtensionsNative.GetDialogueTarget()
-        If liveDialogueTarget != None
-            dialogueTarget = liveDialogueTarget
-        EndIf
-        If dialogueTarget == None
-            Debug.Trace("[MME Extensions Dialogue] opening refresh observed, but speaker was unavailable for post-refresh snapshot")
-        Else
-            If JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
-                ShowDialogueEligibilitySnapshot(dialogueTarget, True)
-            EndIf
-            If JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
-                ShowSexLabBreastfeedingDiagnostic(dialogueTarget)
-            EndIf
-            If JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1
-                ShowOStimBreastfeedingDiagnostic(dialogueTarget)
-            EndIf
-            If JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDialogueTrace", 0) == 1
-                MMEDiagnostics.ObserveBlacksmithDialogueVisibility(dialogueTarget)
-            EndIf
-            If JsonUtil.GetIntValue(SettingsFile, "enableAlchemistDialogueTrace", 0) == 1
-                MMEDiagnostics.ObserveAlchemistDialogueVisibility(dialogueTarget)
-            EndIf
-            If JsonUtil.GetIntValue(SettingsFile, "enableMageDialogueTrace", 0) == 1
-                MMEDiagnostics.ObserveMageDialogueVisibility(dialogueTarget)
-            EndIf
-        EndIf
-        NextDialogueDiagnosticUpdate = 0.0
-        MMEOpeningRefreshSnapshotAt = 0.0
-        PendingDialogueDiagnosticActor = None
     EndIf
     If ostimBreastfeedingDue
         NextOStimBreastfeedingWatchdog = 0.0
@@ -1154,512 +1001,15 @@ String Function DiagnosticBool(Bool value)
     Return "no"
 EndFunction
 
-String Function GetMilkBlockers(Actor source, MilkQUEST milkController)
-    If source == None
-        Return "missing actor"
-    EndIf
-    String blockers = ""
-    Spell beingMilked = milkController.BeingMilkedPassive
-    Spell exhaustion = Game.GetFormFromFile(0x023B6C, "MilkModNEW.esp") as Spell
-    Spell mentalExhaustion = Game.GetFormFromFile(0x0581F4, "MilkModNEW.esp") as Spell
-    Spell livingArmor = Game.GetFormFromFile(0x029709, "MilkModNEW.esp") as Spell
-    If beingMilked != None && source.HasSpell(beingMilked)
-        blockers = "BeingMilked"
-    EndIf
-    If exhaustion != None && source.HasSpell(exhaustion)
-        blockers += " MilkExhaustion"
-    EndIf
-    If mentalExhaustion != None && source.HasSpell(mentalExhaustion)
-        blockers += " MentalExhaustion"
-    EndIf
-    If livingArmor != None && source.HasSpell(livingArmor)
-        blockers += " LivingArmor"
-    EndIf
-    If blockers == ""
-        Return "none"
-    EndIf
-    Return blockers
-EndFunction
-
-String Function ConditionResults(Int[] values)
-    If values == None
-        Return "missing"
-    EndIf
-    String result = ""
-    Int i = 0
-    While i < values.Length
-        If result != ""
-            result += ","
-        EndIf
-        result += "C" + i + "=" + values[i]
-        i += 1
-    EndWhile
-    If result == ""
-        Return "empty"
-    EndIf
-    Return result
-EndFunction
-
-String Function ConditionLabel(String route, Int index)
-    If route == "PlayerSexLab"
-        If index == 0
-            Return "SexLab gate"
-        ElseIf index == 1
-            Return "NPC milk"
-        ElseIf index == 2
-            Return "NPC MilkExhaustion"
-        ElseIf index == 3
-            Return "NPC MentalExhaustion"
-        ElseIf index == 4
-            Return "NPC BeingMilked"
-        ElseIf index == 5
-            Return "NPC LivingArmor"
-        EndIf
-    ElseIf route == "NPCSexLab"
-        If index == 0
-            Return "SexLab gate"
-        ElseIf index == 1
-            Return "Player milk"
-        ElseIf index == 2
-            Return "Player BeingMilked"
-        ElseIf index == 3
-            Return "Player LivingArmor"
-        ElseIf index == 4
-            Return "Player MilkExhaustion"
-        ElseIf index == 5
-            Return "Player MentalExhaustion"
-        EndIf
-    ElseIf route == "PlayerOStim"
-        If index == 0
-            Return "NPC milk"
-        ElseIf index == 1
-            Return "NPC MilkExhaustion"
-        ElseIf index == 2
-            Return "NPC MentalExhaustion"
-        ElseIf index == 3
-            Return "NPC BeingMilked"
-        ElseIf index == 4
-            Return "NPC LivingArmor"
-        ElseIf index == 5
-            Return "OStim availability global"
-        EndIf
-    ElseIf route == "NPCOStim"
-        If index == 0
-            Return "Player milk"
-        ElseIf index == 1
-            Return "Player BeingMilked"
-        ElseIf index == 2
-            Return "Player LivingArmor"
-        ElseIf index == 3
-            Return "Player MilkExhaustion"
-        ElseIf index == 4
-            Return "Player MentalExhaustion"
-        ElseIf index == 5
-            Return "OStim availability global"
-        EndIf
-    EndIf
-    Return "condition C" + index
-EndFunction
-
-String Function ConditionDescriptions(String[] values)
-    If values == None || values.Length == 0
-        Return "missing"
-    EndIf
-    String result = ""
-    Int i = 0
-    While i < values.Length
-        If result != ""
-            result += " | "
-        EndIf
-        result += "C" + i + " " + values[i]
-        i += 1
-    EndWhile
-    Return result
-EndFunction
-
-String Function FirstFailedCondition(Int[] values, String[] descriptions, String route)
-    If values == None || values.Length == 0
-        Return "INFO/conditions unavailable"
-    EndIf
-    Int i = 0
-    While i < values.Length
-        If values[i] == 0
-            If descriptions != None && i < descriptions.Length
-                Return "C" + i + " " + descriptions[i]
-            EndIf
-            Return ConditionLabel(route, i)
-        EndIf
-        i += 1
-    EndWhile
-    Return "none"
-EndFunction
-
-String Function RouteResult(Bool eligible, Bool visible, Int[] values, String[] descriptions, String route)
-    If !eligible
-        Return "FAIL " + FirstFailedCondition(values, descriptions, route)
-    ElseIf visible
-        Return "PASS shown"
-    EndIf
-    Return "PASS NOT SHOWN"
-EndFunction
-
-String Function ShortRouteResult(Bool eligible, Bool visible, Int[] values, String route)
-    If !eligible
-        Return "FAIL " + FirstFailedCondition(values, None, route)
-    ElseIf visible
-        Return "PASS shown"
-    EndIf
-    Return "PASS NOT SHOWN"
-EndFunction
-
-Function ReportDialogueStructure(Actor subject, Actor playerActor)
-    ; Resolve both original MME records and extension records by their stable
-    ; source identities, then inspect runtime topic arrays/PNAM links. This is a
-    ; topology audit only; it never edits or forces a dialogue record.
-    Form playerDrinksTopic = Game.GetFormFromFile(0x062E91, "MilkModNEW.esp")
-    Form npcDrinksTopic = Game.GetFormFromFile(0x062E8F, "MilkModNEW.esp")
-    Form playerDrinksSexLab = Game.GetFormFromFile(0x05FE12, "MilkModNEW.esp")
-    Form npcDrinksSexLab = Game.GetFormFromFile(0x05FE0E, "MilkModNEW.esp")
-    Form playerDrinksOStim = Game.GetFormFromFile(0x00085F, "MMEAlert.esp")
-    Form npcDrinksOStim = Game.GetFormFromFile(0x000860, "MMEAlert.esp")
-    Form[] playerDrinksInfos = MMEExtensionsNative.GetTopicInfos(playerDrinksTopic)
-    Form[] npcDrinksInfos = MMEExtensionsNative.GetTopicInfos(npcDrinksTopic)
-    Int playerDrinksCount = 0
-    Int npcDrinksCount = 0
-    Int playerSexLabIndex = -1
-    Int playerOStimIndex = -1
-    Int npcSexLabIndex = -1
-    Int npcOStimIndex = -1
-    If playerDrinksInfos != None
-        playerDrinksCount = playerDrinksInfos.Length
-        playerSexLabIndex = playerDrinksInfos.Find(playerDrinksSexLab)
-        playerOStimIndex = playerDrinksInfos.Find(playerDrinksOStim)
-    EndIf
-    If npcDrinksInfos != None
-        npcDrinksCount = npcDrinksInfos.Length
-        npcSexLabIndex = npcDrinksInfos.Find(npcDrinksSexLab)
-        npcOStimIndex = npcDrinksInfos.Find(npcDrinksOStim)
-    EndIf
-    Bool playerPNAM = MMEExtensionsNative.GetPreviousTopicInfo(playerDrinksOStim) == playerDrinksSexLab
-    Bool npcPNAM = MMEExtensionsNative.GetPreviousTopicInfo(npcDrinksOStim) == npcDrinksSexLab
-    String structure1 = "runtime PlayerDrinks topic count=" + playerDrinksCount + " SexLabIndex=" + playerSexLabIndex + " OStimIndex=" + playerOStimIndex + " PNAM=" + DiagnosticBool(playerPNAM)
-    String structure2 = "runtime NPCDrinks topic count=" + npcDrinksCount + " SexLabIndex=" + npcSexLabIndex + " OStimIndex=" + npcOStimIndex + " PNAM=" + DiagnosticBool(npcPNAM)
-    Debug.Trace("[MME Extensions Dialogue] " + structure1)
-    Debug.Trace("[MME Extensions Dialogue] " + structure2)
-
-    Int[] playerSexLabConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(playerDrinksSexLab, subject, playerActor)
-    Int[] npcSexLabConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(npcDrinksSexLab, subject, playerActor)
-    Int[] playerOStimConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(playerDrinksOStim, subject, playerActor)
-    Int[] npcOStimConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(npcDrinksOStim, subject, playerActor)
-    String[] playerSexLabDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(playerDrinksSexLab)
-    String[] npcSexLabDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(npcDrinksSexLab)
-    String[] playerOStimDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(playerDrinksOStim)
-    String[] npcOStimDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(npcDrinksOStim)
-    Bool playerSexLabEligible = MMEExtensionsNative.EvaluateTopicInfo(playerDrinksSexLab, subject, playerActor)
-    Bool npcSexLabEligible = MMEExtensionsNative.EvaluateTopicInfo(npcDrinksSexLab, subject, playerActor)
-    Bool playerOStimEligible = MMEExtensionsNative.EvaluateTopicInfo(playerDrinksOStim, subject, playerActor)
-    Bool npcOStimEligible = MMEExtensionsNative.EvaluateTopicInfo(npcDrinksOStim, subject, playerActor)
-    Form[] visibleInfos = MMEExtensionsNative.GetVisibleDialogueInfos()
-    Int visibleInfoCount = 0
-    Bool playerSexLabVisible = False
-    Bool npcSexLabVisible = False
-    Bool playerOStimVisible = False
-    Bool npcOStimVisible = False
-    If visibleInfos != None
-        visibleInfoCount = visibleInfos.Length
-        playerSexLabVisible = visibleInfos.Find(playerDrinksSexLab) >= 0
-        npcSexLabVisible = visibleInfos.Find(npcDrinksSexLab) >= 0
-        playerOStimVisible = visibleInfos.Find(playerDrinksOStim) >= 0
-        npcOStimVisible = visibleInfos.Find(npcDrinksOStim) >= 0
-    EndIf
-    String exact1 = "Player drinks SexLab values: " + ConditionResults(playerSexLabConditions) + " | " + ConditionDescriptions(playerSexLabDescriptions)
-    String exact2 = "NPC drinks SexLab values: " + ConditionResults(npcSexLabConditions) + " | " + ConditionDescriptions(npcSexLabDescriptions)
-    String exact3 = "Player drinks OStim values: " + ConditionResults(playerOStimConditions) + " | " + ConditionDescriptions(playerOStimDescriptions)
-    String exact4 = "NPC drinks OStim values: " + ConditionResults(npcOStimConditions) + " | " + ConditionDescriptions(npcOStimDescriptions)
-    Debug.Trace("[MME Extensions Dialogue] " + exact1)
-    Debug.Trace("[MME Extensions Dialogue] " + exact2)
-    Debug.Trace("[MME Extensions Dialogue] " + exact3)
-    Debug.Trace("[MME Extensions Dialogue] " + exact4)
-    String playerResults = "Player drinks: SexLab " + RouteResult(playerSexLabEligible, playerSexLabVisible, playerSexLabConditions, playerSexLabDescriptions, "PlayerSexLab") + " | OStim " + RouteResult(playerOStimEligible, playerOStimVisible, playerOStimConditions, playerOStimDescriptions, "PlayerOStim")
-    String npcResults = "NPC drinks: SexLab " + RouteResult(npcSexLabEligible, npcSexLabVisible, npcSexLabConditions, npcSexLabDescriptions, "NPCSexLab") + " | OStim " + RouteResult(npcOStimEligible, npcOStimVisible, npcOStimConditions, npcOStimDescriptions, "NPCOStim")
-    Debug.Trace("[MME Extensions Dialogue] visible INFO count=" + visibleInfoCount + " | " + playerResults)
-    Debug.Trace("[MME Extensions Dialogue] " + npcResults)
-    Debug.Notification("Dialogue DEBUG: " + playerResults)
-    Debug.Notification("Dialogue DEBUG: " + npcResults)
-    If (playerSexLabEligible && !playerSexLabVisible) || (npcSexLabEligible && !npcSexLabVisible) || (playerOStimEligible && !playerOStimVisible) || (npcOStimEligible && !npcOStimVisible)
-        Debug.Notification("Dialogue DEBUG: conditions PASS but INFO not shown")
-        Debug.Trace("[MME Extensions Dialogue] conditions PASS but INFO not shown; investigate merged topic array, PNAM ordering, VMAD, and menu construction")
-    EndIf
-EndFunction
-
-String Function SourceFileSummary(Form target)
-    String[] files = MMEExtensionsNative.GetFormSourceFiles(target)
-    If files == None || files.Length == 0
-        Return "missing"
-    EndIf
-    String result = files[0]
-    Int i = 1
-    While i < files.Length
-        result += " -> " + files[i]
-        i += 1
-    EndWhile
-    Return result
-EndFunction
-
 ; Audits MME's original SexLab breastfeeding route only. This runs from the
 ; native Hey there INFO event after Fragment_00 has refreshed MME's condition
 ; quest; it observes live records and state but never starts or alters a scene.
-Function ShowSexLabBreastfeedingDiagnostic(Actor subject)
-    ; Phase 1: resolve the exact original MME interfaces, registrars, INFOs, and
-    ; cached milk values used by the SexLab lane. Do not substitute OStim state.
-    Actor playerActor = Game.GetPlayer()
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    Form playerDrinksTopic = Game.GetFormFromFile(0x062E91, "MilkModNEW.esp")
-    Form npcDrinksTopic = Game.GetFormFromFile(0x062E8F, "MilkModNEW.esp")
-    Form playerDrinksInfo = Game.GetFormFromFile(0x05FE12, "MilkModNEW.esp")
-    Form npcDrinksInfo = Game.GetFormFromFile(0x05FE0E, "MilkModNEW.esp")
-
-    Bool frameworkAvailable = milkController != None && milkController.SexLab != None
-    Bool interfaceValid = frameworkAvailable && milkController.SexLab.AnimSlots != None
-    sslBaseAnimation straightAnimation = None
-    sslBaseAnimation lesbianAnimation = None
-    If interfaceValid
-        ; MME_Dialogues names Var as its straight/male-drinker branch.
-        straightAnimation = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar")
-        lesbianAnimation = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding")
-    EndIf
-    Bool straightResolved = straightAnimation != None
-    Bool lesbianResolved = lesbianAnimation != None
-
-    If milkController == None || milkController.MilkQC == None
-        Debug.Notification("SexLab BF DEBUG: MME interface=FAIL")
-        Debug.Trace("[MME Extensions SexLab BF] MME_MilkQUEST or MilkQC unavailable")
-        Return
-    EndIf
-    MilkQUEST_Conditions conditions = milkController.MilkQC
-    Float playerMilk = MME_Storage.getMilkCurrent(playerActor)
-    Float npcMilk = MME_Storage.getMilkCurrent(subject)
-    String playerBlockers = GetMilkBlockers(playerActor, milkController)
-    String npcBlockers = GetMilkBlockers(subject, milkController)
-    Bool playerInfoExists = playerDrinksInfo != None
-    Bool npcInfoExists = npcDrinksInfo != None
-    Bool playerInfoInTopic = playerInfoExists && MMEExtensionsNative.GetTopicInfos(playerDrinksTopic).Find(playerDrinksInfo) >= 0
-    Bool npcInfoInTopic = npcInfoExists && MMEExtensionsNative.GetTopicInfos(npcDrinksTopic).Find(npcDrinksInfo) >= 0
-    Int[] playerConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(playerDrinksInfo, subject, playerActor)
-    Int[] npcConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(npcDrinksInfo, subject, playerActor)
-    String[] playerDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(playerDrinksInfo)
-    String[] npcDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(npcDrinksInfo)
-    Bool playerEligible = playerInfoExists && MMEExtensionsNative.EvaluateTopicInfo(playerDrinksInfo, subject, playerActor)
-    Bool npcEligible = npcInfoExists && MMEExtensionsNative.EvaluateTopicInfo(npcDrinksInfo, subject, playerActor)
-    Form[] visibleInfos = MMEExtensionsNative.GetVisibleDialogueInfos()
-    Bool playerVisible = visibleInfos != None && visibleInfos.Find(playerDrinksInfo) >= 0
-    Bool npcVisible = visibleInfos != None && visibleInfos.Find(npcDrinksInfo) >= 0
-
-    ; Phase 2: keep technical CTDA/override detail in the Papyrus log. The HUD
-    ; reports only framework state and the first meaningful route failure.
-    Debug.Trace("[MME Extensions SexLab BF] actor=" + subject + " player=" + playerActor)
-    Debug.Trace("[MME Extensions SexLab BF] Framework=" + DiagnosticBool(frameworkAvailable) + " AnimSlots=" + DiagnosticBool(interfaceValid) + " zjBreastFeedingVar(Straight)=" + straightAnimation + " zjBreastFeeding(Lesbian)=" + lesbianAnimation)
-    Debug.Trace("[MME Extensions SexLab BF] gate=" + DiagnosticBool(conditions.MME_BreasfeedingAnimationsCheck) + " DialogueMilking=" + DiagnosticBool(conditions.MME_DialogueMilking) + " Player milk=" + playerMilk + "/TargetMilk=" + conditions.MME_TargetMilk + " blockers=" + playerBlockers + " NPC milk=" + npcMilk + "/SubjectMilk=" + conditions.MME_SubjectMilk + " blockers=" + npcBlockers)
-    Debug.Trace("[MME Extensions SexLab BF] Player-drinks INFO=" + playerDrinksInfo + " topicMember=" + DiagnosticBool(playerInfoInTopic) + " sources=" + SourceFileSummary(playerDrinksInfo))
-    Debug.Trace("[MME Extensions SexLab BF] Player-drinks CTDA=" + ConditionResults(playerConditions) + " | " + ConditionDescriptions(playerDescriptions) + " | eligible=" + DiagnosticBool(playerEligible) + " visible=" + DiagnosticBool(playerVisible))
-    Debug.Trace("[MME Extensions SexLab BF] NPC-drinks INFO=" + npcDrinksInfo + " topicMember=" + DiagnosticBool(npcInfoInTopic) + " sources=" + SourceFileSummary(npcDrinksInfo))
-    Debug.Trace("[MME Extensions SexLab BF] NPC-drinks CTDA=" + ConditionResults(npcConditions) + " | " + ConditionDescriptions(npcDescriptions) + " | eligible=" + DiagnosticBool(npcEligible) + " visible=" + DiagnosticBool(npcVisible))
-    Debug.Trace("[MME Extensions SexLab BF] MMEAlert touches Player-drinks=" + DiagnosticBool(StringUtil.Find(SourceFileSummary(playerDrinksInfo), "MMEAlert.esp") >= 0) + " NPC-drinks=" + DiagnosticBool(StringUtil.Find(SourceFileSummary(npcDrinksInfo), "MMEAlert.esp") >= 0))
-
-    Debug.Notification("SexLab BF DEBUG: Framework=" + DiagnosticBool(frameworkAvailable) + " Straight=" + DiagnosticBool(straightResolved) + " Lesbian=" + DiagnosticBool(lesbianResolved) + " MME gate=" + DiagnosticBool(conditions.MME_BreasfeedingAnimationsCheck))
-    Debug.Notification("SexLab BF DEBUG: NPC milk=" + DiagnosticBool(conditions.MME_SubjectMilk >= 1.0 && npcBlockers == "none") + " Player milk=" + DiagnosticBool(conditions.MME_TargetMilk >= 1.0 && playerBlockers == "none"))
-    Debug.Notification("SexLab BF DEBUG: Player drinks=" + ShortRouteResult(playerEligible, playerVisible, playerConditions, "PlayerSexLab") + " | NPC drinks=" + ShortRouteResult(npcEligible, npcVisible, npcConditions, "NPCSexLab"))
-    If !frameworkAvailable
-        Debug.Notification("SexLab BF DEBUG: first failure=SexLab framework missing")
-    ElseIf !interfaceValid
-        Debug.Notification("SexLab BF DEBUG: first failure=MME AnimSlots invalid")
-    ElseIf !straightResolved
-        Debug.Notification("SexLab BF DEBUG: first failure=zjBreastFeedingVar missing")
-    ElseIf !lesbianResolved
-        Debug.Notification("SexLab BF DEBUG: first failure=zjBreastFeeding missing")
-    ElseIf !conditions.MME_BreasfeedingAnimationsCheck
-        Debug.Notification("SexLab BF DEBUG: first failure=MME animation gate")
-    ElseIf !playerInfoExists || !npcInfoExists
-        Debug.Notification("SexLab BF DEBUG: first failure=original INFO missing")
-    ElseIf !playerInfoInTopic || !npcInfoInTopic
-        Debug.Notification("SexLab BF DEBUG: first failure=INFO absent from topic")
-    ElseIf !playerEligible && !npcEligible
-        Debug.Notification("SexLab BF DEBUG: first failure=INFO conditions")
-    ElseIf (playerEligible && !playerVisible) || (npcEligible && !npcVisible)
-        Debug.Notification("SexLab BF DEBUG: conditions PASS, INFO visible=NO")
-    Else
-        Debug.Notification("SexLab BF DEBUG: eligible INFO visible=YES")
-    EndIf
-EndFunction
-
 ; Audits only the independent OStim alternatives. A route can pass its CTDAs
 ; yet remain absent when its INFO was incorrectly placed in an original MME
 ; response chain; that structural distinction is deliberately surfaced.
-Function ShowOStimBreastfeedingDiagnostic(Actor subject)
-    ; Phase 1: gather live MME milk, cached MilkQC values, the independent OStim
-    ; INFOs/topics, and the framework availability Global used by their CTDAs.
-    Actor playerActor = Game.GetPlayer()
-    If subject == None || playerActor == None
-        Debug.Trace("[MME Extensions OStim BF Dialogue] evaluation actor unavailable")
-        Debug.Notification("OStim BF DEBUG: FAIL dialogue actors unavailable")
-        Return
-    EndIf
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    MilkQUEST_Conditions conditions = None
-    Float subjectMilk = -1.0
-    Float playerMilk = -1.0
-    Float subjectSnapshot = -1.0
-    Float playerSnapshot = -1.0
-    If milkController != None
-        conditions = milkController.MilkQC
-        subjectMilk = MME_Storage.getMilkCurrent(subject)
-        playerMilk = MME_Storage.getMilkCurrent(playerActor)
-    EndIf
-    If conditions != None
-        subjectSnapshot = conditions.MME_SubjectMilk
-        playerSnapshot = conditions.MME_TargetMilk
-    EndIf
-    Form originalPlayerTopic = Game.GetFormFromFile(0x062E91, "MilkModNEW.esp")
-    Form originalNPCTopic = Game.GetFormFromFile(0x062E8F, "MilkModNEW.esp")
-    Form playerInfo = Game.GetFormFromFile(0x00085F, "MMEAlert.esp")
-    Form npcInfo = Game.GetFormFromFile(0x000860, "MMEAlert.esp")
-    Form playerTopic = MMEExtensionsNative.GetParentTopic(playerInfo)
-    Form npcTopic = MMEExtensionsNative.GetParentTopic(npcInfo)
-    Bool playerIndependent = playerTopic != None && playerTopic != originalPlayerTopic
-    Bool npcIndependent = npcTopic != None && npcTopic != originalNPCTopic
-    Bool detected = MMEOStimBreastfeeding.IsOStimDetected()
-    Bool setting = JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0) == 1
-    GlobalVariable gate = GetOStimDialogueAvailabilityGlobal()
-    Float gateValue = -1.0
-    If gate != None
-        gateValue = gate.GetValue()
-    EndIf
-    ; Phase 2: evaluate with Skyrim's real dialogue roles: speaker is Subject,
-    ; player is Target for both opposite directions. Direction changes which
-    ; cached milk value the copied MME condition tests, not the CTDA role order.
-    ; Skyrim evaluates both choice INFOs with the dialogue speaker as Subject
-    ; and the player as Target. MME's Fragment_00 maps those roles to
-    ; SubjectMilk (NPC) and TargetMilk (player), respectively.
-    Int[] playerConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(playerInfo, subject, playerActor)
-    Int[] npcConditions = MMEExtensionsNative.EvaluateTopicInfoConditions(npcInfo, subject, playerActor)
-    String[] playerDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(playerInfo)
-    String[] npcDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(npcInfo)
-    Bool playerEligible = playerInfo != None && MMEExtensionsNative.EvaluateTopicInfo(playerInfo, subject, playerActor)
-    Bool npcEligible = npcInfo != None && MMEExtensionsNative.EvaluateTopicInfo(npcInfo, subject, playerActor)
-    Form[] visibleInfos = MMEExtensionsNative.GetVisibleDialogueInfos()
-    Int visibleInfoCount = 0
-    If visibleInfos != None
-        visibleInfoCount = visibleInfos.Length
-    EndIf
-    Bool visibilityAvailable = visibleInfoCount > 0
-    Bool playerVisible = visibleInfos != None && visibleInfos.Find(playerInfo) >= 0
-    Bool npcVisible = visibleInfos != None && visibleInfos.Find(npcInfo) >= 0
-
-    ; Phase 3: distinguish a real populated-menu absence from an unknowable
-    ; post-dialogue state. An empty list after selection is not evidence that a
-    ; choice was never shown; selection/start events provide stronger evidence.
-    Debug.Trace("[MME Extensions OStim BF Dialogue] detected=" + DiagnosticBool(detected) + " setting=" + DiagnosticBool(setting) + " global=" + gate + " value=" + gateValue)
-    Debug.Trace("[MME Extensions OStim BF Dialogue] CTDA roles: Subject=speaker " + subject + " (milk live=" + subjectMilk + ", MME_SubjectMilk=" + subjectSnapshot + "); Target=player " + playerActor + " (milk live=" + playerMilk + ", MME_TargetMilk=" + playerSnapshot + ")")
-    Debug.Trace("[MME Extensions OStim BF Dialogue] Player INFO=" + playerInfo + " topic=" + playerTopic + " independent=" + DiagnosticBool(playerIndependent) + " sources=" + SourceFileSummary(playerInfo))
-    Debug.Trace("[MME Extensions OStim BF Dialogue] visible list available=" + DiagnosticBool(visibilityAvailable) + " count=" + visibleInfoCount)
-    Debug.Trace("[MME Extensions OStim BF Dialogue] Player CTDA=" + ConditionResults(playerConditions) + " | " + ConditionDescriptions(playerDescriptions) + " eligible=" + DiagnosticBool(playerEligible) + " visible=" + DiagnosticBool(playerVisible))
-    Debug.Trace("[MME Extensions OStim BF Dialogue] NPC INFO=" + npcInfo + " topic=" + npcTopic + " independent=" + DiagnosticBool(npcIndependent) + " sources=" + SourceFileSummary(npcInfo))
-    Debug.Trace("[MME Extensions OStim BF Dialogue] NPC CTDA=" + ConditionResults(npcConditions) + " | " + ConditionDescriptions(npcDescriptions) + " eligible=" + DiagnosticBool(npcEligible) + " visible=" + DiagnosticBool(npcVisible))
-
-    If !detected
-        Debug.Notification("OStim BF DEBUG: UNAVAILABLE - OStim not detected")
-    ElseIf !setting
-        Debug.Notification("OStim BF DEBUG: UNAVAILABLE - setting OFF")
-    ElseIf gate == None || gateValue < 1.0
-        Debug.Notification("OStim BF DEBUG: UNAVAILABLE - dialogue gate OFF")
-    ElseIf !playerIndependent || !npcIndependent
-        Debug.Notification("OStim BF DEBUG: FAIL options are not independent DIALs")
-    Else
-        If visibilityAvailable
-            Debug.Notification("OStim BF DEBUG: Player<-NPC=" + ShortRouteResult(playerEligible, playerVisible, playerConditions, "PlayerOStim") + " | NPC<-Player=" + ShortRouteResult(npcEligible, npcVisible, npcConditions, "NPCOStim"))
-        ElseIf playerEligible || npcEligible
-            Debug.Notification("OStim BF DEBUG: conditions PASS; visibility unavailable")
-            Debug.Trace("[MME Extensions OStim BF Dialogue] visibility cannot be determined because the dialogue choice list has already progressed or closed")
-        Else
-            Debug.Notification("OStim BF DEBUG: conditions FAIL | Player=" + ShortRouteResult(playerEligible, False, playerConditions, "PlayerOStim") + " | NPC=" + ShortRouteResult(npcEligible, False, npcConditions, "NPCOStim"))
-        EndIf
-        If visibilityAvailable && ((playerEligible && !playerVisible) || (npcEligible && !npcVisible))
-            Debug.Notification("OStim BF DEBUG: conditions PASS but option NOT SHOWN")
-        ElseIf conditions != None && subjectMilk >= 1.0 && subjectSnapshot < 1.0
-            Debug.Notification("OStim BF DEBUG: NPC milk live PASS, MME SubjectMilk stale")
-        ElseIf conditions != None && playerMilk >= 1.0 && playerSnapshot < 1.0
-            Debug.Notification("OStim BF DEBUG: Player milk live PASS, MME TargetMilk stale")
-        EndIf
-    EndIf
-EndFunction
-
 ; Reports the exact live values used by MME's two breastfeeding INFOs. The
 ; snapshot repeats only when its state changes, so selecting MME's opening
 ; line exposes the before/after Fragment_00 refresh without notification spam.
-Function ShowDialogueEligibilitySnapshot(Actor subject, Bool postRefresh = False)
-    ; Compare live MME storage against Fragment_00's cached MilkQC snapshot.
-    ; This reveals stale dialogue inputs without rewriting them or bypassing any
-    ; original MME blocker spells, sex rules, or Milk Maid membership checks.
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None || milkController.MilkQC == None
-        Debug.Trace("[MME Extensions Dialogue] MME controller/condition quest unavailable")
-        Return
-    EndIf
-
-    Actor playerActor = Game.GetPlayer()
-    MilkQUEST_Conditions conditions = milkController.MilkQC
-    Float playerMilk = MME_Storage.getMilkCurrent(playerActor)
-    Float subjectMilk = MME_Storage.getMilkCurrent(subject)
-    String subjectBlockers = GetMilkBlockers(subject, milkController)
-    String playerBlockers = GetMilkBlockers(playerActor, milkController)
-    Bool subjectShared = conditions.MME_SubjectMilk >= 1.0 && subjectBlockers == "none"
-    Bool playerShared = conditions.MME_TargetMilk >= 1.0 && playerBlockers == "none"
-    Bool subjectMaid = StorageUtil.HasFloatValue(subject, "MME.MilkMaid.Level")
-    ActorBase subjectBase = subject.GetLeveledActorBase()
-    ActorBase playerBase = playerActor.GetLeveledActorBase()
-    Bool subjectRefreshAllowed = subjectBase != None && (subjectBase.GetSex() == 1 || (subjectBase.GetSex() == 0 && milkController.MaleMaids))
-    Bool playerRefreshAllowed = playerBase != None && (playerBase.GetSex() == 1 || (playerBase.GetSex() == 0 && milkController.MaleMaids))
-    Keyword actorTypeNPC = Game.GetForm(0x00013794) as Keyword
-    Keyword actorTypeCreature = Game.GetForm(0x00013795) as Keyword
-    Bool rootEligible = conditions.MME_DialogueMilking && !subject.IsChild() && subject.HasKeyword(actorTypeNPC) && !subject.HasKeyword(actorTypeCreature)
-    Bool ostimDetected = MMEOStimBreastfeeding.IsOStimDetected()
-    Bool ostimSetting = JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0) == 1
-    GlobalVariable ostimDialogueGate = GetOStimDialogueAvailabilityGlobal()
-    Float ostimDialogueGateValue = -1.0
-    If ostimDialogueGate != None
-        ostimDialogueGateValue = ostimDialogueGate.GetValue()
-    EndIf
-    Bool sexLabPlayerDrinks = subjectShared && conditions.MME_BreasfeedingAnimationsCheck
-    Bool sexLabNPCDrinks = playerShared && conditions.MME_BreasfeedingAnimationsCheck
-    Bool ostimPlayerDrinks = subjectShared && OStimDialogueAvailable
-    Bool ostimNPCDrinks = playerShared && OStimDialogueAvailable
-    Bool milkSnapshotsRefreshed = conditions.MME_TargetMilk == playerMilk && conditions.MME_SubjectMilk == subjectMilk
-    String snapshotState = postRefresh + ":" + subject.GetFormID() + ":" + playerMilk + ":" + subjectMilk + ":" + conditions.MME_TargetMilk + ":" + conditions.MME_SubjectMilk + ":" + subjectBlockers + ":" + playerBlockers + ":" + conditions.MME_DialogueMilking + ":" + conditions.MME_BreasfeedingAnimationsCheck + ":" + OStimDialogueAvailable + ":" + ostimDialogueGateValue
-    If subject == LastDialogueDiagnosticActor && snapshotState == LastDialogueDiagnosticState
-        Return
-    EndIf
-    LastDialogueDiagnosticActor = subject
-    LastDialogueDiagnosticState = snapshotState
-
-    String line0 = "MME opening INFO observed=" + DiagnosticBool(MMEOpeningRefreshObserved) + " / post-refresh snapshot=" + DiagnosticBool(postRefresh)
-    String line1 = "Player milk=" + playerMilk + " / TargetMilk=" + conditions.MME_TargetMilk + " | NPC milk=" + subjectMilk + " / SubjectMilk=" + conditions.MME_SubjectMilk
-    String line2 = "NPC maid=" + DiagnosticBool(subjectMaid) + " / SubjectMaid=" + DiagnosticBool(conditions.MME_SubjectMaid) + " / SubjectSlave=" + DiagnosticBool(conditions.MME_SubjectSlave) + " | refresh NPC=" + DiagnosticBool(subjectRefreshAllowed) + " Player=" + DiagnosticBool(playerRefreshAllowed)
-    String line3 = "blockers NPC=" + subjectBlockers + " | Player=" + playerBlockers + " | SexLabAnim=" + DiagnosticBool(conditions.MME_BreasfeedingAnimationsCheck)
-    String line4 = "DialogueMilking=" + DiagnosticBool(conditions.MME_DialogueMilking) + " / root=" + DiagnosticBool(rootEligible) + " | OStim detected=" + DiagnosticBool(ostimDetected) + " setting=" + DiagnosticBool(ostimSetting) + " property=" + DiagnosticBool(OStimDialogueAvailable) + " global=" + ostimDialogueGateValue
-    String line5 = "Player drinks: SexLab=" + DiagnosticBool(sexLabPlayerDrinks) + " OStim=" + DiagnosticBool(ostimPlayerDrinks) + " | NPC drinks: SexLab=" + DiagnosticBool(sexLabNPCDrinks) + " OStim=" + DiagnosticBool(ostimNPCDrinks)
-    Debug.Trace("[MME Extensions Dialogue] " + GetActorName(subject) + " | " + line0)
-    Debug.Trace("[MME Extensions Dialogue] " + line1)
-    Debug.Trace("[MME Extensions Dialogue] " + line2)
-    Debug.Trace("[MME Extensions Dialogue] " + line3)
-    Debug.Trace("[MME Extensions Dialogue] " + line4)
-    Debug.Trace("[MME Extensions Dialogue] " + line5)
-    Debug.Notification("Dialogue DEBUG: Hey there refresh=" + DiagnosticBool(MMEOpeningRefreshObserved) + " / milk snapshots refreshed=" + DiagnosticBool(milkSnapshotsRefreshed))
-    Debug.Notification("Dialogue DEBUG: SexLab gate=" + DiagnosticBool(conditions.MME_BreasfeedingAnimationsCheck) + " / OStim property=" + DiagnosticBool(OStimDialogueAvailable) + " global=" + ostimDialogueGateValue)
-    If postRefresh
-        ReportDialogueStructure(subject, playerActor)
-    EndIf
-EndFunction
-
 ; Lets player lifecycle events request an immediate capacity rescan.
 Function RefreshCapacity(String reason = "event")
     If !IsExtensionsEnabled()

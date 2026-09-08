@@ -16,8 +16,7 @@ Function Fragment_0(ObjectReference akSpeakerRef)
 EndFunction
 
 Function TestDialogueTarget(Actor target)
-    Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
-    GiveMilkToTarget(target, diagnostic)
+    GiveMilkToTarget(target, False)
 EndFunction
 
 ; Shared entry point for dialogue fragments and optional Skyrim.Net actions.
