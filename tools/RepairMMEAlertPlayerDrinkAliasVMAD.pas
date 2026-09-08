@@ -90,7 +90,6 @@ begin
   AddScript(scripts, 'MMEDebug');
   AddScript(scripts, 'MMEAlertsMCM');
   AddScript(scripts, 'MMEAlertsController');
-  AddScript(scripts, 'MMEDiagnostics');
   AddScript(scripts, 'MMEAlertsQuickTest');
   AddScript(scripts, 'MMEAlertsFlatRateDefaults');
   AddScript(scripts, 'MMESkyrimNetVoiceControls');

@@ -36,7 +36,6 @@ namespace
     constexpr auto kLifecycleEvent = "MMEExtensions_Lifecycle";
     constexpr auto kMMEEffectEvent = "MMEExtensions_MMEEffectApplied";
     constexpr auto kMMEEffectRemovedEvent = "MMEExtensions_MMEEffectRemoved";
-    constexpr auto kDialogueInfoEvent = "MMEExtensions_DialogueInfo";
     constexpr auto kPotionEvent = "MMEExtensions_PotionConsumed";
     constexpr auto kArmorEvent = "MMEExtensions_ArmorEquipped";
 
@@ -388,35 +387,6 @@ namespace
         SKSE::log::info("MME magic effect removed: target {:08X}, effect {:06X}", target->GetFormID(), effect->GetLocalFormID());
     }
 
-    void SendDialogueInfoEvent(RE::TESTopicInfo* info)
-    {
-        auto* source = SKSE::GetModCallbackEventSource();
-        auto* manager = RE::MenuTopicManager::GetSingleton();
-        auto* topic = info ? info->parentTopic : nullptr;
-        if (!source || !manager) {
-            return;
-        }
-
-        // Send the parent DIAL EditorID plus local INFO ID. Papyrus uses the
-        // opening DIAL as the precise post-Fragment diagnostic trigger and the
-        // two OStim DIAL IDs as positive selection evidence.
-        auto speaker = manager->speaker.get();
-        if (!speaker) {
-            speaker = manager->lastSpeaker.get();
-        }
-        SKSE::ModCallbackEvent event{
-            RE::BSFixedString(kDialogueInfoEvent),
-            RE::BSFixedString(topic ? topic->GetFormEditorID() : "<unresolved>"),
-            info ? static_cast<float>(info->GetLocalFormID()) : -1.0F,
-            speaker.get()
-        };
-        source->SendEvent(&event);
-        SKSE::log::info("dialogue event: topic {} info {} speaker {}",
-            topic ? topic->GetFormEditorID() : "<unresolved>",
-            info ? fmt::format("{:06X}", info->GetLocalFormID()) : "<unresolved>",
-            speaker ? fmt::format("{:08X}", speaker->GetFormID()) : "<unresolved>");
-    }
-
     std::uint64_t ActiveEffectKey(RE::TESObjectREFR* target, std::uint16_t uniqueID)
     {
         return (static_cast<std::uint64_t>(target->GetFormID()) << 16) | uniqueID;
@@ -472,7 +442,6 @@ namespace
         public RE::BSTEventSink<RE::TESLoadGameEvent>,
         public RE::BSTEventSink<RE::TESMagicEffectApplyEvent>,
         public RE::BSTEventSink<RE::TESActiveEffectApplyRemoveEvent>,
-        public RE::BSTEventSink<RE::TESTopicInfoEvent>,
         public RE::BSTEventSink<RE::TESEquipEvent>
     {
     public:
@@ -493,7 +462,6 @@ namespace
             holder->AddEventSink<RE::TESLoadGameEvent>(this);
             holder->AddEventSink<RE::TESMagicEffectApplyEvent>(this);
             holder->AddEventSink<RE::TESActiveEffectApplyRemoveEvent>(this);
-            holder->AddEventSink<RE::TESTopicInfoEvent>(this);
             holder->AddEventSink<RE::TESEquipEvent>(this);
             SKSE::log::info("Lifecycle event sinks registered");
         }
@@ -608,27 +576,6 @@ namespace
                     g_mmeActiveEffects.erase(found);
                 }
             }
-            return RE::BSEventNotifyControl::kContinue;
-        }
-
-        RE::BSEventNotifyControl ProcessEvent(
-            const RE::TESTopicInfoEvent*,
-            RE::BSTEventSource<RE::TESTopicInfoEvent>*) override
-        {
-            auto* manager = RE::MenuTopicManager::GetSingleton();
-            if (!manager) {
-                return RE::BSEventNotifyControl::kContinue;
-            }
-            // Engine versions populate these fields at slightly different points.
-            // Prefer current, then last, then the selected dialogue wrapper.
-            auto* info = manager->currentTopicInfo;
-            if (!info) {
-                info = manager->lastTopicInfo;
-            }
-            if (!info && manager->lastSelectedDialogue) {
-                info = manager->lastSelectedDialogue->parentTopicInfo;
-            }
-            SendDialogueInfoEvent(info);
             return RE::BSEventNotifyControl::kContinue;
         }
 

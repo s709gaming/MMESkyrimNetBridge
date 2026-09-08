@@ -26,6 +26,8 @@ Float NextSkyrimNetUpdate = 0.0
 Float NextDebugUpdate = 0.0
 Float NextThoughtDebugUpdate = 0.0
 Float NextArmorCheck = 0.0
+Float NextArmorReminder = 0.0
+Int ArmorReminderRetries = 0
 Float NextDialogueDiagnosticUpdate = 0.0
 Float NextOStimBreastfeedingWatchdog = 0.0
 Float NextThoughtGameTime = 0.0
@@ -85,6 +87,10 @@ Function InitializeController()
     RegisterForModEvent("MMEExtensions_MMEEffectRemoved", "OnMMEEffectRemoved")
     UnregisterForModEvent("MMEExtensions_DialogueInfo")
     RegisterForModEvent("MMEExtensions_DialogueInfo", "OnDialogueInfoSelected")
+    ; The service reminder uses Papyrus's menu event instead of the native
+    ; TESTopicInfoEvent observer. Refresh this registration after every load.
+    UnregisterForMenu("Dialogue Menu")
+    RegisterForMenu("Dialogue Menu")
     ; Reminder timestamps are shared through StorageUtil so redundant controller
     ; initialization cannot clear an active cooldown.
     UnregisterForModEvent("MMEExtensions_ArmorEquipped")
@@ -171,6 +177,7 @@ Function DisableController()
     UnregisterForModEvent("MMEExtensions_MMEEffectApplied")
     UnregisterForModEvent("MMEExtensions_MMEEffectRemoved")
     UnregisterForModEvent("MMEExtensions_DialogueInfo")
+    UnregisterForMenu("Dialogue Menu")
     UnregisterForModEvent("MMEExtensions_ArmorEquipped")
     UnregisterForModEvent("MME_AddMilkMaid")
     UnregisterForModEvent("MilkQuest.StartMilkingMachine")
@@ -188,6 +195,8 @@ Function DisableController()
     NextDebugUpdate = 0.0
     NextThoughtDebugUpdate = 0.0
     NextArmorCheck = 0.0
+    NextArmorReminder = 0.0
+    ArmorReminderRetries = 0
     MMEArmorScript.CancelPlayerArmorCheck(Game.GetPlayer())
     ; Restore MME's own stripping while MME Extensions is disabled.
     MMEArmorScript.ApplyArmorStrippingMasterToggle()
@@ -199,6 +208,55 @@ Function DisableController()
     LastDialogueDiagnosticState = ""
     MMEOpeningRefreshObserved = False
     MMEOpeningRefreshSnapshotAt = 0.0
+EndFunction
+
+; Menu-open is safe but may arrive just before Skyrim publishes its dialogue
+; target. Defer resolution through the controller's existing one-shot scheduler
+; and retry briefly instead of reading MenuTopicManager's transient pointers.
+Event OnMenuOpen(String menuName)
+    If menuName == "Dialogue Menu" && IsExtensionsEnabled() && JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) == 1
+        ArmorReminderRetries = 0
+        NextArmorReminder = Utility.GetCurrentRealTime() + 0.25
+        ScheduleNextUpdate()
+    EndIf
+EndEvent
+
+Function TryShowServiceArmorReminder()
+    Actor reminderSpeaker = Game.GetDialogueTarget() as Actor
+    If reminderSpeaker == None
+        ArmorReminderRetries += 1
+        If ArmorReminderRetries < 4
+            NextArmorReminder = Utility.GetCurrentRealTime() + 0.25
+        Else
+            NextArmorReminder = 0.0
+            ArmorReminderRetries = 0
+        EndIf
+        Return
+    EndIf
+
+    NextArmorReminder = 0.0
+    ArmorReminderRetries = 0
+    Float reminderNow = Utility.GetCurrentRealTime()
+    Float reminderCooldown = JsonUtil.GetFloatValue(SettingsFile, "armorCheckReminderCooldown", 60.0)
+    If reminderCooldown < 0.0
+        reminderCooldown = 0.0
+    ElseIf reminderCooldown > 300.0
+        reminderCooldown = 300.0
+    EndIf
+    Float lastReminderShown = StorageUtil.GetFloatValue(None, ArmorCheckReminderShownAtKey, -1000.0)
+    Float lastReminderAttempt = StorageUtil.GetFloatValue(None, ArmorCheckReminderAttemptAtKey, -1000.0)
+    If lastReminderShown > reminderNow
+        lastReminderShown = -1000.0
+    EndIf
+    If lastReminderAttempt > reminderNow
+        lastReminderAttempt = -1000.0
+    EndIf
+    If reminderNow - lastReminderShown >= reminderCooldown && reminderNow - lastReminderAttempt >= 2.0
+        StorageUtil.SetFloatValue(None, ArmorCheckReminderAttemptAtKey, reminderNow)
+        If MMEServiceArmorReminder.TryShow(reminderSpeaker)
+            StorageUtil.SetFloatValue(None, ArmorCheckReminderShownAtKey, reminderNow)
+        EndIf
+    EndIf
 EndFunction
 
 ; Own the one game-time registration on this established quest script. Thoughts
@@ -508,49 +566,6 @@ Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float local
     If !IsExtensionsEnabled()
         Return
     EndIf
-    ; This gameplay reminder is independent of every diagnostic toggle and must
-    ; run before the diagnostic-only early return below. A successful notice
-    ; starts a configurable real-time cooldown; it does not depend on the
-    ; Dialogue Menu close event, which is not reliable on every dialogue path.
-    If JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) == 1
-        ; Do not depend on OnMenuOpen ordering. Both resolvers return None for
-        ; ambient NPC chatter and identify only the player's live conversation.
-        Actor reminderSpeaker = MMEExtensionsNative.GetDialogueTarget()
-        If reminderSpeaker == None
-            reminderSpeaker = Game.GetDialogueTarget() as Actor
-        EndIf
-        If reminderSpeaker != None
-            Float reminderNow = Utility.GetCurrentRealTime()
-            Float reminderCooldown = JsonUtil.GetFloatValue(SettingsFile, "armorCheckReminderCooldown", 60.0)
-            If reminderCooldown < 0.0
-                reminderCooldown = 0.0
-            ElseIf reminderCooldown > 300.0
-                reminderCooldown = 300.0
-            EndIf
-            ; StorageUtil makes these guards shared across controller instances.
-            ; This matters if an obsolete test plugin and production plugin are
-            ; both active and have each registered the same native event.
-            Float lastReminderShown = StorageUtil.GetFloatValue(None, ArmorCheckReminderShownAtKey, -1000.0)
-            Float lastReminderAttempt = StorageUtil.GetFloatValue(None, ArmorCheckReminderAttemptAtKey, -1000.0)
-            ; GetCurrentRealTime restarts with Skyrim. Ignore timestamps saved by
-            ; a previous process instead of resetting them during every init.
-            If lastReminderShown > reminderNow
-                lastReminderShown = -1000.0
-            EndIf
-            If lastReminderAttempt > reminderNow
-                lastReminderAttempt = -1000.0
-            EndIf
-            Bool attemptAllowed = reminderNow - lastReminderShown >= reminderCooldown && reminderNow - lastReminderAttempt >= 2.0
-            If attemptAllowed
-                ; Reserve before classification so a second controller cannot
-                ; enter TryShow while this event is still being processed.
-                StorageUtil.SetFloatValue(None, ArmorCheckReminderAttemptAtKey, reminderNow)
-                If MMEServiceArmorReminder.TryShow(reminderSpeaker)
-                    StorageUtil.SetFloatValue(None, ArmorCheckReminderShownAtKey, reminderNow)
-                EndIf
-            EndIf
-        EndIf
-    EndIf
     Int selectedInfo = localInfoForm as Int
     If selectedInfo == 0x05FE12 || selectedInfo == 0x05FE0E
         Actor source = sender as Actor
@@ -694,6 +709,10 @@ EndFunction
 Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form sender)
     If !IsExtensionsEnabled()
         Return
+    EndIf
+    If reason == "load"
+        UnregisterForMenu("Dialogue Menu")
+        RegisterForMenu("Dialogue Menu")
     EndIf
     RefreshMMESexLabAnimationGate("lifecycle " + reason)
     RefreshCapacity(reason)
@@ -988,6 +1007,15 @@ Function ScheduleNextUpdate()
             delay = candidate
         EndIf
     EndIf
+    If NextArmorReminder > 0.0
+        candidate = NextArmorReminder - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
+    EndIf
     If NextDialogueDiagnosticUpdate > 0.0
         candidate = NextDialogueDiagnosticUpdate - now
         If candidate <= 0.0
@@ -1010,7 +1038,7 @@ Function ScheduleNextUpdate()
         ; Dialogue needs a quarter-second post-fragment snapshot. All other work
         ; is intentionally throttled to one second to avoid tight Papyrus loops.
         Float minimumDelay = 1.0
-        If NextDialogueDiagnosticUpdate > 0.0
+        If NextDialogueDiagnosticUpdate > 0.0 || NextArmorReminder > 0.0
             minimumDelay = 0.25
         EndIf
         If delay < minimumDelay
@@ -1026,6 +1054,8 @@ Event OnUpdate()
     ; most once per callback. Capacity and Skyrim.Net share the same actor scan.
     If !IsExtensionsEnabled()
         NextArmorCheck = 0.0
+        NextArmorReminder = 0.0
+        ArmorReminderRetries = 0
         MMEArmorScript.CancelPlayerArmorCheck(Game.GetPlayer())
         Return
     EndIf
@@ -1034,6 +1064,7 @@ Event OnUpdate()
     Bool skyrimNetDue = NextSkyrimNetUpdate > 0.0 && now >= NextSkyrimNetUpdate
     Bool debugDue = NextDebugUpdate > 0.0 && now >= NextDebugUpdate
     Bool thoughtDebugDue = NextThoughtDebugUpdate > 0.0 && now >= NextThoughtDebugUpdate
+    Bool armorReminderDue = NextArmorReminder > 0.0 && now >= NextArmorReminder
     Bool dialogueDiagnosticDue = NextDialogueDiagnosticUpdate > 0.0 && now >= NextDialogueDiagnosticUpdate
     Bool ostimBreastfeedingDue = NextOStimBreastfeedingWatchdog > 0.0 && now >= NextOStimBreastfeedingWatchdog
     If capacityDue || skyrimNetDue || thoughtDebugDue
@@ -1053,6 +1084,9 @@ Event OnUpdate()
     EndIf
     If thoughtDebugDue
         NextThoughtDebugUpdate = now + 15.0
+    EndIf
+    If armorReminderDue
+        TryShowServiceArmorReminder()
     EndIf
     If dialogueDiagnosticDue
         ; Prefer Skyrim's live speaker at evaluation time. The event sender is a

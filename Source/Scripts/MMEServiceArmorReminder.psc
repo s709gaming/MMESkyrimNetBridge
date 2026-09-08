@@ -69,7 +69,7 @@ Bool Function TryShow(Actor speaker) Global
 
     String[] observations = JsonUtil.PathStringElements(configFile, "." + poolName)
     String[] reactions = JsonUtil.PathStringElements(configFile, ".reaction")
-    If observations == None || observations.Length == 0 || reactions == None || reactions.Length == 0
+    If observations.Length == 0 || reactions.Length == 0
         ReportStop("wording pool missing or empty: " + poolName, speaker, serviceRole)
         Return False
     EndIf

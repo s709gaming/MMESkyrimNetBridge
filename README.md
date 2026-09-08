@@ -1,12 +1,15 @@
 # MME Extensions
 
-**Release status:** Beta 0.6.0  
+**Release status:** Beta 0.6.0
+
 **Main requirement:** Milk Mod Economy (and its requirements)
-**DOWNLOAD**:https://www.loverslab.com/files/file/50820-mme-milk-mod-economy-extensions/
+
+**DOWNLOAD:**
+https://www.loverslab.com/files/file/50820-mme-milk-mod-economy-extensions/
 
 > **IMPORTANT:** Skyrim SE/AE **1.7.9.9 is not yet supported.**
 
-**Full Requirements & Recommended Setup:**  
+**Full Requirements & Recommended Setup:**
 [REQUIREMENTS.md](https://github.com/s709gaming/MMESkyrimNetBridge/blob/main/REQUIREMENTS.md)
 
 ---
@@ -19,14 +22,21 @@ Make Milk Maid gameplay feel more alive, reactive, and a little more shameless.
 
 ## Key Features
 
-- **Optional, but major, Skyrim.Net integration** gives nearby NPCs AI-generated voice reactions to major MME events and can turn certain conversations into actual gameplay actions.
-- Drinking milk can increase a Milk Maid's milk level, temporarily inflate her breasts, raise arousal, and trigger moans, animations, or reactions.
-- Arousal from drinking milk is meant to trigger your other arousal mods, such as animations or events.
-- Milk can come from bottles... or straight from the tap~
-- Nearby Milk Maids react as they become heavy, full, milked, or fitted with questionable milking equipment.
-- Blacksmiths, Alchemists, and Court Wizards can modify your slot 32 chest armor with hidden milking equipment or kinky, milk-hungry tentacles, depending on their profession.
-- Create new Milk Maids through a simple, erotic breastfeeding ritual.
-- Supports the modern **OStim animation framework** while retaining existing SexLab support.
+* **Optional, but major, Skyrim.Net integration** gives nearby NPCs AI-generated voice reactions and roleplay to major MME events and can turn certain conversations into actual gameplay actions. 
+
+* Drinking milk, even straight from the tap, can increase a Milk Maid's milk level, temporarily inflate her breasts, raise arousal, and trigger moans, animations, or reactions.
+
+* Arousal from drinking milk is meant to trigger your other arousal mods, such as animations or events.
+
+* Nearby Milk Maids react as they become heavy, full, milked, or fitted with questionable milking equipment.
+
+* Blacksmiths, Alchemists, and Court Wizards can modify your slot 32 chest armor with hidden milking equipment or kinky, milk-hungry tentacles, depending on their profession.
+
+* Create new Milk Maids through a simple, erotic breastfeeding ritual.
+
+* Supports the modern **OStim animation framework** while retaining existing SexLab support.
+
+* Court Wizards can help reverse your Milk Maid progression after level 5, just in case things get a little TOO big.
 
 **In short: MME still handles the milk. MME Extensions makes Skyrim notice.**
 
@@ -42,14 +52,21 @@ MME Extensions allows OStim to take over the animation side and interact with th
 
 Depending on your MCM settings, AI narration, lewd sound effects, animations, or notifications can react to:
 
-- Drinking milk and becoming aroused and bustier.
-- Reaching 50% or 100% milk fullness.
-- A new Milk Maid discovering her newfound gifts.
-- Equipping milking devices such as milk cuirasses, parasite armor, and similar equipment.
-- Periodically wearing those questionable devices around Skyrim.
-- Being milked or breastfeeding another character.
-- Clothes flying off when breasts grow too large, along with other important MME events.
-- Try wearing **TENTACLE ARMOR**:  
+* Drinking milk and becoming aroused and bustier.
+
+* Reaching 50% or 100% milk fullness.
+
+* A new Milk Maid discovering her newfound gifts.
+
+* Equipping milking devices such as milk cuirasses, parasite armor, and similar equipment.
+
+* Periodically wearing those questionable devices around Skyrim.
+
+* Being milked or breastfeeding another character.
+
+* Clothes flying off when breasts grow too large, along with other important MME events.
+
+* Try wearing **TENTACLE ARMOR**:
   [Tentacle Armor on Nexus Mods](https://www.nexusmods.com/skyrimspecialedition/mods/62644?tab=description)
 
 ## Erotic Armor Modifications
@@ -72,9 +89,11 @@ A recurring reaction system comments on a Milk Maid's currently worn equipment, 
 
 Depending on your settings, the system can periodically trigger:
 
-- In-game flavor notifications.
-- Reaction sounds.
-- Optional Skyrim.Net AI voice narration.
+* In-game flavor notifications.
+
+* Reaction sounds.
+
+* Optional Skyrim.Net AI voice narration.
 
 Reactions can reference worn milking equipment, parasite or living armor, or the absence of specialized milking equipment.
 
@@ -94,11 +113,15 @@ These remain normal MME settings and can be changed afterward through MME's own 
 
 The recommended profile provides:
 
-- Natural milk production without mandatory Lactacid.
-- Roughly daily milking cycles.
-- Novice progression.
-- 3BA-friendly breast scaling.
-- 100% gush chance to avoid additional milking delay.
+* Natural milk production without mandatory Lactacid.
+
+* Roughly daily milking cycles.
+
+* Novice progression.
+
+* 3BA-friendly breast scaling.
+
+* 100% gush chance to avoid additional milking delay.
 
 The installer offers three startup profiles:
 
@@ -134,11 +157,11 @@ For the complete dependency list, Skyrim VR setup, BodySlide instructions, breas
 
 ## Credits
 
-- **Ed86** - Milk Mod Economy
-- **MinLL and contributors** - Skyrim.Net
-- **CharmedBaryon and contributors** - CommonLibSSE-NG
-- **Tetherball88** - Reference for OStim implementation
-- **GoodProvider** - Reference for SexLab implementation
+* **Ed86** - Milk Mod Economy
+* **MinLL and contributors** - Skyrim.Net
+* **CharmedBaryon and contributors** - CommonLibSSE-NG
+* **Tetherball88** - Reference for OStim implementation
+* **GoodProvider** - Reference for SexLab implementation
 
 ## License / Permissions
 
@@ -149,5 +172,3 @@ Feel free to use, modify, redistribute, or build on MME Extensions under the MIT
 Credit is appreciated.
 
 Third-party dependencies and assets remain subject to their own permissions.
-
-MME Extensions is an independent add-on and is not an official Milk Mod Economy, Skyrim, SKSE, SexLab, SexLab Aroused, OSLAroused, or Skyrim.Net release.
