@@ -497,7 +497,7 @@ EndEvent
 ; Fragment_00. Raw events stay in the log; the HUD reports only the resulting
 ; route state.
 Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float localInfoForm, Form sender)
-    ; Phase 1: resolve enabled diagnostics and keep MME's registrar cache fresh.
+    ; Phase 1: resolve enabled diagnostics.
     ; The native event is observational; it never changes INFO eligibility.
     Bool dialogueDebug = JsonUtil.GetIntValue(SettingsFile, "enableDialogueDiagnostic", 0) == 1
     Bool sexLabBFDebug = JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1
@@ -551,7 +551,6 @@ Event OnDialogueInfoSelected(String eventName, String topicEditorID, Float local
             EndIf
         EndIf
     EndIf
-    RefreshMMESexLabAnimationGate("dialogue event " + topicEditorID)
     Int selectedInfo = localInfoForm as Int
     If selectedInfo == 0x05FE12 || selectedInfo == 0x05FE0E
         Actor source = sender as Actor

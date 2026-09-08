@@ -1435,7 +1435,6 @@ Event OnPageReset(String page)
     If page == "Troubleshoot"
         AddHeaderOption("Output")
         diagnosticNotificationsOption = AddToggleOption("In-Game Audit Notifications", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticNotifications", 1) == 1)
-        diagnosticPapyrusTraceOption = AddToggleOption("Papyrus Audit Trace", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0) == 1)
         AddHeaderOption("Actions")
         diagnosticRefreshGateOption = AddTextOption("Refresh OStim Dialogue Gate", "RUN")
         diagnosticInstallAuditOption = AddTextOption("Run Install Audit", "RUN")
@@ -1469,6 +1468,7 @@ Event OnPageReset(String page)
         diagnosticMageBusFailureOption = AddTextOption("Last Mage Bus Failure", MMEDiagnostics.GetMageDialogueBusFailure(), OPTION_FLAG_DISABLED)
         SetCursorPosition(1)
         AddHeaderOption("Papyrus Trace")
+        diagnosticPapyrusTraceOption = AddToggleOption("Papyrus Audit Trace", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0) == 1)
         papyrusTraceOption = AddToggleOption("Master Papyrus Logging", JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) == 1)
         Int vendorTraceFlags = OPTION_FLAG_NONE
         If JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) != 1
