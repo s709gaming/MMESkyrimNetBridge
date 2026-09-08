@@ -8,7 +8,9 @@ EndFunction
 ; Keeps direct OStim API calls in one optional integration boundary. Nothing in
 ; this source is installed in place of OStim's real scripts.
 String Function FindSemanticScene(Actor[] actors, Int actorPosition, Int targetPosition, String actionType, Bool diagnostic = False, String context = "") Global
-    If actors == None || !OActor.VerifyActors(actors)
+    ; Match MME's own array idiom: an unset array has Length 0. Comparing an
+    ; array object to None emits an invalid None-to-array cast in the VM.
+    If actors.Length == 0 || !OActor.VerifyActors(actors)
         Report(diagnostic, context + "OStim rejected one or more actors")
         Return ""
     EndIf
@@ -22,7 +24,7 @@ EndFunction
 
 Int Function StartManualScene(Actor[] actors, String sceneID, String metadata, Bool suppressPlayerControl = False, Float duration = 0.0, Bool diagnostic = False, String context = "") Global
     ; Validate the already-resolved semantic request before allocating a builder.
-    If actors == None || sceneID == ""
+    If actors.Length == 0 || sceneID == ""
         Report(diagnostic, context + "invalid actors or scene passed to OStim")
         Return -1
     EndIf
@@ -94,7 +96,7 @@ Bool Function OwnsManualThreadForActors(Int threadID, Actor firstActor, Actor se
         Return False
     EndIf
     Actor[] threadActors = OThread.GetActors(threadID)
-    Return threadActors != None && threadActors.Length == 2 && threadActors.Find(firstActor) >= 0 && threadActors.Find(secondActor) >= 0
+    Return threadActors.Length == 2 && threadActors.Find(firstActor) >= 0 && threadActors.Find(secondActor) >= 0
 EndFunction
 
 Bool Function IsThreadInAutoMode(Int threadID) Global
@@ -132,7 +134,7 @@ EndFunction
 ; same-cell and cross-framework rules to prevent delayed Skyrim.Net actions
 ; from stealing actors whose world state changed after action selection.
 Bool Function ValidatePairForCommit(Actor[] actors, Bool diagnostic = False, Bool requireOStimVerification = False, String context = "") Global
-    If actors == None || actors.Length != 2 || actors[0] == None || actors[1] == None || actors[0] == actors[1]
+    If actors.Length != 2 || actors[0] == None || actors[1] == None || actors[0] == actors[1]
         Report(diagnostic, context + "invalid source/drinker pair at scene commit")
         Return False
     EndIf

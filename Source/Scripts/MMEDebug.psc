@@ -1059,6 +1059,7 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
     BeginSession(attemptID, caller, semanticIntent, milkSource, drinker, passiveSpell, sceneID, diagnostic)
     Int threadID = MMEOStimIntegration.StartManualScene(actors, sceneID, "MMEExtensions,Breastfeeding", suppressPlayerControl, sceneDuration, diagnostic, traceContext)
     If threadID < 0
+        MMELog.Alarm("[MME Extensions OStim] FAILURE | BF #" + attemptID + " | builder accepted preflight but did not start a thread")
         EndSession("OStim builder start rejected")
         Return False
     EndIf
@@ -1070,6 +1071,7 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
             StopOwnedThread("startup verification failed")
         EndIf
         TraceActive("started=false; expected scene was not confirmed")
+        AlarmActive("thread started but ownership could not be confirmed within five seconds")
         EndSession("OStim startup verification failed")
         Return False
     EndIf
@@ -1374,6 +1376,9 @@ Function HandleWatchdogUpdate()
     ; Revalidate ownership before scheduling another watchdog tick. Cleanup is
     ; final as soon as OStim or MME no longer belongs to this transaction.
     If ActiveOwnsThread && !StillOwnsThread()
+        If ActiveSemanticIntent == "CreateMilkMaid"
+            AlarmActive("new Milk Maid route lost OStim ownership before its completion callback")
+        EndIf
         RelinquishOwnership("OStim breastfeeding scene ended, changed, or entered auto mode")
     EndIf
     If ActiveSession && ActiveOwnsThread
@@ -1400,6 +1405,13 @@ EndFunction
 
 Function TraceActive(String traceText)
     TraceAttempt(ActiveSessionID, ActiveDiagnostic, traceText)
+EndFunction
+
+; Unconditional, problem-only evidence. Call only at a terminal abnormal exit;
+; ordinary retries, eligibility rejections, and user-driven scene changes stay
+; in the opt-in diagnostic channel.
+Function AlarmActive(String failure)
+    MMELog.Alarm("[MME Extensions OStim] FAILURE | BF #" + ActiveSessionID + " | caller=" + ActiveCaller + " | intent=" + ActiveSemanticIntent + " | " + failure)
 EndFunction
 
 Bool Function IsMMEProcessingEligible(Actor milkSource, MilkQUEST milkController)

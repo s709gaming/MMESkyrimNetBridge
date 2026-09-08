@@ -74,6 +74,7 @@ Bool Function StartRequest(Actor milkSource, Actor candidate) Global
     If service == None
         TraceStep("breastfeeding service unavailable", True)
         Report(diagnostic, "request rejected: persistent breastfeeding service could not resolve")
+        MMELog.Alarm("[MME Extensions New Milkmaid] FAILURE | persistent breastfeeding service could not resolve")
         Return False
     EndIf
 
@@ -130,6 +131,7 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
             TraceSexLabStop(13, "MME potion list unavailable", True)
         EndIf
         Report(diagnostic, "conversion skipped: MME potion list is unavailable")
+        MMELog.Alarm("[MME Extensions New Milkmaid] FAILURE | MME potion list is unavailable after a completed breastfeeding scene")
         Return
     EndIf
 
@@ -144,6 +146,7 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
             TraceSexLabStop(13, "MME Lactacid form missing", True)
         EndIf
         Report(diagnostic, "conversion skipped: MME Lactacid form did not resolve")
+        MMELog.Alarm("[MME Extensions New Milkmaid] FAILURE | MME Lactacid form did not resolve after a completed breastfeeding scene")
         Return
     EndIf
 
@@ -160,6 +163,7 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
             TraceSexLabStop(13, "internal Lactacid could not be staged", True)
         EndIf
         Report(diagnostic, "conversion skipped: internal Lactacid dose could not be staged")
+        MMELog.Alarm("[MME Extensions New Milkmaid] FAILURE | internal Lactacid dose could not be staged")
         Return
     EndIf
 
@@ -179,6 +183,7 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
             TraceSexLabStop(13, "native Lactacid consumption was blocked", True)
         EndIf
         Report(diagnostic, "conversion failed: native Lactacid consumption was blocked; internal dose removed")
+        MMELog.Alarm("[MME Extensions New Milkmaid] FAILURE | native Lactacid consumption was blocked; internal dose removed")
         Return
     EndIf
 
@@ -195,6 +200,7 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
             TraceSexLabStop(14, "native MME effect did not assign a Milk Maid slot", True)
         EndIf
         Report(diagnostic, "conversion failed: native MME effect did not assign a Milk Maid slot")
+        MMELog.Alarm("[MME Extensions New Milkmaid] FAILURE | native MME effect did not assign a Milk Maid slot")
         Return
     EndIf
     TraceStep("slot confirmed")
@@ -215,6 +221,7 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
             TraceSexLabStop(15, "slot exists but Lactacid state was not initialized", True)
         EndIf
         Report(diagnostic, "conversion incomplete: slot exists but native Lactacid state was not initialized")
+        MMELog.Alarm("[MME Extensions New Milkmaid] FAILURE | slot exists but native Lactacid state was not initialized")
         Return
     EndIf
 
