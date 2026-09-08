@@ -1928,7 +1928,7 @@ Event OnOptionSelect(Int option)
         MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
         If controller != None
             If value == 1
-                controller.InitializeController()
+                controller.InitializeController(True)
             Else
                 controller.DisableController()
                 MMEReverseLevel reverseService = MMEReverseLevel.GetService()

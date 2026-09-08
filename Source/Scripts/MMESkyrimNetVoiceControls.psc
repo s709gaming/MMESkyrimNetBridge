@@ -16,7 +16,7 @@ Function RegisterSelfMilkingAction() Global
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingActionDiagnostic", 0) == 1
         Debug.Notification("Self-Milking Action: registration returned [" + result + "]")
     EndIf
-    MMELog.Status("[MMEAlert SkyrimNet] Self-milking action registration result " + result)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Self-milking action registration result " + result)
 EndFunction
 
 Bool Function SelfMilkingIsEligible(Actor candidate, String contextJson, String paramsJson) Global
@@ -154,7 +154,7 @@ Function RegisterGiveMilkAction() Global
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceGiveMilkDiagnostic", 1) == 1
         Debug.Notification("Give Milk Voice: registration returned [" + result + "]")
     EndIf
-    MMELog.Status("[MMEAlert SkyrimNet] Give Milk action registration result " + result)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Give Milk action registration result " + result)
 EndFunction
 
 ; SkyrimNet checks each conversational actor before exposing the action.

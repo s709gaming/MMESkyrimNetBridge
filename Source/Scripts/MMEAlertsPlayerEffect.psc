@@ -36,7 +36,7 @@ Event OnPlayerLoadGame()
     EndIf
     MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
     If controller != None
-        controller.InitializeController()
+        controller.InitializeController(True)
     EndIf
     MMEAlertsQuickTest quickTest = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsQuickTest
     If quickTest != None

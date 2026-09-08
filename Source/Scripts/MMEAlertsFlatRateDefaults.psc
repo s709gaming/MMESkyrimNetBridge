@@ -34,7 +34,7 @@ Function ApplyDefaults()
 
     Bool personalDefaultsEnabled = JsonUtil.GetIntValue(InstallerFile, "enablePersonalDefaults", 1) == 1
     If !personalDefaultsEnabled
-        MMELog.Status("[MME Extensions Defaults] standard MME settings selected; nothing changed")
+        MMELog.Diagnostic("[MME Extensions Defaults] standard MME settings selected; nothing changed")
         Return
     EndIf
 
@@ -83,7 +83,7 @@ Function ApplyDefaults()
 
     ; Commit the save latch only after every available preference/grant ran.
     defaultsApplied = True
-    MMELog.Status("[MME Extensions Defaults] fixed production, level cap, and Novice profile applied")
+    MMELog.Diagnostic("[MME Extensions Defaults] fixed production, level cap, and Novice profile applied")
 EndFunction
 
 Function AddSpellIfMissing(Actor playerActor, Spell spellToAdd)

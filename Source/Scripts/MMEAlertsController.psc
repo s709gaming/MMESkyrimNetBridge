@@ -48,11 +48,13 @@ EndFunction
 
 ; Quest startup registers MME events and initializes the player monitor/poller.
 Event OnInit()
-    InitializeController()
+    InitializeController(True)
 EndEvent
 
 ; Restores event registrations and abilities; called at startup and after load.
-Function InitializeController()
+; Internal MCM refreshes remain silent; true launch/load entry points request
+; one compact engine-on status after initialization is complete.
+Function InitializeController(Bool reportStatus = False)
     ; Phase 1: refresh conditional forms and recover legacy animation state
     ; before honoring the master toggle. The OStim Global must also be correct
     ; while disabled so Skyrim cannot retain a stale dialogue choice.
@@ -60,6 +62,9 @@ Function InitializeController()
     MMEArmorScript.RestorePlayerMovementIfNeeded(Game.GetPlayer(), MMEArmorScript.GetArmorDiagnostic())
     If !IsExtensionsEnabled()
         DisableController()
+        If reportStatus
+            MMELog.Status("[MME Extensions] disabled | controller inactive")
+        EndIf
         Return
     EndIf
     ; Re-apply the configurable stripping master toggle so MME's own stripping
@@ -113,6 +118,13 @@ Function InitializeController()
     UpdatePolling()
     RefreshGameTimeScheduling()
     BaselineKnownMilkmaids()
+    If reportStatus
+        String skyrimNetState = "unavailable"
+        If MMEAlertsSkyrimNet.IsAvailable()
+            skyrimNetState = "available"
+        EndIf
+        MMELog.Status("[MME Extensions] ready | core events registered | Skyrim.Net=" + skyrimNetState)
+    EndIf
 EndFunction
 
 ; MME computes this conditional from the same two registrars during its load

@@ -206,9 +206,9 @@ Function RegisterPromptDecorator() Global
             Debug.Notification("Skyrim.Net Prompt: registration returned [" + result + "] - it may already be registered")
         EndIf
     EndIf
-    MMELog.Status("[MMEAlert SkyrimNet] Milkmaid prompt decorator registration result " + result)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid prompt decorator registration result " + result)
     Int breastfeedingResult = SkyrimNetApi.RegisterDecorator("mme_breastfeeding_role", "MMEAlertsSkyrimNet", "BreastfeedingPromptRole")
-    MMELog.Status("[MMEAlert SkyrimNet] Breastfeeding prompt decorator registration result " + breastfeedingResult)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Breastfeeding prompt decorator registration result " + breastfeedingResult)
 EndFunction
 
 Function SetBreastfeedingPromptState(Actor participant, String role, Int threadID) Global
