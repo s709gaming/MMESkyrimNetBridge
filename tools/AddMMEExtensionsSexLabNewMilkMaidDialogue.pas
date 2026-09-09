@@ -294,33 +294,22 @@ var
 begin
   Result := False;
   conditions := ElementByPath(aInfo, 'Conditions');
+  if Assigned(conditions) then
+    Remove(conditions);
+  Add(aInfo, 'Conditions', True);
+  conditions := ElementByPath(aInfo, 'Conditions');
   if not Assigned(conditions) then
     Exit;
 
+  ; The stable Extensions-owned backend gate controls visibility. The INFO
+  ; fragment performs authoritative live actor/milk/capacity validation before
+  ; it starts the original MME SexLab route, so transient quest-cache CTDAs do
+  ; not belong on the menu entry.
   sourceCondition := FindGlobalCondition(OStimInfo);
   newCondition := ElementAssign(conditions, HighInteger, sourceCondition, False);
   if not PointGlobalCondition(newCondition, SexLabGate) then
     Exit;
-
-  sourceCondition := FindConditionByVariable(OStimInfo, FreeMaidSlotsVariable);
-  if not Assigned(sourceCondition) then
-    Exit;
-  if not Assigned(ElementAssign(conditions, HighInteger, sourceCondition, False)) then
-    Exit;
-
-  sourceCondition := FindConditionByVariable(OStimInfo, SubjectMaidVariable);
-  if not Assigned(sourceCondition) then
-    Exit;
-  if not Assigned(ElementAssign(conditions, HighInteger, sourceCondition, False)) then
-    Exit;
-
-  sourceCondition := FindConditionByVariable(OStimInfo, SubjectSlaveVariable);
-  if not Assigned(sourceCondition) then
-    Exit;
-  if not Assigned(ElementAssign(conditions, HighInteger, sourceCondition, False)) then
-    Exit;
-
-  Result := ElementCount(conditions) = 10;
+  Result := ElementCount(conditions) = 1;
 end;
 
 function InstallSexLabHandler(aInfo: IInterface): Boolean;

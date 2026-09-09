@@ -29,6 +29,8 @@ Float NextArmorCheck = 0.0
 Float NextArmorReminder = 0.0
 Int ArmorReminderRetries = 0
 Float NextOStimBreastfeedingWatchdog = 0.0
+Float NextSexLabFallbackCheck = 0.0
+Int SexLabFallbackCheckAttempts = 0
 Float NextThoughtGameTime = 0.0
 Float NextInjectionGameTime = 0.0
 String ArmorCheckReminderShownAtKey = "MMEExtensions.ArmorReminder.ShownAt"
@@ -73,7 +75,7 @@ Function InitializeController(Bool reportStatus = False)
     ; Phase 2: refresh framework-derived gates and register integrations. Event
     ; registration is deliberately idempotent: unregister first so save reloads
     ; and MCM upgrades cannot accumulate duplicate callbacks.
-    RefreshMMESexLabAnimationGate("controller initialization")
+    BeginSexLabFallbackGrace("controller initialization")
     RegisterMilkingEvents()
     RegisterDhlpEvents()
     MMEAlertsSkyrimNet.RegisterPromptDecorator()
@@ -152,6 +154,63 @@ Bool Function RefreshMMESexLabAnimationGate(String reason = "event")
     Return liveGate
 EndFunction
 
+; SexLab can still be registering animations when this quest initializes.
+; When it is the selected fallback, retry four times over one minute before
+; treating missing MME breastfeeding registrars as an infrastructure failure.
+Function BeginSexLabFallbackGrace(String reason = "event")
+    If !IsExtensionsEnabled() || MMEOStimBreastfeeding.IsBreastfeedingEnabled()
+        NextSexLabFallbackCheck = 0.0
+        SexLabFallbackCheckAttempts = 0
+        Return
+    EndIf
+    If RefreshMMESexLabAnimationGate(reason)
+        NextSexLabFallbackCheck = 0.0
+        SexLabFallbackCheckAttempts = 0
+        Return
+    EndIf
+    SexLabFallbackCheckAttempts = 0
+    NextSexLabFallbackCheck = Utility.GetCurrentRealTime() + 15.0
+    ScheduleNextUpdate()
+EndFunction
+
+Function CheckSexLabFallbackAfterGrace()
+    If MMEOStimBreastfeeding.IsBreastfeedingEnabled()
+        NextSexLabFallbackCheck = 0.0
+        SexLabFallbackCheckAttempts = 0
+        Return
+    EndIf
+    SexLabFallbackCheckAttempts += 1
+    If RefreshMMESexLabAnimationGate("fallback grace attempt " + SexLabFallbackCheckAttempts)
+        NextSexLabFallbackCheck = 0.0
+        SexLabFallbackCheckAttempts = 0
+        Return
+    EndIf
+    If SexLabFallbackCheckAttempts < 4
+        NextSexLabFallbackCheck = Utility.GetCurrentRealTime() + 15.0
+        Return
+    EndIf
+
+    NextSexLabFallbackCheck = 0.0
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
+        MMELog.Alarm("[MME Extensions SexLab BF] ROUTE CLOG | OStim is off but the MME/SexLab animation interface remained unavailable after 60 seconds")
+        Return
+    EndIf
+    Bool straightFound = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar") != None
+    Bool lesbianFound = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding") != None
+    String missing = ""
+    If !straightFound
+        missing = "zjBreastFeedingVar (Straight)"
+    EndIf
+    If !lesbianFound
+        If missing != ""
+            missing += ", "
+        EndIf
+        missing += "zjBreastFeeding (Lesbian)"
+    EndIf
+    MMELog.Alarm("[MME Extensions SexLab BF] ROUTE CLOG | OStim is off but required registrar(s) remained missing after 60 seconds: " + missing)
+EndFunction
+
 ; Skyrim.Net resolves quest action scripts from the existing quest instance.
 ; Keep this entry point on the controller so upgrades work in established saves.
 Function StartBreastfeedingMilkShare(Actor milkSource, Actor target)
@@ -204,6 +263,8 @@ Function DisableController()
     ; Restore MME's own stripping while MME Extensions is disabled.
     MMEArmorScript.ApplyArmorStrippingMasterToggle()
     NextOStimBreastfeedingWatchdog = 0.0
+    NextSexLabFallbackCheck = 0.0
+    SexLabFallbackCheckAttempts = 0
     StopGameTimeScheduling()
 EndFunction
 
@@ -370,6 +431,9 @@ Function RefreshOStimDialogueAvailability()
     If dialogueGate != None
         If OStimDialogueAvailable
             dialogueGate.SetValue(1.0)
+            If dialogueGate.GetValue() < 1.0
+                MMELog.Alarm("[MME Extensions Dialogue] ROUTE CLOG | OStim is enabled but its dialogue gate did not open")
+            EndIf
         Else
             dialogueGate.SetValue(0.0)
         EndIf
@@ -400,6 +464,9 @@ Function RefreshNewMilkMaidDialogueAvailability(Bool sexLabAvailable)
     If dialogueGate != None
         If available
             dialogueGate.SetValue(1.0)
+            If dialogueGate.GetValue() < 1.0
+                MMELog.Alarm("[MME Extensions Dialogue] ROUTE CLOG | SexLab New Milk Maid route is available but its dialogue gate did not open")
+            EndIf
         Else
             dialogueGate.SetValue(0.0)
         EndIf
@@ -819,6 +886,8 @@ Function UpdatePolling()
         NextSkyrimNetUpdate = 0.0
         NextDebugUpdate = 0.0
         NextThoughtDebugUpdate = 0.0
+        NextSexLabFallbackCheck = 0.0
+        SexLabFallbackCheckAttempts = 0
         Return
     EndIf
     Float now = Utility.GetCurrentRealTime()
@@ -931,6 +1000,15 @@ Function ScheduleNextUpdate()
             delay = candidate
         EndIf
     EndIf
+    If NextSexLabFallbackCheck > 0.0
+        candidate = NextSexLabFallbackCheck - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
+    EndIf
     If delay > 0.0
         ; The dialogue-menu armor reminder needs a short retry. All other work
         ; is intentionally throttled to one second to avoid tight Papyrus loops.
@@ -952,6 +1030,8 @@ Event OnUpdate()
     If !IsExtensionsEnabled()
         NextArmorCheck = 0.0
         NextArmorReminder = 0.0
+        NextSexLabFallbackCheck = 0.0
+        SexLabFallbackCheckAttempts = 0
         ArmorReminderRetries = 0
         MMEArmorScript.CancelPlayerArmorCheck(Game.GetPlayer())
         Return
@@ -963,6 +1043,7 @@ Event OnUpdate()
     Bool thoughtDebugDue = NextThoughtDebugUpdate > 0.0 && now >= NextThoughtDebugUpdate
     Bool armorReminderDue = NextArmorReminder > 0.0 && now >= NextArmorReminder
     Bool ostimBreastfeedingDue = NextOStimBreastfeedingWatchdog > 0.0 && now >= NextOStimBreastfeedingWatchdog
+    Bool sexLabFallbackDue = NextSexLabFallbackCheck > 0.0 && now >= NextSexLabFallbackCheck
     If capacityDue || skyrimNetDue || thoughtDebugDue
         ScanNearbyMilkMaids(skyrimNetDue, capacityDue, thoughtDebugDue)
     EndIf
@@ -990,6 +1071,10 @@ Event OnUpdate()
         If breastfeedingService != None
             breastfeedingService.HandleWatchdogUpdate()
         EndIf
+    EndIf
+    If sexLabFallbackDue
+        NextSexLabFallbackCheck = 0.0
+        CheckSexLabFallbackAfterGrace()
     EndIf
     ; Earlier scan/diagnostic work may be latent. Re-read real time so an
     ; armor timer that became due during this update fires in this same pass.

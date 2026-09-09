@@ -17,10 +17,11 @@ EndFunction
 String Function GetInstallStatus() Global
     If Game.GetFormFromFile(0x000800, "MMEAlert.esp") == None
         Return "QUEST MISSING"
-    ElseIf Game.GetFormFromFile(0x00087A, "MMEAlert.esp") == None || Game.GetFormFromFile(0x00087E, "MMEAlert.esp") == None || Game.GetFormFromFile(0x00087D, "MMEAlert.esp") == None || Game.GetFormFromFile(0x00087F, "MMEAlert.esp") == None || Game.GetFormFromFile(0x000880, "MMEAlert.esp") == None
-        Return "DIALOGUE MISSING"
-    ElseIf Game.GetFormFromFile(0x000881, "MMEAlert.esp") == None || Game.GetFormFromFile(0x000882, "MMEAlert.esp") == None || Game.GetFormFromFile(0x000883, "MMEAlert.esp") == None || Game.GetFormFromFile(0x000884, "MMEAlert.esp") == None || Game.GetFormFromFile(0x000885, "MMEAlert.esp") == None
-        Return "BLACKSMITH MISSING"
+    ; DIAL and INFO records are not a reliable GetFormFromFile runtime probe.
+    ; Check the script-visible globals that accompany each dialogue family;
+    ; the package build separately verifies the actual dialogue records.
+    ElseIf Game.GetFormFromFile(0x00085A, "MMEAlert.esp") == None || Game.GetFormFromFile(0x00087D, "MMEAlert.esp") == None || Game.GetFormFromFile(0x000881, "MMEAlert.esp") == None || Game.GetFormFromFile(0x000886, "MMEAlert.esp") == None || Game.GetFormFromFile(0x00088B, "MMEAlert.esp") == None
+        Return "GATES MISSING"
     EndIf
     Return "RECORDS READY"
 EndFunction
@@ -625,6 +626,10 @@ Function RefreshNewMilkMaidSexLabBus() Global
         Return
     EndIf
     service.EnsureNewMilkMaidSexLabListeners(True)
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller != None
+        controller.RefreshMMESexLabAnimationGate("manual New Milk Maid bus")
+    EndIf
 EndFunction
 
 Function ShowNewMilkMaidSexLabBusReport() Global
@@ -654,20 +659,17 @@ EndFunction
 Function RunInstallAudit() Global
     Bool controllerReady = Game.GetFormFromFile(0x000800, "MMEAlert.esp") != None
     Bool gateReady = Game.GetFormFromFile(0x00085A, "MMEAlert.esp") != None
-    Bool oldOStimReady = Game.GetFormFromFile(0x00085B, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00085D, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00085F, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000860, "MMEAlert.esp") != None
-    Bool newMaidReady = Game.GetFormFromFile(0x00087A, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00087E, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00087D, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00087F, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000880, "MMEAlert.esp") != None
-    Bool blacksmithReady = Game.GetFormFromFile(0x000881, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000882, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000883, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000884, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000885, "MMEAlert.esp") != None
-    Bool retiredNewMaidInfoPresent = Game.GetFormFromFile(0x00087B, "MMEAlert.esp") != None
+    Bool newMaidGateReady = Game.GetFormFromFile(0x00087D, "MMEAlert.esp") != None
+    Bool vendorGatesReady = Game.GetFormFromFile(0x000881, "MMEAlert.esp") != None && Game.GetFormFromFile(0x000886, "MMEAlert.esp") != None && Game.GetFormFromFile(0x00088B, "MMEAlert.esp") != None
     Bool mmeReady = Quest.GetQuest("MME_MilkQUEST") != None
     Bool ostimReady = MMEOStimBreastfeeding.IsOStimDetected()
     Bool settingReady = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableOStimBreastfeeding", 0) == 1
 
     Report("Install: controller=" + YesNo(controllerReady) + " MME=" + YesNo(mmeReady) + " OStim=" + YesNo(ostimReady))
-    Report("Records: gate=" + YesNo(gateReady) + " OStim choices=" + YesNo(oldOStimReady) + " new maid=" + YesNo(newMaidReady))
-    Report("Records: Blacksmith dialogue=" + YesNo(blacksmithReady))
-    Report("Build fingerprint: OStim INFO 87E + SexLab INFO 880=" + YesNo(newMaidReady) + " retired 87B=" + YesNo(retiredNewMaidInfoPresent))
+    Report("Script-visible records: OStim gate=" + YesNo(gateReady) + " New Milk Maid gate=" + YesNo(newMaidGateReady) + " vendor gates=" + YesNo(vendorGatesReady))
+    Report("Dialogue DIAL/INFO structure: verified when this package was built")
     Report("Runtime: setting=" + YesNo(settingReady) + " dialogue gate=" + GetGateStatus())
-    If controllerReady && gateReady && oldOStimReady && newMaidReady && blacksmithReady && mmeReady && ostimReady && settingReady && GetGateStatus() == "ON"
+    If controllerReady && gateReady && newMaidGateReady && vendorGatesReady && mmeReady && ostimReady && settingReady && GetGateStatus() == "ON"
         Report("PASS: installed dialogue runtime is ready")
     Else
         Report("FAIL: install/runtime audit found a blocker", 2)
@@ -804,18 +806,24 @@ Function RunCrosshairDialogueAudit() Global
 EndFunction
 
 Function RunNewMilkMaidSexLabBusTest() Global
-    If !MMENewMilkMaid.IsSexLabTraceEnabled()
-        Report("Enable Debug > New Milk Maid SexLab Trace first", 2)
+    MMEDebug service = GetDebugService()
+    If service == None
+        Report("SexLab bus FAIL: persistent service is missing", 2)
         Return
     EndIf
     Actor candidate = Game.GetCurrentCrosshairRef() as Actor
     If candidate == None
-        Report("SexLab bus FAIL: no NPC under the crosshair", 2)
-        Report("Close MCM, aim at the NPC, reopen, then run the bus test")
+        service.RecordNewMilkMaidSexLabBusStop(1, "no NPC under the crosshair; close MCM, aim at the NPC, reopen, then run the test", True)
+        service.ShowNewMilkMaidSexLabBusReport()
         Return
     EndIf
     RefreshNewMilkMaidSexLabBus()
-    MMENewMilkMaid.RunSexLabBusPreflight(candidate)
+    If MMEOStimBreastfeeding.IsBreastfeedingEnabled()
+        MMENewMilkMaid.RunOStimBusPreflight(candidate)
+    Else
+        MMENewMilkMaid.RunSexLabBusPreflight(candidate)
+    EndIf
+    service.ShowNewMilkMaidSexLabBusReport()
 EndFunction
 
 Function Report(String reportText, Int severity = 0) Global

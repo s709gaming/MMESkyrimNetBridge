@@ -608,7 +608,7 @@ Function EnsureNewMilkMaidSexLabListeners(Bool report = False)
     EndIf
 EndFunction
 
-Function RecordNewMilkMaidSexLabBusStop(Int stopNumber, String busMessage, Bool failed = False)
+Function RecordNewMilkMaidSexLabBusStop(Int stopNumber, String busMessage, Bool failed = False, Bool blocked = False)
     If stopNumber == 1
         LastNewMilkMaidSexLabBusThreadID = -1
         LastNewMilkMaidSexLabBusFailure = "none"
@@ -618,6 +618,8 @@ Function RecordNewMilkMaidSexLabBusStop(Int stopNumber, String busMessage, Bool 
     If failed
         LastNewMilkMaidSexLabBusState = "FAILED"
         LastNewMilkMaidSexLabBusFailure = "stop " + stopNumber + ": " + busMessage
+    ElseIf blocked
+        LastNewMilkMaidSexLabBusState = "BLOCKED"
     ElseIf stopNumber >= 16
         LastNewMilkMaidSexLabBusState = "COMPLETE"
     Else
@@ -644,9 +646,13 @@ Function ShowNewMilkMaidSexLabBusReport()
     String report = "NMM Bus " + LastNewMilkMaidSexLabBusState + " | stop " + LastNewMilkMaidSexLabBusStop + " | " + LastNewMilkMaidSexLabBusMessage
     If LastNewMilkMaidSexLabBusState == "FAILED"
         report = "NMM Bus FAILED | " + LastNewMilkMaidSexLabBusFailure
+    ElseIf LastNewMilkMaidSexLabBusState == "BLOCKED"
+        report = "NMM Bus BLOCKED | stop " + LastNewMilkMaidSexLabBusStop + " | " + LastNewMilkMaidSexLabBusMessage
     EndIf
     Debug.Notification(report)
-    MMELog.Diagnostic("[MME Extensions New Milkmaid SexLab] " + report + " | thread=" + LastNewMilkMaidSexLabBusThreadID)
+    ; This is a sparse, explicitly requested audit result, so it remains useful
+    ; without requiring any of the continuous diagnostic trace toggles.
+    MMELog.Status("[MME Extensions New Milkmaid SexLab] " + report + " | thread=" + LastNewMilkMaidSexLabBusThreadID)
 EndFunction
 
 Function RecordBlacksmithDialogueBusStop(Int stopNumber, String busMessage, Bool failed = False, Bool blocked = False, Bool waiting = False, Bool completed = False, Bool writeTrace = False)
@@ -1071,7 +1077,7 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
             StopOwnedThread("startup verification failed")
         EndIf
         TraceActive("started=false; expected scene was not confirmed")
-        AlarmActive("thread started but ownership could not be confirmed within five seconds")
+        AlarmActive("thread started but ownership could not be confirmed within fifteen seconds")
         EndSession("OStim startup verification failed")
         Return False
     EndIf
@@ -1201,10 +1207,11 @@ EndFunction
 
 Bool Function WaitForExpectedScene()
     ; Bounded polling is startup confirmation, not a permanent gameplay poll.
-    ; Five seconds covers asynchronous OStim construction while guaranteeing a
-    ; failed scene cannot leave this TopicInfo stack waiting indefinitely.
+    ; OStim can return its thread before the scene and actor ownership become
+    ; observable. Allow fifteen seconds for a heavily loaded Papyrus session;
+    ; this yielding loop exists only during an explicit startup transaction.
     Int attempt = 0
-    While ActiveSession && ActiveOwnsThread && attempt < 20
+    While ActiveSession && ActiveOwnsThread && attempt < 60
         If MMEOStimIntegration.IsThreadRunning(ActiveThreadID)
             String currentScene = MMEOStimIntegration.GetThreadScene(ActiveThreadID)
             If MMEOStimIntegration.OwnsManualThreadForActors(ActiveThreadID, ActiveMilkSource, ActiveDrinker)

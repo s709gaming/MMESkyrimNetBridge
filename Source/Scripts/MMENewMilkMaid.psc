@@ -237,29 +237,103 @@ EndFunction
 Bool Function ValidateSexLabRequest(Actor milkSource, Actor candidate) Global
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkSource != Game.GetPlayer() || !MMEOStimBreastfeeding.ValidateMilkSource(milkSource, milkController, False) || MME_Storage.getMilkCurrent(milkSource) < 1.0
-        TraceSexLabStop(2, "player/source invalid", True)
+        TraceSexLabStop(2, "player/source is not currently eligible", False, True)
         Return False
     EndIf
     TraceSexLabStop(2, "player/source valid")
 
     String eligibilityFailure = GetEligibilityFailure(candidate, milkController)
     If eligibilityFailure != ""
-        TraceSexLabStop(3, eligibilityFailure, True)
+        TraceSexLabStop(3, eligibilityFailure, False, True)
         Return False
     EndIf
     TraceSexLabStop(3, "candidate eligible")
 
     If MMEOStimBreastfeeding.IsBreastfeedingEnabled()
-        TraceSexLabStop(4, "OStim breastfeeding is ON", True)
+        TraceSexLabStop(4, "SexLab route not applicable while OStim breastfeeding is ON", False, True)
         Return False
     EndIf
     TraceSexLabStop(4, "OStim OFF")
 
     If !MMEAlertsController.IsExtensionsEnabled() || !MMEDebug.IsOriginalMMESexLabBreastfeedingAvailable(milkController)
-        TraceSexLabStop(5, "original MME SexLab route unavailable", True)
+        TraceSexLabStop(5, "original MME SexLab route is not currently available", False, True)
         Return False
     EndIf
-    TraceSexLabStop(5, "original MME SexLab route available")
+    Return ValidateDialoguePresentation(candidate, False)
+EndFunction
+
+Bool Function ValidateOStimBusRequest(Actor milkSource, Actor candidate) Global
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkSource != Game.GetPlayer() || !MMEOStimBreastfeeding.ValidateMilkSource(milkSource, milkController, False) || MME_Storage.getMilkCurrent(milkSource) < 1.0
+        TraceSexLabStop(2, "backend=OStim | player/source is not currently eligible", False, True)
+        Return False
+    EndIf
+    TraceSexLabStop(2, "backend=OStim | player/source valid")
+
+    String eligibilityFailure = GetEligibilityFailure(candidate, milkController)
+    If eligibilityFailure != ""
+        TraceSexLabStop(3, "backend=OStim | " + eligibilityFailure, False, True)
+        Return False
+    EndIf
+    TraceSexLabStop(3, "backend=OStim | candidate eligible")
+
+    If !MMEOStimBreastfeeding.IsBreastfeedingEnabled()
+        TraceSexLabStop(4, "backend=OStim | OStim breastfeeding is OFF", False, True)
+        Return False
+    EndIf
+    TraceSexLabStop(4, "backend=OStim | OStim breastfeeding is ON")
+
+    GlobalVariable dialogueGate = MMEAlertsController.GetOStimDialogueAvailabilityGlobal()
+    If dialogueGate == None || dialogueGate.GetValue() < 1.0
+        TraceSexLabStop(5, "backend=OStim | dialogue gate is missing or closed", True)
+        MMELog.Alarm("[MME Extensions New Milkmaid] ROUTE CLOG | OStim enabled but its dialogue gate is missing or closed")
+        Return False
+    EndIf
+    Return ValidateDialoguePresentation(candidate, True)
+EndFunction
+
+Bool Function ValidateDialoguePresentation(Actor candidate, Bool ostimRoute) Global
+    String backend = "SexLab"
+    String infoEditorID = "MMEExt_SexLabNewMilkMaid"
+    If ostimRoute
+        backend = "OStim"
+        infoEditorID = "MMEExt_NewMilkMaid"
+    EndIf
+
+    Form dialogueInfo = MMEExtensionsNative.GetFormByEditorID(infoEditorID)
+    If dialogueInfo == None
+        TraceSexLabStop(5, "backend=" + backend + " | live INFO did not resolve", True)
+        MMELog.Alarm("[MME Extensions New Milkmaid] ROUTE CLOG | " + backend + " INFO did not resolve in Skyrim's loaded dialogue graph")
+        Return False
+    EndIf
+
+    Form parentTopic = MMEExtensionsNative.GetParentTopic(dialogueInfo)
+    If parentTopic == None
+        TraceSexLabStop(5, "backend=" + backend + " | live INFO has no parent topic", True)
+        MMELog.Alarm("[MME Extensions New Milkmaid] ROUTE CLOG | " + backend + " INFO has no live parent topic")
+        Return False
+    EndIf
+
+    Form[] loadedInfos = MMEExtensionsNative.GetTopicInfos(parentTopic)
+    Bool infoListed = False
+    Int infoIndex = 0
+    While infoIndex < loadedInfos.Length && !infoListed
+        infoListed = loadedInfos[infoIndex] == dialogueInfo
+        infoIndex += 1
+    EndWhile
+    If !infoListed
+        TraceSexLabStop(5, "backend=" + backend + " | parent topic omitted the INFO", True)
+        MMELog.Alarm("[MME Extensions New Milkmaid] ROUTE CLOG | " + backend + " parent topic omitted its INFO from the loaded response list")
+        Return False
+    EndIf
+
+    If !MMEExtensionsNative.EvaluateTopicInfo(dialogueInfo, candidate, Game.GetPlayer())
+        TraceSexLabStop(5, "backend=" + backend + " | Skyrim rejected the live INFO conditions", True)
+        MMELog.Alarm("[MME Extensions New Milkmaid] ROUTE CLOG | " + backend + " eligibility passed but Skyrim rejected the live INFO conditions")
+        Return False
+    EndIf
+
+    TraceSexLabStop(5, "backend=" + backend + " | live INFO loaded, linked, and condition-valid; select the dialogue for stops 06-16")
     Return True
 EndFunction
 
@@ -268,6 +342,11 @@ Function RunSexLabBusPreflight(Actor candidate) Global
     If ValidateSexLabRequest(Game.GetPlayer(), candidate)
         TraceSexLabMessage("PRE-FLIGHT COMPLETE | select the SexLab New Milk Maid dialogue for stops 06-16")
     EndIf
+EndFunction
+
+Function RunOStimBusPreflight(Actor candidate) Global
+    TraceSexLabStop(1, "ENTRY | backend=OStim | crosshair=" + GetActorIdentity(candidate))
+    ValidateOStimBusRequest(Game.GetPlayer(), candidate)
 EndFunction
 
 ; Returns a short failure reason, or an empty string when the original MME
@@ -315,10 +394,10 @@ Bool Function IsSexLabTraceEnabled() Global
     Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableNewMilkmaidSexLabTrace", 0) == 1
 EndFunction
 
-Function TraceSexLabStop(Int stopNumber, String traceText, Bool failed = False) Global
+Function TraceSexLabStop(Int stopNumber, String traceText, Bool failed = False, Bool blocked = False) Global
     MMEDebug service = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
     If service != None
-        service.RecordNewMilkMaidSexLabBusStop(stopNumber, traceText, failed)
+        service.RecordNewMilkMaidSexLabBusStop(stopNumber, traceText, failed, blocked)
     EndIf
     If !IsSexLabTraceEnabled()
         Return
@@ -330,12 +409,14 @@ Function TraceSexLabStop(Int stopNumber, String traceText, Bool failed = False) 
     String line = "NMM SexLab " + stopLabel + " " + traceText
     If failed
         line = "NMM SexLab " + stopLabel + " FAIL: " + traceText
+    ElseIf blocked
+        line = "NMM SexLab " + stopLabel + " BLOCKED: " + traceText
     EndIf
     MMELog.Diagnostic("[MME Extensions New Milkmaid SexLab] " + line)
     ; Rapid one-line notifications overwrite one another. Report grouped route
     ; boundaries in game while preserving every stop in the persistent report
     ; and Papyrus trace.
-    If failed || stopNumber == 7 || stopNumber == 9 || stopNumber == 12 || stopNumber == 16
+    If failed || blocked || stopNumber == 7 || stopNumber == 9 || stopNumber == 12 || stopNumber == 16
         Debug.Notification(line)
     EndIf
 EndFunction

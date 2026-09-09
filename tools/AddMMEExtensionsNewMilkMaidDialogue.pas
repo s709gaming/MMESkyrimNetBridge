@@ -316,8 +316,7 @@ end;
 function RebuildConditions(aInfo: IInterface): Boolean;
 var
   sourceConditions, targetConditions, sourceCondition,
-    newMaidCondition, newSlaveCondition, newFreeCondition,
-    globalParameter: IInterface;
+    copiedCondition, globalParameter: IInterface;
   i: Integer;
 begin
   Result := False;
@@ -334,70 +333,35 @@ begin
   if not Assigned(targetConditions) then
     Exit;
 
+  copiedCondition := nil;
   for i := 0 to ElementCount(sourceConditions) - 1 do begin
     sourceCondition := ElementByIndex(sourceConditions, i);
-    if SameText(GetElementEditValues(sourceCondition, 'CIS2'), SubjectMaidVariable) or
-       SameText(GetElementEditValues(sourceCondition, 'CIS2'), SubjectSlaveVariable) or
-       SameText(GetElementEditValues(sourceCondition, 'CIS2'), FreeMaidSlotsVariable) then begin
-      AddMessage('ERROR: OStim source unexpectedly already has a Milk Maid eligibility condition.');
-      Exit;
-    end;
-    sourceCondition := ElementAssign(targetConditions, HighInteger,
-      sourceCondition, False);
     if SameText(GetElementEditValues(sourceCondition, 'CTDA\Function'),
         'GetGlobalValue') then begin
-      globalParameter := ElementByPath(sourceCondition, 'CTDA\Parameter #1');
+      copiedCondition := ElementAssign(targetConditions, HighInteger,
+        sourceCondition, False);
+      globalParameter := ElementByPath(copiedCondition, 'CTDA\Parameter #1');
       if not Assigned(globalParameter) then begin
         AddMessage('ERROR: OStim gate condition exposes no Global parameter.');
         Exit;
       end;
-      SetEditValue(globalParameter, Name(TargetGate));
+      ; This INFO is the OStim entrance and must use the OStim availability
+      ; gate. TargetGate is reserved for the separate SexLab entrance.
+      SetEditValue(globalParameter, Name(SourceGate));
       if not Assigned(LinksTo(globalParameter)) or
          not Equals(MasterOrSelf(LinksTo(globalParameter)),
-           MasterOrSelf(TargetGate)) then begin
-        AddMessage('ERROR: New Milk Maid condition could not use its framework-neutral Global.');
+           MasterOrSelf(SourceGate)) then begin
+        AddMessage('ERROR: OStim New Milk Maid condition could not use the OStim availability Global.');
         Exit;
       end;
     end;
   end;
-
-  newFreeCondition := ElementAssign(targetConditions, HighInteger,
-    FreeMaidSlotsCondition, False);
-  if not Assigned(newFreeCondition) then
-    Exit;
-
-  newMaidCondition := ElementAssign(targetConditions, HighInteger,
-    SubjectMaidCondition, False);
-  if not Assigned(newMaidCondition) then
-    Exit;
-  SetElementNativeValues(newMaidCondition, 'CTDA\Comparison Value - Float', 0.0);
-
-  newSlaveCondition := ElementAssign(targetConditions, HighInteger,
-    SubjectMaidCondition, False);
-  if not Assigned(newSlaveCondition) then
-    Exit;
-  SetElementEditValues(newSlaveCondition, 'CIS2', SubjectSlaveVariable);
-  SetElementNativeValues(newSlaveCondition, 'CTDA\Comparison Value - Float', 0.0);
-
-  Result := SameText(GetElementEditValues(newFreeCondition, 'CTDA\Function'),
-      'GetVMQuestVariable') and
-    SameText(GetElementEditValues(newFreeCondition, 'CIS2'),
-      FreeMaidSlotsVariable) and
-    (GetElementNativeValues(newFreeCondition,
-      'CTDA\Comparison Value - Float') = 0.0) and
-    SameText(GetElementEditValues(newMaidCondition, 'CTDA\Function'),
-      'GetVMQuestVariable') and
-    SameText(GetElementEditValues(newMaidCondition, 'CIS2'),
-      SubjectMaidVariable) and
-    (GetElementNativeValues(newMaidCondition,
-      'CTDA\Comparison Value - Float') = 0.0) and
-    SameText(GetElementEditValues(newSlaveCondition, 'CTDA\Function'),
-      'GetVMQuestVariable') and
-    SameText(GetElementEditValues(newSlaveCondition, 'CIS2'),
-      SubjectSlaveVariable) and
-    (GetElementNativeValues(newSlaveCondition,
-      'CTDA\Comparison Value - Float') = 0.0) and
-    (ElementCount(targetConditions) = ElementCount(sourceConditions) + 3);
+  ; Visibility uses only the stable Extensions-owned backend gate. The result
+  ; fragment performs the authoritative live actor, milk, sex, busy-state, and
+  ; Milk Maid eligibility checks immediately before starting the scene.
+  Result := Assigned(copiedCondition) and
+    SameText(GetElementEditValues(copiedCondition, 'CTDA\Function'),
+      'GetGlobalValue') and (ElementCount(targetConditions) = 1);
 end;
 
 function InstallHandler(aInfo: IInterface): Boolean;

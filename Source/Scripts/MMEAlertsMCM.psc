@@ -1438,7 +1438,7 @@ Event OnPageReset(String page)
         diagnosticInstallAuditOption = AddTextOption("Run Install Audit", "RUN")
         diagnosticMilkDrinkAuditOption = AddTextOption("Run Milk Drink Audit", "RUN")
         diagnosticDialogueAuditOption = AddTextOption("Run Crosshair Dialogue Audit", "RUN")
-        diagnosticNewMilkmaidSexLabBusOption = AddTextOption("Run New Milk Maid SexLab Bus Test", "RUN")
+        diagnosticNewMilkmaidSexLabBusOption = AddTextOption("Run New Milk Maid Bus Test", "RUN")
         diagnosticRefreshSexLabBusOption = AddTextOption("Refresh SexLab Bus Listeners", "RUN")
         diagnosticShowSexLabBusOption = AddTextOption("Show Last SexLab Bus Report", "RUN")
         diagnosticBlacksmithBusOption = AddTextOption("Run Blacksmith Dialogue Bus Test", "RUN")
@@ -1841,7 +1841,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == diagnosticDialogueAuditOption
         SetInfoText("Check whether the NPC under your crosshair and the player satisfy the New Milk Maid runtime requirements.")
     ElseIf option == diagnosticNewMilkmaidSexLabBusOption
-        SetInfoText("Run stops 01-05 against the crosshair NPC. If they pass, select the SexLab New Milk Maid dialogue to trace stops 06-16.")
+        SetInfoText("Automatically test the enabled OStim or SexLab New Milk Maid route against the crosshair NPC. Stops 01-05 are immediate; selecting the dialogue continues stops 06-16. Trace toggles are optional.")
     ElseIf option == diagnosticRefreshSexLabBusOption
         SetInfoText("Repair AnimationEnding, AnimationEnd, and timeout listeners on an existing save.")
     ElseIf option == diagnosticShowSexLabBusOption
@@ -2376,6 +2376,7 @@ Event OnOptionSelect(Int option)
         MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
         If controller != None
             controller.RefreshOStimDialogueAvailability()
+            controller.BeginSexLabFallbackGrace("OStim breastfeeding toggle changed")
         EndIf
     ElseIf option == ostimDebugOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0)
