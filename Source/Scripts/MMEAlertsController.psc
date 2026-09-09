@@ -272,10 +272,13 @@ EndFunction
 ; target. Defer resolution through the controller's existing one-shot scheduler
 ; and retry briefly instead of reading MenuTopicManager's transient pointers.
 Event OnMenuOpen(String menuName)
-    If menuName == "Dialogue Menu" && IsExtensionsEnabled() && JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) == 1
-        ArmorReminderRetries = 0
-        NextArmorReminder = Utility.GetCurrentRealTime() + 0.25
-        ScheduleNextUpdate()
+    If menuName == "Dialogue Menu" && IsExtensionsEnabled()
+		RefreshNewMilkMaidDialogueAvailability(IsMMESexLabBreastfeedingAvailable())
+        If JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) == 1
+            ArmorReminderRetries = 0
+            NextArmorReminder = Utility.GetCurrentRealTime() + 0.25
+            ScheduleNextUpdate()
+        EndIf
     EndIf
 EndEvent
 
@@ -459,7 +462,10 @@ EndFunction
 ; OStim New Milk Maid INFO continues to use the original OStim gate (00085A).
 ; The two choices therefore remain mutually exclusive in the same choice list.
 Function RefreshNewMilkMaidDialogueAvailability(Bool sexLabAvailable)
-    Bool available = IsExtensionsEnabled() && !MMEOStimBreastfeeding.IsBreastfeedingEnabled() && sexLabAvailable
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Actor playerActor = Game.GetPlayer()
+    Bool playerEligible = MMEOStimBreastfeeding.ValidateMilkSource(playerActor, milkController, False) && MME_Storage.getMilkCurrent(playerActor) >= 1.0
+    Bool available = IsExtensionsEnabled() && !MMEOStimBreastfeeding.IsBreastfeedingEnabled() && sexLabAvailable && playerEligible
     GlobalVariable dialogueGate = GetNewMilkMaidDialogueAvailabilityGlobal()
     If dialogueGate != None
         If available
