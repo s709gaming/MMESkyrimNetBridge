@@ -85,6 +85,18 @@ Int PendingVendorAnimationRequestID = 0
 Bool VendorAnimationPending = False
 Actor VendorAnimationMovementLockActor = None
 
+; Successful "Would you like to drink some milk?" transactions queue here.
+; The persistent service waits for Dialogue Menu to release both behavior
+; graphs, starts the player give and NPC drink idles together, then performs
+; one shared hold and takeover-safe cleanup.
+Actor PendingDialogueMilkGiver = None
+Actor PendingDialogueMilkDrinker = None
+Bool DialogueMilkAnimationPending = False
+Actor ActiveDialogueMilkGiver = None
+Actor ActiveDialogueMilkDrinker = None
+Bool ActiveDialogueMilkGiveStarted = False
+Bool ActiveDialogueMilkDrinkStarted = False
+
 ; Quest startup delegates normal scheduling to the controller.
 Event OnInit()
     EnsureNewMilkMaidSexLabListeners()
@@ -105,6 +117,7 @@ Function RecoverAfterLoad()
     EnsureNewMilkMaidSexLabListeners()
     RecoverSexLabIntentAfterLoad()
     RecoverVendorAnimationAfterLoad()
+    RecoverDialogueMilkAnimationsAfterLoad()
     If !ActiveSession
         Return
     EndIf
@@ -249,6 +262,10 @@ Function HandleVendorServiceResult(Actor vendor, String route, Bool succeeded)
         VendorAnimationTrace(requestID, route, "02", "STOP: speaker did not resolve to an Actor")
         Return
     EndIf
+    If DialogueMilkAnimationPending
+        MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: vendor gesture collided with a pending dialogue milk animation")
+        Return
+    EndIf
     If VendorAnimationPending
         VendorAnimationTrace(requestID, route, "02", "STOP: request #" + PendingVendorAnimationRequestID + " is already waiting for Dialogue Menu to close")
         Return
@@ -269,7 +286,15 @@ Function ObserveVendorServiceInfoEnd(Actor vendor)
 EndFunction
 
 Event OnMenuClose(String menuName)
-    If menuName != "Dialogue Menu" || !VendorAnimationPending
+    If menuName != "Dialogue Menu"
+        Return
+    EndIf
+    If DialogueMilkAnimationPending && !VendorAnimationPending
+        UnregisterForMenu("Dialogue Menu")
+        RunPendingDialogueMilkAnimations()
+        Return
+    EndIf
+    If !VendorAnimationPending
         Return
     EndIf
     UnregisterForMenu("Dialogue Menu")
@@ -283,34 +308,116 @@ Event OnMenuClose(String menuName)
         VendorAnimationTrace(requestID, route, "05", "STOP: vendor missing, dead, or not 3D loaded")
         Return
     EndIf
-    Idle giveIdle = Game.GetFormFromFile(0x0B5E20, "Skyrim.esm") as Idle
-    Idle stopIdle = Game.GetFormFromFile(0x10D9EE, "Skyrim.esm") as Idle
-    If giveIdle == None
-        VendorAnimationTrace(requestID, route, "05", "STOP: vanilla IdleGive 000B5E20 could not be resolved")
-        Return
-    EndIf
-    VendorAnimationTrace(requestID, route, "05", "calling Actor.PlayIdle with vanilla IdleGive 000B5E20")
-    ; Once dialogue releases the vendor, their AI package may immediately choose
-    ; locomotion and replace IdleGive. Hold movement only for the gesture window.
+    VendorAnimationTrace(requestID, route, "05", "delegating vanilla IdleGive to MMEMinorAnimations for a 3-second protected hold")
+    ; Retain only a recovery reference here. MMEMinorAnimations owns safety,
+    ; movement restraint, playback, reset, and normal cleanup.
     VendorAnimationMovementLockActor = vendor
-    vendor.SetDontMove(True)
-    Bool accepted = vendor.PlayIdle(giveIdle)
-    If !accepted
-        ReleaseVendorAnimationMovementLock()
-        VendorAnimationTrace(requestID, route, "06", "STOP: Actor.PlayIdle returned false")
+    Bool accepted = MMEMinorAnimations.PlayGive(vendor, 3.0, IsVendorAnimationTraceEnabled())
+    VendorAnimationMovementLockActor = None
+    If accepted
+        VendorAnimationTrace(requestID, route, "06", "MMEMinorAnimations completed IdleGive and released vendor movement")
+    Else
+        VendorAnimationTrace(requestID, route, "06", "STOP: MMEMinorAnimations rejected or could not start IdleGive")
+    EndIf
+EndEvent
+
+Bool Function QueueDialogueMilkAnimations(Actor giver, Actor drinker) Global
+    MMEDebug service = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
+    If service == None
+        MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: persistent service unavailable while queuing dialogue milk animations")
+        Return False
+    EndIf
+    Return service.QueueDialogueMilkAnimationsInternal(giver, drinker)
+EndFunction
+
+Bool Function QueueDialogueMilkAnimationsInternal(Actor giver, Actor drinker)
+    If giver == None || drinker == None || giver == drinker
+        MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: invalid giver/drinker pair supplied by milk dialogue")
+        Return False
+    EndIf
+    If DialogueMilkAnimationPending || ActiveDialogueMilkGiver != None || ActiveDialogueMilkDrinker != None
+        MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: a dialogue milk animation pair is already pending or active")
+        Return False
+    EndIf
+    If VendorAnimationPending || VendorAnimationMovementLockActor != None
+        MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: dialogue milk animation collided with an active vendor gesture")
+        Return False
+    EndIf
+
+    PendingDialogueMilkGiver = giver
+    PendingDialogueMilkDrinker = drinker
+    DialogueMilkAnimationPending = True
+    If UI.IsMenuOpen("Dialogue Menu")
+        RegisterForMenu("Dialogue Menu")
+    Else
+        ; Defensive fallback for an OnEnd fragment delivered after the menu has
+        ; already closed. Both graphs are free, so execute immediately.
+        RunPendingDialogueMilkAnimations()
+    EndIf
+    Return True
+EndFunction
+
+Function RunPendingDialogueMilkAnimations()
+    Actor giver = PendingDialogueMilkGiver
+    Actor drinker = PendingDialogueMilkDrinker
+    ClearPendingDialogueMilkAnimations(False)
+    If giver == None || drinker == None || giver == drinker
+        MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: queued dialogue milk actors became invalid before playback")
         Return
     EndIf
-    VendorAnimationTrace(requestID, route, "06", "animation accepted by vendor graph")
-    Utility.Wait(2.0)
-    If stopIdle != None && vendor != None && !vendor.IsDead() && vendor.Is3DLoaded()
-        vendor.PlayIdle(stopIdle)
-        VendorAnimationTrace(requestID, route, "07", "vanilla IdleStop_Loose 0010D9EE sent")
-    Else
-        VendorAnimationTrace(requestID, route, "07", "reset idle unavailable or vendor no longer valid")
+    If giver.IsDead() || !giver.Is3DLoaded() || drinker.IsDead() || !drinker.Is3DLoaded()
+        ; Actor availability can legitimately change while dialogue closes.
+        MMELog.Diagnostic("[MME Extensions Minor Animation] dialogue milk pair skipped because an actor became unavailable")
+        Return
     EndIf
-    ReleaseVendorAnimationMovementLock()
-    VendorAnimationTrace(requestID, route, "08", "vendor movement released; route complete")
-EndEvent
+
+    ActiveDialogueMilkGiver = giver
+    ActiveDialogueMilkDrinker = drinker
+    ActiveDialogueMilkGiveStarted = MMEMinorAnimations.StartGive(giver, "DialogueMilk.Giver", False, False)
+    ActiveDialogueMilkDrinkStarted = MMEMinorAnimations.StartDrink(drinker, "DialogueMilk.Drinker", True, False)
+    If !ActiveDialogueMilkGiveStarted && !ActiveDialogueMilkDrinkStarted
+        ClearActiveDialogueMilkAnimations()
+        Return
+    EndIf
+
+    ; One hold keeps the gestures loosely simultaneous. Calling PlayGive then
+    ; PlayDrink would serialize their latent waits into a six-second sequence.
+    Utility.Wait(3.0)
+    If ActiveDialogueMilkGiveStarted
+        MMEMinorAnimations.Complete(giver, "DialogueMilk.Giver", "Dialogue milk Give", False)
+    EndIf
+    If ActiveDialogueMilkDrinkStarted
+        MMEMinorAnimations.Complete(drinker, "DialogueMilk.Drinker", "Dialogue milk Drink", False)
+    EndIf
+    ClearActiveDialogueMilkAnimations()
+EndFunction
+
+Function RecoverDialogueMilkAnimationsAfterLoad()
+    If ActiveDialogueMilkGiver != None
+        MMEMinorAnimations.Cancel(ActiveDialogueMilkGiver, "DialogueMilk.Giver", "Recovered dialogue milk Give", False)
+    EndIf
+    If ActiveDialogueMilkDrinker != None
+        MMEMinorAnimations.Cancel(ActiveDialogueMilkDrinker, "DialogueMilk.Drinker", "Recovered dialogue milk Drink", False)
+    EndIf
+    ClearActiveDialogueMilkAnimations()
+    ClearPendingDialogueMilkAnimations(False)
+EndFunction
+
+Function ClearPendingDialogueMilkAnimations(Bool unregisterMenu = True)
+    If unregisterMenu
+        UnregisterForMenu("Dialogue Menu")
+    EndIf
+    PendingDialogueMilkGiver = None
+    PendingDialogueMilkDrinker = None
+    DialogueMilkAnimationPending = False
+EndFunction
+
+Function ClearActiveDialogueMilkAnimations()
+    ActiveDialogueMilkGiver = None
+    ActiveDialogueMilkDrinker = None
+    ActiveDialogueMilkGiveStarted = False
+    ActiveDialogueMilkDrinkStarted = False
+EndFunction
 
 Function RecoverVendorAnimationAfterLoad()
     UnregisterForMenu("Dialogue Menu")
@@ -325,9 +432,12 @@ Function ReleaseVendorAnimationMovementLock()
     Actor vendor = VendorAnimationMovementLockActor
     VendorAnimationMovementLockActor = None
     If vendor != None
-        vendor.SetDontMove(False)
-        vendor.EvaluatePackage()
+        MMEMinorAnimations.Cancel(vendor, "MinorAnimation.Give", "Recovered vendor Give", IsVendorAnimationTraceEnabled())
     EndIf
+EndFunction
+
+Bool Function IsVendorAnimationTraceEnabled()
+    Return JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) == 1 && JsonUtil.GetIntValue(SettingsFile, "enableVendorAnimationTrace", 0) == 1
 EndFunction
 
 Function ClearVendorAnimationBus(Bool unregisterMenu = True)
@@ -341,7 +451,7 @@ Function ClearVendorAnimationBus(Bool unregisterMenu = True)
 EndFunction
 
 Function VendorAnimationTrace(Int requestID, String route, String stop, String detail)
-    If JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) == 1 && JsonUtil.GetIntValue(SettingsFile, "enableVendorAnimationTrace", 0) == 1
+    If IsVendorAnimationTraceEnabled()
         MMELog.Diagnostic("[MME Extensions Vendor Animation Bus #" + requestID + "] stop " + stop + " | route=" + route + " | " + detail)
     EndIf
 EndFunction

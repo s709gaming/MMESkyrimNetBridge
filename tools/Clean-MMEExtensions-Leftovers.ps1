@@ -129,6 +129,7 @@ $paths = @(
     @{ Path = (Join-Path $GameDataPath "Scripts\MMEExtensionsNative.pex"); Label = "Script"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "Scripts\MMEMilkBoost.pex"); Label = "Script"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "Scripts\MMEMilkDrinkEffects.pex"); Label = "Script"; IsDir = $false },
+    @{ Path = (Join-Path $GameDataPath "Scripts\MMEMinorAnimations.pex"); Label = "Script"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "Scripts\MMENPCDialog.pex"); Label = "Script"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "Scripts\MMESkyrimNetVoiceControls.pex"); Label = "Script"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\MMEExtensions.dll"); Label = "Native DLL"; IsDir = $false },

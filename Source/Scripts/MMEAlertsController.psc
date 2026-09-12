@@ -31,6 +31,7 @@ Int ArmorReminderRetries = 0
 Float NextOStimBreastfeedingWatchdog = 0.0
 Float NextSexLabFallbackCheck = 0.0
 Int SexLabFallbackCheckAttempts = 0
+Bool OpeningDialogueAlarmActive = False
 Float NextThoughtGameTime = 0.0
 Float NextInjectionGameTime = 0.0
 String ArmorCheckReminderShownAtKey = "MMEExtensions.ArmorReminder.ShownAt"
@@ -78,8 +79,13 @@ Function InitializeController(Bool reportStatus = False)
     BeginSexLabFallbackGrace("controller initialization")
     RegisterMilkingEvents()
     RegisterDhlpEvents()
-    MMEAlertsSkyrimNet.RegisterPromptDecorator()
-    MMESkyrimNetVoiceControls.RegisterSelfMilkingAction()
+    ; Do not enter scripts whose bytecode imports SkyrimNetApi when the optional
+    ; plugin is absent. Their internal guards remain defense in depth, but this
+    ; outer boundary keeps the non-Skyrim.Net startup path completely isolated.
+    If Game.GetModByName("SkyrimNet.esp") != 255
+        MMEAlertsSkyrimNet.RegisterPromptDecorator()
+        MMESkyrimNetVoiceControls.RegisterSelfMilkingAction()
+    EndIf
     UnregisterForModEvent("MMEExtensions_Lifecycle")
     RegisterForModEvent("MMEExtensions_Lifecycle", "OnNativeLifecycle")
     UnregisterForModEvent("MMEExtensions_MMEEffectApplied")
@@ -274,6 +280,7 @@ EndFunction
 Event OnMenuOpen(String menuName)
     If menuName == "Dialogue Menu" && IsExtensionsEnabled()
 		RefreshNewMilkMaidDialogueAvailability(IsMMESexLabBreastfeedingAvailable())
+        CheckOpeningDialogueHealth(Game.GetDialogueTarget() as Actor)
         If JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) == 1
             ArmorReminderRetries = 0
             NextArmorReminder = Utility.GetCurrentRealTime() + 0.25
@@ -281,6 +288,69 @@ Event OnMenuOpen(String menuName)
         EndIf
     EndIf
 EndEvent
+
+; Error-only smoke alarm for the original MME opening route. A healthy route,
+; an unrelated ineligible speaker, and Skyrim.Net installations stay silent.
+; This specifically catches the observed compatibility failure: Skyrim.Net is
+; absent and MME's global dialogue gate is closed when dialogue is attempted.
+Function CheckOpeningDialogueHealth(Actor speaker)
+    If Game.GetModByName("SkyrimNet.esp") != 255
+        OpeningDialogueAlarmActive = False
+        Return
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    String failure = ""
+    If milkController == None
+        failure = "MME_MilkQUEST did not resolve"
+    ElseIf !milkController.IsRunning()
+        failure = "MME_MilkQUEST is not running"
+    ElseIf milkController.MilkQC == None
+        failure = "MilkQUEST_Conditions did not resolve"
+    ElseIf !milkController.MilkQC.MME_DialogueMilking
+        failure = "MME_DialogueMilking is false"
+    EndIf
+    Form openingInfo = None
+    String conditionReport = ""
+    If failure == ""
+        Form openingTopic = MMEExtensionsNative.GetFormByEditorID("MME_Hello_Dialogue_Topic")
+        If openingTopic == None
+            failure = "MME_Hello_Dialogue_Topic did not resolve"
+        Else
+            Form[] openingInfos = MMEExtensionsNative.GetTopicInfos(openingTopic)
+            If openingInfos.Length < 1
+                failure = "MME_Hello_Dialogue_Topic has no loaded INFO"
+            Else
+                openingInfo = openingInfos[0]
+            EndIf
+        EndIf
+    EndIf
+    If failure == "" && speaker != None && !MMEExtensionsNative.EvaluateTopicInfo(openingInfo, speaker, Game.GetPlayer())
+        failure = "Skyrim rejected the Hey there INFO conditions"
+        Int[] conditionResults = MMEExtensionsNative.EvaluateTopicInfoConditions(openingInfo, speaker, Game.GetPlayer())
+        String[] conditionDescriptions = MMEExtensionsNative.DescribeTopicInfoConditions(openingInfo)
+        Int conditionIndex = 0
+        While conditionIndex < conditionResults.Length
+            String description = "unknown"
+            If conditionIndex < conditionDescriptions.Length
+                description = conditionDescriptions[conditionIndex]
+            EndIf
+            conditionReport += " | CTDA[" + conditionIndex + "]=" + conditionResults[conditionIndex] + " " + description
+            conditionIndex += 1
+        EndWhile
+    EndIf
+    If failure == ""
+        OpeningDialogueAlarmActive = False
+        Return
+    EndIf
+    If !OpeningDialogueAlarmActive
+        OpeningDialogueAlarmActive = True
+        String speakerName = "unresolved"
+        If speaker != None
+            speakerName = GetActorName(speaker)
+        EndIf
+        MMELog.Alarm("[MME Extensions Dialogue] ROUTE CLOG | Skyrim.Net=absent | " + failure + " | speaker=" + speakerName + conditionReport)
+    EndIf
+EndFunction
 
 Function TryShowServiceArmorReminder()
     Actor reminderSpeaker = Game.GetDialogueTarget() as Actor

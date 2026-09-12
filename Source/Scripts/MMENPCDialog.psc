@@ -12,15 +12,15 @@ String SettingsFile = "/MMEAlerts/Settings"
 ; Stage-one dialogue fragment: validate and report only. No inventory changes.
 Function Fragment_0(ObjectReference akSpeakerRef)
     Actor target = akSpeakerRef as Actor
-    TestDialogueTarget(target)
+    TestDialogueTarget(target, True)
 EndFunction
 
-Function TestDialogueTarget(Actor target)
-    GiveMilkToTarget(target, False)
+Function TestDialogueTarget(Actor target, Bool dialogueRequest = False)
+    GiveMilkToTarget(target, False, dialogueRequest)
 EndFunction
 
 ; Shared entry point for dialogue fragments and optional Skyrim.Net actions.
-Bool Function GiveMilkToTarget(Actor target, Bool diagnostic = False) Global
+Bool Function GiveMilkToTarget(Actor target, Bool diagnostic = False, Bool dialogueRequest = False) Global
     ; Phase 1: validate extension state, actor identity, and live MME membership.
     If !MMEAlertsController.IsExtensionsEnabled()
         Return False
@@ -48,11 +48,11 @@ Bool Function GiveMilkToTarget(Actor target, Bool diagnostic = False) Global
     Report(diagnostic, targetName + " is an MME Milkmaid; validation passed")
     ; Phase 2: hand the validated pair to the single inventory/consumption path.
     ; Keeping selection and consumption together minimizes inventory races.
-    Return TestInventorySelection(Game.GetPlayer(), target, milkController, diagnostic)
+    Return TestInventorySelection(Game.GetPlayer(), target, milkController, diagnostic, dialogueRequest)
 EndFunction
 
 ; Selects one supported milk, then hands it to the validated NPC for native consumption.
-Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkController, Bool diagnostic) Global
+Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkController, Bool diagnostic, Bool dialogueRequest = False) Global
     ; Phase 1: resolve all supported MME/vanilla sources and report inventory
     ; state. MME's live FormLists remain authoritative where available.
     If giver == None
@@ -85,7 +85,7 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
         itemName = "<unnamed milk>"
     EndIf
     Report(diagnostic, "selected " + selectedType + ": " + itemName + " [form " + selectedItem.GetFormID() + "]")
-    Return ProcessNativeConsumption(giver, target, selectedItem, selectedType, milkController, diagnostic)
+    Return ProcessNativeConsumption(giver, target, selectedItem, selectedType, milkController, diagnostic, dialogueRequest)
 EndFunction
 
 ; Selects one owned item from the exact milk sources supported by Give Milk.
@@ -221,7 +221,7 @@ Function ReportNormalMilkInventory(Actor owner, Form hearthfireMilk, FormList ba
 EndFunction
 
 ; Stage three transfers exactly one item and verifies that EquipItem consumed it.
-Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedItem, String selectedType, MilkQUEST milkController, Bool diagnostic) Global
+Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedItem, String selectedType, MilkQUEST milkController, Bool diagnostic, Bool dialogueRequest = False) Global
     ; Phase 1: revalidate references, membership, and inventory immediately before
     ; committing. Eligibility may have changed since the dialogue/action check.
     If giver == None || target == None || selectedItem == None
@@ -284,12 +284,21 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
         Report(diagnostic, GetActorName(target) + " consumed " + selectedItem.GetName() + " | player " + giverBefore + " -> " + giver.GetItemCount(selectedItem) + " | native potion processed")
     EndIf
 
-    ; Phase 5: narration, optional animation, and modular Extensions effects run
-    ; only after native consumption succeeded. The animation reset is last.
+    ; Phase 5: narration, animations, and modular Extensions effects run only
+    ; after native consumption succeeded. Dialogue defers its paired player
+    ; Give/NPC Drink presentation until the menu releases both actor graphs;
+    ; non-dialogue callers retain the established optional NPC-only animation.
     MMEAlertsSkyrimNet.NarrateNPCMilkDrink(target, True)
-    Bool animationStarted = StartDrinkAnimation(target, selectedItem, diagnostic)
-    ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
-    FinishDrinkAnimation(target, animationStarted, diagnostic)
+    If dialogueRequest
+        ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
+        ; The persistent coordinator emits a failure-only alarm with the exact
+        ; cause if this request cannot be queued; keep the success path silent.
+        MMEDebug.QueueDialogueMilkAnimations(giver, target)
+    Else
+        Bool animationStarted = StartDrinkAnimation(target, selectedItem, diagnostic)
+        ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
+        FinishDrinkAnimation(target, animationStarted, diagnostic)
+    EndIf
     Return True
 EndFunction
 
