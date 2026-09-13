@@ -64,6 +64,7 @@ Int npcMilkConsumptionDiagnosticOption
 Int npcDrinkNotificationsOption
 Int npcDrinkNotificationsDiagnosticOption
 Int playerDrinkNotificationsOption
+Int giveMilkEasyModeOption
 Int armorStrippingCheckDiagnosticOption
 Int lifecycleDiagnosticOption
 Int milkmaidCreationDiagnosticOption
@@ -155,6 +156,7 @@ Int diagnosticPapyrusTraceOption
 Int papyrusTraceOption
 Int specificDiagnosticTraceOption
 Int vendorAnimationTraceOption
+Int milkDialogueTimingTraceOption
 Int diagnosticRefreshGateOption
 Int diagnosticInstallAuditOption
 Int diagnosticMilkDrinkAuditOption
@@ -187,7 +189,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 111
+    Return 114
 EndFunction
 
 Function SetPageNames()
@@ -1009,6 +1011,20 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "specificDiagnosticTraceMigration112", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Opt-in timestamp chain for the Give Milk dialogue. This does not alter
+    ; dialogue, inventory, effects, or animation behavior.
+    If JsonUtil.GetIntValue(SettingsFile, "milkDialogueTimingTraceMigration113", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkDialogueTimingTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "milkDialogueTimingTraceMigration113", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Give Milk no longer uses Lactacid. Existing saves receive the requested
+    ; default-on fallback that supplies one temporary HearthFires Jug.
+    If JsonUtil.GetIntValue(SettingsFile, "giveMilkEasyModeMigration114", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1)
+        JsonUtil.SetIntValue(SettingsFile, "giveMilkEasyModeMigration114", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1112,6 +1128,7 @@ Event OnPageReset(String page)
     npcDrinkNotificationsOption = -1
     npcDrinkNotificationsDiagnosticOption = -1
     playerDrinkNotificationsOption = -1
+    giveMilkEasyModeOption = -1
     armorStrippingCheckDiagnosticOption = -1
     lifecycleDiagnosticOption = -1
     milkmaidCreationDiagnosticOption = -1
@@ -1203,6 +1220,7 @@ Event OnPageReset(String page)
     papyrusTraceOption = -1
     specificDiagnosticTraceOption = -1
     vendorAnimationTraceOption = -1
+    milkDialogueTimingTraceOption = -1
     diagnosticRefreshGateOption = -1
     diagnosticInstallAuditOption = -1
     diagnosticDialogueAuditOption = -1
@@ -1255,6 +1273,8 @@ Event OnPageReset(String page)
         npcDrinkNotificationsOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1) == 1)
         AddHeaderOption("Player Milk Drinking")
         playerDrinkNotificationsOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1) == 1)
+        AddHeaderOption("Easy Mode")
+        giveMilkEasyModeOption = AddToggleOption("Free Jug for Give Milk", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1) == 1)
         Return
     EndIf
     If page == "A" + "nimations "
@@ -1479,6 +1499,7 @@ Event OnPageReset(String page)
         diagnosticPapyrusTraceOption = AddToggleOption("Papyrus Audit Trace", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0) == 1, diagnosticTraceFlags)
         Int vendorTraceFlags = diagnosticTraceFlags
         vendorAnimationTraceOption = AddToggleOption("Vendor Animation", JsonUtil.GetIntValue(SettingsFile, "enableVendorAnimationTrace", 0) == 1, vendorTraceFlags)
+        milkDialogueTimingTraceOption = AddToggleOption("Milk Dialogue Timing", JsonUtil.GetIntValue(SettingsFile, "enableMilkDialogueTimingTrace", 0) == 1, vendorTraceFlags)
         Return
     EndIf
     If page == "Debug"
@@ -1630,6 +1651,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Show a notification after an NPC Milkmaid drinks recognized milk.")
     ElseIf option == playerDrinkNotificationsOption
         SetInfoText("Show a notification after you drink recognized milk.")
+    ElseIf option == giveMilkEasyModeOption
+        SetInfoText("When Give Milk finds no eligible milk, supply and immediately consume one temporary HearthFires Jug of Milk. Lactacid is never used. Default on.")
     ElseIf option == selfMilkingActionOption
         SetInfoText("Allow Skyrim.Net to start self-milking for a selected Milk Maid.")
     ElseIf option == pairedMilkingActionOption
@@ -1832,6 +1855,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Allow detailed problem-specific Papyrus traces. Requires Master Papyrus Logging. Gameplay notifications, sparse status messages, and serious failure alarms are independent.")
     ElseIf option == vendorAnimationTraceOption
         SetInfoText("Trace every vendor-animation bus stop from the selected final service INFO through Dialogue Menu close, PlayIdle acceptance, and reset.")
+    ElseIf option == milkDialogueTimingTraceOption
+        SetInfoText("Log the earliest Papyrus-visible selection signal, INFO end, validation, consumption, Give dispatch, three-second hold, and effects. Requires Master Papyrus Logging; changes no gameplay.")
     ElseIf option == diagnosticRefreshGateOption
         SetInfoText("Recalculate the shared OStim dialogue gate without relying on the optional native DLL.")
     ElseIf option == diagnosticInstallAuditOption
@@ -2045,6 +2070,10 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableVendorAnimationTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableVendorAnimationTrace", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == milkDialogueTimingTraceOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkDialogueTimingTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkDialogueTimingTrace", value)
+        SetToggleOptionValue(option, value == 1)
     ElseIf option == diagnosticRefreshGateOption
         MMEDiagnostics.RefreshDialogueGate()
         ForcePageReset()
@@ -2174,6 +2203,10 @@ Event OnOptionSelect(Int option)
     ElseIf option == playerDrinkNotificationsOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotifications", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == giveMilkEasyModeOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkEasyMode", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == selfMilkingActionOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingAction", 1)

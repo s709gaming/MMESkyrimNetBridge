@@ -8,10 +8,33 @@ Scriptname MMENPCDialog extends TopicInfo Hidden
 ; Extensions effects, and the optional NPC drink animation in that order.
 
 String SettingsFile = "/MMEAlerts/Settings"
+String DialogueTimingKey = "MMEExtensions.DialogueMilk.SelectionTime"
+
+; INFO OnBegin is the earliest Papyrus-visible signal after the player selects
+; this response. It is not a raw mouse/button callback, so the trace says so.
+Function Fragment_TimingBegin(ObjectReference akSpeakerRef)
+    Actor target = akSpeakerRef as Actor
+    Actor player = Game.GetPlayer()
+    If IsDialogueTimingTraceEnabled()
+        Float now = Utility.GetCurrentRealTime()
+        StorageUtil.SetFloatValue(player, DialogueTimingKey, now)
+        MMELog.Status("[MME Extensions Dialogue Timing] 01 SELECT | INFO OnBegin (earliest Papyrus signal) | t=" + now + " | target=" + GetActorName(target))
+    EndIf
+
+    ; Visual-only early path. Inventory validation, transfer, consumption, and
+    ; gameplay effects deliberately remain in Fragment_0/OnEnd. The persistent
+    ; service owns duplicate suppression and takeover-safe cleanup.
+    MMEDebug.StartDialogueMilkGiveEarly(player, target)
+EndFunction
 
 ; Stage-one dialogue fragment: validate and report only. No inventory changes.
 Function Fragment_0(ObjectReference akSpeakerRef)
     Actor target = akSpeakerRef as Actor
+    TraceDialogueTiming("02 INFO OnEnd", target)
+    ; Always release an early visual, even if validation or inventory later
+    ; rejects the transaction. This prevents a failed request owning the player
+    ; animation state beyond the spoken response.
+    MMEDebug.FinishDialogueMilkGiveEarly(Game.GetPlayer(), target)
     TestDialogueTarget(target, True)
 EndFunction
 
@@ -46,6 +69,7 @@ Bool Function GiveMilkToTarget(Actor target, Bool diagnostic = False, Bool dialo
     EndIf
 
     Report(diagnostic, targetName + " is an MME Milkmaid; validation passed")
+    TraceDialogueTiming("03 validation passed", target)
     ; Phase 2: hand the validated pair to the single inventory/consumption path.
     ; Keeping selection and consumption together minimizes inventory races.
     Return TestInventorySelection(Game.GetPlayer(), target, milkController, diagnostic, dialogueRequest)
@@ -62,18 +86,37 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
 
     Form lactacid = milkController.MME_Util_Potions.GetAt(0)
     Form hearthfireMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
-    Int lactacidCount = GetOwnedCount(giver, lactacid)
-    Int normalCount = CountOwnedNormalMilk(giver, hearthfireMilk, milkController.MME_Milk_Basic)
-    Int racialCount = CountOwnedFromList(giver, milkController.MME_Milk_Race)
-    Int supernaturalCount = CountOwnedFromList(giver, milkController.MME_Milk_Special)
+    ; Full category counts walk every MME milk FormList and are useful only for
+    ; an explicit diagnostic request. The normal dialogue path selects its one
+    ; item directly below instead of scanning the same lists twice.
+    If diagnostic
+        Int lactacidCount = GetOwnedCount(giver, lactacid)
+        Int normalCount = CountOwnedNormalMilk(giver, hearthfireMilk, milkController.MME_Milk_Basic)
+        Int racialCount = CountOwnedFromList(giver, milkController.MME_Milk_Race)
+        Int supernaturalCount = CountOwnedFromList(giver, milkController.MME_Milk_Special)
+        Report(True, "inventory: Lactacid " + lactacidCount + " | Normal " + normalCount + " | Racial " + racialCount + " | Supernatural " + supernaturalCount)
+        ReportNormalMilkInventory(giver, hearthfireMilk, milkController.MME_Milk_Basic, True)
+    EndIf
 
-    Report(diagnostic, "inventory: Lactacid " + lactacidCount + " | Normal " + normalCount + " | Racial " + racialCount + " | Supernatural " + supernaturalCount)
-    ReportNormalMilkInventory(giver, hearthfireMilk, milkController.MME_Milk_Basic, diagnostic)
-
-    ; Phase 2: use the shared supported-milk selector, keeping category
-    ; membership, fallback records, and the Lactacid -> normal -> racial ->
-    ; supernatural priority in one place.
+    ; Phase 2: Give Milk deliberately excludes Lactacid. Prefer ordinary milk,
+    ; then racial and supernatural milk. Easy Mode supplies one base Jug only
+    ; when the player owns none of those eligible forms.
     Form selectedItem = FindFirstSupportedMilk(giver, milkController)
+    Bool easyModeSupply = False
+    If selectedItem == None && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableGiveMilkEasyMode", 1) == 1
+        If hearthfireMilk == None
+            MMELog.Alarm("[MME Extensions Dialogue] FAILURE: Easy Mode could not resolve HearthFires Jug of Milk 00003534")
+            Return False
+        EndIf
+        Int easyBefore = giver.GetItemCount(hearthfireMilk)
+        giver.AddItem(hearthfireMilk, 1, True)
+        If giver.GetItemCount(hearthfireMilk) != easyBefore + 1
+            MMELog.Alarm("[MME Extensions Dialogue] FAILURE: Easy Mode could not supply its temporary Jug of Milk")
+            Return False
+        EndIf
+        selectedItem = hearthfireMilk
+        easyModeSupply = True
+    EndIf
     String selectedType = GetSupportedMilkType(selectedItem, milkController)
 
     If selectedItem == None
@@ -85,7 +128,8 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
         itemName = "<unnamed milk>"
     EndIf
     Report(diagnostic, "selected " + selectedType + ": " + itemName + " [form " + selectedItem.GetFormID() + "]")
-    Return ProcessNativeConsumption(giver, target, selectedItem, selectedType, milkController, diagnostic, dialogueRequest)
+    TraceDialogueTiming("04 milk selected", target)
+    Return ProcessNativeConsumption(giver, target, selectedItem, selectedType, milkController, diagnostic, dialogueRequest, easyModeSupply)
 EndFunction
 
 ; Selects one owned item from the exact milk sources supported by Give Milk.
@@ -94,13 +138,6 @@ EndFunction
 Form Function FindFirstSupportedMilk(Actor owner, MilkQUEST milkController) Global
     If owner == None || milkController == None
         Return None
-    EndIf
-    Form lactacid = None
-    If milkController.MME_Util_Potions != None
-        lactacid = milkController.MME_Util_Potions.GetAt(0)
-    EndIf
-    If GetOwnedCount(owner, lactacid) > 0
-        Return lactacid
     EndIf
     Form hearthfireMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
     Form selectedItem = FindFirstOwnedNormalMilk(owner, hearthfireMilk, milkController.MME_Milk_Basic)
@@ -221,7 +258,7 @@ Function ReportNormalMilkInventory(Actor owner, Form hearthfireMilk, FormList ba
 EndFunction
 
 ; Stage three transfers exactly one item and verifies that EquipItem consumed it.
-Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedItem, String selectedType, MilkQUEST milkController, Bool diagnostic, Bool dialogueRequest = False) Global
+Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedItem, String selectedType, MilkQUEST milkController, Bool diagnostic, Bool dialogueRequest = False, Bool easyModeSupply = False) Global
     ; Phase 1: revalidate references, membership, and inventory immediately before
     ; committing. Eligibility may have changed since the dialogue/action check.
     If giver == None || target == None || selectedItem == None
@@ -229,6 +266,9 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
         Return False
     EndIf
     If !MMEArmorScript.IsMMEMilkMaid(target, milkController)
+        If easyModeSupply
+            giver.RemoveItem(selectedItem, 1, True)
+        EndIf
         Report(diagnostic, "transfer rejected: target is no longer an MME Milkmaid")
         Return False
     EndIf
@@ -236,6 +276,9 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
     Int giverBefore = giver.GetItemCount(selectedItem)
     Int targetBefore = target.GetItemCount(selectedItem)
     If giverBefore < 1
+        If easyModeSupply
+            MMELog.Alarm("[MME Extensions Dialogue] FAILURE: Easy Mode temporary Jug disappeared before transfer")
+        EndIf
         Report(diagnostic, "transfer failed: selected item is no longer in player inventory")
         Return False
     EndIf
@@ -253,6 +296,12 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
         ElseIf targetAfterTransfer > targetBefore
             target.RemoveItem(selectedItem, 1, True, giver)
         EndIf
+        If easyModeSupply && giver.GetItemCount(selectedItem) > 0
+            giver.RemoveItem(selectedItem, 1, True)
+        EndIf
+        If easyModeSupply
+            MMELog.Alarm("[MME Extensions Dialogue] FAILURE: Easy Mode temporary Jug transfer failed and cleanup was attempted")
+        EndIf
         Report(diagnostic, "transfer failed; rollback attempted | player " + giverBefore + " -> " + giver.GetItemCount(selectedItem) + " | target " + targetBefore + " -> " + target.GetItemCount(selectedItem))
         Return False
     EndIf
@@ -265,6 +314,7 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
     StorageUtil.SetFloatValue(target, "MMEExtensions.NPCDrink.SuppressTime", Utility.GetCurrentRealTime())
     StorageUtil.SetIntValue(target, "MMEExtensions.NPCDrink.SuppressForm", selectedItem.GetFormID())
     target.EquipItem(selectedItem, False, True)
+    TraceDialogueTiming("05 EquipItem requested", target)
     Utility.Wait(0.5)
 
     ; Phase 4: verify consumption by inventory delta. If Skyrim retained the item,
@@ -273,6 +323,10 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
     If targetAfterConsume >= targetAfterTransfer
         ; The item is still present, so return the transferred copy to the giver.
         target.RemoveItem(selectedItem, 1, True, giver)
+        If easyModeSupply && giver.GetItemCount(selectedItem) > 0
+            giver.RemoveItem(selectedItem, 1, True)
+            MMELog.Alarm("[MME Extensions Dialogue] FAILURE: Easy Mode temporary Jug was not consumed and was removed during recovery")
+        EndIf
         Report(diagnostic, "consume failed; item returned | player " + giverBefore + " -> " + giver.GetItemCount(selectedItem))
         Return False
     EndIf
@@ -283,23 +337,47 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
     Else
         Report(diagnostic, GetActorName(target) + " consumed " + selectedItem.GetName() + " | player " + giverBefore + " -> " + giver.GetItemCount(selectedItem) + " | native potion processed")
     EndIf
+    TraceDialogueTiming("06 consumption verified", target)
 
     ; Phase 5: narration, animations, and modular Extensions effects run only
-    ; after native consumption succeeded. Dialogue defers its paired player
-    ; Give/NPC Drink presentation until the menu releases both actor graphs;
-    ; non-dialogue callers retain the established optional NPC-only animation.
+    ; after native consumption succeeded. Dialogue queues the player Give before
+    ; slower milk/arousal reactions so it can begin as soon as the menu releases
+    ; the player graph. The NPC keeps any fullness reaction it earns; non-dialogue
+    ; callers retain the established optional NPC-only Drink animation.
     MMEAlertsSkyrimNet.NarrateNPCMilkDrink(target, True)
     If dialogueRequest
-        ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
-        ; The persistent coordinator emits a failure-only alarm with the exact
-        ; cause if this request cannot be queued; keep the success path silent.
+        ; The persistent coordinator emits failure-only alarms for broken queue
+        ; state while treating normal gameplay safety rejections as diagnostics.
         MMEDebug.QueueDialogueMilkAnimations(giver, target)
+        TraceDialogueTiming("11 Give sequence returned", target)
+        ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
+        TraceDialogueTiming("12 extension effects complete", target)
     Else
         Bool animationStarted = StartDrinkAnimation(target, selectedItem, diagnostic)
         ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
         FinishDrinkAnimation(target, animationStarted, diagnostic)
     EndIf
     Return True
+EndFunction
+
+Bool Function IsDialogueTimingTraceEnabled() Global
+    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePapyrusTrace", 0) == 1 && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkDialogueTimingTrace", 0) == 1
+EndFunction
+
+Function TraceDialogueTiming(String stage, Actor target = None) Global
+    If !IsDialogueTimingTraceEnabled()
+        Return
+    EndIf
+    Actor player = Game.GetPlayer()
+    Float now = Utility.GetCurrentRealTime()
+    Float selectedAt = StorageUtil.GetFloatValue(player, "MMEExtensions.DialogueMilk.SelectionTime", 0.0)
+    String elapsed = "unavailable"
+    If selectedAt > 0.0 && now >= selectedAt
+        elapsed = "+" + (now - selectedAt) + "s"
+    ElseIf stage == "02 INFO OnEnd"
+        MMELog.Alarm("[MME Extensions Dialogue Timing] FAILURE: timing enabled but INFO OnBegin selection timestamp is missing")
+    EndIf
+    MMELog.Status("[MME Extensions Dialogue Timing] " + stage + " | " + elapsed + " | t=" + now + " | target=" + GetActorName(target))
 EndFunction
 
 ; Stage four applies only our modular extension effects. Native MME potion effects have

@@ -85,22 +85,32 @@ Int PendingVendorAnimationRequestID = 0
 Bool VendorAnimationPending = False
 Actor VendorAnimationMovementLockActor = None
 
-; Successful "Would you like to drink some milk?" transactions queue here.
-; The persistent service waits for Dialogue Menu to release both behavior
-; graphs, starts the player give and NPC drink idles together, then performs
-; one shared hold and takeover-safe cleanup.
+; "Would you like to drink some milk?" starts its visual-only player Give at
+; INFO OnBegin. OnEnd completes that owned idle and performs the established
+; transaction; the queue remains as a safe fallback if early playback failed.
 Actor PendingDialogueMilkGiver = None
 Actor PendingDialogueMilkDrinker = None
 Bool DialogueMilkAnimationPending = False
+Float PendingDialogueMilkQueuedAt = 0.0
 Actor ActiveDialogueMilkGiver = None
+; Retained for upgrade-safe recovery of an older paired-animation save.
 Actor ActiveDialogueMilkDrinker = None
 Bool ActiveDialogueMilkGiveStarted = False
 Bool ActiveDialogueMilkDrinkStarted = False
+Actor CompletedEarlyDialogueMilkGiver = None
+Actor CompletedEarlyDialogueMilkDrinker = None
 
 ; Quest startup delegates normal scheduling to the controller.
 Event OnInit()
     EnsureNewMilkMaidSexLabListeners()
     UpdateDebugLoop()
+EndEvent
+
+; MMEAlertsController already schedules OnUpdate on this shared quest form.
+; This event adds no registration or polling loop; it only recovers a rare
+; pending Give if the registered Dialogue Menu close event was missed.
+Event OnUpdate()
+    CheckDialogueMilkAnimationWatchdog()
 EndEvent
 
 Function UpdateDebugLoop()
@@ -330,10 +340,79 @@ Bool Function QueueDialogueMilkAnimations(Actor giver, Actor drinker) Global
     Return service.QueueDialogueMilkAnimationsInternal(giver, drinker)
 EndFunction
 
+Bool Function StartDialogueMilkGiveEarly(Actor giver, Actor drinker) Global
+    MMEDebug service = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
+    If service == None
+        MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: persistent service unavailable for early dialogue Give")
+        Return False
+    EndIf
+    Return service.StartDialogueMilkGiveEarlyInternal(giver, drinker)
+EndFunction
+
+Bool Function StartDialogueMilkGiveEarlyInternal(Actor giver, Actor drinker)
+    If giver == None || drinker == None || giver == drinker
+        MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: invalid giver/drinker pair supplied to early dialogue Give")
+        Return False
+    EndIf
+    If ActiveDialogueMilkGiver == giver && ActiveDialogueMilkDrinker == drinker && ActiveDialogueMilkGiveStarted
+        ; Defensive idempotence if the engine repeats INFO OnBegin.
+        Return True
+    EndIf
+    If DialogueMilkAnimationPending || ActiveDialogueMilkGiver != None || ActiveDialogueMilkDrinker != None
+        MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: early dialogue Give collided with an existing milk animation request")
+        Return False
+    EndIf
+    If VendorAnimationPending || VendorAnimationMovementLockActor != None
+        MMELog.Diagnostic("[MME Extensions Minor Animation] early dialogue Give skipped during an active vendor gesture")
+        Return False
+    EndIf
+
+    CompletedEarlyDialogueMilkGiver = None
+    CompletedEarlyDialogueMilkDrinker = None
+    ActiveDialogueMilkGiver = giver
+    ActiveDialogueMilkDrinker = drinker
+    MMENPCDialog.TraceDialogueTiming("08 early Give dispatch", drinker)
+    ActiveDialogueMilkGiveStarted = MMEMinorAnimations.StartGive(giver, "DialogueMilk.Giver", False, False)
+    If !ActiveDialogueMilkGiveStarted
+        MMENPCDialog.TraceDialogueTiming("09 early Give rejected by animation safety", drinker)
+        ClearActiveDialogueMilkAnimations()
+        Return False
+    EndIf
+    MMENPCDialog.TraceDialogueTiming("09 early Give PlayIdle accepted", drinker)
+    Return True
+EndFunction
+
+Bool Function FinishDialogueMilkGiveEarly(Actor giver, Actor drinker) Global
+    MMEDebug service = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
+    If service == None
+        MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: persistent service unavailable while finishing early dialogue Give")
+        Return False
+    EndIf
+    Return service.FinishDialogueMilkGiveEarlyInternal(giver, drinker)
+EndFunction
+
+Bool Function FinishDialogueMilkGiveEarlyInternal(Actor giver, Actor drinker)
+    If ActiveDialogueMilkGiver != giver || ActiveDialogueMilkDrinker != drinker || !ActiveDialogueMilkGiveStarted
+        Return False
+    EndIf
+    MMEMinorAnimations.Complete(giver, "DialogueMilk.Giver", "Dialogue milk Give", False)
+    MMENPCDialog.TraceDialogueTiming("10 early Give completed at INFO OnEnd", drinker)
+    ClearActiveDialogueMilkAnimations()
+    CompletedEarlyDialogueMilkGiver = giver
+    CompletedEarlyDialogueMilkDrinker = drinker
+    Return True
+EndFunction
+
 Bool Function QueueDialogueMilkAnimationsInternal(Actor giver, Actor drinker)
     If giver == None || drinker == None || giver == drinker
         MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: invalid giver/drinker pair supplied by milk dialogue")
         Return False
+    EndIf
+    If CompletedEarlyDialogueMilkGiver == giver && CompletedEarlyDialogueMilkDrinker == drinker
+        MMENPCDialog.TraceDialogueTiming("07 early Give claimed by successful transaction", drinker)
+        CompletedEarlyDialogueMilkGiver = None
+        CompletedEarlyDialogueMilkDrinker = None
+        Return True
     EndIf
     If DialogueMilkAnimationPending || ActiveDialogueMilkGiver != None || ActiveDialogueMilkDrinker != None
         MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: a dialogue milk animation pair is already pending or active")
@@ -346,7 +425,9 @@ Bool Function QueueDialogueMilkAnimationsInternal(Actor giver, Actor drinker)
 
     PendingDialogueMilkGiver = giver
     PendingDialogueMilkDrinker = drinker
+    PendingDialogueMilkQueuedAt = Utility.GetCurrentRealTime()
     DialogueMilkAnimationPending = True
+    MMENPCDialog.TraceDialogueTiming("07 Give queued", drinker)
     If UI.IsMenuOpen("Dialogue Menu")
         RegisterForMenu("Dialogue Menu")
     Else
@@ -358,38 +439,54 @@ Bool Function QueueDialogueMilkAnimationsInternal(Actor giver, Actor drinker)
 EndFunction
 
 Function RunPendingDialogueMilkAnimations()
+    If !DialogueMilkAnimationPending
+        Return
+    EndIf
     Actor giver = PendingDialogueMilkGiver
     Actor drinker = PendingDialogueMilkDrinker
+    Float queuedAt = PendingDialogueMilkQueuedAt
     ClearPendingDialogueMilkAnimations(False)
     If giver == None || drinker == None || giver == drinker
         MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: queued dialogue milk actors became invalid before playback")
         Return
     EndIf
-    If giver.IsDead() || !giver.Is3DLoaded() || drinker.IsDead() || !drinker.Is3DLoaded()
-        ; Actor availability can legitimately change while dialogue closes.
-        MMELog.Diagnostic("[MME Extensions Minor Animation] dialogue milk pair skipped because an actor became unavailable")
+    If giver.IsDead() || !giver.Is3DLoaded()
+        ; Player availability can legitimately change while dialogue closes.
+        MMELog.Diagnostic("[MME Extensions Minor Animation] dialogue milk Give skipped because the player became unavailable")
         Return
+    EndIf
+
+    MMENPCDialog.TraceDialogueTiming("08 Give dispatch", drinker)
+    Float startDelay = Utility.GetCurrentRealTime() - queuedAt
+    If queuedAt > 0.0 && startDelay > 3.0
+        MMELog.Diagnostic("[MME Extensions Minor Animation] dialogue milk Give dispatch delayed " + startDelay + " seconds after queue")
     EndIf
 
     ActiveDialogueMilkGiver = giver
-    ActiveDialogueMilkDrinker = drinker
     ActiveDialogueMilkGiveStarted = MMEMinorAnimations.StartGive(giver, "DialogueMilk.Giver", False, False)
-    ActiveDialogueMilkDrinkStarted = MMEMinorAnimations.StartDrink(drinker, "DialogueMilk.Drinker", True, False)
-    If !ActiveDialogueMilkGiveStarted && !ActiveDialogueMilkDrinkStarted
+    If !ActiveDialogueMilkGiveStarted
+        MMENPCDialog.TraceDialogueTiming("09 Give rejected by animation safety", drinker)
         ClearActiveDialogueMilkAnimations()
         Return
     EndIf
+    MMENPCDialog.TraceDialogueTiming("09 Give PlayIdle accepted", drinker)
 
-    ; One hold keeps the gestures loosely simultaneous. Calling PlayGive then
-    ; PlayDrink would serialize their latent waits into a six-second sequence.
     Utility.Wait(3.0)
-    If ActiveDialogueMilkGiveStarted
-        MMEMinorAnimations.Complete(giver, "DialogueMilk.Giver", "Dialogue milk Give", False)
-    EndIf
-    If ActiveDialogueMilkDrinkStarted
-        MMEMinorAnimations.Complete(drinker, "DialogueMilk.Drinker", "Dialogue milk Drink", False)
-    EndIf
+    MMEMinorAnimations.Complete(giver, "DialogueMilk.Giver", "Dialogue milk Give", False)
+    MMENPCDialog.TraceDialogueTiming("10 Give hold complete", drinker)
     ClearActiveDialogueMilkAnimations()
+EndFunction
+
+Function CheckDialogueMilkAnimationWatchdog()
+    If !DialogueMilkAnimationPending || PendingDialogueMilkQueuedAt <= 0.0
+        Return
+    EndIf
+    Float elapsed = Utility.GetCurrentRealTime() - PendingDialogueMilkQueuedAt
+    If elapsed < 10.0 || UI.IsMenuOpen("Dialogue Menu")
+        Return
+    EndIf
+    MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: dialogue closed but queued Give was never dispatched; recovering after " + elapsed + " seconds")
+    RunPendingDialogueMilkAnimations()
 EndFunction
 
 Function RecoverDialogueMilkAnimationsAfterLoad()
@@ -401,6 +498,8 @@ Function RecoverDialogueMilkAnimationsAfterLoad()
     EndIf
     ClearActiveDialogueMilkAnimations()
     ClearPendingDialogueMilkAnimations(False)
+    CompletedEarlyDialogueMilkGiver = None
+    CompletedEarlyDialogueMilkDrinker = None
 EndFunction
 
 Function ClearPendingDialogueMilkAnimations(Bool unregisterMenu = True)
@@ -409,6 +508,7 @@ Function ClearPendingDialogueMilkAnimations(Bool unregisterMenu = True)
     EndIf
     PendingDialogueMilkGiver = None
     PendingDialogueMilkDrinker = None
+    PendingDialogueMilkQueuedAt = 0.0
     DialogueMilkAnimationPending = False
 EndFunction
 

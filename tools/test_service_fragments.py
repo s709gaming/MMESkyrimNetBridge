@@ -3,6 +3,8 @@ import unittest
 from pathlib import Path
 
 from add_service_completion_fragments import TARGETS, patch_plugin
+from add_milk_dialogue_timing_fragment import patch_plugin as patch_milk_timing_fragment
+from remove_give_milk_inventory_conditions import patch_plugin as patch_give_milk_inventory_conditions
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = (ROOT / 'Source/Scripts/MMEBlacksmithDialogue.psc').read_text()
@@ -76,23 +78,59 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('MMEMinorAnimations.Complete', drink)
         self.assertNotIn('MMEReactionAnimation.', drink)
 
-    def test_milk_dialogue_queues_paired_animation_after_success(self):
+    def test_milk_dialogue_queues_give_before_extension_effects(self):
         dialogue = (ROOT / 'Source/Scripts/MMENPCDialog.psc').read_text()
         self.assertIn('TestDialogueTarget(target, True)', dialogue)
         self.assertIn('Bool dialogueRequest = False', dialogue)
         self.assertIn('MMEDebug.QueueDialogueMilkAnimations(giver, target)', dialogue)
-        self.assertNotIn('MMELog.Alarm', dialogue)
+        branch = dialogue.split('If dialogueRequest', 1)[1].split('Else', 1)[0]
+        self.assertLess(branch.index('MMEDebug.QueueDialogueMilkAnimations'), branch.index('ApplyExtensionEffects'))
+        alarm_lines = [line.strip() for line in dialogue.splitlines() if 'MMELog.Alarm' in line]
+        self.assertGreaterEqual(len(alarm_lines), 1)
+        for line in alarm_lines:
+            self.assertIn('FAILURE:', line)
 
-    def test_persistent_service_runs_pair_after_dialogue_close(self):
+    def test_milk_dialogue_timing_trace_is_opt_in_and_staged(self):
+        dialogue = (ROOT / 'Source/Scripts/MMENPCDialog.psc').read_text()
         bus = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
+        mcm = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
+        self.assertIn('Function Fragment_TimingBegin(ObjectReference akSpeakerRef)', dialogue)
+        self.assertIn('INFO OnBegin (earliest Papyrus signal)', dialogue)
+        self.assertIn('"enableMilkDialogueTimingTrace"', dialogue)
+        self.assertIn('TraceDialogueTiming("02 INFO OnEnd"', dialogue)
+        self.assertIn('TraceDialogueTiming("06 consumption verified"', dialogue)
+        self.assertIn('MMEDebug.StartDialogueMilkGiveEarly(player, target)', dialogue)
+        self.assertIn('MMEDebug.FinishDialogueMilkGiveEarly(Game.GetPlayer(), target)', dialogue)
+        self.assertIn('TraceDialogueTiming("08 early Give dispatch"', bus)
+        self.assertIn('TraceDialogueTiming("09 early Give PlayIdle accepted"', bus)
+        self.assertIn('TraceDialogueTiming("07 Give queued"', bus)
+        self.assertIn('TraceDialogueTiming("09 Give PlayIdle accepted"', bus)
+        self.assertIn('milkDialogueTimingTraceOption = AddToggleOption("Milk Dialogue Timing"', mcm)
+        self.assertGreater(mcm.index('milkDialogueTimingTraceOption = AddToggleOption'), mcm.index('vendorAnimationTraceOption = AddToggleOption'))
+
+    def test_persistent_service_starts_give_early_and_retains_close_fallback(self):
+        bus = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
+        self.assertIn('Bool Function StartDialogueMilkGiveEarly(Actor giver, Actor drinker) Global', bus)
+        self.assertIn('Return service.StartDialogueMilkGiveEarlyInternal(giver, drinker)', bus)
+        self.assertIn('Bool Function FinishDialogueMilkGiveEarly(Actor giver, Actor drinker) Global', bus)
+        self.assertIn('ActiveDialogueMilkGiver == giver && ActiveDialogueMilkDrinker == drinker && ActiveDialogueMilkGiveStarted', bus)
+        self.assertIn('early Give claimed by successful transaction', bus)
+        self.assertIn('early Give completed at INFO OnEnd', bus)
         self.assertIn('If DialogueMilkAnimationPending && !VendorAnimationPending', bus)
         self.assertIn('UI.IsMenuOpen("Dialogue Menu")', bus)
         self.assertIn('MMEMinorAnimations.StartGive(giver, "DialogueMilk.Giver", False, False)', bus)
-        self.assertIn('MMEMinorAnimations.StartDrink(drinker, "DialogueMilk.Drinker", True, False)', bus)
+        self.assertNotIn('MMEMinorAnimations.StartDrink(drinker, "DialogueMilk.Drinker", True, False)', bus)
         self.assertEqual(bus.count('Utility.Wait(3.0)'), 1)
         self.assertIn('MMEMinorAnimations.Complete(giver, "DialogueMilk.Giver"', bus)
-        self.assertIn('MMEMinorAnimations.Complete(drinker, "DialogueMilk.Drinker"', bus)
+        self.assertNotIn('MMEMinorAnimations.Complete(drinker, "DialogueMilk.Drinker"', bus)
         self.assertIn('RecoverDialogueMilkAnimationsAfterLoad()', bus)
+
+    def test_dialogue_give_watchdog_is_failure_only_and_reuses_shared_update(self):
+        bus = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
+        self.assertIn('Event OnUpdate()', bus)
+        self.assertIn('CheckDialogueMilkAnimationWatchdog()', bus)
+        self.assertIn('FAILURE: dialogue closed but queued Give was never dispatched', bus)
+        self.assertNotIn('RegisterForSingleUpdate(', bus)
 
     def test_minor_animation_smoke_alarms_are_failure_only(self):
         minor = (ROOT / 'Source/Scripts/MMEMinorAnimations.psc').read_text()
@@ -104,6 +142,21 @@ class ServiceTests(unittest.TestCase):
     def test_packaged_plugin_has_all_end_bindings(self):
         data = (ROOT / 'MMEAlert.esp').read_bytes()
         self.assertEqual(patch_plugin(data), data)
+        self.assertEqual(patch_milk_timing_fragment(data), data)
+        self.assertEqual(patch_give_milk_inventory_conditions(data), data)
+
+    def test_give_milk_excludes_lactacid_and_has_default_on_easy_mode(self):
+        dialogue = (ROOT / 'Source/Scripts/MMENPCDialog.psc').read_text()
+        mcm = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
+        selector = dialogue.split('Form Function FindFirstSupportedMilk(', 1)[1].split('EndFunction', 1)[0]
+        self.assertNotIn('MME_Util_Potions', selector)
+        self.assertIn('enableGiveMilkEasyMode", 1', dialogue)
+        self.assertIn('Game.GetFormFromFile(0x003534, "HearthFires.esm")', dialogue)
+        self.assertIn('Easy Mode temporary Jug', dialogue)
+        self.assertIn('Return 114', mcm)
+        self.assertIn('AddHeaderOption("Easy Mode")', mcm)
+        self.assertIn('AddToggleOption("Free Jug for Give Milk"', mcm)
+        self.assertIn('JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1)', mcm)
 
     def test_opening_does_not_apply_or_gesture(self):
         body = SOURCE.split('Function Fragment_RefreshBlacksmithArmorState(', 1)[1].split('EndFunction', 1)[0]

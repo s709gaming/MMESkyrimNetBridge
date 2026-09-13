@@ -237,6 +237,13 @@ if (Test-Path -LiteralPath $pluginPath) {
     if (!$pluginText.Contains($wantedMilkResponse)) {
         throw "MMEAlert.esp is missing the intended milk-dialogue response '$wantedMilkResponse'. Repair the target INFO in SSEEdit before packaging."
     }
+    if (!$pluginText.Contains("Fragment_TimingBegin")) {
+        throw "MMEAlert.esp is missing the opt-in milk-dialogue OnBegin timing fragment. Run tools\add_milk_dialogue_timing_fragment.py against the project plugin before packaging."
+    }
+    & python (Join-Path $PSScriptRoot "tools\remove_give_milk_inventory_conditions.py") $pluginPath --check
+    if ($LASTEXITCODE -ne 0) {
+        throw "MMEAlert.esp still contains Give Milk inventory conditions or lost its eligibility gates."
+    }
     if (!$pluginText.Contains("MMEExt_OStimDialogueAvailable") -or
         $pluginText.Contains("::OStimDialogueAvailable_var")) {
         throw "MMEAlert.esp still uses the unreliable OStim quest-variable dialogue gate. Run the updated tools\AddMMEExtensionsOStimBreastfeedingDialogue.pas in SSEEdit and save the plugin before packaging."
