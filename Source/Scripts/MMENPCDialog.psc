@@ -24,7 +24,12 @@ Function Fragment_TimingBegin(ObjectReference akSpeakerRef)
     ; Visual-only early path. Inventory validation, transfer, consumption, and
     ; gameplay effects deliberately remain in Fragment_0/OnEnd. The persistent
     ; service owns duplicate suppression and takeover-safe cleanup.
-    MMEDebug.StartDialogueMilkGiveEarly(player, target)
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If target != None && milkController != None
+        If MMEArmorScript.IsMMEMilkMaid(target, milkController) || MMENPCDrinkDialogue.IsEligible(target, milkController, False)
+            MMEDebug.StartDialogueMilkGiveEarly(player, target)
+        EndIf
+    EndIf
 EndFunction
 
 ; Stage-one dialogue fragment: validate and report only. No inventory changes.
@@ -64,19 +69,23 @@ Bool Function GiveMilkToTarget(Actor target, Bool diagnostic = False, Bool dialo
 
     Bool isMilkmaid = MMEArmorScript.IsMMEMilkMaid(target, milkController)
     If !isMilkmaid
-        Report(diagnostic, targetName + " is not an MME Milkmaid; request rejected")
-        Return False
+        If !MMENPCDrinkDialogue.IsEligible(target, milkController, diagnostic)
+            Report(diagnostic, targetName + " is not an eligible adult non-Milkmaid; request rejected")
+            Return False
+        EndIf
+        Report(diagnostic, targetName + " validated for the adult non-Milkmaid drink route")
+        Return TestInventorySelection(Game.GetPlayer(), target, milkController, diagnostic, dialogueRequest, False)
     EndIf
 
     Report(diagnostic, targetName + " is an MME Milkmaid; validation passed")
     TraceDialogueTiming("03 validation passed", target)
     ; Phase 2: hand the validated pair to the single inventory/consumption path.
     ; Keeping selection and consumption together minimizes inventory races.
-    Return TestInventorySelection(Game.GetPlayer(), target, milkController, diagnostic, dialogueRequest)
+    Return TestInventorySelection(Game.GetPlayer(), target, milkController, diagnostic, dialogueRequest, True)
 EndFunction
 
 ; Selects one supported milk, then hands it to the validated NPC for native consumption.
-Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkController, Bool diagnostic, Bool dialogueRequest = False) Global
+Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkController, Bool diagnostic, Bool dialogueRequest = False, Bool establishedMilkmaid = True) Global
     ; Phase 1: resolve all supported MME/vanilla sources and report inventory
     ; state. MME's live FormLists remain authoritative where available.
     If giver == None
@@ -129,7 +138,7 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
     EndIf
     Report(diagnostic, "selected " + selectedType + ": " + itemName + " [form " + selectedItem.GetFormID() + "]")
     TraceDialogueTiming("04 milk selected", target)
-    Return ProcessNativeConsumption(giver, target, selectedItem, selectedType, milkController, diagnostic, dialogueRequest, easyModeSupply)
+    Return ProcessNativeConsumption(giver, target, selectedItem, selectedType, milkController, diagnostic, dialogueRequest, easyModeSupply, establishedMilkmaid)
 EndFunction
 
 ; Selects one owned item from the exact milk sources supported by Give Milk.
@@ -258,14 +267,14 @@ Function ReportNormalMilkInventory(Actor owner, Form hearthfireMilk, FormList ba
 EndFunction
 
 ; Stage three transfers exactly one item and verifies that EquipItem consumed it.
-Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedItem, String selectedType, MilkQUEST milkController, Bool diagnostic, Bool dialogueRequest = False, Bool easyModeSupply = False) Global
+Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedItem, String selectedType, MilkQUEST milkController, Bool diagnostic, Bool dialogueRequest = False, Bool easyModeSupply = False, Bool establishedMilkmaid = True) Global
     ; Phase 1: revalidate references, membership, and inventory immediately before
     ; committing. Eligibility may have changed since the dialogue/action check.
     If giver == None || target == None || selectedItem == None
         Report(diagnostic, "transfer failed: missing giver, target, or item")
         Return False
     EndIf
-    If !MMEArmorScript.IsMMEMilkMaid(target, milkController)
+    If establishedMilkmaid && !MMEArmorScript.IsMMEMilkMaid(target, milkController)
         If easyModeSupply
             giver.RemoveItem(selectedItem, 1, True)
         EndIf
@@ -281,9 +290,40 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
         EndIf
         Report(diagnostic, "transfer failed: selected item is no longer in player inventory")
         Return False
+    ElseIf !establishedMilkmaid && !MMENPCDrinkDialogue.IsEligible(target, milkController, diagnostic)
+        If easyModeSupply
+            giver.RemoveItem(selectedItem, 1, True)
+        EndIf
+        Report(diagnostic, "transfer rejected: target is no longer an eligible adult non-Milkmaid")
+        Return False
     EndIf
 
-    Float lactacidBefore = MME_Storage.getLactacidCurrent(target)
+    ; Dialogue receiver Drink runs after the spoken response but before the
+    ; potion is equipped. Completing it first prevents the native MME
+    ; fullness/reaction animation from competing for the same actor graph.
+    Bool receiverDrinkStarted = False
+    If dialogueRequest
+        TraceDialogueTiming("04A receiver Drink dispatch", target)
+        If establishedMilkmaid
+            receiverDrinkStarted = StartDrinkAnimation(target, selectedItem, diagnostic)
+        Else
+            receiverDrinkStarted = MMENPCDrinkDialogue.PlayDrink(target, diagnostic)
+        EndIf
+        If receiverDrinkStarted
+            TraceDialogueTiming("04B receiver Drink accepted", target)
+            If establishedMilkmaid
+                FinishDrinkAnimation(target, receiverDrinkStarted, diagnostic)
+            EndIf
+            TraceDialogueTiming("04C receiver Drink complete", target)
+        Else
+            TraceDialogueTiming("04B receiver Drink skipped or rejected", target)
+        EndIf
+    EndIf
+
+    Float lactacidBefore = 0.0
+    If establishedMilkmaid
+        lactacidBefore = MME_Storage.getLactacidCurrent(target)
+    EndIf
     ; Phase 2: transfer one item and verify both inventories. Any partial transfer
     ; is rolled back before consumption or extension effects are attempted.
     giver.RemoveItem(selectedItem, 1, True, target)
@@ -331,7 +371,10 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
         Return False
     EndIf
 
-    Float lactacidAfter = MME_Storage.getLactacidCurrent(target)
+    Float lactacidAfter = lactacidBefore
+    If establishedMilkmaid
+        lactacidAfter = MME_Storage.getLactacidCurrent(target)
+    EndIf
     If selectedType == "Lactacid"
         Report(diagnostic, GetActorName(target) + " consumed Lactacid | player " + giverBefore + " -> " + giver.GetItemCount(selectedItem) + " | MME Lactacid " + lactacidBefore + " -> " + lactacidAfter)
     Else
@@ -344,13 +387,19 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
     ; slower milk/arousal reactions so it can begin as soon as the menu releases
     ; the player graph. The NPC keeps any fullness reaction it earns; non-dialogue
     ; callers retain the established optional NPC-only Drink animation.
-    MMEAlertsSkyrimNet.NarrateNPCMilkDrink(target, True)
+    If establishedMilkmaid
+        MMEAlertsSkyrimNet.NarrateNPCMilkDrink(target, True)
+    EndIf
     If dialogueRequest
         ; The persistent coordinator emits failure-only alarms for broken queue
         ; state while treating normal gameplay safety rejections as diagnostics.
         MMEDebug.QueueDialogueMilkAnimations(giver, target)
         TraceDialogueTiming("11 Give sequence returned", target)
-        ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
+        If establishedMilkmaid
+            ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
+        Else
+            MMENPCDrinkDialogue.ApplyPostDrink(target, selectedItem, diagnostic)
+        EndIf
         TraceDialogueTiming("12 extension effects complete", target)
     Else
         Bool animationStarted = StartDrinkAnimation(target, selectedItem, diagnostic)

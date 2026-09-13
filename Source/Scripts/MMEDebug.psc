@@ -84,6 +84,7 @@ Int VendorAnimationSequence = 0
 Int PendingVendorAnimationRequestID = 0
 Bool VendorAnimationPending = False
 Actor VendorAnimationMovementLockActor = None
+Bool VendorAnimationStartedEarly = False
 
 ; "Would you like to drink some milk?" starts its visual-only player Give at
 ; INFO OnBegin. OnEnd completes that owned idle and performs the established
@@ -285,14 +286,31 @@ Function HandleVendorServiceResult(Actor vendor, String route, Bool succeeded)
     PendingVendorAnimationRequestID = requestID
     VendorAnimationPending = True
     RegisterForMenu("Dialogue Menu")
-    VendorAnimationTrace(requestID, route, "02", "service committed; registered for Dialogue Menu close")
+    VendorAnimationTrace(requestID, route, "02", "service committed; attempting early IdleGive")
+    VendorAnimationMovementLockActor = vendor
+    VendorAnimationStartedEarly = MMEMinorAnimations.StartGive(vendor, "VendorService.Give", True, IsVendorAnimationTraceEnabled())
+    If VendorAnimationStartedEarly
+        VendorAnimationTrace(requestID, route, "03", "early IdleGive accepted; INFO OnEnd will release it")
+    Else
+        VendorAnimationMovementLockActor = None
+        VendorAnimationTrace(requestID, route, "03", "early IdleGive skipped or rejected; menu-close fallback retained")
+    EndIf
 EndFunction
 
 Function ObserveVendorServiceInfoEnd(Actor vendor)
     If !VendorAnimationPending
         Return
     EndIf
-    VendorAnimationTrace(PendingVendorAnimationRequestID, PendingVendorAnimationRoute, "03", "final INFO OnEnd received | speaker=" + GetActorName(vendor) + " " + vendor)
+    VendorAnimationTrace(PendingVendorAnimationRequestID, PendingVendorAnimationRoute, "04", "final INFO OnEnd received | speaker=" + GetActorName(vendor) + " " + vendor)
+    If VendorAnimationStartedEarly && VendorAnimationMovementLockActor == vendor
+        MMEMinorAnimations.Complete(vendor, "VendorService.Give", "Vendor Give", IsVendorAnimationTraceEnabled())
+        VendorAnimationMovementLockActor = None
+        VendorAnimationStartedEarly = False
+        VendorAnimationTrace(PendingVendorAnimationRequestID, PendingVendorAnimationRoute, "05", "early IdleGive completed and movement released")
+        ClearVendorAnimationBus()
+    ElseIf VendorAnimationStartedEarly
+        MMELog.Alarm("[MME Extensions Minor Animation] FAILURE: early vendor Give owner differed from final INFO speaker; menu-close recovery retained")
+    EndIf
 EndFunction
 
 Event OnMenuClose(String menuName)
@@ -312,7 +330,15 @@ Event OnMenuClose(String menuName)
     String route = PendingVendorAnimationRoute
     Actor vendor = PendingVendorAnimationActor
     ClearVendorAnimationBus(False)
-    VendorAnimationTrace(requestID, route, "04", "Dialogue Menu closed; vendor animation graph released")
+    VendorAnimationTrace(requestID, route, "04", "Dialogue Menu closed; evaluating vendor Give fallback")
+
+    If VendorAnimationStartedEarly && VendorAnimationMovementLockActor == vendor
+        MMEMinorAnimations.Complete(vendor, "VendorService.Give", "Vendor Give recovery", IsVendorAnimationTraceEnabled())
+        VendorAnimationMovementLockActor = None
+        VendorAnimationStartedEarly = False
+        VendorAnimationTrace(requestID, route, "06", "missed INFO OnEnd recovered; early IdleGive released")
+        Return
+    EndIf
 
     If vendor == None || vendor.IsDead() || !vendor.Is3DLoaded()
         VendorAnimationTrace(requestID, route, "05", "STOP: vendor missing, dead, or not 3D loaded")
@@ -532,8 +558,13 @@ Function ReleaseVendorAnimationMovementLock()
     Actor vendor = VendorAnimationMovementLockActor
     VendorAnimationMovementLockActor = None
     If vendor != None
-        MMEMinorAnimations.Cancel(vendor, "MinorAnimation.Give", "Recovered vendor Give", IsVendorAnimationTraceEnabled())
+        If VendorAnimationStartedEarly
+            MMEMinorAnimations.Cancel(vendor, "VendorService.Give", "Recovered early vendor Give", IsVendorAnimationTraceEnabled())
+        Else
+            MMEMinorAnimations.Cancel(vendor, "MinorAnimation.Give", "Recovered vendor Give", IsVendorAnimationTraceEnabled())
+        EndIf
     EndIf
+    VendorAnimationStartedEarly = False
 EndFunction
 
 Bool Function IsVendorAnimationTraceEnabled()

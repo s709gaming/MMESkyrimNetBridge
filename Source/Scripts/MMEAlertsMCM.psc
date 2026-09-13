@@ -65,6 +65,11 @@ Int npcDrinkNotificationsOption
 Int npcDrinkNotificationsDiagnosticOption
 Int playerDrinkNotificationsOption
 Int giveMilkEasyModeOption
+Int nonMilkmaidFemaleDrinkingOption
+Int nonMilkmaidFemaleArousalOption
+Int nonMilkmaidMaleDrinkingOption
+Int nonMilkmaidMaleArousalOption
+Int nonMilkmaidDrinkNotificationsOption
 Int armorStrippingCheckDiagnosticOption
 Int lifecycleDiagnosticOption
 Int milkmaidCreationDiagnosticOption
@@ -189,7 +194,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 114
+    Return 115
 EndFunction
 
 Function SetPageNames()
@@ -1025,6 +1030,17 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "giveMilkEasyModeMigration114", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Universal Give Milk remains isolated from MME Milkmaid storage/effects.
+    ; These settings only govern eligible adult non-Milkmaid receivers.
+    If JsonUtil.GetIntValue(SettingsFile, "universalNPCDrinkMigration115", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableNonMilkmaidFemaleDrinking", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 10.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNonMilkmaidMaleDrinking", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", 10.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableNonMilkmaidDrinkNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "universalNPCDrinkMigration115", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1129,6 +1145,11 @@ Event OnPageReset(String page)
     npcDrinkNotificationsDiagnosticOption = -1
     playerDrinkNotificationsOption = -1
     giveMilkEasyModeOption = -1
+    nonMilkmaidFemaleDrinkingOption = -1
+    nonMilkmaidFemaleArousalOption = -1
+    nonMilkmaidMaleDrinkingOption = -1
+    nonMilkmaidMaleArousalOption = -1
+    nonMilkmaidDrinkNotificationsOption = -1
     armorStrippingCheckDiagnosticOption = -1
     lifecycleDiagnosticOption = -1
     milkmaidCreationDiagnosticOption = -1
@@ -1273,6 +1294,12 @@ Event OnPageReset(String page)
         npcDrinkNotificationsOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1) == 1)
         AddHeaderOption("Player Milk Drinking")
         playerDrinkNotificationsOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1) == 1)
+        AddHeaderOption("Non-Milkmaid Drinking")
+        nonMilkmaidFemaleDrinkingOption = AddToggleOption("Allow Adult Women", JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidFemaleDrinking", 1) == 1)
+        nonMilkmaidFemaleArousalOption = AddSliderOption("Women Arousal Per Drink", JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 10.0), "+{0}")
+        nonMilkmaidMaleDrinkingOption = AddToggleOption("Allow Adult Men", JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidMaleDrinking", 1) == 1)
+        nonMilkmaidMaleArousalOption = AddSliderOption("Men Arousal Per Drink", JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", 10.0), "+{0}")
+        nonMilkmaidDrinkNotificationsOption = AddToggleOption("Flavor Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidDrinkNotifications", 1) == 1)
         AddHeaderOption("Easy Mode")
         giveMilkEasyModeOption = AddToggleOption("Free Jug for Give Milk", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1) == 1)
         Return
@@ -1653,6 +1680,16 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Show a notification after you drink recognized milk.")
     ElseIf option == giveMilkEasyModeOption
         SetInfoText("When Give Milk finds no eligible milk, supply and immediately consume one temporary HearthFires Jug of Milk. Lactacid is never used. Default on.")
+    ElseIf option == nonMilkmaidFemaleDrinkingOption
+        SetInfoText("Allow eligible adult female non-Milkmaids to receive milk through Give Milk.")
+    ElseIf option == nonMilkmaidFemaleArousalOption
+        SetInfoText("Optional SexLab Aroused exposure added after an adult female non-Milkmaid successfully drinks. Zero disables it.")
+    ElseIf option == nonMilkmaidMaleDrinkingOption
+        SetInfoText("Allow eligible adult male non-Milkmaids to receive milk through Give Milk.")
+    ElseIf option == nonMilkmaidMaleArousalOption
+        SetInfoText("Optional SexLab Aroused exposure added after an adult male non-Milkmaid successfully drinks. Zero disables it.")
+    ElseIf option == nonMilkmaidDrinkNotificationsOption
+        SetInfoText("Show local flavor text after a non-Milkmaid drinks. This does not call Skyrim.Net.")
     ElseIf option == selfMilkingActionOption
         SetInfoText("Allow Skyrim.Net to start self-milking for a selected Milk Maid.")
     ElseIf option == pairedMilkingActionOption
@@ -2208,6 +2245,18 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkEasyMode", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == nonMilkmaidFemaleDrinkingOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidFemaleDrinking", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNonMilkmaidFemaleDrinking", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == nonMilkmaidMaleDrinkingOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidMaleDrinking", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNonMilkmaidMaleDrinking", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == nonMilkmaidDrinkNotificationsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidDrinkNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNonMilkmaidDrinkNotifications", value)
+        SetToggleOptionValue(option, value == 1)
     ElseIf option == selfMilkingActionOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingAction", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingAction", value)
@@ -2551,6 +2600,16 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(10.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
+    ElseIf option == nonMilkmaidFemaleArousalOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 10.0))
+        SetSliderDialogDefaultValue(10.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == nonMilkmaidMaleArousalOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", 10.0))
+        SetSliderDialogDefaultValue(10.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
     ElseIf option == milkFullNarrationCooldownOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkFullNarrationCooldown", 60.0))
         SetSliderDialogDefaultValue(60.0)
@@ -2715,6 +2774,14 @@ Event OnOptionSliderAccept(Int option, Float value)
         SetSliderOptionValue(option, value, "x{1}")
     ElseIf option == milkDrinkArousalAmountOption
         JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "+{0}")
+    ElseIf option == nonMilkmaidFemaleArousalOption
+        JsonUtil.SetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "+{0}")
+    ElseIf option == nonMilkmaidMaleArousalOption
+        JsonUtil.SetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "+{0}")
     ElseIf option == milkFullNarrationCooldownOption

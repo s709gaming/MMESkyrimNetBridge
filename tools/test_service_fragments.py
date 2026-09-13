@@ -1,10 +1,12 @@
 """Verify every production service fragment publishes to the vendor-animation bus."""
+import json
 import unittest
 from pathlib import Path
 
 from add_service_completion_fragments import TARGETS, patch_plugin
 from add_milk_dialogue_timing_fragment import patch_plugin as patch_milk_timing_fragment
 from remove_give_milk_inventory_conditions import patch_plugin as patch_give_milk_inventory_conditions
+from enable_universal_give_milk_dialogue import patch_plugin as patch_universal_give_milk_dialogue
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = (ROOT / 'Source/Scripts/MMEBlacksmithDialogue.psc').read_text()
@@ -47,10 +49,12 @@ class ServiceTests(unittest.TestCase):
         self.assertNotIn('PlayIdle', body)
         self.assertNotIn('Utility.Wait', body)
 
-    def test_persistent_bus_uses_menu_close_and_minor_animation_service(self):
+    def test_persistent_bus_starts_vendor_give_early_with_menu_close_fallback(self):
         bus = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
         self.assertIn('RegisterForMenu("Dialogue Menu")', bus)
         self.assertIn('Event OnMenuClose(String menuName)', bus)
+        self.assertIn('MMEMinorAnimations.StartGive(vendor, "VendorService.Give", True,', bus)
+        self.assertIn('MMEMinorAnimations.Complete(vendor, "VendorService.Give"', bus)
         self.assertIn('MMEMinorAnimations.PlayGive(vendor, 3.0,', bus)
         self.assertIn('MMEMinorAnimations.Cancel(vendor, "MinorAnimation.Give"', bus)
         self.assertNotIn('vendor.PlayIdle', bus)
@@ -83,12 +87,21 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('TestDialogueTarget(target, True)', dialogue)
         self.assertIn('Bool dialogueRequest = False', dialogue)
         self.assertIn('MMEDebug.QueueDialogueMilkAnimations(giver, target)', dialogue)
-        branch = dialogue.split('If dialogueRequest', 1)[1].split('Else', 1)[0]
+        branch = dialogue.rsplit('If dialogueRequest', 1)[1].split('Else', 1)[0]
         self.assertLess(branch.index('MMEDebug.QueueDialogueMilkAnimations'), branch.index('ApplyExtensionEffects'))
         alarm_lines = [line.strip() for line in dialogue.splitlines() if 'MMELog.Alarm' in line]
         self.assertGreaterEqual(len(alarm_lines), 1)
         for line in alarm_lines:
             self.assertIn('FAILURE:', line)
+
+    def test_dialogue_receiver_drinks_before_native_consumption(self):
+        dialogue = (ROOT / 'Source/Scripts/MMENPCDialog.psc').read_text()
+        transaction = dialogue.split('Bool Function ProcessNativeConsumption(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('TraceDialogueTiming("04A receiver Drink dispatch"', transaction)
+        self.assertIn('receiverDrinkStarted = StartDrinkAnimation(target, selectedItem, diagnostic)', transaction)
+        self.assertIn('FinishDrinkAnimation(target, receiverDrinkStarted, diagnostic)', transaction)
+        self.assertLess(transaction.index('StartDrinkAnimation(target, selectedItem'), transaction.index('target.EquipItem(selectedItem'))
+        self.assertLess(transaction.index('FinishDrinkAnimation(target, receiverDrinkStarted'), transaction.index('target.EquipItem(selectedItem'))
 
     def test_milk_dialogue_timing_trace_is_opt_in_and_staged(self):
         dialogue = (ROOT / 'Source/Scripts/MMENPCDialog.psc').read_text()
@@ -144,6 +157,7 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(patch_plugin(data), data)
         self.assertEqual(patch_milk_timing_fragment(data), data)
         self.assertEqual(patch_give_milk_inventory_conditions(data), data)
+        self.assertEqual(patch_universal_give_milk_dialogue(data), data)
 
     def test_give_milk_excludes_lactacid_and_has_default_on_easy_mode(self):
         dialogue = (ROOT / 'Source/Scripts/MMENPCDialog.psc').read_text()
@@ -153,10 +167,48 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('enableGiveMilkEasyMode", 1', dialogue)
         self.assertIn('Game.GetFormFromFile(0x003534, "HearthFires.esm")', dialogue)
         self.assertIn('Easy Mode temporary Jug', dialogue)
-        self.assertIn('Return 114', mcm)
+        self.assertIn('Return 115', mcm)
         self.assertIn('AddHeaderOption("Easy Mode")', mcm)
         self.assertIn('AddToggleOption("Free Jug for Give Milk"', mcm)
         self.assertIn('JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1)', mcm)
+
+    def test_universal_adult_non_milkmaid_route_is_isolated_and_configurable(self):
+        dialogue = (ROOT / 'Source/Scripts/MMENPCDialog.psc').read_text()
+        universal = (ROOT / 'Source/Scripts/MMENPCDrinkDialogue.psc').read_text()
+        mcm = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
+        config = (ROOT / 'SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json').read_text()
+        self.assertIn('MMENPCDrinkDialogue.IsEligible', dialogue)
+        self.assertIn('target.IsChild()', universal)
+        self.assertIn('ActorTypeNPC', universal)
+        self.assertIn('enableNonMilkmaidMaleDrinking', universal)
+        self.assertIn('enableNonMilkmaidFemaleDrinking', universal)
+        self.assertNotIn('MME_Storage', universal)
+        self.assertNotIn('MMEMilkBoost', universal)
+        self.assertNotIn('MMEAlertsSkyrimNet', universal)
+        self.assertNotIn('SkyrimNetApi', universal)
+        self.assertIn('ApplyArousalAmountForActor', universal)
+        self.assertIn('arousalSent', universal)
+        self.assertIn('JsonUtil.PathStringElements(configFile, pool)', universal)
+        self.assertIn('11D non-Milkmaid reaction sound returned', universal)
+        self.assertIn('11F non-Milkmaid notification complete', universal)
+        self.assertIn('11E6 HUD notification returned', universal)
+        renderer = universal.split('String Function RenderToken(', 1)[1].split('EndFunction', 1)[0]
+        self.assertNotIn('While', renderer)
+        self.assertIn('If tokenIndex < 0', renderer)
+        for pool in ('male_generic', 'female_generic', 'male_aroused', 'female_aroused'):
+            self.assertIn('"' + pool + '"', config)
+        self.assertNotIn('{Actor}', config)
+        self.assertNotIn('{Milk}', config)
+        pools = json.loads(config)
+        self.assertEqual(set(pools), {'male_generic', 'female_generic', 'male_aroused', 'female_aroused'})
+        for pool, messages in pools.items():
+            with self.subTest(pool=pool):
+                self.assertEqual(len(messages), 6)
+        self.assertIn('Utility.RandomInt(0, entries.Length - 1)', universal)
+        self.assertIn('11E0A notification JSON validation', universal)
+        self.assertIn('11E0C notification JSON entry selected', universal)
+        self.assertIn('AddHeaderOption("Non-Milkmaid Drinking")', mcm)
+        self.assertIn('universalNPCDrinkMigration115', mcm)
 
     def test_opening_does_not_apply_or_gesture(self):
         body = SOURCE.split('Function Fragment_RefreshBlacksmithArmorState(', 1)[1].split('EndFunction', 1)[0]

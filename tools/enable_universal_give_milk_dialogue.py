@@ -1,8 +1,7 @@
-"""Remove Give Milk's five inventory CTDAs while retaining later eligibility gates.
+"""Remove only Give Milk's Milkmaid-faction CTDA for universal adult routing.
 
-The INFO becomes available independently of inventory so Papyrus can provide
-the default-on Easy Mode Jug. Lactacid is also removed from the record gate.
-The rewrite is surgical, validated, backed up, and idempotent.
+The remaining non-slave gate is preserved byte-for-byte. Adult/NPC/sex-toggle
+eligibility is revalidated in Papyrus before inventory or gameplay changes.
 """
 import argparse
 import struct
@@ -17,33 +16,30 @@ from add_milk_dialogue_timing_fragment import (
     u16,
 )
 
-GET_ITEM_COUNT = 47
-RUN_ON_TARGET = 1
-EXPECTED_ITEMS = {
-    0x020343F2,  # Lactacid, MilkModNEW.esp
-    0x00003534,  # Jug of Milk, HearthFires.esm
-    0x0205E87B,  # MME basic milk list
-    0x02071C2B,  # MME racial milk list
-    0x02071C2D,  # MME supernatural milk list
-}
+GET_IN_FACTION = 71
+MILKMAID_FACTION = 0x0204D53B
+NON_SLAVE_FACTION = 0x02056707
 
 
-def is_inventory_condition(value):
-    return (
-        len(value) == 32
-        and struct.unpack_from("<H", value, 8)[0] == GET_ITEM_COUNT
-        and struct.unpack_from("<I", value, 20)[0] == RUN_ON_TARGET
-        and struct.unpack_from("<I", value, 12)[0] in EXPECTED_ITEMS
-    )
+def condition_parameter(value):
+    require(len(value) == 32, "Unexpected Give Milk CTDA size")
+    return struct.unpack_from("<I", value, 12)[0]
+
+
+def validate_condition(value, parameter, flags):
+    require(struct.unpack_from("<f", value, 4)[0] == 1.0, "Unexpected comparison value")
+    require(struct.unpack_from("<H", value, 8)[0] == GET_IN_FACTION, "Unexpected condition function")
+    require(condition_parameter(value) == parameter, "Unexpected condition parameter")
+    require(value[0] == flags, "Unexpected condition flags")
+    require(struct.unpack_from("<I", value, 20)[0] == 0, "Unexpected run-on selector")
 
 
 def patch_info_payload(payload):
     require(record_editor_id(payload) == TARGET_EDITOR_ID, "Target FormID has an unexpected EditorID")
     output = bytearray()
     pos = 0
-    condition_count = 0
-    removed_items = set()
-    retained_conditions = []
+    removed = 0
+    retained = []
     while pos < len(payload):
         require(pos + 6 <= len(payload), "Truncated INFO subrecord")
         tag = payload[pos:pos + 4]
@@ -52,23 +48,19 @@ def patch_info_payload(payload):
         require(end <= len(payload), "Truncated INFO subrecord payload")
         value = payload[pos + 6:end]
         if tag == b"CTDA":
-            condition_count += 1
-            if is_inventory_condition(value):
-                removed_items.add(struct.unpack_from("<I", value, 12)[0])
+            parameter = condition_parameter(value)
+            if parameter == MILKMAID_FACTION:
+                validate_condition(value, MILKMAID_FACTION, 0)
+                removed += 1
                 pos = end
                 continue
-            retained_conditions.append(value)
+            retained.append(value)
         output += payload[pos:end]
         pos = end
 
-    if condition_count == 7:
-        require(removed_items == EXPECTED_ITEMS, "Give Milk inventory conditions differ from the audited set")
-        require(len(retained_conditions) == 2, "Expected exactly two retained eligibility conditions")
-    elif condition_count in (1, 2):
-        require(not removed_items, "Partially patched Give Milk conditions")
-        require(len(retained_conditions) == condition_count, "Unexpected retained eligibility condition count")
-    else:
-        raise ValueError(f"Unexpected Give Milk condition count: {condition_count}")
+    require(removed in (0, 1), "Expected at most one Milkmaid condition")
+    require(len(retained) == 1, "Expected exactly one retained non-slave condition")
+    validate_condition(retained[0], NON_SLAVE_FACTION, 0x20)
     return bytes(output)
 
 
@@ -113,11 +105,11 @@ if __name__ == "__main__":
     updated = patch_plugin(original)
     require(patch_plugin(updated) == updated, "Patch is not idempotent")
     if args.check:
-        require(updated == original, "Give Milk inventory conditions still need removal")
+        require(updated == original, "Give Milk still has its Milkmaid-only condition")
     elif updated != original:
-        backup = args.plugin.parent / "backups" / ("give-milk-easy-mode-" + datetime.now().strftime("%Y%m%d-%H%M%S"))
+        backup = args.plugin.parent / "backups" / ("universal-give-milk-" + datetime.now().strftime("%Y%m%d-%H%M%S"))
         backup.mkdir(parents=True)
         (backup / args.plugin.name).write_bytes(original)
         args.plugin.write_bytes(updated)
         print("Backup:", backup)
-    print("Verified Give Milk has no inventory CTDAs and retains its current eligibility gates.")
+    print("Verified Give Milk is universal while retaining its non-slave gate.")

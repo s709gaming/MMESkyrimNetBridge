@@ -54,6 +54,21 @@ Bool Function ApplyConfiguredMilkArousalForActor(Actor target, String sourceLabe
     EndIf
 
     Float configuredAmount = JsonUtil.GetFloatValue(settingsFile, "milkDrinkArousal", 10.0)
+    Return ApplyArousalAmountForActor(target, configuredAmount, sourceLabel, showDiagnostic)
+EndFunction
+
+; Optional-arousal boundary for non-Milkmaids. Callers choose the sex-specific
+; amount, while this function preserves the same dependency, cap, and event contract.
+Bool Function ApplyArousalAmountForActor(Actor target, Float configuredAmount, String sourceLabel, Bool showDiagnostic = False) Global
+    String actorName = GetActorName(target)
+    If target == None
+        Report(showDiagnostic, "skipped: actor not found | source=" + sourceLabel)
+        Return False
+    EndIf
+    If !IsAvailable()
+        Report(showDiagnostic, "skipped: SexLabAroused.esm not detected")
+        Return False
+    EndIf
     If configuredAmount < 0.0
         configuredAmount = 0.0
     ElseIf configuredAmount > 100.0
