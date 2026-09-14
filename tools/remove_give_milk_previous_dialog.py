@@ -1,9 +1,9 @@
-"""Remove Give Milk's legacy faction CTDAs for universal adult routing.
+"""Remove the copied PreviousDialog (PNAM) from the Give Milk INFO.
 
-Adult/NPC/sex-toggle eligibility and Milkmaid routing are revalidated in
-Papyrus before inventory or gameplay changes. Leaving the old MilkSlaveFaction
-exclusion in the INFO prevents ordinary MME-managed women from ever reaching
-that runtime policy.
+MMEExt_DialogueDrinkMilk was cloned from a sequenced MME response and retained
+its link to the preceding "Would you like to become Milkmaid?" INFO. A standalone
+player choice must not carry that forced-sequence link. The rewrite is surgical,
+validated, backed up, and idempotent.
 """
 import argparse
 import struct
@@ -18,22 +18,7 @@ from add_milk_dialogue_timing_fragment import (
     u16,
 )
 
-GET_IN_FACTION = 71
-MILKMAID_FACTION = 0x0204D53B
-NON_SLAVE_FACTION = 0x02056707
-
-
-def condition_parameter(value):
-    require(len(value) == 32, "Unexpected Give Milk CTDA size")
-    return struct.unpack_from("<I", value, 12)[0]
-
-
-def validate_condition(value, parameter, flags):
-    require(struct.unpack_from("<f", value, 4)[0] == 1.0, "Unexpected comparison value")
-    require(struct.unpack_from("<H", value, 8)[0] == GET_IN_FACTION, "Unexpected condition function")
-    require(condition_parameter(value) == parameter, "Unexpected condition parameter")
-    require(value[0] == flags, "Unexpected condition flags")
-    require(struct.unpack_from("<I", value, 20)[0] == 0, "Unexpected run-on selector")
+EXPECTED_PREVIOUS_DIALOG = 0x0205FE0F
 
 
 def patch_info_payload(payload):
@@ -41,7 +26,6 @@ def patch_info_payload(payload):
     output = bytearray()
     pos = 0
     removed = 0
-    retained = []
     while pos < len(payload):
         require(pos + 6 <= len(payload), "Truncated INFO subrecord")
         tag = payload[pos:pos + 4]
@@ -49,24 +33,16 @@ def patch_info_payload(payload):
         end = pos + 6 + size
         require(end <= len(payload), "Truncated INFO subrecord payload")
         value = payload[pos + 6:end]
-        if tag == b"CTDA":
-            parameter = condition_parameter(value)
-            if parameter == MILKMAID_FACTION:
-                validate_condition(value, MILKMAID_FACTION, 0)
-                removed += 1
-                pos = end
-                continue
-            if parameter == NON_SLAVE_FACTION:
-                validate_condition(value, NON_SLAVE_FACTION, 0x20)
-                removed += 1
-                pos = end
-                continue
-            retained.append(value)
+        if tag == b"PNAM":
+            require(size == 4, "Unexpected Give Milk PNAM size")
+            require(struct.unpack("<I", value)[0] == EXPECTED_PREVIOUS_DIALOG, "Give Milk points at an unexpected PreviousDialog")
+            removed += 1
+            pos = end
+            continue
         output += payload[pos:end]
         pos = end
 
-    require(removed in (0, 1, 2), "Expected at most the two audited faction conditions")
-    require(len(retained) == 0, "Give Milk contains an unexpected retained condition")
+    require(removed in (0, 1), "Expected at most one Give Milk PreviousDialog")
     return bytes(output)
 
 
@@ -111,11 +87,11 @@ if __name__ == "__main__":
     updated = patch_plugin(original)
     require(patch_plugin(updated) == updated, "Patch is not idempotent")
     if args.check:
-        require(updated == original, "Give Milk still has a legacy faction condition")
+        require(updated == original, "Give Milk still carries its copied PreviousDialog")
     elif updated != original:
-        backup = args.plugin.parent / "backups" / ("universal-give-milk-" + datetime.now().strftime("%Y%m%d-%H%M%S"))
+        backup = args.plugin.parent / "backups" / ("give-milk-previous-dialog-" + datetime.now().strftime("%Y%m%d-%H%M%S"))
         backup.mkdir(parents=True)
         (backup / args.plugin.name).write_bytes(original)
         args.plugin.write_bytes(updated)
         print("Backup:", backup)
-    print("Verified Give Milk has no ESP-level conditions; runtime eligibility is authoritative.")
+    print("Verified Give Milk is an independent INFO with no PreviousDialog.")

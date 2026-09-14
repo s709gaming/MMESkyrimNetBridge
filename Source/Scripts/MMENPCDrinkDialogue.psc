@@ -1,7 +1,7 @@
 Scriptname MMENPCDrinkDialogue Hidden
 
-; Adult non-Milkmaid branch for Give Milk. It deliberately owns no MME milk,
-; capacity, Lactacid, conversion, or Skyrim.Net behavior.
+; Adult non-Milkmaid branch for Give Milk plus the shared, data-driven reaction
+; renderer used by both ordinary adults and established MME Milkmaids.
 Bool Function IsEligible(Actor target, MilkQUEST milkController, Bool diagnostic = False) Global
     If target == None || target == Game.GetPlayer()
         Return False
@@ -32,15 +32,15 @@ Bool Function PlayDrink(Actor target, Bool diagnostic = False) Global
     Return MMEMinorAnimations.PlayDrink(target, duration, True, diagnostic)
 EndFunction
 
-Function ApplyPostDrink(Actor target, Form drinkItem, Bool diagnostic = False) Global
+String Function ApplyPostDrink(Actor target, Form drinkItem, Bool diagnostic = False) Global
     If target == None || drinkItem == None
         MMELog.Alarm("[MME Extensions Universal Drink] FAILURE: post-drink effects received a missing actor or milk item")
-        Return
+        Return ""
     EndIf
     ActorBase baseInfo = target.GetLeveledActorBase()
     If baseInfo == None
         MMELog.Alarm("[MME Extensions Universal Drink] FAILURE: post-drink effects could not resolve the receiver ActorBase")
-        Return
+        Return ""
     EndIf
     Int sex = baseInfo.GetSex()
     Float amount = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "nonMilkmaidFemaleArousal", 10.0)
@@ -54,17 +54,35 @@ Function ApplyPostDrink(Actor target, Form drinkItem, Bool diagnostic = False) G
     MMEMilkDrinkEffects.PlayDrinkReaction(target, diagnostic)
     MMENPCDialog.TraceDialogueTiming("11D non-Milkmaid reaction sound returned", target)
     MMENPCDialog.TraceDialogueTiming("11E non-Milkmaid notification dispatch", target)
-    ShowNotification(target, drinkItem, sex, arousalSent)
+    String renderedReaction = BuildDrinkReaction(target, drinkItem, False, 0.0, arousalSent)
+    ShowNotification(target, renderedReaction)
     MMENPCDialog.TraceDialogueTiming("11F non-Milkmaid notification complete", target)
+    Return renderedReaction
 EndFunction
 
-Function ShowNotification(Actor target, Form drinkItem, Int sex, Bool arousalSent) Global
+Function ShowNotification(Actor target, String renderedReaction) Global
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableNonMilkmaidDrinkNotifications", 1) != 1
         Return
     EndIf
-    ; Reuse the proven MMEThoughts JSON pipeline: validate, load one pool,
-    ; choose one complete entry, then render it with the one-pass token helper.
-    String template = SelectNotificationTemplate(target, sex, arousalSent)
+    If renderedReaction == ""
+        MMELog.Alarm("[MME Extensions Drink Reaction] FAILURE: non-Milkmaid HUD received a blank rendered reaction")
+        Return
+    EndIf
+    Debug.Notification(renderedReaction)
+    MMENPCDialog.TraceDialogueTiming("11E6 HUD notification returned", target)
+EndFunction
+
+String Function BuildDrinkReaction(Actor target, Form drinkItem, Bool establishedMilkmaid, Float milkAdded, Bool arousalSent) Global
+    If target == None || drinkItem == None
+        MMELog.Alarm("[MME Extensions Drink Reaction] FAILURE: reaction renderer received a missing actor or milk item")
+        Return ""
+    EndIf
+    ActorBase baseInfo = target.GetLeveledActorBase()
+    If baseInfo == None
+        MMELog.Alarm("[MME Extensions Drink Reaction] FAILURE: reaction renderer could not resolve the drinker's ActorBase")
+        Return ""
+    EndIf
+    String template = SelectNotificationTemplate(target, baseInfo.GetSex(), establishedMilkmaid, milkAdded, arousalSent)
     MMENPCDialog.TraceDialogueTiming("11E1 notification template selected", target)
     String actorName = MMEDrinkTracker.GetActorName(target)
     MMENPCDialog.TraceDialogueTiming("11E2 actor name resolved", target)
@@ -77,14 +95,20 @@ Function ShowNotification(Actor target, Form drinkItem, Int sex, Bool arousalSen
     MMENPCDialog.TraceDialogueTiming("11E4 actor token rendered", target)
     rendered = RenderToken(rendered, "{milk}", milkName)
     MMENPCDialog.TraceDialogueTiming("11E5 milk token rendered", target)
-    Debug.Notification(rendered)
-    MMENPCDialog.TraceDialogueTiming("11E6 HUD notification returned", target)
+    If rendered == ""
+        MMELog.Alarm("[MME Extensions Drink Reaction] FAILURE: JSON reaction rendered as blank")
+    EndIf
+    Return rendered
 EndFunction
 
-String Function SelectNotificationTemplate(Actor target, Int sex, Bool arousalSent) Global
+String Function SelectNotificationTemplate(Actor target, Int sex, Bool establishedMilkmaid, Float milkAdded, Bool arousalSent) Global
     String configFile = "/MMEAlerts/NonMilkmaidDrinkNotifications"
     String pool = ".female_generic"
-    If sex == 0 && arousalSent
+    If establishedMilkmaid && milkAdded > 0.0 && arousalSent
+        pool = ".female_milk_arousal"
+    ElseIf establishedMilkmaid && milkAdded > 0.0
+        pool = ".female_milk"
+    ElseIf sex == 0 && arousalSent
         pool = ".male_aroused"
     ElseIf sex == 0
         pool = ".male_generic"

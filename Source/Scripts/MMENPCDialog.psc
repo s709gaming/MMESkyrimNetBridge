@@ -387,25 +387,24 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
     ; slower milk/arousal reactions so it can begin as soon as the menu releases
     ; the player graph. The NPC keeps any fullness reaction it earns; non-dialogue
     ; callers retain the established optional NPC-only Drink animation.
-    If establishedMilkmaid
-        MMEAlertsSkyrimNet.NarrateNPCMilkDrink(target, True)
-    EndIf
+    String renderedReaction = ""
     If dialogueRequest
         ; The persistent coordinator emits failure-only alarms for broken queue
         ; state while treating normal gameplay safety rejections as diagnostics.
         MMEDebug.QueueDialogueMilkAnimations(giver, target)
         TraceDialogueTiming("11 Give sequence returned", target)
         If establishedMilkmaid
-            ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
+            renderedReaction = ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
         Else
-            MMENPCDrinkDialogue.ApplyPostDrink(target, selectedItem, diagnostic)
+            renderedReaction = MMENPCDrinkDialogue.ApplyPostDrink(target, selectedItem, diagnostic)
         EndIf
         TraceDialogueTiming("12 extension effects complete", target)
     Else
         Bool animationStarted = StartDrinkAnimation(target, selectedItem, diagnostic)
-        ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
+        renderedReaction = ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
         FinishDrinkAnimation(target, animationStarted, diagnostic)
     EndIf
+    MMEAlertsSkyrimNet.NarrateNPCMilkDrink(target, dialogueRequest, renderedReaction)
     Return True
 EndFunction
 
@@ -429,14 +428,14 @@ Function TraceDialogueTiming(String stage, Actor target = None) Global
     MMELog.Status("[MME Extensions Dialogue Timing] " + stage + " | " + elapsed + " | t=" + now + " | target=" + GetActorName(target))
 EndFunction
 
-; Stage four applies only our modular extension effects. Native MME potion effects have
-; already run, and Skyrim.Net is intentionally excluded from NPC dialogue consumption.
-Function ApplyExtensionEffects(Actor target, Form selectedItem, String selectedType, Bool diagnostic) Global
+; Stage four applies our modular extension effects and returns one factual,
+; rendered reaction. The caller sends that same result to Skyrim.Net afterward.
+String Function ApplyExtensionEffects(Actor target, Form selectedItem, String selectedType, Bool diagnostic) Global
     ; Each integration is intentionally independent. Milk, arousal, sound, and
     ; notification failures do not undo successful native potion consumption.
     If target == None || selectedItem == None
         Report(diagnostic, "effects failed: missing target or consumed item")
-        Return
+        Return ""
     EndIf
 
     Int drinkKind = 1
@@ -456,7 +455,8 @@ Function ApplyExtensionEffects(Actor target, Form selectedItem, String selectedT
     Int arousalAfter = MMEArousalBridge.GetCurrentArousal(target)
 
     Int moanResult = MMEMilkDrinkEffects.PlayDrinkReaction(target, False)
-    MMEDrinkTracker.ShowNPCDrinkNotification(target, selectedItem, milkAdded, arousalSent)
+    String renderedReaction = MMENPCDrinkDialogue.BuildDrinkReaction(target, selectedItem, True, milkAdded, arousalSent)
+    MMEDrinkTracker.ShowNPCDrinkNotification(target, selectedItem, milkAdded, arousalSent, renderedReaction)
     String arousalResult = "off/unavailable"
     If arousalSent
         arousalResult = arousalBefore + " -> " + arousalAfter
@@ -471,6 +471,7 @@ Function ApplyExtensionEffects(Actor target, Form selectedItem, String selectedT
     EndIf
 
     Report(diagnostic, "effects " + GetActorName(target) + " | milk " + milkBefore + " -> " + milkAfter + " (+" + milkAdded + ") | arousal " + arousalResult + " | moan " + moanResultText)
+    Return renderedReaction
 EndFunction
 
 ; Starts MME's visible Lactacid reaction as soon as consumption is confirmed.

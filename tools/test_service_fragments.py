@@ -7,6 +7,8 @@ from add_service_completion_fragments import TARGETS, patch_plugin
 from add_milk_dialogue_timing_fragment import patch_plugin as patch_milk_timing_fragment
 from remove_give_milk_inventory_conditions import patch_plugin as patch_give_milk_inventory_conditions
 from enable_universal_give_milk_dialogue import patch_plugin as patch_universal_give_milk_dialogue
+from remove_give_milk_previous_dialog import patch_plugin as patch_give_milk_previous_dialog
+from separate_give_milk_dialogue_topic import patch_plugin as patch_separate_give_milk_topic
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = (ROOT / 'Source/Scripts/MMEBlacksmithDialogue.psc').read_text()
@@ -158,6 +160,15 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(patch_milk_timing_fragment(data), data)
         self.assertEqual(patch_give_milk_inventory_conditions(data), data)
         self.assertEqual(patch_universal_give_milk_dialogue(data), data)
+        self.assertEqual(patch_give_milk_previous_dialog(data), data)
+        self.assertEqual(patch_separate_give_milk_topic(data), data)
+
+    def test_give_milk_info_has_no_pre_papyrus_conditions(self):
+        data = (ROOT / 'MMEAlert.esp').read_bytes()
+        self.assertEqual(patch_give_milk_inventory_conditions(data), data)
+        self.assertEqual(patch_universal_give_milk_dialogue(data), data)
+        self.assertEqual(patch_give_milk_previous_dialog(data), data)
+        self.assertEqual(patch_separate_give_milk_topic(data), data)
 
     def test_give_milk_excludes_lactacid_and_has_default_on_easy_mode(self):
         dialogue = (ROOT / 'Source/Scripts/MMENPCDialog.psc').read_text()
@@ -184,7 +195,6 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('enableNonMilkmaidFemaleDrinking', universal)
         self.assertNotIn('MME_Storage', universal)
         self.assertNotIn('MMEMilkBoost', universal)
-        self.assertNotIn('MMEAlertsSkyrimNet', universal)
         self.assertNotIn('SkyrimNetApi', universal)
         self.assertIn('ApplyArousalAmountForActor', universal)
         self.assertIn('arousalSent', universal)
@@ -195,12 +205,12 @@ class ServiceTests(unittest.TestCase):
         renderer = universal.split('String Function RenderToken(', 1)[1].split('EndFunction', 1)[0]
         self.assertNotIn('While', renderer)
         self.assertIn('If tokenIndex < 0', renderer)
-        for pool in ('male_generic', 'female_generic', 'male_aroused', 'female_aroused'):
+        for pool in ('male_generic', 'female_generic', 'male_aroused', 'female_aroused', 'female_milk', 'female_milk_arousal'):
             self.assertIn('"' + pool + '"', config)
         self.assertNotIn('{Actor}', config)
         self.assertNotIn('{Milk}', config)
         pools = json.loads(config)
-        self.assertEqual(set(pools), {'male_generic', 'female_generic', 'male_aroused', 'female_aroused'})
+        self.assertEqual(set(pools), {'male_generic', 'female_generic', 'male_aroused', 'female_aroused', 'female_milk', 'female_milk_arousal'})
         for pool, messages in pools.items():
             with self.subTest(pool=pool):
                 self.assertEqual(len(messages), 6)

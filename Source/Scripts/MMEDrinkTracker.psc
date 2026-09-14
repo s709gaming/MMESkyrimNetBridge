@@ -213,14 +213,15 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
         Return
     EndIf
 
-    ; Phase 2: narration observes the confirmed drink independently of optional
-    ; Extensions gameplay effects. Disabling effects must not erase the event.
-    MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker)
+    ; Phase 2: select one factual reaction after the actual outcome is known.
+    ; Disabling effects must not erase the verified drink or its narration.
     If JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1) != 1
         If diagnostic
             Debug.Notification("NPC Milk: effects disabled for " + actorName)
         EndIf
-        ShowNPCDrinkNotification(drinker, drinkItem, 0.0, False)
+        String genericReaction = MMENPCDrinkDialogue.BuildDrinkReaction(drinker, drinkItem, True, 0.0, False)
+        ShowNPCDrinkNotification(drinker, drinkItem, 0.0, False, genericReaction)
+        MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, genericReaction)
         Return
     EndIf
 
@@ -233,7 +234,9 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
     Bool arousalSent = MMEArousalBridge.ApplyMilkDrinkArousalForActor(drinker, drinkItem, diagnostic)
     Int arousalAfter = MMEArousalBridge.GetCurrentArousal(drinker)
     MMEMilkDrinkEffects.PlayDrinkReaction(drinker, diagnostic)
-    ShowNPCDrinkNotification(drinker, drinkItem, milkAdded, arousalSent)
+    String renderedReaction = MMENPCDrinkDialogue.BuildDrinkReaction(drinker, drinkItem, True, milkAdded, arousalSent)
+    ShowNPCDrinkNotification(drinker, drinkItem, milkAdded, arousalSent, renderedReaction)
+    MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, renderedReaction)
     If diagnostic
         String arousalResult = "off/unavailable"
         If arousalSent
@@ -264,7 +267,7 @@ EndFunction
 ; NPC drink processing moved to HandleNativeNPCDrink above.
 
 ; Shows one concise result after a confirmed NPC drink and its extension effects.
-Function ShowNPCDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded, Bool arousalSent) Global
+Function ShowNPCDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded, Bool arousalSent, String renderedReaction = "") Global
     String configFile = "/MMEAlerts/Settings"
     Bool diagnostic = JsonUtil.GetIntValue(configFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1
     If JsonUtil.GetIntValue(configFile, "enableNPCDrinkNotifications", 1) != 1
@@ -280,25 +283,14 @@ Function ShowNPCDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded
         Return
     EndIf
 
-    String actorName = drinker.GetDisplayName()
-    If actorName == ""
-        actorName = "A Milk Maid"
+    If renderedReaction == ""
+        renderedReaction = MMENPCDrinkDialogue.BuildDrinkReaction(drinker, drinkItem, True, milkAdded, arousalSent)
     EndIf
-    String drinkName = drinkItem.GetName()
-    If drinkName == ""
-        drinkName = "some milk"
+    If renderedReaction == ""
+        MMELog.Alarm("[MME Extensions Drink Reaction] FAILURE: Milkmaid HUD received a blank rendered reaction")
+        Return
     EndIf
-    String notificationText = ""
-    If milkAdded > 0.0 && arousalSent
-        notificationText = actorName + " drank " + drinkName + ". She's hornier and heavier."
-    ElseIf milkAdded > 0.0
-        notificationText = actorName + " drank " + drinkName + ". She's already feeling heavier."
-    ElseIf arousalSent
-        notificationText = actorName + " drank " + drinkName + ". She's getting turned on!"
-    Else
-        notificationText = actorName + " drank " + drinkName + ". It was good."
-    EndIf
-    Debug.Notification(notificationText)
+    Debug.Notification(renderedReaction)
     If diagnostic
         Debug.Notification("NPC Drink Notification: shown | milk +" + milkAdded + " | arousal " + arousalSent)
     EndIf

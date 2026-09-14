@@ -242,11 +242,19 @@ if (Test-Path -LiteralPath $pluginPath) {
     }
     & python (Join-Path $PSScriptRoot "tools\remove_give_milk_inventory_conditions.py") $pluginPath --check
     if ($LASTEXITCODE -ne 0) {
-        throw "MMEAlert.esp still contains Give Milk inventory conditions or lost its eligibility gates."
+        throw "MMEAlert.esp still contains Give Milk inventory conditions."
     }
     & python (Join-Path $PSScriptRoot "tools\enable_universal_give_milk_dialogue.py") $pluginPath --check
     if ($LASTEXITCODE -ne 0) {
-        throw "MMEAlert.esp still restricts Give Milk to Milkmaids or lost its non-slave gate."
+        throw "MMEAlert.esp still contains a legacy Give Milk faction condition. Runtime eligibility must remain authoritative."
+    }
+    & python (Join-Path $PSScriptRoot "tools\remove_give_milk_previous_dialog.py") $pluginPath --check
+    if ($LASTEXITCODE -ne 0) {
+        throw "MMEAlert.esp Give Milk INFO still carries its copied PreviousDialog link and is not an independent menu choice."
+    }
+    & python (Join-Path $PSScriptRoot "tools\separate_give_milk_dialogue_topic.py") $pluginPath --check
+    if ($LASTEXITCODE -ne 0) {
+        throw "MMEAlert.esp Give Milk must have its own DIAL, parented INFO, and exactly one Hey there choice link."
     }
     if (!$pluginText.Contains("MMEExt_OStimDialogueAvailable") -or
         $pluginText.Contains("::OStimDialogueAvailable_var")) {

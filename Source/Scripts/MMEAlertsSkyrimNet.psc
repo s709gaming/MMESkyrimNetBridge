@@ -653,7 +653,7 @@ Function NarrateMilkHalfFull(Actor milkMaid) Global
 EndFunction
 
 ; Requests one actor-specific narration after a verified NPC Milkmaid drink.
-Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False) Global
+Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String renderedReaction = "") Global
     ; Dialogue and native potion paths converge here after their own duplicate
     ; suppression. This function owns only narration gates and cooldown state.
     If !IsExtensionsEnabled()
@@ -703,19 +703,26 @@ Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False) Global
         Return
     EndIf
 
-    String content = actorName + " just drank some milk. Her breasts are becoming heavier and more sensitive, and she seems pleased with the effects. React creatively with playful, suggestive humor. Don't simply restate the event."
-    If MMEAlertsController.AreArmsRestrained(drinker)
-        content = actorName + " just drank some milk despite having her arms restrained. Her breasts are becoming heavier and more sensitive, and she seems pleased with the effects. React creatively with playful, suggestive humor about the situation. Don't simply restate the event."
+    If renderedReaction == ""
+        MMELog.Alarm("[MME Extensions Drink Narration] FAILURE: verified NPC drink reached Skyrim.Net without a rendered JSON reaction; using safe fallback context")
+        renderedReaction = actorName + " drinks some milk."
     EndIf
-    Int result = SkyrimNetApi.DirectNarration(content, None, None)
+    String content = "Immediate situation: " + renderedReaction + " Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on " + actorName + " and only the effects actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+    If MMEAlertsController.AreArmsRestrained(drinker)
+        content = "Immediate situation: " + renderedReaction + " " + actorName + " also has restrained arms. Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on " + actorName + " and only the effects actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+    EndIf
+    Int result = SkyrimNetApi.DirectNarration(content, None, drinker)
     If result == 0
         JsonUtil.SetFloatValue(settingsFile, "lastNPCDrinkNarrationRealTime", now)
         JsonUtil.Save(settingsFile, False)
         If diagnostic
             Debug.Notification("NPC Drink Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
         EndIf
-    ElseIf diagnostic
-        Debug.Notification("NPC Drink Narration: rejected [" + result + "]")
+    Else
+        MMELog.Alarm("[MME Extensions Drink Narration] FAILURE: Skyrim.Net rejected NPC drink narration [" + result + "] for " + actorName)
+        If diagnostic
+            Debug.Notification("NPC Drink Narration: rejected [" + result + "]")
+        EndIf
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] NPC drink DirectNarration result " + result + " | " + actorName + " | " + content)
 EndFunction

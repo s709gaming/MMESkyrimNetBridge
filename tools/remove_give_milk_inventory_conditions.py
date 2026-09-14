@@ -1,4 +1,4 @@
-"""Remove Give Milk's five inventory CTDAs while retaining later eligibility gates.
+"""Remove Give Milk's five inventory CTDAs before runtime eligibility checks.
 
 The INFO becomes available independently of inventory so Papyrus can provide
 the default-on Easy Mode Jug. Lactacid is also removed from the record gate.
@@ -64,7 +64,7 @@ def patch_info_payload(payload):
     if condition_count == 7:
         require(removed_items == EXPECTED_ITEMS, "Give Milk inventory conditions differ from the audited set")
         require(len(retained_conditions) == 2, "Expected exactly two retained eligibility conditions")
-    elif condition_count in (1, 2):
+    elif condition_count in (0, 1, 2):
         require(not removed_items, "Partially patched Give Milk conditions")
         require(len(retained_conditions) == condition_count, "Unexpected retained eligibility condition count")
     else:
@@ -120,4 +120,4 @@ if __name__ == "__main__":
         (backup / args.plugin.name).write_bytes(original)
         args.plugin.write_bytes(updated)
         print("Backup:", backup)
-    print("Verified Give Milk has no inventory CTDAs and retains its current eligibility gates.")
+    print("Verified Give Milk has no inventory CTDAs.")
