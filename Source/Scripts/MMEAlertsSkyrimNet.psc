@@ -652,40 +652,45 @@ Function NarrateMilkHalfFull(Actor milkMaid) Global
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Half-Full DirectNarration result " + result + " | cooldown " + cooldown + " | " + content)
 EndFunction
 
-; Requests one actor-specific narration after a verified NPC Milkmaid drink.
-Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String renderedReaction = "") Global
+; Requests one actor-specific narration after a verified adult NPC milk drink.
+; The explicit Troubleshoot route may bypass cooldown without changing the
+; production timestamp, allowing consecutive male/female/Milkmaid validation.
+Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String renderedReaction = "", Bool diagnosticTest = False) Global
     ; Dialogue and native potion paths converge here after their own duplicate
     ; suppression. This function owns only narration gates and cooldown state.
     If !IsExtensionsEnabled()
+        ReportNPCDrinkNarrationTest(diagnosticTest, "05 SKYRIM.NET SKIPPED | MME Extensions disabled")
         Return
     EndIf
     String settingsFile = "/MMEAlerts/Settings"
-    Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableNPCDrinkNarrationDiagnostic", 0) == 1
+    Bool diagnostic = diagnosticTest || JsonUtil.GetIntValue(settingsFile, "enableNPCDrinkNarrationDiagnostic", 0) == 1
     If drinker == None || drinker == Game.GetPlayer()
+        ReportNPCDrinkNarrationTest(diagnosticTest, "05 SKYRIM.NET SKIPPED | invalid NPC drinker")
         Return
     EndIf
 
-    String actorName = drinker.GetDisplayName()
-    If actorName == ""
-        actorName = "The Milk Maid"
+    String actorName = ResolveActorName(drinker, "The drinker")
+    String route = "global"
+    If dialogueDrink
+        route = "dialogue"
+    ElseIf diagnosticTest
+        route = "troubleshoot"
     EndIf
     If diagnostic
-        If dialogueDrink
-            Debug.Notification("NPC Drink Narration: dialogue drink detected | " + actorName)
-        Else
-            Debug.Notification("NPC Drink Narration: drink detected | " + actorName)
-        EndIf
+        Debug.Notification("NPC Drink Narration: " + route + " drink detected | " + actorName)
     EndIf
     If JsonUtil.GetIntValue(settingsFile, "enableNPCDrinkNarration", 1) != 1
         If diagnostic
             Debug.Notification("NPC Drink Narration: skipped - narration disabled")
         EndIf
+        ReportNPCDrinkNarrationTest(diagnosticTest, "05 SKYRIM.NET SKIPPED | NPC Drink Narration disabled")
         Return
     EndIf
     If !IsAvailable()
         If diagnostic
             Debug.Notification("NPC Drink Narration: skipped - Skyrim.Net unavailable")
         EndIf
+        ReportNPCDrinkNarrationTest(diagnosticTest, "05 SKYRIM.NET SKIPPED | Skyrim.Net unavailable")
         Return
     EndIf
 
@@ -695,7 +700,7 @@ Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String r
     If last > now
         last = -1.0
     EndIf
-    If last >= 0.0 && now - last < cooldown
+    If !diagnosticTest && last >= 0.0 && now - last < cooldown
         If diagnostic
             Int remaining = (cooldown - (now - last)) as Int
             Debug.Notification("NPC Drink Narration: skipped - cooldown " + remaining + "s")
@@ -711,20 +716,33 @@ Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String r
     If MMEAlertsController.AreArmsRestrained(drinker)
         content = "Immediate situation: " + renderedReaction + " " + actorName + " also has restrained arms. Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on " + actorName + " and only the effects actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
     EndIf
+    If diagnosticTest
+        MMELog.Status("[MME Extensions Global NPC Drink Test] 04 SKYRIM.NET DISPATCH | route=" + route + " | actor=" + actorName + " | cooldown bypassed")
+    EndIf
     Int result = SkyrimNetApi.DirectNarration(content, None, drinker)
     If result == 0
-        JsonUtil.SetFloatValue(settingsFile, "lastNPCDrinkNarrationRealTime", now)
-        JsonUtil.Save(settingsFile, False)
+        If !diagnosticTest
+            JsonUtil.SetFloatValue(settingsFile, "lastNPCDrinkNarrationRealTime", now)
+            JsonUtil.Save(settingsFile, False)
+        EndIf
         If diagnostic
             Debug.Notification("NPC Drink Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
         EndIf
+        ReportNPCDrinkNarrationTest(diagnosticTest, "05 SKYRIM.NET ACCEPTED [0] | route=" + route + " | actor=" + actorName)
     Else
         MMELog.Alarm("[MME Extensions Drink Narration] FAILURE: Skyrim.Net rejected NPC drink narration [" + result + "] for " + actorName)
         If diagnostic
             Debug.Notification("NPC Drink Narration: rejected [" + result + "]")
         EndIf
+        ReportNPCDrinkNarrationTest(diagnosticTest, "05 SKYRIM.NET REJECTED [" + result + "] | route=" + route + " | actor=" + actorName)
     EndIf
-    MMELog.Diagnostic("[MMEAlert SkyrimNet] NPC drink DirectNarration result " + result + " | " + actorName + " | " + content)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] NPC drink DirectNarration result " + result + " | route=" + route + " | " + actorName + " | " + content)
+EndFunction
+
+Function ReportNPCDrinkNarrationTest(Bool diagnosticTest, String reportText) Global
+    If diagnosticTest
+        MMELog.Status("[MME Extensions Global NPC Drink Test] " + reportText)
+    EndIf
 EndFunction
 
 ; Requests an opt-in narration after a confirmed player milk drink.

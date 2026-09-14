@@ -316,7 +316,7 @@ end;
 function RebuildConditions(aInfo: IInterface): Boolean;
 var
   sourceConditions, targetConditions, sourceCondition,
-    copiedCondition, globalParameter: IInterface;
+    copiedCondition, femaleCondition, globalParameter: IInterface;
   i: Integer;
 begin
   Result := False;
@@ -356,12 +356,24 @@ begin
       end;
     end;
   end;
-  ; Visibility uses only the stable Extensions-owned backend gate. The result
-  ; fragment performs the authoritative live actor, milk, sex, busy-state, and
-  ; Milk Maid eligibility checks immediately before starting the scene.
+  ; Hide this conversion choice from male subjects. Runtime validation repeats
+  ; the restriction so another mod cannot bypass it by invoking the INFO.
+  femaleCondition := ElementAssign(targetConditions, HighInteger,
+    copiedCondition, False);
+  if not Assigned(femaleCondition) then
+    Exit;
+  SetElementEditValues(femaleCondition, 'CTDA\Function', 'GetIsSex');
+  SetElementNativeValues(femaleCondition, 'CTDA\Comparison Value - Float', 1.0);
+  SetElementNativeValues(femaleCondition, 'CTDA\Parameter #1', 1);
+  SetElementNativeValues(femaleCondition, 'CTDA\Parameter #2', 0);
+  SetElementNativeValues(femaleCondition, 'CTDA\Run On', 0);
+  SetElementNativeValues(femaleCondition, 'CTDA\Reference', 0);
+  SetElementNativeValues(femaleCondition, 'CTDA\Unknown 3', 0);
   Result := Assigned(copiedCondition) and
     SameText(GetElementEditValues(copiedCondition, 'CTDA\Function'),
-      'GetGlobalValue') and (ElementCount(targetConditions) = 1);
+      'GetGlobalValue') and
+    SameText(GetElementEditValues(femaleCondition, 'CTDA\Function'),
+      'GetIsSex') and (ElementCount(targetConditions) = 2);
 end;
 
 function InstallHandler(aInfo: IInterface): Boolean;

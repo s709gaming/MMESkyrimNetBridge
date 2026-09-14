@@ -290,7 +290,7 @@ end;
 
 function AddSexLabEligibility(aInfo: IInterface): Boolean;
 var
-  conditions, sourceCondition, newCondition: IInterface;
+  conditions, sourceCondition, newCondition, femaleCondition: IInterface;
 begin
   Result := False;
   conditions := ElementByPath(aInfo, 'Conditions');
@@ -309,7 +309,18 @@ begin
   newCondition := ElementAssign(conditions, HighInteger, sourceCondition, False);
   if not PointGlobalCondition(newCondition, SexLabGate) then
     Exit;
-  Result := ElementCount(conditions) = 1;
+  femaleCondition := ElementAssign(conditions, HighInteger, newCondition, False);
+  if not Assigned(femaleCondition) then
+    Exit;
+  SetElementEditValues(femaleCondition, 'CTDA\Function', 'GetIsSex');
+  SetElementNativeValues(femaleCondition, 'CTDA\Comparison Value - Float', 1.0);
+  SetElementNativeValues(femaleCondition, 'CTDA\Parameter #1', 1);
+  SetElementNativeValues(femaleCondition, 'CTDA\Parameter #2', 0);
+  SetElementNativeValues(femaleCondition, 'CTDA\Run On', 0);
+  SetElementNativeValues(femaleCondition, 'CTDA\Reference', 0);
+  SetElementNativeValues(femaleCondition, 'CTDA\Unknown 3', 0);
+  Result := SameText(GetElementEditValues(femaleCondition, 'CTDA\Function'),
+    'GetIsSex') and (ElementCount(conditions) = 2);
 end;
 
 function InstallSexLabHandler(aInfo: IInterface): Boolean;

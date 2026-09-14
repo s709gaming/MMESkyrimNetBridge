@@ -87,9 +87,14 @@ Event OnNativePotionConsumed(String eventName, String pluginName, Float localFor
     EndIf
     Actor drinker = sender as Actor
     If drinker == None
+        MMELog.Alarm("[MME Extensions Global NPC Drink] FAILURE: native potion event sender was not an Actor | " + pluginName + ":" + (localFormID as Int))
         Return
     EndIf
     Form drinkItem = Game.GetFormFromFile(localFormID as Int, pluginName)
+    If drinkItem == None
+        MMELog.Alarm("[MME Extensions Global NPC Drink] FAILURE: consumed form could not be reconstructed | actor=" + GetActorName(drinker) + " | " + pluginName + ":" + (localFormID as Int))
+        Return
+    EndIf
     Int drinkKind = GetSupportedDrinkKind(drinkItem)
     If drinkKind == 0
         Return
@@ -172,22 +177,30 @@ Event OnUpdate()
 EndEvent
 
 ; Processes a supported NPC milk drink through the native event pipeline.
-Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, String pluginName, Float localFormID)
-    ; Phase 1: require a live real MME Milk Maid and suppress dialogue/native
-    ; duplication before changing milk, arousal, sound, or Skyrim.Net context.
+; diagnosticTest bypasses event deduplication only for the explicit Troubleshoot
+; action; both paths otherwise share this exact validation/effects implementation.
+Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, String pluginName, Float localFormID, Bool diagnosticTest = False)
+    ; Phase 1: validate a live adult NPC and suppress dialogue/native duplication
+    ; before changing milk, arousal, sound, or notification state.
     Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0) == 1
-    If drinker.IsDead() || drinker.IsDisabled()
+    If diagnosticTest
+        diagnostic = True
+    EndIf
+    If drinker == None || drinkItem == None
+        MMELog.Alarm("[MME Extensions Global NPC Drink] FAILURE: handler received a missing actor or milk item")
         Return
     EndIf
     String actorName = GetActorName(drinker)
+    StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "detected")
+    StorageUtil.SetFloatValue(drinker, "MMEExtensions.NPCDrink.LastStageTime", Utility.GetCurrentRealTime())
+    StorageUtil.SetIntValue(drinker, "MMEExtensions.NPCDrink.LastStageForm", drinkItem.GetFormID())
     If diagnostic
-        Debug.Notification("NPC Milk: detected " + actorName + " drinking " + drinkItem.GetName())
+        ReportNPCDrink(diagnostic, diagnosticTest, "01 DETECTED | " + actorName + " | " + drinkItem.GetName() + " | source=" + pluginName + ":" + (localFormID as Int))
     EndIf
-
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None || !MMEArmorScript.IsMMEMilkMaid(drinker, milkController)
+    If drinker == Game.GetPlayer() || drinker.IsDead() || drinker.IsDisabled() || !drinker.Is3DLoaded() || drinker.IsChild()
+        StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "rejected actor state")
         If diagnostic
-            Debug.Notification("NPC Milk: ignored " + actorName + " - not an MME Milkmaid")
+            ReportNPCDrink(diagnostic, diagnosticTest, "02 REJECTED | actor is player, dead, disabled, unloaded, or a child")
         EndIf
         Return
     EndIf
@@ -197,36 +210,107 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
     Float now = Utility.GetCurrentRealTime()
     Float suppressTime = StorageUtil.GetFloatValue(drinker, "MMEExtensions.NPCDrink.SuppressTime", -10.0)
     Int suppressForm = StorageUtil.GetIntValue(drinker, "MMEExtensions.NPCDrink.SuppressForm", 0)
-    If suppressForm == drinkItem.GetFormID() && now - suppressTime < 2.0
+    If !diagnosticTest && suppressForm == drinkItem.GetFormID() && now - suppressTime < 2.0
         StorageUtil.UnsetFloatValue(drinker, "MMEExtensions.NPCDrink.SuppressTime")
         StorageUtil.UnsetIntValue(drinker, "MMEExtensions.NPCDrink.SuppressForm")
+        StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "dialogue duplicate suppressed")
         If diagnostic
             Debug.Notification("NPC Milk: duplicate dialogue event suppressed")
         EndIf
         Return
     EndIf
 
-    If IsDuplicateDrink(drinker, drinkItem, "MMEExtensions.NPCDrink", 1.0)
+    If !diagnosticTest && IsDuplicateDrink(drinker, drinkItem, "MMEExtensions.NPCDrink", 1.0)
+        StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "native duplicate suppressed")
         If diagnostic
             Debug.Notification("NPC Milk: duplicate native event suppressed")
         EndIf
         Return
     EndIf
 
+    ActorBase baseInfo = drinker.GetLeveledActorBase()
+    Keyword actorTypeNPC = Game.GetFormFromFile(0x013794, "Skyrim.esm") as Keyword
+    If baseInfo == None || baseInfo.GetRace() == None || actorTypeNPC == None || !baseInfo.GetRace().HasKeyword(actorTypeNPC)
+        StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "rejected non-NPC race")
+        If diagnostic
+            ReportNPCDrink(diagnostic, diagnosticTest, "02 REJECTED | ActorBase, race, or ActorTypeNPC validation failed")
+        EndIf
+        Return
+    EndIf
+
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Bool establishedMilkmaid = milkController != None && MMEArmorScript.IsMMEMilkMaid(drinker, milkController)
+    Int actorSex = baseInfo.GetSex()
+    ; A non-Milkmaid Lactacid drink belongs to MME's conversion effect. The
+    ; equip event can arrive before that effect finishes assigning the new maid,
+    ; so treating it as an ordinary milk drink would add a second reaction while
+    ; MME is still converting the actor.
+    If drinkKind == 2 && !establishedMilkmaid
+        StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "MME Lactacid conversion owned")
+        ReportNPCDrink(diagnostic, diagnosticTest, "02 DELEGATED | non-Milkmaid Lactacid belongs to MME conversion")
+        Return
+    EndIf
+    If !establishedMilkmaid
+        If actorSex == 0 && JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidMaleDrinking", 1) != 1
+            StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "male route disabled")
+            If diagnostic
+                ReportNPCDrink(diagnostic, diagnosticTest, "02 REJECTED | Allow Adult Men is off")
+            EndIf
+            Return
+        ElseIf actorSex == 1 && JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidFemaleDrinking", 1) != 1
+            StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "female route disabled")
+            If diagnostic
+                ReportNPCDrink(diagnostic, diagnosticTest, "02 REJECTED | Allow Adult Women is off")
+            EndIf
+            Return
+        ElseIf actorSex != 0 && actorSex != 1
+            StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "unsupported sex")
+            If diagnostic
+                ReportNPCDrink(diagnostic, diagnosticTest, "02 REJECTED | unsupported ActorBase sex value " + actorSex)
+            EndIf
+            Return
+        EndIf
+    EndIf
+    StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "validated")
+    If diagnostic
+        ReportNPCDrink(diagnostic, diagnosticTest, "02 VALIDATED | Milkmaid=" + establishedMilkmaid + " | sex=" + actorSex)
+    EndIf
+
     ; Phase 2: select one factual reaction after the actual outcome is known.
-    ; Disabling effects must not erase the verified drink or its narration.
+    ; Disabling effects must not erase the verified drink or its local reaction.
     If JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1) != 1
         If diagnostic
             Debug.Notification("NPC Milk: effects disabled for " + actorName)
         EndIf
-        String genericReaction = MMENPCDrinkDialogue.BuildDrinkReaction(drinker, drinkItem, True, 0.0, False)
-        ShowNPCDrinkNotification(drinker, drinkItem, 0.0, False, genericReaction)
-        MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, genericReaction)
+        String genericReaction = MMENPCDrinkDialogue.BuildDrinkReaction(drinker, drinkItem, establishedMilkmaid, 0.0, False)
+        If establishedMilkmaid
+            ShowNPCDrinkNotification(drinker, drinkItem, 0.0, False, genericReaction)
+        Else
+            MMENPCDrinkDialogue.ShowNotification(drinker, genericReaction)
+        EndIf
+        StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "complete effects disabled")
+        ReportNPCDrink(diagnostic, diagnosticTest, "03 COMPLETE | effects disabled; reaction only")
+        MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, genericReaction, diagnosticTest)
         Return
     EndIf
 
-    ; Phase 3: apply milk/arousal/sound through actor-safe shared integrations,
-    ; then emit one consolidated result notification.
+    ; Phase 3: ordinary adults use the same sex-specific arousal/reaction path
+    ; proven by Give Milk. Only established Milkmaids receive MME milk gain.
+    If !establishedMilkmaid
+        String ordinaryReaction = MMENPCDrinkDialogue.ApplyPostDrink(drinker, drinkItem, diagnostic)
+        If ordinaryReaction == ""
+            MMELog.Alarm("[MME Extensions Global NPC Drink] FAILURE: ordinary-adult reaction pipeline returned blank | actor=" + actorName)
+            StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "failed blank ordinary reaction")
+            Return
+        EndIf
+        StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "complete ordinary adult")
+        ReportNPCDrink(diagnostic, diagnosticTest, "03 COMPLETE | ordinary adult | no MME milk gain")
+        MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, ordinaryReaction, diagnosticTest)
+        MMELog.Diagnostic("[MMEAlert NPC Drink] processed ordinary adult " + actorName + " | " + pluginName + ":" + localFormID)
+        Return
+    EndIf
+
+    ; Established Milkmaids retain the existing milk/arousal/sound behavior.
     Float milkBefore = MME_Storage.getMilkCurrent(drinker)
     Float milkAdded = MMEMilkBoost.ApplyMilkDrinkBonusForActor(drinker, drinkKind, diagnostic)
     Float milkAfter = MME_Storage.getMilkCurrent(drinker)
@@ -236,7 +320,6 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
     MMEMilkDrinkEffects.PlayDrinkReaction(drinker, diagnostic)
     String renderedReaction = MMENPCDrinkDialogue.BuildDrinkReaction(drinker, drinkItem, True, milkAdded, arousalSent)
     ShowNPCDrinkNotification(drinker, drinkItem, milkAdded, arousalSent, renderedReaction)
-    MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, renderedReaction)
     If diagnostic
         String arousalResult = "off/unavailable"
         If arousalSent
@@ -244,7 +327,43 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
         EndIf
         Debug.Notification("NPC Milk: applied to " + actorName + " | milk " + milkBefore + " -> " + milkAfter + " (+" + milkAdded + ") | arousal " + arousalResult)
     EndIf
+    StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "complete Milkmaid")
+    ReportNPCDrink(diagnostic, diagnosticTest, "03 COMPLETE | Milkmaid | milk " + milkBefore + " -> " + milkAfter)
+    MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, renderedReaction, diagnosticTest)
     MMELog.Diagnostic("[MMEAlert NPC Drink] processed " + actorName + " | " + pluginName + ":" + localFormID)
+EndFunction
+
+; Explicit Troubleshoot harness. It simulates the post-consumption callback with
+; HearthFires milk and intentionally applies the same gameplay effects as a real
+; global event, but does not add, remove, or equip an inventory item.
+Function RunCrosshairNPCDrinkTest()
+    Actor candidate = Game.GetCurrentCrosshairRef() as Actor
+    If candidate == None
+        MMELog.Status("[MME Extensions Global NPC Drink Test] 00 FAIL | no NPC under crosshair")
+        Debug.Notification("Global NPC Drink Test: no NPC under crosshair")
+        Return
+    EndIf
+    Form testMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
+    If testMilk == None
+        MMELog.Alarm("[MME Extensions Global NPC Drink Test] 00 FAIL | HearthFires Jug of Milk did not resolve")
+        Debug.Notification("Global NPC Drink Test: HearthFires milk missing")
+        Return
+    EndIf
+    MMELog.Status("[MME Extensions Global NPC Drink Test] 00 START | actor=" + GetActorName(candidate) + " | simulated post-consumption event")
+    Debug.Notification("Global NPC Drink Test: simulating Jug of Milk for " + GetActorName(candidate))
+    HandleNativeNPCDrink(candidate, testMilk, 3, "MCMTest", 0x003534, True)
+EndFunction
+
+Function ReportNPCDrink(Bool diagnostic, Bool diagnosticTest, String reportText)
+    If !diagnostic
+        Return
+    EndIf
+    If diagnosticTest
+        MMELog.Status("[MME Extensions Global NPC Drink Test] " + reportText)
+    Else
+        MMELog.Diagnostic("[MMEAlert NPC Drink] " + reportText)
+        Debug.Notification("NPC Milk: " + reportText)
+    EndIf
 EndFunction
 
 ; Classifies drinks: 0 unsupported, 1 MME milk, 2 Lactacid, 3 HearthFires milk.

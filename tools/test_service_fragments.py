@@ -9,12 +9,20 @@ from remove_give_milk_inventory_conditions import patch_plugin as patch_give_mil
 from enable_universal_give_milk_dialogue import patch_plugin as patch_universal_give_milk_dialogue
 from remove_give_milk_previous_dialog import patch_plugin as patch_give_milk_previous_dialog
 from separate_give_milk_dialogue_topic import patch_plugin as patch_separate_give_milk_topic
+from restrict_new_milkmaid_dialogue_to_females import patch_plugin as patch_female_new_milkmaid
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = (ROOT / 'Source/Scripts/MMEBlacksmithDialogue.psc').read_text()
 
 
 class ServiceTests(unittest.TestCase):
+    def test_new_milkmaid_conversion_is_female_only_in_script_and_dialogue(self):
+        source = (ROOT / 'Source/Scripts/MMENewMilkMaid.psc').read_text()
+        self.assertIn('If candidateSex != 1', source)
+        self.assertNotIn('milkController.MaleMaids', source)
+        data = (ROOT / 'MMEAlert.esp').read_bytes()
+        self.assertEqual(patch_female_new_milkmaid(data), data)
+
     def test_non_skyrim_net_startup_is_isolated_and_dialogue_alarm_is_error_only(self):
         controller = (ROOT / 'Source/Scripts/MMEAlertsController.psc').read_text()
         self.assertRegex(controller, r'If Game\.GetModByName\("SkyrimNet\.esp"\) != 255\s+MMEAlertsSkyrimNet\.RegisterPromptDecorator\(\)\s+MMESkyrimNetVoiceControls\.RegisterSelfMilkingAction\(\)\s+EndIf')
@@ -178,7 +186,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('enableGiveMilkEasyMode", 1', dialogue)
         self.assertIn('Game.GetFormFromFile(0x003534, "HearthFires.esm")', dialogue)
         self.assertIn('Easy Mode temporary Jug', dialogue)
-        self.assertIn('Return 115', mcm)
+        self.assertIn('Return 116', mcm)
         self.assertIn('AddHeaderOption("Easy Mode")', mcm)
         self.assertIn('AddToggleOption("Free Jug for Give Milk"', mcm)
         self.assertIn('JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1)', mcm)
@@ -219,6 +227,53 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('11E0C notification JSON entry selected', universal)
         self.assertIn('AddHeaderOption("Non-Milkmaid Drinking")', mcm)
         self.assertIn('universalNPCDrinkMigration115', mcm)
+
+    def test_global_npc_drink_phase_two_is_universal_and_keeps_milkmaid_effects_isolated(self):
+        tracker = (ROOT / 'Source/Scripts/MMEDrinkTracker.psc').read_text()
+        diagnostics = (ROOT / 'Source/Scripts/MMEDiagnostics.psc').read_text()
+        mcm = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
+        native_handler = tracker.split('Function HandleNativeNPCDrink(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('drinker.IsChild()', native_handler)
+        self.assertIn('ActorTypeNPC', native_handler)
+        self.assertIn('enableNonMilkmaidMaleDrinking', native_handler)
+        self.assertIn('enableNonMilkmaidFemaleDrinking', native_handler)
+        self.assertIn('MMENPCDrinkDialogue.ApplyPostDrink', native_handler)
+        self.assertIn('If !establishedMilkmaid', native_handler)
+        self.assertEqual(native_handler.count('MMEMilkBoost.ApplyMilkDrinkBonusForActor'), 1)
+        self.assertLess(native_handler.index('Return\n    EndIf\n\n    ; Established Milkmaids'), native_handler.index('MMEMilkBoost.ApplyMilkDrinkBonusForActor'))
+        self.assertIn('dialogue duplicate suppressed', native_handler)
+        self.assertIn('native duplicate suppressed', native_handler)
+        self.assertIn('MMEExtensions.NPCDrink.LastStage', native_handler)
+        self.assertIn('RunGlobalNPCDrinkTest', diagnostics)
+        self.assertIn('Test Global NPC Milk Drink', mcm)
+        self.assertIn('simulated post-consumption event', tracker)
+
+    def test_global_npc_drink_phase_three_reuses_json_and_targets_skyrim_net_once(self):
+        tracker = (ROOT / 'Source/Scripts/MMEDrinkTracker.psc').read_text()
+        dialogue = (ROOT / 'Source/Scripts/MMENPCDialog.psc').read_text()
+        bridge = (ROOT / 'Source/Scripts/MMEAlertsSkyrimNet.psc').read_text()
+        mcm = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
+        native_handler = tracker.split('Function HandleNativeNPCDrink(', 1)[1].split('EndFunction', 1)[0]
+        narrator = bridge.split('Function NarrateNPCMilkDrink(', 1)[1].split('EndFunction', 1)[0]
+        lactacid_guard = native_handler.split('If drinkKind == 2 && !establishedMilkmaid', 1)[1].split('EndIf', 1)[0]
+        self.assertIn('MME Lactacid conversion owned', lactacid_guard)
+        self.assertNotIn('NarrateNPCMilkDrink', lactacid_guard)
+        self.assertEqual(native_handler.count('MMEAlertsSkyrimNet.NarrateNPCMilkDrink'), 3)
+        self.assertIn('NarrateNPCMilkDrink(drinker, False, genericReaction, diagnosticTest)', native_handler)
+        self.assertIn('NarrateNPCMilkDrink(drinker, False, ordinaryReaction, diagnosticTest)', native_handler)
+        self.assertIn('NarrateNPCMilkDrink(drinker, False, renderedReaction, diagnosticTest)', native_handler)
+        self.assertLess(native_handler.index('03 COMPLETE | ordinary adult'), native_handler.index('NarrateNPCMilkDrink(drinker, False, ordinaryReaction'))
+        self.assertIn('NarrateNPCMilkDrink(target, dialogueRequest, renderedReaction)', dialogue)
+        self.assertIn('Bool diagnosticTest = False', bridge)
+        self.assertIn('ResolveActorName(drinker, "The drinker")', narrator)
+        self.assertIn('diagnosticTest ||', narrator)
+        self.assertIn('If !diagnosticTest && last >= 0.0', narrator)
+        self.assertIn('If !diagnosticTest\n            JsonUtil.SetFloatValue', narrator)
+        self.assertEqual(narrator.count('SkyrimNetApi.DirectNarration('), 1)
+        self.assertIn('short, humorous, suggestive, and playful reaction', narrator)
+        self.assertIn('04 SKYRIM.NET DISPATCH', narrator)
+        self.assertIn('05 SKYRIM.NET ACCEPTED', narrator)
+        self.assertIn('Give Milk dialogue or globally detected adult NPC milk drinking', mcm)
 
     def test_opening_does_not_apply_or_gesture(self):
         body = SOURCE.split('Function Fragment_RefreshBlacksmithArmorState(', 1)[1].split('EndFunction', 1)[0]

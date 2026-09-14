@@ -165,6 +165,7 @@ Int milkDialogueTimingTraceOption
 Int diagnosticRefreshGateOption
 Int diagnosticInstallAuditOption
 Int diagnosticMilkDrinkAuditOption
+Int diagnosticGlobalNPCDrinkTestOption
 Int diagnosticDialogueAuditOption
 Int diagnosticNewMilkmaidSexLabBusOption
 Int diagnosticRefreshSexLabBusOption
@@ -194,7 +195,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 115
+    Return 116
 EndFunction
 
 Function SetPageNames()
@@ -1244,6 +1245,8 @@ Event OnPageReset(String page)
     milkDialogueTimingTraceOption = -1
     diagnosticRefreshGateOption = -1
     diagnosticInstallAuditOption = -1
+    diagnosticMilkDrinkAuditOption = -1
+    diagnosticGlobalNPCDrinkTestOption = -1
     diagnosticDialogueAuditOption = -1
     diagnosticNewMilkmaidSexLabBusOption = -1
     diagnosticRefreshSexLabBusOption = -1
@@ -1484,6 +1487,7 @@ Event OnPageReset(String page)
         diagnosticRefreshGateOption = AddTextOption("Refresh OStim Dialogue Gate", "RUN")
         diagnosticInstallAuditOption = AddTextOption("Run Install Audit", "RUN")
         diagnosticMilkDrinkAuditOption = AddTextOption("Run Milk Drink Audit", "RUN")
+        diagnosticGlobalNPCDrinkTestOption = AddTextOption("Test Global NPC Milk Drink", "RUN")
         diagnosticDialogueAuditOption = AddTextOption("Run Crosshair Dialogue Audit", "RUN")
         diagnosticNewMilkmaidSexLabBusOption = AddTextOption("Run New Milk Maid Bus Test", "RUN")
         diagnosticRefreshSexLabBusOption = AddTextOption("Refresh SexLab Bus Listeners", "RUN")
@@ -1827,7 +1831,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == milkDrinkAnimationDiagnosticOption
         SetInfoText("Report whether PLAYER or NPC triggered the drink animation, what was detected, and why it started or skipped.")
     ElseIf option == npcDrinkNarrationOption
-        SetInfoText("Ask Skyrim.Net for one immediate reaction when an NPC Milkmaid drinks supported milk. Uses LLM tokens.")
+        SetInfoText("Ask Skyrim.Net for one immediate humorous and suggestive reaction after supported Give Milk dialogue or globally detected adult NPC milk drinking. Covers men, women, and Milkmaids. Uses LLM tokens.")
     ElseIf option == npcDrinkNarrationCooldownOption
         SetInfoText("Set the global real-time delay between token-using NPC drink narrations.")
     ElseIf option == npcDrinkNarrationDiagnosticOption
@@ -1900,6 +1904,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Check the controller, MME, OStim, dialogue records, setting, and live dialogue gate.")
     ElseIf option == diagnosticMilkDrinkAuditOption
         SetInfoText("Trace the player milk-drink route through quest, alias, tracker attachment, settings, supported forms, equip event, and accepted drink stages.")
+    ElseIf option == diagnosticGlobalNPCDrinkTestOption
+        SetInfoText("Simulate a global HearthFires milk consumption on the crosshair adult NPC. Inventory is untouched; configured gameplay effects are real. Skyrim.Net narration bypasses cooldown for this test and writes a short Papyrus route.")
     ElseIf option == diagnosticDialogueAuditOption
         SetInfoText("Check whether the NPC under your crosshair and the player satisfy the New Milk Maid runtime requirements.")
     ElseIf option == diagnosticNewMilkmaidSexLabBusOption
@@ -2118,6 +2124,8 @@ Event OnOptionSelect(Int option)
         MMEDiagnostics.RunInstallAudit()
     ElseIf option == diagnosticMilkDrinkAuditOption
         MMEDiagnostics.RunMilkDrinkAudit()
+    ElseIf option == diagnosticGlobalNPCDrinkTestOption
+        MMEDiagnostics.RunGlobalNPCDrinkTest()
     ElseIf option == diagnosticDialogueAuditOption
         MMEDiagnostics.RunCrosshairDialogueAudit()
     ElseIf option == diagnosticNewMilkmaidSexLabBusOption

@@ -733,6 +733,23 @@ Function RunMilkDrinkAudit() Global
     EndIf
 EndFunction
 
+; Runs the real global NPC post-consumption handler against the crosshair actor.
+; Inventory is untouched, but configured milk/arousal/reaction effects are real.
+Function RunGlobalNPCDrinkTest() Global
+    Quest controllerQuest = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as Quest
+    If controllerQuest == None
+        Report("Global NPC drink test FAIL: controller quest is missing", 2)
+        Return
+    EndIf
+    ReferenceAlias playerAlias = controllerQuest.GetAlias(1) as ReferenceAlias
+    MMEDrinkTracker tracker = playerAlias as MMEDrinkTracker
+    If tracker == None
+        Report("Global NPC drink test FAIL: MMEDrinkTracker is not attached to player alias ID 1", 2)
+        Return
+    EndIf
+    tracker.RunCrosshairNPCDrinkTest()
+EndFunction
+
 Function RunCrosshairDialogueAudit() Global
     Actor candidate = Game.GetCurrentCrosshairRef() as Actor
     Actor playerActor = Game.GetPlayer()

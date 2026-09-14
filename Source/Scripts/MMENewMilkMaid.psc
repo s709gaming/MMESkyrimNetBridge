@@ -370,8 +370,10 @@ String Function GetEligibilityFailure(Actor candidate, MilkQUEST milkController)
         Return "target base unavailable"
     EndIf
     Int candidateSex = candidateBase.GetSex()
-    If candidateSex != 1 && !(candidateSex == 0 && milkController.MaleMaids)
-        Return "target is not eligible under MME sex settings"
+    ; Extensions deliberately supports female Milk Maid conversion only. MME's
+    ; optional MaleMaids setting must not broaden this dialogue route.
+    If candidateSex != 1
+        Return "target is not female; male Milk Maid conversion is unsupported"
     EndIf
     If candidate.IsInCombat()
         Return "target is in combat"
