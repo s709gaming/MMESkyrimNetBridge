@@ -219,6 +219,11 @@ EndFunction
 
 ; Skyrim.Net resolves quest action scripts from the existing quest instance.
 ; Keep this entry point on the controller so upgrades work in established saves.
+Function GivePlayerMilkToSpeaker(Actor target)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] dedicated action selected | player giver=" + Game.GetPlayer() + " | speaker/drinker=" + target)
+    MMESkyrimNetVoiceControls.GivePlayerMilkToSpeaker(target)
+EndFunction
+
 Function StartBreastfeedingMilkShare(Actor milkSource, Actor target)
     MMELog.Diagnostic("[MMEAlert SkyrimNet BF] dedicated action selected | semantic intent=speaker offers breast to target | speaker/source=" + milkSource + " | target/drinker=" + target)
     MMESkyrimNetVoiceControls.StartBreastfeedingMilkShare(milkSource, target, "speaker/source=" + MMEOStimBreastfeeding.GetActorName(milkSource) + " | target/drinker=" + MMEOStimBreastfeeding.GetActorName(target))

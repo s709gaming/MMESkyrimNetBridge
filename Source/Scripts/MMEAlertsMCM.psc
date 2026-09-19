@@ -98,8 +98,11 @@ Int milkmaidCreatedNarrationDiagnosticOption
 Int selfMilkingActionOption
 Int pairedMilkingActionOption
 Int breastfeedingActionCooldownOption
+Int giveMilkActionOption
+Int giveMilkActionCooldownOption
 Int selfMilkingActionDiagnosticOption
 Int pairedMilkingActionDiagnosticOption
+Int giveMilkActionDiagnosticOption
 Int masterEnableOption
 Int ostimBreastfeedingOption
 Int ostimBreastfeedingDurationOption
@@ -196,7 +199,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 116
+    Return 117
 EndFunction
 
 Function SetPageNames()
@@ -310,8 +313,11 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingAction", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
         JsonUtil.SetFloatValue(SettingsFile, "breastfeedingActionCooldown", 45.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkAction", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "giveMilkActionCooldown", 45.0)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableOStimBreastfeeding", MMEOStimBreastfeeding.IsOStimDetected() as Int)
         JsonUtil.SetFloatValue(SettingsFile, "ostimBreastfeedingDuration", 20.0)
         JsonUtil.SetIntValue(SettingsFile, "enableOStimDebug", 0)
@@ -1051,6 +1057,15 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "universalNPCDrinkMigration115", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds the static Skyrim.Net player-to-speaker Give Milk action. Its own
+    ; cooldown is independent from drink narration and breastfeeding actions.
+    If JsonUtil.GetIntValue(SettingsFile, "giveMilkActionMigration116", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkAction", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "giveMilkActionCooldown", 45.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkActionDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "giveMilkActionMigration116", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1188,8 +1203,11 @@ Event OnPageReset(String page)
     selfMilkingActionOption = -1
     pairedMilkingActionOption = -1
     breastfeedingActionCooldownOption = -1
+    giveMilkActionOption = -1
+    giveMilkActionCooldownOption = -1
     selfMilkingActionDiagnosticOption = -1
     pairedMilkingActionDiagnosticOption = -1
+    giveMilkActionDiagnosticOption = -1
     masterEnableOption = -1
     ostimBreastfeedingOption = -1
     ostimBreastfeedingDurationOption = -1
@@ -1430,11 +1448,17 @@ Event OnPageReset(String page)
         AddHeaderOption("Actions")
         selfMilkingActionOption = AddToggleOption("Allow Self-Milking Action", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingAction", 1) == 1)
         pairedMilkingActionOption = AddToggleOption("Allow Paired Milking Action", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) == 1)
+        giveMilkActionOption = AddToggleOption("Allow Give Milk Action", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkAction", 1) == 1)
         Int breastfeedingCooldownFlags = OPTION_FLAG_NONE
         If JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) != 1
             breastfeedingCooldownFlags = OPTION_FLAG_DISABLED
         EndIf
         breastfeedingActionCooldownOption = AddSliderOption("Breastfeeding Action Cooldown", JsonUtil.GetFloatValue(SettingsFile, "breastfeedingActionCooldown", 45.0), "{0} seconds", breastfeedingCooldownFlags)
+        Int giveMilkCooldownFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkAction", 1) != 1
+            giveMilkCooldownFlags = OPTION_FLAG_DISABLED
+        EndIf
+        giveMilkActionCooldownOption = AddSliderOption("Give Milk Action Cooldown", JsonUtil.GetFloatValue(SettingsFile, "giveMilkActionCooldown", 45.0), "{0} seconds", giveMilkCooldownFlags)
         AddHeaderOption("AI Reactions")
         milkFullNarrationOption = AddToggleOption("Narrate Milk Full", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarration", 1) == 1)
         Int narrationFlags = OPTION_FLAG_NONE
@@ -1574,6 +1598,7 @@ Event OnPageReset(String page)
         fullnessSelfMilkAnimationDiagnosticOption = AddToggleOption("Fullness Animation", JsonUtil.GetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0) == 1)
         selfMilkingActionDiagnosticOption = AddToggleOption("Self-Milking Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0) == 1)
         pairedMilkingActionDiagnosticOption = AddToggleOption("Paired Milking Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0) == 1)
+        giveMilkActionDiagnosticOption = AddToggleOption("Give Milk Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkActionDiagnostic", 0) == 1)
         SetCursorPosition(1)
         AddHeaderOption("Skyrim.Net")
         skyrimNetDrinkDiagnosticOption = AddToggleOption("Milk Drink Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0) == 1)
@@ -1715,6 +1740,10 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Allow Skyrim.Net to start a milk-sharing scene with the selected source and the player.")
     ElseIf option == breastfeedingActionCooldownOption
         SetInfoText("Prevent Skyrim.Net from starting another breastfeeding action for this many real-time seconds. Dialogue breastfeeding remains available.")
+    ElseIf option == giveMilkActionOption
+        SetInfoText("Allow Skyrim.Net to give one player-owned milk item to the speaking adult NPC, who immediately drinks it without opening dialogue.")
+    ElseIf option == giveMilkActionCooldownOption
+        SetInfoText("Prevent Skyrim.Net from starting another Give Milk action for this many real-time seconds. Normal Give Milk dialogue remains available.")
     ElseIf option == npcMilkConsumptionDiagnosticOption
         SetInfoText("Report native NPC milk detection, Milkmaid validation, duplicates, and applied effects.")
     ElseIf option == npcDrinkNotificationsDiagnosticOption
@@ -2296,6 +2325,12 @@ Event OnOptionSelect(Int option)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", value)
         SetToggleOptionValue(option, value == 1)
         ForcePageReset()
+    ElseIf option == giveMilkActionOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkAction", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkAction", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
     ElseIf option == npcMilkConsumptionDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", value)
@@ -2414,6 +2449,11 @@ Event OnOptionSelect(Int option)
     ElseIf option == pairedMilkingActionDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == giveMilkActionDiagnosticOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkActionDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkActionDiagnostic", value)
+        JsonUtil.Save(SettingsFile, False)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == skyrimNetDrinkDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0)
@@ -2616,6 +2656,11 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(45.0)
         SetSliderDialogRange(5.0, 300.0)
         SetSliderDialogInterval(5.0)
+    ElseIf option == giveMilkActionCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "giveMilkActionCooldown", 45.0))
+        SetSliderDialogDefaultValue(45.0)
+        SetSliderDialogRange(5.0, 300.0)
+        SetSliderDialogInterval(5.0)
     ElseIf option == flatMilkBonusOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 1.0))
         SetSliderDialogDefaultValue(1.0)
@@ -2797,6 +2842,10 @@ Event OnOptionSliderAccept(Int option, Float value)
         (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
     ElseIf option == breastfeedingActionCooldownOption
         JsonUtil.SetFloatValue(SettingsFile, "breastfeedingActionCooldown", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == giveMilkActionCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "giveMilkActionCooldown", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
     ElseIf option == flatMilkBonusOption

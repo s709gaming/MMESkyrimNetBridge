@@ -107,6 +107,52 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('SetSliderDialogRange(5.0, 300.0)', mcm)
         self.assertIn('breastfeedingActionCooldownMigration89', mcm)
 
+    def test_skyrimnet_give_milk_action_reuses_verified_transaction(self):
+        action_yaml = (ROOT / 'SkyrimNetActions/mme_give_player_milk_to_speaker.yaml').read_text()
+        controller = (ROOT / 'Source/Scripts/MMEAlertsController.psc').read_text()
+        actions = (ROOT / 'Source/Scripts/MMESkyrimNetVoiceControls.psc').read_text()
+        dialogue = (ROOT / 'Source/Scripts/MMENPCDialog.psc').read_text()
+        mcm = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
+        build = (ROOT / 'build-package.ps1').read_text()
+
+        self.assertIn('name: GivePlayerMilkToSpeaker', action_yaml)
+        self.assertIn('questEditorId: MMEAlertDebugQuest', action_yaml)
+        self.assertIn('scriptName: MMEAlertsController', action_yaml)
+        self.assertIn('executionFunctionName: GivePlayerMilkToSpeaker', action_yaml)
+        self.assertIn('type: speaker', action_yaml)
+        self.assertIn('name: target', action_yaml)
+        self.assertIn("from the player's inventory", action_yaml)
+        self.assertIn('immediately drinks it', action_yaml)
+        self.assertIn('Lactacid is never used', action_yaml)
+
+        callback = controller.split('Function GivePlayerMilkToSpeaker(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('MMESkyrimNetVoiceControls.GivePlayerMilkToSpeaker(target)', callback)
+        policy = actions.split('Function GivePlayerMilkToSpeaker(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('enableGiveMilkAction", 1', policy)
+        self.assertIn('GetGiveMilkActionCooldownRemaining()', policy)
+        self.assertLess(policy.index('MarkGiveMilkActionCooldown()'), policy.index('MMENPCDialog.GiveMilkToTarget'))
+        self.assertIn('MMENPCDialog.GiveMilkToTarget(target, diagnostic, False, True)', policy)
+        cooldown = actions.split('Float Function GetGiveMilkActionCooldownRemaining(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('giveMilkActionCooldown", 45.0', cooldown)
+        self.assertIn('lastGiveMilkActionRealTime', cooldown)
+
+        transaction = dialogue.split('Bool Function ProcessNativeConsumption(', 1)[1].split('EndFunction', 1)[0]
+        action_branch = transaction.split('ElseIf actionRequest', 1)[1].split('\n    Else', 1)[0]
+        self.assertIn('MMEMinorAnimations.StartGive(giver, actionGiveOwner', action_branch)
+        self.assertIn('StartDrinkAnimation(target, selectedItem, diagnostic)', action_branch)
+        self.assertIn('MMEMinorAnimations.StartDrink(target, actionDrinkOwner', action_branch)
+        self.assertIn('ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)', action_branch)
+        self.assertIn('MMENPCDrinkDialogue.ApplyPostDrink(target, selectedItem, diagnostic)', action_branch)
+        self.assertIn('MMEMinorAnimations.Complete(giver, actionGiveOwner', action_branch)
+        self.assertNotIn('UI.IsMenuOpen', action_branch)
+        self.assertEqual(transaction.count('MMEAlertsSkyrimNet.NarrateNPCMilkDrink'), 1)
+
+        self.assertIn('Allow Give Milk Action', mcm)
+        self.assertIn('Give Milk Action Cooldown', mcm)
+        self.assertIn('Give Milk Action Diagnostic', mcm)
+        self.assertIn('giveMilkActionMigration116', mcm)
+        self.assertIn('mme_give_player_milk_to_speaker.yaml', build)
+
     def test_original_mme_sexlab_dialogue_is_observed_without_info_override(self):
         service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
         ending = service.split('Event OnNewMilkMaidSexLabEnding(', 1)[1].split('EndEvent', 1)[0]
@@ -327,7 +373,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('enableGiveMilkEasyMode", 1', dialogue)
         self.assertIn('Game.GetFormFromFile(0x003534, "HearthFires.esm")', dialogue)
         self.assertIn('Easy Mode temporary Jug', dialogue)
-        self.assertIn('Return 116', mcm)
+        self.assertIn('Return 117', mcm)
         self.assertIn('AddHeaderOption("Easy Mode")', mcm)
         self.assertIn('AddToggleOption("Free Jug for Give Milk"', mcm)
         self.assertIn('JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1)', mcm)

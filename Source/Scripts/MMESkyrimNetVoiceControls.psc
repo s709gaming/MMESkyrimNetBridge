@@ -145,7 +145,90 @@ Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
     MMEReactionAnimation.Finish(candidate, animationStarted, owner, duration, requestLabel, diagnostic)
 EndFunction
 
-; Registers the opt-in action that reuses the tested NPC dialogue pipeline.
+; Static YAML action policy for player-to-speaker Give Milk. Skyrim.Net clears
+; its own busy state as soon as it hands off to Papyrus, so this adapter owns a
+; real-time cooldown before entering the latent inventory/animation transaction.
+Float Function GetGiveMilkActionCooldownRemaining() Global
+    String settingsFile = "/MMEAlerts/Settings"
+    Float cooldown = JsonUtil.GetFloatValue(settingsFile, "giveMilkActionCooldown", 45.0)
+    If cooldown < 5.0
+        cooldown = 5.0
+    ElseIf cooldown > 300.0
+        cooldown = 300.0
+    EndIf
+    Float now = Utility.GetCurrentRealTime()
+    Float last = JsonUtil.GetFloatValue(settingsFile, "lastGiveMilkActionRealTime", -1.0)
+    If last < 0.0 || last > now
+        Return 0.0
+    EndIf
+    Float remaining = cooldown - (now - last)
+    If remaining < 0.0
+        Return 0.0
+    EndIf
+    Return remaining
+EndFunction
+
+Function MarkGiveMilkActionCooldown() Global
+    String settingsFile = "/MMEAlerts/Settings"
+    JsonUtil.SetFloatValue(settingsFile, "lastGiveMilkActionRealTime", Utility.GetCurrentRealTime())
+    JsonUtil.Save(settingsFile, False)
+EndFunction
+
+Function GivePlayerMilkToSpeaker(Actor target) Global
+    String settingsFile = "/MMEAlerts/Settings"
+    Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableGiveMilkActionDiagnostic", 0) == 1
+    If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue(settingsFile, "enableGiveMilkAction", 1) != 1
+        If diagnostic
+            Debug.Notification("Skyrim.Net Give Milk: rejected - action disabled")
+        EndIf
+        Return
+    EndIf
+    If target == None || target == Game.GetPlayer() || target.IsDead() || target.IsDisabled() || !target.Is3DLoaded() || target.IsChild()
+        If diagnostic
+            Debug.Notification("Skyrim.Net Give Milk: rejected - speaker is not an available adult NPC")
+        EndIf
+        Return
+    EndIf
+
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None
+        MMELog.Alarm("[MME Extensions Skyrim.Net Give Milk] FAILURE: MME controller could not resolve")
+        Return
+    EndIf
+    Bool establishedMilkmaid = MMEArmorScript.IsMMEMilkMaid(target, milkController)
+    If !establishedMilkmaid && !MMENPCDrinkDialogue.IsEligible(target, milkController, diagnostic)
+        If diagnostic
+            Debug.Notification("Skyrim.Net Give Milk: rejected - speaker is not an eligible adult receiver")
+        EndIf
+        Return
+    EndIf
+
+    Float cooldownRemaining = GetGiveMilkActionCooldownRemaining()
+    If cooldownRemaining > 0.0
+        MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] rejected | action cooldown active | remaining=" + (cooldownRemaining as Int) + "s")
+        If diagnostic
+            Debug.Notification("Skyrim.Net Give Milk: cooldown " + (cooldownRemaining as Int) + "s")
+        EndIf
+        Return
+    EndIf
+
+    ; Claim before the latent transaction. Skyrim.Net may otherwise dispatch a
+    ; second request after clearing its own busy flag but before Papyrus returns.
+    MarkGiveMilkActionCooldown()
+    MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] transaction accepted | player giver=" + Game.GetPlayer() + " | speaker/drinker=" + target + " | established Milkmaid=" + establishedMilkmaid)
+    Bool success = MMENPCDialog.GiveMilkToTarget(target, diagnostic, False, True)
+    If diagnostic
+        If success
+            Debug.Notification("Skyrim.Net Give Milk: milk consumed")
+        Else
+            Debug.Notification("Skyrim.Net Give Milk: transaction failed; see preceding reason")
+        EndIf
+    EndIf
+    MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] transaction complete | success=" + success + " | speaker/drinker=" + target)
+EndFunction
+
+; Legacy dynamically registered prototype retained for save/callback
+; compatibility. Current packages use the YAML quest action above.
 Function RegisterGiveMilkAction() Global
     If !MMEAlertsSkyrimNet.IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceGiveMilk", 0) != 1
         Return

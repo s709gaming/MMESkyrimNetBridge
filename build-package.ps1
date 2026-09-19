@@ -174,19 +174,21 @@ if (Test-Path -LiteralPath $milkmaidPrompt) {
     Copy-Item -LiteralPath $milkmaidPrompt -Destination $promptDestination
 }
 
-# Skyrim.Net exposes explicit source-speaks and drinker-speaks contracts. Both
-# normalize into the same two-actor bridge on MMEAlertDebugQuest.
-$milkShareActions = @(
+# Skyrim.Net actions use the persistent MMEAlertDebugQuest bridge. The paired
+# breastfeeding contracts normalize their actor roles there; Give Milk reuses
+# the same proven quest-action route for the current speaking NPC.
+$skyrimNetActions = @(
     (Join-Path $projectRoot "SkyrimNetActions\mme_breastfeeding_milk_share.yaml"),
-    (Join-Path $projectRoot "SkyrimNetActions\mme_breastfeeding_drink_from_target.yaml")
+    (Join-Path $projectRoot "SkyrimNetActions\mme_breastfeeding_drink_from_target.yaml"),
+    (Join-Path $projectRoot "SkyrimNetActions\mme_give_player_milk_to_speaker.yaml")
 )
 $actionDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\config\actions"
 New-Item -ItemType Directory -Force -Path $actionDestination | Out-Null
-foreach ($milkShareAction in $milkShareActions) {
-    if (!(Test-Path -LiteralPath $milkShareAction)) {
-        throw "Required Skyrim.Net breastfeeding action is missing: $milkShareAction"
+foreach ($skyrimNetAction in $skyrimNetActions) {
+    if (!(Test-Path -LiteralPath $skyrimNetAction)) {
+        throw "Required Skyrim.Net action is missing: $skyrimNetAction"
     }
-    Copy-Item -LiteralPath $milkShareAction -Destination $actionDestination
+    Copy-Item -LiteralPath $skyrimNetAction -Destination $actionDestination
 }
 
 # Install the late, actor-specific breastfeeding override after generic SexLab
