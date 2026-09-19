@@ -404,7 +404,7 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
         renderedReaction = ApplyExtensionEffects(target, selectedItem, selectedType, diagnostic)
         FinishDrinkAnimation(target, animationStarted, diagnostic)
     EndIf
-    MMEAlertsSkyrimNet.NarrateNPCMilkDrink(target, dialogueRequest, renderedReaction)
+    MMEAlertsSkyrimNet.NarrateNPCMilkDrink(target, dialogueRequest, renderedReaction, False, establishedMilkmaid)
     Return True
 EndFunction
 

@@ -16,6 +16,125 @@ SOURCE = (ROOT / 'Source/Scripts/MMEBlacksmithDialogue.psc').read_text()
 
 
 class ServiceTests(unittest.TestCase):
+    def test_ostim_breastfeeding_startup_is_async_after_dialogue(self):
+        service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
+        startup = service.split('Bool Function StartBreastfeeding(', 1)[1].split('EndFunction', 1)[0]
+        confirmation = service.split('Bool Function TryConfirmOStimStartup(', 1)[1].split('EndFunction', 1)[0]
+        watchdog = service.split('Function HandleWatchdogUpdate(', 1)[1].split('EndFunction', 1)[0]
+        thread_changed = service.split('Event OnOStimThreadSceneChanged(', 1)[1].split('EndEvent', 1)[0]
+        thread_end = service.split('Event OnOStimThreadEnd(', 1)[1].split('EndEvent', 1)[0]
+
+        self.assertNotIn('WaitForExpectedScene(', service)
+        self.assertNotIn('Utility.Wait(', startup)
+        self.assertIn('ActiveStartupDeadline = Utility.GetCurrentRealTime() + 30.0', startup)
+        self.assertIn('ActiveLaunching = False', startup)
+        self.assertIn('RequestWatchdog()', startup)
+        self.assertIn('Return True', startup)
+        self.assertIn('OwnsManualThreadForActors(', confirmation)
+        self.assertIn('ActiveStartupConfirmed = True', confirmation)
+        self.assertIn('StartConfirmedOStimSidecar()', confirmation)
+        self.assertIn('TryConfirmOStimStartup("thread_scenechanged")', thread_changed)
+        self.assertNotIn('sceneID != ActiveSceneID', thread_changed.split('TryConfirmOStimStartup', 1)[0])
+        self.assertIn('TryConfirmOStimStartup("watchdog")', watchdog)
+        self.assertIn('Utility.GetCurrentRealTime() >= ActiveStartupDeadline', watchdog)
+        self.assertIn('RequestWatchdog()', watchdog)
+        self.assertIn('ActiveStartupConfirmed', thread_end)
+
+    def test_breastfeeding_phase_one_converges_on_one_reaction_pipeline(self):
+        service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
+        dialogue = (ROOT / 'Source/Scripts/MMENPCDrinkDialogue.psc').read_text()
+        narrator = (ROOT / 'Source/Scripts/MMEAlertsSkyrimNet.psc').read_text()
+
+        completion = service.split('Function CompleteBreastfeedingDrink(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('ClaimBreastfeedingCompletion(drinker, backend, threadID)', completion)
+        self.assertIn('MMEMilkBoost.ApplyMilkDrinkBonusForActor(drinker, 1, False, False)', completion)
+        self.assertIn('MMEArousalBridge.ApplyMilkDrinkArousalForActor(drinker, basicMilk, False)', completion)
+        self.assertIn('MMENPCDrinkDialogue.BuildDrinkReaction(drinker, basicMilk, isMilkMaid, milkAdded, arousalSent)', completion)
+        self.assertIn('MMEMilkDrinkEffects.PlayDrinkReaction(drinker, diagnostic)', completion)
+        self.assertIn('MMENPCDrinkDialogue.ShowBreastfeedingNotification(drinker, isMilkMaid, renderedReaction)', completion)
+        self.assertIn('MMEAlertsSkyrimNet.NarratePlayerMilkDrink(drinker, basicMilk, renderedReaction)', completion)
+        self.assertIn('MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, renderedReaction, False, isMilkMaid)', completion)
+        self.assertIn('semanticIntent == "CreateMilkMaid" || semanticIntent == "CreateMilkMaidSexLab"', completion)
+        self.assertNotIn('MMEDrinkAnimation.', completion)
+        self.assertIn('String renderedReaction = ""', narrator.split('Function NarratePlayerMilkDrink(', 1)[1].split('\n', 1)[0])
+
+        notification = dialogue.split('Function ShowBreastfeedingNotification(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('enablePlayerDrinkNotifications', notification)
+        self.assertIn('enableNPCDrinkNotifications', notification)
+        self.assertIn('enableNonMilkmaidDrinkNotifications', notification)
+
+    def test_skyrimnet_breastfeeding_action_has_configurable_loop_breaker(self):
+        service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
+        actions = (ROOT / 'Source/Scripts/MMESkyrimNetVoiceControls.psc').read_text()
+        mcm = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
+
+        completion = service.split('Function CompleteBreastfeedingDrink(', 1)[1].split('EndFunction', 1)[0]
+        action = actions.split('Function StartBreastfeedingMilkShare(', 1)[1].split('EndFunction', 1)[0]
+        remaining = actions.split('Float Function GetBreastfeedingActionCooldownRemaining(', 1)[1].split('EndFunction', 1)[0]
+        marker = actions.split('Function MarkBreastfeedingActionCooldown(', 1)[1].split('EndFunction', 1)[0]
+
+        self.assertIn('MMESkyrimNetVoiceControls.MarkBreastfeedingActionCooldown()', completion)
+        self.assertIn('GetBreastfeedingActionCooldownRemaining()', action)
+        self.assertIn('post-scene action cooldown active', action)
+        self.assertEqual(action.count('MarkBreastfeedingActionCooldown()'), 2)
+        self.assertIn('breastfeedingActionCooldown", 45.0', remaining)
+        self.assertIn('lastBreastfeedingActionRealTime', remaining)
+        self.assertIn('lastBreastfeedingActionRealTime', marker)
+        self.assertIn('Breastfeeding Action Cooldown', mcm)
+        self.assertIn('SetSliderDialogDefaultValue(45.0)', mcm)
+        self.assertIn('SetSliderDialogRange(5.0, 300.0)', mcm)
+        self.assertIn('breastfeedingActionCooldownMigration89', mcm)
+
+    def test_original_mme_sexlab_dialogue_is_observed_without_info_override(self):
+        service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
+        ending = service.split('Event OnNewMilkMaidSexLabEnding(', 1)[1].split('EndEvent', 1)[0]
+        self.assertIn('positions[0]', ending)
+        self.assertIn('positions[1]', ending)
+        self.assertIn('thread.Animation == straightAnimation', ending)
+        self.assertIn('thread.Animation == lesbianAnimation', ending)
+        self.assertNotIn('thread.HasTag("Breastfeeding")', ending)
+        self.assertIn('CompleteBreastfeedingDrink(completedSource, completedDrinker, "SexLab", threadID, completionIntent)', ending)
+        self.assertEqual(service.count('CompleteBreastfeedingDrink(milkSource, drinker, "OStim"'), 2)
+
+    def test_breastfeeding_scene_start_equip_remains_suppressed(self):
+        service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
+        tracker = (ROOT / 'Source/Scripts/MMEDrinkTracker.psc').read_text()
+        suppression = service.split('Bool Function ShouldSuppressBreastfeedingDrink(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('thread.HasTag("Breastfeeding")', suppression)
+        self.assertIn('GetbyRegistrar("zjBreastFeeding")', suppression)
+        self.assertIn('GetbyRegistrar("zjBreastFeedingVar")', suppression)
+        self.assertIn('breastfeedingService.ShouldSuppressBreastfeedingDrink(drinker)', tracker)
+
+    def test_breastfeeding_does_not_dispatch_a_cup_idle(self):
+        service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
+        ending = service.split('Event OnNewMilkMaidSexLabEnding(', 1)[1].split('EndEvent', 1)[0]
+        ended = service.split('Event OnSexLabBreastfeedingEnd(', 1)[1].split('EndEvent', 1)[0]
+        self.assertIn('StorageUtil.HasFloatValue(completedSource, "MME.MilkMaid.Level")', ending)
+        self.assertNotIn('RememberSexLabBreastfeedingAnimation(', ending)
+        self.assertNotIn('QueueBreastfeedingDrinkAnimation(', ending)
+        self.assertIn('ClearPendingSexLabBreastfeedingAnimation()', ended)
+        self.assertNotIn('QueueBreastfeedingDrinkAnimation(', ended)
+        self.assertEqual(service.count('QueueBreastfeedingDrinkAnimation(drinker, "OStim"'), 0)
+
+    def test_breastfeeding_animation_compatibility_hooks_are_inert(self):
+        service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
+        ordinary = (ROOT / 'Source/Scripts/MMEDrinkAnimation.psc').read_text()
+        queue = service.split('Function QueueBreastfeedingDrinkAnimation(', 1)[1].split('EndFunction', 1)[0]
+        callback = service.split('Event OnBreastfeedingDrinkAnimation(', 1)[1].split('EndEvent', 1)[0]
+        self.assertNotIn('ModEvent.', queue)
+        self.assertNotIn('MMEMinorAnimations.', queue)
+        self.assertNotIn('Utility.Wait', callback)
+        self.assertNotIn('MMEMinorAnimations.StartDrink(', callback)
+        self.assertNotIn('MMEMinorAnimations.Finish(', callback)
+        self.assertNotIn('RegisterForSingleUpdate', callback)
+        self.assertIn('MMEMinorAnimations.StartDrink(', ordinary)
+
+    def test_breastfeeding_animation_alarms_are_failure_only(self):
+        service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
+        alarm_lines = [line.strip() for line in service.splitlines() if 'MMELog.Alarm("[MME Extensions BF Animation]' in line]
+        self.assertGreater(len(alarm_lines), 0)
+        self.assertTrue(all('FAILURE:' in line for line in alarm_lines))
+
     def test_new_milkmaid_conversion_is_female_only_in_script_and_dialogue(self):
         source = (ROOT / 'Source/Scripts/MMENewMilkMaid.psc').read_text()
         self.assertIn('If candidateSex != 1', source)
@@ -259,18 +378,23 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('MME Lactacid conversion owned', lactacid_guard)
         self.assertNotIn('NarrateNPCMilkDrink', lactacid_guard)
         self.assertEqual(native_handler.count('MMEAlertsSkyrimNet.NarrateNPCMilkDrink'), 3)
-        self.assertIn('NarrateNPCMilkDrink(drinker, False, genericReaction, diagnosticTest)', native_handler)
-        self.assertIn('NarrateNPCMilkDrink(drinker, False, ordinaryReaction, diagnosticTest)', native_handler)
-        self.assertIn('NarrateNPCMilkDrink(drinker, False, renderedReaction, diagnosticTest)', native_handler)
+        self.assertIn('NarrateNPCMilkDrink(drinker, False, genericReaction, diagnosticTest, establishedMilkmaid)', native_handler)
+        self.assertIn('NarrateNPCMilkDrink(drinker, False, ordinaryReaction, diagnosticTest, False)', native_handler)
+        self.assertIn('NarrateNPCMilkDrink(drinker, False, renderedReaction, diagnosticTest, True)', native_handler)
         self.assertLess(native_handler.index('03 COMPLETE | ordinary adult'), native_handler.index('NarrateNPCMilkDrink(drinker, False, ordinaryReaction'))
-        self.assertIn('NarrateNPCMilkDrink(target, dialogueRequest, renderedReaction)', dialogue)
+        self.assertIn('NarrateNPCMilkDrink(target, dialogueRequest, renderedReaction, False, establishedMilkmaid)', dialogue)
         self.assertIn('Bool diagnosticTest = False', bridge)
+        self.assertIn('Bool establishedMilkmaid = False', bridge)
         self.assertIn('ResolveActorName(drinker, "The drinker")', narrator)
         self.assertIn('diagnosticTest ||', narrator)
         self.assertIn('If !diagnosticTest && last >= 0.0', narrator)
         self.assertIn('If !diagnosticTest\n            JsonUtil.SetFloatValue', narrator)
         self.assertEqual(narrator.count('SkyrimNetApi.DirectNarration('), 1)
         self.assertIn('short, humorous, suggestive, and playful reaction', narrator)
+        self.assertIn('If !establishedMilkmaid', narrator)
+        self.assertIn('is not a Milk Maid', narrator)
+        self.assertIn('did not add breast milk, breast fullness, breast weight, swelling, growth, leaking, or lactation', narrator)
+        self.assertIn('Do not imply or invent any of those effects.', narrator)
         self.assertIn('04 SKYRIM.NET DISPATCH', narrator)
         self.assertIn('05 SKYRIM.NET ACCEPTED', narrator)
         self.assertIn('Give Milk dialogue or globally detected adult NPC milk drinking', mcm)

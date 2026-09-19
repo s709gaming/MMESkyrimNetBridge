@@ -72,6 +72,30 @@ Function ShowNotification(Actor target, String renderedReaction) Global
     MMENPCDialog.TraceDialogueTiming("11E6 HUD notification returned", target)
 EndFunction
 
+; Breastfeeding has no consumed inventory item, but its verified completion
+; reuses the same JSON renderer. Keep player, Milkmaid NPC, and ordinary-adult
+; notification preferences independent.
+Function ShowBreastfeedingNotification(Actor target, Bool establishedMilkmaid, String renderedReaction) Global
+    If target == None
+        MMELog.Alarm("[MME Extensions BF Drink] FAILURE: notification received no drinker")
+        Return
+    EndIf
+    String setting = "enableNonMilkmaidDrinkNotifications"
+    If target == Game.GetPlayer()
+        setting = "enablePlayerDrinkNotifications"
+    ElseIf establishedMilkmaid
+        setting = "enableNPCDrinkNotifications"
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", setting, 1) != 1
+        Return
+    EndIf
+    If renderedReaction == ""
+        MMELog.Alarm("[MME Extensions BF Drink] FAILURE: notification received a blank rendered reaction")
+        Return
+    EndIf
+    Debug.Notification(renderedReaction)
+EndFunction
+
 String Function BuildDrinkReaction(Actor target, Form drinkItem, Bool establishedMilkmaid, Float milkAdded, Bool arousalSent) Global
     If target == None || drinkItem == None
         MMELog.Alarm("[MME Extensions Drink Reaction] FAILURE: reaction renderer received a missing actor or milk item")

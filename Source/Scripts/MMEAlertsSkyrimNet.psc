@@ -655,7 +655,7 @@ EndFunction
 ; Requests one actor-specific narration after a verified adult NPC milk drink.
 ; The explicit Troubleshoot route may bypass cooldown without changing the
 ; production timestamp, allowing consecutive male/female/Milkmaid validation.
-Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String renderedReaction = "", Bool diagnosticTest = False) Global
+Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String renderedReaction = "", Bool diagnosticTest = False, Bool establishedMilkmaid = False) Global
     ; Dialogue and native potion paths converge here after their own duplicate
     ; suppression. This function owns only narration gates and cooldown state.
     If !IsExtensionsEnabled()
@@ -716,6 +716,9 @@ Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String r
     If MMEAlertsController.AreArmsRestrained(drinker)
         content = "Immediate situation: " + renderedReaction + " " + actorName + " also has restrained arms. Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on " + actorName + " and only the effects actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
     EndIf
+    If !establishedMilkmaid
+        content += " Factual boundary: " + actorName + " is not a Milk Maid, and this drink did not add breast milk, breast fullness, breast weight, swelling, growth, leaking, or lactation. Do not imply or invent any of those effects."
+    EndIf
     If diagnosticTest
         MMELog.Status("[MME Extensions Global NPC Drink Test] 04 SKYRIM.NET DISPATCH | route=" + route + " | actor=" + actorName + " | cooldown bypassed")
     EndIf
@@ -746,7 +749,7 @@ Function ReportNPCDrinkNarrationTest(Bool diagnosticTest, String reportText) Glo
 EndFunction
 
 ; Requests an opt-in narration after a confirmed player milk drink.
-Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem) Global
+Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem, String renderedReaction = "") Global
     ; Chance is evaluated before the cooldown/API call. This keeps an ineligible
     ; random roll from consuming cooldown and preserves the opt-in default.
     If !IsExtensionsEnabled() || drinker != Game.GetPlayer() || drinkItem == None
@@ -801,9 +804,16 @@ Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem) Global
         drinkName = "some milk"
     EndIf
     String content = "The player just drank " + drinkName + ". Their breasts are becoming heavier and more sensitive. React creatively with playful, suggestive humor. Don't simply restate the event."
-    String restrainedContent = BuildRestrainedPlayerDrinkContent(drinker, drinkName)
-    If restrainedContent != ""
-        content = restrainedContent
+    If renderedReaction != ""
+        content = "Immediate situation: " + renderedReaction + " Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on the player and only the effects actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+        If MMEAlertsController.AreArmsRestrained(drinker)
+            content = "Immediate situation: " + renderedReaction + " The player also has restrained arms. Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on the player and only the effects actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+        EndIf
+    Else
+        String restrainedContent = BuildRestrainedPlayerDrinkContent(drinker, drinkName)
+        If restrainedContent != ""
+            content = restrainedContent
+        EndIf
     EndIf
     Int result = SkyrimNetApi.DirectNarration(content, None, None)
     If result == 0

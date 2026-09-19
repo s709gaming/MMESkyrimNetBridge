@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 project(
     MMEExtensions
-    VERSION 0.4.1
+    VERSION 0.5.0
     DESCRIPTION "Native lifecycle bridge for MME Extensions"
     LANGUAGES CXX
 )
@@ -18,9 +18,22 @@ option(ENABLE_SKYRIM_AE "Enable Skyrim AE support" ON)
 option(ENABLE_SKYRIM_VR "Enable Skyrim VR support" ON)
 set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
 
-# Build the pinned local CommonLibSSE-NG checkout and expose its plugin helper.
-add_subdirectory(extern/CommonLibSSE-NG EXCLUDE_FROM_ALL)
-include(extern/CommonLibSSE-NG/cmake/CommonLibSSE.cmake)
+# Pin the maintained alandtse lineage.  FetchContent makes clean builds
+# reproducible instead of silently using the ignored, legacy 3.7.0 checkout
+# that may happen to exist under extern/.
+include(FetchContent)
+FetchContent_Declare(
+    CommonLibSSE
+    GIT_REPOSITORY https://github.com/alandtse/CommonLibSSE-NG.git
+    GIT_TAG v8.3.0
+    GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(CommonLibSSE)
+
+# A source add_subdirectory does not currently expose the plugin helper.
+if(NOT COMMAND add_commonlibsse_plugin)
+    include(${commonlibsse_SOURCE_DIR}/cmake/CommonLibSSE.cmake)
+endif()
 
 # Address Library-based NG builds can support SE, AE, and VR in one DLL, while
 # the VR preset below proves that no desktop-only compile dependency leaked in.
@@ -37,7 +50,7 @@ target_compile_features(MMEExtensions PRIVATE cxx_std_23)
 target_precompile_headers(MMEExtensions PRIVATE include/PCH.h)
 
 if(MSVC)
-    target_compile_options(MMEExtensions PRIVATE /permissive- /W4 /WX)
+    target_compile_options(MMEExtensions PRIVATE /permissive- /Zc:preprocessor /W4 /WX)
 endif()
 
 # Put the finished DLL directly in a Skyrim/Vortex-compatible folder tree.

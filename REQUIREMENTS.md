@@ -67,7 +67,10 @@ Required by the MME Extensions CommonLibSSE-NG DLL.
 Tested on:
 
 **Skyrim SE / AE 1.6.1170**
-**1.7.99.0 NOT YET SUPPORTED**
+
+Built with CommonLibSSE-NG 8.3.0 for the current Skyrim 1.7.x runtime family,
+including the version-5 Address Library format. This path is build-supported
+but still needs an in-game validation pass on Skyrim 1.7.99/1.7.104.
 
 ---
 

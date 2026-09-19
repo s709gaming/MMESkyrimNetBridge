@@ -97,6 +97,7 @@ Int milkmaidCreatedNarrationCooldownOption
 Int milkmaidCreatedNarrationDiagnosticOption
 Int selfMilkingActionOption
 Int pairedMilkingActionOption
+Int breastfeedingActionCooldownOption
 Int selfMilkingActionDiagnosticOption
 Int pairedMilkingActionDiagnosticOption
 Int masterEnableOption
@@ -308,6 +309,7 @@ Function EnsureDefaults()
         JsonUtil.SetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingAction", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "breastfeedingActionCooldown", 45.0)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableOStimBreastfeeding", MMEOStimBreastfeeding.IsOStimDetected() as Int)
@@ -718,6 +720,7 @@ Function EnsureDefaults()
     If JsonUtil.GetIntValue(SettingsFile, "milkingActionsMigration63", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingAction", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "breastfeedingActionCooldown", 45.0)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "milkingActionsMigration63", 1)
@@ -892,6 +895,12 @@ Function EnsureDefaults()
     If JsonUtil.GetIntValue(SettingsFile, "milkMaidThoughtsTraceMigration88", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0)
         JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsTraceMigration88", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Adds a Skyrim.Net-only recursion guard without changing dialogue access.
+    If JsonUtil.GetIntValue(SettingsFile, "breastfeedingActionCooldownMigration89", 0) == 0
+        JsonUtil.SetFloatValue(SettingsFile, "breastfeedingActionCooldown", 45.0)
+        JsonUtil.SetIntValue(SettingsFile, "breastfeedingActionCooldownMigration89", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
     ; Preserve the user's former mirror choice while upgrading the output from a
@@ -1178,6 +1187,7 @@ Event OnPageReset(String page)
     milkmaidCreatedNarrationDiagnosticOption = -1
     selfMilkingActionOption = -1
     pairedMilkingActionOption = -1
+    breastfeedingActionCooldownOption = -1
     selfMilkingActionDiagnosticOption = -1
     pairedMilkingActionDiagnosticOption = -1
     masterEnableOption = -1
@@ -1420,6 +1430,11 @@ Event OnPageReset(String page)
         AddHeaderOption("Actions")
         selfMilkingActionOption = AddToggleOption("Allow Self-Milking Action", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingAction", 1) == 1)
         pairedMilkingActionOption = AddToggleOption("Allow Paired Milking Action", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) == 1)
+        Int breastfeedingCooldownFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) != 1
+            breastfeedingCooldownFlags = OPTION_FLAG_DISABLED
+        EndIf
+        breastfeedingActionCooldownOption = AddSliderOption("Breastfeeding Action Cooldown", JsonUtil.GetFloatValue(SettingsFile, "breastfeedingActionCooldown", 45.0), "{0} seconds", breastfeedingCooldownFlags)
         AddHeaderOption("AI Reactions")
         milkFullNarrationOption = AddToggleOption("Narrate Milk Full", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarration", 1) == 1)
         Int narrationFlags = OPTION_FLAG_NONE
@@ -1698,6 +1713,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Allow Skyrim.Net to start self-milking for a selected Milk Maid.")
     ElseIf option == pairedMilkingActionOption
         SetInfoText("Allow Skyrim.Net to start a milk-sharing scene with the selected source and the player.")
+    ElseIf option == breastfeedingActionCooldownOption
+        SetInfoText("Prevent Skyrim.Net from starting another breastfeeding action for this many real-time seconds. Dialogue breastfeeding remains available.")
     ElseIf option == npcMilkConsumptionDiagnosticOption
         SetInfoText("Report native NPC milk detection, Milkmaid validation, duplicates, and applied effects.")
     ElseIf option == npcDrinkNotificationsDiagnosticOption
@@ -2278,6 +2295,7 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", value)
         SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
     ElseIf option == npcMilkConsumptionDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", value)
@@ -2593,6 +2611,11 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(15.0)
         SetSliderDialogRange(15.0, 300.0)
         SetSliderDialogInterval(15.0)
+    ElseIf option == breastfeedingActionCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "breastfeedingActionCooldown", 45.0))
+        SetSliderDialogDefaultValue(45.0)
+        SetSliderDialogRange(5.0, 300.0)
+        SetSliderDialogInterval(5.0)
     ElseIf option == flatMilkBonusOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 1.0))
         SetSliderDialogDefaultValue(1.0)
@@ -2772,6 +2795,10 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
         (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
+    ElseIf option == breastfeedingActionCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "breastfeedingActionCooldown", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
     ElseIf option == flatMilkBonusOption
         JsonUtil.SetFloatValue(SettingsFile, "flatMilkBonus", value)
         JsonUtil.Save(SettingsFile, False)

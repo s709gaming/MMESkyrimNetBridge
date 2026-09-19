@@ -290,7 +290,7 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
         EndIf
         StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "complete effects disabled")
         ReportNPCDrink(diagnostic, diagnosticTest, "03 COMPLETE | effects disabled; reaction only")
-        MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, genericReaction, diagnosticTest)
+        MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, genericReaction, diagnosticTest, establishedMilkmaid)
         Return
     EndIf
 
@@ -305,7 +305,7 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
         EndIf
         StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "complete ordinary adult")
         ReportNPCDrink(diagnostic, diagnosticTest, "03 COMPLETE | ordinary adult | no MME milk gain")
-        MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, ordinaryReaction, diagnosticTest)
+        MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, ordinaryReaction, diagnosticTest, False)
         MMELog.Diagnostic("[MMEAlert NPC Drink] processed ordinary adult " + actorName + " | " + pluginName + ":" + localFormID)
         Return
     EndIf
@@ -329,7 +329,7 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
     EndIf
     StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "complete Milkmaid")
     ReportNPCDrink(diagnostic, diagnosticTest, "03 COMPLETE | Milkmaid | milk " + milkBefore + " -> " + milkAfter)
-    MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, renderedReaction, diagnosticTest)
+    MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, renderedReaction, diagnosticTest, True)
     MMELog.Diagnostic("[MMEAlert NPC Drink] processed " + actorName + " | " + pluginName + ":" + localFormID)
 EndFunction
 

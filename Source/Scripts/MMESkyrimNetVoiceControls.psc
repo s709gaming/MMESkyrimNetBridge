@@ -206,6 +206,32 @@ Function VoiceGiveMilkExecute(Actor candidate) Global
 EndFunction
 
 ; Skyrim.Net resolves its conversational second actor through the target parameter.
+Float Function GetBreastfeedingActionCooldownRemaining() Global
+    String settingsFile = "/MMEAlerts/Settings"
+    Float cooldown = JsonUtil.GetFloatValue(settingsFile, "breastfeedingActionCooldown", 45.0)
+    If cooldown < 5.0
+        cooldown = 5.0
+    ElseIf cooldown > 300.0
+        cooldown = 300.0
+    EndIf
+    Float now = Utility.GetCurrentRealTime()
+    Float last = JsonUtil.GetFloatValue(settingsFile, "lastBreastfeedingActionRealTime", -1.0)
+    If last < 0.0 || last > now
+        Return 0.0
+    EndIf
+    Float remaining = cooldown - (now - last)
+    If remaining < 0.0
+        Return 0.0
+    EndIf
+    Return remaining
+EndFunction
+
+Function MarkBreastfeedingActionCooldown() Global
+    String settingsFile = "/MMEAlerts/Settings"
+    JsonUtil.SetFloatValue(settingsFile, "lastBreastfeedingActionRealTime", Utility.GetCurrentRealTime())
+    JsonUtil.Save(settingsFile, False)
+EndFunction
+
 Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String semanticIntent = "speaker/source offers to target/drinker") Global
     ; Phase 1: validate action policy and both actor references before selecting
     ; a framework. The parameter contract is explicit source then drinker.
@@ -227,6 +253,14 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
         MMELog.Diagnostic("[MMEAlert SkyrimNet BF] rejected | MME Extensions or paired milking action disabled")
         If routeDiagnostic
             Debug.Notification("Skyrim.Net BF: rejected - action disabled")
+        EndIf
+        Return
+    EndIf
+    Float cooldownRemaining = GetBreastfeedingActionCooldownRemaining()
+    If cooldownRemaining > 0.0
+        MMELog.Diagnostic("[MMEAlert SkyrimNet BF] rejected | post-scene action cooldown active | remaining=" + (cooldownRemaining as Int) + "s")
+        If routeDiagnostic
+            Debug.Notification("Skyrim.Net BF: cooldown " + (cooldownRemaining as Int) + "s")
         EndIf
         Return
     EndIf
@@ -287,6 +321,9 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
             Debug.Notification("SN OStim Trace: calling shared StartBreastfeeding")
         EndIf
         Bool ostimStarted = ostimService.StartBreastfeeding(milkSource, drinker, routeDiagnostic, "Skyrim.Net", semanticIntent)
+        If ostimStarted
+            MarkBreastfeedingActionCooldown()
+        EndIf
         If routeDiagnostic
             If ostimStarted
                 Debug.Notification("Skyrim.Net BF: OStim breastfeeding started")
@@ -312,5 +349,8 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
         Return
     EndIf
     Bool sexLabStarted = service.StartSexLabBreastfeeding(milkSource, drinker, "Skyrim.Net")
+    If sexLabStarted
+        MarkBreastfeedingActionCooldown()
+    EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet BF] defensive SexLab result=" + sexLabStarted + " | milk source=" + milkSourceName + " | drinker=" + drinkerName)
 EndFunction

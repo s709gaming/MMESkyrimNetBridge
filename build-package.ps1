@@ -256,6 +256,15 @@ if (Test-Path -LiteralPath $pluginPath) {
     if ($LASTEXITCODE -ne 0) {
         throw "MMEAlert.esp Give Milk must have its own DIAL, parented INFO, and exactly one Hey there choice link."
     }
+    & python (Join-Path $PSScriptRoot "tools\restrict_new_milkmaid_dialogue_to_females.py") $pluginPath --check
+    if ($LASTEXITCODE -ne 0) {
+        throw "MMEAlert.esp New Milk Maid INFOs do not contain a safe GetIsSex(Female) dialogue condition."
+    }
+    $dialogueRepairProject = Join-Path $PSScriptRoot "build\mutagen-dialogue-repair\mutagen-dialogue-repair.csproj"
+    & dotnet run --project $dialogueRepairProject -- --check-female $pluginPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "MMEAlert.esp failed typed New Milk Maid CTDA validation."
+    }
     if (!$pluginText.Contains("MMEExt_OStimDialogueAvailable") -or
         $pluginText.Contains("::OStimDialogueAvailable_var")) {
         throw "MMEAlert.esp still uses the unreliable OStim quest-variable dialogue gate. Run the updated tools\AddMMEExtensionsOStimBreastfeedingDialogue.pas in SSEEdit and save the plugin before packaging."
