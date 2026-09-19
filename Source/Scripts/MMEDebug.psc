@@ -1236,7 +1236,7 @@ Function CompleteBreastfeedingDrink(Actor milkSource, Actor drinker, String back
         result += " | not Milk Maid"
     EndIf
     result += " | arousal +" + arousalAdded
-    String renderedReaction = MMENPCDrinkDialogue.BuildDrinkReaction(drinker, basicMilk, isMilkMaid, milkAdded, arousalSent)
+    String renderedReaction = MMENPCDrinkDialogue.BuildBreastfeedingReaction(milkSource, drinker, isMilkMaid, milkAdded, arousalSent)
     If renderedReaction == ""
         MMELog.Alarm("[MME Extensions BF Drink] FAILURE: verified " + backend + " completion produced a blank JSON reaction")
         Return

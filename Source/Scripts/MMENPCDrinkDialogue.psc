@@ -96,6 +96,55 @@ Function ShowBreastfeedingNotification(Actor target, Bool establishedMilkmaid, S
     Debug.Notification(renderedReaction)
 EndFunction
 
+; Breastfeeding has a real actor source rather than a consumed inventory item.
+; Keep that fact first, then add one short outcome-aware JSON flavor line. A
+; broken optional pool degrades to the factual anchor instead of suppressing
+; the HUD notification or Skyrim.Net handoff.
+String Function BuildBreastfeedingReaction(Actor milkSource, Actor drinker, Bool establishedMilkmaid, Float milkAdded, Bool arousalSent) Global
+    If milkSource == None || drinker == None || milkSource == drinker
+        MMELog.Alarm("[MME Extensions BF Drink] FAILURE: breastfeeding reaction renderer received invalid source/drinker actors")
+        Return ""
+    EndIf
+
+    String anchor = MMEDrinkTracker.GetActorName(drinker) + " sucks on " + MMEDrinkTracker.GetActorName(milkSource) + "'s tits."
+    ActorBase baseInfo = drinker.GetLeveledActorBase()
+    If baseInfo == None
+        MMELog.Alarm("[MME Extensions BF Drink] FAILURE: breastfeeding flavor could not resolve the drinker's ActorBase; using factual anchor")
+        Return anchor
+    EndIf
+
+    Int sex = baseInfo.GetSex()
+    String pool = ".breastfeeding_female_generic"
+    If sex == 0 && arousalSent
+        pool = ".breastfeeding_male_aroused"
+    ElseIf sex == 0
+        pool = ".breastfeeding_male_generic"
+    ElseIf establishedMilkmaid && milkAdded > 0.0 && arousalSent
+        pool = ".breastfeeding_female_milk_arousal"
+    ElseIf establishedMilkmaid && milkAdded > 0.0
+        pool = ".breastfeeding_female_milk"
+    ElseIf arousalSent
+        pool = ".breastfeeding_female_aroused"
+    EndIf
+
+    String configFile = "/MMEAlerts/NonMilkmaidDrinkNotifications"
+    If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
+        MMELog.Alarm("[MME Extensions BF Drink] FAILURE: breastfeeding flavor JSON is missing or malformed; using factual anchor")
+        Return anchor
+    EndIf
+    String[] entries = JsonUtil.PathStringElements(configFile, pool)
+    If entries.Length == 0
+        MMELog.Alarm("[MME Extensions BF Drink] FAILURE: breastfeeding flavor JSON pool is empty: " + pool + "; using factual anchor")
+        Return anchor
+    EndIf
+    String flavor = entries[Utility.RandomInt(0, entries.Length - 1)]
+    If flavor == ""
+        MMELog.Alarm("[MME Extensions BF Drink] FAILURE: breastfeeding flavor JSON returned a blank entry: " + pool + "; using factual anchor")
+        Return anchor
+    EndIf
+    Return anchor + " " + flavor
+EndFunction
+
 String Function BuildDrinkReaction(Actor target, Form drinkItem, Bool establishedMilkmaid, Float milkAdded, Bool arousalSent) Global
     If target == None || drinkItem == None
         MMELog.Alarm("[MME Extensions Drink Reaction] FAILURE: reaction renderer received a missing actor or milk item")

@@ -49,7 +49,8 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('ClaimBreastfeedingCompletion(drinker, backend, threadID)', completion)
         self.assertIn('MMEMilkBoost.ApplyMilkDrinkBonusForActor(drinker, 1, False, False)', completion)
         self.assertIn('MMEArousalBridge.ApplyMilkDrinkArousalForActor(drinker, basicMilk, False)', completion)
-        self.assertIn('MMENPCDrinkDialogue.BuildDrinkReaction(drinker, basicMilk, isMilkMaid, milkAdded, arousalSent)', completion)
+        self.assertIn('MMENPCDrinkDialogue.BuildBreastfeedingReaction(milkSource, drinker, isMilkMaid, milkAdded, arousalSent)', completion)
+        self.assertNotIn('MMENPCDrinkDialogue.BuildDrinkReaction(', completion)
         self.assertIn('MMEMilkDrinkEffects.PlayDrinkReaction(drinker, diagnostic)', completion)
         self.assertIn('MMENPCDrinkDialogue.ShowBreastfeedingNotification(drinker, isMilkMaid, renderedReaction)', completion)
         self.assertIn('MMEAlertsSkyrimNet.NarratePlayerMilkDrink(drinker, basicMilk, renderedReaction)', completion)
@@ -62,6 +63,27 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('enablePlayerDrinkNotifications', notification)
         self.assertIn('enableNPCDrinkNotifications', notification)
         self.assertIn('enableNonMilkmaidDrinkNotifications', notification)
+
+        renderer = dialogue.split('String Function BuildBreastfeedingReaction(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('GetActorName(drinker) + " sucks on " + MMEDrinkTracker.GetActorName(milkSource) + "\'s tits."', renderer)
+        self.assertIn('Return anchor + " " + flavor', renderer)
+        self.assertIn('using factual anchor', renderer)
+        self.assertIn('Utility.RandomInt(0, entries.Length - 1)', renderer)
+        self.assertLess(renderer.index('If sex == 0'), renderer.index('establishedMilkmaid && milkAdded > 0.0'))
+
+        pools = json.loads((ROOT / 'SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json').read_text())
+        breastfeeding_pools = [
+            'breastfeeding_male_generic',
+            'breastfeeding_male_aroused',
+            'breastfeeding_female_generic',
+            'breastfeeding_female_aroused',
+            'breastfeeding_female_milk',
+            'breastfeeding_female_milk_arousal',
+        ]
+        for pool_name in breastfeeding_pools:
+            self.assertGreaterEqual(len(pools[pool_name]), 5)
+            self.assertTrue(all(entry.strip() for entry in pools[pool_name]))
+            self.assertTrue(all('Milk, Dilute' not in entry for entry in pools[pool_name]))
 
     def test_skyrimnet_breastfeeding_action_has_configurable_loop_breaker(self):
         service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
@@ -337,7 +359,8 @@ class ServiceTests(unittest.TestCase):
         self.assertNotIn('{Actor}', config)
         self.assertNotIn('{Milk}', config)
         pools = json.loads(config)
-        self.assertEqual(set(pools), {'male_generic', 'female_generic', 'male_aroused', 'female_aroused', 'female_milk', 'female_milk_arousal'})
+        ordinary_pools = {'male_generic', 'female_generic', 'male_aroused', 'female_aroused', 'female_milk', 'female_milk_arousal'}
+        self.assertTrue(ordinary_pools.issubset(set(pools)))
         for pool, messages in pools.items():
             with self.subTest(pool=pool):
                 self.assertEqual(len(messages), 6)
