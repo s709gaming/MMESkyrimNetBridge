@@ -13,6 +13,8 @@ from restrict_new_milkmaid_dialogue_to_females import patch_plugin as patch_fema
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = (ROOT / 'Source/Scripts/MMEBlacksmithDialogue.psc').read_text()
+SKYRIMNET_PLUGIN_ID = 's709gaming.mme-extensions'
+SKYRIMNET_PLUGIN = ROOT / 'SkyrimNetPlugin' / SKYRIMNET_PLUGIN_ID
 
 
 class ServiceTests(unittest.TestCase):
@@ -108,7 +110,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('breastfeedingActionCooldownMigration89', mcm)
 
     def test_skyrimnet_give_milk_action_supports_any_actor_pair(self):
-        action_yaml = (ROOT / 'SkyrimNetActions/mme_give_milk_to_actor.yaml').read_text()
+        action_yaml = (SKYRIMNET_PLUGIN / 'actions/givemilktoactor.yaml').read_text()
         controller = (ROOT / 'Source/Scripts/MMEAlertsController.psc').read_text()
         actions = (ROOT / 'Source/Scripts/MMESkyrimNetVoiceControls.psc').read_text()
         transaction = (ROOT / 'Source/Scripts/MMEActorDrinkTransaction.psc').read_text()
@@ -153,7 +155,40 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('Give Milk Action Diagnostic', mcm)
         self.assertIn('actorDrinkMigration117', mcm)
         self.assertIn('MMEActorDrinkTransaction', build)
-        self.assertIn('mme_give_milk_to_actor.yaml', build)
+        self.assertIn('givemilktoactor.yaml', build)
+
+    def test_skyrimnet_beta25_external_plugin_contract(self):
+        manifest = json.loads((SKYRIMNET_PLUGIN / 'manifest.json').read_text())
+        self.assertEqual(manifest['id'], SKYRIMNET_PLUGIN_ID)
+        self.assertEqual(manifest['type'], 'bundle')
+        self.assertEqual(manifest['version'].count('.'), 2)
+        self.assertEqual(manifest['min_skyrimnet_version'], '0.25.0')
+        self.assertTrue(manifest['nsfw'])
+        self.assertEqual(manifest['mods'][0]['file'], 'MMEAlert.esp')
+        self.assertTrue(manifest['mods'][0]['required'])
+
+        actions = sorted((SKYRIMNET_PLUGIN / 'actions').glob('*.yaml'))
+        self.assertEqual(len(actions), 3)
+        for action in actions:
+            name_line = next(line for line in action.read_text().splitlines() if line.startswith('name:'))
+            action_name = name_line.split(':', 1)[1].strip().strip('"').strip("'")
+            self.assertEqual(action.stem.casefold(), action_name.casefold())
+
+        expected_prompts = {
+            'mme_wearer_self_comment.prompt',
+            'submodules/character_bio/0260_mme_extensions_milkmaid.prompt',
+            'submodules/user_final_instructions/0950_mme_extensions_breastfeeding.prompt',
+        }
+        actual_prompts = {
+            path.relative_to(SKYRIMNET_PLUGIN / 'prompts').as_posix()
+            for path in (SKYRIMNET_PLUGIN / 'prompts').rglob('*.prompt')
+        }
+        self.assertEqual(actual_prompts, expected_prompts)
+
+        build = (ROOT / 'build-package.ps1').read_text()
+        self.assertIn('SKSE\\Plugins\\SkyrimNet\\external', build)
+        self.assertIn('min_skyrimnet_version 0.25.0', build)
+        self.assertIn('Transitional Beta 24 compatibility', build)
 
     def test_original_mme_sexlab_dialogue_is_observed_without_info_override(self):
         service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
