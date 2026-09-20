@@ -150,9 +150,9 @@ EndFunction
 ; real-time cooldown before entering the latent inventory/animation transaction.
 Float Function GetGiveMilkActionCooldownRemaining() Global
     String settingsFile = "/MMEAlerts/Settings"
-    Float cooldown = JsonUtil.GetFloatValue(settingsFile, "giveMilkActionCooldown", 45.0)
-    If cooldown < 5.0
-        cooldown = 5.0
+    Float cooldown = JsonUtil.GetFloatValue(settingsFile, "giveMilkActionCooldown", 0.0)
+    If cooldown < 0.0
+        cooldown = 0.0
     ElseIf cooldown > 300.0
         cooldown = 300.0
     EndIf

@@ -1216,7 +1216,7 @@ Function CompleteBreastfeedingDrink(Actor milkSource, Actor drinker, String back
     Bool arousalSent = MMEArousalBridge.ApplyMilkDrinkArousalForActor(drinker, basicMilk, False)
     Float arousalAdded = 0.0
     If arousalSent
-        arousalAdded = JsonUtil.GetFloatValue(configFile, "milkDrinkArousal", 10.0)
+        arousalAdded = JsonUtil.GetFloatValue(configFile, "milkDrinkArousal", 20.0)
         If arousalAdded < 0.0
             arousalAdded = 0.0
         ElseIf arousalAdded > 100.0

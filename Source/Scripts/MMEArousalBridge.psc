@@ -53,7 +53,7 @@ Bool Function ApplyConfiguredMilkArousalForActor(Actor target, String sourceLabe
         Return False
     EndIf
 
-    Float configuredAmount = JsonUtil.GetFloatValue(settingsFile, "milkDrinkArousal", 10.0)
+    Float configuredAmount = JsonUtil.GetFloatValue(settingsFile, "milkDrinkArousal", 20.0)
     Return ApplyArousalAmountForActor(target, configuredAmount, sourceLabel, showDiagnostic)
 EndFunction
 

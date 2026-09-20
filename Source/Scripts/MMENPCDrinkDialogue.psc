@@ -43,9 +43,9 @@ String Function ApplyPostDrink(Actor target, Form drinkItem, Bool diagnostic = F
         Return ""
     EndIf
     Int sex = baseInfo.GetSex()
-    Float amount = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "nonMilkmaidFemaleArousal", 10.0)
+    Float amount = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "nonMilkmaidFemaleArousal", 20.0)
     If sex == 0
-        amount = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "nonMilkmaidMaleArousal", 10.0)
+        amount = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "nonMilkmaidMaleArousal", 20.0)
     EndIf
     MMENPCDialog.TraceDialogueTiming("11A non-Milkmaid arousal dispatch", target)
     Bool arousalSent = MMEArousalBridge.ApplyArousalAmountForActor(target, amount, "drank " + drinkItem.GetName(), diagnostic)

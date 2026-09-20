@@ -133,7 +133,12 @@ class ServiceTests(unittest.TestCase):
         self.assertLess(policy.index('MarkGiveMilkActionCooldown()'), policy.index('MMEActorDrinkTransaction.GiveDrink'))
         self.assertIn('MMEActorDrinkTransaction.GiveDrink(giver, drinker, diagnostic)', policy)
         cooldown = actions.split('Float Function GetGiveMilkActionCooldownRemaining(', 1)[1].split('EndFunction', 1)[0]
-        self.assertIn('giveMilkActionCooldown", 45.0', cooldown)
+        self.assertIn('giveMilkActionCooldown", 0.0', cooldown)
+        self.assertIn('If cooldown < 0.0', cooldown)
+        self.assertIn('drinkBalanceDefaultsMigration118', mcm)
+        self.assertIn('milkDrinkArousal", 20.0', mcm)
+        self.assertIn('nonMilkmaidFemaleArousal", 20.0', mcm)
+        self.assertIn('nonMilkmaidMaleArousal", 20.0', mcm)
         self.assertIn('lastGiveMilkActionRealTime', cooldown)
 
         self.assertIn('Game.GetFormFromFile(0x003534, "HearthFires.esm")', transaction)

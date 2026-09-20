@@ -315,7 +315,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
         JsonUtil.SetFloatValue(SettingsFile, "breastfeedingActionCooldown", 45.0)
         JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkAction", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "giveMilkActionCooldown", 45.0)
+        JsonUtil.SetFloatValue(SettingsFile, "giveMilkActionCooldown", 0.0)
         JsonUtil.SetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0)
@@ -341,7 +341,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkArousal", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 10.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 20.0)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0)
@@ -572,7 +572,7 @@ Function EnsureDefaults()
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "arousalIntegrationMigration27", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkArousal", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 10.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 20.0)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 1)
         JsonUtil.SetIntValue(SettingsFile, "arousalIntegrationMigration27", 1)
         JsonUtil.Save(SettingsFile, False)
@@ -1052,9 +1052,9 @@ Function EnsureDefaults()
     ; These settings only govern eligible adult non-Milkmaid receivers.
     If JsonUtil.GetIntValue(SettingsFile, "universalNPCDrinkMigration115", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableNonMilkmaidFemaleDrinking", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 10.0)
+        JsonUtil.SetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 20.0)
         JsonUtil.SetIntValue(SettingsFile, "enableNonMilkmaidMaleDrinking", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", 10.0)
+        JsonUtil.SetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", 20.0)
         JsonUtil.SetIntValue(SettingsFile, "enableNonMilkmaidDrinkNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "universalNPCDrinkMigration115", 1)
         JsonUtil.Save(SettingsFile, False)
@@ -1063,7 +1063,7 @@ Function EnsureDefaults()
     ; cooldown is independent from drink narration and breastfeeding actions.
     If JsonUtil.GetIntValue(SettingsFile, "giveMilkActionMigration116", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkAction", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "giveMilkActionCooldown", 45.0)
+        JsonUtil.SetFloatValue(SettingsFile, "giveMilkActionCooldown", 0.0)
         JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "giveMilkActionMigration116", 1)
         JsonUtil.Save(SettingsFile, False)
@@ -1074,6 +1074,24 @@ Function EnsureDefaults()
     If JsonUtil.GetIntValue(SettingsFile, "actorDrinkMigration117", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", 1)
         JsonUtil.SetIntValue(SettingsFile, "actorDrinkMigration117", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Adopt the quieter repeat-action policy and stronger arousal defaults once,
+    ; without overwriting values a player already customized away from the old defaults.
+    If JsonUtil.GetIntValue(SettingsFile, "drinkBalanceDefaultsMigration118", 0) == 0
+        If JsonUtil.GetFloatValue(SettingsFile, "giveMilkActionCooldown", 45.0) == 45.0
+            JsonUtil.SetFloatValue(SettingsFile, "giveMilkActionCooldown", 0.0)
+        EndIf
+        If JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 10.0) == 10.0
+            JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 20.0)
+        EndIf
+        If JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 10.0) == 10.0
+            JsonUtil.SetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 20.0)
+        EndIf
+        If JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", 10.0) == 10.0
+            JsonUtil.SetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", 20.0)
+        EndIf
+        JsonUtil.SetIntValue(SettingsFile, "drinkBalanceDefaultsMigration118", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
 EndFunction
@@ -1338,9 +1356,9 @@ Event OnPageReset(String page)
         playerDrinkNotificationsOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1) == 1)
         AddHeaderOption("Non-Milkmaid Drinking")
         nonMilkmaidFemaleDrinkingOption = AddToggleOption("Allow Adult Women", JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidFemaleDrinking", 1) == 1)
-        nonMilkmaidFemaleArousalOption = AddSliderOption("Women Arousal Per Drink", JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 10.0), "+{0}")
+        nonMilkmaidFemaleArousalOption = AddSliderOption("Women Arousal Per Drink", JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 20.0), "+{0}")
         nonMilkmaidMaleDrinkingOption = AddToggleOption("Allow Adult Men", JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidMaleDrinking", 1) == 1)
-        nonMilkmaidMaleArousalOption = AddSliderOption("Men Arousal Per Drink", JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", 10.0), "+{0}")
+        nonMilkmaidMaleArousalOption = AddSliderOption("Men Arousal Per Drink", JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", 20.0), "+{0}")
         nonMilkmaidDrinkNotificationsOption = AddToggleOption("Flavor Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidDrinkNotifications", 1) == 1)
         AddHeaderOption("Easy Mode")
         giveMilkEasyModeOption = AddToggleOption("Free Jug for Give Milk", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1) == 1)
@@ -1385,7 +1403,7 @@ Event OnPageReset(String page)
         If JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkArousal", 1) != 1
             arousalFlags = OPTION_FLAG_DISABLED
         EndIf
-        milkDrinkArousalAmountOption = AddSliderOption("Arousal Per Milk", JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 10.0), "+{0}", arousalFlags)
+        milkDrinkArousalAmountOption = AddSliderOption("Arousal Per Milk", JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 20.0), "+{0}", arousalFlags)
         Return
     EndIf
     If page == "Armor"
@@ -1470,7 +1488,7 @@ Event OnPageReset(String page)
         If JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkAction", 1) != 1
             giveMilkCooldownFlags = OPTION_FLAG_DISABLED
         EndIf
-        giveMilkActionCooldownOption = AddSliderOption("Give Milk Action Cooldown", JsonUtil.GetFloatValue(SettingsFile, "giveMilkActionCooldown", 45.0), "{0} seconds", giveMilkCooldownFlags)
+        giveMilkActionCooldownOption = AddSliderOption("Give Milk Action Cooldown", JsonUtil.GetFloatValue(SettingsFile, "giveMilkActionCooldown", 0.0), "{0} seconds", giveMilkCooldownFlags)
         AddHeaderOption("AI Reactions")
         milkFullNarrationOption = AddToggleOption("Narrate Milk Full", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarration", 1) == 1)
         Int narrationFlags = OPTION_FLAG_NONE
@@ -2676,9 +2694,9 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(5.0, 300.0)
         SetSliderDialogInterval(5.0)
     ElseIf option == giveMilkActionCooldownOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "giveMilkActionCooldown", 45.0))
-        SetSliderDialogDefaultValue(45.0)
-        SetSliderDialogRange(5.0, 300.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "giveMilkActionCooldown", 0.0))
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0.0, 300.0)
         SetSliderDialogInterval(5.0)
     ElseIf option == flatMilkBonusOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 1.0))
@@ -2691,18 +2709,18 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(0.0, 2.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == milkDrinkArousalAmountOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 10.0))
-        SetSliderDialogDefaultValue(10.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 20.0))
+        SetSliderDialogDefaultValue(20.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == nonMilkmaidFemaleArousalOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 10.0))
-        SetSliderDialogDefaultValue(10.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 20.0))
+        SetSliderDialogDefaultValue(20.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == nonMilkmaidMaleArousalOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", 10.0))
-        SetSliderDialogDefaultValue(10.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", 20.0))
+        SetSliderDialogDefaultValue(20.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == milkFullNarrationCooldownOption
