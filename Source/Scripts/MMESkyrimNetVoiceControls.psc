@@ -227,6 +227,51 @@ Function GivePlayerMilkToSpeaker(Actor target) Global
     MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] transaction complete | success=" + success + " | speaker/drinker=" + target)
 EndFunction
 
+; Generalized successor to GivePlayerMilkToSpeaker. Keep the legacy callback
+; above for established saves, while new YAML supplies speaker=giver and a
+; selected nearby actor=drinker.
+Function GiveMilkToActor(Actor giver, Actor drinker) Global
+    String settingsFile = "/MMEAlerts/Settings"
+    Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableGiveMilkActionDiagnostic", 0) == 1
+    If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue(settingsFile, "enableGiveMilkAction", 1) != 1
+        If diagnostic
+            Debug.Notification("Actor Give Drink: rejected - action disabled")
+        EndIf
+        Return
+    EndIf
+
+    ; Reject a bad Skyrim.Net role mapping before claiming the shared cooldown.
+    ; GiveDrink repeats these checks defensively after acquiring its actor locks.
+    If giver == None || drinker == None || giver == drinker || !MMEActorDrinkTransaction.IsAvailableAdult(giver) || !MMEActorDrinkTransaction.IsAvailableAdult(drinker)
+        MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] invalid actor mapping | giver=" + giver + " | drinker=" + drinker)
+        If diagnostic
+            Debug.Notification("Actor Give Drink: rejected - invalid participants")
+        EndIf
+        Return
+    EndIf
+
+    Float cooldownRemaining = GetGiveMilkActionCooldownRemaining()
+    If cooldownRemaining > 0.0
+        MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] actor action cooldown active | remaining=" + (cooldownRemaining as Int) + "s")
+        If diagnostic
+            Debug.Notification("Actor Give Drink: cooldown " + (cooldownRemaining as Int) + "s")
+        EndIf
+        Return
+    EndIf
+
+    ; Claim before entering the latent inventory and animation transaction.
+    MarkGiveMilkActionCooldown()
+    Bool success = MMEActorDrinkTransaction.GiveDrink(giver, drinker, diagnostic)
+    If diagnostic
+        If success
+            Debug.Notification("Actor Give Drink: milk consumed")
+        Else
+            Debug.Notification("Actor Give Drink: transaction failed; see preceding reason")
+        EndIf
+    EndIf
+    MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] actor transaction complete | success=" + success + " | giver=" + giver + " | drinker=" + drinker)
+EndFunction
+
 ; Legacy dynamically registered prototype retained for save/callback
 ; compatibility. Current packages use the YAML quest action above.
 Function RegisterGiveMilkAction() Global

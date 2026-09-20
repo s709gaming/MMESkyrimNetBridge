@@ -123,6 +123,7 @@ $paths = @(
     @{ Path = (Join-Path $GameDataPath "Scripts\MMEAlertsPlayerEffect.pex"); Label = "Script"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "Scripts\MMEAlertsQuickTest.pex"); Label = "Script"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "Scripts\MMEAlertsSkyrimNet.pex"); Label = "Script"; IsDir = $false },
+    @{ Path = (Join-Path $GameDataPath "Scripts\MMEActorDrinkTransaction.pex"); Label = "Script"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "Scripts\MMEArousalBridge.pex"); Label = "Script"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "Scripts\MMEDebug.pex"); Label = "Script"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "Scripts\MMEDrinkTracker.pex"); Label = "Script"; IsDir = $false },

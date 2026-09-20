@@ -100,6 +100,7 @@ Int pairedMilkingActionOption
 Int breastfeedingActionCooldownOption
 Int giveMilkActionOption
 Int giveMilkActionCooldownOption
+Int actorDrinkMilkRemovalOption
 Int selfMilkingActionDiagnosticOption
 Int pairedMilkingActionDiagnosticOption
 Int giveMilkActionDiagnosticOption
@@ -315,6 +316,7 @@ Function EnsureDefaults()
         JsonUtil.SetFloatValue(SettingsFile, "breastfeedingActionCooldown", 45.0)
         JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkAction", 1)
         JsonUtil.SetFloatValue(SettingsFile, "giveMilkActionCooldown", 45.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkActionDiagnostic", 0)
@@ -1066,6 +1068,14 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "giveMilkActionMigration116", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Generalizes Give Milk to speaker/target actor pairs. The HearthFires Jug
+    ; remains the universal baseline; confirmed Milkmaid givers may fund it
+    ; from one unit of MilkCurrent with transactional rollback on failure.
+    If JsonUtil.GetIntValue(SettingsFile, "actorDrinkMigration117", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", 1)
+        JsonUtil.SetIntValue(SettingsFile, "actorDrinkMigration117", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1205,6 +1215,7 @@ Event OnPageReset(String page)
     breastfeedingActionCooldownOption = -1
     giveMilkActionOption = -1
     giveMilkActionCooldownOption = -1
+    actorDrinkMilkRemovalOption = -1
     selfMilkingActionDiagnosticOption = -1
     pairedMilkingActionDiagnosticOption = -1
     giveMilkActionDiagnosticOption = -1
@@ -1448,7 +1459,8 @@ Event OnPageReset(String page)
         AddHeaderOption("Actions")
         selfMilkingActionOption = AddToggleOption("Allow Self-Milking Action", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingAction", 1) == 1)
         pairedMilkingActionOption = AddToggleOption("Allow Paired Milking Action", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) == 1)
-        giveMilkActionOption = AddToggleOption("Allow Give Milk Action", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkAction", 1) == 1)
+        giveMilkActionOption = AddToggleOption("Allow Actor Give Drink Action", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkAction", 1) == 1)
+        actorDrinkMilkRemovalOption = AddToggleOption("Milkmaid Giver Spends Milk", JsonUtil.GetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", 1) == 1)
         Int breastfeedingCooldownFlags = OPTION_FLAG_NONE
         If JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) != 1
             breastfeedingCooldownFlags = OPTION_FLAG_DISABLED
@@ -1741,7 +1753,9 @@ Event OnOptionHighlight(Int option)
     ElseIf option == breastfeedingActionCooldownOption
         SetInfoText("Prevent Skyrim.Net from starting another breastfeeding action for this many real-time seconds. Dialogue breastfeeding remains available.")
     ElseIf option == giveMilkActionOption
-        SetInfoText("Allow Skyrim.Net to give one player-owned milk item to the speaking adult NPC, who immediately drinks it without opening dialogue.")
+        SetInfoText("Allow a speaking adult NPC or the player to give a selected nearby adult a HearthFires Jug of Milk. Either role may be the player.")
+    ElseIf option == actorDrinkMilkRemovalOption
+        SetInfoText("When the giver is a confirmed MME Milkmaid with at least one stored milk, spend one milk to fund the jug. Failed transactions restore the deducted milk; other givers receive the baseline free jug.")
     ElseIf option == giveMilkActionCooldownOption
         SetInfoText("Prevent Skyrim.Net from starting another Give Milk action for this many real-time seconds. Normal Give Milk dialogue remains available.")
     ElseIf option == npcMilkConsumptionDiagnosticOption
@@ -2331,6 +2345,11 @@ Event OnOptionSelect(Int option)
         JsonUtil.Save(SettingsFile, False)
         SetToggleOptionValue(option, value == 1)
         ForcePageReset()
+    ElseIf option == actorDrinkMilkRemovalOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
     ElseIf option == npcMilkConsumptionDiagnosticOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", value)

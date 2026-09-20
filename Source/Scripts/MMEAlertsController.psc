@@ -224,6 +224,14 @@ Function GivePlayerMilkToSpeaker(Actor target)
     MMESkyrimNetVoiceControls.GivePlayerMilkToSpeaker(target)
 EndFunction
 
+; General action contract: the conversational speaker gives the selected actor
+; a drink. Either role may be the player; the backend normalizes all four
+; player/NPC combinations and rejects self-targeting.
+Function GiveMilkToActor(Actor giver, Actor drinker)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] actor action selected | giver=" + giver + " | drinker=" + drinker)
+    MMESkyrimNetVoiceControls.GiveMilkToActor(giver, drinker)
+EndFunction
+
 Function StartBreastfeedingMilkShare(Actor milkSource, Actor target)
     MMELog.Diagnostic("[MMEAlert SkyrimNet BF] dedicated action selected | semantic intent=speaker offers breast to target | speaker/source=" + milkSource + " | target/drinker=" + target)
     MMESkyrimNetVoiceControls.StartBreastfeedingMilkShare(milkSource, target, "speaker/source=" + MMEOStimBreastfeeding.GetActorName(milkSource) + " | target/drinker=" + MMEOStimBreastfeeding.GetActorName(target))
