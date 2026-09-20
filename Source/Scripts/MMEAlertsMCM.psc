@@ -200,7 +200,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 117
+    Return 118
 EndFunction
 
 Function SetPageNames()
@@ -1477,7 +1477,7 @@ Event OnPageReset(String page)
         AddHeaderOption("Actions")
         selfMilkingActionOption = AddToggleOption("Allow Self-Milking Action", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingAction", 1) == 1)
         pairedMilkingActionOption = AddToggleOption("Allow Paired Milking Action", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) == 1)
-        giveMilkActionOption = AddToggleOption("Allow Actor Give Drink Action", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkAction", 1) == 1)
+        giveMilkActionOption = AddToggleOption("Allow Give-and-Drink Actions", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkAction", 1) == 1)
         actorDrinkMilkRemovalOption = AddToggleOption("Milkmaid Giver Spends Milk", JsonUtil.GetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", 1) == 1)
         Int breastfeedingCooldownFlags = OPTION_FLAG_NONE
         If JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) != 1
@@ -1771,7 +1771,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == breastfeedingActionCooldownOption
         SetInfoText("Prevent Skyrim.Net from starting another breastfeeding action for this many real-time seconds. Dialogue breastfeeding remains available.")
     ElseIf option == giveMilkActionOption
-        SetInfoText("Allow a speaking adult NPC or the player to give a selected nearby adult a HearthFires Jug of Milk. Either role may be the player.")
+        SetInfoText("Allow three explicit Skyrim.Net routes: player gives to speaker to drink, speaker gives to player to drink, or speaker gives to another NPC to drink.")
     ElseIf option == actorDrinkMilkRemovalOption
         SetInfoText("When the giver is a confirmed MME Milkmaid with at least one stored milk, spend one milk to fund the jug. Failed transactions restore the deducted milk; other givers receive the baseline free jug.")
     ElseIf option == giveMilkActionCooldownOption

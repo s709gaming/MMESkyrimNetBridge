@@ -1,0 +1,19 @@
+name: PlayerGivesMilkToSpeakerToDrink
+label: Player gives milk for speaker to drink
+description: "Use exactly when the player gives milk to the speaking NPC and the speaking NPC immediately drinks it. The player is always the giver and the speaker is always the drinker. This is a complete give-and-drink action, not an inventory gift: the speaker consumes the milk during the action. Do not reverse the participants, select another receiver, merely narrate a transfer, narrate a second transfer, or invoke another milk-drinking action."
+questEditorId: MMEAlertDebugQuest
+scriptName: MMEAlertsController
+executionFunctionName: PlayerGivesMilkToSpeakerToDrink
+defaultPriority: 8
+parameterMapping:
+  - type: speaker
+    name: drinker
+    description: the speaking adult NPC who receives the player's milk and immediately drinks it
+eligibilityRules:
+  - conditions:
+      - decoratorName: "is_in_combat"
+        arguments: ["currentActor"]
+        comparisonOperator: "=="
+        expectedValue: false
+    logicalOperator: "AND"
+    required: true

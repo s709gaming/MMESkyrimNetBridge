@@ -175,12 +175,14 @@ if (Test-Path -LiteralPath $milkmaidPrompt) {
 }
 
 # Skyrim.Net actions use the persistent MMEAlertDebugQuest bridge. The paired
-# breastfeeding contracts normalize their actor roles there; Give Milk maps
-# the speaking giver and selected drinker into the generalized transaction.
+# breastfeeding contracts normalize their actor roles there. Three explicit
+# Give Milk contracts fix player/speaker direction before one shared transaction.
 $skyrimNetActions = @(
     (Join-Path $projectRoot "SkyrimNetActions\mme_breastfeeding_milk_share.yaml"),
     (Join-Path $projectRoot "SkyrimNetActions\mme_breastfeeding_drink_from_target.yaml"),
-    (Join-Path $projectRoot "SkyrimNetActions\mme_give_milk_to_actor.yaml")
+    (Join-Path $projectRoot "SkyrimNetActions\mme_give_milk_to_actor.yaml"),
+    (Join-Path $projectRoot "SkyrimNetActions\mme_player_gives_milk_to_speaker_to_drink.yaml"),
+    (Join-Path $projectRoot "SkyrimNetActions\mme_speaker_gives_milk_to_player_to_drink.yaml")
 )
 $actionDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\config\actions"
 New-Item -ItemType Directory -Force -Path $actionDestination | Out-Null

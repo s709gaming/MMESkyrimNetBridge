@@ -231,6 +231,37 @@ EndFunction
 ; above for established saves, while new YAML supplies speaker=giver and a
 ; selected nearby actor=drinker.
 Function GiveMilkToActor(Actor giver, Actor drinker) Global
+    ExecuteGiveMilkDrink(giver, drinker, "legacy GiveMilkToActor")
+EndFunction
+
+Function PlayerGivesMilkToSpeakerToDrink(Actor drinker) Global
+    Actor giver = Game.GetPlayer()
+    If drinker == None || drinker == giver
+        MMELog.Alarm("[MME Extensions Skyrim.Net Give Milk] ROUTE FAILURE: PlayerGivesMilkToSpeakerToDrink did not receive a separate speaking NPC | giver=" + giver + " | drinker=" + drinker)
+        Return
+    EndIf
+    ExecuteGiveMilkDrink(giver, drinker, "PlayerGivesMilkToSpeakerToDrink")
+EndFunction
+
+Function SpeakerGivesMilkToPlayerToDrink(Actor giver) Global
+    Actor drinker = Game.GetPlayer()
+    If giver == None || giver == drinker
+        MMELog.Alarm("[MME Extensions Skyrim.Net Give Milk] ROUTE FAILURE: SpeakerGivesMilkToPlayerToDrink did not receive a separate speaking NPC | giver=" + giver + " | drinker=" + drinker)
+        Return
+    EndIf
+    ExecuteGiveMilkDrink(giver, drinker, "SpeakerGivesMilkToPlayerToDrink")
+EndFunction
+
+Function SpeakerGivesMilkToActorToDrink(Actor giver, Actor drinker) Global
+    Actor player = Game.GetPlayer()
+    If giver == None || drinker == None || giver == player || drinker == player || giver == drinker
+        MMELog.Alarm("[MME Extensions Skyrim.Net Give Milk] ROUTE FAILURE: SpeakerGivesMilkToActorToDrink requires two separate NPCs and may not target the player | giver=" + giver + " | drinker=" + drinker)
+        Return
+    EndIf
+    ExecuteGiveMilkDrink(giver, drinker, "SpeakerGivesMilkToActorToDrink")
+EndFunction
+
+Function ExecuteGiveMilkDrink(Actor giver, Actor drinker, String route) Global
     String settingsFile = "/MMEAlerts/Settings"
     Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableGiveMilkActionDiagnostic", 0) == 1
     If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue(settingsFile, "enableGiveMilkAction", 1) != 1
@@ -269,7 +300,7 @@ Function GiveMilkToActor(Actor giver, Actor drinker) Global
             Debug.Notification("Actor Give Drink: transaction failed; see preceding reason")
         EndIf
     EndIf
-    MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] actor transaction complete | success=" + success + " | giver=" + giver + " | drinker=" + drinker)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] actor transaction complete | route=" + route + " | success=" + success + " | giver=" + giver + " | drinker=" + drinker)
 EndFunction
 
 ; Legacy dynamically registered prototype retained for save/callback

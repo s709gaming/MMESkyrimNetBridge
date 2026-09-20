@@ -232,6 +232,23 @@ Function GiveMilkToActor(Actor giver, Actor drinker)
     MMESkyrimNetVoiceControls.GiveMilkToActor(giver, drinker)
 EndFunction
 
+; Explicit give-and-drink contracts keep Skyrim.Net from inferring or reversing
+; player/speaker roles. All routes normalize here, then enter one transaction.
+Function PlayerGivesMilkToSpeakerToDrink(Actor drinker)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] route selected | PlayerGivesMilkToSpeakerToDrink | giver=" + Game.GetPlayer() + " | drinker=" + drinker)
+    MMESkyrimNetVoiceControls.PlayerGivesMilkToSpeakerToDrink(drinker)
+EndFunction
+
+Function SpeakerGivesMilkToPlayerToDrink(Actor giver)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] route selected | SpeakerGivesMilkToPlayerToDrink | giver=" + giver + " | drinker=" + Game.GetPlayer())
+    MMESkyrimNetVoiceControls.SpeakerGivesMilkToPlayerToDrink(giver)
+EndFunction
+
+Function SpeakerGivesMilkToActorToDrink(Actor giver, Actor drinker)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] route selected | SpeakerGivesMilkToActorToDrink | giver=" + giver + " | drinker=" + drinker)
+    MMESkyrimNetVoiceControls.SpeakerGivesMilkToActorToDrink(giver, drinker)
+EndFunction
+
 Function StartBreastfeedingMilkShare(Actor milkSource, Actor target)
     MMELog.Diagnostic("[MMEAlert SkyrimNet BF] dedicated action selected | semantic intent=speaker offers breast to target | speaker/source=" + milkSource + " | target/drinker=" + target)
     MMESkyrimNetVoiceControls.StartBreastfeedingMilkShare(milkSource, target, "speaker/source=" + MMEOStimBreastfeeding.GetActorName(milkSource) + " | target/drinker=" + MMEOStimBreastfeeding.GetActorName(target))

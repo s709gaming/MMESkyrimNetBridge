@@ -1,17 +1,17 @@
-name: GiveMilkToActor
-label: Give milk to another actor
-description: "The speaking adult gives a selected nearby adult one Hearthfire Jug of Milk, and the receiver immediately drinks it. Either participant may be the player, but the giver and drinker must be different actors. The action performs the complete transaction and animations itself; do not narrate a second transfer or invoke it repeatedly. A confirmed MME Milk Maid giver may spend one unit of stored milk when that option is enabled; otherwise the baseline jug is supplied freely."
+name: SpeakerGivesMilkToActorToDrink
+label: Speaker gives milk for another NPC to drink
+description: "Use only when the speaking NPC gives milk to another nearby NPC, who immediately drinks it. This is a complete give-and-drink action, not an inventory gift: the selected receiver consumes the milk during the action. The player is never the receiver for this action; use SpeakerGivesMilkToPlayerToDrink instead. The speaker is never the receiver; use PlayerGivesMilkToSpeakerToDrink when the player is giving milk to the speaker. Do not reverse the participants, narrate a second transfer, or invoke another milk-drinking action."
 questEditorId: MMEAlertDebugQuest
 scriptName: MMEAlertsController
-executionFunctionName: GiveMilkToActor
+executionFunctionName: SpeakerGivesMilkToActorToDrink
 defaultPriority: 8
 parameterMapping:
   - type: speaker
     name: giver
-    description: the speaking adult who offers and hands over the milk; may be the player
+    description: the speaking NPC who gives the milk and never drinks it in this action
   - type: dynamic
     name: drinker
-    description: the selected nearby adult who receives and drinks the milk; may be the player but cannot be the giver
+    description: the selected nearby NPC who receives and immediately drinks the milk; never the player and never the speaking giver
 eligibilityRules:
   - conditions:
       - decoratorName: "is_in_combat"

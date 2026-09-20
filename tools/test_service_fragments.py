@@ -107,27 +107,58 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('SetSliderDialogRange(5.0, 300.0)', mcm)
         self.assertIn('breastfeedingActionCooldownMigration89', mcm)
 
-    def test_skyrimnet_give_milk_action_supports_any_actor_pair(self):
-        action_yaml = (ROOT / 'SkyrimNetActions/mme_give_milk_to_actor.yaml').read_text()
+    def test_skyrimnet_give_and_drink_actions_have_explicit_actor_directions(self):
+        npc_to_npc_yaml = (ROOT / 'SkyrimNetActions/mme_give_milk_to_actor.yaml').read_text()
+        player_to_speaker_yaml = (ROOT / 'SkyrimNetActions/mme_player_gives_milk_to_speaker_to_drink.yaml').read_text()
+        speaker_to_player_yaml = (ROOT / 'SkyrimNetActions/mme_speaker_gives_milk_to_player_to_drink.yaml').read_text()
         controller = (ROOT / 'Source/Scripts/MMEAlertsController.psc').read_text()
         actions = (ROOT / 'Source/Scripts/MMESkyrimNetVoiceControls.psc').read_text()
         transaction = (ROOT / 'Source/Scripts/MMEActorDrinkTransaction.psc').read_text()
         mcm = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
         build = (ROOT / 'build-package.ps1').read_text()
 
-        self.assertIn('name: GiveMilkToActor', action_yaml)
-        self.assertIn('questEditorId: MMEAlertDebugQuest', action_yaml)
-        self.assertIn('scriptName: MMEAlertsController', action_yaml)
-        self.assertIn('executionFunctionName: GiveMilkToActor', action_yaml)
-        self.assertIn('type: speaker', action_yaml)
-        self.assertIn('name: giver', action_yaml)
-        self.assertIn('type: dynamic', action_yaml)
-        self.assertIn('name: drinker', action_yaml)
-        self.assertIn('Either participant may be the player', action_yaml)
+        self.assertIn('name: PlayerGivesMilkToSpeakerToDrink', player_to_speaker_yaml)
+        self.assertIn('executionFunctionName: PlayerGivesMilkToSpeakerToDrink', player_to_speaker_yaml)
+        self.assertIn('type: speaker', player_to_speaker_yaml)
+        self.assertIn('name: drinker', player_to_speaker_yaml)
+        self.assertNotIn('type: dynamic', player_to_speaker_yaml)
+        self.assertIn('speaker consumes the milk during the action', player_to_speaker_yaml)
 
-        callback = controller.split('Function GiveMilkToActor(', 1)[1].split('EndFunction', 1)[0]
-        self.assertIn('MMESkyrimNetVoiceControls.GiveMilkToActor(giver, drinker)', callback)
-        policy = actions.split('Function GiveMilkToActor(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('name: SpeakerGivesMilkToPlayerToDrink', speaker_to_player_yaml)
+        self.assertIn('executionFunctionName: SpeakerGivesMilkToPlayerToDrink', speaker_to_player_yaml)
+        self.assertIn('type: speaker', speaker_to_player_yaml)
+        self.assertIn('name: giver', speaker_to_player_yaml)
+        self.assertNotIn('type: dynamic', speaker_to_player_yaml)
+        self.assertIn('player consumes the milk during the action', speaker_to_player_yaml)
+
+        self.assertIn('name: SpeakerGivesMilkToActorToDrink', npc_to_npc_yaml)
+        self.assertIn('executionFunctionName: SpeakerGivesMilkToActorToDrink', npc_to_npc_yaml)
+        self.assertIn('type: speaker', npc_to_npc_yaml)
+        self.assertIn('name: giver', npc_to_npc_yaml)
+        self.assertIn('type: dynamic', npc_to_npc_yaml)
+        self.assertIn('name: drinker', npc_to_npc_yaml)
+        self.assertIn('player is never the receiver', npc_to_npc_yaml)
+        self.assertNotIn('name: GiveMilkToActor', npc_to_npc_yaml)
+
+        player_callback = controller.split('Function PlayerGivesMilkToSpeakerToDrink(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('MMESkyrimNetVoiceControls.PlayerGivesMilkToSpeakerToDrink(drinker)', player_callback)
+        player_policy = actions.split('Function PlayerGivesMilkToSpeakerToDrink(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('Actor giver = Game.GetPlayer()', player_policy)
+        self.assertIn('ExecuteGiveMilkDrink(giver, drinker, "PlayerGivesMilkToSpeakerToDrink")', player_policy)
+
+        npc_player_callback = controller.split('Function SpeakerGivesMilkToPlayerToDrink(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('MMESkyrimNetVoiceControls.SpeakerGivesMilkToPlayerToDrink(giver)', npc_player_callback)
+        npc_player_policy = actions.split('Function SpeakerGivesMilkToPlayerToDrink(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('Actor drinker = Game.GetPlayer()', npc_player_policy)
+        self.assertIn('ExecuteGiveMilkDrink(giver, drinker, "SpeakerGivesMilkToPlayerToDrink")', npc_player_policy)
+
+        npc_npc_callback = controller.split('Function SpeakerGivesMilkToActorToDrink(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('MMESkyrimNetVoiceControls.SpeakerGivesMilkToActorToDrink(giver, drinker)', npc_npc_callback)
+        npc_npc_policy = actions.split('Function SpeakerGivesMilkToActorToDrink(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('drinker == player', npc_npc_policy)
+        self.assertIn('ROUTE FAILURE', npc_npc_policy)
+
+        policy = actions.split('Function ExecuteGiveMilkDrink(', 1)[1].split('EndFunction', 1)[0]
         self.assertIn('enableGiveMilkAction", 1', policy)
         self.assertIn('GetGiveMilkActionCooldownRemaining()', policy)
         self.assertLess(policy.index('MarkGiveMilkActionCooldown()'), policy.index('MMEActorDrinkTransaction.GiveDrink'))
@@ -152,13 +183,16 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('MMEAlertsSkyrimNet.NarrateNPCMilkDrink', transaction)
         self.assertNotIn('RegisterForUpdate', transaction)
 
-        self.assertIn('Allow Actor Give Drink Action', mcm)
+        self.assertIn('Allow Give-and-Drink Actions', mcm)
         self.assertIn('Milkmaid Giver Spends Milk', mcm)
         self.assertIn('Give Milk Action Cooldown', mcm)
         self.assertIn('Give Milk Action Diagnostic', mcm)
         self.assertIn('actorDrinkMigration117', mcm)
+        self.assertIn('Return 118', mcm)
         self.assertIn('MMEActorDrinkTransaction', build)
         self.assertIn('mme_give_milk_to_actor.yaml', build)
+        self.assertIn('mme_player_gives_milk_to_speaker_to_drink.yaml', build)
+        self.assertIn('mme_speaker_gives_milk_to_player_to_drink.yaml', build)
 
     def test_original_mme_sexlab_dialogue_is_observed_without_info_override(self):
         service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
@@ -380,7 +414,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('enableGiveMilkEasyMode", 1', dialogue)
         self.assertIn('Game.GetFormFromFile(0x003534, "HearthFires.esm")', dialogue)
         self.assertIn('Easy Mode temporary Jug', dialogue)
-        self.assertIn('Return 117', mcm)
+        self.assertIn('Return 118', mcm)
         self.assertIn('AddHeaderOption("Easy Mode")', mcm)
         self.assertIn('AddToggleOption("Free Jug for Give Milk"', mcm)
         self.assertIn('JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1)', mcm)
