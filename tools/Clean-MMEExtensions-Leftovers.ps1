@@ -136,13 +136,7 @@ $paths = @(
     @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\MMEExtensions.dll"); Label = "Native DLL"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\StorageUtilData\MMEAlerts\Installer.json"); Label = "Installer config"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\StorageUtilData\MMEAlerts\SkyrimNet.json"); Label = "SkyrimNet config"; IsDir = $false },
-    @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\external\s709gaming.mme-extensions"); Label = "SkyrimNet Beta 25 external plugin"; IsDir = $true },
-    @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\config\actions\mme_give_milk_to_actor.yaml"); Label = "Legacy SkyrimNet action"; IsDir = $false },
-    @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\config\actions\mme_breastfeeding_milk_share.yaml"); Label = "Legacy SkyrimNet action"; IsDir = $false },
-    @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\config\actions\mme_breastfeeding_drink_from_target.yaml"); Label = "Legacy SkyrimNet action"; IsDir = $false },
-    @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\prompts\mme_wearer_self_comment.prompt"); Label = "Legacy SkyrimNet prompt"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\prompts\submodules\character_bio\0260_mme_extensions_milkmaid.prompt"); Label = "SkyrimNet prompt"; IsDir = $false },
-    @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\prompts\submodules\user_final_instructions\0950_mme_extensions_breastfeeding.prompt"); Label = "Legacy SkyrimNet prompt"; IsDir = $false },
     @{ Path = (Join-Path $GameDataPath "Sound\fx\MMESkyrimNetBridge"); Label = "Sound folder"; IsDir = $true }
 )
 
