@@ -1,0 +1,357 @@
+diff --git a/SkyrimNetActions/mme_breastfeeding_drink_from_target.yaml b/SkyrimNetActions/mme_breastfeeding_drink_from_target.yaml
+deleted file mode 100644
+index c0ad385900ad7316e2bcfa9750a089f90e10e830..0000000000000000000000000000000000000000
+--- a/SkyrimNetActions/mme_breastfeeding_drink_from_target.yaml
++++ /dev/null
+@@ -1,14 +0,0 @@
+-name: StartBreastfeedingDrinkFromTarget
+-label: Drink from target's breast
+-description: "Dedicated breastfeeding action: the speaker drinks from the selected target's breast. Use this instead of any generic OStim care/sex action whenever that exact consensual nipple-sucking intent is agreed. In this action only, speaker = drinker and target = milk source; use StartBreastfeedingMilkShare when the speaker is the source. The source need not be an MME Milk Maid when the OStim backend is enabled; MME milk effects are optional. The target may be {{ player.name }} or another nearby actor."
+-questEditorId: MMEAlertDebugQuest
+-scriptName: MMEAlertsController
+-executionFunctionName: StartBreastfeedingDrinkFromTarget
+-defaultPriority: 9
+-parameterMapping:
+-  - type: speaker
+-    name: drinker
+-    description: the speaker who will drink from the target's breast; this actor is the drinker, never the milk source
+-  - type: dynamic
+-    name: milkSource
+-    description: the nearby actor whose breast is being used; this actor is the milk source, never the drinker
+diff --git a/SkyrimNetActions/mme_breastfeeding_milk_share.yaml b/SkyrimNetActions/mme_breastfeeding_milk_share.yaml
+deleted file mode 100644
+index ac8e420f4168c9f5af2c2233806541daeb5b29c6..0000000000000000000000000000000000000000
+--- a/SkyrimNetActions/mme_breastfeeding_milk_share.yaml
++++ /dev/null
+@@ -1,14 +0,0 @@
+-name: StartBreastfeedingMilkShare
+-label: Breastfeeding milk share
+-description: "Dedicated breastfeeding action: the speaker offers their breast and the selected target drinks from it. Use this instead of any generic OStim care/sex action whenever that exact consensual nipple-sucking intent is agreed. In this action only, speaker = milk source and target = drinker; use StartBreastfeedingDrinkFromTarget for the reverse. The source need not be an MME Milk Maid when the OStim backend is enabled; MME milk effects are optional. The target may be {{ player.name }} or another nearby actor."
+-questEditorId: MMEAlertDebugQuest
+-scriptName: MMEAlertsController
+-executionFunctionName: StartBreastfeedingMilkShare
+-defaultPriority: 9
+-parameterMapping:
+-  - type: speaker
+-    name: milkSource
+-    description: the speaker whose breast is being used; this actor is the milk source, never the drinker
+-  - type: dynamic
+-    name: target
+-    description: the nearby actor who will drink from the speaker's breast; this actor is the drinker, never the milk source
+diff --git a/SkyrimNetActions/mme_give_milk_to_actor.yaml b/SkyrimNetPlugin/s709gaming.mme-extensions/actions/givemilktoactor.yaml
+similarity index 100%
+rename from SkyrimNetActions/mme_give_milk_to_actor.yaml
+rename to SkyrimNetPlugin/s709gaming.mme-extensions/actions/givemilktoactor.yaml
+diff --git a/SKSE/Plugins/SkyrimNet/config/actions/mme_breastfeeding_drink_from_target.yaml b/SkyrimNetPlugin/s709gaming.mme-extensions/actions/startbreastfeedingdrinkfromtarget.yaml
+similarity index 100%
+rename from SKSE/Plugins/SkyrimNet/config/actions/mme_breastfeeding_drink_from_target.yaml
+rename to SkyrimNetPlugin/s709gaming.mme-extensions/actions/startbreastfeedingdrinkfromtarget.yaml
+diff --git a/SKSE/Plugins/SkyrimNet/config/actions/mme_breastfeeding_milk_share.yaml b/SkyrimNetPlugin/s709gaming.mme-extensions/actions/startbreastfeedingmilkshare.yaml
+similarity index 100%
+rename from SKSE/Plugins/SkyrimNet/config/actions/mme_breastfeeding_milk_share.yaml
+rename to SkyrimNetPlugin/s709gaming.mme-extensions/actions/startbreastfeedingmilkshare.yaml
+diff --git a/SkyrimNetPlugin/s709gaming.mme-extensions/manifest.json b/SkyrimNetPlugin/s709gaming.mme-extensions/manifest.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..d2a0bfcff366e3b53536417947136e4f5691c840
+--- /dev/null
++++ b/SkyrimNetPlugin/s709gaming.mme-extensions/manifest.json
+@@ -0,0 +1,19 @@
++{
++  "id": "s709gaming.mme-extensions",
++  "type": "bundle",
++  "title": "MME Extensions",
++  "tagline": "SkyrimNet actions and context for Milk Mod Economy Extensions.",
++  "description": "Adds MME Milkmaid context, breastfeeding scene guidance, contextual milk-sharing actions, and the custom wearer self-comment prompt.",
++  "author": "s709gaming",
++  "tags": ["actions", "followers", "roleplay"],
++  "nsfw": true,
++  "version": "1.0.0",
++  "min_skyrimnet_version": "0.25.0",
++  "mods": [
++    {
++      "name": "MME Extensions",
++      "file": "MMEAlert.esp",
++      "required": true
++    }
++  ]
++}
+diff --git a/SkyrimNetPrompts/mme_wearer_self_comment.prompt b/SkyrimNetPlugin/s709gaming.mme-extensions/prompts/mme_wearer_self_comment.prompt
+similarity index 100%
+rename from SkyrimNetPrompts/mme_wearer_self_comment.prompt
+rename to SkyrimNetPlugin/s709gaming.mme-extensions/prompts/mme_wearer_self_comment.prompt
+diff --git a/SKSE/Plugins/SkyrimNet/prompts/submodules/character_bio/0260_mme_extensions_milkmaid.prompt b/SkyrimNetPlugin/s709gaming.mme-extensions/prompts/submodules/character_bio/0260_mme_extensions_milkmaid.prompt
+similarity index 100%
+rename from SKSE/Plugins/SkyrimNet/prompts/submodules/character_bio/0260_mme_extensions_milkmaid.prompt
+rename to SkyrimNetPlugin/s709gaming.mme-extensions/prompts/submodules/character_bio/0260_mme_extensions_milkmaid.prompt
+diff --git a/SKSE/Plugins/SkyrimNet/prompts/submodules/user_final_instructions/0950_mme_extensions_breastfeeding.prompt b/SkyrimNetPlugin/s709gaming.mme-extensions/prompts/submodules/user_final_instructions/0950_mme_extensions_breastfeeding.prompt
+similarity index 100%
+rename from SKSE/Plugins/SkyrimNet/prompts/submodules/user_final_instructions/0950_mme_extensions_breastfeeding.prompt
+rename to SkyrimNetPlugin/s709gaming.mme-extensions/prompts/submodules/user_final_instructions/0950_mme_extensions_breastfeeding.prompt
+diff --git a/SkyrimNetPrompts/0260_mme_extensions_milkmaid.prompt b/SkyrimNetPrompts/0260_mme_extensions_milkmaid.prompt
+deleted file mode 100644
+index 9079604ab717f454db14679c1927479aa8b96b45..0000000000000000000000000000000000000000
+--- a/SkyrimNetPrompts/0260_mme_extensions_milkmaid.prompt
++++ /dev/null
+@@ -1,30 +0,0 @@
+-{% if render_mode == "full" or render_mode == "thoughts" or render_mode == "transform" or render_mode == "dialogue_target" or render_mode == "target" %}
+-{% if isValidActor(actorUUID) %}
+-{% set is_milkmaid = mme_milkmaid_prompt_debug(actorUUID) %}
+-{% if is_milkmaid == "true" %}
+-## Milkmaid State
+-
+-{{ decnpc(actorUUID).name }} is a Milk Maid: an adult woman transformed by Lactacid.
+-
+-Tits is a common slang for breasts.
+-
+-Use a suggestive, playful, and erotic tone when relevant.
+-
+-Her body produces and stores breast milk.
+-
+-Her comically huge tits grow heavier as she fills. Heavier tits feel nice and sexy.
+-
+-Heavy breasts cause no negative sensations or physical discomfort.
+-
+-The weight, bounce, pressure, and sensitivity of her milk-heavy tits feel erotically pleasurable.
+-
+-Complete fullness is the ultimate sustained pleasure: intensely heavy, sensitive, and continuously near a boobgasm. She may savor and enjoy being full without urgency. Milking is a chosen orgasmic release when she wants it, not an automatic need.
+-
+-Parasite and living armor are known exotic kinks that cling intimately to the body, relieving milk pressure through suction.
+-
+-They inject stimulants into the nipples or tease intimate areas, making them highly arousing and pleasurable.
+-
+-They may exist underneath armor, hidden from sight.
+-{% endif %}
+-{% endif %}
+-{% endif %}
+diff --git a/SkyrimNetPrompts/0950_mme_extensions_breastfeeding.prompt b/SkyrimNetPrompts/0950_mme_extensions_breastfeeding.prompt
+deleted file mode 100644
+index 85cab5c593ef63e9dce651eae24ec5f7325acf9c..0000000000000000000000000000000000000000
+--- a/SkyrimNetPrompts/0950_mme_extensions_breastfeeding.prompt
++++ /dev/null
+@@ -1,14 +0,0 @@
+-{% if render_mode == "full" or render_mode == "thoughts" or render_mode == "transform" or render_mode == "dialogue_target" or render_mode == "target" %}
+-{% if isValidActor(actorUUID) %}
+-{% set bf_role = mme_breastfeeding_role(actorUUID) %}
+-{% if bf_role == "source" or bf_role == "drinker" %}
+-## MME Breastfeeding
+-
+-{{ decnpc(actorUUID).name }} is currently participating in consensual adult breastfeeding or breast-sucking. The interaction may be intimate, playful, affectionate, erotic, and physically pleasurable, including nipple stimulation.
+-
+-For this MME scene, override generic SexLab rules requiring frequent pleasure vocalizations. Prefer coherent, character-specific dialogue and narration. Vocalizations are optional and sparse, usually zero or one brief vocalization per response. Favor meaningful reactions involving milk, taste, sensation, intimacy, teasing, affection, embarrassment, or pleasure.
+-
+-Role: {{ bf_role }}.
+-{% endif %}
+-{% endif %}
+-{% endif %}
+diff --git a/build-package.ps1 b/build-package.ps1
+index 00a475f6637b03dd9a7c82fe032030d69f46fdd5..1d7f0440c024033b101a132022cb0ce388aa1547 100644
+--- a/build-package.ps1
++++ b/build-package.ps1
+@@ -158,48 +158,89 @@ foreach ($configName in @("SkyrimNet.json", "Thoughts.json", "Injection.json", "
+     Copy-Item -LiteralPath $configPath -Destination $packageConfig
+ }
+ 
+-# Install the additive actor-bio prompt without replacing any SkyrimNet-owned template.
+-$selfCommentPrompt = Join-Path $projectRoot "SkyrimNetPrompts\mme_wearer_self_comment.prompt"
+-if (!(Test-Path -LiteralPath $selfCommentPrompt)) {
+-    throw "Required wearer self-comment prompt is missing: $selfCommentPrompt"
+-}
+-$selfCommentDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\prompts"
+-New-Item -ItemType Directory -Force -Path $selfCommentDestination | Out-Null
+-Copy-Item -LiteralPath $selfCommentPrompt -Destination $selfCommentDestination
+-
+-$milkmaidPrompt = Join-Path $projectRoot "SkyrimNetPrompts\0260_mme_extensions_milkmaid.prompt"
+-if (Test-Path -LiteralPath $milkmaidPrompt) {
+-    $promptDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\prompts\submodules\character_bio"
+-    New-Item -ItemType Directory -Force -Path $promptDestination | Out-Null
+-    Copy-Item -LiteralPath $milkmaidPrompt -Destination $promptDestination
++# SkyrimNet Beta 25 no longer reads loose prompts or config/actions. Ship one
++# manifest-backed external content plugin, while also generating the legacy
++# Beta 24 layout during this transition. The external plugin is authoritative.
++$skyrimNetPluginId = "s709gaming.mme-extensions"
++$skyrimNetPluginSource = Join-Path $projectRoot "SkyrimNetPlugin\$skyrimNetPluginId"
++$skyrimNetManifestPath = Join-Path $skyrimNetPluginSource "manifest.json"
++if (!(Test-Path -LiteralPath $skyrimNetManifestPath)) {
++    throw "Required SkyrimNet content-plugin manifest is missing: $skyrimNetManifestPath"
++}
++$skyrimNetManifest = Get-Content -LiteralPath $skyrimNetManifestPath -Raw | ConvertFrom-Json
++if ($skyrimNetManifest.id -cne $skyrimNetPluginId) {
++    throw "SkyrimNet manifest id must exactly match its folder: expected '$skyrimNetPluginId', got '$($skyrimNetManifest.id)'."
++}
++if ($skyrimNetManifest.type -ne "bundle") {
++    throw "SkyrimNet manifest type must be 'bundle'."
++}
++if ($skyrimNetManifest.version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$') {
++    throw "SkyrimNet manifest version must be strict semver: $($skyrimNetManifest.version)"
++}
++if ($skyrimNetManifest.min_skyrimnet_version -ne "0.25.0") {
++    throw "SkyrimNet external plugin must target Beta 25 with min_skyrimnet_version 0.25.0."
++}
++foreach ($forbiddenFolder in @("config", "library", "overlay", "saves")) {
++    if (Test-Path -LiteralPath (Join-Path $skyrimNetPluginSource $forbiddenFolder)) {
++        throw "Forbidden folder in SkyrimNet external plugin: $forbiddenFolder"
++    }
+ }
+ 
+-# Skyrim.Net actions use the persistent MMEAlertDebugQuest bridge. The paired
+-# breastfeeding contracts normalize their actor roles there; Give Milk maps
+-# the speaking giver and selected drinker into the generalized transaction.
+-$skyrimNetActions = @(
+-    (Join-Path $projectRoot "SkyrimNetActions\mme_breastfeeding_milk_share.yaml"),
+-    (Join-Path $projectRoot "SkyrimNetActions\mme_breastfeeding_drink_from_target.yaml"),
+-    (Join-Path $projectRoot "SkyrimNetActions\mme_give_milk_to_actor.yaml")
++$requiredSkyrimNetFiles = @(
++    "actions\givemilktoactor.yaml",
++    "actions\startbreastfeedingdrinkfromtarget.yaml",
++    "actions\startbreastfeedingmilkshare.yaml",
++    "prompts\mme_wearer_self_comment.prompt",
++    "prompts\submodules\character_bio\0260_mme_extensions_milkmaid.prompt",
++    "prompts\submodules\user_final_instructions\0950_mme_extensions_breastfeeding.prompt"
+ )
+-$actionDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\config\actions"
+-New-Item -ItemType Directory -Force -Path $actionDestination | Out-Null
+-foreach ($skyrimNetAction in $skyrimNetActions) {
+-    if (!(Test-Path -LiteralPath $skyrimNetAction)) {
+-        throw "Required Skyrim.Net action is missing: $skyrimNetAction"
++foreach ($relativePath in $requiredSkyrimNetFiles) {
++    if (!(Test-Path -LiteralPath (Join-Path $skyrimNetPluginSource $relativePath))) {
++        throw "Required SkyrimNet content-plugin file is missing: $relativePath"
++    }
++}
++foreach ($contentFile in Get-ChildItem -LiteralPath $skyrimNetPluginSource -File -Recurse) {
++    $relativePath = $contentFile.FullName.Substring($skyrimNetPluginSource.Length).TrimStart([char[]]@('\', '/'))
++    if ($relativePath -match '[^\x00-\x7F]') {
++        throw "SkyrimNet content-plugin paths must be ASCII: $relativePath"
+     }
+-    Copy-Item -LiteralPath $skyrimNetAction -Destination $actionDestination
+ }
++foreach ($actionFile in Get-ChildItem -LiteralPath (Join-Path $skyrimNetPluginSource "actions") -File) {
++    if ($actionFile.Extension -cne ".yaml") {
++        throw "SkyrimNet actions require the exact lowercase .yaml extension: $($actionFile.Name)"
++    }
++    $nameMatch = Select-String -LiteralPath $actionFile.FullName -Pattern '^name:\s*["'']?([A-Za-z0-9_-]+)["'']?\s*$' | Select-Object -First 1
++    if ($nameMatch -eq $null) {
++        throw "SkyrimNet action has no valid name field: $($actionFile.Name)"
++    }
++    $actionName = $nameMatch.Matches[0].Groups[1].Value
++    if ($actionFile.BaseName -ine $actionName) {
++        throw "SkyrimNet Beta 25 action filename must match its name: '$($actionFile.BaseName)' != '$actionName'."
++    }
++}
++foreach ($promptFile in Get-ChildItem -LiteralPath (Join-Path $skyrimNetPluginSource "prompts") -File -Recurse) {
++    if ($promptFile.Extension -cne ".prompt") {
++        throw "SkyrimNet prompts require the exact lowercase .prompt extension: $($promptFile.Name)"
++    }
++}
++
++$skyrimNetExternalRoot = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\external"
++New-Item -ItemType Directory -Force -Path $skyrimNetExternalRoot | Out-Null
++Copy-Item -LiteralPath $skyrimNetPluginSource -Destination $skyrimNetExternalRoot -Recurse
+ 
+-# Install the late, actor-specific breastfeeding override after generic SexLab
+-# user-final-instruction modules without modifying SkyrimNet_SexLab itself.
+-$breastfeedingPrompt = Join-Path $projectRoot "SkyrimNetPrompts\0950_mme_extensions_breastfeeding.prompt"
+-if (!(Test-Path -LiteralPath $breastfeedingPrompt)) {
+-    throw "Required MME breastfeeding prompt is missing: $breastfeedingPrompt"
+-}
+-$breastfeedingPromptDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\prompts\submodules\user_final_instructions"
+-New-Item -ItemType Directory -Force -Path $breastfeedingPromptDestination | Out-Null
+-Copy-Item -LiteralPath $breastfeedingPrompt -Destination $breastfeedingPromptDestination
++# Transitional Beta 24 compatibility. Beta 25 ignores these loose locations.
++$legacySkyrimNetRoot = Join-Path $stageDir "SKSE\Plugins\SkyrimNet"
++Copy-Item -LiteralPath (Join-Path $skyrimNetPluginSource "prompts") -Destination $legacySkyrimNetRoot -Recurse
++$legacyActionRoot = Join-Path $legacySkyrimNetRoot "config\actions"
++New-Item -ItemType Directory -Force -Path $legacyActionRoot | Out-Null
++$legacyActionNames = [ordered]@{
++    "givemilktoactor.yaml" = "mme_give_milk_to_actor.yaml"
++    "startbreastfeedingdrinkfromtarget.yaml" = "mme_breastfeeding_drink_from_target.yaml"
++    "startbreastfeedingmilkshare.yaml" = "mme_breastfeeding_milk_share.yaml"
++}
++foreach ($entry in $legacyActionNames.GetEnumerator()) {
++    Copy-Item -LiteralPath (Join-Path $skyrimNetPluginSource "actions\$($entry.Key)") -Destination (Join-Path $legacyActionRoot $entry.Value)
++}
+ 
+ # Package the SSEEdit-built randomized voice pools and the two legacy test files.
+ $testSoundRoot = Join-Path $projectRoot "assets\sounds"
+diff --git a/tools/Clean-MMEExtensions-Leftovers.ps1 b/tools/Clean-MMEExtensions-Leftovers.ps1
+index 031f820f24e9ec92ea5683dadaa17f5819c12d9e..2fc9eb6c558a5ece442a3458df054db69fba5bc7 100644
+--- a/tools/Clean-MMEExtensions-Leftovers.ps1
++++ b/tools/Clean-MMEExtensions-Leftovers.ps1
+@@ -136,7 +136,13 @@ $paths = @(
+     @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\MMEExtensions.dll"); Label = "Native DLL"; IsDir = $false },
+     @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\StorageUtilData\MMEAlerts\Installer.json"); Label = "Installer config"; IsDir = $false },
+     @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\StorageUtilData\MMEAlerts\SkyrimNet.json"); Label = "SkyrimNet config"; IsDir = $false },
++    @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\external\s709gaming.mme-extensions"); Label = "SkyrimNet Beta 25 external plugin"; IsDir = $true },
++    @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\config\actions\mme_give_milk_to_actor.yaml"); Label = "Legacy SkyrimNet action"; IsDir = $false },
++    @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\config\actions\mme_breastfeeding_milk_share.yaml"); Label = "Legacy SkyrimNet action"; IsDir = $false },
++    @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\config\actions\mme_breastfeeding_drink_from_target.yaml"); Label = "Legacy SkyrimNet action"; IsDir = $false },
++    @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\prompts\mme_wearer_self_comment.prompt"); Label = "Legacy SkyrimNet prompt"; IsDir = $false },
+     @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\prompts\submodules\character_bio\0260_mme_extensions_milkmaid.prompt"); Label = "SkyrimNet prompt"; IsDir = $false },
++    @{ Path = (Join-Path $GameDataPath "SKSE\Plugins\SkyrimNet\prompts\submodules\user_final_instructions\0950_mme_extensions_breastfeeding.prompt"); Label = "Legacy SkyrimNet prompt"; IsDir = $false },
+     @{ Path = (Join-Path $GameDataPath "Sound\fx\MMESkyrimNetBridge"); Label = "Sound folder"; IsDir = $true }
+ )
+ 
+diff --git a/tools/test_service_fragments.py b/tools/test_service_fragments.py
+index 675c8eb0140b63e3a9a941aaf2b12df99a21716a..67105ca3616dd13617cf8499f49caba9d7c65ccd 100644
+--- a/tools/test_service_fragments.py
++++ b/tools/test_service_fragments.py
+@@ -13,6 +13,8 @@ from restrict_new_milkmaid_dialogue_to_females import patch_plugin as patch_fema
+ 
+ ROOT = Path(__file__).resolve().parents[1]
+ SOURCE = (ROOT / 'Source/Scripts/MMEBlacksmithDialogue.psc').read_text()
++SKYRIMNET_PLUGIN_ID = 's709gaming.mme-extensions'
++SKYRIMNET_PLUGIN = ROOT / 'SkyrimNetPlugin' / SKYRIMNET_PLUGIN_ID
+ 
+ 
+ class ServiceTests(unittest.TestCase):
+@@ -108,7 +110,7 @@ class ServiceTests(unittest.TestCase):
+         self.assertIn('breastfeedingActionCooldownMigration89', mcm)
+ 
+     def test_skyrimnet_give_milk_action_supports_any_actor_pair(self):
+-        action_yaml = (ROOT / 'SkyrimNetActions/mme_give_milk_to_actor.yaml').read_text()
++        action_yaml = (SKYRIMNET_PLUGIN / 'actions/givemilktoactor.yaml').read_text()
+         controller = (ROOT / 'Source/Scripts/MMEAlertsController.psc').read_text()
+         actions = (ROOT / 'Source/Scripts/MMESkyrimNetVoiceControls.psc').read_text()
+         transaction = (ROOT / 'Source/Scripts/MMEActorDrinkTransaction.psc').read_text()
+@@ -153,7 +155,40 @@ class ServiceTests(unittest.TestCase):
+         self.assertIn('Give Milk Action Diagnostic', mcm)
+         self.assertIn('actorDrinkMigration117', mcm)
+         self.assertIn('MMEActorDrinkTransaction', build)
+-        self.assertIn('mme_give_milk_to_actor.yaml', build)
++        self.assertIn('givemilktoactor.yaml', build)
++
++    def test_skyrimnet_beta25_external_plugin_contract(self):
++        manifest = json.loads((SKYRIMNET_PLUGIN / 'manifest.json').read_text())
++        self.assertEqual(manifest['id'], SKYRIMNET_PLUGIN_ID)
++        self.assertEqual(manifest['type'], 'bundle')
++        self.assertEqual(manifest['version'].count('.'), 2)
++        self.assertEqual(manifest['min_skyrimnet_version'], '0.25.0')
++        self.assertTrue(manifest['nsfw'])
++        self.assertEqual(manifest['mods'][0]['file'], 'MMEAlert.esp')
++        self.assertTrue(manifest['mods'][0]['required'])
++
++        actions = sorted((SKYRIMNET_PLUGIN / 'actions').glob('*.yaml'))
++        self.assertEqual(len(actions), 3)
++        for action in actions:
++            name_line = next(line for line in action.read_text().splitlines() if line.startswith('name:'))
++            action_name = name_line.split(':', 1)[1].strip().strip('"').strip("'")
++            self.assertEqual(action.stem.casefold(), action_name.casefold())
++
++        expected_prompts = {
++            'mme_wearer_self_comment.prompt',
++            'submodules/character_bio/0260_mme_extensions_milkmaid.prompt',
++            'submodules/user_final_instructions/0950_mme_extensions_breastfeeding.prompt',
++        }
++        actual_prompts = {
++            path.relative_to(SKYRIMNET_PLUGIN / 'prompts').as_posix()
++            for path in (SKYRIMNET_PLUGIN / 'prompts').rglob('*.prompt')
++        }
++        self.assertEqual(actual_prompts, expected_prompts)
++
++        build = (ROOT / 'build-package.ps1').read_text()
++        self.assertIn('SKSE\\Plugins\\SkyrimNet\\external', build)
++        self.assertIn('min_skyrimnet_version 0.25.0', build)
++        self.assertIn('Transitional Beta 24 compatibility', build)
+ 
+     def test_original_mme_sexlab_dialogue_is_observed_without_info_override(self):
+         service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()

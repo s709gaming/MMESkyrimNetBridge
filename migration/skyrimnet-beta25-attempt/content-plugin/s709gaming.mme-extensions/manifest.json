@@ -1,0 +1,19 @@
+{
+  "id": "s709gaming.mme-extensions",
+  "type": "bundle",
+  "title": "MME Extensions",
+  "tagline": "SkyrimNet actions and context for Milk Mod Economy Extensions.",
+  "description": "Adds MME Milkmaid context, breastfeeding scene guidance, contextual milk-sharing actions, and the custom wearer self-comment prompt.",
+  "author": "s709gaming",
+  "tags": ["actions", "followers", "roleplay"],
+  "nsfw": true,
+  "version": "1.0.0",
+  "min_skyrimnet_version": "0.25.0",
+  "mods": [
+    {
+      "name": "MME Extensions",
+      "file": "MMEAlert.esp",
+      "required": true
+    }
+  ]
+}

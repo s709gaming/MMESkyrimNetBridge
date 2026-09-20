@@ -1,0 +1,14 @@
+{% if render_mode == "full" or render_mode == "thoughts" or render_mode == "transform" or render_mode == "dialogue_target" or render_mode == "target" %}
+{% if isValidActor(actorUUID) %}
+{% set bf_role = mme_breastfeeding_role(actorUUID) %}
+{% if bf_role == "source" or bf_role == "drinker" %}
+## MME Breastfeeding
+
+{{ decnpc(actorUUID).name }} is currently participating in consensual adult breastfeeding or breast-sucking. The interaction may be intimate, playful, affectionate, erotic, and physically pleasurable, including nipple stimulation.
+
+For this MME scene, override generic SexLab rules requiring frequent pleasure vocalizations. Prefer coherent, character-specific dialogue and narration. Vocalizations are optional and sparse, usually zero or one brief vocalization per response. Favor meaningful reactions involving milk, taste, sensation, intimacy, teasing, affection, embarrassment, or pleasure.
+
+Role: {{ bf_role }}.
+{% endif %}
+{% endif %}
+{% endif %}
