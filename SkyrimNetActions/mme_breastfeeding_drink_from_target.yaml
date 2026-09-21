@@ -12,3 +12,4 @@ parameterMapping:
   - type: dynamic
     name: milkSource
     description: the nearby actor whose breast is being used; this actor is the milk source, never the drinker
+eligibilityRules: []

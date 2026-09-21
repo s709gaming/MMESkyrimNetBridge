@@ -6,6 +6,7 @@ Scriptname SkyrimNetApi Hidden
 ; compile without making Skyrim.Net a runtime requirement.
 
 Int Function RegisterDecorator(String decoratorID, String sourceScript, String functionName) Global Native
+Int Function AddWorldKnowledge(String content, String conditionExpr, Bool alwaysInject, Float importance, String displayName) Global Native
 Int Function RegisterAction(String actionName, String description, String eligibilityScriptName, String eligibilityFunctionName, String executionScriptName, String executionFunctionName, String triggeringEventTypesCsv, String categoryStr, Int defaultPriority, String parameterSchemaJson, String customCategory = "", String tags = "") Global Native
 Int Function UnregisterAction(String actionName) Global Native
 Int Function RegisterShortLivedEvent(String eventId, String eventType, String description, String data, Int ttlMs, Actor sourceActor, Actor targetActor) Global Native

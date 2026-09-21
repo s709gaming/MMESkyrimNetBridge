@@ -1,0 +1,83 @@
+{
+  "id": "s709gaming.mme-extensions",
+  "type": "bundle",
+  "title": "MME Extensions",
+  "tagline": "Adds Milk Mod Economy context and consensual milk-sharing actions to SkyrimNet.",
+  "description": "Adds actor-specific Milk Maid lore, breastfeeding and milk-sharing actions, a validated Milk Maid conversion action, and the custom wearer self-comment prompt.",
+  "author": "s709gaming",
+  "tags": ["actions", "dialogue", "roleplay", "milk-mod-economy"],
+  "nsfw": true,
+  "icon": "droplets",
+  "version": "1.3.2",
+  "min_skyrimnet_version": "0.25.0",
+  "mods": [
+    {
+      "name": "MME Extensions",
+      "file": "MMEAlert.esp",
+      "required": true
+    }
+  ],
+  "requirements": [
+    "Milk Mod Economy"
+  ],
+  "invocation": {
+    "purpose": "Lets SkyrimNet actors start MME Extensions breastfeeding scenes and give milk to another actor who immediately drinks it.",
+    "actions": [
+      {
+        "file": "actions/startbreastfeedingdrinkfromtarget.yaml",
+        "source_mods": [
+          {
+            "name": "MME Extensions",
+            "url": "https://github.com/s709gaming/MMESkyrimNetBridge"
+          }
+        ]
+      },
+      {
+        "file": "actions/startbreastfeedingmilkshare.yaml",
+        "source_mods": [
+          {
+            "name": "MME Extensions",
+            "url": "https://github.com/s709gaming/MMESkyrimNetBridge"
+          }
+        ]
+      },
+      {
+        "file": "actions/speakergivesmilktoactortodrink.yaml",
+        "source_mods": [
+          {
+            "name": "MME Extensions",
+            "url": "https://github.com/s709gaming/MMESkyrimNetBridge"
+          }
+        ]
+      },
+      {
+        "file": "actions/playergivesmilktospeakertodrink.yaml",
+        "source_mods": [
+          {
+            "name": "MME Extensions",
+            "url": "https://github.com/s709gaming/MMESkyrimNetBridge"
+          }
+        ]
+      },
+      {
+        "file": "actions/speakergivesmilktoplayertodrink.yaml",
+        "source_mods": [
+          {
+            "name": "MME Extensions",
+            "url": "https://github.com/s709gaming/MMESkyrimNetBridge"
+          }
+        ]
+      },
+      {
+        "file": "actions/maketargetnewmilkmaid.yaml",
+        "source_mods": [
+          {
+            "name": "MME Extensions",
+            "url": "https://github.com/s709gaming/MMESkyrimNetBridge"
+          }
+        ]
+      }
+    ],
+    "attestation": "The shared MME Extensions Papyrus callbacks have been tested in game without save corruption or quest breakage. The SkyrimNet 25 external-layer packaging remains subject to in-game compatibility testing."
+  }
+}

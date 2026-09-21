@@ -249,6 +249,12 @@ Function SpeakerGivesMilkToActorToDrink(Actor giver, Actor drinker)
     MMESkyrimNetVoiceControls.SpeakerGivesMilkToActorToDrink(giver, drinker)
 EndFunction
 
+; Persistent quest entry point used by the static Skyrim.Net action YAML.
+Function MakeTargetNewMilkMaid(Actor target)
+    MMELog.Diagnostic("[MME Extensions Create Milk Maid] action selected | target=" + target)
+    MMENewMilkMaid.MakeTargetNewMilkMaid(target)
+EndFunction
+
 Function StartBreastfeedingMilkShare(Actor milkSource, Actor target)
     MMELog.Diagnostic("[MMEAlert SkyrimNet BF] dedicated action selected | semantic intent=speaker offers breast to target | speaker/source=" + milkSource + " | target/drinker=" + target)
     MMESkyrimNetVoiceControls.StartBreastfeedingMilkShare(milkSource, target, "speaker/source=" + MMEOStimBreastfeeding.GetActorName(milkSource) + " | target/drinker=" + MMEOStimBreastfeeding.GetActorName(target))

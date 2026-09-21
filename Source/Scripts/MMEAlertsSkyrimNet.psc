@@ -190,21 +190,17 @@ Function RegisterPromptDecorator() Global
     If !IsExtensionsEnabled()
         Return
     EndIf
-    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 1) == 1
+    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 0) == 1
     If !IsAvailable()
         If diagnostic
             Debug.Notification("Skyrim.Net Prompt: registration skipped - SkyrimNet not detected")
         EndIf
-        MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid prompt decorator skipped; SkyrimNet not detected")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] prompt decorator registration skipped; SkyrimNet not detected")
         Return
     EndIf
     Int result = SkyrimNetApi.RegisterDecorator("mme_milkmaid_prompt_debug", "MMEAlertsSkyrimNet", "MilkmaidPromptDebug")
     If diagnostic
-        If result == 0
-            Debug.Notification("Skyrim.Net Prompt: debug callback registered [0]")
-        Else
-            Debug.Notification("Skyrim.Net Prompt: registration returned [" + result + "] - it may already be registered")
-        EndIf
+        Debug.Notification("Skyrim.Net Prompt: Milkmaid callback registration result [" + result + "]")
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid prompt decorator registration result " + result)
     Int breastfeedingResult = SkyrimNetApi.RegisterDecorator("mme_breastfeeding_role", "MMEAlertsSkyrimNet", "BreastfeedingPromptRole")
@@ -267,27 +263,13 @@ Bool Function IsRealMMEMilkmaid(Actor candidate) Global
     Return MMEArmorScript.IsMMEMilkMaid(candidate, milkController)
 EndFunction
 
-; Returns an explicit string gate because prompt values may not preserve Papyrus numeric types.
 String Function MilkmaidPromptDebug(Actor milkMaid) Global
-    If !IsExtensionsEnabled()
+    If !IsExtensionsEnabled() || milkMaid == None || !IsRealMMEMilkmaid(milkMaid)
         Return ""
     EndIf
-    If milkMaid == None
-        Return ""
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 0) == 1
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid lore rendered for " + ResolveActorName(milkMaid, "unnamed actor"))
     EndIf
-    If !IsRealMMEMilkmaid(milkMaid)
-        Return ""
-    EndIf
-
-    Float level = StorageUtil.GetFloatValue(milkMaid, "MME.MilkMaid.Level", -1.0)
-    String actorName = milkMaid.GetDisplayName()
-    If actorName == ""
-        actorName = "unnamed actor"
-    EndIf
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 1) == 1
-        Debug.Notification("Skyrim.Net Prompt: Milkmaid lore rendered for " + actorName + " | MME level " + level)
-    EndIf
-    MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid lore rendered for " + actorName + " | MME level " + level)
     Return "true"
 EndFunction
 

@@ -1,0 +1,19 @@
+name: MakeTargetNewMilkMaid
+label: Transform selected woman into a Milk Maid
+description: "A Milk Maid is an adult woman transformed into an MME milk-producing woman. Use whenever the story causes a specifically selected nearby adult female NPC to become a new Milk Maid. The transformation may be voluntary, accidental, magical, or caused by Lactacid, drinking unusual milk, a potion, spell, curse, blessing, experiment, or another narrative event. This action applies the actual MME conversion after the story establishes that it happens. The selected target is the woman being transformed, regardless of who or what caused it. Do not use on the player, men, children, existing Milk Maids, or Milk Slaves, and do not invoke a breastfeeding or give-milk action at the same time."
+questEditorId: MMEAlertDebugQuest
+scriptName: MMEAlertsController
+executionFunctionName: MakeTargetNewMilkMaid
+defaultPriority: 8
+parameterMapping:
+  - type: dynamic
+    name: target
+    description: the specifically selected nearby adult female NPC who becomes the new Milk Maid; choose her exact actor name, never the player, regardless of who or what caused the transformation
+eligibilityRules:
+  - conditions:
+      - decoratorName: "is_in_combat"
+        arguments: ["currentActor"]
+        comparisonOperator: "=="
+        expectedValue: false
+    logicalOperator: "AND"
+    required: true

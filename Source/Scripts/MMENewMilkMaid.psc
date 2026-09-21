@@ -98,7 +98,8 @@ EndFunction
 ; not a prerequisite for the separate native MME Milk Maid creation transaction.
 Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String semanticIntent, Bool mmeProcessed) Global
     Bool sexLabRoute = semanticIntent == "CreateMilkMaidSexLab"
-    If semanticIntent != "CreateMilkMaid" && !sexLabRoute
+    Bool actionRoute = semanticIntent == "CreateMilkMaidAction"
+    If semanticIntent != "CreateMilkMaid" && !sexLabRoute && !actionRoute
         Return
     EndIf
 
@@ -232,6 +233,151 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
         TraceSexLabStop(16, "COMPLETE")
     EndIf
     Report(diagnostic, "canonical MME Lactacid creation effect confirmed for " + GetActorName(candidate))
+EndFunction
+
+; Skyrim.Net's targeted conversion action deliberately uses MME's original
+; dialogue transaction rather than reproducing registration or animation:
+; stage one native Lactacid dose, EquipItem it, then let MilkLactacidScr call
+; AssignSlotMaid, initialize Lactacid, and run ZaZAPCHorFd for ten seconds.
+; OStim and direct breastfeeding reach this same native handoff only after
+; their paired scene; this action is the original dialogue's direct route.
+Function MakeTargetNewMilkMaid(Actor candidate) Global
+    If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableCreateMilkMaidAction", 1) != 1
+        FailAction(candidate, "The Create Milk Maid action is disabled.", False)
+        Return
+    EndIf
+
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    String failure = GetActionEligibilityFailure(candidate, milkController)
+    If failure != ""
+        FailAction(candidate, failure, IsUnexpectedActionFailure(failure))
+        Return
+    EndIf
+
+    ; One global lock closes the race where two AI actions both observe the
+    ; final free slot before either native Lactacid effect assigns it. A stale
+    ; lock self-heals after load or an interrupted Papyrus stack.
+    String lockKey = "MMEExtensions.CreateMilkMaid.ActionLock"
+    String lockTimeKey = "MMEExtensions.CreateMilkMaid.ActionLockTime"
+    Float now = Utility.GetCurrentRealTime()
+    Int lockOwner = StorageUtil.GetIntValue(None, lockKey, 0)
+    Float lockedAt = StorageUtil.GetFloatValue(None, lockTimeKey, -1.0)
+    If lockOwner == 1 && lockedAt >= 0.0 && now >= lockedAt && now - lockedAt < 60.0
+        FailAction(candidate, "Another Milk Maid conversion is already in progress.", False)
+        Return
+    EndIf
+    StorageUtil.SetIntValue(None, lockKey, 1)
+    StorageUtil.SetFloatValue(None, lockTimeKey, now)
+
+    ; Revalidate after claiming the lock and before touching the target.
+    milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    failure = GetActionEligibilityFailure(candidate, milkController)
+    If failure != ""
+        ReleaseActionLock(lockKey, lockTimeKey)
+        FailAction(candidate, failure, IsUnexpectedActionFailure(failure))
+        Return
+    EndIf
+
+    MMELog.Diagnostic("[MME Extensions Create Milk Maid] Skyrim.Net action committed | target=" + GetActorIdentity(candidate))
+    HandleBreastfeedingCompleted(Game.GetPlayer(), candidate, "CreateMilkMaidAction", False)
+
+    Bool assigned = MMEArmorScript.IsMMEMilkMaid(candidate, milkController)
+    Bool initialized = assigned && MME_Storage.getLactacidCurrent(candidate) >= 1.0
+    ReleaseActionLock(lockKey, lockTimeKey)
+    If assigned && initialized
+        Debug.Notification(GetActorName(candidate) + " is now a Milk Maid.")
+        MMELog.Diagnostic("[MME Extensions Create Milk Maid] COMPLETE | target=" + GetActorIdentity(candidate))
+    ElseIf assigned
+        ; Roll back through MME's own complete single-actor reset. Never edit
+        ; its array, faction, body nodes, or StorageUtil state independently.
+        milkController.SingleMaidReset(candidate)
+        Utility.Wait(0.1)
+        If MMEArmorScript.IsMMEMilkMaid(candidate, milkController)
+            FailAction(candidate, "MME assigned a partial Milk Maid state and its native rollback failed. Check the Papyrus log.", True)
+        Else
+            FailAction(candidate, "MME did not initialize Lactacid; its partial conversion was rolled back.", True)
+        EndIf
+    Else
+        FailAction(candidate, "MME did not assign a Milk Maid slot. Its capacity may be too low or its registry may be full. Check the Papyrus log.", True)
+    EndIf
+EndFunction
+
+; Returns a player-facing failure, with no writes. Do not inspect MilkMaid[]
+; here: MME 2022 exposes that auto-property as None to some external scripts,
+; even while MilkLactacidScr and AssignSlotMaid use the live array internally.
+; MME's native Lactacid effect owns the exact Find(None, 1) slot/capacity check;
+; this adapter verifies the public faction/StorageUtil postcondition afterward.
+String Function GetActionEligibilityFailure(Actor candidate, MilkQUEST milkController) Global
+    If candidate == None
+        Return "No target NPC was selected."
+    ElseIf candidate == Game.GetPlayer()
+        Return "The target must be a female NPC, not the player."
+    ElseIf candidate.IsChild()
+        Return "The target is a child and cannot become a Milk Maid."
+    EndIf
+    ActorBase candidateBase = candidate.GetLeveledActorBase()
+    If candidateBase == None
+        Return "The target's actor data is unavailable."
+    ElseIf candidateBase.GetSex() != 1
+        Return "The target is male; only female NPCs are supported."
+    ElseIf candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
+        Return "The target must be alive, enabled, and currently loaded."
+    EndIf
+    If milkController == None || !milkController.IsRunning()
+        Return "The required MME Milk Quest is unavailable or not running."
+    ElseIf MMEArmorScript.IsMMEMilkMaid(candidate, milkController)
+        Return "The target is already a Milk Maid."
+    ElseIf MMEArmorScript.IsMMEMilkSlave(candidate, milkController)
+        Return "The target is a Milk Slave and cannot be converted directly."
+    ElseIf milkController.MilkQC == None
+        Return "Required MME quest condition data is unavailable."
+    ElseIf milkController.MilkMaidFaction == None
+        Return "The required MME Milk Maid faction property is unavailable."
+    ElseIf milkController.MME_Util_Potions == None
+        Return "The required MME potion data is unavailable."
+    ElseIf Game.GetModByName("ZaZAnimationPack.esm") == 255
+        Return "The required ZaZ animation dependency is unavailable."
+    EndIf
+
+    Potion lactacid = milkController.MME_Util_Potions.GetAt(0) as Potion
+    If lactacid == None || lactacid.GetNthEffectMagicEffect(0) == None
+        Return "The required MME Lactacid conversion effect is unavailable."
+    ElseIf milkController.SexLab == None
+        Return "MME's SexLab animation dependency is unavailable."
+    ElseIf candidate.IsInCombat()
+        Return "The target is in combat."
+    ElseIf candidate.IsOnMount()
+        Return "The target is mounted."
+    ElseIf MMEOStimIntegration.IsActorBusy(candidate)
+        Return "The target is already in an animation scene."
+    ElseIf MMEAlertsController.IsFreeArmAnimationBlocked(candidate)
+        Return "The target's restraints prevent the required animation."
+    EndIf
+    Int sitState = candidate.GetSitState()
+    If sitState > 0 && sitState <= 3
+        Return "The target must be standing for the conversion animation."
+    EndIf
+
+    Return ""
+EndFunction
+
+Bool Function IsUnexpectedActionFailure(String failure) Global
+    Return StringUtil.Find(failure, "unavailable") >= 0 || StringUtil.Find(failure, "did not") >= 0
+EndFunction
+
+Function ReleaseActionLock(String lockKey, String lockTimeKey) Global
+    StorageUtil.UnsetIntValue(None, lockKey)
+    StorageUtil.UnsetFloatValue(None, lockTimeKey)
+EndFunction
+
+Function FailAction(Actor candidate, String failure, Bool unexpected) Global
+    Debug.Notification("Create Milk Maid: " + failure)
+    String detail = failure + " | target=" + GetActorIdentity(candidate)
+    If unexpected
+        MMELog.Alarm("[MME Extensions Create Milk Maid] FAILURE | " + detail)
+    Else
+        MMELog.Diagnostic("[MME Extensions Create Milk Maid] rejected | " + detail)
+    EndIf
 EndFunction
 
 Bool Function ValidateSexLabRequest(Actor milkSource, Actor candidate) Global

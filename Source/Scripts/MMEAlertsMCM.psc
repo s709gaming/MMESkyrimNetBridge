@@ -99,6 +99,7 @@ Int selfMilkingActionOption
 Int pairedMilkingActionOption
 Int breastfeedingActionCooldownOption
 Int giveMilkActionOption
+Int createMilkMaidActionOption
 Int giveMilkActionCooldownOption
 Int actorDrinkMilkRemovalOption
 Int selfMilkingActionDiagnosticOption
@@ -200,7 +201,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 118
+    Return 122
 EndFunction
 
 Function SetPageNames()
@@ -315,6 +316,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enablePairedMilkingAction", 1)
         JsonUtil.SetFloatValue(SettingsFile, "breastfeedingActionCooldown", 45.0)
         JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkAction", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableCreateMilkMaidAction", 1)
         JsonUtil.SetFloatValue(SettingsFile, "giveMilkActionCooldown", 0.0)
         JsonUtil.SetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0)
@@ -1094,6 +1096,13 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "drinkBalanceDefaultsMigration118", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Enables the static, runtime-validated Skyrim.Net conversion action on
+    ; existing saves without changing any original MME dialogue settings.
+    If JsonUtil.GetIntValue(SettingsFile, "createMilkMaidActionMigration120", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableCreateMilkMaidAction", 1)
+        JsonUtil.SetIntValue(SettingsFile, "createMilkMaidActionMigration120", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1232,6 +1241,7 @@ Event OnPageReset(String page)
     pairedMilkingActionOption = -1
     breastfeedingActionCooldownOption = -1
     giveMilkActionOption = -1
+    createMilkMaidActionOption = -1
     giveMilkActionCooldownOption = -1
     actorDrinkMilkRemovalOption = -1
     selfMilkingActionDiagnosticOption = -1
@@ -1478,6 +1488,7 @@ Event OnPageReset(String page)
         selfMilkingActionOption = AddToggleOption("Allow Self-Milking Action", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingAction", 1) == 1)
         pairedMilkingActionOption = AddToggleOption("Allow Paired Milking Action", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) == 1)
         giveMilkActionOption = AddToggleOption("Allow Give-and-Drink Actions", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkAction", 1) == 1)
+        createMilkMaidActionOption = AddToggleOption("Allow Create Milk Maid Action", JsonUtil.GetIntValue(SettingsFile, "enableCreateMilkMaidAction", 1) == 1)
         actorDrinkMilkRemovalOption = AddToggleOption("Milkmaid Giver Spends Milk", JsonUtil.GetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", 1) == 1)
         Int breastfeedingCooldownFlags = OPTION_FLAG_NONE
         If JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) != 1
@@ -1635,7 +1646,7 @@ Event OnPageReset(String page)
         skyrimNetMilkingDiagnosticOption = AddToggleOption("Milking Start/End Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingDiagnostic", 0) == 1)
         skyrimNetCreationDiagnosticOption = AddToggleOption("New Milkmaid Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetCreationDiagnostic", 0) == 1)
         skyrimNetStatusDiagnosticOption = AddToggleOption("Nearby Milk Status Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", 0) == 1)
-        skyrimNetPromptDiagnosticOption = AddToggleOption("Milkmaid Bio Prompt", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 1) == 1)
+        skyrimNetPromptDiagnosticOption = AddToggleOption("Milkmaid Bio Prompt", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 0) == 1)
         skyrimNetOStimTraceOption = AddToggleOption("Skyrim.Net OStim Trace", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetOStimTrace", 0) == 1)
         skyrimNetSexLabTraceOption = AddToggleOption("Skyrim.Net SexLab Trace", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetSexLabTrace", 0) == 1)
         milkFullNarrationDiagnosticOption = AddToggleOption("Milk Full Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarrationDiagnostic", 0) == 1)
@@ -1772,6 +1783,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Prevent Skyrim.Net from starting another breastfeeding action for this many real-time seconds. Dialogue breastfeeding remains available.")
     ElseIf option == giveMilkActionOption
         SetInfoText("Allow three explicit Skyrim.Net routes: player gives to speaker to drink, speaker gives to player to drink, or speaker gives to another NPC to drink.")
+    ElseIf option == createMilkMaidActionOption
+        SetInfoText("Allow Skyrim.Net to convert one explicitly selected adult female NPC through MME's native Lactacid registration and animation flow. Every target and capacity check is repeated before commit.")
     ElseIf option == actorDrinkMilkRemovalOption
         SetInfoText("When the giver is a confirmed MME Milkmaid with at least one stored milk, spend one milk to fund the jug. Failed transactions restore the deducted milk; other givers receive the baseline free jug.")
     ElseIf option == giveMilkActionCooldownOption
@@ -1805,7 +1818,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == skyrimNetStatusDiagnosticOption
         SetInfoText("Report SkyrimNet nearby Milkmaid status updates and failures.")
     ElseIf option == skyrimNetPromptDiagnosticOption
-        SetInfoText("Report when SkyrimNet renders the optional Milkmaid bio prompt for an actor.")
+        SetInfoText("Report when Skyrim.Net renders the optional Milkmaid bio prompt for an actor.")
     ElseIf option == skyrimNetOStimTraceOption
         SetInfoText("Show Skyrim.Net breastfeeding action selection, semantic roles, OStim routing, and startup. If no SN BF intent appears, another action was selected before this mod ran.")
     ElseIf option == skyrimNetSexLabTraceOption
@@ -2363,6 +2376,11 @@ Event OnOptionSelect(Int option)
         JsonUtil.Save(SettingsFile, False)
         SetToggleOptionValue(option, value == 1)
         ForcePageReset()
+    ElseIf option == createMilkMaidActionOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableCreateMilkMaidAction", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableCreateMilkMaidAction", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
     ElseIf option == actorDrinkMilkRemovalOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", value)
@@ -2509,7 +2527,7 @@ Event OnOptionSelect(Int option)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == skyrimNetPromptDiagnosticOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 1)
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == skyrimNetOStimTraceOption

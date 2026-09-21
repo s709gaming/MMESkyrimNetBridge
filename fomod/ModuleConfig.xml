@@ -57,5 +57,25 @@
         </group>
       </optionalFileGroups>
     </installStep>
+
+    <installStep name="SkyrimNet Version Compatibility">
+      <optionalFileGroups order="Explicit">
+        <group name="Leave unchecked for SkyrimNet 24" type="SelectAtMostOne">
+          <plugins order="Explicit">
+
+            <plugin name="Install SkyrimNet 25 compatibility">
+              <description>Check this only when using SkyrimNet 0.25 or newer. Adds the manifest-backed external content plugin required by SkyrimNet 25. Leave unchecked for SkyrimNet 24.</description>
+              <files>
+                <folder source="fomod\choices\skyrimnet25\s709gaming.mme-extensions" destination="SKSE\Plugins\SkyrimNet\external\s709gaming.mme-extensions" priority="10" />
+              </files>
+              <typeDescriptor>
+                <type name="Optional" />
+              </typeDescriptor>
+            </plugin>
+
+          </plugins>
+        </group>
+      </optionalFileGroups>
+    </installStep>
   </installSteps>
 </config>

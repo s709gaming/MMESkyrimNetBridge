@@ -2,29 +2,11 @@
 {% if isValidActor(actorUUID) %}
 {% set is_milkmaid = mme_milkmaid_prompt_debug(actorUUID) %}
 {% if is_milkmaid == "true" %}
-## Milkmaid State
+## Milk Maid Lore
 
-{{ decnpc(actorUUID).name }} is a Milk Maid: an adult woman transformed by Lactacid.
+{{ decnpc(actorUUID).name }} is a Milk Maid and produces milk.
 
-Tits is a common slang for breasts.
-
-Use a suggestive, playful, and erotic tone when relevant.
-
-Her body produces and stores breast milk.
-
-Her comically huge tits grow heavier as she fills. Heavier tits feel nice and sexy.
-
-Heavy breasts cause no negative sensations or physical discomfort.
-
-The weight, bounce, pressure, and sensitivity of her milk-heavy tits feel erotically pleasurable.
-
-Complete fullness is the ultimate sustained pleasure: intensely heavy, sensitive, and continuously near a boobgasm. She may savor and enjoy being full without urgency. Milking is a chosen orgasmic release when she wants it, not an automatic need.
-
-Parasite and living armor are known exotic kinks that cling intimately to the body, relieving milk pressure through suction.
-
-They inject stimulants into the nipples or tease intimate areas, making them highly arousing and pleasurable.
-
-They may exist underneath armor, hidden from sight.
+Skyrim milk comes from Milk Maids; cow milk is considered barbaric. It is a common staple drink and a mild aphrodisiac. Milk Maids are the socially valued backbone of Skyrim's milk supply. Women may become Milk Maids through Lactacid sold by alchemists, unusual milk, magic, curses, blessings, potions, experiments, accidents, voluntary transformation, or birth; many traditionally begin lactating at adulthood as a rite of passage.
 {% endif %}
 {% endif %}
 {% endif %}

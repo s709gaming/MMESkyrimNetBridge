@@ -50,3 +50,5 @@ Int Function Milklvl0fix()
 EndFunction
 Function AssignSlot(Actor akActor)
 EndFunction
+Function SingleMaidReset(Actor akActor)
+EndFunction

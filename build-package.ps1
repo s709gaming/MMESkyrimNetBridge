@@ -23,6 +23,9 @@ $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickst
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
 $standardDefaultsOutputDir = Join-Path $projectRoot "fomod\choices\standard\Scripts"
+$skyrimNet25PluginId = "s709gaming.mme-extensions"
+$skyrimNet25SourceDir = Join-Path $projectRoot "SkyrimNet25\$skyrimNet25PluginId"
+$skyrimNet25ManifestPath = Join-Path $skyrimNet25SourceDir "manifest.json"
 
 $nativeDll = Join-Path $projectRoot "build\native-release\package\SKSE\Plugins\MMEExtensions.dll"
 $ostimBreastfeedingScene = Join-Path $projectRoot "SKSE\Plugins\OStim\scenes\MMEExtensions\2P\FF\MMEExt2PStandingNippleSuckingFF.json"
@@ -158,7 +161,7 @@ foreach ($configName in @("SkyrimNet.json", "Thoughts.json", "Injection.json", "
     Copy-Item -LiteralPath $configPath -Destination $packageConfig
 }
 
-# Install the additive actor-bio prompt without replacing any SkyrimNet-owned template.
+# Install the custom wearer prompt without replacing any SkyrimNet-owned template.
 $selfCommentPrompt = Join-Path $projectRoot "SkyrimNetPrompts\mme_wearer_self_comment.prompt"
 if (!(Test-Path -LiteralPath $selfCommentPrompt)) {
     throw "Required wearer self-comment prompt is missing: $selfCommentPrompt"
@@ -167,12 +170,16 @@ $selfCommentDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\prompts"
 New-Item -ItemType Directory -Force -Path $selfCommentDestination | Out-Null
 Copy-Item -LiteralPath $selfCommentPrompt -Destination $selfCommentDestination
 
+# Add concise lore only to actor bios that the live MME state identifies as
+# Milk Maids. This is the proven v24 decorator route and does not persist lore
+# in Skyrim.Net's shared world-memory database.
 $milkmaidPrompt = Join-Path $projectRoot "SkyrimNetPrompts\0260_mme_extensions_milkmaid.prompt"
-if (Test-Path -LiteralPath $milkmaidPrompt) {
-    $promptDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\prompts\submodules\character_bio"
-    New-Item -ItemType Directory -Force -Path $promptDestination | Out-Null
-    Copy-Item -LiteralPath $milkmaidPrompt -Destination $promptDestination
+if (!(Test-Path -LiteralPath $milkmaidPrompt)) {
+    throw "Required Milkmaid actor-bio prompt is missing: $milkmaidPrompt"
 }
+$milkmaidPromptDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\prompts\submodules\character_bio"
+New-Item -ItemType Directory -Force -Path $milkmaidPromptDestination | Out-Null
+Copy-Item -LiteralPath $milkmaidPrompt -Destination $milkmaidPromptDestination
 
 # Skyrim.Net actions use the persistent MMEAlertDebugQuest bridge. The paired
 # breastfeeding contracts normalize their actor roles there. Three explicit
@@ -182,7 +189,8 @@ $skyrimNetActions = @(
     (Join-Path $projectRoot "SkyrimNetActions\mme_breastfeeding_drink_from_target.yaml"),
     (Join-Path $projectRoot "SkyrimNetActions\mme_give_milk_to_actor.yaml"),
     (Join-Path $projectRoot "SkyrimNetActions\mme_player_gives_milk_to_speaker_to_drink.yaml"),
-    (Join-Path $projectRoot "SkyrimNetActions\mme_speaker_gives_milk_to_player_to_drink.yaml")
+    (Join-Path $projectRoot "SkyrimNetActions\mme_speaker_gives_milk_to_player_to_drink.yaml"),
+    (Join-Path $projectRoot "SkyrimNetActions\mme_make_target_new_milkmaid.yaml")
 )
 $actionDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\config\actions"
 New-Item -ItemType Directory -Force -Path $actionDestination | Out-Null
@@ -203,6 +211,93 @@ $breastfeedingPromptDestination = Join-Path $stageDir "SKSE\Plugins\SkyrimNet\pr
 New-Item -ItemType Directory -Force -Path $breastfeedingPromptDestination | Out-Null
 Copy-Item -LiteralPath $breastfeedingPrompt -Destination $breastfeedingPromptDestination
 
+# Generate the optional SkyrimNet 25 external content plugin from the same
+# canonical actions and prompts used by the default SkyrimNet 24 layout. The
+# generated files live beneath the FOMOD choice, not the always-installed SKSE
+# folder. SkyrimNet 25 requires each action filename to match its YAML name.
+if (!(Test-Path -LiteralPath $skyrimNet25ManifestPath)) {
+    throw "Required SkyrimNet 25 manifest is missing: $skyrimNet25ManifestPath"
+}
+$skyrimNet25Manifest = Get-Content -LiteralPath $skyrimNet25ManifestPath -Raw | ConvertFrom-Json
+if ($skyrimNet25Manifest.id -cne $skyrimNet25PluginId) {
+    throw "SkyrimNet 25 manifest id must exactly match its folder: expected '$skyrimNet25PluginId', got '$($skyrimNet25Manifest.id)'."
+}
+if ($skyrimNet25Manifest.type -ne "bundle") {
+    throw "SkyrimNet 25 manifest type must be 'bundle'."
+}
+if ($skyrimNet25Manifest.version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$') {
+    throw "SkyrimNet 25 manifest version must be semantic versioning: $($skyrimNet25Manifest.version)"
+}
+if ($skyrimNet25Manifest.min_skyrimnet_version -ne "0.25.0") {
+    throw "SkyrimNet 25 manifest min_skyrimnet_version must be 0.25.0."
+}
+if ([string]::IsNullOrWhiteSpace([string]$skyrimNet25Manifest.icon)) {
+    throw "SkyrimNet 25 manifest requires an icon."
+}
+if ($null -eq $skyrimNet25Manifest.invocation -or [string]::IsNullOrWhiteSpace([string]$skyrimNet25Manifest.invocation.attestation)) {
+    throw "SkyrimNet 25 action bundle requires invocation metadata and an attestation."
+}
+
+$skyrimNet25StageDir = Join-Path $stageDir "fomod\choices\skyrimnet25\$skyrimNet25PluginId"
+$skyrimNet25ActionDir = Join-Path $skyrimNet25StageDir "actions"
+$skyrimNet25PromptDir = Join-Path $skyrimNet25StageDir "prompts"
+New-Item -ItemType Directory -Force -Path $skyrimNet25ActionDir, $skyrimNet25PromptDir | Out-Null
+Copy-Item -LiteralPath $skyrimNet25ManifestPath -Destination $skyrimNet25StageDir
+
+$generatedSkyrimNet25Actions = @()
+foreach ($skyrimNetAction in $skyrimNetActions) {
+    $actionText = Get-Content -LiteralPath $skyrimNetAction -Raw
+    $actionNameMatch = [regex]::Match($actionText, '(?m)^name:\s*["'']?([A-Za-z0-9_-]+)["'']?\s*$')
+    if (!$actionNameMatch.Success) {
+        throw "SkyrimNet action has no valid name field: $skyrimNetAction"
+    }
+    if ($actionText -notmatch '(?m)^eligibilityRules:\s*') {
+        throw "SkyrimNet 25 action is missing the required eligibilityRules property: $skyrimNetAction"
+    }
+    $actionFileName = $actionNameMatch.Groups[1].Value.ToLowerInvariant() + ".yaml"
+    Copy-Item -LiteralPath $skyrimNetAction -Destination (Join-Path $skyrimNet25ActionDir $actionFileName)
+    $generatedSkyrimNet25Actions += "actions/$actionFileName"
+}
+
+$declaredSkyrimNet25Actions = @($skyrimNet25Manifest.invocation.actions | ForEach-Object { [string]$_.file })
+$missingManifestActions = @($generatedSkyrimNet25Actions | Where-Object { $_ -notin $declaredSkyrimNet25Actions })
+$staleManifestActions = @($declaredSkyrimNet25Actions | Where-Object { $_ -notin $generatedSkyrimNet25Actions })
+if ($missingManifestActions.Count -gt 0 -or $staleManifestActions.Count -gt 0) {
+    throw "SkyrimNet 25 manifest action list does not match generated actions. Missing declarations: $($missingManifestActions -join ', '); stale declarations: $($staleManifestActions -join ', ')"
+}
+
+$skyrimNet25PromptMap = [ordered]@{
+    $selfCommentPrompt = "mme_wearer_self_comment.prompt"
+    $milkmaidPrompt = "submodules\character_bio\0260_mme_extensions_milkmaid.prompt"
+    $breastfeedingPrompt = "submodules\user_final_instructions\0950_mme_extensions_breastfeeding.prompt"
+}
+foreach ($promptEntry in $skyrimNet25PromptMap.GetEnumerator()) {
+    if (!(Test-Path -LiteralPath $promptEntry.Key)) {
+        throw "Required SkyrimNet 25 prompt is missing: $($promptEntry.Key)"
+    }
+    $promptOutput = Join-Path $skyrimNet25PromptDir $promptEntry.Value
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $promptOutput) | Out-Null
+    Copy-Item -LiteralPath $promptEntry.Key -Destination $promptOutput
+}
+
+foreach ($forbiddenFolder in @("config", "library", "overlay", "saves")) {
+    if (Test-Path -LiteralPath (Join-Path $skyrimNet25StageDir $forbiddenFolder)) {
+        throw "Forbidden folder in generated SkyrimNet 25 external plugin: $forbiddenFolder"
+    }
+}
+foreach ($contentFile in Get-ChildItem -LiteralPath $skyrimNet25StageDir -File -Recurse) {
+    $relativePath = $contentFile.FullName.Substring($skyrimNet25StageDir.Length).TrimStart([char[]]@('\', '/'))
+    if ($relativePath -match '[^\x00-\x7F]') {
+        throw "SkyrimNet 25 external-plugin paths must be ASCII: $relativePath"
+    }
+    if ($contentFile.DirectoryName -eq $skyrimNet25ActionDir -and $contentFile.Extension -cne ".yaml") {
+        throw "SkyrimNet 25 actions require the exact lowercase .yaml extension: $relativePath"
+    }
+    if ($relativePath.StartsWith("prompts\") -and $contentFile.Extension -cne ".prompt") {
+        throw "SkyrimNet 25 prompts require the exact lowercase .prompt extension: $relativePath"
+    }
+}
+
 # Package the SSEEdit-built randomized voice pools and the two legacy test files.
 $testSoundRoot = Join-Path $projectRoot "assets\sounds"
 if (Test-Path -LiteralPath $testSoundRoot) {
@@ -212,6 +307,9 @@ if (Test-Path -LiteralPath $testSoundRoot) {
 # Ship the project overview. Keep the generically named LICENSE file out of the
 # game Data package because unrelated mods commonly use the same root filename.
 Copy-Item -LiteralPath (Join-Path $projectRoot "README.md") -Destination $stageDir
+$packageDocs = Join-Path $stageDir "Docs"
+New-Item -ItemType Directory -Force -Path $packageDocs | Out-Null
+Copy-Item -LiteralPath (Join-Path $projectRoot "docs\SkyrimNet-New-Milk-Maid-Action.md") -Destination $packageDocs
 
 $spidConfig = Join-Path $projectRoot "MMEAlert_DISTR.ini"
 If (Test-Path -LiteralPath $spidConfig) {

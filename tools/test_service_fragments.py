@@ -188,11 +188,82 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('Give Milk Action Cooldown', mcm)
         self.assertIn('Give Milk Action Diagnostic', mcm)
         self.assertIn('actorDrinkMigration117', mcm)
-        self.assertIn('Return 118', mcm)
+        self.assertIn('Return 122', mcm)
         self.assertIn('MMEActorDrinkTransaction', build)
         self.assertIn('mme_give_milk_to_actor.yaml', build)
         self.assertIn('mme_player_gives_milk_to_speaker_to_drink.yaml', build)
         self.assertIn('mme_speaker_gives_milk_to_player_to_drink.yaml', build)
+
+    def test_skyrimnet25_fomod_bundle_is_generated_from_canonical_content(self):
+        manifest_path = ROOT / 'SkyrimNet25/s709gaming.mme-extensions/manifest.json'
+        manifest = json.loads(manifest_path.read_text())
+        fomod = (ROOT / 'fomod/ModuleConfig.xml').read_text()
+        build = (ROOT / 'build-package.ps1').read_text()
+        maintenance = (ROOT / 'SkyrimNet25/README.md').read_text()
+
+        self.assertEqual(manifest['id'], 's709gaming.mme-extensions')
+        self.assertEqual(manifest['type'], 'bundle')
+        self.assertEqual(manifest['min_skyrimnet_version'], '0.25.0')
+        self.assertTrue(manifest['icon'])
+        declared_actions = {entry['file'] for entry in manifest['invocation']['actions']}
+        self.assertEqual(declared_actions, {
+            'actions/startbreastfeedingdrinkfromtarget.yaml',
+            'actions/startbreastfeedingmilkshare.yaml',
+            'actions/speakergivesmilktoactortodrink.yaml',
+            'actions/playergivesmilktospeakertodrink.yaml',
+            'actions/speakergivesmilktoplayertodrink.yaml',
+            'actions/maketargetnewmilkmaid.yaml',
+        })
+
+        for action_path in (ROOT / 'SkyrimNetActions').glob('*.yaml'):
+            self.assertIn('eligibilityRules:', action_path.read_text(), action_path.name)
+
+        self.assertIn('type="SelectAtMostOne"', fomod)
+        self.assertIn('Install SkyrimNet 25 compatibility', fomod)
+        self.assertIn('fomod\\choices\\skyrimnet25\\s709gaming.mme-extensions', fomod)
+        self.assertIn('SkyrimNet25\\$skyrimNet25PluginId', build)
+        self.assertIn('ToLowerInvariant() + ".yaml"', build)
+        self.assertIn('The actions and prompts are not duplicated here.', maintenance)
+
+    def test_targeted_new_milkmaid_action_reuses_native_mme_conversion(self):
+        action = (ROOT / 'SkyrimNetActions/mme_make_target_new_milkmaid.yaml').read_text()
+        controller = (ROOT / 'Source/Scripts/MMEAlertsController.psc').read_text()
+        conversion = (ROOT / 'Source/Scripts/MMENewMilkMaid.psc').read_text()
+        mcm = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
+        build = (ROOT / 'build-package.ps1').read_text()
+        notes = (ROOT / 'docs/SkyrimNet-New-Milk-Maid-Action.md').read_text()
+
+        self.assertIn('name: MakeTargetNewMilkMaid', action)
+        self.assertIn('executionFunctionName: MakeTargetNewMilkMaid', action)
+        self.assertIn('type: dynamic', action)
+        self.assertIn('voluntary, accidental, magical', action)
+        self.assertIn('potion, spell, curse, blessing, experiment', action)
+        self.assertNotIn('who has agreed', action)
+        self.assertIn('MMENewMilkMaid.MakeTargetNewMilkMaid(target)', controller)
+        validator = conversion.split('String Function GetActionEligibilityFailure(', 1)[1].split('EndFunction', 1)[0]
+        for required in ('candidateBase.GetSex() != 1', 'IsMMEMilkMaid',
+                         'MilkQC == None', 'MilkMaidFaction == None',
+                         'MME_Util_Potions == None', 'GetNthEffectMagicEffect(0) == None',
+                         'SexLab == None', 'ZaZAnimationPack.esm', 'IsActorBusy(candidate)', 'IsFreeArmAnimationBlocked(candidate)'):
+            self.assertIn(required, validator)
+        execution = conversion.split('Function MakeTargetNewMilkMaid(', 1)[1].split('EndFunction', 1)[0]
+        self.assertLess(execution.index('GetActionEligibilityFailure(candidate, milkController)'), execution.index('StorageUtil.SetIntValue(None, lockKey, 1)'))
+        self.assertIn('HandleBreastfeedingCompleted(Game.GetPlayer(), candidate, "CreateMilkMaidAction", False)', execution)
+        native = conversion.split('Function HandleBreastfeedingCompleted(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('candidate.EquipItem(lactacid, False, True)', native)
+        self.assertNotIn('milkController.AssignSlotMaid(', conversion)
+        self.assertIn('milkController.SingleMaidReset(candidate)', execution)
+        self.assertNotIn('Debug.SendAnimationEvent', conversion)
+        self.assertIn('The target is male', conversion)
+        self.assertIn('already a Milk Maid', conversion)
+        self.assertNotIn('milkController.MilkMaid[', validator)
+        self.assertNotIn('milkController.MilkMaid.Length', validator)
+        self.assertIn('capacity may be too low or its registry may be full', conversion)
+        self.assertIn('MMELog.Alarm("[MME Extensions Create Milk Maid] FAILURE', conversion)
+        self.assertIn('Allow Create Milk Maid Action', mcm)
+        self.assertIn('createMilkMaidActionMigration120', mcm)
+        self.assertIn('mme_make_target_new_milkmaid.yaml', build)
+        self.assertIn('Original MME dialogue', notes)
 
     def test_original_mme_sexlab_dialogue_is_observed_without_info_override(self):
         service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
@@ -270,6 +341,25 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('Scriptname SkyrimNetApi Hidden', sdk)
         self.assertIn('Function RegisterAction(', sdk)
         self.assertIn('Function DirectNarration(', sdk)
+
+    def test_milkmaid_lore_uses_actor_bio_decorator(self):
+        bridge = (ROOT / 'Source/Scripts/MMEAlertsSkyrimNet.psc').read_text()
+        controller = (ROOT / 'Source/Scripts/MMEAlertsController.psc').read_text()
+        mcm = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
+        build = (ROOT / 'build-package.ps1').read_text()
+        prompt = (ROOT / 'SkyrimNetPrompts/0260_mme_extensions_milkmaid.prompt').read_text()
+        self.assertIn('RegisterDecorator("mme_milkmaid_prompt_debug"', bridge)
+        self.assertIn('Return "true"', bridge)
+        self.assertIn('IsRealMMEMilkmaid(milkMaid)', bridge)
+        self.assertNotIn('AddWorldKnowledge', bridge)
+        self.assertNotIn('MilkmaidWorldKnowledge', controller)
+        self.assertIn('cow milk is considered barbaric', prompt)
+        self.assertIn('common staple drink', prompt)
+        self.assertIn('mild aphrodisiac', prompt)
+        self.assertIn('socially valued backbone', prompt)
+        self.assertIn('Lactacid sold by alchemists', prompt)
+        self.assertIn('Return 122', mcm)
+        self.assertIn('0260_mme_extensions_milkmaid.prompt', build)
 
     def test_every_service_routes_through_completion_bus(self):
         for action in TARGETS.values():
@@ -414,7 +504,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('enableGiveMilkEasyMode", 1', dialogue)
         self.assertIn('Game.GetFormFromFile(0x003534, "HearthFires.esm")', dialogue)
         self.assertIn('Easy Mode temporary Jug', dialogue)
-        self.assertIn('Return 118', mcm)
+        self.assertIn('Return 122', mcm)
         self.assertIn('AddHeaderOption("Easy Mode")', mcm)
         self.assertIn('AddToggleOption("Free Jug for Give Milk"', mcm)
         self.assertIn('JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1)', mcm)
