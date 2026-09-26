@@ -238,6 +238,8 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('type: dynamic', action)
         self.assertIn('voluntary, accidental, magical', action)
         self.assertIn('potion, spell, curse, blessing, experiment', action)
+        self.assertIn('the player or a specifically selected nearby adult female NPC', action)
+        self.assertNotIn('Do not use on the player', action)
         self.assertNotIn('who has agreed', action)
         self.assertIn('MMENewMilkMaid.MakeTargetNewMilkMaid(target)', controller)
         validator = conversion.split('String Function GetActionEligibilityFailure(', 1)[1].split('EndFunction', 1)[0]
@@ -246,11 +248,17 @@ class ServiceTests(unittest.TestCase):
                          'MME_Util_Potions == None', 'GetNthEffectMagicEffect(0) == None',
                          'SexLab == None', 'ZaZAnimationPack.esm', 'IsActorBusy(candidate)', 'IsFreeArmAnimationBlocked(candidate)'):
             self.assertIn(required, validator)
+        self.assertNotIn('candidate == Game.GetPlayer()', validator)
+        self.assertNotIn('GetSitState()', validator)
         execution = conversion.split('Function MakeTargetNewMilkMaid(', 1)[1].split('EndFunction', 1)[0]
         self.assertLess(execution.index('GetActionEligibilityFailure(candidate, milkController)'), execution.index('StorageUtil.SetIntValue(None, lockKey, 1)'))
         self.assertIn('HandleBreastfeedingCompleted(Game.GetPlayer(), candidate, "CreateMilkMaidAction", False)', execution)
         native = conversion.split('Function HandleBreastfeedingCompleted(', 1)[1].split('EndFunction', 1)[0]
         self.assertIn('candidate.EquipItem(lactacid, False, True)', native)
+        self.assertIn('GetEligibilityFailure(candidate, milkController, actionRoute)', native)
+        shared_validator = conversion.split('String Function GetEligibilityFailure(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('Bool allowPlayer = False', conversion)
+        self.assertIn('(!allowPlayer && candidate == Game.GetPlayer())', shared_validator)
         self.assertNotIn('milkController.AssignSlotMaid(', conversion)
         self.assertIn('milkController.SingleMaidReset(candidate)', execution)
         self.assertNotIn('Debug.SendAnimationEvent', conversion)

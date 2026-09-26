@@ -117,7 +117,9 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
         Return
     EndIf
 
-    String eligibilityFailure = GetEligibilityFailure(candidate, milkController)
+    ; The Skyrim.Net roleplay action may intentionally transform the player.
+    ; Existing OStim/SexLab dialogue routes remain NPC-only by default.
+    String eligibilityFailure = GetEligibilityFailure(candidate, milkController, actionRoute)
     If eligibilityFailure != ""
         TraceStep(eligibilityFailure, True)
         If sexLabRoute
@@ -309,9 +311,7 @@ EndFunction
 ; this adapter verifies the public faction/StorageUtil postcondition afterward.
 String Function GetActionEligibilityFailure(Actor candidate, MilkQUEST milkController) Global
     If candidate == None
-        Return "No target NPC was selected."
-    ElseIf candidate == Game.GetPlayer()
-        Return "The target must be a female NPC, not the player."
+        Return "No target actor was selected."
     ElseIf candidate.IsChild()
         Return "The target is a child and cannot become a Milk Maid."
     EndIf
@@ -352,10 +352,6 @@ String Function GetActionEligibilityFailure(Actor candidate, MilkQUEST milkContr
         Return "The target is already in an animation scene."
     ElseIf MMEAlertsController.IsFreeArmAnimationBlocked(candidate)
         Return "The target's restraints prevent the required animation."
-    EndIf
-    Int sitState = candidate.GetSitState()
-    If sitState > 0 && sitState <= 3
-        Return "The target must be standing for the conversion animation."
     EndIf
 
     Return ""
@@ -497,11 +493,11 @@ EndFunction
 
 ; Returns a short failure reason, or an empty string when the original MME
 ; Lactacid creation branch can accept this candidate.
-String Function GetEligibilityFailure(Actor candidate, MilkQUEST milkController) Global
+String Function GetEligibilityFailure(Actor candidate, MilkQUEST milkController, Bool allowPlayer = False) Global
     If milkController == None
         Return "MME controller unavailable"
     EndIf
-    If !MMEDebug.IsActorAvailable(candidate) || candidate == Game.GetPlayer()
+    If !MMEDebug.IsActorAvailable(candidate) || (!allowPlayer && candidate == Game.GetPlayer())
         Return "target invalid"
     EndIf
     If MMEArmorScript.IsMMEMilkMaid(candidate, milkController)
