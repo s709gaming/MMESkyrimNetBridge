@@ -18,7 +18,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
-$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMETentacleEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEExtensionsNative")
+$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMETentacleEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
@@ -310,6 +310,11 @@ Copy-Item -LiteralPath (Join-Path $projectRoot "README.md") -Destination $stageD
 $packageDocs = Join-Path $stageDir "Docs"
 New-Item -ItemType Directory -Force -Path $packageDocs | Out-Null
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\SkyrimNet-New-Milk-Maid-Action.md") -Destination $packageDocs
+$apiDoc = Join-Path $projectRoot "docs\MMEExtensions-Modding-API.md"
+if (!(Test-Path -LiteralPath $apiDoc)) {
+    throw "Required public API documentation is missing: $apiDoc"
+}
+Copy-Item -LiteralPath $apiDoc -Destination $packageDocs
 
 $spidConfig = Join-Path $projectRoot "MMEAlert_DISTR.ini"
 If (Test-Path -LiteralPath $spidConfig) {

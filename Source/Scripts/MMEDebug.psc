@@ -32,6 +32,9 @@ Int AttemptSequence = 0
 Int ActiveSessionID = 0
 String ActiveCaller = ""
 String ActiveSemanticIntent = ""
+Bool ActiveAPIAcceptedPublished = False
+Bool ActiveAPIStartedPublished = False
+Bool ActiveAPITerminalPublished = False
 
 ; SexLab uses short-lived, actor-scoped startup locks. SexLab's own active
 ; state becomes authoritative as soon as StartThread succeeds.
@@ -1455,6 +1458,7 @@ Bool Function StartBreastfeeding(Actor milkSource, Actor drinker, Bool callerDia
         Return False
     EndIf
     ActiveThreadID = threadID
+    PublishAPIAccepted()
     ; Do not wait for OStim inside a TopicInfo result fragment. OStim may defer
     ; scene activation until the dialogue menu has fully closed, and waiting
     ; here prevents that close from completing. Events plus the controller's
@@ -1483,6 +1487,9 @@ Function BeginSession(Int sessionID, String caller, String semanticIntent, Actor
     ActiveSessionID = sessionID
     ActiveCaller = caller
     ActiveSemanticIntent = semanticIntent
+    ActiveAPIAcceptedPublished = False
+    ActiveAPIStartedPublished = False
+    ActiveAPITerminalPublished = False
     ; No provisional player-thread ID: NPC-only Skyrim.Net pairs must wait for
     ; the positive ID returned by OStim and ignore legacy player-thread events.
     ActiveThreadID = -1
@@ -1533,12 +1540,16 @@ Function ClearSessionState()
     ActiveSessionID = 0
     ActiveCaller = ""
     ActiveSemanticIntent = ""
+    ActiveAPIAcceptedPublished = False
+    ActiveAPIStartedPublished = False
+    ActiveAPITerminalPublished = False
 EndFunction
 
-Function EndSession(String reason = "completed")
+Function EndSession(String reason = "completed", Bool completedNormally = False)
     ; Cleanup is deliberately idempotent and local. Never stop an OStim thread
     ; here: callers must first prove StillOwnsThread, then stop it explicitly.
     TraceActive("cleanup reason=" + reason)
+    PublishAPITerminal(completedNormally, reason)
     UnregisterSessionEvents()
     ClearSessionState()
 EndFunction
@@ -1564,6 +1575,7 @@ Bool Function TryConfirmOStimStartup(String confirmationSource)
     EndIf
 
     ActiveStartupConfirmed = True
+    PublishAPIStarted()
     String finalSceneID = MMEOStimIntegration.GetThreadScene(ActiveThreadID)
     TraceActive("OStim startup confirmed asynchronously by " + confirmationSource + " | thread=" + ActiveThreadID + " | selected scene=" + ActiveSceneID + " | current scene=" + finalSceneID)
     If ActiveSemanticIntent == "CreateMilkMaid"
@@ -1721,7 +1733,7 @@ Event OnOStimThreadEnd(String eventName, String json, Float threadID, Form sende
             EndIf
             MMENewMilkMaid.HandleBreastfeedingCompleted(milkSource, drinker, semanticIntent, mmeProcessed)
         EndIf
-        EndSession("OStim thread ended normally")
+        EndSession("OStim thread ended normally", completed)
     EndIf
 EndEvent
 
@@ -1745,7 +1757,7 @@ Event OnOStimEnd(String eventName, String json, Float numArg, Form sender)
             EndIf
             MMENewMilkMaid.HandleBreastfeedingCompleted(milkSource, drinker, semanticIntent, mmeProcessed)
         EndIf
-        EndSession("OStim player thread ended normally")
+        EndSession("OStim player thread ended normally", completed)
     EndIf
 EndEvent
 
@@ -1837,6 +1849,35 @@ EndFunction
 
 Function TraceActive(String traceText)
     TraceAttempt(ActiveSessionID, ActiveDiagnostic, traceText)
+EndFunction
+
+; Public lifecycle events are emitted from the authoritative persistent service,
+; not from Skyrim.Net or dialogue adapters. Per-session flags make every stage
+; at-most-once even when OStim sends both modern and legacy callbacks.
+Function PublishAPIAccepted()
+    If ActiveSession && !ActiveAPIAcceptedPublished && ActiveThreadID >= 0
+        ActiveAPIAcceptedPublished = True
+        MMEExtensionsAPI.PublishBreastfeedingStage("MMEExtensions_BreastfeedingRequestAccepted", ActiveMilkSource, ActiveDrinker, "OStim", ActiveSessionID)
+    EndIf
+EndFunction
+
+Function PublishAPIStarted()
+    If ActiveSession && ActiveAPIAcceptedPublished && !ActiveAPIStartedPublished
+        ActiveAPIStartedPublished = True
+        MMEExtensionsAPI.PublishBreastfeedingStage("MMEExtensions_BreastfeedingStarted", ActiveMilkSource, ActiveDrinker, "OStim", ActiveSessionID)
+    EndIf
+EndFunction
+
+Function PublishAPITerminal(Bool completedNormally, String reason)
+    If !ActiveSession || !ActiveAPIAcceptedPublished || ActiveAPITerminalPublished
+        Return
+    EndIf
+    ActiveAPITerminalPublished = True
+    If completedNormally
+        MMEExtensionsAPI.PublishBreastfeedingStage("MMEExtensions_BreastfeedingCompleted", ActiveMilkSource, ActiveDrinker, "OStim", ActiveSessionID)
+    Else
+        MMEExtensionsAPI.PublishBreastfeedingAborted(ActiveMilkSource, ActiveDrinker, "OStim", ActiveSessionID, reason)
+    EndIf
 EndFunction
 
 ; Unconditional, problem-only evidence. Call only at a terminal abnormal exit;

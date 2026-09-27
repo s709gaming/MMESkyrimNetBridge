@@ -696,6 +696,51 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('[MME Bound Thoughts] narration dispatch', bridge)
         self.assertIn('MMEThoughts.TraceBound("timer due")', controller)
 
+    def test_public_api_is_thin_readable_and_tracks_ostim_lifecycle(self):
+        api = (ROOT / 'Source/Scripts/MMEExtensionsAPI.psc').read_text()
+        service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
+        build = (ROOT / 'build-package.ps1').read_text()
+        docs = (ROOT / 'docs/MMEExtensions-Modding-API.md').read_text()
+
+        self.assertIn('Scriptname MMEExtensionsAPI Hidden', api)
+        self.assertIn('Int Function GetAPIVersion() Global', api)
+        self.assertIn('Return 1', api)
+        self.assertIn('Bool Function IsMilkMaid(Actor target) Global', api)
+        self.assertIn('Return MMEArmorScript.IsMMEMilkMaid(target)', api)
+        self.assertIn('Bool Function StartOStimBreastfeeding(Actor milkSource, Actor drinker) Global', api)
+        self.assertIn('MMEOStimBreastfeeding.StartSharedBreastfeeding(milkSource, drinker, "Public API")', api)
+        self.assertIn('Function RequestMilkMaidCreation(Actor target) Global', api)
+        self.assertIn('MMENewMilkMaid.MakeTargetNewMilkMaid(target)', api)
+        self.assertNotIn('Utility.Wait', api)
+        self.assertNotIn('RegisterForUpdate', api)
+
+        stage_publisher = api.split('Bool Function PublishBreastfeedingStage(', 1)[1].split('EndFunction', 1)[0]
+        self.assertLess(stage_publisher.index('PushForm(handle, milkSource)'), stage_publisher.index('PushForm(handle, drinker)'))
+        self.assertLess(stage_publisher.index('PushForm(handle, drinker)'), stage_publisher.index('PushString(handle, backend)'))
+        self.assertLess(stage_publisher.index('PushString(handle, backend)'), stage_publisher.index('PushInt(handle, requestID)'))
+        abort_publisher = api.split('Bool Function PublishBreastfeedingAborted(', 1)[1].split('EndFunction', 1)[0]
+        self.assertLess(abort_publisher.index('PushInt(handle, requestID)'), abort_publisher.index('PushString(handle, reason)'))
+
+        for event_name in (
+            'MMEExtensions_BreastfeedingRequestAccepted',
+            'MMEExtensions_BreastfeedingStarted',
+            'MMEExtensions_BreastfeedingCompleted',
+            'MMEExtensions_BreastfeedingAborted',
+        ):
+            self.assertIn(event_name, service + api)
+            self.assertIn(event_name, docs)
+        self.assertIn('ActiveAPIAcceptedPublished', service)
+        self.assertIn('ActiveAPIStartedPublished', service)
+        self.assertIn('ActiveAPITerminalPublished', service)
+        self.assertIn('EndSession("OStim thread ended normally", completed)', service)
+        self.assertIn('EndSession("OStim player thread ended normally", completed)', service)
+
+        self.assertIn('"MMEExtensionsAPI"', build)
+        self.assertIn('docs\\MMEExtensions-Modding-API.md', build)
+        self.assertIn('A function with **OStim** in its name is OStim-only.', docs)
+        self.assertIn('There is no animation-free creation API in version 1.', docs)
+        self.assertIn('MMEExtensions_MilkmaidCreated', docs)
+
     def test_quickstart_grants_optional_dd_open_straitjacket_once(self):
         quickstart = (ROOT / 'fomod/choices/recommended-quickstart/Source/Scripts/MMEAlertsQuickTest.psc').read_text()
         fomod = (ROOT / 'fomod/ModuleConfig.xml').read_text()
