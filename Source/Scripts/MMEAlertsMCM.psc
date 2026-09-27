@@ -157,6 +157,7 @@ Int boundMilkMaidThoughtsRandomnessOption
 Int boundMilkMaidThoughtsChanceOption
 Int boundMilkMaidThoughtNarrationOption
 Int boundMilkMaidThoughtNarrationChanceOption
+Int boundMilkMaidThoughtSoundsOption
 Int milkMaidThoughtsDebugOption
 Int traceMilkMaidThoughtsLogicOption
 Int armorInjectionOption
@@ -423,6 +424,8 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkMaidThoughtNarration", 1)
         JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationChance", 100)
         JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationMigration124", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkMaidThoughtSounds", 1)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtSoundsMigration125", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0)
         JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsMigration87", 1)
@@ -1155,6 +1158,13 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationMigration124", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds an independent default-on moan gate for the heavy-restraint Thought.
+    ; The global Reaction Sounds toggle remains the master sound switch.
+    If JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtSoundsMigration125", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkMaidThoughtSounds", 1)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtSoundsMigration125", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1351,6 +1361,7 @@ Event OnPageReset(String page)
     boundMilkMaidThoughtsChanceOption = -1
     boundMilkMaidThoughtNarrationOption = -1
     boundMilkMaidThoughtNarrationChanceOption = -1
+    boundMilkMaidThoughtSoundsOption = -1
     milkMaidThoughtsDebugOption = -1
     traceMilkMaidThoughtsLogicOption = -1
     armorInjectionOption = -1
@@ -1614,6 +1625,7 @@ Event OnPageReset(String page)
         boundMilkMaidThoughtsChanceOption = AddSliderOption("Bound Thought Chance", JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtsChance", 100), "{0}%")
         boundMilkMaidThoughtNarrationOption = AddToggleOption("Skyrim.Net Bound Narration", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughtNarration", 1) == 1)
         boundMilkMaidThoughtNarrationChanceOption = AddSliderOption("Bound Narration Chance", JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationChance", 100), "{0}%")
+        boundMilkMaidThoughtSoundsOption = AddToggleOption("Devious Restraint Moans", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughtSounds", 1) == 1)
         Return
     EndIf
     If page == "Tentacle Effects"
@@ -2040,6 +2052,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Let a successful local bound Thought request a targeted Skyrim.Net reaction. Disabling this does not suppress the HUD Thought.")
     ElseIf option == boundMilkMaidThoughtNarrationChanceOption
         SetInfoText("Set the chance that a successful local bound Thought is also sent to Skyrim.Net.")
+    ElseIf option == boundMilkMaidThoughtSoundsOption
+        SetInfoText("Play a hot reaction moan on the selected restrained Milk Maid when a bound Thought appears. The global Reaction Sounds setting must also be enabled.")
     ElseIf option == milkMaidThoughtsDebugOption
         SetInfoText("Attempt one local Thought notification every 15 real-time seconds using the controller's shared single-update scheduler. Debug Thoughts are not mirrored to Skyrim.Net.")
     ElseIf option == traceMilkMaidThoughtsLogicOption
@@ -2235,6 +2249,10 @@ Event OnOptionSelect(Int option)
     ElseIf option == boundMilkMaidThoughtNarrationOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughtNarration", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkMaidThoughtNarration", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == boundMilkMaidThoughtSoundsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughtSounds", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkMaidThoughtSounds", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == milkMaidThoughtsDebugOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)

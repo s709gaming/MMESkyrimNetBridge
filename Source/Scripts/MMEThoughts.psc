@@ -261,9 +261,32 @@ Bool Function GenerateAndShowBoundThought(Actor[] scannedActors) Global
     EndIf
 
     Debug.Notification(renderedThought)
+    PlayBoundThoughtReaction(selectedActor)
     MMEAlertsSkyrimNet.NarrateBoundMilkMaidThought(selectedActor, renderedThought)
     TraceBound("HUD shown | actor=" + ResolveActorName(selectedActor) + " | pool=" + poolName + " | comment=" + renderedThought)
     Return True
+EndFunction
+
+; Heavy-restraint Thoughts use the established hot, sex-aware reaction pool.
+; This has its own MCM switch while still respecting the global sound master
+; and shared volume. It never controls the HUD Thought or Skyrim.Net narration.
+Function PlayBoundThoughtReaction(Actor selectedActor) Global
+    String settingsFile = "/MMEAlerts/Settings"
+    If selectedActor == None
+        Return
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enableReactionSounds", 1) != 1 || JsonUtil.GetIntValue(settingsFile, "enableBoundMilkMaidThoughtSounds", 1) != 1
+        Return
+    EndIf
+
+    Sound reaction = MMEReactionSounds.Resolve(selectedActor, 0x000856) ; Hot/high SOUN marker
+    If reaction == None
+        Return
+    EndIf
+    Int instance = reaction.Play(selectedActor)
+    If instance > 0
+        Sound.SetInstanceVolume(instance, JsonUtil.GetFloatValue(settingsFile, "reactionSoundVolume", 100.0) / 100.0)
+    EndIf
 EndFunction
 
 ; Plays the existing mild/hot SOUN pools for a successfully shown Thought.
