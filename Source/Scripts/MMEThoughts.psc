@@ -30,6 +30,11 @@ Bool Function IsNormalThoughtsEnabled() Global
     Return IsExtensionsEnabled() && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkMaidThoughts", 1) == 1
 EndFunction
 
+Bool Function IsBoundThoughtsEnabled() Global
+    Return IsExtensionsEnabled() && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableBoundMilkMaidThoughts", 1) == 1 \
+        && MMEArmorScript.ResolveDeviousHeavyBondageKeyword() != None
+EndFunction
+
 Bool Function IsDebugEnabled() Global
     Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkMaidThoughtsDebug", 0) == 1
 EndFunction
@@ -60,6 +65,37 @@ Float Function CalculateNextInterval(Float baseInterval, Float randomness) Globa
     EndIf
     If nextInterval < 2.0
         nextInterval = 2.0
+    EndIf
+    Return nextInterval
+EndFunction
+
+; The bound route permits a one-hour testing cadence. Randomness is capped to
+; baseInterval - 1 so it can never push the resulting delay below one hour;
+; at a one-hour base the effective randomness is therefore zero.
+Float Function CalculateNextBoundInterval(Float baseInterval, Float randomness) Global
+    If baseInterval < 1.0
+        baseInterval = 1.0
+    ElseIf baseInterval > 48.0
+        baseInterval = 48.0
+    EndIf
+    If randomness < 0.0
+        randomness = 0.0
+    ElseIf randomness > 12.0
+        randomness = 12.0
+    EndIf
+
+    Float effectiveRandomness = randomness
+    Float allowedRandomness = baseInterval - 1.0
+    If effectiveRandomness > allowedRandomness
+        effectiveRandomness = allowedRandomness
+    EndIf
+
+    Float nextInterval = baseInterval
+    If effectiveRandomness > 0.0
+        nextInterval = baseInterval + Utility.RandomFloat(-effectiveRandomness, effectiveRandomness)
+    EndIf
+    If nextInterval < 1.0
+        nextInterval = 1.0
     EndIf
     Return nextInterval
 EndFunction
@@ -157,6 +193,79 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowNarration)
     Return True
 EndFunction
 
+; Independent DD-heavy-bondage cousin of the normal Thought route. One
+; uniformly selected restrained Milk Maid consumes one JSON entry and produces
+; exactly one targeted Skyrim.Net narration attempt.
+Bool Function GenerateAndShowBoundThought(Actor[] scannedActors) Global
+    If scannedActors.Length == 0
+        ReportFailure("bound thought skipped: nearby scan returned no actors")
+        Return False
+    EndIf
+    If !JsonUtil.JsonExists("/MMEAlerts/Thoughts") || !JsonUtil.IsGood("/MMEAlerts/Thoughts")
+        ReportFailure("bound thought skipped: Thoughts.json is missing or invalid")
+        Return False
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Keyword heavyBondage = MMEArmorScript.ResolveDeviousHeavyBondageKeyword()
+    If milkController == None || heavyBondage == None
+        ReportFailure("bound thought skipped: MME or DD heavy-bondage keyword unavailable")
+        Return False
+    EndIf
+
+    Int validCount = CountValidBoundCandidates(scannedActors, milkController, heavyBondage)
+    TraceBound("candidate count=" + validCount + " | scanned=" + scannedActors.Length)
+    If validCount <= 0
+        TraceBound("skipped | no restrained Milk Maids")
+        Return False
+    EndIf
+
+    Int chance = JsonUtil.GetIntValue("/MMEAlerts/Settings", "boundMilkMaidThoughtsChance", 100)
+    If chance < 0
+        chance = 0
+    ElseIf chance > 100
+        chance = 100
+    EndIf
+    Int chanceRoll = 1
+    If chance < 100
+        chanceRoll = Utility.RandomInt(1, 100)
+    EndIf
+    If chanceRoll > chance
+        TraceBound("chance failed | roll=" + chanceRoll + " | chance=" + chance + "%")
+        Return False
+    EndIf
+    TraceBound("chance passed | roll=" + chanceRoll + " | chance=" + chance + "%")
+
+    Actor selectedActor = SelectRandomBoundCandidate(scannedActors, milkController, heavyBondage, validCount)
+    If selectedActor == None
+        TraceBound("skipped | random candidate selection failed")
+        Return False
+    EndIf
+    TraceBound("selected actor=" + ResolveActorName(selectedActor))
+
+    String poolName = "armsBound"
+    String[] entries = JsonUtil.PathStringElements("/MMEAlerts/Thoughts", "." + poolName)
+    ; Preserve customized pre-change JSON files during upgrades.
+    If entries.Length == 0
+        poolName = "halfPlus_armsBound"
+        entries = JsonUtil.PathStringElements("/MMEAlerts/Thoughts", "." + poolName)
+    EndIf
+    If entries.Length == 0
+        TraceBound("skipped | armsBound pool is missing or empty")
+        Return False
+    EndIf
+    Int entryIndex = Utility.RandomInt(0, entries.Length - 1)
+    String renderedThought = RenderActorToken(entries[entryIndex], ResolveActorName(selectedActor))
+    If renderedThought == ""
+        TraceBound("skipped | malformed " + poolName + " entry " + entryIndex)
+        Return False
+    EndIf
+
+    Debug.Notification(renderedThought)
+    MMEAlertsSkyrimNet.NarrateBoundMilkMaidThought(selectedActor, renderedThought)
+    TraceBound("HUD shown | actor=" + ResolveActorName(selectedActor) + " | pool=" + poolName + " | comment=" + renderedThought)
+    Return True
+EndFunction
+
 ; Plays the existing mild/hot SOUN pools for a successfully shown Thought.
 ; This is intentionally independent of drink and armor-equip moan toggles.
 Function PlayThoughtReaction(Actor selectedActor, Int armorClass) Global
@@ -215,6 +324,42 @@ Actor Function SelectRandomCandidate(Actor[] scannedActors, MilkQUEST milkContro
         i += 1
     EndWhile
     Return None
+EndFunction
+
+Int Function CountValidBoundCandidates(Actor[] scannedActors, MilkQUEST milkController, Keyword heavyBondage) Global
+    Int validCount = 0
+    Int i = 0
+    While i < scannedActors.Length
+        If IsValidBoundCandidate(scannedActors[i], milkController, heavyBondage)
+            validCount += 1
+        EndIf
+        i += 1
+    EndWhile
+    Return validCount
+EndFunction
+
+Actor Function SelectRandomBoundCandidate(Actor[] scannedActors, MilkQUEST milkController, Keyword heavyBondage, Int validCount) Global
+    If validCount <= 0
+        Return None
+    EndIf
+    Int selectedOrdinal = Utility.RandomInt(0, validCount - 1)
+    Int validOrdinal = 0
+    Int i = 0
+    While i < scannedActors.Length
+        Actor candidate = scannedActors[i]
+        If IsValidBoundCandidate(candidate, milkController, heavyBondage)
+            If validOrdinal == selectedOrdinal
+                Return candidate
+            EndIf
+            validOrdinal += 1
+        EndIf
+        i += 1
+    EndWhile
+    Return None
+EndFunction
+
+Bool Function IsValidBoundCandidate(Actor candidate, MilkQUEST milkController, Keyword heavyBondage) Global
+    Return heavyBondage != None && IsValidCandidate(candidate, milkController) && candidate.WornHasKeyword(heavyBondage)
 EndFunction
 
 Bool Function IsValidCandidate(Actor candidate, MilkQUEST milkController) Global
@@ -287,6 +432,10 @@ Function TraceDebug(String traceText) Global
     If IsDebugEnabled()
         MMELog.Diagnostic("[MMEThoughts] " + traceText)
     EndIf
+EndFunction
+
+Function TraceBound(String traceText) Global
+    MMELog.MasterDiagnostic("[MME Bound Thoughts] " + traceText)
 EndFunction
 
 Function ReportFailure(String reason) Global

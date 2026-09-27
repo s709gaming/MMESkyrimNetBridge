@@ -1001,6 +1001,48 @@ Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass, S
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Milk Maid Thought DirectNarration result " + result + " | target=" + actorName + " | " + content)
 EndFunction
 
+; The game-time DD Thought schedule is the cooldown. Every successful rendered
+; event makes one narration attempt; there is deliberately no additional chance
+; roll or shared normal-Thought real-time cooldown.
+Function NarrateBoundMilkMaidThought(Actor milkMaid, String renderedThought) Global
+    If !IsExtensionsEnabled() || milkMaid == None || renderedThought == ""
+        MMELog.MasterDiagnostic("[MME Bound Thoughts] narration skipped | invalid request")
+        Return
+    EndIf
+    If !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
+        MMELog.MasterDiagnostic("[MME Bound Thoughts] narration skipped | Skyrim.Net unavailable or disabled")
+        Return
+    EndIf
+    String settingsFile = "/MMEAlerts/Settings"
+    If JsonUtil.GetIntValue(settingsFile, "enableBoundMilkMaidThoughtNarration", 1) != 1
+        MMELog.MasterDiagnostic("[MME Bound Thoughts] narration skipped | disabled in MCM")
+        Return
+    EndIf
+
+    Int chance = JsonUtil.GetIntValue(settingsFile, "boundMilkMaidThoughtNarrationChance", 100)
+    If chance < 0
+        chance = 0
+    ElseIf chance > 100
+        chance = 100
+    EndIf
+    Int chanceRoll = 1
+    If chance < 100
+        chanceRoll = Utility.RandomInt(1, 100)
+    EndIf
+    If chanceRoll > chance
+        MMELog.MasterDiagnostic("[MME Bound Thoughts] narration chance failed | roll=" + chanceRoll + " | chance=" + chance + "%")
+        Return
+    EndIf
+    MMELog.MasterDiagnostic("[MME Bound Thoughts] narration chance passed | roll=" + chanceRoll + " | chance=" + chance + "%")
+
+    String actorName = ResolveActorName(milkMaid, "The Milk Maid")
+    String content = "Immediate situation: " + renderedThought + " Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on " + actorName + " and only the bound-arm, breast, milk, weight, or fullness details actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+    MMELog.MasterDiagnostic("[MME Bound Thoughts] narration dispatch | target=" + actorName)
+    Int result = SkyrimNetApi.DirectNarration(content, None, milkMaid)
+    MMELog.MasterDiagnostic("[MME Bound Thoughts] narration result=" + result + " | target=" + actorName)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Bound Milk Maid Thought DirectNarration result " + result + " | target=" + actorName + " | " + content)
+EndFunction
+
 ; Publishes one replaceable five-minute summary from the existing capacity scan.
 Function SendNearbyMilkStatuses(Actor playerActor, String statuses, Int scannedCount, Int milkmaidCount) Global
     ; This is the milk-state sibling of nearby armor context. It consumes the

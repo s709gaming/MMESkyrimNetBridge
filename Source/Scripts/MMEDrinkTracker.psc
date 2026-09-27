@@ -65,6 +65,9 @@ Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
         EndIf
         Return
     EndIf
+    If ShouldSuppressPlayerDrink(drinker, akBaseObject, diagnostic)
+        Return
+    EndIf
     If !IsEligibleDrinker(drinker)
         If diagnostic
             Debug.Notification("Milk Debug: drink detected but player is not an eligible MME Milk Maid")
@@ -152,6 +155,12 @@ Function HandlePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, String 
     ; established Milk Maids before this drink, never for a new conversion.
     Bool wasKnownMilkmaid = MMEAlertsController.IsKnownMilkmaid(drinker)
     Float milkDelta = HandleDrinkDetected(drinker, drinkItem, drinkKind)
+    ; Ordinary recognized milk may now enter the same native Lactacid-backed
+    ; conversion used by the proven New Milk Maid routes. Real Lactacid remains
+    ; wholly owned by MME and is never rolled a second time here.
+    If !wasKnownMilkmaid && drinkKind != 2
+        MMENewMilkMaid.TryPlayerMilkDrinkConversion(drinker, drinkItem, drinkKind, diagnostic)
+    EndIf
     ; Phase 2: request the optional shared standing reaction after effects. The
     ; tracker owns completion through its existing single OnUpdate callback.
     Bool animDiagnostic = JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1
@@ -175,6 +184,26 @@ EndFunction
 Event OnUpdate()
     MMEDrinkAnimation.ResetAnimation(Game.GetPlayer(), "PLAYER", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1)
 EndEvent
+
+; Ignores only the synthetic Lactacid equip used by our conversion handoff.
+; MME's ActiveMagicEffect still receives it and remains authoritative.
+Bool Function ShouldSuppressPlayerDrink(Actor drinker, Form drinkItem, Bool diagnostic = False)
+    If drinker == None || drinkItem == None
+        Return False
+    EndIf
+    Int suppressForm = StorageUtil.GetIntValue(drinker, "MMEExtensions.PlayerDrink.SuppressForm", 0)
+    Float suppressTime = StorageUtil.GetFloatValue(drinker, "MMEExtensions.PlayerDrink.SuppressTime", -10.0)
+    Float elapsed = Utility.GetCurrentRealTime() - suppressTime
+    If suppressForm != drinkItem.GetFormID() || elapsed < 0.0 || elapsed >= 2.0
+        Return False
+    EndIf
+    StorageUtil.UnsetIntValue(drinker, "MMEExtensions.PlayerDrink.SuppressForm")
+    StorageUtil.UnsetFloatValue(drinker, "MMEExtensions.PlayerDrink.SuppressTime")
+    If diagnostic
+        MMELog.Diagnostic("[MMEAlert Player Drink] synthetic conversion Lactacid suppressed | form=" + drinkItem.GetFormID())
+    EndIf
+    Return True
+EndFunction
 
 ; Processes a supported NPC milk drink through the native event pipeline.
 ; diagnosticTest bypasses event deduplication only for the explicit Troubleshoot

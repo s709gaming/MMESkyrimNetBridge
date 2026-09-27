@@ -33,6 +33,7 @@ Float NextSexLabFallbackCheck = 0.0
 Int SexLabFallbackCheckAttempts = 0
 Bool OpeningDialogueAlarmActive = False
 Float NextThoughtGameTime = 0.0
+Float NextBoundThoughtGameTime = 0.0
 Float NextInjectionGameTime = 0.0
 String ArmorCheckReminderShownAtKey = "MMEExtensions.ArmorReminder.ShownAt"
 String ArmorCheckReminderAttemptAtKey = "MMEExtensions.ArmorReminder.AttemptAt"
@@ -433,6 +434,7 @@ EndFunction
 Function RefreshGameTimeScheduling()
     Float now = Utility.GetCurrentGameTime()
     ScheduleNextThought(now)
+    ScheduleNextBoundThought(now)
     ScheduleNextInjection(now)
     ArmNextGameTimeUpdate(now)
 EndFunction
@@ -442,6 +444,12 @@ EndFunction
 Function RefreshThoughtScheduling()
     Float now = Utility.GetCurrentGameTime()
     ScheduleNextThought(now)
+    ArmNextGameTimeUpdate(now)
+EndFunction
+
+Function RefreshBoundThoughtScheduling()
+    Float now = Utility.GetCurrentGameTime()
+    ScheduleNextBoundThought(now)
     ArmNextGameTimeUpdate(now)
 EndFunction
 
@@ -464,6 +472,19 @@ Function ScheduleNextThought(Float now)
     MMEThoughts.TraceDebug("normal schedule armed | next=" + nextInterval + " game hours")
 EndFunction
 
+Function ScheduleNextBoundThought(Float now)
+    If !MMEThoughts.IsBoundThoughtsEnabled()
+        NextBoundThoughtGameTime = 0.0
+        MMEThoughts.TraceBound("schedule disabled or DD unavailable")
+        Return
+    EndIf
+    Float baseInterval = JsonUtil.GetFloatValue(SettingsFile, "boundMilkMaidThoughtsInterval", 24.0)
+    Float randomness = JsonUtil.GetFloatValue(SettingsFile, "boundMilkMaidThoughtsRandomness", 12.0)
+    Float nextInterval = MMEThoughts.CalculateNextBoundInterval(baseInterval, randomness)
+    NextBoundThoughtGameTime = now + (nextInterval / 24.0)
+    MMEThoughts.TraceBound("schedule armed | next=" + nextInterval + " game hours")
+EndFunction
+
 Function ScheduleNextInjection(Float now)
     If !MMETentacleEffects.IsEnabled()
         NextInjectionGameTime = 0.0
@@ -483,6 +504,9 @@ Function ArmNextGameTimeUpdate(Float now)
     If NextThoughtGameTime > 0.0
         nextDeadline = NextThoughtGameTime
     EndIf
+    If NextBoundThoughtGameTime > 0.0 && (nextDeadline <= 0.0 || NextBoundThoughtGameTime < nextDeadline)
+        nextDeadline = NextBoundThoughtGameTime
+    EndIf
     If NextInjectionGameTime > 0.0 && (nextDeadline <= 0.0 || NextInjectionGameTime < nextDeadline)
         nextDeadline = NextInjectionGameTime
     EndIf
@@ -499,14 +523,16 @@ EndFunction
 Function StopGameTimeScheduling()
     UnregisterForUpdateGameTime()
     NextThoughtGameTime = 0.0
+    NextBoundThoughtGameTime = 0.0
     NextInjectionGameTime = 0.0
 EndFunction
 
 Event OnUpdateGameTime()
     Float now = Utility.GetCurrentGameTime()
     Bool thoughtDue = NextThoughtGameTime > 0.0 && now >= NextThoughtGameTime
+    Bool boundThoughtDue = NextBoundThoughtGameTime > 0.0 && now >= NextBoundThoughtGameTime
     Bool injectionDue = NextInjectionGameTime > 0.0 && now >= NextInjectionGameTime
-    If !thoughtDue && !injectionDue
+    If !thoughtDue && !boundThoughtDue && !injectionDue
         ArmNextGameTimeUpdate(now)
         Return
     EndIf
@@ -516,6 +542,11 @@ Event OnUpdateGameTime()
     If thoughtDue
         MMEThoughts.GenerateAndShowThought(nearbyActors, True)
         ScheduleNextThought(now)
+    EndIf
+    If boundThoughtDue
+        MMEThoughts.TraceBound("timer due")
+        MMEThoughts.GenerateAndShowBoundThought(nearbyActors)
+        ScheduleNextBoundThought(now)
     EndIf
     If injectionDue
         MMETentacleEffects.RunInjectionCheck(nearbyActors, False)

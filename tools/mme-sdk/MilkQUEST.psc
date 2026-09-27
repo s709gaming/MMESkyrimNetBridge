@@ -28,6 +28,7 @@ Float Property MilkProdMod Auto
 Bool Property BellyScale Auto
 Bool Property BreastScaleLimit Auto
 Bool Property MaleMaids Auto
+Bool Property PlayerCantBeMilkmaid Auto
 Float Property BoobMAX Auto
 Float Property BoobIncr Auto
 Float Property BoobPerLvl Auto

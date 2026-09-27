@@ -255,7 +255,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('HandleBreastfeedingCompleted(Game.GetPlayer(), candidate, "CreateMilkMaidAction", False)', execution)
         native = conversion.split('Function HandleBreastfeedingCompleted(', 1)[1].split('EndFunction', 1)[0]
         self.assertIn('candidate.EquipItem(lactacid, False, True)', native)
-        self.assertIn('GetEligibilityFailure(candidate, milkController, actionRoute)', native)
+        self.assertIn('GetEligibilityFailure(candidate, milkController, actionRoute || milkDrinkRoute)', native)
         shared_validator = conversion.split('String Function GetEligibilityFailure(', 1)[1].split('EndFunction', 1)[0]
         self.assertIn('Bool allowPlayer = False', conversion)
         self.assertIn('(!allowPlayer && candidate == Game.GetPlayer())', shared_validator)
@@ -272,6 +272,45 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('createMilkMaidActionMigration120', mcm)
         self.assertIn('mme_make_target_new_milkmaid.yaml', build)
         self.assertIn('Original MME dialogue', notes)
+
+    def test_ordinary_player_milk_can_use_native_mme_conversion(self):
+        tracker = (ROOT / 'Source/Scripts/MMEDrinkTracker.psc').read_text()
+        conversion = (ROOT / 'Source/Scripts/MMENewMilkMaid.psc').read_text()
+        mcm = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
+        sdk = (ROOT / 'tools/mme-sdk/MilkQUEST.psc').read_text()
+
+        player_handler = tracker.split('Function HandlePlayerDrink(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('!wasKnownMilkmaid && drinkKind != 2', player_handler)
+        self.assertIn('TryPlayerMilkDrinkConversion(drinker, drinkItem, drinkKind, diagnostic)', player_handler)
+        self.assertLess(player_handler.index('HandleDrinkDetected('), player_handler.index('TryPlayerMilkDrinkConversion('))
+
+        suppression = tracker.split('Bool Function ShouldSuppressPlayerDrink(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('MMEExtensions.PlayerDrink.SuppressForm', suppression)
+        self.assertIn('MMEExtensions.PlayerDrink.SuppressTime', suppression)
+        self.assertIn('elapsed >= 2.0', suppression)
+        self.assertIn('ShouldSuppressPlayerDrink(drinker, akBaseObject, diagnostic)', tracker)
+
+        helper = conversion.split('Bool Function TryPlayerMilkDrinkConversion(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('enablePlayerMilkMaidConversion", 1', helper)
+        self.assertIn('playerMilkMaidConversionChance", 100', helper)
+        self.assertIn('chance < 100 && Utility.RandomInt(1, 100) > chance', helper)
+        self.assertIn('milkController.PlayerCantBeMilkmaid', helper)
+        self.assertIn('CreateMilkMaidMilkDrink', helper)
+        self.assertIn('drinkKind == 2', helper)
+
+        native = conversion.split('Function HandleBreastfeedingCompleted(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('milkDrinkRoute = semanticIntent == "CreateMilkMaidMilkDrink"', native)
+        self.assertIn('actionRoute || milkDrinkRoute', native)
+        self.assertIn('MMEExtensions.PlayerDrink.SuppressForm', native)
+        self.assertIn('candidate.EquipItem(lactacid, False, True)', native)
+
+        self.assertIn('Bool Property PlayerCantBeMilkmaid Auto', sdk)
+        self.assertIn('Milk Can Create Player Milk Maid', mcm)
+        self.assertIn('Milk Maid Conversion Chance', mcm)
+        self.assertIn('playerMilkMaidConversionMigration121', mcm)
+        self.assertIn('SetSliderDialogDefaultValue(100.0)', mcm)
+        self.assertIn('SetSliderDialogRange(0.0, 100.0)', mcm)
+        self.assertIn('SetSliderDialogInterval(5.0)', mcm)
 
     def test_original_mme_sexlab_dialogue_is_observed_without_info_override(self):
         service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
@@ -612,6 +651,66 @@ class ServiceTests(unittest.TestCase):
         self.assertNotIn('PlayIdle', body)
         self.assertNotIn('TryApplyReverseLeveling', body)
         self.assertEqual(body.count('Parent.Fragment_00(akSpeakerRef)'), 1)
+
+    def test_bound_milkmaid_thoughts_are_optional_uniform_and_targeted(self):
+        armor = (ROOT / 'Source/Scripts/MMEArmorScript.psc').read_text()
+        thoughts = (ROOT / 'Source/Scripts/MMEThoughts.psc').read_text()
+        controller = (ROOT / 'Source/Scripts/MMEAlertsController.psc').read_text()
+        bridge = (ROOT / 'Source/Scripts/MMEAlertsSkyrimNet.psc').read_text()
+        mcm = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
+        pools = json.loads((ROOT / 'SKSE/Plugins/StorageUtilData/MMEAlerts/Thoughts.json').read_text())
+        self.assertIn('Keyword.GetKeyword("zad_DeviousHeavyBondage")', armor)
+        self.assertIn('heavyBondage != None && target.WornHasKeyword(heavyBondage)', armor)
+        self.assertIn('CountValidBoundCandidates', thoughts)
+        self.assertIn('SelectRandomBoundCandidate', thoughts)
+        self.assertIn('Utility.RandomInt(0, validCount - 1)', thoughts)
+        self.assertIn('candidate.WornHasKeyword(heavyBondage)', thoughts)
+        bound_validator = thoughts.split('Bool Function IsValidBoundCandidate(', 1)[1].split('EndFunction', 1)[0]
+        self.assertNotIn('getMilkCurrent', bound_validator)
+        self.assertIn('candidate.WornHasKeyword(heavyBondage)', bound_validator)
+        self.assertIn('PathStringElements("/MMEAlerts/Thoughts", "." + poolName)', thoughts)
+        self.assertEqual(len(pools['armsBound']), 5)
+        self.assertTrue(all('{actor}' in line for line in pools['armsBound']))
+        self.assertIn('boundMilkMaidThoughtsInterval", 24.0', controller)
+        self.assertIn('boundMilkMaidThoughtsRandomness", 12.0', controller)
+        self.assertIn('CalculateNextBoundInterval(baseInterval, randomness)', controller)
+        self.assertIn('boundMilkMaidThoughtsChance", 100', thoughts)
+        self.assertIn('NextBoundThoughtGameTime', controller)
+        narrator = bridge.split('Function NarrateBoundMilkMaidThought(', 1)[1].split('EndFunction', 1)[0]
+        self.assertEqual(narrator.count('SkyrimNetApi.DirectNarration('), 1)
+        self.assertIn('enableBoundMilkMaidThoughtNarration", 1', narrator)
+        self.assertIn('boundMilkMaidThoughtNarrationChance", 100', narrator)
+        self.assertIn('Utility.RandomInt(1, 100)', narrator)
+        self.assertIn('DirectNarration(content, None, milkMaid)', narrator)
+        self.assertIn('boundMilkMaidThoughtsMigration122', mcm)
+        self.assertIn('boundMilkMaidThoughtsChanceMigration123', mcm)
+        self.assertIn('boundMilkMaidThoughtNarrationMigration124', mcm)
+        self.assertIn('Bound Milk Maid Thoughts', mcm)
+        self.assertIn('Skyrim.Net Bound Narration', mcm)
+        self.assertIn('Bound Narration Chance', mcm)
+        self.assertIn('SetSliderDialogDefaultValue(24.0)', mcm)
+        self.assertIn('SetSliderDialogDefaultValue(12.0)', mcm)
+        self.assertIn('SetSliderDialogRange(1.0, 48.0)', mcm)
+        self.assertIn('SetSliderDialogDefaultValue(100.0)', mcm)
+        self.assertIn('SetSliderDialogInterval(5.0)', mcm)
+        self.assertIn('[MME Bound Thoughts] narration dispatch', bridge)
+        self.assertIn('MMEThoughts.TraceBound("timer due")', controller)
+
+    def test_quickstart_grants_optional_dd_open_straitjacket_once(self):
+        quickstart = (ROOT / 'fomod/choices/recommended-quickstart/Source/Scripts/MMEAlertsQuickTest.psc').read_text()
+        fomod = (ROOT / 'fomod/ModuleConfig.xml').read_text()
+        self.assertIn('QuickStartDDOpenStraitjacketGrantKey', quickstart)
+        self.assertIn('"Devious Devices - Expansion.esm"', quickstart)
+        self.assertIn('Game.GetModByName(deviousDevicesPlugin) != 255', quickstart)
+        self.assertIn('GrantOptionalArmor(playerActor, deviousDevicesPlugin, 0x039C6F)', quickstart)
+        self.assertEqual(quickstart.count('GrantOptionalArmor(playerActor, deviousDevicesPlugin'), 1)
+        self.assertLess(
+            quickstart.index('Game.GetModByName(deviousDevicesPlugin) != 255'),
+            quickstart.index('GrantOptionalArmor(playerActor, deviousDevicesPlugin')
+        )
+        completion_guard = quickstart.split('Function ScheduleTestSetup()', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('QuickStartDDOpenStraitjacketGrantKey', completion_guard)
+        self.assertIn('open-bust heavy straitjacket when Devious Devices Expansion is installed', fomod)
 
 
 if __name__ == '__main__':

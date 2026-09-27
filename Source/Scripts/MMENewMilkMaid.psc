@@ -99,11 +99,15 @@ EndFunction
 Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String semanticIntent, Bool mmeProcessed) Global
     Bool sexLabRoute = semanticIntent == "CreateMilkMaidSexLab"
     Bool actionRoute = semanticIntent == "CreateMilkMaidAction"
-    If semanticIntent != "CreateMilkMaid" && !sexLabRoute && !actionRoute
+    Bool milkDrinkRoute = semanticIntent == "CreateMilkMaidMilkDrink"
+    If semanticIntent != "CreateMilkMaid" && !sexLabRoute && !actionRoute && !milkDrinkRoute
         Return
     EndIf
 
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableOStimDebug", 0) == 1
+    If milkDrinkRoute
+        diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableAddMilkDebug", 0) == 1
+    EndIf
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If !mmeProcessed
         TraceStep("Mode 4 incomplete; creation continues")
@@ -119,7 +123,7 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
 
     ; The Skyrim.Net roleplay action may intentionally transform the player.
     ; Existing OStim/SexLab dialogue routes remain NPC-only by default.
-    String eligibilityFailure = GetEligibilityFailure(candidate, milkController, actionRoute)
+    String eligibilityFailure = GetEligibilityFailure(candidate, milkController, actionRoute || milkDrinkRoute)
     If eligibilityFailure != ""
         TraceStep(eligibilityFailure, True)
         If sexLabRoute
@@ -172,8 +176,13 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
 
     ; Suppress only MME Extensions' duplicate native drink observer. MME's own
     ; ActiveMagicEffect remains authoritative and runs without interception.
-    StorageUtil.SetFloatValue(candidate, "MMEExtensions.NPCDrink.SuppressTime", Utility.GetCurrentRealTime())
-    StorageUtil.SetIntValue(candidate, "MMEExtensions.NPCDrink.SuppressForm", lactacid.GetFormID())
+    If candidate == Game.GetPlayer()
+        StorageUtil.SetFloatValue(candidate, "MMEExtensions.PlayerDrink.SuppressTime", Utility.GetCurrentRealTime())
+        StorageUtil.SetIntValue(candidate, "MMEExtensions.PlayerDrink.SuppressForm", lactacid.GetFormID())
+    Else
+        StorageUtil.SetFloatValue(candidate, "MMEExtensions.NPCDrink.SuppressTime", Utility.GetCurrentRealTime())
+        StorageUtil.SetIntValue(candidate, "MMEExtensions.NPCDrink.SuppressForm", lactacid.GetFormID())
+    EndIf
     candidate.EquipItem(lactacid, False, True)
     Utility.Wait(0.5)
 
@@ -235,6 +244,51 @@ Function HandleBreastfeedingCompleted(Actor milkSource, Actor candidate, String 
         TraceSexLabStop(16, "COMPLETE")
     EndIf
     Report(diagnostic, "canonical MME Lactacid creation effect confirmed for " + GetActorName(candidate))
+EndFunction
+
+; Extends MME's native Lactacid conversion to an ordinary recognized player
+; milk drink without duplicating registration, initialization, or animation.
+Bool Function TryPlayerMilkDrinkConversion(Actor playerActor, Form drinkItem, Int drinkKind, Bool diagnostic = False) Global
+    String settingsFile = "/MMEAlerts/Settings"
+    If playerActor == None || playerActor != Game.GetPlayer() || drinkItem == None || drinkKind == 2
+        Return False
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enablePlayerMilkMaidConversion", 1) != 1
+        Return False
+    EndIf
+    If MMEAlertsController.IsKnownMilkmaid(playerActor)
+        Return False
+    EndIf
+
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None
+        Report(diagnostic, "milk conversion skipped: MME controller unavailable")
+        Return False
+    EndIf
+    If milkController.PlayerCantBeMilkmaid
+        Report(diagnostic, "milk conversion skipped: MME forbids player Milk Maid conversion")
+        Return False
+    EndIf
+    String failure = GetEligibilityFailure(playerActor, milkController, True)
+    If failure != ""
+        Report(diagnostic, "milk conversion skipped: " + failure)
+        Return False
+    EndIf
+
+    Int chance = JsonUtil.GetIntValue(settingsFile, "playerMilkMaidConversionChance", 100)
+    If chance < 0
+        chance = 0
+    ElseIf chance > 100
+        chance = 100
+    EndIf
+    If chance <= 0 || (chance < 100 && Utility.RandomInt(1, 100) > chance)
+        Report(diagnostic, "milk conversion chance did not trigger at " + chance + "%")
+        Return False
+    EndIf
+
+    MMELog.Diagnostic("[MME Extensions Milk Conversion] ordinary milk triggered player conversion | item=" + drinkItem.GetName() + " | chance=" + chance + "%")
+    HandleBreastfeedingCompleted(playerActor, playerActor, "CreateMilkMaidMilkDrink", False)
+    Return MMEArmorScript.IsMMEMilkMaid(playerActor, milkController)
 EndFunction
 
 ; Skyrim.Net's targeted conversion action deliberately uses MME's original

@@ -64,6 +64,8 @@ Int npcMilkConsumptionDiagnosticOption
 Int npcDrinkNotificationsOption
 Int npcDrinkNotificationsDiagnosticOption
 Int playerDrinkNotificationsOption
+Int playerMilkMaidConversionOption
+Int playerMilkMaidConversionChanceOption
 Int giveMilkEasyModeOption
 Int nonMilkmaidFemaleDrinkingOption
 Int nonMilkmaidFemaleArousalOption
@@ -149,6 +151,12 @@ Int milkMaidThoughtsIntervalOption
 Int milkMaidThoughtsRandomnessOption
 Int milkMaidThoughtNarrationOption
 Int armorThoughtSoundsOption
+Int boundMilkMaidThoughtsOption
+Int boundMilkMaidThoughtsIntervalOption
+Int boundMilkMaidThoughtsRandomnessOption
+Int boundMilkMaidThoughtsChanceOption
+Int boundMilkMaidThoughtNarrationOption
+Int boundMilkMaidThoughtNarrationChanceOption
 Int milkMaidThoughtsDebugOption
 Int traceMilkMaidThoughtsLogicOption
 Int armorInjectionOption
@@ -369,6 +377,8 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotificationsDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkMaidConversion", 1)
+        JsonUtil.SetIntValue(SettingsFile, "playerMilkMaidConversionChance", 100)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1)
         JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyPercent", 100.0)
@@ -404,6 +414,15 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "mirrorMilkMaidThoughtsToSkyrimNet", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorThoughtSounds", 1)
         JsonUtil.SetIntValue(SettingsFile, "armorThoughtSoundsMigration94", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkMaidThoughts", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "boundMilkMaidThoughtsInterval", 24.0)
+        JsonUtil.SetFloatValue(SettingsFile, "boundMilkMaidThoughtsRandomness", 12.0)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtsChance", 100)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtsMigration122", 1)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtsChanceMigration123", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkMaidThoughtNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationChance", 100)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationMigration124", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0)
         JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsMigration87", 1)
@@ -1103,6 +1122,39 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "createMilkMaidActionMigration120", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Extend MME's native Lactacid creation behavior to recognized ordinary
+    ; player milk drinks. Existing saves receive the requested default-on 100%.
+    If JsonUtil.GetIntValue(SettingsFile, "playerMilkMaidConversionMigration121", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkMaidConversion", 1)
+        JsonUtil.SetIntValue(SettingsFile, "playerMilkMaidConversionChance", 100)
+        JsonUtil.SetIntValue(SettingsFile, "playerMilkMaidConversionMigration121", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Adds the optional DD heavy-bondage Thought sibling. Its production
+    ; schedule is independent and defaults to one attempt every 24 +/- 12 game
+    ; hours; DD absence makes the schedule inert without a hard dependency.
+    If JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtsMigration122", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkMaidThoughts", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "boundMilkMaidThoughtsInterval", 24.0)
+        JsonUtil.SetFloatValue(SettingsFile, "boundMilkMaidThoughtsRandomness", 12.0)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtsMigration122", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Adds a separately adjustable roll to the bound route. Existing saves get
+    ; the requested default-on behavior without changing their saved schedule.
+    If JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtsChanceMigration123", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtsChance", 100)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtsChanceMigration123", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Separates the local bound Thought from its optional Skyrim.Net reaction.
+    ; Existing saves keep the previous behavior: narration enabled at 100%.
+    If JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationMigration124", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkMaidThoughtNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationChance", 100)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationMigration124", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1206,6 +1258,8 @@ Event OnPageReset(String page)
     npcDrinkNotificationsOption = -1
     npcDrinkNotificationsDiagnosticOption = -1
     playerDrinkNotificationsOption = -1
+    playerMilkMaidConversionOption = -1
+    playerMilkMaidConversionChanceOption = -1
     giveMilkEasyModeOption = -1
     nonMilkmaidFemaleDrinkingOption = -1
     nonMilkmaidFemaleArousalOption = -1
@@ -1291,6 +1345,12 @@ Event OnPageReset(String page)
     milkMaidThoughtsRandomnessOption = -1
     milkMaidThoughtNarrationOption = -1
     armorThoughtSoundsOption = -1
+    boundMilkMaidThoughtsOption = -1
+    boundMilkMaidThoughtsIntervalOption = -1
+    boundMilkMaidThoughtsRandomnessOption = -1
+    boundMilkMaidThoughtsChanceOption = -1
+    boundMilkMaidThoughtNarrationOption = -1
+    boundMilkMaidThoughtNarrationChanceOption = -1
     milkMaidThoughtsDebugOption = -1
     traceMilkMaidThoughtsLogicOption = -1
     armorInjectionOption = -1
@@ -1364,6 +1424,12 @@ Event OnPageReset(String page)
         npcDrinkNotificationsOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1) == 1)
         AddHeaderOption("Player Milk Drinking")
         playerDrinkNotificationsOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1) == 1)
+        playerMilkMaidConversionOption = AddToggleOption("Milk Can Create Player Milk Maid", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkMaidConversion", 1) == 1)
+        Int conversionChanceFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkMaidConversion", 1) != 1
+            conversionChanceFlags = OPTION_FLAG_DISABLED
+        EndIf
+        playerMilkMaidConversionChanceOption = AddSliderOption("Milk Maid Conversion Chance", JsonUtil.GetIntValue(SettingsFile, "playerMilkMaidConversionChance", 100), "{0}%", conversionChanceFlags)
         AddHeaderOption("Non-Milkmaid Drinking")
         nonMilkmaidFemaleDrinkingOption = AddToggleOption("Allow Adult Women", JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidFemaleDrinking", 1) == 1)
         nonMilkmaidFemaleArousalOption = AddSliderOption("Women Arousal Per Drink", JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 20.0), "+{0}")
@@ -1541,6 +1607,13 @@ Event OnPageReset(String page)
         milkMaidThoughtsRandomnessOption = AddSliderOption("Randomness (+/-)", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0), "{0} game hours")
         milkMaidThoughtNarrationOption = AddToggleOption("Skyrim.Net Thought Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtNarration", 1) == 1)
         armorThoughtSoundsOption = AddToggleOption("Armor Thought Sounds", JsonUtil.GetIntValue(SettingsFile, "enableArmorThoughtSounds", 1) == 1)
+        AddHeaderOption("Devious Heavy Bondage")
+        boundMilkMaidThoughtsOption = AddToggleOption("Bound Milk Maid Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughts", 1) == 1)
+        boundMilkMaidThoughtsIntervalOption = AddSliderOption("Bound Thought Interval", JsonUtil.GetFloatValue(SettingsFile, "boundMilkMaidThoughtsInterval", 24.0), "{0} game hours")
+        boundMilkMaidThoughtsRandomnessOption = AddSliderOption("Bound Randomness (+/-)", JsonUtil.GetFloatValue(SettingsFile, "boundMilkMaidThoughtsRandomness", 12.0), "{0} game hours")
+        boundMilkMaidThoughtsChanceOption = AddSliderOption("Bound Thought Chance", JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtsChance", 100), "{0}%")
+        boundMilkMaidThoughtNarrationOption = AddToggleOption("Skyrim.Net Bound Narration", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughtNarration", 1) == 1)
+        boundMilkMaidThoughtNarrationChanceOption = AddSliderOption("Bound Narration Chance", JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationChance", 100), "{0}%")
         Return
     EndIf
     If page == "Tentacle Effects"
@@ -1763,6 +1836,10 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Show a notification after an NPC Milkmaid drinks recognized milk.")
     ElseIf option == playerDrinkNotificationsOption
         SetInfoText("Show a notification after you drink recognized milk.")
+    ElseIf option == playerMilkMaidConversionOption
+        SetInfoText("Allow recognized ordinary milk to transform a non-Milk-Maid player through MME's original Lactacid creation effect. Real Lactacid keeps its native behavior.")
+    ElseIf option == playerMilkMaidConversionChanceOption
+        SetInfoText("Set the chance that a recognized ordinary milk drink transforms the eligible player into an MME Milk Maid.")
     ElseIf option == giveMilkEasyModeOption
         SetInfoText("When Give Milk finds no eligible milk, supply and immediately consume one temporary HearthFires Jug of Milk. Lactacid is never used. Default on.")
     ElseIf option == nonMilkmaidFemaleDrinkingOption
@@ -1951,6 +2028,18 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Ask Skyrim.Net for a direct, AI-generated reaction to each normal game-hour Thought. The 15-second test remains local-only.")
     ElseIf option == armorThoughtSoundsOption
         SetInfoText("Play a mild or hot reaction sound on the selected Milk Maid when an Armor Thought appears. The global reaction-sound setting must also be enabled.")
+    ElseIf option == boundMilkMaidThoughtsOption
+        SetInfoText("When Devious Devices is present, select one nearby Milk Maid wearing the heavy-bondage keyword and send her JSON Thought to Skyrim.Net. Milk fullness is not required.")
+    ElseIf option == boundMilkMaidThoughtsIntervalOption
+        SetInfoText("Set the independent base delay between bound Milk Maid Thought attempts in game-time hours.")
+    ElseIf option == boundMilkMaidThoughtsRandomnessOption
+        SetInfoText("Randomly subtract or add this many game-time hours. Randomness is automatically capped so the final interval never falls below one hour; a one-hour base disables randomness.")
+    ElseIf option == boundMilkMaidThoughtsChanceOption
+        SetInfoText("Set the chance that a due bound Thought proceeds after at least one eligible restrained Milk Maid is found.")
+    ElseIf option == boundMilkMaidThoughtNarrationOption
+        SetInfoText("Let a successful local bound Thought request a targeted Skyrim.Net reaction. Disabling this does not suppress the HUD Thought.")
+    ElseIf option == boundMilkMaidThoughtNarrationChanceOption
+        SetInfoText("Set the chance that a successful local bound Thought is also sent to Skyrim.Net.")
     ElseIf option == milkMaidThoughtsDebugOption
         SetInfoText("Attempt one local Thought notification every 15 real-time seconds using the controller's shared single-update scheduler. Debug Thoughts are not mirrored to Skyrim.Net.")
     ElseIf option == traceMilkMaidThoughtsLogicOption
@@ -2137,6 +2226,15 @@ Event OnOptionSelect(Int option)
     ElseIf option == armorThoughtSoundsOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorThoughtSounds", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorThoughtSounds", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == boundMilkMaidThoughtsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughts", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkMaidThoughts", value)
+        SetToggleOptionValue(option, value == 1)
+        RefreshBoundThoughtSchedule()
+    ElseIf option == boundMilkMaidThoughtNarrationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughtNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkMaidThoughtNarration", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == milkMaidThoughtsDebugOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
@@ -2340,6 +2438,12 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotifications", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == playerMilkMaidConversionOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkMaidConversion", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkMaidConversion", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
     ElseIf option == giveMilkEasyModeOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkEasyMode", value)
@@ -2634,6 +2738,13 @@ Function RefreshThoughtSchedule()
     EndIf
 EndFunction
 
+Function RefreshBoundThoughtSchedule()
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller != None
+        controller.RefreshBoundThoughtScheduling()
+    EndIf
+EndFunction
+
 Function RefreshArmorInjectionSchedule()
     MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
     If controller != None
@@ -2681,6 +2792,26 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(4.0)
         SetSliderDialogRange(0.0, 12.0)
         SetSliderDialogInterval(1.0)
+    ElseIf option == boundMilkMaidThoughtsIntervalOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "boundMilkMaidThoughtsInterval", 24.0))
+        SetSliderDialogDefaultValue(24.0)
+        SetSliderDialogRange(1.0, 48.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == boundMilkMaidThoughtsRandomnessOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "boundMilkMaidThoughtsRandomness", 12.0))
+        SetSliderDialogDefaultValue(12.0)
+        SetSliderDialogRange(0.0, 12.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == boundMilkMaidThoughtsChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtsChance", 100))
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+    ElseIf option == boundMilkMaidThoughtNarrationChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationChance", 100))
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
     ElseIf option == armorInjectionIntervalOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorInjectionInterval", 12.0))
         SetSliderDialogDefaultValue(12.0)
@@ -2759,6 +2890,11 @@ Event OnOptionSliderOpen(Int option)
     ElseIf option == playerDrinkNarrationChanceOption
         SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "playerDrinkNarrationChance", 25))
         SetSliderDialogDefaultValue(25.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+    ElseIf option == playerMilkMaidConversionChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "playerMilkMaidConversionChance", 100))
+        SetSliderDialogDefaultValue(100.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(5.0)
     ElseIf option == milkmaidCreatedNarrationCooldownOption
@@ -2872,6 +3008,24 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} game hours")
         RefreshThoughtSchedule()
+    ElseIf option == boundMilkMaidThoughtsIntervalOption
+        JsonUtil.SetFloatValue(SettingsFile, "boundMilkMaidThoughtsInterval", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        RefreshBoundThoughtSchedule()
+    ElseIf option == boundMilkMaidThoughtsRandomnessOption
+        JsonUtil.SetFloatValue(SettingsFile, "boundMilkMaidThoughtsRandomness", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        RefreshBoundThoughtSchedule()
+    ElseIf option == boundMilkMaidThoughtsChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtsChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+    ElseIf option == boundMilkMaidThoughtNarrationChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
     ElseIf option == armorInjectionIntervalOption
         JsonUtil.SetFloatValue(SettingsFile, "armorInjectionInterval", value)
         JsonUtil.Save(SettingsFile, False)
@@ -2937,6 +3091,10 @@ Event OnOptionSliderAccept(Int option, Float value)
         SetSliderOptionValue(option, value, "{0} seconds")
     ElseIf option == playerDrinkNarrationChanceOption
         JsonUtil.SetIntValue(SettingsFile, "playerDrinkNarrationChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+    ElseIf option == playerMilkMaidConversionChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "playerMilkMaidConversionChance", value as Int)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0}%")
     ElseIf option == milkmaidCreatedNarrationCooldownOption

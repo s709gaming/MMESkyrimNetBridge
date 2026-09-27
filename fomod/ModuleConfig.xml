@@ -14,13 +14,13 @@
   </requiredInstallFiles>
 
   <installSteps order="Explicit">
-    <installStep name="Quick Start and MME Defaults">
+    <installStep name="Installation Options">
       <optionalFileGroups order="Explicit">
         <group name="MAKE SURE MME EXTENSIONS LOADS AFTER THE ORIGINAL MILK MOD ECONOMY&#10;Choose a startup profile" type="SelectExactlyOne">
           <plugins order="Explicit">
 
             <plugin name="(Quick Start) Convenience MCM Defaults + Free milk on start">
-              <description>Applies the Convenience MCM defaults once, then leaves your MME settings alone. Also grants three Lactacid plus three of each starter milk on a new save.</description>
+              <description>Applies the Convenience MCM defaults once, then leaves your MME settings alone. Grants starter milk and armor, plus an open-bust heavy straitjacket when Devious Devices Expansion is installed.</description>
               <files>
                 <file source="fomod\choices\recommended\Installer.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\Installer.json" priority="0" />
                 <file source="fomod\choices\recommended-quickstart\Scripts\MMEAlertsQuickTest.pex" destination="Scripts\MMEAlertsQuickTest.pex" priority="1" />
@@ -55,11 +55,6 @@
 
           </plugins>
         </group>
-      </optionalFileGroups>
-    </installStep>
-
-    <installStep name="SkyrimNet Version Compatibility">
-      <optionalFileGroups order="Explicit">
         <group name="Leave unchecked for SkyrimNet 24" type="SelectAtMostOne">
           <plugins order="Explicit">
 

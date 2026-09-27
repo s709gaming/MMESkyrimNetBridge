@@ -5,6 +5,7 @@ Scriptname MMEAlertsQuickTest extends Quest
 String QuickStartGrantKey = "MMEExtensions.QuickStart.Granted"
 String QuickStartMilkCuirassGrantKey = "MMEExtensions.QuickStart.MilkCuirassGranted"
 String QuickStartTentacleMeatGrantKey = "MMEExtensions.QuickStart.TentacleMeatGranted"
+String QuickStartDDOpenStraitjacketGrantKey = "MMEExtensions.QuickStart.DDOpenStraitjacketGranted"
 Bool milkVarietyGranted = False
 Bool quickStartScheduled = False
 
@@ -22,7 +23,8 @@ Function ScheduleTestSetup()
     EndIf
     If StorageUtil.GetIntValue(None, QuickStartGrantKey, 0) != 0 \
     && StorageUtil.GetIntValue(None, QuickStartMilkCuirassGrantKey, 0) != 0 \
-    && StorageUtil.GetIntValue(None, QuickStartTentacleMeatGrantKey, 0) != 0
+    && StorageUtil.GetIntValue(None, QuickStartTentacleMeatGrantKey, 0) != 0 \
+    && StorageUtil.GetIntValue(None, QuickStartDDOpenStraitjacketGrantKey, 0) != 0
         Return
     EndIf
     quickStartScheduled = True
@@ -82,6 +84,17 @@ Function GrantOptionalArmorBonuses(Actor playerActor)
             GrantOptionalArmor(playerActor, tentaclePlugin, 0x00131F) ; Tentacle Parasite cuirass
             GrantOptionalArmor(playerActor, tentaclePlugin, 0x001320) ; Tentacle Parasite shoes
             GrantOptionalArmor(playerActor, tentaclePlugin, 0x001321) ; Tentacle Parasite gauntlets
+        EndIf
+    EndIf
+
+    ; Inventory device only: Devious Devices owns its normal equip swap to the
+    ; rendered restraint, which carries HeavyBondage, StraitJacket, and
+    ; ExposedBreasts. This remains inert when DD Expansion is not installed.
+    String deviousDevicesPlugin = "Devious Devices - Expansion.esm"
+    If StorageUtil.GetIntValue(None, QuickStartDDOpenStraitjacketGrantKey, 0) == 0
+        StorageUtil.SetIntValue(None, QuickStartDDOpenStraitjacketGrantKey, 1)
+        If Game.GetModByName(deviousDevicesPlugin) != 255
+            GrantOptionalArmor(playerActor, deviousDevicesPlugin, 0x039C6F) ; Black Ebonite Straitjacket (Open)
         EndIf
     EndIf
 EndFunction

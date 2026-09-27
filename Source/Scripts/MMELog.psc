@@ -18,6 +18,14 @@ Function Diagnostic(String reportText, Int severity = 0) Global
     EndIf
 EndFunction
 
+; Sparse feature-level breadcrumbs that need only the master logging switch.
+; Use this for low-frequency scheduling paths, not polling or animation spam.
+Function MasterDiagnostic(String reportText, Int severity = 0) Global
+    If JsonUtil.GetIntValue(GetSettingsFile(), "enablePapyrusTrace", 0) == 1
+        Debug.Trace(reportText, severity)
+    EndIf
+EndFunction
+
 Function Status(String reportText, Int severity = 0) Global
     Debug.Trace(reportText, severity)
 EndFunction

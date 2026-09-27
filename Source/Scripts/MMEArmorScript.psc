@@ -825,6 +825,21 @@ Bool Function IsValidMilkMaid(Actor target, MilkQUEST milkController) Global
     Return IsMMEMilkMaid(target, milkController)
 EndFunction
 
+; Optional Devious Devices category check. Keyword.GetKeyword resolves by
+; editor ID without a compile-time dependency on zadLibs; when DD is absent it
+; returns None and the feature fails closed.
+Keyword Function ResolveDeviousHeavyBondageKeyword() Global
+    Return Keyword.GetKeyword("zad_DeviousHeavyBondage")
+EndFunction
+
+Bool Function HasDeviousHeavyBondage(Actor target) Global
+    If target == None
+        Return False
+    EndIf
+    Keyword heavyBondage = ResolveDeviousHeavyBondageKeyword()
+    Return heavyBondage != None && target.WornHasKeyword(heavyBondage)
+EndFunction
+
 Bool Function GetDiagnostic() Global
     Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableArmorOverflowDiagnostic", 0) == 1
 EndFunction
