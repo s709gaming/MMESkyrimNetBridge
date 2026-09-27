@@ -158,8 +158,20 @@ Function HandlePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, String 
     ; Ordinary recognized milk may now enter the same native Lactacid-backed
     ; conversion used by the proven New Milk Maid routes. Real Lactacid remains
     ; wholly owned by MME and is never rolled a second time here.
+    Bool createdMilkMaid = False
     If !wasKnownMilkmaid && drinkKind != 2
-        MMENewMilkMaid.TryPlayerMilkDrinkConversion(drinker, drinkItem, drinkKind, diagnostic)
+        createdMilkMaid = MMENewMilkMaid.TryPlayerMilkDrinkConversion(drinker, drinkItem, drinkKind, diagnostic)
+    EndIf
+    ; A successful ordinary-milk conversion owns the one spoken reaction. Real
+    ; Lactacid may start MME's native conversion asynchronously, so suppress its
+    ; ordinary drink narration preemptively for a previously unknown Milk Maid.
+    ; The short-lived drink context event and every gameplay effect were already
+    ; published by HandleDrinkDetected and remain unchanged.
+    Bool conversionNarrationExpected = createdMilkMaid || (!wasKnownMilkmaid && drinkKind == 2)
+    If conversionNarrationExpected
+        MMELog.MasterDiagnostic("[MMEAlert Player Drink] ordinary narration suppressed: Milk Maid conversion reaction owns this drink")
+    Else
+        MMEAlertsSkyrimNet.NarratePlayerMilkDrink(drinker, drinkItem)
     EndIf
     ; Phase 2: request the optional shared standing reaction after effects. The
     ; tracker owns completion through its existing single OnUpdate callback.
@@ -500,7 +512,6 @@ Float Function HandleDrinkDetected(Actor drinker, Form drinkItem, Int drinkKind)
     ; failures must not roll back MME milk that was already applied.
     Bool arousalSent = MMEArousalBridge.ApplyMilkDrinkArousalForActor(drinker, drinkItem, diagnostic)
     MMEAlertsSkyrimNet.SendMilkDrink(drinker, drinkItem)
-    MMEAlertsSkyrimNet.NarratePlayerMilkDrink(drinker, drinkItem)
     ShowPlayerDrinkNotification(drinker, drinkItem, milkAdded, arousalSent, diagnostic)
     PublishDrinkEvent(drinker, drinkItem, drinkKind)
     Return milkAdded

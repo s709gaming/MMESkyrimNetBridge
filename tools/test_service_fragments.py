@@ -281,8 +281,14 @@ class ServiceTests(unittest.TestCase):
 
         player_handler = tracker.split('Function HandlePlayerDrink(', 1)[1].split('EndFunction', 1)[0]
         self.assertIn('!wasKnownMilkmaid && drinkKind != 2', player_handler)
-        self.assertIn('TryPlayerMilkDrinkConversion(drinker, drinkItem, drinkKind, diagnostic)', player_handler)
+        self.assertIn('createdMilkMaid = MMENewMilkMaid.TryPlayerMilkDrinkConversion(drinker, drinkItem, drinkKind, diagnostic)', player_handler)
         self.assertLess(player_handler.index('HandleDrinkDetected('), player_handler.index('TryPlayerMilkDrinkConversion('))
+        self.assertIn('createdMilkMaid || (!wasKnownMilkmaid && drinkKind == 2)', player_handler)
+        self.assertIn('MMEAlertsSkyrimNet.NarratePlayerMilkDrink(drinker, drinkItem)', player_handler)
+        self.assertLess(player_handler.index('TryPlayerMilkDrinkConversion('), player_handler.index('NarratePlayerMilkDrink('))
+        drink_effects = tracker.split('Float Function HandleDrinkDetected(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('MMEAlertsSkyrimNet.SendMilkDrink(drinker, drinkItem)', drink_effects)
+        self.assertNotIn('NarratePlayerMilkDrink', drink_effects)
 
         suppression = tracker.split('Bool Function ShouldSuppressPlayerDrink(', 1)[1].split('EndFunction', 1)[0]
         self.assertIn('MMEExtensions.PlayerDrink.SuppressForm', suppression)
