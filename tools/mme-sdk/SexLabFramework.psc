@@ -27,3 +27,11 @@ EndFunction
 Bool Function IsActorActive(Actor ActorRef)
     Return False
 EndFunction
+
+Bool Function IsValidActor(Actor ActorRef)
+    Return False
+EndFunction
+
+sslBaseVoice Function PickVoice(Actor ActorRef)
+    Return None
+EndFunction

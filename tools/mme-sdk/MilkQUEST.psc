@@ -51,5 +51,9 @@ Int Function Milklvl0fix()
 EndFunction
 Function AssignSlot(Actor akActor)
 EndFunction
+; Present in MME 20220522. Compile-time declaration for the no-confirmation
+; API; the installed MME script owns the runtime implementation.
+Function AssignSlotMaid(Actor akActor)
+EndFunction
 Function SingleMaidReset(Actor akActor)
 EndFunction

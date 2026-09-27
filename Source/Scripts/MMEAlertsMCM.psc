@@ -13,6 +13,14 @@ Int reversePlayerLevelOption
 Int reverseApplyOption
 Int reverseRemoveOption
 Int reverseTraceOption
+Int dungeonChestMilkMaidOption
+Int dungeonChestMilkMaidChanceOption
+Int regularChestMilkMaidOption
+Int regularChestMilkMaidChanceOption
+Int forcedMilkMaidNotificationOption
+Int forcedMilkMaidLactacidStoryOption
+Int forcedMilkMaidNarrationOption
+Int forcedMilkMaidDiagnosticOption
 Int soundsOption
 Int volumeOption
 Int capacityOption
@@ -37,6 +45,7 @@ Int skyrimNetSexLabTraceOption
 Int drinkMoansOption
 Int fullnessMoansOption
 Int milkingMoansOption
+Int newMilkMaidMoansOption
 Int skyrimNetStatusOption
 Int arousalStatusOption
 Int milkDrinkArousalOption
@@ -210,7 +219,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 122
+    Return 125
 EndFunction
 
 Function SetPageNames()
@@ -291,11 +300,20 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableDrinkMoans", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableFullnessMoans", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkingMoans", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNewMilkMaidMoans", 1)
         JsonUtil.SetFloatValue(SettingsFile, "reactionSoundVolume", 100.0)
         JsonUtil.SetIntValue(SettingsFile, "enableCapacityReactions", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableCapacityPolling", 1)
         JsonUtil.SetFloatValue(SettingsFile, "pollingInterval", 15.0)
         JsonUtil.SetIntValue(SettingsFile, "enableCapacityNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1)
+        JsonUtil.SetIntValue(SettingsFile, "dungeonChestMilkMaidChance", 100)
+        JsonUtil.SetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1)
+        JsonUtil.SetIntValue(SettingsFile, "regularChestMilkMaidChance", 10)
+        JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidNotification", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidStory", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDebugMilkReport", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDrinkDetectionDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDrinkTrackerDiagnostics", 0)
@@ -1165,6 +1183,35 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtSoundsMigration125", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds one-shot forced conversion traps to curated vanilla/DLC dungeon boss
+    ; chests. Existing saves receive the requested default-on 100% behavior.
+    If JsonUtil.GetIntValue(SettingsFile, "dungeonChestMilkMaidMigration126", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1)
+        JsonUtil.SetIntValue(SettingsFile, "dungeonChestMilkMaidChance", 100)
+        JsonUtil.SetIntValue(SettingsFile, "dungeonChestMilkMaidMigration126", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Extends forced conversion feedback and adds a separately controlled 10%
+    ; one-shot roll for curated ordinary vanilla/DLC treasure chests.
+    If JsonUtil.GetIntValue(SettingsFile, "forcedMilkMaidFeedbackMigration127", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1)
+        JsonUtil.SetIntValue(SettingsFile, "regularChestMilkMaidChance", 10)
+        JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidNotification", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidLactacidStory", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "forcedMilkMaidFeedbackMigration127", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Replaces the drink-specific forced story with trigger-neutral prose and
+    ; adds one shared high conversion moan for every confirmed creation route.
+    If JsonUtil.GetIntValue(SettingsFile, "newMilkMaidFeedbackMigration128", 0) == 0
+        Int previousStoryValue = JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidLactacidStory", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidStory", previousStoryValue)
+        JsonUtil.SetIntValue(SettingsFile, "enableNewMilkMaidMoans", 1)
+        JsonUtil.SetIntValue(SettingsFile, "newMilkMaidFeedbackMigration128", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1214,6 +1261,14 @@ Event OnPageReset(String page)
     reverseApplyOption = -1
     reverseRemoveOption = -1
     reverseTraceOption = -1
+    dungeonChestMilkMaidOption = -1
+    dungeonChestMilkMaidChanceOption = -1
+    regularChestMilkMaidOption = -1
+    regularChestMilkMaidChanceOption = -1
+    forcedMilkMaidNotificationOption = -1
+    forcedMilkMaidLactacidStoryOption = -1
+    forcedMilkMaidNarrationOption = -1
+    forcedMilkMaidDiagnosticOption = -1
     ; Rebuild option IDs on every page render; SkyUI IDs are ephemeral and must
     ; never be persisted. Runtime values are always reread from JsonUtil.
     EnsureDefaults()
@@ -1241,6 +1296,7 @@ Event OnPageReset(String page)
     drinkMoansOption = -1
     fullnessMoansOption = -1
     milkingMoansOption = -1
+    newMilkMaidMoansOption = -1
     skyrimNetStatusOption = -1
     arousalStatusOption = -1
     milkDrinkArousalOption = -1
@@ -1413,6 +1469,24 @@ Event OnPageReset(String page)
     diagnosticMageBusFailureOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Misc"
+        AddHeaderOption("Milk Maid Chest Traps")
+        dungeonChestMilkMaidOption = AddToggleOption("Boss Chests", JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1) == 1)
+        Int dungeonChestChanceFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1) != 1
+            dungeonChestChanceFlags = OPTION_FLAG_DISABLED
+        EndIf
+        dungeonChestMilkMaidChanceOption = AddSliderOption("Boss Chest Chance", JsonUtil.GetIntValue(SettingsFile, "dungeonChestMilkMaidChance", 100), "{0}%", dungeonChestChanceFlags)
+        regularChestMilkMaidOption = AddToggleOption("Regular Chests", JsonUtil.GetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1) == 1)
+        Int regularChestChanceFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1) != 1
+            regularChestChanceFlags = OPTION_FLAG_DISABLED
+        EndIf
+        regularChestMilkMaidChanceOption = AddSliderOption("Regular Chest Chance", JsonUtil.GetIntValue(SettingsFile, "regularChestMilkMaidChance", 10), "{0}%", regularChestChanceFlags)
+        AddHeaderOption("Forced Conversion Feedback")
+        forcedMilkMaidNotificationOption = AddToggleOption("Conversion Notification", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNotification", 1) == 1)
+        forcedMilkMaidLactacidStoryOption = AddToggleOption("Conversion Story", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidStory", 1) == 1)
+        forcedMilkMaidNarrationOption = AddToggleOption("Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNarration", 1) == 1)
+        forcedMilkMaidDiagnosticOption = AddToggleOption("Conversion Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidDiagnostic", 0) == 1)
         AddHeaderOption("Reverse Milk Maid Leveling")
         reverseDurationOption = AddSliderOption("Reverse Leveling Duration", MMEReverseLevel.GetDuration(), "{0} game hours")
         reversePlayerLevelOption = AddSliderOption("Minimum Milk Maid Level", MMEReverseLevel.GetRequiredLevel(), "{0}")
@@ -1757,6 +1831,7 @@ Event OnPageReset(String page)
     drinkMoansOption = AddToggleOption("Drink Milk Moans", JsonUtil.GetIntValue(SettingsFile, "enableDrinkMoans", 1) == 1)
     fullnessMoansOption = AddToggleOption("Milk Fullness Moans", JsonUtil.GetIntValue(SettingsFile, "enableFullnessMoans", 1) == 1)
     milkingMoansOption = AddToggleOption("Milking Start/End Moans", JsonUtil.GetIntValue(SettingsFile, "enableMilkingMoans", 1) == 1)
+    newMilkMaidMoansOption = AddToggleOption("New Milk Maid Moans", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkMaidMoans", 1) == 1)
     volumeOption = AddSliderOption("Moaning Sound Volume", JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0), "{0}%")
     AddHeaderOption("Capacity Tracker")
     capacityOption = AddToggleOption("Enable 50% Capacity Reactions", JsonUtil.GetIntValue(SettingsFile, "enableCapacityReactions", 1) == 1)
@@ -1767,6 +1842,31 @@ EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
+    If option == dungeonChestMilkMaidOption
+        SetInfoText("Curated vanilla and DLC dungeon boss chests forcibly convert their eligible activator into a Milk Maid. Each placed chest rolls once after success or a missed chance. Default on.")
+        Return
+    ElseIf option == dungeonChestMilkMaidChanceOption
+        SetInfoText("Chance that an eligible dungeon boss chest activation attempts forced Milk Maid conversion. Default 100%, range 0-100 in 5% steps.")
+        Return
+    ElseIf option == regularChestMilkMaidOption
+        SetInfoText("Curated ordinary vanilla and DLC treasure chests can forcibly convert their eligible activator. Merchant, evidence, player-storage, EMPTY and boss containers are excluded. Default on.")
+        Return
+    ElseIf option == regularChestMilkMaidChanceOption
+        SetInfoText("One-shot conversion chance for each eligible ordinary treasure chest. Default 10%, range 0-100 in 5% steps.")
+        Return
+    ElseIf option == forcedMilkMaidNotificationOption
+        SetInfoText("Show one editable JSON conversion line as a regular notification after every successful forced animated API conversion. Default on.")
+        Return
+    ElseIf option == forcedMilkMaidLactacidStoryOption
+        SetInfoText("For forced player conversions, show trigger-neutral game-pausing transformation messages before and after the animation. Text is editable in the forced-conversion JSON. Default on.")
+        Return
+    ElseIf option == forcedMilkMaidNarrationOption
+        SetInfoText("After every successful forced animated API conversion, send the same selected JSON line to Skyrim.Net for immediate narration without a cooldown or extra chance roll. Default on.")
+        Return
+    ElseIf option == forcedMilkMaidDiagnosticOption
+        SetInfoText("Write detailed forced-conversion, JSON feedback and Skyrim.Net results when the master Papyrus logging switches are enabled. Default off.")
+        Return
+    EndIf
     If option == reverseTraceOption
         SetInfoText("Log reverse-leveling application, milking completion, level changes and skipped writes to the Papyrus log. Default off.")
         Return
@@ -1796,6 +1896,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Play moans when a Milkmaid crosses half or full capacity.")
     ElseIf option == milkingMoansOption
         SetInfoText("Play moans when milking starts and ends.")
+    ElseIf option == newMilkMaidMoansOption
+        SetInfoText("Play one high moan near the beginning of every confirmed new Milk Maid conversion. Default on and controlled by the master sound switch and volume.")
     ElseIf option == capacityOption
         SetInfoText("React when a Milkmaid reaches half capacity.")
     ElseIf option == pollingOption
@@ -2163,6 +2265,45 @@ EndEvent
 
 ; Persists toggle changes and refreshes only controllers affected by that option.
 Event OnOptionSelect(Int option)
+    If option == dungeonChestMilkMaidOption
+        Int dungeonChestValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableDungeonChestMilkMaid", dungeonChestValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, dungeonChestValue == 1)
+        ForcePageReset()
+        Return
+    ElseIf option == regularChestMilkMaidOption
+        Int regularChestValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableRegularChestMilkMaid", regularChestValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, regularChestValue == 1)
+        ForcePageReset()
+        Return
+    ElseIf option == forcedMilkMaidNotificationOption
+        Int notificationValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNotification", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidNotification", notificationValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, notificationValue == 1)
+        Return
+    ElseIf option == forcedMilkMaidLactacidStoryOption
+        Int storyValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidStory", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidStory", storyValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, storyValue == 1)
+        Return
+    ElseIf option == forcedMilkMaidNarrationOption
+        Int narrationValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidNarration", narrationValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, narrationValue == 1)
+        Return
+    ElseIf option == forcedMilkMaidDiagnosticOption
+        Int diagnosticValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidDiagnostic", diagnosticValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, diagnosticValue == 1)
+        Return
+    EndIf
     If option == reverseTraceOption
         Int traceValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableReverseLevelTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableReverseLevelTrace", traceValue)
@@ -2214,6 +2355,10 @@ Event OnOptionSelect(Int option)
     ElseIf option == milkingMoansOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkingMoans", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkingMoans", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == newMilkMaidMoansOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableNewMilkMaidMoans", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableNewMilkMaidMoans", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == capacityOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableCapacityReactions", 1)
@@ -2772,7 +2917,19 @@ EndFunction
 
 ; Configures the shared sound-volume and capacity-interval slider dialogs.
 Event OnOptionSliderOpen(Int option)
-    If option == reverseDurationOption
+    If option == dungeonChestMilkMaidChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "dungeonChestMilkMaidChance", 100))
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+        Return
+    ElseIf option == regularChestMilkMaidChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "regularChestMilkMaidChance", 10))
+        SetSliderDialogDefaultValue(10.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+        Return
+    ElseIf option == reverseDurationOption
         SetSliderDialogStartValue(MMEReverseLevel.GetDuration())
         SetSliderDialogDefaultValue(24.0)
         SetSliderDialogRange(1.0, 72.0)
@@ -2990,7 +3147,17 @@ EndEvent
 
 ; Saves accepted slider values and reschedules polling when its interval changes.
 Event OnOptionSliderAccept(Int option, Float value)
-    If option == reverseDurationOption
+    If option == dungeonChestMilkMaidChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "dungeonChestMilkMaidChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        Return
+    ElseIf option == regularChestMilkMaidChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "regularChestMilkMaidChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        Return
+    ElseIf option == reverseDurationOption
         JsonUtil.SetIntValue(SettingsFile, "reverseLevelingDuration", value as Int)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, MMEReverseLevel.GetDuration(), "{0} game hours")

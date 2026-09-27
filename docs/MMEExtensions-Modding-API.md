@@ -1,7 +1,7 @@
 # MME Extensions Modding API
 
 This document describes the stable Papyrus entry points and ModEvents intended
-for other Skyrim mods. The current API version is **1**.
+for other Skyrim mods. The current API version is **2**.
 
 Use `MMEExtensionsAPI.psc`. Do not call `MMEDebug`, `MMENewMilkMaid`,
 `MMEOStimBreastfeeding`, or the Skyrim.Net bridge scripts directly. Those are
@@ -15,7 +15,7 @@ API names are deliberately explicit:
 - A function with **OStim** in its name is OStim-only.
 - A function without a framework name is backend-neutral and does not promise
   OStim, SexLab, or any other scene framework.
-- API version 1 does not expose a generic backend-neutral breastfeeding starter.
+- The API does not expose a generic backend-neutral breastfeeding starter.
   It exposes the proven OStim service directly and labels it accordingly.
 
 The breastfeeding lifecycle events are backend-neutral. Their `backend`
@@ -40,7 +40,7 @@ check `GetAPIVersion()` before depending on features introduced by a later API.
 Int version = MMEExtensionsAPI.GetAPIVersion()
 ```
 
-Returns `1` for this release.
+Returns `2` for this release.
 
 ### IsMilkMaid
 
@@ -93,9 +93,34 @@ The function intentionally has no Boolean return. Treat it as a request and
 listen for `MMEExtensions_MilkmaidCreated` to confirm success. MME Extensions
 also displays the established rejection reason when the target is ineligible.
 
-There is no animation-free creation API in version 1. MME owns the creation
+There is no animation-free creation API. MME owns the creation
 animation and registration in the same native transaction; bypassing it would
 risk an incomplete Milk Maid registration.
+
+### TryCreateMilkMaidForcedAnimated
+
+```papyrus
+Bool created = MMEExtensionsAPI.TryCreateMilkMaidForcedAnimated(targetActor)
+```
+
+Backend-neutral, forced gameplay transaction introduced in API version 2. It
+supports the player or an eligible adult female NPC. It bypasses MME's NPC
+Yes/No confirmation while retaining MME's localized assignment message,
+authoritative slot and progression-capacity checks, initial Lactacid state,
+and original ten-second `ZaZAPCHorFd` reaction sequence. Player calls can also
+show MME's original game-pausing Lactacid story boxes. After a successful call,
+MME Extensions selects one editable line from
+`ForcedMilkMaidConversion.json`, uses it for the local notification, and sends
+the same context to the dedicated Skyrim.Net forced narration route. Each
+feedback channel has an MCM toggle; the API's conversion result never depends
+on Skyrim.Net being installed or accepting the narration request.
+
+This is a latent call. It returns only after conversion and animation cleanup.
+`true` means registration and initialization succeeded and the animation
+completed. `false` means the actor was ineligible, animation was unsafe, MME
+had no available slot, or initialization failed. A failed capacity or safety
+check does not partially convert the actor. Successful calls also publish
+`MMEExtensions_MilkmaidCreated`.
 
 ## Existing Milk Maid creation event
 

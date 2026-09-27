@@ -1,7 +1,7 @@
 Scriptname MMEExtensionsAPI Hidden
 
 ; =============================================================================
-; MME Extensions public Papyrus API (version 1)
+; MME Extensions public Papyrus API (version 2)
 ; =============================================================================
 ; This is the stable entry point for other mods. Call these wrappers instead
 ; of MMEDebug, MMENewMilkMaid, MMEOStimBreastfeeding, or other internal scripts.
@@ -15,7 +15,7 @@ Scriptname MMEExtensionsAPI Hidden
 ; transaction finishes. Listen for the documented ModEvents to observe results.
 
 Int Function GetAPIVersion() Global
-    Return 1
+    Return 2
 EndFunction
 
 ; Backend-neutral query. Returns true only for a current, authoritative MME
@@ -47,6 +47,15 @@ EndFunction
 ; existing actor-only MMEExtensions_MilkmaidCreated event to confirm success.
 Function RequestMilkMaidCreation(Actor target) Global
     MMENewMilkMaid.MakeTargetNewMilkMaid(target)
+EndFunction
+
+; Backend-neutral forced gameplay transaction. This bypasses MME's NPC Yes/No
+; confirmation but retains MME's localized assignment message, slot/capacity
+; authority, initial Lactacid state, and original ten-second ZaZ reaction.
+; True means registration, initialization, animation, and cleanup completed.
+; The function is latent and may take roughly ten seconds before returning.
+Bool Function TryCreateMilkMaidForcedAnimated(Actor target) Global
+    Return MMENewMilkMaid.TryCreateMilkMaidForcedAnimated(target)
 EndFunction
 
 ; =============================================================================

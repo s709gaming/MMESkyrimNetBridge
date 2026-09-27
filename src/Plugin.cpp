@@ -11,9 +11,11 @@
 #include <RE/T/TESFile.h>
 #include <RE/T/TESForm.h>
 #include <RE/T/TESActorLocationChangeEvent.h>
+#include <RE/T/TESActivateEvent.h>
 #include <RE/T/TESActiveEffectApplyRemoveEvent.h>
 #include <RE/T/TESLoadGameEvent.h>
 #include <RE/T/TESMagicEffectApplyEvent.h>
+#include <RE/T/TESObjectCONT.h>
 #include <RE/T/TESEquipEvent.h>
 #include <RE/T/TESTopic.h>
 #include <RE/T/TESTopicInfo.h>
@@ -38,6 +40,182 @@ namespace
     constexpr auto kMMEEffectRemovedEvent = "MMEExtensions_MMEEffectRemoved";
     constexpr auto kPotionEvent = "MMEExtensions_PotionConsumed";
     constexpr auto kArmorEvent = "MMEExtensions_ArmorEquipped";
+    constexpr auto kDungeonBossChestEvent = "MMEExtensions_DungeonBossChestActivated";
+    constexpr auto kDungeonRegularChestEvent = "MMEExtensions_DungeonRegularChestActivated";
+
+    bool IsCuratedDungeonBossChest(RE::TESBoundObject* baseObject)
+    {
+        if (!baseObject || baseObject->GetFormType() != RE::FormType::Container) {
+            return false;
+        }
+        auto* sourceFile = baseObject->GetFile(0);
+        if (!sourceFile) {
+            return false;
+        }
+
+        const auto localID = baseObject->GetLocalFormID();
+        const auto filename = sourceFile->GetFilename();
+        // Curated from the live vanilla load order. EMPTY templates are omitted;
+        // every accepted base is an actual boss/reward container family.
+        if (_stricmp(filename.data(), "Skyrim.esm") == 0) {
+            switch (localID) {
+            case 0x0B1176:  // TreasFalmerChestBossDwarven
+            case 0x0774C9:  // TreasOrcChestBoss
+            case 0x0774BF:  // TreasGiantChestBoss
+            case 0x08EA5D:  // TreasAfflictedChestBoss
+            case 0x08B1F1:  // TreasCWSonsChestBossLarge
+            case 0x08B1F0:  // TreasCWImperialChestBossLarge
+            case 0x08B1E9:  // TreasCWSonsChestBossSmall
+            case 0x08B1E8:  // TreasCWImperialChestBossSmall
+            case 0x020671:  // TreasDraugrChestBoss
+            case 0x020667:  // TreasHagravenChestBoss
+            case 0x020664:  // TreasVampireChestBoss
+            case 0x020661:  // TreasWerewolfChestBoss
+            case 0x02065D:  // TreasWarlockChestBoss
+            case 0x02065B:  // TreasFalmerChestBoss
+            case 0x020658:  // TreasForswornChestBoss
+            case 0x020652:  // TreasDwarvenChestBoss
+            case 0x02064F:  // TreasBanditChestBoss
+                return true;
+            default:
+                return false;
+            }
+        }
+        if (_stricmp(filename.data(), "Dawnguard.esm") == 0) {
+            return localID == 0x0040A5 ||  // DLC01SC_ChestBoss
+                   localID == 0x019DD6;    // DLC01TreasSnowElfChestBoss
+        }
+        if (_stricmp(filename.data(), "Dragonborn.esm") == 0) {
+            switch (localID) {
+            case 0x03A2B6:  // DLC2dunKolbjornTreasDraugrChestBoss
+            case 0x02C461:  // DLC2TreasApocryphaChestBoss
+            case 0x02C45F:  // DLC2TreasWerebearChestBoss
+            case 0x02C45A:  // DLC2TreasWerewolfChestBoss
+            case 0x02C456:  // DLC2TreasWarlockChestBoss
+            case 0x02AAC2:  // DLC2TreasDraugrChestBoss
+            case 0x02AABF:  // DLC2TreasBanditChestBoss
+            case 0x02AABA:  // DLC2TreasDwarvenChestBoss
+            case 0x025E46:  // DLC2TreasRieklingChestBoss
+                return true;
+            default:
+                return false;
+            }
+        }
+        return _stricmp(filename.data(), "_ResourcePack.esl") == 0 && localID == 0x000096;
+    }
+
+    bool IsCuratedDungeonRegularChest(RE::TESBoundObject* baseObject)
+    {
+        if (!baseObject || baseObject->GetFormType() != RE::FormType::Container) {
+            return false;
+        }
+        auto* sourceFile = baseObject->GetFile(0);
+        if (!sourceFile) {
+            return false;
+        }
+
+        const auto localID = baseObject->GetLocalFormID();
+        const auto filename = sourceFile->GetFilename();
+        // Curated from the live vanilla/DLC load order: ordinary treasure-chest
+        // families only. Boss and EMPTY templates are deliberately excluded,
+        // as are merchant, evidence, player-storage, barrel, and sack records.
+        if (_stricmp(filename.data(), "Skyrim.esm") == 0) {
+            switch (localID) {
+            case 0x10EE0C:  // TreasCWImperialChestCWMission07
+            case 0x10EE0B:  // TreasCWSonsChestCWMission07
+            case 0x10E05E:  // dunTreasMapTreasChestSpecial
+            case 0x0FCB25:  // TreasExplorerLootChestSnow
+            case 0x0F4A01:  // dunTreasMapTreasChest
+            case 0x0F1F66:  // TreasBanditChestSnow
+            case 0x0EF052:  // TreasExplorerLootChest
+            case 0x0D89C6:  // TreasHouseNobleChest
+            case 0x0D1259:  // TreasTreashunterChest
+            case 0x0774C8:  // TreasOrcChest
+            case 0x0774C6:  // TreasGiantChest
+            case 0x08EA5E:  // TreasAfflictedChest
+            case 0x08A3B6:  // TreasCWSonsChest
+            case 0x08A3B4:  // TreasCWImperialChest
+            case 0x02069A:  // TreasDwarvenChestLarge
+            case 0x021363:  // TreasUpperChest
+            case 0x020670:  // TreasDraugrChest
+            case 0x020665:  // TreasHagravenChest
+            case 0x020662:  // TreasVampireChest
+            case 0x02065F:  // TreasWerewolfChest
+            case 0x020659:  // TreasFalmerChest
+            case 0x020654:  // TreasForswornChest
+            case 0x020650:  // TreasDwarvenChestSmall
+            case 0x05418E:  // TreasWarlockChest
+            case 0x03AC21:  // TreasBanditChest
+                return true;
+            default:
+                return false;
+            }
+        }
+        if (_stricmp(filename.data(), "Dawnguard.esm") == 0) {
+            switch (localID) {
+            case 0x01692A:  // DLC1TreasSoulCairnChest02
+            case 0x015FDD:  // DLC01TreasSnowElfChest
+            case 0x015461:  // DLC1TreasSoulCairnChest
+            case 0x00DCE7:  // DLC1TreasChestDarkFall01
+                return true;
+            default:
+                return false;
+            }
+        }
+        if (_stricmp(filename.data(), "Dragonborn.esm") == 0) {
+            switch (localID) {
+            case 0x03D2A1:  // DLC2dunBloodskalTreasChestLure
+            case 0x035E25:  // DLC2dunFrostmoonTreasChest
+            case 0x034B39:  // DLC2TreasRieklingChestSnow
+            case 0x02C463:  // DLC2TreasExplorerLootChestSnow
+            case 0x02C462:  // DLC2TreasExplorerLootChest
+            case 0x02C460:  // DLC2TreasApocryphaChest
+            case 0x02C45E:  // DLC2TreasWerebearChest
+            case 0x02C458:  // DLC2TreasWerewolfChest
+            case 0x02C455:  // DLC2TreasWarlockChest
+            case 0x02AAC1:  // DLC2TreasDraugrChest
+            case 0x02AAC0:  // DLC2TreasBanditChestSnow
+            case 0x02AABE:  // DLC2TreasBanditChest
+            case 0x02AABC:  // DLC2TreasDwarvenChestSmall
+            case 0x02AABB:  // DLC2TreasDwarvenChestLarge
+            case 0x025E48:  // DLC2TreasRieklingChest
+                return true;
+            default:
+                return false;
+            }
+        }
+        return false;
+    }
+
+    void SendDungeonChestEvent(
+        const char* eventName, const char* chestKind, RE::TESObjectREFR* chest,
+        RE::Actor* activator, RE::TESBoundObject* baseObject)
+    {
+        auto* source = SKSE::GetModCallbackEventSource();
+        auto* sourceFile = baseObject ? baseObject->GetFile(0) : nullptr;
+        if (!source || !chest || !activator || !baseObject || !sourceFile) {
+            return;
+        }
+        const auto chestIdentity = fmt::format("{}:{:08X}", sourceFile->GetFilename(), chest->GetFormID());
+        SKSE::ModCallbackEvent event{
+            RE::BSFixedString(eventName),
+            RE::BSFixedString(chestIdentity),
+            static_cast<float>(baseObject->GetLocalFormID()),
+            activator
+        };
+        source->SendEvent(&event);
+        if (_stricmp(chestKind, "regular") == 0) {
+            // Ordinary chests are common. Keep their native breadcrumb below
+            // the production info threshold; Papyrus owns MCM-gated tracing.
+            SKSE::log::debug(
+                "dungeon regular chest activated: ref {:08X}, base {}:{:06X}, actor {:08X}",
+                chest->GetFormID(), sourceFile->GetFilename(), baseObject->GetLocalFormID(), activator->GetFormID());
+        } else {
+            SKSE::log::info(
+                "dungeon {} chest activated: ref {:08X}, base {}:{:06X}, actor {:08X}",
+                chestKind, chest->GetFormID(), sourceFile->GetFilename(), baseObject->GetLocalFormID(), activator->GetFormID());
+        }
+    }
 
     std::vector<RE::Actor*> GetNearbyActors(RE::StaticFunctionTag*, float radius)
     {
@@ -380,7 +558,8 @@ namespace
         public RE::BSTEventSink<RE::TESLoadGameEvent>,
         public RE::BSTEventSink<RE::TESMagicEffectApplyEvent>,
         public RE::BSTEventSink<RE::TESActiveEffectApplyRemoveEvent>,
-        public RE::BSTEventSink<RE::TESEquipEvent>
+        public RE::BSTEventSink<RE::TESEquipEvent>,
+        public RE::BSTEventSink<RE::TESActivateEvent>
     {
     public:
         static LifecycleEventSink* GetSingleton()
@@ -401,6 +580,7 @@ namespace
             holder->AddEventSink<RE::TESMagicEffectApplyEvent>(this);
             holder->AddEventSink<RE::TESActiveEffectApplyRemoveEvent>(this);
             holder->AddEventSink<RE::TESEquipEvent>(this);
+            holder->AddEventSink<RE::TESActivateEvent>(this);
             SKSE::log::info("Lifecycle event sinks registered");
         }
 
@@ -534,6 +714,23 @@ namespace
                 SendPotionEvent(actor, item);
             } else if (actor && item && item->GetFormType() == RE::FormType::Armor) {
                 SendArmorEvent(actor, item);
+            }
+            return RE::BSEventNotifyControl::kContinue;
+        }
+
+        RE::BSEventNotifyControl ProcessEvent(
+            const RE::TESActivateEvent* event,
+            RE::BSTEventSource<RE::TESActivateEvent>*) override
+        {
+            if (!event || !event->objectActivated || !event->actionRef) {
+                return RE::BSEventNotifyControl::kContinue;
+            }
+            auto* activator = event->actionRef->As<RE::Actor>();
+            auto* baseObject = event->objectActivated->GetBaseObject();
+            if (activator && IsCuratedDungeonBossChest(baseObject)) {
+                SendDungeonChestEvent(kDungeonBossChestEvent, "boss", event->objectActivated.get(), activator, baseObject);
+            } else if (activator && IsCuratedDungeonRegularChest(baseObject)) {
+                SendDungeonChestEvent(kDungeonRegularChestEvent, "regular", event->objectActivated.get(), activator, baseObject);
             }
             return RE::BSEventNotifyControl::kContinue;
         }

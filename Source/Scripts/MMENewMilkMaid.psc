@@ -358,6 +358,182 @@ Function MakeTargetNewMilkMaid(Actor candidate) Global
     EndIf
 EndFunction
 
+; Generic no-confirmation conversion used by environmental traps and public
+; integrations. MME remains authoritative for registration and capacity via
+; AssignSlotMaid. We then reproduce MilkLactacidScr's successful initialization
+; and visible ten-second reaction without displaying its NPC Yes/No message.
+Bool Function TryCreateMilkMaidForcedAnimated(Actor candidate) Global
+    If !MMEAlertsController.IsExtensionsEnabled()
+        FailAction(candidate, "MME Extensions is disabled.", False)
+        Return False
+    EndIf
+
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    String failure = GetActionEligibilityFailure(candidate, milkController)
+    If failure != ""
+        FailAction(candidate, failure, IsUnexpectedActionFailure(failure))
+        Return False
+    EndIf
+    String animationFailure = MMEAnimationSafety.GetStartBlockReason(candidate, milkController, True)
+    If animationFailure != ""
+        FailAction(candidate, "The conversion animation is blocked: " + animationFailure + ".", False)
+        Return False
+    ElseIf !milkController.SexLab.IsValidActor(candidate)
+        FailAction(candidate, "SexLab does not consider the target valid for the conversion animation.", False)
+        Return False
+    EndIf
+
+    String lockKey = "MMEExtensions.CreateMilkMaid.ActionLock"
+    String lockTimeKey = "MMEExtensions.CreateMilkMaid.ActionLockTime"
+    Float now = Utility.GetCurrentRealTime()
+    Int lockOwner = StorageUtil.GetIntValue(None, lockKey, 0)
+    Float lockedAt = StorageUtil.GetFloatValue(None, lockTimeKey, -1.0)
+    If lockOwner == 1 && lockedAt >= 0.0 && now >= lockedAt && now - lockedAt < 60.0
+        FailAction(candidate, "Another Milk Maid conversion is already in progress.", False)
+        Return False
+    EndIf
+    StorageUtil.SetIntValue(None, lockKey, 1)
+    StorageUtil.SetFloatValue(None, lockTimeKey, now)
+
+    ; Repeat every mutable check after taking the global conversion lock.
+    milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    failure = GetActionEligibilityFailure(candidate, milkController)
+    If failure == ""
+        animationFailure = MMEAnimationSafety.GetStartBlockReason(candidate, milkController, True)
+        If animationFailure != ""
+            failure = "The conversion animation is blocked: " + animationFailure + "."
+        ElseIf !milkController.SexLab.IsValidActor(candidate)
+            failure = "SexLab no longer considers the target valid for the conversion animation."
+        EndIf
+    EndIf
+    If failure != ""
+        ReleaseActionLock(lockKey, lockTimeKey)
+        FailAction(candidate, failure, IsUnexpectedActionFailure(failure))
+        Return False
+    EndIf
+
+    String animationOwner = "ForcedMilkMaidConversion"
+    If !MMEAnimationSafety.TryAcquire(candidate, animationOwner)
+        ReleaseActionLock(lockKey, lockTimeKey)
+        FailAction(candidate, "Another MME Extensions animation claimed the target.", False)
+        Return False
+    EndIf
+
+    ; AssignSlotMaid owns the live MilkMaid[] lookup, progression capacity
+    ; limit, StorageUtil initialization, localized success notification, and
+    ; Milk Maid faction membership. A failed capacity check simply leaves the
+    ; authoritative postcondition false.
+    MMELog.Diagnostic("[MME Extensions Create Milk Maid] forced assignment requested | target=" + GetActorIdentity(candidate))
+    milkController.AssignSlotMaid(candidate)
+    Utility.Wait(0.1)
+    If !MMEArmorScript.IsMMEMilkMaid(candidate, milkController)
+        MMEAnimationSafety.Release(candidate, animationOwner)
+        ReleaseActionLock(lockKey, lockTimeKey)
+        FailAction(candidate, "MME did not assign a Milk Maid slot. Its capacity may be too low or its registry may be full.", False)
+        Return False
+    EndIf
+
+    MME_Storage.changeLactacidCurrent(candidate, 1.0)
+    milkController.CurrentSize(candidate)
+    If MME_Storage.getLactacidCurrent(candidate) < 1.0
+        milkController.SingleMaidReset(candidate)
+        MMEAnimationSafety.Release(candidate, animationOwner)
+        ReleaseActionLock(lockKey, lockTimeKey)
+        FailAction(candidate, "MME did not initialize Lactacid; its partial conversion was rolled back.", True)
+        Return False
+    EndIf
+
+    ; Preserve MilkLactacidScr's visible creation performance. AssignSlotMaid
+    ; already displayed MME's localized "becomes a Milkmaid" notification. For
+    ; the player, the optional API story setting preserves MME's screen-wide,
+    ; game-pausing presentation with trigger-neutral transformation prose.
+    Actor playerActor = Game.GetPlayer()
+    Bool isPlayer = candidate == playerActor
+    Bool showConversionStory = isPlayer && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableForcedMilkMaidStory", 1) == 1
+    String conversionConfig = "/MMEAlerts/ForcedMilkMaidConversion"
+    If showConversionStory
+        String openingStory = JsonUtil.GetStringValue(conversionConfig, "openingStory", "A change courses through your body. Your breasts grow warm, and your nipples begin to tingle and harden against your clothes. Heat spreads through you, your mind goes blank, and you can barely remain on your feet. Sudden shock waves race through your body as you collapse.")
+        Debug.MessageBox(openingStory)
+    EndIf
+    If isPlayer
+        Game.DisablePlayerControls(True, True, False, False, True, True, False)
+        Game.ForceThirdPerson()
+        Game.ShakeCamera(None, Utility.RandomFloat(0.5, 1.0), 10.0)
+    EndIf
+    Debug.SendAnimationEvent(candidate, "ZaZAPCHorFd")
+    candidate.SetUnconscious(True)
+    MMEReactionSounds.PlayNewMilkMaidMoan(candidate)
+    If isPlayer
+        Int orgasmStartHandle = ModEvent.Create("PlayerOrgasmStart")
+        If orgasmStartHandle
+            ModEvent.Send(orgasmStartHandle)
+        EndIf
+    EndIf
+    Utility.Wait(10.0)
+    If isPlayer
+        Int orgasmEndHandle = ModEvent.Create("PlayerOrgasmEnd")
+        If orgasmEndHandle
+            ModEvent.Send(orgasmEndHandle)
+        EndIf
+    EndIf
+    If showConversionStory
+        String closingStory = JsonUtil.GetStringValue(conversionConfig, "closingStory", "%text1 just had a breast-induced orgasm!")
+        closingStory = MMEAlertsSkyrimNet.RenderToken(closingStory, "%text1", GetActorName(candidate))
+        Debug.MessageBox(closingStory)
+    EndIf
+    Debug.SendAnimationEvent(candidate, "IdleForceDefaultState")
+    candidate.SetUnconscious(False)
+    If isPlayer && !milkController.SexLab.IsActorActive(candidate)
+        Game.EnablePlayerControls()
+    EndIf
+
+    MMEAnimationSafety.Release(candidate, animationOwner)
+    ReleaseActionLock(lockKey, lockTimeKey)
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller != None
+        ; Publish history and the public event, but suppress the generic creation
+        ; narration. This API owns one JSON-driven forced narration below.
+        controller.CheckMilkmaidCreation(candidate, "forced animated API", False, False)
+    Else
+        MMELog.Alarm("[MME Extensions Create Milk Maid] converted actor but creation controller was unavailable | target=" + GetActorIdentity(candidate))
+    EndIf
+    PublishForcedConversionFeedback(candidate)
+    MMELog.Diagnostic("[MME Extensions Create Milk Maid] forced conversion complete | target=" + GetActorIdentity(candidate))
+    Return True
+EndFunction
+
+Function PublishForcedConversionFeedback(Actor candidate) Global
+    If candidate == None
+        Return
+    EndIf
+    String settingsFile = "/MMEAlerts/Settings"
+    Bool showNotification = JsonUtil.GetIntValue(settingsFile, "enableForcedMilkMaidNotification", 1) == 1
+    Bool narrate = JsonUtil.GetIntValue(settingsFile, "enableForcedMilkMaidNarration", 1) == 1
+    If !showNotification && !narrate
+        Return
+    EndIf
+
+    String configFile = "/MMEAlerts/ForcedMilkMaidConversion"
+    Int messageCount = JsonUtil.StringListCount(configFile, "conversionMessages")
+    String template = "{actor} feels strange magic coursing through their breasts!"
+    If messageCount > 0
+        template = JsonUtil.StringListGet(configFile, "conversionMessages", Utility.RandomInt(0, messageCount - 1))
+        If template == ""
+            template = "{actor} feels strange magic coursing through their breasts!"
+        EndIf
+    EndIf
+    String content = MMEAlertsSkyrimNet.RenderMessage(template, GetActorName(candidate))
+    If showNotification
+        Debug.Notification(content)
+    EndIf
+    If narrate
+        MMEAlertsSkyrimNet.NarrateForcedMilkMaidConversion(candidate, content)
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enableForcedMilkMaidDiagnostic", 0) == 1
+        MMELog.Diagnostic("[MME Extensions Create Milk Maid] feedback | target=" + GetActorIdentity(candidate) + " | entries=" + messageCount + " | notification=" + showNotification + " | narration=" + narrate + " | content=" + content)
+    EndIf
+EndFunction
+
 ; Returns a player-facing failure, with no writes. Do not inspect MilkMaid[]
 ; here: MME 2022 exposes that auto-property as None to some external scripts,
 ; even while MilkLactacidScr and AssignSlotMaid use the live array internally.

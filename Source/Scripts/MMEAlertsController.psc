@@ -6,6 +6,14 @@ Function OnTentaclePlayerLine(String response, Int success)
     MMEAlertsSkyrimNet.PlayTentaclePlayerLine(response, success)
 EndFunction
 
+Function OnNewMilkMaidPlayerLine(String response, Int success)
+    MMEAlertsSkyrimNet.PlayNewMilkMaidPlayerLine(response, success)
+EndFunction
+
+Function OnForcedMilkMaidPlayerLine(String response, Int success)
+    MMEAlertsSkyrimNet.PlayForcedMilkMaidPlayerLine(response, success)
+EndFunction
+
 ; ---------------------------------------------------------------------------
 ; Controller-owned persistent state
 ; ---------------------------------------------------------------------------
@@ -101,6 +109,10 @@ Function InitializeController(Bool reportStatus = False)
     ; initialization cannot clear an active cooldown.
     UnregisterForModEvent("MMEExtensions_ArmorEquipped")
     RegisterForModEvent("MMEExtensions_ArmorEquipped", "OnArmorEquipped")
+    UnregisterForModEvent("MMEExtensions_DungeonBossChestActivated")
+    RegisterForModEvent("MMEExtensions_DungeonBossChestActivated", "OnDungeonBossChestActivated")
+    UnregisterForModEvent("MMEExtensions_DungeonRegularChestActivated")
+    RegisterForModEvent("MMEExtensions_DungeonRegularChestActivated", "OnDungeonRegularChestActivated")
     UnregisterForModEvent("MME_AddMilkMaid")
     RegisterForModEvent("MME_AddMilkMaid", "OnMMEAddMilkmaidRequested")
     ; Phase 3: repair the player monitoring ability on the one known bytecode
@@ -135,6 +147,21 @@ Function InitializeController(Bool reportStatus = False)
         MMELog.Status("[MME Extensions] ready | core events registered | Skyrim.Net=" + skyrimNetState)
     EndIf
 EndFunction
+
+; The native bridge has already restricted this event to curated vanilla/DLC
+; boss-chest bases. The sender is the actor who activated the placed chest;
+; chestIdentity uniquely keys the one-shot roll without a record override.
+Event OnDungeonBossChestActivated(String eventName, String chestIdentity, Float baseLocalID, Form sender)
+    Actor targetActor = sender as Actor
+    MMELog.MasterDiagnostic("[MME Extensions Dungeon Chest] native boss activation | chest=" + chestIdentity + " | base=" + baseLocalID as Int)
+    MMEDungeonChestConversion.HandleActivation(targetActor, chestIdentity, True)
+EndEvent
+
+Event OnDungeonRegularChestActivated(String eventName, String chestIdentity, Float baseLocalID, Form sender)
+    Actor targetActor = sender as Actor
+    MMELog.MasterDiagnostic("[MME Extensions Dungeon Chest] native regular activation | chest=" + chestIdentity + " | base=" + baseLocalID as Int)
+    MMEDungeonChestConversion.HandleActivation(targetActor, chestIdentity, False)
+EndEvent
 
 ; MME computes this conditional from the same two registrars during its load
 ; script. Refreshing the cached value fixes load-order staleness without
@@ -789,7 +816,7 @@ Event OnMMEAddMilkmaidRequested(Form sender)
 EndEvent
 
 ; Waits for MME, validates a real false-to-true transition, and publishes it once.
-Function CheckMilkmaidCreation(Actor candidate, String source, Bool ownsPendingMarker = True)
+Function CheckMilkmaidCreation(Actor candidate, String source, Bool ownsPendingMarker = True, Bool narrateCreation = True)
     ; This routine reconciles several creation signals that may arrive in either
     ; order. MilkQUEST membership is authoritative; effect/pending markers only
     ; explain whether conversion is still underway and who may clear the state.
@@ -826,11 +853,18 @@ Function CheckMilkmaidCreation(Actor candidate, String source, Bool ownsPendingM
         Return
     EndIf
     StorageUtil.SetIntValue(candidate, KnownMilkmaidKey, 1)
+    ; All native Lactacid, dialogue, ordinary-milk, Skyrim.Net action, and
+    ; third-party MME_AddMilkMaid routes converge here after the transition is
+    ; authoritative. The forced API calls the same deduplicated helper at its
+    ; animation start so it does not wait until that ten-second scene ends.
+    MMEReactionSounds.PlayNewMilkMaidMoan(candidate)
     If diagnostic
         Debug.Notification("MME Extensions - " + GetActorName(candidate) + " is a new Milkmaid!")
     EndIf
     MMEAlertsSkyrimNet.SendMilkmaidCreated(candidate)
-    MMEAlertsSkyrimNet.NarrateMilkmaidCreated(candidate)
+    If narrateCreation
+        MMEAlertsSkyrimNet.NarrateMilkmaidCreated(candidate)
+    EndIf
     Int handle = ModEvent.Create("MMEExtensions_MilkmaidCreated")
     If handle
         ModEvent.PushForm(handle, candidate)
