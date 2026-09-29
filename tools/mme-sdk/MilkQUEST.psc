@@ -10,6 +10,9 @@ MilkQUEST_Conditions Property MilkQC Auto
 FormList Property MME_Milk_Basic Auto
 FormList Property MME_Milk_Race Auto
 FormList Property MME_Milk_Special Auto
+FormList Property MME_Milk_Succubus Auto
+FormList Property MME_Milk_Vampire Auto
+FormList Property MME_Milk_Werewolf Auto
 FormList Property MME_Util_Potions Auto
 Armor Property MilkCuirass Auto
 Armor Property MilkCuirassFuta Auto

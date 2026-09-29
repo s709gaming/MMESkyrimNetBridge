@@ -1,0 +1,6 @@
+{
+  "enabled": 1,
+  "disableBreastScalingOnce": 1,
+  "pregnancyCreatesMilkMaid": 1,
+  "scanIntervalSeconds": 10.0
+}

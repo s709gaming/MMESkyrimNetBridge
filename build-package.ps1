@@ -10,6 +10,7 @@ $vanillaSource = Join-Path $gameRoot "Data\Source\Scripts"
 $skyUiSdkSource = Join-Path $projectRoot "tools\skyui-sdk"
 $mmeSdkSource = Join-Path $projectRoot "tools\mme-sdk"
 $ostimSdkSource = Join-Path $projectRoot "tools\ostim-sdk"
+$omaniaSdkSource = Join-Path $projectRoot "tools\omania-sdk"
 $skyrimNetSdkSource = Join-Path $projectRoot "tools\skyrimnet-sdk"
 $sourceDir = Join-Path $projectRoot "Source\Scripts"
 $compiledDir = Join-Path $projectRoot "Scripts"
@@ -18,7 +19,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
-$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMETentacleEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEExtensionsAPI", "MMEExtensionsNative")
+$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMETentacleEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
@@ -67,7 +68,7 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 & (Join-Path $projectRoot "tools\Test-TentacleNarrationContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-ReactionSoundContracts.ps1")
 New-Item -ItemType Directory -Force -Path $compiledDir | Out-Null
-$imports = "$sourceDir;$skyUiSdkSource;$mmeSdkSource;$ostimSdkSource;$skyrimNetSdkSource;$skseSource;$vanillaSource"
+$imports = "$sourceDir;$skyUiSdkSource;$mmeSdkSource;$ostimSdkSource;$omaniaSdkSource;$skyrimNetSdkSource;$skseSource;$vanillaSource"
 foreach ($scriptName in $scriptNames) {
     Write-Host "Compiling $scriptName.psc..." -ForegroundColor Cyan
     & $compiler "$scriptName.psc" "-f=$flags" "-i=$imports" "-o=$compiledDir"

@@ -4,12 +4,15 @@
 #include <RE/P/ProcessLists.h>
 #include <RE/P/PackUnpackImpl.h>
 #include <RE/A/ActiveEffect.h>
+#include <RE/B/BGSKeyword.h>
+#include <RE/B/BGSLocation.h>
 #include <RE/E/EffectSetting.h>
 #include <RE/M/MenuTopicManager.h>
 #include <RE/N/NativeFunction.h>
 #include <RE/S/ScriptEventSourceHolder.h>
 #include <RE/T/TESFile.h>
 #include <RE/T/TESForm.h>
+#include <RE/T/TESDataHandler.h>
 #include <RE/T/TESActorLocationChangeEvent.h>
 #include <RE/T/TESActivateEvent.h>
 #include <RE/T/TESActiveEffectApplyRemoveEvent.h>
@@ -42,6 +45,103 @@ namespace
     constexpr auto kArmorEvent = "MMEExtensions_ArmorEquipped";
     constexpr auto kDungeonBossChestEvent = "MMEExtensions_DungeonBossChestActivated";
     constexpr auto kDungeonRegularChestEvent = "MMEExtensions_DungeonRegularChestActivated";
+    constexpr auto kInnPalaceEnteredEvent = "MMEExtensions_InnPalaceEntered";
+    constexpr auto kInnPalaceExitedEvent = "MMEExtensions_InnPalaceExited";
+
+    enum class SocialVenueKind : std::uint32_t
+    {
+        kNone = 0,
+        kInn = 1,
+        kGuildTavern = 2,
+        kJarlResidence = 3
+    };
+
+    struct SocialVenue
+    {
+        RE::BGSLocation* location{ nullptr };
+        SocialVenueKind kind{ SocialVenueKind::kNone };
+    };
+
+    RE::BGSKeyword* g_locTypeInn = nullptr;
+    std::unordered_map<RE::FormID, SocialVenueKind> g_socialVenueForms;
+
+    void InitializeSocialVenueForms()
+    {
+        auto* dataHandler = RE::TESDataHandler::GetSingleton();
+        if (!dataHandler) {
+            SKSE::log::error("social venue forms unavailable: TESDataHandler missing");
+            return;
+        }
+
+        g_locTypeInn = dataHandler->LookupForm<RE::BGSKeyword>(0x01CB87, "Skyrim.esm");
+        g_socialVenueForms.clear();
+        const auto addVenue = [&](RE::FormID localID, SocialVenueKind kind) {
+            if (auto* location = dataHandler->LookupForm<RE::BGSLocation>(localID, "Skyrim.esm")) {
+                g_socialVenueForms.insert_or_assign(location->GetFormID(), kind);
+            } else {
+                SKSE::log::warn("social venue location missing: Skyrim.esm:{:06X}", localID);
+            }
+        };
+
+        // Public guild/tavern spaces which vanilla does not tag LocTypeInn.
+        addVenue(0x01F877, SocialVenueKind::kGuildTavern);  // Jorrvaskr
+        addVenue(0x02264A, SocialVenueKind::kGuildTavern);  // Ragged Flagon
+        addVenue(0x01F872, SocialVenueKind::kGuildTavern);  // Drunken Huntsman
+
+        // Exact jarl residences avoid the unrelated Castle Dour locations that
+        // also carry LocTypeCastle. Parent traversal covers subordinate cells.
+        addVenue(0x01F871, SocialVenueKind::kJarlResidence);  // Dragonsreach
+        addVenue(0x020086, SocialVenueKind::kJarlResidence);  // Blue Palace
+        addVenue(0x0209F2, SocialVenueKind::kJarlResidence);  // Palace of the Kings
+        addVenue(0x022646, SocialVenueKind::kJarlResidence);  // Mistveil Keep
+        addVenue(0x01F316, SocialVenueKind::kJarlResidence);  // Understone Keep
+        addVenue(0x020062, SocialVenueKind::kJarlResidence);  // White Hall
+        addVenue(0x01EB9A, SocialVenueKind::kJarlResidence);  // Highmoon Hall
+        addVenue(0x0200C9, SocialVenueKind::kJarlResidence);  // Falkreath Jarl's Longhouse
+        addVenue(0x01EB7D, SocialVenueKind::kJarlResidence);  // Winterhold Jarl's Longhouse
+
+        SKSE::log::info(
+            "social venue forms initialized: LocTypeInn={}, explicit locations={}",
+            g_locTypeInn != nullptr, g_socialVenueForms.size());
+    }
+
+    SocialVenue FindSocialVenue(RE::BGSLocation* location)
+    {
+        // Location parent chains are shallow in vanilla. Bound traversal so a
+        // malformed modded cycle can never trap the event sink.
+        std::unordered_set<RE::FormID> visited;
+        for (std::uint32_t depth = 0; location && depth < 16; ++depth) {
+            if (!visited.insert(location->GetFormID()).second) {
+                break;
+            }
+            if (const auto it = g_socialVenueForms.find(location->GetFormID()); it != g_socialVenueForms.end()) {
+                return { location, it->second };
+            }
+            if (g_locTypeInn && location->HasKeyword(g_locTypeInn)) {
+                return { location, SocialVenueKind::kInn };
+            }
+            location = location->parentLoc;
+        }
+        return {};
+    }
+
+    void SendSocialVenueEvent(const char* eventName, const SocialVenue& venue)
+    {
+        auto* source = SKSE::GetModCallbackEventSource();
+        if (!source || !venue.location || venue.kind == SocialVenueKind::kNone) {
+            return;
+        }
+        SKSE::ModCallbackEvent event{
+            RE::BSFixedString(eventName),
+            RE::BSFixedString(""),
+            static_cast<float>(venue.kind),
+            venue.location
+        };
+        source->SendEvent(&event);
+        SKSE::log::info(
+            "social venue event sent: {} location {:08X}, kind {}",
+            eventName, venue.location->GetFormID(), static_cast<std::uint32_t>(venue.kind));
+    }
 
     bool IsCuratedDungeonBossChest(RE::TESBoundObject* baseObject)
     {
@@ -603,6 +703,12 @@ namespace
             RE::BSTEventSource<RE::TESActorLocationChangeEvent>*) override
         {
             if (event && event->actor.get() == RE::PlayerCharacter::GetSingleton() && event->oldLoc != event->newLoc) {
+                const auto oldVenue = FindSocialVenue(event->oldLoc);
+                const auto newVenue = FindSocialVenue(event->newLoc);
+                if (oldVenue.location != newVenue.location) {
+                    SendSocialVenueEvent(kInnPalaceExitedEvent, oldVenue);
+                    SendSocialVenueEvent(kInnPalaceEnteredEvent, newVenue);
+                }
                 SendLifecycleEvent("location");
             }
             return RE::BSEventNotifyControl::kContinue;
@@ -757,6 +863,7 @@ namespace
     {
         // Event sources and loaded forms are ready only after DataLoaded.
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
+            InitializeSocialVenueForms();
             LifecycleEventSink::GetSingleton()->Register();
         }
     }

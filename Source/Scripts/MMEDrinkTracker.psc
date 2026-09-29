@@ -324,7 +324,11 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
             Debug.Notification("NPC Milk: effects disabled for " + actorName)
         EndIf
         String genericReaction = MMENPCDrinkDialogue.BuildDrinkReaction(drinker, drinkItem, establishedMilkmaid, 0.0, False)
-        If establishedMilkmaid
+        If MMEInnPalaceMilkEvent.ShowNotificationIfOwned(drinker, drinkItem)
+            ; Dedicated social-venue feedback owns this verified transaction.
+        ElseIf MMEChestMilkTrap.ShowNotificationIfOwned(drinker, drinkItem)
+            ; Dedicated chest feedback owns this verified transaction.
+        ElseIf establishedMilkmaid
             ShowNPCDrinkNotification(drinker, drinkItem, 0.0, False, genericReaction)
         Else
             MMENPCDrinkDialogue.ShowNotification(drinker, genericReaction)
@@ -332,6 +336,9 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
         StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "complete effects disabled")
         ReportNPCDrink(diagnostic, diagnosticTest, "03 COMPLETE | effects disabled; reaction only")
         MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, genericReaction, diagnosticTest, establishedMilkmaid)
+        If !diagnosticTest
+            PublishDrinkEvent(drinker, drinkItem, drinkKind)
+        EndIf
         Return
     EndIf
 
@@ -347,6 +354,9 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
         StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "complete ordinary adult")
         ReportNPCDrink(diagnostic, diagnosticTest, "03 COMPLETE | ordinary adult | no MME milk gain")
         MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, ordinaryReaction, diagnosticTest, False)
+        If !diagnosticTest
+            PublishDrinkEvent(drinker, drinkItem, drinkKind)
+        EndIf
         MMELog.Diagnostic("[MMEAlert NPC Drink] processed ordinary adult " + actorName + " | " + pluginName + ":" + localFormID)
         Return
     EndIf
@@ -371,6 +381,9 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
     StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "complete Milkmaid")
     ReportNPCDrink(diagnostic, diagnosticTest, "03 COMPLETE | Milkmaid | milk " + milkBefore + " -> " + milkAfter)
     MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, renderedReaction, diagnosticTest, True)
+    If !diagnosticTest
+        PublishDrinkEvent(drinker, drinkItem, drinkKind)
+    EndIf
     MMELog.Diagnostic("[MMEAlert NPC Drink] processed " + actorName + " | " + pluginName + ":" + localFormID)
 EndFunction
 
@@ -408,7 +421,7 @@ Function ReportNPCDrink(Bool diagnostic, Bool diagnosticTest, String reportText)
 EndFunction
 
 ; Classifies drinks: 0 unsupported, 1 MME milk, 2 Lactacid, 3 HearthFires milk.
-Int Function GetSupportedDrinkKind(Form item)
+Int Function GetSupportedDrinkKind(Form item) Global
     Form lactacid = Game.GetFormFromFile(0x0343F2, "MilkModNEW.esp")
     If item == lactacid
         Return 2
@@ -430,6 +443,13 @@ EndFunction
 Function ShowNPCDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded, Bool arousalSent, String renderedReaction = "") Global
     String configFile = "/MMEAlerts/Settings"
     Bool diagnostic = JsonUtil.GetIntValue(configFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1
+    If drinker != None && drinkItem != None
+        If MMEInnPalaceMilkEvent.ShowNotificationIfOwned(drinker, drinkItem)
+            Return
+        ElseIf MMEChestMilkTrap.ShowNotificationIfOwned(drinker, drinkItem)
+            Return
+        EndIf
+    EndIf
     If JsonUtil.GetIntValue(configFile, "enableNPCDrinkNotifications", 1) != 1
         If diagnostic
             Debug.Notification("NPC Drink Notification: skipped - feature disabled")
@@ -519,6 +539,9 @@ EndFunction
 
 Function ShowPlayerDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded, Bool arousalSent, Bool diagnostic = False) Global
     String configFile = "/MMEAlerts/Settings"
+    If drinker != None && drinkItem != None && MMEChestMilkTrap.ShowNotificationIfOwned(drinker, drinkItem)
+        Return
+    EndIf
     If JsonUtil.GetIntValue(configFile, "enablePlayerDrinkNotifications", 1) != 1
         If diagnostic
             Debug.Notification("Player Drink Notification: skipped - feature disabled")
@@ -554,7 +577,7 @@ Function ShowPlayerDrinkNotification(Actor drinker, Form drinkItem, Float milkAd
 EndFunction
 
 ; Broadcasts a normalized drink event for future native/SkyrimNet consumers.
-Function PublishDrinkEvent(Actor drinker, Form drinkItem, Int drinkKind)
+Function PublishDrinkEvent(Actor drinker, Form drinkItem, Int drinkKind) Global
     Int handle = ModEvent.Create("MMEAlerts_DrinkDetected")
     If handle
         ModEvent.PushForm(handle, drinker)

@@ -3,10 +3,10 @@ Scriptname MMEDungeonChestConversion Hidden
 ; Handles the gameplay side of native treasure-chest activation events. The
 ; DLL identifies curated boss and ordinary treasure families; this script owns
 ; category settings, chance, per-reference one-shot state, and conversion.
-Function HandleActivation(Actor targetActor, String chestIdentity, Bool bossChest) Global
+Int Function HandleActivation(Actor targetActor, String chestIdentity, Bool bossChest) Global
     String settingsFile = "/MMEAlerts/Settings"
     If !MMEAlertsController.IsExtensionsEnabled()
-        Return
+        Return 0
     EndIf
     String chestKind = "regular"
     String enabledKey = "enableRegularChestMilkMaid"
@@ -19,17 +19,17 @@ Function HandleActivation(Actor targetActor, String chestIdentity, Bool bossChes
         defaultChance = 100
     EndIf
     If JsonUtil.GetIntValue(settingsFile, enabledKey, 1) != 1
-        Return
+        Return 0
     EndIf
     If targetActor == None || chestIdentity == ""
         Report("ignored malformed activation")
-        Return
+        Return 0
     EndIf
 
     String resolvedKey = "MMEExtensions.DungeonChest.Resolved." + chestIdentity
     String pendingKey = "MMEExtensions.DungeonChest.Pending." + chestIdentity
     If StorageUtil.GetIntValue(None, resolvedKey, 0) == 1 || StorageUtil.GetIntValue(None, pendingKey, 0) == 1
-        Return
+        Return 0
     EndIf
 
     Int chance = JsonUtil.GetIntValue(settingsFile, chanceKey, defaultChance)
@@ -43,7 +43,7 @@ Function HandleActivation(Actor targetActor, String chestIdentity, Bool bossChes
         ; cannot be used to reroll the configured probability.
         StorageUtil.SetIntValue(None, resolvedKey, 1)
         Report("chance missed | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(targetActor) + " | chance=" + chance)
-        Return
+        Return 0
     EndIf
 
     StorageUtil.SetIntValue(None, pendingKey, 1)
@@ -53,11 +53,13 @@ Function HandleActivation(Actor targetActor, String chestIdentity, Bool bossChes
     If created
         StorageUtil.SetIntValue(None, resolvedKey, 1)
         Report("conversion complete | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(targetActor))
+        Return 1
     Else
         ; Capacity and temporary actor-state failures do not consume the chest.
         ; It may be tried again after the underlying condition is corrected.
         Report("conversion rejected | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(targetActor))
     EndIf
+    Return 0
 EndFunction
 
 String Function GetActorName(Actor target) Global

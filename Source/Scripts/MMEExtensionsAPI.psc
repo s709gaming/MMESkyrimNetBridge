@@ -1,7 +1,7 @@
 Scriptname MMEExtensionsAPI Hidden
 
 ; =============================================================================
-; MME Extensions public Papyrus API (version 2)
+; MME Extensions public Papyrus API (version 4)
 ; =============================================================================
 ; This is the stable entry point for other mods. Call these wrappers instead
 ; of MMEDebug, MMENewMilkMaid, MMEOStimBreastfeeding, or other internal scripts.
@@ -15,7 +15,7 @@ Scriptname MMEExtensionsAPI Hidden
 ; transaction finishes. Listen for the documented ModEvents to observe results.
 
 Int Function GetAPIVersion() Global
-    Return 2
+    Return 4
 EndFunction
 
 ; Backend-neutral query. Returns true only for a current, authoritative MME
@@ -58,6 +58,29 @@ Bool Function TryCreateMilkMaidForcedAnimated(Actor target) Global
     Return MMENewMilkMaid.TryCreateMilkMaidForcedAnimated(target)
 EndFunction
 
+; Backend-neutral forced drink transaction introduced in API version 3. The
+; supplied item must be a supported MME milk, Lactacid, or HearthFires milk.
+; The real item is equipped and consumed so the ordinary MME Extensions drink
+; pipeline remains the sole owner of effects and event publication.
+Bool Function ForceMilkDrink(Actor drinker, Form milkItem) Global
+    Return MMEForcedMilkDrink.ForceMilkDrink(drinker, milkItem)
+EndFunction
+
+; Convenience form of ForceMilkDrink for integrations that want an ordinary,
+; dependency-stable drink without resolving an item themselves. Uses the
+; HearthFires Jug of Milk and otherwise has the same validation and events.
+Bool Function DrinkNormalMilk(Actor drinker) Global
+    Form normalMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
+    Return MMEForcedMilkDrink.ForceMilkDrink(drinker, normalMilk)
+EndFunction
+
+; Inventory-backed actor-to-actor transaction. Uses the established Give Milk
+; priority (normal, racial, supernatural), excludes Lactacid, and honors the
+; existing Free Jug for Give Milk fallback when the giver owns no eligible milk.
+Bool Function GiveAvailableMilk(Actor giver, Actor drinker) Global
+    Return MMEAvailableMilkTransaction.GiveAvailableMilk(giver, drinker)
+EndFunction
+
 ; =============================================================================
 ; Internal event publishers
 ; =============================================================================
@@ -87,5 +110,32 @@ Bool Function PublishBreastfeedingAborted(Actor milkSource, Actor drinker, Strin
     ModEvent.PushString(handle, backend)
     ModEvent.PushInt(handle, requestID)
     ModEvent.PushString(handle, reason)
+    Return ModEvent.Send(handle)
+EndFunction
+
+Bool Function PublishForcedMilkDrinkCompleted(Actor drinker, Form milkItem, Int drinkKind) Global
+    Int handle = ModEvent.Create("MMEExtensions_ForcedMilkDrinkCompleted")
+    If handle == 0
+        Return False
+    EndIf
+    ModEvent.PushForm(handle, drinker)
+    ModEvent.PushForm(handle, milkItem)
+    ModEvent.PushInt(handle, drinkKind)
+    Return ModEvent.Send(handle)
+EndFunction
+
+Bool Function PublishAvailableMilkGiven(Actor giver, Actor drinker, Form milkItem, Bool fallbackSupplied) Global
+    Int handle = ModEvent.Create("MMEExtensions_AvailableMilkGiven")
+    If handle == 0
+        Return False
+    EndIf
+    ModEvent.PushForm(handle, giver)
+    ModEvent.PushForm(handle, drinker)
+    ModEvent.PushForm(handle, milkItem)
+    If fallbackSupplied
+        ModEvent.PushInt(handle, 1)
+    Else
+        ModEvent.PushInt(handle, 0)
+    EndIf
     Return ModEvent.Send(handle)
 EndFunction

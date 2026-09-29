@@ -1,7 +1,7 @@
 # MME Extensions Modding API
 
 This document describes the stable Papyrus entry points and ModEvents intended
-for other Skyrim mods. The current API version is **2**.
+for other Skyrim mods. The current API version is **4**.
 
 Use `MMEExtensionsAPI.psc`. Do not call `MMEDebug`, `MMENewMilkMaid`,
 `MMEOStimBreastfeeding`, or the Skyrim.Net bridge scripts directly. Those are
@@ -40,7 +40,7 @@ check `GetAPIVersion()` before depending on features introduced by a later API.
 Int version = MMEExtensionsAPI.GetAPIVersion()
 ```
 
-Returns `2` for this release.
+Returns `4` for this release.
 
 ### IsMilkMaid
 
@@ -121,6 +121,96 @@ completed. `false` means the actor was ineligible, animation was unsafe, MME
 had no available slot, or initialization failed. A failed capacity or safety
 check does not partially convert the actor. Successful calls also publish
 `MMEExtensions_MilkmaidCreated`.
+
+### ForceMilkDrink
+
+```papyrus
+Bool consumed = MMEExtensionsAPI.ForceMilkDrink(targetActor, milkItem)
+```
+
+Backend-neutral forced inventory transaction introduced in API version 3.
+`milkItem` must be an MME milk (including exotic milk), MME Lactacid, or the
+HearthFires Jug of Milk. The function stages exactly one temporary item and
+equips it, allowing MME and MME Extensions' ordinary drink observers to remain
+authoritative for gameplay effects. It never removes an item the actor already
+owned.
+
+This is a short latent call. `true` means the staged item was consumed;
+`false` means validation, staging, or consumption failed and any staged item
+was removed. It does not promise a particular animation or Milk Maid outcome.
+The actor must be a loaded, living, conscious adult humanoid. Successful calls
+publish `MMEExtensions_ForcedMilkDrinkCompleted`.
+
+### DrinkNormalMilk
+
+```papyrus
+Bool consumed = MMEExtensionsAPI.DrinkNormalMilk(targetActor)
+```
+
+Convenience wrapper introduced in API version 3. It supplies the HearthFires
+Jug of Milk to the same transaction used by `ForceMilkDrink`, so callers do not
+need to resolve or ship a milk form. It has the same actor validation, latent
+return behavior, normal drink processing, cleanup guarantees, and
+`MMEExtensions_ForcedMilkDrinkCompleted` event. The event's `drinkKind` is `3`.
+
+### GiveAvailableMilk
+
+```papyrus
+Bool consumed = MMEExtensionsAPI.GiveAvailableMilk(giverActor, drinkerActor)
+```
+
+Backend-neutral, inventory-backed actor-to-actor transaction introduced in API
+version 4. The giver and drinker may be the player or eligible adult NPCs, but
+must be two different loaded actors outside combat. The function selects one
+item the giver actually owns using the established Give Milk priority:
+
+1. normal milk (HearthFires Jug or MME basic milk);
+2. racial milk;
+3. supernatural milk.
+
+This is category priority, not a dynamic comparison of gold value or magic
+effect strength. Within an MME FormList, the first owned entry wins. Lactacid
+is deliberately excluded.
+
+If the giver owns no eligible milk, the existing **Free Jug for Give Milk** MCM
+setting controls fallback behavior. When enabled, the transaction supplies and
+consumes one temporary HearthFires Jug; when disabled, it returns `false`
+without changing inventory. Transfer and failed-consumption paths roll back the
+selected item. A successful latent call includes the established give/drink
+animations where safe, ordinary drink effects and feedback, and publishes
+`MMEExtensions_AvailableMilkGiven`.
+
+## Available milk transaction event
+
+```text
+MMEExtensions_AvailableMilkGiven
+```
+
+Published once after `GiveAvailableMilk` verifies consumption and finishes its
+owned animations. Payload order is stable:
+
+1. `Form giver`
+2. `Form drinker`
+3. `Form milkItem`
+4. `Int fallbackSupplied` (`1` for the temporary HearthFires Jug, otherwise `0`)
+
+## Forced milk drink event
+
+```text
+MMEExtensions_ForcedMilkDrinkCompleted
+```
+
+Published once after `ForceMilkDrink` verifies that the temporary item was
+consumed. Payload order is stable:
+
+1. `Form drinker`
+2. `Form milkItem`
+3. `Int drinkKind` (`1` MME milk, `2` Lactacid, `3` HearthFires milk)
+
+This event reports the public API transaction. Separately,
+`MMEAlerts_DrinkDetected` continues to report ordinary completed drink
+processing where applicable; integrations should not treat both events as one
+combined stream without deduplication.
 
 ## Existing Milk Maid creation event
 

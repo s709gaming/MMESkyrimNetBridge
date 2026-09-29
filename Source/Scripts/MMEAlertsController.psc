@@ -38,6 +38,10 @@ Float NextArmorReminder = 0.0
 Int ArmorReminderRetries = 0
 Float NextOStimBreastfeedingWatchdog = 0.0
 Float NextSexLabFallbackCheck = 0.0
+Float NextOManiaCompatibilityCheck = 0.0
+Float NextInnPalaceDrink = 0.0
+Location PendingInnPalaceVenue = None
+Int PendingInnPalaceVenueKind = 0
 Int SexLabFallbackCheckAttempts = 0
 Bool OpeningDialogueAlarmActive = False
 Float NextThoughtGameTime = 0.0
@@ -113,8 +117,13 @@ Function InitializeController(Bool reportStatus = False)
     RegisterForModEvent("MMEExtensions_DungeonBossChestActivated", "OnDungeonBossChestActivated")
     UnregisterForModEvent("MMEExtensions_DungeonRegularChestActivated")
     RegisterForModEvent("MMEExtensions_DungeonRegularChestActivated", "OnDungeonRegularChestActivated")
+    UnregisterForModEvent("MMEExtensions_InnPalaceEntered")
+    RegisterForModEvent("MMEExtensions_InnPalaceEntered", "OnInnPalaceEntered")
+    UnregisterForModEvent("MMEExtensions_InnPalaceExited")
+    RegisterForModEvent("MMEExtensions_InnPalaceExited", "OnInnPalaceExited")
     UnregisterForModEvent("MME_AddMilkMaid")
     RegisterForModEvent("MME_AddMilkMaid", "OnMMEAddMilkmaidRequested")
+    RefreshOManiaCompatibility()
     ; Phase 3: repair the player monitoring ability on the one known bytecode
     ; migration. Existing active effects retain their original script instance,
     ; so remove/re-add is required when the tracker implementation changes.
@@ -154,14 +163,50 @@ EndFunction
 Event OnDungeonBossChestActivated(String eventName, String chestIdentity, Float baseLocalID, Form sender)
     Actor targetActor = sender as Actor
     MMELog.MasterDiagnostic("[MME Extensions Dungeon Chest] native boss activation | chest=" + chestIdentity + " | base=" + baseLocalID as Int)
-    MMEDungeonChestConversion.HandleActivation(targetActor, chestIdentity, True)
+    Int conversionCompleted = MMEDungeonChestConversion.HandleActivation(targetActor, chestIdentity, True)
+    If conversionCompleted != 1
+        MMEChestMilkTrap.HandleActivation(targetActor, chestIdentity, True)
+    EndIf
 EndEvent
 
 Event OnDungeonRegularChestActivated(String eventName, String chestIdentity, Float baseLocalID, Form sender)
     Actor targetActor = sender as Actor
     MMELog.MasterDiagnostic("[MME Extensions Dungeon Chest] native regular activation | chest=" + chestIdentity + " | base=" + baseLocalID as Int)
-    MMEDungeonChestConversion.HandleActivation(targetActor, chestIdentity, False)
+    Int conversionCompleted = MMEDungeonChestConversion.HandleActivation(targetActor, chestIdentity, False)
+    If conversionCompleted != 1
+        MMEChestMilkTrap.HandleActivation(targetActor, chestIdentity, False)
+    EndIf
 EndEvent
+
+Event OnInnPalaceEntered(String eventName, String unusedText, Float venueKindValue, Form sender)
+    Location venue = sender as Location
+    Int venueKind = venueKindValue as Int
+    Float due = MMEInnPalaceMilkEvent.Arm(venue, venueKind)
+    If due <= 0.0
+        Return
+    EndIf
+    PendingInnPalaceVenue = venue
+    PendingInnPalaceVenueKind = venueKind
+    NextInnPalaceDrink = due
+    ScheduleNextUpdate()
+EndEvent
+
+Event OnInnPalaceExited(String eventName, String unusedText, Float venueKindValue, Form sender)
+    Location venue = sender as Location
+    If PendingInnPalaceVenue == venue
+        CancelInnPalaceDrink("player left venue")
+        ScheduleNextUpdate()
+    EndIf
+EndEvent
+
+Function CancelInnPalaceDrink(String reason = "canceled")
+    If NextInnPalaceDrink > 0.0
+        MMEInnPalaceMilkEvent.Report(reason)
+    EndIf
+    NextInnPalaceDrink = 0.0
+    PendingInnPalaceVenue = None
+    PendingInnPalaceVenueKind = 0
+EndFunction
 
 ; MME computes this conditional from the same two registrars during its load
 ; script. Refreshing the cached value fixes load-order staleness without
@@ -311,7 +356,10 @@ Function DisableController()
     UnregisterForModEvent("MMEExtensions_MMEEffectRemoved")
     UnregisterForMenu("Dialogue Menu")
     UnregisterForModEvent("MMEExtensions_ArmorEquipped")
+    UnregisterForModEvent("MMEExtensions_InnPalaceEntered")
+    UnregisterForModEvent("MMEExtensions_InnPalaceExited")
     UnregisterForModEvent("MME_AddMilkMaid")
+    UnregisterForModEvent("OMania_Inseminated")
     UnregisterForModEvent("MilkQuest.StartMilkingMachine")
     UnregisterForModEvent("MilkQuest.StopMilkingMachine")
     UnregisterForModEvent("MME_MilkingDone")
@@ -334,9 +382,33 @@ Function DisableController()
     MMEArmorScript.ApplyArmorStrippingMasterToggle()
     NextOStimBreastfeedingWatchdog = 0.0
     NextSexLabFallbackCheck = 0.0
+    NextOManiaCompatibilityCheck = 0.0
+    CancelInnPalaceDrink("controller disabled")
     SexLabFallbackCheckAttempts = 0
     StopGameTimeScheduling()
 EndFunction
+
+; OMania is an optional dependency. The installed FOMOD marker is the sole
+; opt-in switch; the external API is never entered unless its plugin is loaded.
+Function RefreshOManiaCompatibility()
+    UnregisterForModEvent("OMania_Inseminated")
+    If MMEOManiaCompatibility.IsEnabled()
+        RegisterForModEvent("OMania_Inseminated", "OnOManiaInseminated")
+        MMEOManiaCompatibility.ReportBreastScalingAPIStatusOnce()
+    Else
+        MMEOManiaCompatibility.ReportUnavailableOnce()
+    EndIf
+EndFunction
+
+; Insemination can precede implantation, so this event only accelerates the
+; next authoritative IsPregnant scan; it never assumes pregnancy succeeded.
+Event OnOManiaInseminated(String eventName, String strArg, Float numArg, Form sender)
+    If MMEOManiaCompatibility.IsEnabled()
+        MMELog.MasterDiagnostic("[MME Extensions OMania] OMania_Inseminated received; pregnancy verification scheduled")
+        NextOManiaCompatibilityCheck = Utility.GetCurrentRealTime() + 2.0
+        ScheduleNextUpdate()
+    EndIf
+EndEvent
 
 ; Menu-open is safe but may arrive just before Skyrim publishes its dialogue
 ; target. Defer resolution through the controller's existing one-shot scheduler
@@ -862,7 +934,9 @@ Function CheckMilkmaidCreation(Actor candidate, String source, Bool ownsPendingM
         Debug.Notification("MME Extensions - " + GetActorName(candidate) + " is a new Milkmaid!")
     EndIf
     MMEAlertsSkyrimNet.SendMilkmaidCreated(candidate)
-    If narrateCreation
+    If MMEChestMilkTrap.HasOwnedContext(candidate)
+        MMEChestMilkTrap.TryNarrateContext(candidate)
+    ElseIf narrateCreation
         MMEAlertsSkyrimNet.NarrateMilkmaidCreated(candidate)
     EndIf
     Int handle = ModEvent.Create("MMEExtensions_MilkmaidCreated")
@@ -878,6 +952,9 @@ Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form send
         Return
     EndIf
     If reason == "load"
+        ; Loading inside a venue establishes a baseline rather than pretending
+        ; the player just entered. Any pre-save real-time deadline is discarded.
+        CancelInnPalaceDrink("save loaded")
         UnregisterForMenu("Dialogue Menu")
         RegisterForMenu("Dialogue Menu")
     EndIf
@@ -1064,6 +1141,7 @@ Function UpdatePolling()
         NextDebugUpdate = 0.0
         NextThoughtDebugUpdate = 0.0
         NextSexLabFallbackCheck = 0.0
+        NextOManiaCompatibilityCheck = 0.0
         SexLabFallbackCheckAttempts = 0
         Return
     EndIf
@@ -1087,6 +1165,11 @@ Function UpdatePolling()
         NextThoughtDebugUpdate = now + 15.0
     Else
         NextThoughtDebugUpdate = 0.0
+    EndIf
+    If MMEOManiaCompatibility.IsEnabled()
+        NextOManiaCompatibilityCheck = now + 2.0
+    Else
+        NextOManiaCompatibilityCheck = 0.0
     EndIf
     ScheduleNextUpdate()
 EndFunction
@@ -1186,6 +1269,24 @@ Function ScheduleNextUpdate()
             delay = candidate
         EndIf
     EndIf
+    If NextOManiaCompatibilityCheck > 0.0
+        candidate = NextOManiaCompatibilityCheck - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
+    EndIf
+    If NextInnPalaceDrink > 0.0
+        candidate = NextInnPalaceDrink - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
+    EndIf
     If delay > 0.0
         ; The dialogue-menu armor reminder needs a short retry. All other work
         ; is intentionally throttled to one second to avoid tight Papyrus loops.
@@ -1208,6 +1309,8 @@ Event OnUpdate()
         NextArmorCheck = 0.0
         NextArmorReminder = 0.0
         NextSexLabFallbackCheck = 0.0
+        NextOManiaCompatibilityCheck = 0.0
+        CancelInnPalaceDrink("extensions disabled")
         SexLabFallbackCheckAttempts = 0
         ArmorReminderRetries = 0
         MMEArmorScript.CancelPlayerArmorCheck(Game.GetPlayer())
@@ -1221,6 +1324,8 @@ Event OnUpdate()
     Bool armorReminderDue = NextArmorReminder > 0.0 && now >= NextArmorReminder
     Bool ostimBreastfeedingDue = NextOStimBreastfeedingWatchdog > 0.0 && now >= NextOStimBreastfeedingWatchdog
     Bool sexLabFallbackDue = NextSexLabFallbackCheck > 0.0 && now >= NextSexLabFallbackCheck
+    Bool oManiaCompatibilityDue = NextOManiaCompatibilityCheck > 0.0 && now >= NextOManiaCompatibilityCheck
+    Bool innPalaceDrinkDue = NextInnPalaceDrink > 0.0 && now >= NextInnPalaceDrink
     If capacityDue || skyrimNetDue || thoughtDebugDue
         ScanNearbyMilkMaids(skyrimNetDue, capacityDue, thoughtDebugDue)
     EndIf
@@ -1252,6 +1357,21 @@ Event OnUpdate()
     If sexLabFallbackDue
         NextSexLabFallbackCheck = 0.0
         CheckSexLabFallbackAfterGrace()
+    EndIf
+    If oManiaCompatibilityDue
+        NextOManiaCompatibilityCheck = 0.0
+        MMEOManiaCompatibility.ConvertOneNearbyPregnancy(NearbyRange)
+        If MMEOManiaCompatibility.IsEnabled()
+            NextOManiaCompatibilityCheck = Utility.GetCurrentRealTime() + JsonUtil.GetFloatValue(MMEOManiaCompatibility.GetConfigFile(), "scanIntervalSeconds", 10.0)
+        EndIf
+    EndIf
+    If innPalaceDrinkDue
+        Location venue = PendingInnPalaceVenue
+        Int venueKind = PendingInnPalaceVenueKind
+        ; Clear first so the forced equip and its callbacks cannot consume this
+        ; deadline twice. The service starts cooldown only after consumption.
+        CancelInnPalaceDrink("timer fired")
+        MMEInnPalaceMilkEvent.ProcessDue(venue, venueKind, NearbyRange)
     EndIf
     ; Earlier scan/diagnostic work may be latent. Re-read real time so an
     ; armor timer that became due during this update fires in this same pass.

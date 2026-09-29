@@ -70,6 +70,31 @@
 
           </plugins>
         </group>
+        <group name="Optional mod compatibility" type="SelectAny">
+          <plugins order="Explicit">
+
+            <plugin name="Install OMania compatibility">
+              <description>Detects every implanted OMania pregnancy through OMania's authoritative API and uses MME Extensions' forced animated API to create Milk Maids. Automatically recommended when OMania.esp is active. The Troubleshoot page provides a manual Dragon Egg potion test.</description>
+              <files>
+                <file source="fomod\choices\omania-compatibility\OManiaCompatibility.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\OManiaCompatibility.json" priority="10" />
+              </files>
+              <typeDescriptor>
+                <dependencyType>
+                  <defaultType name="Optional" />
+                  <patterns>
+                    <pattern>
+                      <dependencies operator="And">
+                        <fileDependency file="OMania.esp" state="Active" />
+                      </dependencies>
+                      <type name="Recommended" />
+                    </pattern>
+                  </patterns>
+                </dependencyType>
+              </typeDescriptor>
+            </plugin>
+
+          </plugins>
+        </group>
       </optionalFileGroups>
     </installStep>
   </installSteps>

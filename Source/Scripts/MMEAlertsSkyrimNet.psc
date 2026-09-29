@@ -637,9 +637,44 @@ EndFunction
 ; Requests one actor-specific narration after a verified adult NPC milk drink.
 ; The explicit Troubleshoot route may bypass cooldown without changing the
 ; production timestamp, allowing consecutive male/female/Milkmaid validation.
+; Dedicated chest-trap narration. The selected drinker is always supplied as
+; the preferred speaker, including the player. This route has no second chance
+; or narration cooldown because the gameplay trap already owns both gates.
+Function NarrateChestMilkDrink(Actor drinker, String milkName, String chestKind) Global
+    If !IsExtensionsEnabled() || drinker == None
+        Return
+    EndIf
+    String settingsFile = "/MMEAlerts/Settings"
+    If JsonUtil.GetIntValue(settingsFile, "enableChestMilkTrapNarration", 1) != 1
+        MMELog.MasterDiagnostic("[MME Extensions Chest Milk Narration] skipped: feature disabled")
+        Return
+    EndIf
+    If !IsAvailable()
+        MMELog.MasterDiagnostic("[MME Extensions Chest Milk Narration] skipped: Skyrim.Net unavailable")
+        Return
+    EndIf
+    String actorName = ResolveActorName(drinker, "The drinker")
+    If milkName == ""
+        milkName = "exotic milk"
+    EndIf
+    If chestKind == ""
+        chestKind = "treasure chest"
+    EndIf
+    String situation = actorName + " is magically forced to drink " + milkName + " from the " + chestKind + "."
+    String content = "Immediate situation: " + situation + " Prioritize " + actorName + " as the speaker. Have them react immediately and enthusiastically, as if a wonderful sensation is coursing through them. Keep the response short, playful, positive, and focused on the magical forced drink; do not invent a different source for the milk."
+    Int result = SkyrimNetApi.DirectNarration(content, None, drinker)
+    If result != 0
+        MMELog.Alarm("[MME Extensions Chest Milk Narration] FAILURE: Skyrim.Net rejected request [" + result + "] for " + actorName)
+    EndIf
+    MMELog.MasterDiagnostic("[MME Extensions Chest Milk Narration] result=" + result + " | speaker=" + actorName + " | " + situation)
+EndFunction
+
 Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String renderedReaction = "", Bool diagnosticTest = False, Bool establishedMilkmaid = False) Global
     ; Dialogue and native potion paths converge here after their own duplicate
     ; suppression. This function owns only narration gates and cooldown state.
+    If MMEChestMilkTrap.TryNarrateContext(drinker)
+        Return
+    EndIf
     If !IsExtensionsEnabled()
         ReportNPCDrinkNarrationTest(diagnosticTest, "05 SKYRIM.NET SKIPPED | MME Extensions disabled")
         Return
@@ -734,6 +769,9 @@ EndFunction
 Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem, String renderedReaction = "") Global
     ; Chance is evaluated before the cooldown/API call. This keeps an ineligible
     ; random roll from consuming cooldown and preserves the opt-in default.
+    If MMEChestMilkTrap.TryNarrateContext(drinker, drinkItem)
+        Return
+    EndIf
     If !IsExtensionsEnabled() || drinker != Game.GetPlayer() || drinkItem == None
         Return
     EndIf

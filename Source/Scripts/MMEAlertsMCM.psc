@@ -17,6 +17,18 @@ Int dungeonChestMilkMaidOption
 Int dungeonChestMilkMaidChanceOption
 Int regularChestMilkMaidOption
 Int regularChestMilkMaidChanceOption
+Int chestMilkTrapOption
+Int chestMilkTrapChanceOption
+Int chestMilkTrapCooldownOption
+Int chestMilkTrapVariationOption
+Int chestMilkTrapNotificationOption
+Int chestMilkTrapNarrationOption
+Int innPalaceMilkDrinkingOption
+Int guildTavernMilkDrinkingOption
+Int jarlResidenceMilkDrinkingOption
+Int innPalaceDrinkDelayOption
+Int innPalaceDrinkVariationOption
+Int innPalaceDrinkCooldownOption
 Int forcedMilkMaidNotificationOption
 Int forcedMilkMaidLactacidStoryOption
 Int forcedMilkMaidNarrationOption
@@ -189,6 +201,7 @@ Int milkDialogueTimingTraceOption
 Int diagnosticRefreshGateOption
 Int diagnosticInstallAuditOption
 Int diagnosticMilkDrinkAuditOption
+Int diagnosticSpawnOManiaPotionOption
 Int diagnosticGlobalNPCDrinkTestOption
 Int diagnosticDialogueAuditOption
 Int diagnosticNewMilkmaidSexLabBusOption
@@ -219,7 +232,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 125
+    Return 130
 EndFunction
 
 Function SetPageNames()
@@ -310,6 +323,19 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "dungeonChestMilkMaidChance", 100)
         JsonUtil.SetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1)
         JsonUtil.SetIntValue(SettingsFile, "regularChestMilkMaidChance", 10)
+        JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "chestMilkTrapChance", 10)
+        JsonUtil.SetFloatValue(SettingsFile, "chestMilkTrapCooldownHours", 4.0)
+        JsonUtil.SetFloatValue(SettingsFile, "chestMilkTrapCooldownVariation", 4.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrapNotification", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrapNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableGuildTavernMilkDrinking", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableJarlResidenceMilkDrinking", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkDelaySeconds", 11.0)
+        JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", 10.0)
+        JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkCooldownHours", 4.0)
+        JsonUtil.SetIntValue(SettingsFile, "innPalaceDrinkMigration130", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidNotification", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidStory", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidNarration", 1)
@@ -1212,6 +1238,30 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "newMilkMaidFeedbackMigration128", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds the shared boss/regular exotic-milk chest trap. Failed rolls do not
+    ; consume its game-time cooldown; verified forced drinks do.
+    If JsonUtil.GetIntValue(SettingsFile, "chestMilkTrapMigration129", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "chestMilkTrapChance", 10)
+        JsonUtil.SetFloatValue(SettingsFile, "chestMilkTrapCooldownHours", 4.0)
+        JsonUtil.SetFloatValue(SettingsFile, "chestMilkTrapCooldownVariation", 4.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrapNotification", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrapNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "chestMilkTrapMigration129", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Adds delayed normal-milk drinks on entry to inns, the three curated
+    ; guild/tavern spaces and the nine vanilla jarl residences.
+    If JsonUtil.GetIntValue(SettingsFile, "innPalaceDrinkMigration130", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableGuildTavernMilkDrinking", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableJarlResidenceMilkDrinking", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkDelaySeconds", 11.0)
+        JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", 10.0)
+        JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkCooldownHours", 4.0)
+        JsonUtil.SetIntValue(SettingsFile, "innPalaceDrinkMigration130", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1265,6 +1315,18 @@ Event OnPageReset(String page)
     dungeonChestMilkMaidChanceOption = -1
     regularChestMilkMaidOption = -1
     regularChestMilkMaidChanceOption = -1
+    chestMilkTrapOption = -1
+    chestMilkTrapChanceOption = -1
+    chestMilkTrapCooldownOption = -1
+    chestMilkTrapVariationOption = -1
+    chestMilkTrapNotificationOption = -1
+    chestMilkTrapNarrationOption = -1
+    innPalaceMilkDrinkingOption = -1
+    guildTavernMilkDrinkingOption = -1
+    jarlResidenceMilkDrinkingOption = -1
+    innPalaceDrinkDelayOption = -1
+    innPalaceDrinkVariationOption = -1
+    innPalaceDrinkCooldownOption = -1
     forcedMilkMaidNotificationOption = -1
     forcedMilkMaidLactacidStoryOption = -1
     forcedMilkMaidNarrationOption = -1
@@ -1440,6 +1502,7 @@ Event OnPageReset(String page)
     diagnosticRefreshGateOption = -1
     diagnosticInstallAuditOption = -1
     diagnosticMilkDrinkAuditOption = -1
+    diagnosticSpawnOManiaPotionOption = -1
     diagnosticGlobalNPCDrinkTestOption = -1
     diagnosticDialogueAuditOption = -1
     diagnosticNewMilkmaidSexLabBusOption = -1
@@ -1491,6 +1554,17 @@ Event OnPageReset(String page)
         reverseDurationOption = AddSliderOption("Reverse Leveling Duration", MMEReverseLevel.GetDuration(), "{0} game hours")
         reversePlayerLevelOption = AddSliderOption("Minimum Milk Maid Level", MMEReverseLevel.GetRequiredLevel(), "{0}")
         SetCursorPosition(1)
+        AddHeaderOption("Exotic Milk Chest Trap")
+        chestMilkTrapOption = AddToggleOption("Enable Exotic Milk Trap", JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrap", 1) == 1)
+        Int chestMilkTrapFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrap", 1) != 1
+            chestMilkTrapFlags = OPTION_FLAG_DISABLED
+        EndIf
+        chestMilkTrapChanceOption = AddSliderOption("Chest Trap Chance", JsonUtil.GetIntValue(SettingsFile, "chestMilkTrapChance", 10), "{0}%", chestMilkTrapFlags)
+        chestMilkTrapCooldownOption = AddSliderOption("Base Cooldown", JsonUtil.GetFloatValue(SettingsFile, "chestMilkTrapCooldownHours", 4.0), "{0} game hours", chestMilkTrapFlags)
+        chestMilkTrapVariationOption = AddSliderOption("Random Variation", JsonUtil.GetFloatValue(SettingsFile, "chestMilkTrapCooldownVariation", 4.0), "+/- {0} game hours", chestMilkTrapFlags)
+        chestMilkTrapNotificationOption = AddToggleOption("Chest Drink Notification", JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrapNotification", 1) == 1, chestMilkTrapFlags)
+        chestMilkTrapNarrationOption = AddToggleOption("Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrapNarration", 1) == 1, chestMilkTrapFlags)
         AddHeaderOption("Debug")
         reverseApplyOption = AddTextOption("Apply Reverse Leveling", "APPLY")
         reverseRemoveOption = AddTextOption("Remove Reverse Leveling", "REMOVE")
@@ -1498,6 +1572,17 @@ Event OnPageReset(String page)
         Return
     EndIf
     If page == "Milk Drinking"
+        AddHeaderOption("Inn and Palace Drinking")
+        innPalaceMilkDrinkingOption = AddToggleOption("Enable Inn and Palace Drinking", JsonUtil.GetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1) == 1)
+        Int innPalaceFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1) != 1
+            innPalaceFlags = OPTION_FLAG_DISABLED
+        EndIf
+        guildTavernMilkDrinkingOption = AddToggleOption("Guild and Tavern Locations", JsonUtil.GetIntValue(SettingsFile, "enableGuildTavernMilkDrinking", 1) == 1, innPalaceFlags)
+        jarlResidenceMilkDrinkingOption = AddToggleOption("Jarl Residences", JsonUtil.GetIntValue(SettingsFile, "enableJarlResidenceMilkDrinking", 1) == 1, innPalaceFlags)
+        innPalaceDrinkDelayOption = AddSliderOption("Drink Delay", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelaySeconds", 11.0), "{0} seconds", innPalaceFlags)
+        innPalaceDrinkVariationOption = AddSliderOption("Delay Randomization", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", 10.0), "+/-{0} seconds", innPalaceFlags)
+        innPalaceDrinkCooldownOption = AddSliderOption("Shared Cooldown", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkCooldownHours", 4.0), "{0} game hours", innPalaceFlags)
         AddHeaderOption("Milk Gain Per Drink")
         milkmaidLevelBonusOption = AddToggleOption("MME Level Bonus", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1) == 1)
         flatMilkBonusOption = AddSliderOption("Flat Milk Bonus", JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 1.0), "+{1} milk")
@@ -1726,6 +1811,7 @@ Event OnPageReset(String page)
         diagnosticRefreshGateOption = AddTextOption("Refresh OStim Dialogue Gate", "RUN")
         diagnosticInstallAuditOption = AddTextOption("Run Install Audit", "RUN")
         diagnosticMilkDrinkAuditOption = AddTextOption("Run Milk Drink Audit", "RUN")
+        diagnosticSpawnOManiaPotionOption = AddTextOption("Spawn OMania Dragon Egg Potion", "SPAWN")
         diagnosticGlobalNPCDrinkTestOption = AddTextOption("Test Global NPC Milk Drink", "RUN")
         diagnosticDialogueAuditOption = AddTextOption("Run Crosshair Dialogue Audit", "RUN")
         diagnosticNewMilkmaidSexLabBusOption = AddTextOption("Run New Milk Maid Bus Test", "RUN")
@@ -1842,6 +1928,25 @@ EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
+    If option == innPalaceMilkDrinkingOption
+        SetInfoText("After entering an inn or enabled special social venue, wait a randomized delay and make one random eligible loaded NPC drink ordinary HearthFires milk through the normal API. Default on.")
+        Return
+    ElseIf option == guildTavernMilkDrinkingOption
+        SetInfoText("Include Jorrvaskr, the Ragged Flagon and the Drunken Huntsman, which vanilla does not classify as inns. Default on.")
+        Return
+    ElseIf option == jarlResidenceMilkDrinkingOption
+        SetInfoText("Include the nine vanilla jarl residences without treating Castle Dour as a palace. Default on.")
+        Return
+    ElseIf option == innPalaceDrinkDelayOption
+        SetInfoText("Base real-time delay after entering a supported venue. Default 11 seconds.")
+        Return
+    ElseIf option == innPalaceDrinkVariationOption
+        SetInfoText("Random seconds added to or subtracted from the base delay. The final delay is at least one second. Default +/-10 seconds.")
+        Return
+    ElseIf option == innPalaceDrinkCooldownOption
+        SetInfoText("Shared game-time cooldown started only after verified consumption. Zero disables the cooldown. Default 4 hours, range 0-24.")
+        Return
+    EndIf
     If option == dungeonChestMilkMaidOption
         SetInfoText("Curated vanilla and DLC dungeon boss chests forcibly convert their eligible activator into a Milk Maid. Each placed chest rolls once after success or a missed chance. Default on.")
         Return
@@ -1853,6 +1958,24 @@ Event OnOptionHighlight(Int option)
         Return
     ElseIf option == regularChestMilkMaidChanceOption
         SetInfoText("One-shot conversion chance for each eligible ordinary treasure chest. Default 10%, range 0-100 in 5% steps.")
+        Return
+    ElseIf option == chestMilkTrapOption
+        SetInfoText("After the conversion trap declines, curated boss and ordinary treasure chests may force one nearby adult humanoid to drink random Succubus, Vampire, or Werewolf milk. Player and allies are prioritized. Default on.")
+        Return
+    ElseIf option == chestMilkTrapChanceOption
+        SetInfoText("Chance per eligible chest activation. A failed roll does not start the shared cooldown. Default 10%, range 0-100 in 5% steps.")
+        Return
+    ElseIf option == chestMilkTrapCooldownOption
+        SetInfoText("Shared game-time cooldown started only after a verified forced drink. Default 4 game hours.")
+        Return
+    ElseIf option == chestMilkTrapVariationOption
+        SetInfoText("Random hours added to or subtracted from the base cooldown. The final cooldown is never below one game hour. Default +/-4 hours.")
+        Return
+    ElseIf option == chestMilkTrapNotificationOption
+        SetInfoText("Show a factual HUD notification naming the selected actor and exotic milk after the forced drink. Works without Skyrim.Net. Default on.")
+        Return
+    ElseIf option == chestMilkTrapNarrationOption
+        SetInfoText("Send one immediate Skyrim.Net event with the selected drinker prioritized as speaker. The gameplay trap already owns chance and cooldown. Default on.")
         Return
     ElseIf option == forcedMilkMaidNotificationOption
         SetInfoText("Show one editable JSON conversion line as a regular notification after every successful forced animated API conversion. Default on.")
@@ -2200,6 +2323,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Check the controller, MME, OStim, dialogue records, setting, and live dialogue gate.")
     ElseIf option == diagnosticMilkDrinkAuditOption
         SetInfoText("Trace the player milk-drink route through quest, alias, tracker attachment, settings, supported forms, equip event, and accepted drink stages.")
+    ElseIf option == diagnosticSpawnOManiaPotionOption
+        SetInfoText("Add exactly one OMania Dragon Egg Concoction to the player. This manual test does not change pregnancy state or use a one-time latch.")
     ElseIf option == diagnosticGlobalNPCDrinkTestOption
         SetInfoText("Simulate a global HearthFires milk consumption on the crosshair adult NPC. Inventory is untouched; configured gameplay effects are real. Skyrim.Net narration bypasses cooldown for this test and writes a short Papyrus route.")
     ElseIf option == diagnosticDialogueAuditOption
@@ -2278,6 +2403,44 @@ Event OnOptionSelect(Int option)
         JsonUtil.Save(SettingsFile, False)
         SetToggleOptionValue(option, regularChestValue == 1)
         ForcePageReset()
+        Return
+    ElseIf option == chestMilkTrapOption
+        Int chestMilkTrapValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrap", chestMilkTrapValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, chestMilkTrapValue == 1)
+        ForcePageReset()
+        Return
+    ElseIf option == chestMilkTrapNotificationOption
+        Int chestNotificationValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrapNotification", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrapNotification", chestNotificationValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, chestNotificationValue == 1)
+        Return
+    ElseIf option == chestMilkTrapNarrationOption
+        Int chestNarrationValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrapNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrapNarration", chestNarrationValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, chestNarrationValue == 1)
+        Return
+    ElseIf option == innPalaceMilkDrinkingOption
+        Int innPalaceValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", innPalaceValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, innPalaceValue == 1)
+        ForcePageReset()
+        Return
+    ElseIf option == guildTavernMilkDrinkingOption
+        Int guildTavernValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableGuildTavernMilkDrinking", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableGuildTavernMilkDrinking", guildTavernValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, guildTavernValue == 1)
+        Return
+    ElseIf option == jarlResidenceMilkDrinkingOption
+        Int jarlResidenceValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableJarlResidenceMilkDrinking", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableJarlResidenceMilkDrinking", jarlResidenceValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, jarlResidenceValue == 1)
         Return
     ElseIf option == forcedMilkMaidNotificationOption
         Int notificationValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNotification", 1)
@@ -2476,6 +2639,8 @@ Event OnOptionSelect(Int option)
         MMEDiagnostics.RunInstallAudit()
     ElseIf option == diagnosticMilkDrinkAuditOption
         MMEDiagnostics.RunMilkDrinkAudit()
+    ElseIf option == diagnosticSpawnOManiaPotionOption
+        MMEOManiaCompatibility.SpawnDragonEggPotion(Game.GetPlayer())
     ElseIf option == diagnosticGlobalNPCDrinkTestOption
         MMEDiagnostics.RunGlobalNPCDrinkTest()
     ElseIf option == diagnosticDialogueAuditOption
@@ -2929,6 +3094,42 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(5.0)
         Return
+    ElseIf option == chestMilkTrapChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "chestMilkTrapChance", 10))
+        SetSliderDialogDefaultValue(10.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+        Return
+    ElseIf option == chestMilkTrapCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "chestMilkTrapCooldownHours", 4.0))
+        SetSliderDialogDefaultValue(4.0)
+        SetSliderDialogRange(1.0, 24.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == chestMilkTrapVariationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "chestMilkTrapCooldownVariation", 4.0))
+        SetSliderDialogDefaultValue(4.0)
+        SetSliderDialogRange(0.0, 12.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == innPalaceDrinkDelayOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelaySeconds", 11.0))
+        SetSliderDialogDefaultValue(11.0)
+        SetSliderDialogRange(1.0, 60.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == innPalaceDrinkVariationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", 10.0))
+        SetSliderDialogDefaultValue(10.0)
+        SetSliderDialogRange(0.0, 60.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == innPalaceDrinkCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkCooldownHours", 4.0))
+        SetSliderDialogDefaultValue(4.0)
+        SetSliderDialogRange(0.0, 24.0)
+        SetSliderDialogInterval(1.0)
+        Return
     ElseIf option == reverseDurationOption
         SetSliderDialogStartValue(MMEReverseLevel.GetDuration())
         SetSliderDialogDefaultValue(24.0)
@@ -3156,6 +3357,36 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.SetIntValue(SettingsFile, "regularChestMilkMaidChance", value as Int)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0}%")
+        Return
+    ElseIf option == chestMilkTrapChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "chestMilkTrapChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        Return
+    ElseIf option == chestMilkTrapCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "chestMilkTrapCooldownHours", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        Return
+    ElseIf option == chestMilkTrapVariationOption
+        JsonUtil.SetFloatValue(SettingsFile, "chestMilkTrapCooldownVariation", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "+/- {0} game hours")
+        Return
+    ElseIf option == innPalaceDrinkDelayOption
+        JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkDelaySeconds", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+        Return
+    ElseIf option == innPalaceDrinkVariationOption
+        JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "+/-{0} seconds")
+        Return
+    ElseIf option == innPalaceDrinkCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkCooldownHours", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
         Return
     ElseIf option == reverseDurationOption
         JsonUtil.SetIntValue(SettingsFile, "reverseLevelingDuration", value as Int)
