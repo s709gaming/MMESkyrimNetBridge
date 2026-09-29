@@ -1,7 +1,7 @@
 # MME Extensions Modding API
 
 This document describes the stable Papyrus entry points and ModEvents intended
-for other Skyrim mods. The current API version is **4**.
+for other Skyrim mods. The current API version is **5**.
 
 Use `MMEExtensionsAPI.psc`. Do not call `MMEDebug`, `MMENewMilkMaid`,
 `MMEOStimBreastfeeding`, or the Skyrim.Net bridge scripts directly. Those are
@@ -40,7 +40,7 @@ check `GetAPIVersion()` before depending on features introduced by a later API.
 Int version = MMEExtensionsAPI.GetAPIVersion()
 ```
 
-Returns `4` for this release.
+Returns `5` for this release.
 
 ### IsMilkMaid
 
@@ -179,6 +179,78 @@ without changing inventory. Transfer and failed-consumption paths roll back the
 selected item. A successful latent call includes the established give/drink
 animations where safe, ordinary drink effects and feedback, and publishes
 `MMEExtensions_AvailableMilkGiven`.
+
+### TryMilkArmorThought
+
+```papyrus
+Bool shown = MMEExtensionsAPI.TryMilkArmorThought(targetActor)
+```
+
+Backend-neutral presentation request introduced in API version 5. It runs the
+existing periodic Milk Armor Thought pipeline for exactly `targetActor` rather
+than scanning for and randomly choosing a nearby Milk Maid. The actor's live
+milk fullness and worn body armor choose the existing editable JSON pool. A
+successful call uses the same HUD notification, configured reaction sound, and
+optional Skyrim.Net narration as the scheduled feature.
+
+The automatic Thought interval and actor selection are bypassed. The Milk
+Armor Thoughts feature must be enabled, and the target must be a loaded valid
+MME Milk Maid. `true` means a complete Thought was rendered and shown; it does
+not mean Skyrim.Net necessarily accepted narration.
+
+### TryHeavyRestraintReaction
+
+```papyrus
+Bool shown = MMEExtensionsAPI.TryHeavyRestraintReaction(targetActor)
+```
+
+Backend-neutral presentation request introduced in API version 5. It runs the
+existing Devious heavy-restraint Thought pipeline for exactly `targetActor`,
+including its editable JSON line, HUD notification, configured hot reaction
+sound, and optional Skyrim.Net narration.
+
+The automatic interval, random actor selection, and scheduled Bound Thought
+chance are bypassed. Bound Milk Maid Thoughts must be enabled, Devious Devices'
+`zad_DeviousHeavyBondage` keyword must be available, and the target must be a
+loaded MME Milk Maid currently wearing an item with that keyword. `true` means
+the local Thought was rendered and shown; narration may still be disabled,
+rejected, or fail its own configured narration chance.
+
+### TryLivingArmorEffect
+
+```papyrus
+Bool applied = MMEExtensionsAPI.TryLivingArmorEffect(targetActor)
+```
+
+Backend-neutral gameplay request introduced in API version 5. It runs the
+existing Tentacle Effects pipeline for one target instead of scanning a nearby
+group. The call validates current Living or Parasite Armor, applies the
+configured milk and arousal effects, and reuses the existing HUD notification,
+reaction sound, and optional Skyrim.Net narration.
+
+The periodic interval and Injection Chance are bypassed. Tentacle Effects must
+be enabled, and the target must be a loaded valid MME Milk Maid wearing a
+supported Living or Parasite Armor. `true` means the eligible effect pipeline
+ran; individual milk, arousal, sound, and narration channels retain their own
+settings and availability checks.
+
+### TryArmorStrippingCheck
+
+```papyrus
+Bool stripped = MMEExtensionsAPI.TryArmorStrippingCheck(targetActor)
+```
+
+Backend-neutral gameplay request introduced in API version 5. It immediately
+runs the same fullness-based evaluator used by periodic polling and delayed
+post-drink checks. It reads the target's current milk, threshold, and slot 32
+armor. A verified removal reuses the existing notification, hot reaction
+sound, and optional Skyrim.Net narration.
+
+Armor Stripping must be enabled. MME armor protections, Devious Devices checks,
+SexLab no-strip rules, configured thresholds, and engine verification remain
+authoritative. `true` means slot 32 armor was actually removed; `false` includes
+safe rejection, insufficient fullness, protected equipment, and unavailable
+actors.
 
 ## Available milk transaction event
 

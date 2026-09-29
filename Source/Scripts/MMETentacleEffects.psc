@@ -48,9 +48,10 @@ Float Function CalculateNextInterval(Float baseInterval, Float variation) Global
     Return nextInterval
 EndFunction
 
-; Runs both scheduled and manual checks. Manual checks bypass only the timer;
-; they retain the live enable gate, actor validation, armor check, and chance.
-Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = False) Global
+; Runs scheduled, manual, and public-API checks. Manual checks bypass only the
+; timer. Public API calls may also bypass the scheduler's random chance while
+; retaining the live enable gate, actor validation, and armor classification.
+Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = False, Bool applyScheduledChance = True) Global
     Bool diagnostic = manualDiagnostic || IsDiagnosticEnabled()
     If !IsEnabled()
         Report(diagnostic, "check skipped: Tentacle Effects are disabled")
@@ -69,11 +70,14 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
         Return False
     EndIf
 
-    Int chance = JsonUtil.GetIntValue(GetSettingsFile(), "armorInjectionChance", 100)
-    If chance < 0
-        chance = 0
-    ElseIf chance > 100
-        chance = 100
+    Int chance = 100
+    If applyScheduledChance
+        chance = JsonUtil.GetIntValue(GetSettingsFile(), "armorInjectionChance", 100)
+        If chance < 0
+            chance = 0
+        ElseIf chance > 100
+            chance = 100
+        EndIf
     EndIf
 
     Actor playerActor = Game.GetPlayer()
@@ -99,7 +103,10 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
             Report(diagnostic, "candidate=" + actorName + " | armor=" + MMEArmorScript.GetArmorName(wornArmor) + " | class=" + armorClass + " " + MMEArmorScript.GetArmorTypeLabel(armorClass))
             If armorClass == 2 || armorClass == 3
                 eligibleCount += 1
-                Int roll = Utility.RandomInt(1, 100)
+                Int roll = 1
+                If applyScheduledChance
+                    roll = Utility.RandomInt(1, 100)
+                EndIf
                 If roll <= chance
                     Float milkBefore = 0.0
                     Int arousalBefore = -1

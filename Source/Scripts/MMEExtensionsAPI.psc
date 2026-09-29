@@ -1,7 +1,7 @@
 Scriptname MMEExtensionsAPI Hidden
 
 ; =============================================================================
-; MME Extensions public Papyrus API (version 4)
+; MME Extensions public Papyrus API (version 5)
 ; =============================================================================
 ; This is the stable entry point for other mods. Call these wrappers instead
 ; of MMEDebug, MMENewMilkMaid, MMEOStimBreastfeeding, or other internal scripts.
@@ -15,7 +15,7 @@ Scriptname MMEExtensionsAPI Hidden
 ; transaction finishes. Listen for the documented ModEvents to observe results.
 
 Int Function GetAPIVersion() Global
-    Return 4
+    Return 5
 EndFunction
 
 ; Backend-neutral query. Returns true only for a current, authoritative MME
@@ -79,6 +79,57 @@ EndFunction
 ; existing Free Jug for Give Milk fallback when the giver owns no eligible milk.
 Bool Function GiveAvailableMilk(Actor giver, Actor drinker) Global
     Return MMEAvailableMilkTransaction.GiveAvailableMilk(giver, drinker)
+EndFunction
+
+; Runs the complete configured periodic Milk Armor Thought pipeline for one
+; actor: live fullness/armor classification, JSON wording, HUD notification,
+; reaction sound, and optional Skyrim.Net narration. It bypasses only nearby
+; scanning, random actor selection, and timer scheduling.
+Bool Function TryMilkArmorThought(Actor target) Global
+    If target == None || !MMEThoughts.IsNormalThoughtsEnabled()
+        Return False
+    EndIf
+    Actor[] targets = new Actor[1]
+    targets[0] = target
+    Return MMEThoughts.GenerateAndShowThought(targets, True)
+EndFunction
+
+; Runs the complete configured Devious heavy-restraint Thought pipeline for
+; one actor: JSON wording, HUD notification, hot reaction sound, and optional
+; Skyrim.Net narration. The explicit API request bypasses the periodic chance,
+; but retains the feature gate, Milk Maid validation, and worn-keyword check.
+Bool Function TryHeavyRestraintReaction(Actor target) Global
+    If target == None || !MMEThoughts.IsBoundThoughtsEnabled()
+        Return False
+    EndIf
+    Actor[] targets = new Actor[1]
+    targets[0] = target
+    Return MMEThoughts.GenerateAndShowBoundThought(targets, False)
+EndFunction
+
+; Runs the complete configured Living/Parasite Armor effect for one actor:
+; armor validation, milk/arousal effects, HUD notification, reaction sound,
+; and optional Skyrim.Net narration. It bypasses the periodic chance, while
+; the Tentacle Effects feature toggle and all output-channel settings remain
+; authoritative.
+Bool Function TryLivingArmorEffect(Actor target) Global
+    If target == None
+        Return False
+    EndIf
+    Actor[] targets = new Actor[1]
+    targets[0] = target
+    Return MMETentacleEffects.RunInjectionCheck(targets, False, False)
+EndFunction
+
+; Runs the configured fullness-based armor-stripping evaluator immediately for
+; one actor. On verified removal it reuses the notification, hot reaction
+; sound, and optional Skyrim.Net narration. Framework no-strip protections and
+; the Armor Stripping MCM master remain authoritative.
+Bool Function TryArmorStrippingCheck(Actor target) Global
+    If target == None || !MMEAlertsController.IsExtensionsEnabled() || !MMEArmorScript.IsConfigurableArmorStrippingEnabled()
+        Return False
+    EndIf
+    Return MMEArmorScript.EvaluateArmorStrippingForActor(target, MME_Storage.getMilkCurrent(target), "public API")
 EndFunction
 
 ; =============================================================================

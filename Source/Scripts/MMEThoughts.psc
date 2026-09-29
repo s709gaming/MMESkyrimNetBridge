@@ -196,7 +196,7 @@ EndFunction
 ; Independent DD-heavy-bondage cousin of the normal Thought route. One
 ; uniformly selected restrained Milk Maid consumes one JSON entry and produces
 ; exactly one targeted Skyrim.Net narration attempt.
-Bool Function GenerateAndShowBoundThought(Actor[] scannedActors) Global
+Bool Function GenerateAndShowBoundThought(Actor[] scannedActors, Bool applyScheduledChance = True) Global
     If scannedActors.Length == 0
         ReportFailure("bound thought skipped: nearby scan returned no actors")
         Return False
@@ -219,14 +219,17 @@ Bool Function GenerateAndShowBoundThought(Actor[] scannedActors) Global
         Return False
     EndIf
 
-    Int chance = JsonUtil.GetIntValue("/MMEAlerts/Settings", "boundMilkMaidThoughtsChance", 100)
-    If chance < 0
-        chance = 0
-    ElseIf chance > 100
-        chance = 100
+    Int chance = 100
+    If applyScheduledChance
+        chance = JsonUtil.GetIntValue("/MMEAlerts/Settings", "boundMilkMaidThoughtsChance", 100)
+        If chance < 0
+            chance = 0
+        ElseIf chance > 100
+            chance = 100
+        EndIf
     EndIf
     Int chanceRoll = 1
-    If chance < 100
+    If applyScheduledChance && chance < 100
         chanceRoll = Utility.RandomInt(1, 100)
     EndIf
     If chanceRoll > chance
