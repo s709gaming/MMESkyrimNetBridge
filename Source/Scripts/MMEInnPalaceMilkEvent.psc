@@ -16,6 +16,21 @@ Float Function Arm(Location venue, Int venueKind) Global
         Return 0.0
     EndIf
 
+    ; Town/city ancestry is deliberately broad and may include interiors.
+    ; Unlike inns and curated social venues, town entry uses its own chance.
+    If venueKind == 4
+        Int townChance = JsonUtil.GetIntValue("/MMEAlerts/Settings", "townMilkDrinkChance", 25)
+        If townChance < 0
+            townChance = 0
+        ElseIf townChance > 100
+            townChance = 100
+        EndIf
+        If townChance == 0 || Utility.RandomInt(1, 100) > townChance
+            Report("town entry chance missed | venue=" + venue.GetFormID() + " | chance=" + townChance)
+            Return 0.0
+        EndIf
+    EndIf
+
     Float baseDelay = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "innPalaceDrinkDelaySeconds", 11.0)
     Float variation = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "innPalaceDrinkDelayVariation", 10.0)
     If baseDelay < 1.0
@@ -81,10 +96,14 @@ Bool Function ProcessDue(Location venue, Int venueKind, Float radius = 2000.0) G
 EndFunction
 
 Bool Function IsVenueKindEnabled(Int venueKind) Global
-    If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableInnPalaceMilkDrinking", 1) != 1
+    If !MMEAlertsController.IsExtensionsEnabled()
         Return False
     EndIf
-    If venueKind == 1
+    If venueKind == 4
+        Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableTownMilkDrink", 1) == 1
+    ElseIf JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableInnPalaceMilkDrinking", 1) != 1
+        Return False
+    ElseIf venueKind == 1
         Return True
     ElseIf venueKind == 2
         Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableGuildTavernMilkDrinking", 1) == 1

@@ -35,16 +35,10 @@ Bool Function SelfMilkingIsEligible(Actor candidate, String contextJson, String 
         EndIf
         Return False
     EndIf
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None || !MMEArmorScript.IsMMEMilkMaid(candidate, milkController)
+    String invalidReason = MMESelfMilking.GetInvalidReason(candidate, False, False, False)
+    If invalidReason != ""
         If diagnostic
-            Debug.Notification("Self-Milking Action: rejected - not an MME Milkmaid")
-        EndIf
-        Return False
-    EndIf
-    If StorageUtil.GetIntValue(candidate, "MMEAlerts.IsMilking", 0) == 1
-        If diagnostic
-            Debug.Notification("Self-Milking Action: rejected - already milking")
+            Debug.Notification("Self-Milking Action: rejected - " + invalidReason)
         EndIf
         Return False
     EndIf
@@ -67,16 +61,10 @@ Function SelfMilkingExecute(Actor candidate, String contextJson, String paramsJs
         EndIf
         Return
     EndIf
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If candidate == None || milkController == None || !MMEArmorScript.IsMMEMilkMaid(candidate, milkController) || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
+    String invalidReason = MMESelfMilking.GetInvalidReason(candidate, False, False, False)
+    If invalidReason != ""
         If diagnostic
-            Debug.Notification("Self-Milking Action: execution rejected - invalid target")
-        EndIf
-        Return
-    EndIf
-    If StorageUtil.GetIntValue(candidate, "MMEAlerts.IsMilking", 0) == 1
-        If diagnostic
-            Debug.Notification("Self-Milking Action: execution rejected - already milking")
+            Debug.Notification("Self-Milking Action: execution rejected - " + invalidReason)
         EndIf
         Return
     EndIf
@@ -84,11 +72,11 @@ Function SelfMilkingExecute(Actor candidate, String contextJson, String paramsJs
         Debug.Notification("[MME Debug] Actor resolved: " + candidate.GetDisplayName())
         Debug.Notification("[MME Debug] Calling MME MilkSelf")
     EndIf
-    milkController.MilkSelf.Cast(candidate)
+    Bool started = MMESelfMilking.StartExisting(candidate, False, False, False)
     If diagnostic
-        Debug.Notification("[MME Debug] MME MilkSelf cast requested")
+        Debug.Notification("[MME Debug] MME MilkSelf cast requested: " + started)
     EndIf
-    MMELog.Diagnostic("[MMEAlert SkyrimNet] Self-milking action cast MME MilkSelf on " + candidate)
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Self-milking action cast result=" + started + " | actor=" + candidate)
 EndFunction
 
 ; Fullness-specific trigger adapter. The shared reaction executor owns actor

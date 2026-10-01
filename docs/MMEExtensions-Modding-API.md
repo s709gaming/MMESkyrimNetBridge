@@ -209,12 +209,12 @@ existing Devious heavy-restraint Thought pipeline for exactly `targetActor`,
 including its editable JSON line, HUD notification, configured hot reaction
 sound, and optional Skyrim.Net narration.
 
-The automatic interval, random actor selection, and scheduled Bound Thought
-chance are bypassed. Bound Milk Maid Thoughts must be enabled, Devious Devices'
-`zad_DeviousHeavyBondage` keyword must be available, and the target must be a
-loaded MME Milk Maid currently wearing an item with that keyword. `true` means
-the local Thought was rendered and shown; narration may still be disabled,
-rejected, or fail its own configured narration chance.
+The automatic enable switch, interval, random actor selection, and scheduled
+Bound Thought chance are bypassed. MME Extensions must be enabled, Devious
+Devices' `zad_DeviousHeavyBondage` keyword must be available, and the target
+must be a loaded MME Milk Maid currently wearing an item with that keyword.
+`true` means the local Thought was rendered and shown; narration may still be
+disabled, rejected, or fail its own configured narration chance.
 
 ### TryLivingArmorEffect
 

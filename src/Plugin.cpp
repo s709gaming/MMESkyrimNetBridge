@@ -53,7 +53,8 @@ namespace
         kNone = 0,
         kInn = 1,
         kGuildTavern = 2,
-        kJarlResidence = 3
+        kJarlResidence = 3,
+        kTown = 4
     };
 
     struct SocialVenue
@@ -63,6 +64,7 @@ namespace
     };
 
     RE::BGSKeyword* g_locTypeInn = nullptr;
+    RE::BGSKeyword* g_locTypeCity = nullptr;
     std::unordered_map<RE::FormID, SocialVenueKind> g_socialVenueForms;
 
     void InitializeSocialVenueForms()
@@ -74,6 +76,7 @@ namespace
         }
 
         g_locTypeInn = dataHandler->LookupForm<RE::BGSKeyword>(0x01CB87, "Skyrim.esm");
+        g_locTypeCity = dataHandler->LookupForm<RE::BGSKeyword>(0x013168, "Skyrim.esm");
         g_socialVenueForms.clear();
         const auto addVenue = [&](RE::FormID localID, SocialVenueKind kind) {
             if (auto* location = dataHandler->LookupForm<RE::BGSLocation>(localID, "Skyrim.esm")) {
@@ -101,8 +104,8 @@ namespace
         addVenue(0x01EB7D, SocialVenueKind::kJarlResidence);  // Winterhold Jarl's Longhouse
 
         SKSE::log::info(
-            "social venue forms initialized: LocTypeInn={}, explicit locations={}",
-            g_locTypeInn != nullptr, g_socialVenueForms.size());
+            "social venue forms initialized: LocTypeInn={}, LocTypeCity={}, explicit locations={}",
+            g_locTypeInn != nullptr, g_locTypeCity != nullptr, g_socialVenueForms.size());
     }
 
     SocialVenue FindSocialVenue(RE::BGSLocation* location)
@@ -119,6 +122,9 @@ namespace
             }
             if (g_locTypeInn && location->HasKeyword(g_locTypeInn)) {
                 return { location, SocialVenueKind::kInn };
+            }
+            if (g_locTypeCity && location->HasKeyword(g_locTypeCity)) {
+                return { location, SocialVenueKind::kTown };
             }
             location = location->parentLoc;
         }
@@ -706,8 +712,11 @@ namespace
                 const auto oldVenue = FindSocialVenue(event->oldLoc);
                 const auto newVenue = FindSocialVenue(event->newLoc);
                 if (oldVenue.location != newVenue.location) {
-                    SendSocialVenueEvent(kInnPalaceExitedEvent, oldVenue);
+                    // Publish the destination first. Papyrus can retain one
+                    // shared pending drink across city/inn/palace boundaries,
+                    // then safely ignore the following exit for the old venue.
                     SendSocialVenueEvent(kInnPalaceEnteredEvent, newVenue);
+                    SendSocialVenueEvent(kInnPalaceExitedEvent, oldVenue);
                 }
                 SendLifecycleEvent("location");
             }

@@ -173,6 +173,10 @@ Function HandlePlayerDrink(Actor drinker, Form drinkItem, Int drinkKind, String 
     Else
         MMEAlertsSkyrimNet.NarratePlayerMilkDrink(drinker, drinkItem)
     EndIf
+    ; Only actors who were already Milk Maids before this drink may receive the
+    ; optional heavy-restraint bonus. A newly converted actor keeps sole
+    ; ownership of the conversion reaction for this transaction.
+    TryBoundMilkDrinkReaction(drinker, wasKnownMilkmaid, False)
     ; Phase 2: request the optional shared standing reaction after effects. The
     ; tracker owns completion through its existing single OnUpdate callback.
     Bool animDiagnostic = JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1
@@ -336,6 +340,7 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
         StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "complete effects disabled")
         ReportNPCDrink(diagnostic, diagnosticTest, "03 COMPLETE | effects disabled; reaction only")
         MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, genericReaction, diagnosticTest, establishedMilkmaid)
+        TryBoundMilkDrinkReaction(drinker, establishedMilkmaid, diagnosticTest)
         If !diagnosticTest
             PublishDrinkEvent(drinker, drinkItem, drinkKind)
         EndIf
@@ -381,10 +386,54 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
     StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "complete Milkmaid")
     ReportNPCDrink(diagnostic, diagnosticTest, "03 COMPLETE | Milkmaid | milk " + milkBefore + " -> " + milkAfter)
     MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, renderedReaction, diagnosticTest, True)
+    TryBoundMilkDrinkReaction(drinker, True, diagnosticTest)
     If !diagnosticTest
         PublishDrinkEvent(drinker, drinkItem, drinkKind)
     EndIf
     MMELog.Diagnostic("[MMEAlert NPC Drink] processed " + actorName + " | " + pluginName + ":" + localFormID)
+EndFunction
+
+; Optional post-drink caller for the public heavy-restraint reaction facade.
+; Eligibility is checked before rolling so ordinary actors, new conversions,
+; and installations without Devious Devices consume no random roll. The API
+; bypasses the hourly bound chance; this function owns the one drink chance.
+Bool Function TryBoundMilkDrinkReaction(Actor drinker, Bool establishedMilkmaid, Bool diagnosticTest = False) Global
+    If diagnosticTest || !establishedMilkmaid || drinker == None
+        Return False
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableBoundMilkDrinkReaction", 1) != 1
+        Return False
+    EndIf
+
+    Keyword heavyBondage = MMEArmorScript.ResolveDeviousHeavyBondageKeyword()
+    If heavyBondage == None || !drinker.WornHasKeyword(heavyBondage)
+        Return False
+    EndIf
+
+    Int chance = JsonUtil.GetIntValue("/MMEAlerts/Settings", "boundMilkDrinkReactionChance", 50)
+    If chance < 0
+        chance = 0
+    ElseIf chance > 100
+        chance = 100
+    EndIf
+    If chance <= 0
+        MMELog.MasterDiagnostic("[MME Extensions Bound Drink] chance failed | actor=" + GetActorName(drinker) + " | chance=0%")
+        Return False
+    EndIf
+
+    Int roll = 1
+    If chance < 100
+        roll = Utility.RandomInt(1, 100)
+    EndIf
+    If roll > chance
+        MMELog.MasterDiagnostic("[MME Extensions Bound Drink] chance failed | actor=" + GetActorName(drinker) + " | roll=" + roll + " | chance=" + chance + "%")
+        Return False
+    EndIf
+
+    MMELog.MasterDiagnostic("[MME Extensions Bound Drink] chance passed | actor=" + GetActorName(drinker) + " | roll=" + roll + " | chance=" + chance + "%")
+    Bool shown = MMEExtensionsAPI.TryHeavyRestraintReaction(drinker)
+    MMELog.MasterDiagnostic("[MME Extensions Bound Drink] reaction result=" + shown + " | actor=" + GetActorName(drinker))
+    Return shown
 EndFunction
 
 ; Explicit Troubleshoot harness. It simulates the post-consumption callback with

@@ -1,0 +1,16 @@
+{
+  "craving": [
+    "{ActorName} can't stop thinking about drinking milk.",
+    "{ActorName}'s milk craving is getting harder to ignore.",
+    "{ActorName} is getting embarrassingly desperate for milk.",
+    "{ActorName} keeps thinking about getting another taste of milk.",
+    "{ActorName} is trying very hard not to think about milk."
+  ],
+  "give_in": [
+    "{ActorName} gives in. They need milk now.",
+    "{ActorName} can't resist the milk craving any longer.",
+    "{ActorName}'s willpower finally loses to milk.",
+    "{ActorName} caves and goes looking for milk.",
+    "{ActorName} decides they've waited long enough for milk."
+  ]
+}

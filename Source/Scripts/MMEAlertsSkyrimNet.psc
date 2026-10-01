@@ -669,6 +669,75 @@ Function NarrateChestMilkDrink(Actor drinker, String milkName, String chestKind)
     MMELog.MasterDiagnostic("[MME Extensions Chest Milk Narration] result=" + result + " | speaker=" + actorName + " | " + situation)
 EndFunction
 
+; Requests one actor-owned reaction when a periodic craving begins. This is
+; deliberately separate from normal drink narration: no drink has happened
+; yet, and the later public drink transaction remains free to report itself.
+Function NarrateMilkCraving(Actor cravingActor, String renderedCraving) Global
+    String settingsFile = "/MMEAlerts/Settings"
+    If !IsExtensionsEnabled() || cravingActor == None || renderedCraving == ""
+        MMELog.MasterDiagnostic("[MME Extensions Milk Craving] Skyrim.Net skipped | invalid request")
+        Return
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enableMilkCravingNarration", 1) != 1
+        MMELog.MasterDiagnostic("[MME Extensions Milk Craving] Skyrim.Net skipped | narration disabled")
+        Return
+    EndIf
+    If !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
+        MMELog.MasterDiagnostic("[MME Extensions Milk Craving] Skyrim.Net skipped | unavailable or globally disabled")
+        Return
+    EndIf
+
+    String actorName = ResolveActorName(cravingActor, "The Milk Maid")
+    String content = "Immediate situation: " + renderedCraving + " This powerful milk craving pertains directly to " + actorName + ", who should speak and react from her own first-person perspective. Make the anticipated taste and sensation of drinking milk feel wonderfully tempting and increasingly difficult to resist. Keep the reaction short, eager, playful, slightly embarrassed, positive, and appropriate to her personality. Stay focused on wanting milk; do not claim she has already drunk it, do not assign the reaction to another nearby character, and do not merely repeat the immediate situation."
+    If cravingActor == Game.GetPlayer()
+        ; DirectNarration may select a nearby NPC for Player-originated events.
+        ; Generate privately and use only the dedicated Player TTS callback.
+        MMEAlertsController bridge = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+        If bridge == None
+            MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: Skyrim.Net player callback quest could not resolve")
+            Return
+        EndIf
+        String contextJson = "{\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
+        Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnMilkCravingPlayerLine")
+        If queued != 1
+            MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: Skyrim.Net rejected player craving generation [" + queued + "] | actor=" + actorName)
+        Else
+            MMELog.MasterDiagnostic("[MME Extensions Milk Craving] Skyrim.Net player generation queued | actor=" + actorName)
+        EndIf
+        Return
+    EndIf
+
+    Actor listener = Game.GetPlayer()
+    Int result = SkyrimNetApi.DirectNarration(content, cravingActor, listener)
+    If result != 0
+        MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: Skyrim.Net rejected NPC craving narration [" + result + "] | actor=" + actorName)
+    Else
+        MMELog.MasterDiagnostic("[MME Extensions Milk Craving] Skyrim.Net narration accepted | speaker=" + actorName + " | listener=" + ResolveActorName(listener, "everyone nearby"))
+    EndIf
+EndFunction
+
+Function PlayMilkCravingPlayerLine(String response, Int success) Global
+    If success != 1 || response == ""
+        MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: Skyrim.Net player craving generation callback failed; no NPC fallback")
+        Return
+    EndIf
+    If !IsExtensionsEnabled() || !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1 || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkCravingNarration", 1) != 1
+        MMELog.MasterDiagnostic("[MME Extensions Milk Craving] player playback canceled | narration no longer enabled")
+        Return
+    EndIf
+    Actor playerActor = Game.GetPlayer()
+    If playerActor == None || playerActor.IsChild()
+        MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: player craving playback could not resolve a valid player")
+        Return
+    EndIf
+    Int result = SkyrimNetApi.TriggerPlayerTTS(response)
+    If result != 0
+        MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: Skyrim.Net rejected player craving TTS [" + result + "]")
+    Else
+        MMELog.MasterDiagnostic("[MME Extensions Milk Craving] Skyrim.Net player TTS accepted")
+    EndIf
+EndFunction
+
 Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String renderedReaction = "", Bool diagnosticTest = False, Bool establishedMilkmaid = False) Global
     ; Dialogue and native potion paths converge here after their own duplicate
     ; suppression. This function owns only narration gates and cooldown state.
@@ -1597,7 +1666,11 @@ String Function ResolveActorName(Actor actorRef, String fallbackName) Global
 EndFunction
 
 String Function RenderMessage(String template, String actorName) Global
-    Return RenderToken(template, "{actor}", actorName)
+    String rendered = RenderToken(template, "{actor}", actorName)
+    ; Newer data files use the more explicit token while legacy files retain
+    ; {actor}. Supporting both keeps user-customized JSON backward compatible.
+    rendered = RenderToken(rendered, "{ActorName}", actorName)
+    Return rendered
 EndFunction
 
 String Function RenderToken(String template, String token, String value) Global

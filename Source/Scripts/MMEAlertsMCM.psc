@@ -26,9 +26,19 @@ Int chestMilkTrapNarrationOption
 Int innPalaceMilkDrinkingOption
 Int guildTavernMilkDrinkingOption
 Int jarlResidenceMilkDrinkingOption
+Int townMilkDrinkOption
+Int townMilkDrinkChanceOption
 Int innPalaceDrinkDelayOption
 Int innPalaceDrinkVariationOption
 Int innPalaceDrinkCooldownOption
+Int milkCravingsOption
+Int milkCravingNarrationOption
+Int milkCravingIntervalOption
+Int milkCravingVariationOption
+Int milkCravingChanceOption
+Int milkCravingGiveInDelayOption
+Int autoSelfMilkingOption
+Int autoSelfMilkingDelayOption
 Int forcedMilkMaidNotificationOption
 Int forcedMilkMaidLactacidStoryOption
 Int forcedMilkMaidNarrationOption
@@ -179,6 +189,8 @@ Int boundMilkMaidThoughtsChanceOption
 Int boundMilkMaidThoughtNarrationOption
 Int boundMilkMaidThoughtNarrationChanceOption
 Int boundMilkMaidThoughtSoundsOption
+Int boundMilkDrinkReactionOption
+Int boundMilkDrinkReactionChanceOption
 Int milkMaidThoughtsDebugOption
 Int traceMilkMaidThoughtsLogicOption
 Int armorInjectionOption
@@ -232,7 +244,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 130
+    Return 134
 EndFunction
 
 Function SetPageNames()
@@ -332,10 +344,23 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableGuildTavernMilkDrinking", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableJarlResidenceMilkDrinking", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableTownMilkDrink", 1)
+        JsonUtil.SetIntValue(SettingsFile, "townMilkDrinkChance", 25)
         JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkDelaySeconds", 11.0)
         JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", 10.0)
         JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkCooldownHours", 4.0)
         JsonUtil.SetIntValue(SettingsFile, "innPalaceDrinkMigration130", 1)
+        JsonUtil.SetIntValue(SettingsFile, "townMilkDrinkMigration132", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkCravings", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkCravingNarration", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "milkCravingIntervalHours", 48.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkCravingIntervalVariation", 24.0)
+        JsonUtil.SetIntValue(SettingsFile, "milkCravingTriggerChance", 100)
+        JsonUtil.SetFloatValue(SettingsFile, "milkCravingGiveInDelayHours", 4.0)
+        JsonUtil.SetIntValue(SettingsFile, "milkCravingMigration133", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableAutoSelfMilking", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "autoSelfMilkingDelayHours", 1.0)
+        JsonUtil.SetIntValue(SettingsFile, "autoSelfMilkingMigration134", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidNotification", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidStory", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidNarration", 1)
@@ -470,6 +495,9 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationMigration124", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkMaidThoughtSounds", 1)
         JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtSoundsMigration125", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkDrinkReaction", 1)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkDrinkReactionChance", 50)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkDrinkReactionMigration131", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0)
         JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsMigration87", 1)
@@ -1262,6 +1290,44 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "innPalaceDrinkMigration130", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds an independent drink-triggered caller of the complete heavy-restraint
+    ; reaction. It has its own chance and does not consume or alter the hourly
+    ; bound Thought schedule.
+    If JsonUtil.GetIntValue(SettingsFile, "boundMilkDrinkReactionMigration131", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkDrinkReaction", 1)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkDrinkReactionChance", 50)
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkDrinkReactionMigration131", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Adds a broad city-location entry roll. City interiors are intentionally
+    ; accepted, and the transaction shares the inn/palace timer and cooldown.
+    If JsonUtil.GetIntValue(SettingsFile, "townMilkDrinkMigration132", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableTownMilkDrink", 1)
+        JsonUtil.SetIntValue(SettingsFile, "townMilkDrinkChance", 25)
+        JsonUtil.SetIntValue(SettingsFile, "townMilkDrinkMigration132", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Adds the two-stage, game-time Milk Maid craving cycle. Existing saves
+    ; receive the same enabled defaults as a fresh installation.
+    If JsonUtil.GetIntValue(SettingsFile, "milkCravingMigration133", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkCravings", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkCravingNarration", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "milkCravingIntervalHours", 48.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkCravingIntervalVariation", 24.0)
+        JsonUtil.SetIntValue(SettingsFile, "milkCravingTriggerChance", 100)
+        JsonUtil.SetFloatValue(SettingsFile, "milkCravingGiveInDelayHours", 4.0)
+        JsonUtil.SetIntValue(SettingsFile, "milkCravingMigration133", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Connects the existing Milk Full crossing to MME's own MilkSelf spell
+    ; after a configurable game-time delay. No duplicate milking implementation
+    ; or narration channel is introduced.
+    If JsonUtil.GetIntValue(SettingsFile, "autoSelfMilkingMigration134", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableAutoSelfMilking", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "autoSelfMilkingDelayHours", 1.0)
+        JsonUtil.SetIntValue(SettingsFile, "autoSelfMilkingMigration134", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1324,9 +1390,19 @@ Event OnPageReset(String page)
     innPalaceMilkDrinkingOption = -1
     guildTavernMilkDrinkingOption = -1
     jarlResidenceMilkDrinkingOption = -1
+    townMilkDrinkOption = -1
+    townMilkDrinkChanceOption = -1
     innPalaceDrinkDelayOption = -1
     innPalaceDrinkVariationOption = -1
     innPalaceDrinkCooldownOption = -1
+    milkCravingsOption = -1
+    milkCravingNarrationOption = -1
+    milkCravingIntervalOption = -1
+    milkCravingVariationOption = -1
+    milkCravingChanceOption = -1
+    milkCravingGiveInDelayOption = -1
+    autoSelfMilkingOption = -1
+    autoSelfMilkingDelayOption = -1
     forcedMilkMaidNotificationOption = -1
     forcedMilkMaidLactacidStoryOption = -1
     forcedMilkMaidNarrationOption = -1
@@ -1480,6 +1556,8 @@ Event OnPageReset(String page)
     boundMilkMaidThoughtNarrationOption = -1
     boundMilkMaidThoughtNarrationChanceOption = -1
     boundMilkMaidThoughtSoundsOption = -1
+    boundMilkDrinkReactionOption = -1
+    boundMilkDrinkReactionChanceOption = -1
     milkMaidThoughtsDebugOption = -1
     traceMilkMaidThoughtsLogicOption = -1
     armorInjectionOption = -1
@@ -1580,9 +1658,41 @@ Event OnPageReset(String page)
         EndIf
         guildTavernMilkDrinkingOption = AddToggleOption("Guild and Tavern Locations", JsonUtil.GetIntValue(SettingsFile, "enableGuildTavernMilkDrinking", 1) == 1, innPalaceFlags)
         jarlResidenceMilkDrinkingOption = AddToggleOption("Jarl Residences", JsonUtil.GetIntValue(SettingsFile, "enableJarlResidenceMilkDrinking", 1) == 1, innPalaceFlags)
-        innPalaceDrinkDelayOption = AddSliderOption("Drink Delay", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelaySeconds", 11.0), "{0} seconds", innPalaceFlags)
-        innPalaceDrinkVariationOption = AddSliderOption("Delay Randomization", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", 10.0), "+/-{0} seconds", innPalaceFlags)
-        innPalaceDrinkCooldownOption = AddSliderOption("Shared Cooldown", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkCooldownHours", 4.0), "{0} game hours", innPalaceFlags)
+        townMilkDrinkOption = AddToggleOption("Town Milk Drink", JsonUtil.GetIntValue(SettingsFile, "enableTownMilkDrink", 1) == 1)
+        Int townDrinkFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableTownMilkDrink", 1) != 1
+            townDrinkFlags = OPTION_FLAG_DISABLED
+        EndIf
+        townMilkDrinkChanceOption = AddSliderOption("Town Drink Chance", JsonUtil.GetIntValue(SettingsFile, "townMilkDrinkChance", 25), "{0}%", townDrinkFlags)
+        Int sharedVenueFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1) != 1 && JsonUtil.GetIntValue(SettingsFile, "enableTownMilkDrink", 1) != 1
+            sharedVenueFlags = OPTION_FLAG_DISABLED
+        EndIf
+        innPalaceDrinkDelayOption = AddSliderOption("Drink Delay", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelaySeconds", 11.0), "{0} seconds", sharedVenueFlags)
+        innPalaceDrinkVariationOption = AddSliderOption("Delay Randomization", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", 10.0), "+/-{0} seconds", sharedVenueFlags)
+        innPalaceDrinkCooldownOption = AddSliderOption("Shared Cooldown", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkCooldownHours", 4.0), "{0} game hours", sharedVenueFlags)
+        AddHeaderOption("Milk Cravings")
+        milkCravingsOption = AddToggleOption("Enable Milk Cravings", JsonUtil.GetIntValue(SettingsFile, "enableMilkCravings", 1) == 1)
+        Int milkCravingFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableMilkCravings", 1) != 1
+            milkCravingFlags = OPTION_FLAG_DISABLED
+        EndIf
+        Int milkCravingNarrationFlags = milkCravingFlags
+        If !MMEAlertsSkyrimNet.IsAvailable()
+            milkCravingNarrationFlags = OPTION_FLAG_DISABLED
+        EndIf
+        milkCravingNarrationOption = AddToggleOption("Skyrim.Net Craving Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkCravingNarration", 1) == 1, milkCravingNarrationFlags)
+        milkCravingIntervalOption = AddSliderOption("Craving Interval", JsonUtil.GetFloatValue(SettingsFile, "milkCravingIntervalHours", 48.0), "{0} game hours", milkCravingFlags)
+        milkCravingVariationOption = AddSliderOption("Interval Randomization", JsonUtil.GetFloatValue(SettingsFile, "milkCravingIntervalVariation", 24.0), "+/-{0} game hours", milkCravingFlags)
+        milkCravingChanceOption = AddSliderOption("Trigger Chance", JsonUtil.GetIntValue(SettingsFile, "milkCravingTriggerChance", 100), "{0}%", milkCravingFlags)
+        milkCravingGiveInDelayOption = AddSliderOption("Maximum Give-In Delay", JsonUtil.GetFloatValue(SettingsFile, "milkCravingGiveInDelayHours", 4.0), "{0} game hours", milkCravingFlags)
+        AddHeaderOption("Auto Self-Milking")
+        autoSelfMilkingOption = AddToggleOption("Enable Auto Self-Milking", JsonUtil.GetIntValue(SettingsFile, "enableAutoSelfMilking", 1) == 1)
+        Int autoSelfMilkingFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableAutoSelfMilking", 1) != 1
+            autoSelfMilkingFlags = OPTION_FLAG_DISABLED
+        EndIf
+        autoSelfMilkingDelayOption = AddSliderOption("Self-Milking Delay", JsonUtil.GetFloatValue(SettingsFile, "autoSelfMilkingDelayHours", 1.0), "{0} game hours", autoSelfMilkingFlags)
         AddHeaderOption("Milk Gain Per Drink")
         milkmaidLevelBonusOption = AddToggleOption("MME Level Bonus", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1) == 1)
         flatMilkBonusOption = AddSliderOption("Flat Milk Bonus", JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 1.0), "+{1} milk")
@@ -1785,6 +1895,8 @@ Event OnPageReset(String page)
         boundMilkMaidThoughtNarrationOption = AddToggleOption("Skyrim.Net Bound Narration", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughtNarration", 1) == 1)
         boundMilkMaidThoughtNarrationChanceOption = AddSliderOption("Bound Narration Chance", JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationChance", 100), "{0}%")
         boundMilkMaidThoughtSoundsOption = AddToggleOption("Devious Restraint Moans", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughtSounds", 1) == 1)
+        boundMilkDrinkReactionOption = AddToggleOption("Milk Drink Restraint Reaction", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkDrinkReaction", 1) == 1)
+        boundMilkDrinkReactionChanceOption = AddSliderOption("Milk Drink Reaction Chance", JsonUtil.GetIntValue(SettingsFile, "boundMilkDrinkReactionChance", 50), "{0}%")
         Return
     EndIf
     If page == "Tentacle Effects"
@@ -1937,6 +2049,12 @@ Event OnOptionHighlight(Int option)
     ElseIf option == jarlResidenceMilkDrinkingOption
         SetInfoText("Include the nine vanilla jarl residences without treating Castle Dour as a palace. Default on.")
         Return
+    ElseIf option == townMilkDrinkOption
+        SetInfoText("On entering a major-city location, including its interiors, roll for one delayed normal-milk drink. Shares the inn and palace timer and cooldown. Default on.")
+        Return
+    ElseIf option == townMilkDrinkChanceOption
+        SetInfoText("Chance to schedule a drink when entering a major-city location. Failed rolls are silent and do not start the cooldown. Default 25%, range 0-100% in 5% steps.")
+        Return
     ElseIf option == innPalaceDrinkDelayOption
         SetInfoText("Base real-time delay after entering a supported venue. Default 11 seconds.")
         Return
@@ -1945,6 +2063,30 @@ Event OnOptionHighlight(Int option)
         Return
     ElseIf option == innPalaceDrinkCooldownOption
         SetInfoText("Shared game-time cooldown started only after verified consumption. Zero disables the cooldown. Default 4 hours, range 0-24.")
+        Return
+    ElseIf option == milkCravingsOption
+        SetInfoText("Periodically select one nearby loaded MME Milk Maid, announce a craving, then make her drink ordinary milk after a random game-time delay. Includes the player. Default on.")
+        Return
+    ElseIf option == milkCravingNarrationOption
+        SetInfoText("Ask Skyrim.Net for one short first-person reaction from the affected Milk Maid when her craving begins. Available only when Skyrim.Net is installed. Default on.")
+        Return
+    ElseIf option == milkCravingIntervalOption
+        SetInfoText("Base delay between craving attempts in Skyrim game-time hours. A new interval is rolled after every completed or skipped attempt. Default 48 hours.")
+        Return
+    ElseIf option == milkCravingVariationOption
+        SetInfoText("Randomly subtract or add this many game-time hours. Runtime clamps the final interval to at least one hour. Default 24 hours.")
+        Return
+    ElseIf option == milkCravingChanceOption
+        SetInfoText("Chance that a due craving begins after at least one valid nearby Milk Maid is found. Default 100%, adjustable in 5% steps.")
+        Return
+    ElseIf option == milkCravingGiveInDelayOption
+        SetInfoText("Maximum random game-time delay between the craving notification and giving in. The actual delay is rolled from zero to this value. Default four hours.")
+        Return
+    ElseIf option == autoSelfMilkingOption
+        SetInfoText("After the existing Milk Full trigger, queue that Milk Maid for MME's original self-milking scene. Includes the player and nearby NPC Milk Maids. Default on.")
+        Return
+    ElseIf option == autoSelfMilkingDelayOption
+        SetInfoText("Game-time delay between the Milk Full trigger and MME's original self-milking scene. The actor must still be nearby, full, valid, and not already milking. Default 1 hour, range 0-24.")
         Return
     EndIf
     If option == dungeonChestMilkMaidOption
@@ -2279,6 +2421,10 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Set the chance that a successful local bound Thought is also sent to Skyrim.Net.")
     ElseIf option == boundMilkMaidThoughtSoundsOption
         SetInfoText("Play a hot reaction moan on the selected restrained Milk Maid when a bound Thought appears. The global Reaction Sounds setting must also be enabled.")
+    ElseIf option == boundMilkDrinkReactionOption
+        SetInfoText("After a confirmed milk drink, let an existing Milk Maid in Devious heavy bondage trigger the complete bound notification, moan, and optional Skyrim.Net reaction.")
+    ElseIf option == boundMilkDrinkReactionChanceOption
+        SetInfoText("Set the independent chance that an eligible restrained Milk Maid reacts after drinking milk. This does not use or reset the hourly bound Thought chance or schedule.")
     ElseIf option == milkMaidThoughtsDebugOption
         SetInfoText("Attempt one local Thought notification every 15 real-time seconds using the controller's shared single-update scheduler. Debug Thoughts are not mirrored to Skyrim.Net.")
     ElseIf option == traceMilkMaidThoughtsLogicOption
@@ -2442,6 +2588,35 @@ Event OnOptionSelect(Int option)
         JsonUtil.Save(SettingsFile, False)
         SetToggleOptionValue(option, jarlResidenceValue == 1)
         Return
+    ElseIf option == townMilkDrinkOption
+        Int townDrinkValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableTownMilkDrink", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableTownMilkDrink", townDrinkValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, townDrinkValue == 1)
+        ForcePageReset()
+        Return
+    ElseIf option == milkCravingsOption
+        Int cravingValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkCravings", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkCravings", cravingValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, cravingValue == 1)
+        RefreshMilkCravingSchedule()
+        ForcePageReset()
+        Return
+    ElseIf option == milkCravingNarrationOption
+        Int cravingNarrationValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkCravingNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkCravingNarration", cravingNarrationValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, cravingNarrationValue == 1)
+        Return
+    ElseIf option == autoSelfMilkingOption
+        Int autoSelfMilkingValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableAutoSelfMilking", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableAutoSelfMilking", autoSelfMilkingValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, autoSelfMilkingValue == 1)
+        RefreshAutoSelfMilkingSchedule()
+        ForcePageReset()
+        Return
     ElseIf option == forcedMilkMaidNotificationOption
         Int notificationValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNotification", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidNotification", notificationValue)
@@ -2561,6 +2736,10 @@ Event OnOptionSelect(Int option)
     ElseIf option == boundMilkMaidThoughtSoundsOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughtSounds", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkMaidThoughtSounds", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == boundMilkDrinkReactionOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkDrinkReaction", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBoundMilkDrinkReaction", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == milkMaidThoughtsDebugOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0)
@@ -3080,6 +3259,20 @@ Function RefreshArmorInjectionSchedule()
     EndIf
 EndFunction
 
+Function RefreshMilkCravingSchedule()
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller != None
+        controller.RefreshMilkCravingScheduling()
+    EndIf
+EndFunction
+
+Function RefreshAutoSelfMilkingSchedule()
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller != None
+        controller.RefreshAutoSelfMilkingScheduling()
+    EndIf
+EndFunction
+
 ; Configures the shared sound-volume and capacity-interval slider dialogs.
 Event OnOptionSliderOpen(Int option)
     If option == dungeonChestMilkMaidChanceOption
@@ -3118,6 +3311,12 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(1.0, 60.0)
         SetSliderDialogInterval(1.0)
         Return
+    ElseIf option == townMilkDrinkChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "townMilkDrinkChance", 25))
+        SetSliderDialogDefaultValue(25.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+        Return
     ElseIf option == innPalaceDrinkVariationOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", 10.0))
         SetSliderDialogDefaultValue(10.0)
@@ -3127,6 +3326,36 @@ Event OnOptionSliderOpen(Int option)
     ElseIf option == innPalaceDrinkCooldownOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkCooldownHours", 4.0))
         SetSliderDialogDefaultValue(4.0)
+        SetSliderDialogRange(0.0, 24.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == milkCravingIntervalOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkCravingIntervalHours", 48.0))
+        SetSliderDialogDefaultValue(48.0)
+        SetSliderDialogRange(1.0, 168.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == milkCravingVariationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkCravingIntervalVariation", 24.0))
+        SetSliderDialogDefaultValue(24.0)
+        SetSliderDialogRange(0.0, 48.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == milkCravingChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "milkCravingTriggerChance", 100))
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+        Return
+    ElseIf option == milkCravingGiveInDelayOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkCravingGiveInDelayHours", 4.0))
+        SetSliderDialogDefaultValue(4.0)
+        SetSliderDialogRange(0.0, 4.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == autoSelfMilkingDelayOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "autoSelfMilkingDelayHours", 1.0))
+        SetSliderDialogDefaultValue(1.0)
         SetSliderDialogRange(0.0, 24.0)
         SetSliderDialogInterval(1.0)
         Return
@@ -3186,6 +3415,11 @@ Event OnOptionSliderOpen(Int option)
     ElseIf option == boundMilkMaidThoughtNarrationChanceOption
         SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationChance", 100))
         SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+    ElseIf option == boundMilkDrinkReactionChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "boundMilkDrinkReactionChance", 50))
+        SetSliderDialogDefaultValue(50.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(5.0)
     ElseIf option == armorInjectionIntervalOption
@@ -3378,6 +3612,11 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
         Return
+    ElseIf option == townMilkDrinkChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "townMilkDrinkChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        Return
     ElseIf option == innPalaceDrinkVariationOption
         JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", value)
         JsonUtil.Save(SettingsFile, False)
@@ -3387,6 +3626,34 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkCooldownHours", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} game hours")
+        Return
+    ElseIf option == milkCravingIntervalOption
+        JsonUtil.SetFloatValue(SettingsFile, "milkCravingIntervalHours", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        RefreshMilkCravingSchedule()
+        Return
+    ElseIf option == milkCravingVariationOption
+        JsonUtil.SetFloatValue(SettingsFile, "milkCravingIntervalVariation", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "+/-{0} game hours")
+        RefreshMilkCravingSchedule()
+        Return
+    ElseIf option == milkCravingChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "milkCravingTriggerChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        Return
+    ElseIf option == milkCravingGiveInDelayOption
+        JsonUtil.SetFloatValue(SettingsFile, "milkCravingGiveInDelayHours", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        Return
+    ElseIf option == autoSelfMilkingDelayOption
+        JsonUtil.SetFloatValue(SettingsFile, "autoSelfMilkingDelayHours", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        RefreshAutoSelfMilkingSchedule()
         Return
     ElseIf option == reverseDurationOption
         JsonUtil.SetIntValue(SettingsFile, "reverseLevelingDuration", value as Int)
@@ -3440,6 +3707,10 @@ Event OnOptionSliderAccept(Int option, Float value)
         SetSliderOptionValue(option, value, "{0}%")
     ElseIf option == boundMilkMaidThoughtNarrationChanceOption
         JsonUtil.SetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+    ElseIf option == boundMilkDrinkReactionChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "boundMilkDrinkReactionChance", value as Int)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0}%")
     ElseIf option == armorInjectionIntervalOption

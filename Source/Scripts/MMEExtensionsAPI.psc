@@ -97,9 +97,9 @@ EndFunction
 ; Runs the complete configured Devious heavy-restraint Thought pipeline for
 ; one actor: JSON wording, HUD notification, hot reaction sound, and optional
 ; Skyrim.Net narration. The explicit API request bypasses the periodic chance,
-; but retains the feature gate, Milk Maid validation, and worn-keyword check.
+; timer toggle, Milk Maid validation, and worn-keyword check.
 Bool Function TryHeavyRestraintReaction(Actor target) Global
-    If target == None || !MMEThoughts.IsBoundThoughtsEnabled()
+    If target == None || !MMEThoughts.IsExtensionsEnabled()
         Return False
     EndIf
     Actor[] targets = new Actor[1]

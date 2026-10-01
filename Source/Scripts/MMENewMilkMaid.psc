@@ -597,7 +597,9 @@ Function ReleaseActionLock(String lockKey, String lockTimeKey) Global
 EndFunction
 
 Function FailAction(Actor candidate, String failure, Bool unexpected) Global
-    Debug.Notification("Create Milk Maid: " + failure)
+    ; Skyrim.Net can retry an action after world state has already changed.
+    ; Keep expected rejections out of the HUD; diagnostics and true failure
+    ; alarms below retain the reason in Papyrus.0.log.
     String detail = failure + " | target=" + GetActorIdentity(candidate)
     If unexpected
         MMELog.Alarm("[MME Extensions Create Milk Maid] FAILURE | " + detail)

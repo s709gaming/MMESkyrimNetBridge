@@ -14,6 +14,10 @@ Function OnForcedMilkMaidPlayerLine(String response, Int success)
     MMEAlertsSkyrimNet.PlayForcedMilkMaidPlayerLine(response, success)
 EndFunction
 
+Function OnMilkCravingPlayerLine(String response, Int success)
+    MMEAlertsSkyrimNet.PlayMilkCravingPlayerLine(response, success)
+EndFunction
+
 ; ---------------------------------------------------------------------------
 ; Controller-owned persistent state
 ; ---------------------------------------------------------------------------
@@ -28,6 +32,9 @@ String KnownMilkmaidKey = "MMEExtensions.KnownMilkmaid"
 String PendingMilkmaidKey = "MMEExtensions.PendingMilkmaid"
 String EffectOwnedMilkmaidKey = "MMEExtensions.PendingMilkmaid.EffectOwned"
 String DhlpSuspendedKey = "MMEExtensions.DhlpSuspended"
+String AutoSelfMilkingPendingKey = "MMEExtensions.AutoSelfMilking.Pending"
+String AutoSelfMilkingDueKey = "MMEExtensions.AutoSelfMilking.Due"
+String AutoSelfMilkingDispatchKey = "MMEExtensions.AutoSelfMilking.Dispatched"
 Float NearbyRange = 2000.0
 Float NextCapacityUpdate = 0.0
 Float NextSkyrimNetUpdate = 0.0
@@ -47,6 +54,10 @@ Bool OpeningDialogueAlarmActive = False
 Float NextThoughtGameTime = 0.0
 Float NextBoundThoughtGameTime = 0.0
 Float NextInjectionGameTime = 0.0
+Float NextMilkCravingGameTime = 0.0
+Float NextMilkCravingGiveInGameTime = 0.0
+Float NextAutoSelfMilkingGameTime = 0.0
+Actor ActiveMilkCravingActor = None
 String ArmorCheckReminderShownAtKey = "MMEExtensions.ArmorReminder.ShownAt"
 String ArmorCheckReminderAttemptAtKey = "MMEExtensions.ArmorReminder.AttemptAt"
 Bool Property OStimDialogueAvailable Auto Conditional
@@ -181,10 +192,23 @@ EndEvent
 Event OnInnPalaceEntered(String eventName, String unusedText, Float venueKindValue, Form sender)
     Location venue = sender as Location
     Int venueKind = venueKindValue as Int
+    If venue == None
+        Return
+    EndIf
+    ; Towns, inns, guild halls and palaces share one pending transaction. A
+    ; move between them keeps the original deadline and entry notification;
+    ; the destination becomes authoritative for the eventual exit event.
+    If NextInnPalaceDrink > 0.0
+        PendingInnPalaceVenue = venue
+        MMEInnPalaceMilkEvent.Report("pending timer retained across supported locations | venue=" + venue.GetFormID() + " | kind=" + venueKind)
+        ScheduleNextUpdate()
+        Return
+    EndIf
     Float due = MMEInnPalaceMilkEvent.Arm(venue, venueKind)
     If due <= 0.0
         Return
     EndIf
+    Debug.Notification("Someone nearby looks thirsty for a refreshing drink of milk!")
     PendingInnPalaceVenue = venue
     PendingInnPalaceVenueKind = venueKind
     NextInnPalaceDrink = due
@@ -535,6 +559,8 @@ Function RefreshGameTimeScheduling()
     ScheduleNextThought(now)
     ScheduleNextBoundThought(now)
     ScheduleNextInjection(now)
+    RestoreMilkCravingScheduling(now)
+    RestoreAutoSelfMilkingScheduling(now)
     ArmNextGameTimeUpdate(now)
 EndFunction
 
@@ -555,6 +581,36 @@ EndFunction
 Function RefreshInjectionScheduling()
     Float now = Utility.GetCurrentGameTime()
     ScheduleNextInjection(now)
+    ArmNextGameTimeUpdate(now)
+EndFunction
+
+; MCM changes reset only an idle craving cycle. An actor who is already
+; craving retains her give-in deadline unless the feature was disabled.
+Function RefreshMilkCravingScheduling()
+    Float now = Utility.GetCurrentGameTime()
+    If !MMEMilkCravings.IsEnabled()
+        CancelMilkCraving("feature disabled")
+    ElseIf ActiveMilkCravingActor != None && NextMilkCravingGiveInGameTime > 0.0
+        MMEMilkCravings.Report("active give-in deadline retained after settings refresh | actor=" + MMEMilkCravings.GetActorName(ActiveMilkCravingActor))
+    Else
+        If ActiveMilkCravingActor != None || NextMilkCravingGiveInGameTime > 0.0
+            MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: inconsistent active state found during settings refresh; resetting cycle")
+            CancelMilkCraving("inconsistent state repaired")
+        EndIf
+        ScheduleNextMilkCraving(now)
+    EndIf
+    ArmNextGameTimeUpdate(now)
+EndFunction
+
+; MCM changes preserve already-randomized actor deadlines. Disabling the
+; feature clears every pending request so no delayed scene can fire afterward.
+Function RefreshAutoSelfMilkingScheduling()
+    Float now = Utility.GetCurrentGameTime()
+    If !MMESelfMilking.IsAutoEnabled()
+        ClearAutoSelfMilkingQueue("feature disabled")
+    Else
+        RestoreAutoSelfMilkingScheduling(now)
+    EndIf
     ArmNextGameTimeUpdate(now)
 EndFunction
 
@@ -597,6 +653,228 @@ Function ScheduleNextInjection(Float now)
     MMETentacleEffects.TraceDiagnostic(False, "schedule armed | next=" + nextInterval + " game hours")
 EndFunction
 
+Function RestoreMilkCravingScheduling(Float now)
+    If !MMEMilkCravings.IsEnabled()
+        CancelMilkCraving("schedule disabled")
+        Return
+    EndIf
+    If ActiveMilkCravingActor != None
+        If NextMilkCravingGiveInGameTime > 0.0
+            NextMilkCravingGameTime = 0.0
+            MMEMilkCravings.Report("active give-in deadline restored | actor=" + MMEMilkCravings.GetActorName(ActiveMilkCravingActor))
+            Return
+        EndIf
+        MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: active actor restored without a give-in deadline; resetting cycle")
+        CancelMilkCraving("missing give-in deadline repaired")
+    ElseIf NextMilkCravingGiveInGameTime > 0.0
+        MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: give-in deadline restored without an active actor; resetting cycle")
+        NextMilkCravingGiveInGameTime = 0.0
+    EndIf
+    ScheduleNextMilkCraving(now)
+EndFunction
+
+Function ScheduleNextMilkCraving(Float now)
+    If !MMEMilkCravings.IsEnabled()
+        NextMilkCravingGameTime = 0.0
+        Return
+    EndIf
+    If ActiveMilkCravingActor != None
+        NextMilkCravingGameTime = 0.0
+        Return
+    EndIf
+    Float nextInterval = MMEMilkCravings.CalculateNextInterval()
+    NextMilkCravingGameTime = now + (nextInterval / 24.0)
+    MMEMilkCravings.Report("cycle armed | interval=" + nextInterval + " game hours | due=" + NextMilkCravingGameTime)
+EndFunction
+
+Function CancelMilkCraving(String reason = "canceled")
+    If ActiveMilkCravingActor != None
+        MMEMilkCravings.ClearCraving(ActiveMilkCravingActor)
+    EndIf
+    ActiveMilkCravingActor = None
+    NextMilkCravingGameTime = 0.0
+    NextMilkCravingGiveInGameTime = 0.0
+    MMEMilkCravings.Report("state cleared | reason=" + reason)
+EndFunction
+
+Function ResolveActiveMilkCraving(Float now)
+    Actor cravingActor = ActiveMilkCravingActor
+    NextMilkCravingGiveInGameTime = 0.0
+    If cravingActor == None
+        MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: give-in deadline fired without an active actor")
+    Else
+        MMEMilkCravings.Report("give-in due | actor=" + MMEMilkCravings.GetActorName(cravingActor))
+        MMEMilkCravings.ResolveCraving(cravingActor)
+    EndIf
+    ActiveMilkCravingActor = None
+    ScheduleNextMilkCraving(Utility.GetCurrentGameTime())
+EndFunction
+
+Function ReportAutoSelfMilking(String detail)
+    MMELog.MasterDiagnostic("[MME Extensions Auto Self-Milking] " + detail)
+EndFunction
+
+Bool Function IsAutoSelfMilkingDependencyFailure(String reason)
+    Return reason == "MME controller unavailable" || reason == "MME MilkSelf spell unavailable"
+EndFunction
+
+; Called only on the established full-capacity crossing, never on every scan.
+; StorageUtil keeps the actor queue and deadlines stable across save/load.
+Function QueueAutoSelfMilking(Actor candidate)
+    If !MMESelfMilking.IsAutoEnabled()
+        Return
+    EndIf
+    String actorName = MMESelfMilking.GetActorName(candidate)
+    ReportAutoSelfMilking("milk-full crossing | actor=" + actorName)
+    String invalidReason = MMESelfMilking.GetInvalidReason(candidate, True, True, True)
+    If invalidReason != ""
+        If IsAutoSelfMilkingDependencyFailure(invalidReason)
+            MMELog.Alarm("[MME Extensions Auto Self-Milking] FAILURE: " + invalidReason + " | actor=" + actorName)
+        Else
+            ReportAutoSelfMilking("request canceled | actor=" + actorName + " | reason=" + invalidReason)
+        EndIf
+        Return
+    EndIf
+    Float existingDue = StorageUtil.GetFloatValue(candidate, AutoSelfMilkingDueKey, 0.0)
+    If existingDue > 0.0
+        ReportAutoSelfMilking("duplicate request ignored | actor=" + actorName + " | due=" + existingDue)
+        Return
+    EndIf
+    Float now = Utility.GetCurrentGameTime()
+    Float delayHours = MMESelfMilking.GetAutoDelayHours()
+    Float scheduledDelay = delayHours
+    If scheduledDelay < 0.01
+        scheduledDelay = 0.01
+    EndIf
+    Float due = now + (scheduledDelay / 24.0)
+    StorageUtil.SetFloatValue(candidate, AutoSelfMilkingDueKey, due)
+    StorageUtil.FormListAdd(None, AutoSelfMilkingPendingKey, candidate, False)
+    If NextAutoSelfMilkingGameTime <= 0.0 || due < NextAutoSelfMilkingGameTime
+        NextAutoSelfMilkingGameTime = due
+    EndIf
+    ReportAutoSelfMilking("request armed | actor=" + actorName + " | delay=" + delayHours + " game hours | due=" + due)
+    ArmNextGameTimeUpdate(now)
+EndFunction
+
+Function RemoveAutoSelfMilkingRequest(Actor candidate)
+    If candidate == None
+        Return
+    EndIf
+    StorageUtil.FormListRemove(None, AutoSelfMilkingPendingKey, candidate, True)
+    StorageUtil.UnsetFloatValue(candidate, AutoSelfMilkingDueKey)
+EndFunction
+
+Function ClearAutoSelfMilkingQueue(String reason = "cleared")
+    Int count = StorageUtil.FormListCount(None, AutoSelfMilkingPendingKey)
+    Int i = count - 1
+    While i >= 0
+        Actor candidate = StorageUtil.FormListGet(None, AutoSelfMilkingPendingKey, i) as Actor
+        If candidate != None
+            StorageUtil.UnsetFloatValue(candidate, AutoSelfMilkingDueKey)
+            StorageUtil.UnsetIntValue(candidate, AutoSelfMilkingDispatchKey)
+        EndIf
+        i -= 1
+    EndWhile
+    StorageUtil.FormListClear(None, AutoSelfMilkingPendingKey)
+    NextAutoSelfMilkingGameTime = 0.0
+    If count > 0
+        ReportAutoSelfMilking("pending queue cleared | count=" + count + " | reason=" + reason)
+    EndIf
+EndFunction
+
+; Rebuild the earliest deadline and prune only corrupt entries. Actor gameplay
+; eligibility is deliberately rechecked when the request becomes due.
+Function RestoreAutoSelfMilkingScheduling(Float now)
+    If !MMESelfMilking.IsAutoEnabled()
+        ClearAutoSelfMilkingQueue("schedule disabled")
+        Return
+    EndIf
+    NextAutoSelfMilkingGameTime = 0.0
+    Int restored = 0
+    Int i = StorageUtil.FormListCount(None, AutoSelfMilkingPendingKey) - 1
+    While i >= 0
+        Actor candidate = StorageUtil.FormListGet(None, AutoSelfMilkingPendingKey, i) as Actor
+        Float due = 0.0
+        If candidate != None
+            due = StorageUtil.GetFloatValue(candidate, AutoSelfMilkingDueKey, 0.0)
+        EndIf
+        If candidate == None || due <= 0.0
+            StorageUtil.FormListRemoveAt(None, AutoSelfMilkingPendingKey, i)
+        Else
+            If NextAutoSelfMilkingGameTime <= 0.0 || due < NextAutoSelfMilkingGameTime
+                NextAutoSelfMilkingGameTime = due
+            EndIf
+            restored += 1
+        EndIf
+        i -= 1
+    EndWhile
+    If restored > 0
+        ReportAutoSelfMilking("pending queue restored | count=" + restored + " | next due=" + NextAutoSelfMilkingGameTime)
+    EndIf
+EndFunction
+
+Function ResolveDueAutoSelfMilking(Float now)
+    If !MMESelfMilking.IsAutoEnabled()
+        ClearAutoSelfMilkingQueue("feature disabled before deadline")
+        Return
+    EndIf
+    Int i = StorageUtil.FormListCount(None, AutoSelfMilkingPendingKey) - 1
+    While i >= 0
+        Actor candidate = StorageUtil.FormListGet(None, AutoSelfMilkingPendingKey, i) as Actor
+        Float due = 0.0
+        If candidate != None
+            due = StorageUtil.GetFloatValue(candidate, AutoSelfMilkingDueKey, 0.0)
+        EndIf
+        If candidate == None || due <= 0.0
+            StorageUtil.FormListRemoveAt(None, AutoSelfMilkingPendingKey, i)
+        ElseIf now >= due
+            String actorName = MMESelfMilking.GetActorName(candidate)
+            RemoveAutoSelfMilkingRequest(candidate)
+            String invalidReason = MMESelfMilking.GetInvalidReason(candidate, True, True, True)
+            If invalidReason != ""
+                If IsAutoSelfMilkingDependencyFailure(invalidReason)
+                    MMELog.Alarm("[MME Extensions Auto Self-Milking] FAILURE: " + invalidReason + " | actor=" + actorName)
+                Else
+                    ReportAutoSelfMilking("request canceled | actor=" + actorName + " | reason=" + invalidReason)
+                EndIf
+            Else
+                ReportAutoSelfMilking("delay expired | actor=" + actorName + " | validation=passed")
+                StorageUtil.SetIntValue(candidate, AutoSelfMilkingDispatchKey, 1)
+                Bool dispatched = MMESelfMilking.StartExisting(candidate, True, True, True)
+                If dispatched
+                    ReportAutoSelfMilking("MilkSelf cast dispatched | actor=" + actorName)
+                Else
+                    StorageUtil.UnsetIntValue(candidate, AutoSelfMilkingDispatchKey)
+                    MMELog.Alarm("[MME Extensions Auto Self-Milking] FAILURE: validated request was rejected during MilkSelf dispatch | actor=" + actorName)
+                EndIf
+            EndIf
+        EndIf
+        i -= 1
+    EndWhile
+    RestoreAutoSelfMilkingScheduling(now)
+EndFunction
+
+Function ConfirmOrCancelAutoSelfMilking(Actor candidate)
+    If candidate == None
+        Return
+    EndIf
+    Bool queueChanged = False
+    If StorageUtil.GetFloatValue(candidate, AutoSelfMilkingDueKey, 0.0) > 0.0
+        RemoveAutoSelfMilkingRequest(candidate)
+        ReportAutoSelfMilking("pending request cleared | actor=" + MMESelfMilking.GetActorName(candidate) + " | reason=milking started through another route")
+        queueChanged = True
+    EndIf
+    If StorageUtil.GetIntValue(candidate, AutoSelfMilkingDispatchKey, 0) == 1
+        StorageUtil.UnsetIntValue(candidate, AutoSelfMilkingDispatchKey)
+        ReportAutoSelfMilking("MME milking start confirmed | actor=" + MMESelfMilking.GetActorName(candidate))
+    EndIf
+    If queueChanged
+        Float now = Utility.GetCurrentGameTime()
+        RestoreAutoSelfMilkingScheduling(now)
+        ArmNextGameTimeUpdate(now)
+    EndIf
+EndFunction
+
 Function ArmNextGameTimeUpdate(Float now)
     UnregisterForUpdateGameTime()
     Float nextDeadline = 0.0
@@ -608,6 +886,15 @@ Function ArmNextGameTimeUpdate(Float now)
     EndIf
     If NextInjectionGameTime > 0.0 && (nextDeadline <= 0.0 || NextInjectionGameTime < nextDeadline)
         nextDeadline = NextInjectionGameTime
+    EndIf
+    If NextMilkCravingGameTime > 0.0 && (nextDeadline <= 0.0 || NextMilkCravingGameTime < nextDeadline)
+        nextDeadline = NextMilkCravingGameTime
+    EndIf
+    If NextMilkCravingGiveInGameTime > 0.0 && (nextDeadline <= 0.0 || NextMilkCravingGiveInGameTime < nextDeadline)
+        nextDeadline = NextMilkCravingGiveInGameTime
+    EndIf
+    If NextAutoSelfMilkingGameTime > 0.0 && (nextDeadline <= 0.0 || NextAutoSelfMilkingGameTime < nextDeadline)
+        nextDeadline = NextAutoSelfMilkingGameTime
     EndIf
     If nextDeadline <= 0.0
         Return
@@ -624,6 +911,8 @@ Function StopGameTimeScheduling()
     NextThoughtGameTime = 0.0
     NextBoundThoughtGameTime = 0.0
     NextInjectionGameTime = 0.0
+    CancelMilkCraving("game-time scheduling stopped")
+    ClearAutoSelfMilkingQueue("game-time scheduling stopped")
 EndFunction
 
 Event OnUpdateGameTime()
@@ -631,13 +920,28 @@ Event OnUpdateGameTime()
     Bool thoughtDue = NextThoughtGameTime > 0.0 && now >= NextThoughtGameTime
     Bool boundThoughtDue = NextBoundThoughtGameTime > 0.0 && now >= NextBoundThoughtGameTime
     Bool injectionDue = NextInjectionGameTime > 0.0 && now >= NextInjectionGameTime
-    If !thoughtDue && !boundThoughtDue && !injectionDue
+    Bool milkCravingDue = NextMilkCravingGameTime > 0.0 && now >= NextMilkCravingGameTime
+    Bool milkCravingGiveInDue = NextMilkCravingGiveInGameTime > 0.0 && now >= NextMilkCravingGiveInGameTime
+    Bool autoSelfMilkingDue = NextAutoSelfMilkingGameTime > 0.0 && now >= NextAutoSelfMilkingGameTime
+    If !thoughtDue && !boundThoughtDue && !injectionDue && !milkCravingDue && !milkCravingGiveInDue && !autoSelfMilkingDue
         ArmNextGameTimeUpdate(now)
         Return
     EndIf
-    ; Never cast None to an array: the VM rejects that cast, and the compiler
-    ; can reuse its temporary for the native result, causing a type mismatch.
-    Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
+    If autoSelfMilkingDue
+        ResolveDueAutoSelfMilking(now)
+    EndIf
+    ; Resolve the already-selected actor without paying for another nearby
+    ; scan. A healthy state cannot have both craving deadlines armed.
+    If milkCravingGiveInDue
+        ResolveActiveMilkCraving(now)
+        milkCravingDue = False
+    EndIf
+    Actor[] nearbyActors
+    If thoughtDue || boundThoughtDue || injectionDue || milkCravingDue
+        ; Never cast None to an array: the VM rejects that cast, and the compiler
+        ; can reuse its temporary for the native result, causing a type mismatch.
+        nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
+    EndIf
     If thoughtDue
         MMEThoughts.GenerateAndShowThought(nearbyActors, True)
         ScheduleNextThought(now)
@@ -650,6 +954,23 @@ Event OnUpdateGameTime()
     If injectionDue
         MMETentacleEffects.RunInjectionCheck(nearbyActors, False)
         ScheduleNextInjection(now)
+    EndIf
+    If milkCravingDue
+        NextMilkCravingGameTime = 0.0
+        Actor selectedCravingActor = MMEMilkCravings.BeginCraving(nearbyActors)
+        If selectedCravingActor == None
+            ScheduleNextMilkCraving(now)
+        Else
+            ActiveMilkCravingActor = selectedCravingActor
+            Float giveInDelay = MMEMilkCravings.CalculateGiveInDelay()
+            If giveInDelay <= 0.0
+                MMEMilkCravings.Report("give-in delay=0 game hours | resolving immediately | actor=" + MMEMilkCravings.GetActorName(selectedCravingActor))
+                ResolveActiveMilkCraving(now)
+            Else
+                NextMilkCravingGiveInGameTime = now + (giveInDelay / 24.0)
+                MMEMilkCravings.Report("give-in armed | actor=" + MMEMilkCravings.GetActorName(selectedCravingActor) + " | delay=" + giveInDelay + " game hours | due=" + NextMilkCravingGiveInGameTime)
+            EndIf
+        EndIf
     EndIf
     ArmNextGameTimeUpdate(now)
 EndEvent
@@ -1042,6 +1363,7 @@ Event OnMMEMilkingStart(Form actorForm, Int animationSpeed, Int milkingType)
         Return
     EndIf
     Actor milkMaid = actorForm as Actor
+    ConfirmOrCancelAutoSelfMilking(milkMaid)
     If !IsNearbyMilkMaid(milkMaid)
         Return
     EndIf
@@ -1524,6 +1846,9 @@ Int Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactio
     EndIf
     MMEAlertsSkyrimNet.SendCapacityMilestone(candidate, crossing)
     MMESkyrimNetVoiceControls.PlayFullnessSelfMilkAnimation(candidate, crossing)
+    If crossing == 2
+        QueueAutoSelfMilking(candidate)
+    EndIf
     If !processLocalReactions
         Return crossing
     EndIf

@@ -32,6 +32,16 @@ Int Function HandleActivation(Actor targetActor, String chestIdentity, Bool boss
         Return 0
     EndIf
 
+    ; An already registered Milk Maid cannot benefit from this conversion.
+    ; Resolve the chest quietly so repeated activation cannot spam the generic
+    ; forced-conversion rejection notification. Report() keeps the reason in
+    ; the existing Papyrus diagnostic channels without adding another toggle.
+    If MMEExtensionsAPI.IsMilkMaid(targetActor)
+        StorageUtil.SetIntValue(None, resolvedKey, 1)
+        Report("conversion skipped because target is already a Milk Maid | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(targetActor))
+        Return 0
+    EndIf
+
     Int chance = JsonUtil.GetIntValue(settingsFile, chanceKey, defaultChance)
     If chance < 0
         chance = 0
