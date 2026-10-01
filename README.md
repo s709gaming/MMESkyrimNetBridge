@@ -1,33 +1,36 @@
 # MME Extensions
 
-**Release status:** 1.0  
+**Release status:** 1.1
 **Main requirement:** Milk Mod Economy (and its requirements)
 
-**DOWNLOAD:**
-https://www.loverslab.com/files/file/50820-mme-milk-mod-economy-extensions/
+**Download:** [MME Milk Mod Economy Extensions on LoversLab](https://www.loverslab.com/files/file/50820-mme-milk-mod-economy-extensions/)
 
 > **IMPORTANT:** Skyrim SE/AE **1.7.9.9 is not yet supported.**
 
 **Full Requirements & Recommended Setup:**  
 [REQUIREMENTS.md](https://github.com/s709gaming/MMESkyrimNetBridge/blob/main/REQUIREMENTS.md)
 
-**Download:** https://www.loverslab.com/files/file/50820-mme-milk-mod-economy-extensions/
-
 ---
 
-Milk Mod Economy Extensions modernizes and expands ed86's popular **Milk Mod Economy** with reactions, animations, OStim support, and optional AI-powered **Skyrim.Net integration**.
+Milk Mod Economy Extensions modernizes and expands ed86's popular **Milk Mod Economy** with reactions, animations, new gameplay events, OStim support, and optional AI-powered **Skyrim.Net integration**.
 
-**Everything is OPTIONAL and adjustable through an in-game MCM.**
+**Everything is optional and adjustable through an in-game MCM.**
 
 Make Milk Maid gameplay feel more alive, reactive, and a little more shameless.
 
 ## Key Features
 
-* **Optional, but major, Skyrim.Net integration** gives nearby NPCs AI-generated voice reactions and roleplay to major MME events and can turn certain conversations into actual gameplay actions. 
+* **Optional, but major, Skyrim.Net integration** gives nearby NPCs AI-generated voice reactions, actions, and semi-intelligent roleplay around Milk Mod Economy gameplay.
 
-* Drinking milk, even straight from the tap, can increase a Milk Maid's milk level, temporarily inflate her breasts, raise arousal, and trigger moans, animations, or reactions.
+* Drinking milk, even straight from the tap, can increase a Milk Maid's milk level, temporarily inflate her breasts, raise arousal, and trigger moans, animations, notifications, or reactions.
 
-* Arousal from drinking milk is meant to trigger your other arousal mods, such as animations or events.
+* Skyrim can occasionally decide you need more milk whether you agree or not. Opening treasure chests can magically force someone nearby to drink milk, while Milk Maids may develop cravings and help themselves periodically.
+
+* Inns, bars, palace dining areas, towns, and cities can trigger nearby characters to drink milk and experience the associated erotic effects. Men may become visibly aroused, while women may become wet.
+
+* Milk Maids who remain completely full for too long may eventually take matters into their own hands and milk themselves.
+
+* Arousal caused by milk is designed to feed into other arousal mods, potentially triggering their own animations and events.
 
 * Nearby Milk Maids react as they become heavy, full, milked, or fitted with questionable milking equipment.
 
@@ -37,51 +40,120 @@ Make Milk Maid gameplay feel more alive, reactive, and a little more shameless.
 
 * Supports the modern **OStim animation framework** while retaining existing SexLab support.
 
-* Court Wizards can help reverse your Milk Maid progression after level 5, just in case things get a little TOO big.
+* Court Wizards can help reverse your Milk Maid progression after level 5, just in case things get a little too big.
+
+* Omania compatibility adds pregnancy as another wonderfully questionable path toward becoming a Milk Maid. Get eggnant. Become a Milk Maid. Regret nothing.
 
 **In short: MME still handles the milk. MME Extensions makes Skyrim notice.**
+
+## Dynamic Milk Events
+
+Milk is no longer limited to something you deliberately drink.
+
+Depending on your MCM settings, MME Extensions can trigger milk-related events naturally while exploring Skyrim.
+
+### Treasure Chests
+
+Opening a treasure chest may trigger a magical effect that forces a nearby character to drink milk.
+
+The milk behaves normally afterward, potentially increasing milk production, breast size, and arousal while triggering supported sounds, animations, notifications, and Skyrim.Net reactions.
+
+The default trigger chance is **33%**, with a **one game-hour cooldown** and no random cooldown variation. These values can be adjusted through the MCM.
+
+### Location Events
+
+Entering certain locations may cause a nearby character to suddenly drink milk.
+
+Supported locations include:
+
+* Inns and bars.
+
+* Palace dining areas.
+
+* Towns and cities.
+
+Male characters may become visibly aroused, while female characters may become wet as the milk's effects kick in.
+
+Towns and cities use a default **25% trigger chance** with a **four game-hour shared cooldown**.
+
+### Milk Maid Cravings
+
+Milk Maids may periodically develop cravings and decide to drink milk themselves.
+
+This triggers the normal milk effects, including milk gain, breast growth, arousal, and any enabled reactions.
+
+**Default interval:** 48 ± 24 game hours.
+
+### Self-Milking
+
+A Milk Maid who remains completely full for one hour without being milked may eventually decide to handle the problem herself.
+
+Because apparently Skyrim has learned the dangers of procrastination.
+
+## Skyrim.Net Integration
+
+Skyrim.Net is optional, but it is one of the largest parts of MME Extensions.
+
+Major MME events can generate context-aware AI narration and nearby NPC reactions. This includes both original MME gameplay and MME Extensions systems such as:
+
+* Drinking milk.
+
+* Magical treasure-chest milk events.
+
+* Location-based milk events.
+
+* Milk Maid cravings.
+
+* Self-milking.
+
+* Reaching 50% or 100% milk fullness.
+
+* Becoming a new Milk Maid.
+
+* Being milked.
+
+* Breastfeeding another character.
+
+* Wearing milking devices, parasite armor, tentacles, or restraints.
+
+* Clothes coming off when breasts become too large.
+
+* Other important Milk Mod Economy events.
+
+Depending on the event and your settings, reactions may include AI narration, NPC dialogue, notifications, sounds, or animations.
 
 ## OStim and SexLab Can Coexist
 
 SexLab is a master of the original MME and is needed for essential background functions and animations.
 
-SexLab is also required by the insanely popular Devious Devices and other major add-ons in the MME ecosystem.
+SexLab is also required by Devious Devices and other major add-ons in the MME ecosystem.
 
 MME Extensions allows OStim to take over the animation side and interact with the OStim ecosystem instead.
 
-## What Can Trigger Reactions?
-
-Depending on your MCM settings, AI narration, lewd sound effects, animations, or notifications can react to:
-
-* Drinking milk and becoming aroused and bustier.
-
-* Reaching 50% or 100% milk fullness.
-
-* A new Milk Maid discovering her newfound gifts.
-
-* Equipping milking devices such as milk cuirasses, parasite armor, and similar equipment.
-
-* Periodically wearing those questionable devices around Skyrim.
-
-* Being milked or breastfeeding another character.
-
-* Clothes flying off when breasts grow too large, along with other important MME events.
-
-* Try wearing **TENTACLE ARMOR**:
-  [Tentacle Armor on Nexus Mods](https://www.nexusmods.com/skyrimspecialedition/mods/62644?tab=description)
-
 ## Erotic Armor Modifications
 
-- Blacksmiths can modify your armor to fit big tits and install hidden milking equipment underneath, free of charge.
-- More kinky adventurers can have tentacles fitted underneath their armor by Alchemists or Court Wizards. This also modifies the armor to accommodate big tits.
-- The catch? The tentacles won't share their milk. Instead, they'll periodically sting and inject you with an aphrodisiac that makes you even more... productive.
-- All of the above can come with in-game notifications, sound effects, and optional Skyrim.Net AI narration.
-- **Up to a limit of 10 modifications of each type.**
-- **Unlock via "Hey, there!"**
+Blacksmiths, Alchemists, and Court Wizards can provide some highly questionable improvements to your armor.
+
+* Blacksmiths can modify armor to accommodate big tits and install hidden milking equipment underneath, free of charge.
+
+* More adventurous Milk Maids can have tentacles fitted underneath their armor by Alchemists or Court Wizards.
+
+* The tentacles will not share their milk. Instead, they periodically sting and inject the wearer with an aphrodisiac that makes her even more... productive.
+
+* Armor events can trigger notifications, sound effects, animations, and optional Skyrim.Net AI narration.
+
+* Supports up to 10 modifications of each type.
+
+* Unlocks through **"Hey, there!"**
+
+Try wearing **Tentacle Armor**:
+[Tentacle Armor on Nexus Mods](https://www.nexusmods.com/skyrimspecialedition/mods/62644?tab=description)
 
 ## Milk Maid Thoughts
 
-A recurring reaction system comments on a Milk Maid's currently worn equipment, or lack of specialized milking equipment.
+Milk Maids do not necessarily stay quiet about their situation.
+
+A recurring reaction system comments on currently worn equipment, Milk Maid status, or the suspicious absence of specialized milking equipment.
 
 Depending on your settings, the system can periodically trigger:
 
@@ -91,15 +163,23 @@ Depending on your settings, the system can periodically trigger:
 
 * Optional Skyrim.Net AI voice narration.
 
-Reactions can reference worn milking equipment, parasite or living armor, heavy restraints, or the absence of specialized milking equipment.
+Reactions can reference milking equipment, parasite or living armor, heavy restraints, breast fullness, or a lack of specialized equipment.
 
 ## New Milk Maid Creation
 
-A new Milk Maid can now be created through the existing **"Hey, there"** dialogue.
+New Milk Maids can be created through the existing **"Hey, there!"** dialogue.
 
-If the player has at least 1 milk available and the NPC is eligible, the dialogue can start a breastfeeding scene.
+If the player has at least one milk available and the NPC is eligible, the dialogue can start a breastfeeding scene.
 
 After the scene completes successfully, the NPC can become a new Milk Maid using MME's existing creation system.
+
+## Omania Integration
+
+Omania adds another route into Milk Maid life.
+
+Compatible pregnancy events can result in a character becoming a Milk Maid.
+
+Get eggnant. Become a Milk Maid. Regret nothing.
 
 ## Optional MME Settings
 
@@ -125,7 +205,7 @@ The installer offers three startup profiles:
 
 Applies easier MME settings and grants a small one-time supply of milk and a milking cuirass so you can jump quickly into the mod.
 
-If Tentacle Armor is installed, you can use that instead.
+If Tentacle Armor or Devious Devices Expansion is installed, Quick Start can also provide supported optional starter armor.
 
 ### Easy MCM Defaults + No Starter Items
 

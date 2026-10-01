@@ -28,7 +28,7 @@ Bool Function HandleActivation(Actor sourceActor, String chestIdentity, Bool bos
         Return False
     EndIf
 
-    Int chance = JsonUtil.GetIntValue("/MMEAlerts/Settings", "chestMilkTrapChance", 10)
+    Int chance = JsonUtil.GetIntValue("/MMEAlerts/Settings", "chestMilkTrapChance", 33)
     If chance < 0
         chance = 0
     ElseIf chance > 100
@@ -81,17 +81,17 @@ Bool Function HandleActivation(Actor sourceActor, String chestIdentity, Bool bos
     ShowNotificationIfOwned(drinker, milkItem)
     TryNarrateContext(drinker, milkItem)
 
-    Float baseHours = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "chestMilkTrapCooldownHours", 4.0)
-    Float variation = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "chestMilkTrapCooldownVariation", 4.0)
-    If baseHours < 1.0
-        baseHours = 1.0
+    Float baseHours = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "chestMilkTrapCooldownHours", 1.0)
+    Float variation = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "chestMilkTrapCooldownVariation", 0.0)
+    If baseHours < 0.0
+        baseHours = 0.0
     EndIf
     If variation < 0.0
         variation = 0.0
     EndIf
     Float rolledHours = baseHours + Utility.RandomFloat(0.0 - variation, variation)
-    If rolledHours < 1.0
-        rolledHours = 1.0
+    If rolledHours < 0.0
+        rolledHours = 0.0
     EndIf
     StorageUtil.SetFloatValue(None, "MMEExtensions.ChestDrink.NextAllowedGameDay", nowGame + (rolledHours / 24.0))
     Report("complete | chest=" + chestIdentity + " | actor=" + GetActorName(drinker) + " | milk=" + GetMilkName(milkItem) + " | cooldown hours=" + rolledHours)
