@@ -430,6 +430,7 @@ String Function ResolveArmorProtectionReason(MilkQUEST milkController, Armor slo
     Int milkingIndex = FindMilkingEquipmentNameDirect(milkController, armorName)
     Int basicIndex = FindBasicLivingArmorNameDirect(milkController, armorName)
     Int parasiteIndex = FindParasiteLivingArmorNameDirect(milkController, armorName)
+    Int customClass = MMECustomArmorRegistry.ClassifyCustomArmor(slotArmor)
     ; Native arrays and MME's established name rules always outrank the
     ; user-managed MilkingEquipment registry.
     String reason = ""
@@ -437,6 +438,8 @@ String Function ResolveArmorProtectionReason(MilkQUEST milkController, Armor slo
         reason = "registry=BasicLivingArmor | index=" + basicIndex + " | storedName=" + armorName
     ElseIf parasiteIndex >= 0
         reason = "registry=ParasiteLivingArmor | index=" + parasiteIndex + " | storedName=" + armorName
+    ElseIf customClass > 0
+        reason = "registry=CustomArmorRegistry | class=" + MMECustomArmorRegistry.GetClassLabel(customClass)
     ElseIf StringUtil.Find(armorName, "Milk") >= 0
         reason = "MME name rule=Milk"
     ElseIf StringUtil.Find(armorName, "Cow") >= 0
@@ -717,7 +720,10 @@ String Function GetMMEProtectedForBasicLivingArmorReason(MilkQUEST milkControlle
     EndIf
     Int milkingIndex = FindMilkingEquipmentNameDirect(milkController, armorName)
     Int parasiteIndex = FindParasiteLivingArmorNameDirect(milkController, armorName)
-    If milkingIndex >= 0
+    Int customClass = MMECustomArmorRegistry.ClassifyCustomArmor(slotArmor)
+    If customClass > 0
+        Return "registry=CustomArmorRegistry | class=" + MMECustomArmorRegistry.GetClassLabel(customClass)
+    ElseIf milkingIndex >= 0
         Return "registry=MilkingEquipment | index=" + milkingIndex
     ElseIf parasiteIndex >= 0
         Return "registry=ParasiteLivingArmor | index=" + parasiteIndex
@@ -790,7 +796,10 @@ String Function GetMMEProtectedForParasiteLivingArmorReason(MilkQUEST milkContro
     EndIf
     Int milkingIndex = FindMilkingEquipmentNameDirect(milkController, armorName)
     Int basicIndex = FindBasicLivingArmorNameDirect(milkController, armorName)
-    If milkingIndex >= 0
+    Int customClass = MMECustomArmorRegistry.ClassifyCustomArmor(slotArmor)
+    If customClass > 0
+        Return "registry=CustomArmorRegistry | class=" + MMECustomArmorRegistry.GetClassLabel(customClass)
+    ElseIf milkingIndex >= 0
         Return "registry=MilkingEquipment | index=" + milkingIndex
     ElseIf basicIndex >= 0
         Return "registry=BasicLivingArmor | index=" + basicIndex
@@ -849,8 +858,19 @@ Function Report(Bool showNotification, String reportText) Global
 EndFunction
 
 ; MME's own configured armor-name arrays are the source of truth.
-; 0 unsupported, 1 Milking Armor, 2 AM Living Armor, 3 AM Living Parasite.
+; 0 unsupported, 1 Milking Armor, 2 AM Living Armor, 3 AM Living Parasite,
+; 4 independent Dwemer Armor.
 Int Function ClassifyArmor(MilkQUEST milkController, Armor equippedArmor, String source = "unknown", Actor wearer = None) Global
+    Int armorClass = ClassifyOriginalArmor(milkController, equippedArmor, source, wearer)
+    If armorClass == 0
+        armorClass = MMECustomArmorRegistry.ClassifyCustomArmor(equippedArmor, GetArmorLookupDiagnostic())
+    EndIf
+    Return armorClass
+EndFunction
+
+; Original MME-only classification is kept separate so the compatibility
+; equip handler can prove that MME itself will not also apply the same effects.
+Int Function ClassifyOriginalArmor(MilkQUEST milkController, Armor equippedArmor, String source = "unknown", Actor wearer = None) Global
     ; Direct form properties identify MME's canonical cuirasses even if renamed.
     ; Array matching intentionally uses the live display name because that is how
     ; MME exposes configurable third-party Milking/Living/Parasite equipment.
@@ -910,6 +930,8 @@ String Function GetArmorTypeLabel(Int armorClass) Global
         Return "Living Armor"
     ElseIf armorClass == 3
         Return "Living Parasite"
+    ElseIf armorClass == 4
+        Return "Dwemer Armor"
     EndIf
     Return "Unsupported"
 EndFunction
@@ -940,6 +962,10 @@ String Function GetArmorClassificationSource(MilkQUEST milkController, Armor equ
     Int milkingIndex = FindMilkingEquipmentNameDirect(milkController, armorName)
     If milkingIndex >= 0
         Return "MilkingEquipment"
+    EndIf
+    Int customClass = MMECustomArmorRegistry.ClassifyCustomArmor(equippedArmor)
+    If customClass > 0
+        Return "CustomArmorRegistry=" + MMECustomArmorRegistry.GetClassLabel(customClass)
     EndIf
     If StringUtil.Find(armorName, "Tentacle Armor") >= 0
         Return "MME special name rule=Tentacle Armor"
@@ -988,6 +1014,12 @@ Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
 
     If armorClass == 0
         NotifyArmorDebug(diagnostic, role + " | Unsupported | " + GetArmorName(equippedArmor))
+        Return
+    EndIf
+    If armorClass == 4
+        ; Dedicated Dwemer armor intentionally owns its own threshold, story,
+        ; and milking sequence. Do not inherit Milking/Living equip reactions.
+        ReportArmor(diagnostic, "reaction delegated to dedicated Dwemer Armor system")
         Return
     EndIf
     ; Phase 2: require real live MilkQUEST membership for both Player and NPC.

@@ -148,6 +148,10 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowNarration)
 
     Armor wornArmor = selectedActor.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
     Int armorClass = MMEArmorScript.ClassifyArmor(milkController, wornArmor, "thought", selectedActor)
+    If armorClass == 4
+        MMELog.MasterDiagnostic("[MME Extensions Dwemer Armor] normal armor Thought skipped | dedicated flavor is not implemented")
+        Return False
+    EndIf
     String poolName = GetPoolName(halfPlus, armorClass)
     If poolName == ""
         ReportFailure("unsupported armor class " + armorClass + " for " + ResolveActorName(selectedActor))

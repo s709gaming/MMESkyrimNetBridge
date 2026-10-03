@@ -1,7 +1,7 @@
 Scriptname MMEExtensionsAPI Hidden
 
 ; =============================================================================
-; MME Extensions public Papyrus API (version 5)
+; MME Extensions public Papyrus API (version 8)
 ; =============================================================================
 ; This is the stable entry point for other mods. Call these wrappers instead
 ; of MMEDebug, MMENewMilkMaid, MMEOStimBreastfeeding, or other internal scripts.
@@ -15,13 +15,76 @@ Scriptname MMEExtensionsAPI Hidden
 ; transaction finishes. Listen for the documented ModEvents to observe results.
 
 Int Function GetAPIVersion() Global
-    Return 5
+    Return 8
 EndFunction
 
 ; Backend-neutral query. Returns true only for a current, authoritative MME
 ; Milk Maid registration. This does not depend on Skyrim.Net or OStim.
 Bool Function IsMilkMaid(Actor target) Global
     Return MMEArmorScript.IsMMEMilkMaid(target)
+EndFunction
+
+; Backend-neutral, player-facing story presentation introduced in API version
+; 8. The subject supplies {actor}/{ActorName}; it may be the player or an NPC.
+; True means a nonblank message was submitted to Skyrim's game-pausing story
+; box. It does not report when the player dismisses that box.
+Bool Function ShowStoryPopup(Actor subject, String storyText) Global
+    Return MMEStoryPopup.ShowStoryPopup(subject, storyText, "Public API")
+EndFunction
+
+; Selects one entry from a PapyrusUtil typed stringList pool, substitutes the
+; subject tokens, and displays it through the same story box. fallbackText is
+; used when the file or pool cannot provide a valid entry.
+Bool Function ShowRandomStoryPopup(Actor subject, String configFile, String poolName, String fallbackText = "") Global
+    Return MMEStoryPopup.ShowRandomStoryPopup(subject, configFile, poolName, fallbackText, "Public API")
+EndFunction
+
+; Backend-neutral custom armor classification introduced in API version 6.
+; Return values: 0 unsupported, 1 Milking Armor, 2 Living Armor,
+; 3 Living Parasite, 4 independent Dwemer Armor. MME's original forms/name arrays remain authoritative;
+; the unlimited JSON registry is consulted only when they do not classify it.
+Int Function GetArmorClass(Armor targetArmor) Global
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Return MMEArmorScript.ClassifyArmor(milkController, targetArmor, "Public API")
+EndFunction
+
+Bool Function IsCustomMilkArmor(Armor targetArmor) Global
+    Return MMECustomArmorRegistry.ClassifyCustomArmor(targetArmor) == 1
+EndFunction
+
+Bool Function IsCustomLivingArmor(Armor targetArmor) Global
+    Return MMECustomArmorRegistry.ClassifyCustomArmor(targetArmor) == 2
+EndFunction
+
+Bool Function IsCustomParasiteArmor(Armor targetArmor) Global
+    Return MMECustomArmorRegistry.ClassifyCustomArmor(targetArmor) == 3
+EndFunction
+
+Bool Function IsCustomDwemerArmor(Armor targetArmor) Global
+    Return MMECustomArmorRegistry.ClassifyCustomArmor(targetArmor) == 4
+EndFunction
+
+; Persistent exact-form registration. localFormID is the plugin-local ID used
+; by Game.GetFormFromFile, not the load-order-prefixed runtime FormID.
+; armorClass: 1 Milking, 2 Living, 3 Parasite, 4 Dwemer. Returns false for invalid,
+; unresolved, or already registered forms, and for a failed JSON save.
+Bool Function RegisterCustomArmor(String pluginName, Int localFormID, Int armorClass) Global
+    Return MMECustomArmorRegistry.RegisterArmor(pluginName, localFormID, armorClass)
+EndFunction
+
+; Removes one exact-form registration from the requested category and saves it.
+Bool Function UnregisterCustomArmor(String pluginName, Int localFormID, Int armorClass) Global
+    Return MMECustomArmorRegistry.UnregisterArmor(pluginName, localFormID, armorClass)
+EndFunction
+
+; Broad display-name fallbacks are supplied for mods whose forms cannot be
+; known ahead of time. Exact-form registration above is safer and preferred.
+Bool Function RegisterCustomArmorName(String armorName, Int armorClass) Global
+    Return MMECustomArmorRegistry.RegisterArmorName(armorName, armorClass)
+EndFunction
+
+Bool Function UnregisterCustomArmorName(String armorName, Int armorClass) Global
+    Return MMECustomArmorRegistry.UnregisterArmorName(armorName, armorClass)
 EndFunction
 
 ; OStim-only availability query. True means OStim is detected, supported, and

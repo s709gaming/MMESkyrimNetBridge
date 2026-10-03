@@ -19,8 +19,12 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
-$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMETentacleEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMEExtensionsAPI", "MMEExtensionsNative")
+$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMETentacleEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
+$diagnosticOverrideSource = Join-Path $projectRoot "Source\MMEDiagnosticOverrides"
+$diagnosticOverrideNames = @("MilkQUEST", "MME_StartMilking")
+$diagnosticSdk = Join-Path $projectRoot "tools\mme-diagnostic-sdk"
+$scriptNames += "MMEMilkingDiagnostics"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
 $standardDefaultsOutputDir = Join-Path $projectRoot "fomod\choices\standard\Scripts"
@@ -69,6 +73,10 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 & (Join-Path $projectRoot "tools\Test-ReactionSoundContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-MilkCravingContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-AutoSelfMilkingContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-StoryPopupContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-CustomArmorRegistryContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-DwemerArmorContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-MilkingDiagnosticContracts.ps1")
 New-Item -ItemType Directory -Force -Path $compiledDir | Out-Null
 $imports = "$sourceDir;$skyUiSdkSource;$mmeSdkSource;$ostimSdkSource;$omaniaSdkSource;$skyrimNetSdkSource;$skseSource;$vanillaSource"
 foreach ($scriptName in $scriptNames) {
@@ -80,6 +88,12 @@ foreach ($scriptName in $scriptNames) {
 }
 
 # Reject the compiled array-cast regression before replacing the release ZIP.
+# Compile diagnostic base-MME overrides against full installed framework sources,
+# not the deliberately minimal SDK declarations used by Extensions scripts.
+foreach ($overrideName in $diagnosticOverrideNames) {
+    & $compiler (Join-Path $diagnosticOverrideSource "$overrideName.psc") "-f=$flags" "-i=$diagnosticOverrideSource;$diagnosticSdk;$imports" "-o=$compiledDir"
+    if ($LASTEXITCODE -ne 0) { throw "Compilation failed for diagnostic override $overrideName" }
+}
 & (Join-Path $projectRoot "tools\Test-ScanArrayContracts.ps1") -CompiledDirectory $compiledDir -Assembler (Join-Path (Split-Path -Parent $compiler) "PapyrusAssembler.exe")
 
 # The base package is inert; compile the Recommended-only QuickStart override
@@ -140,6 +154,10 @@ foreach ($scriptName in $scriptNames) {
 }
 
 # The lifecycle feature requires the CommonLibSSE-NG SE/AE/VR bridge.
+foreach ($overrideName in $diagnosticOverrideNames) {
+    Copy-Item -LiteralPath (Join-Path $compiledDir "$overrideName.pex") -Destination $packageScripts
+    Copy-Item -LiteralPath (Join-Path $diagnosticOverrideSource "$overrideName.psc") -Destination $packageSources
+}
 if (!(Test-Path -LiteralPath $nativeDll)) {
     throw "Native lifecycle DLL missing. Run build-native.ps1 first: $nativeDll"
 }
@@ -156,7 +174,7 @@ Copy-Item -LiteralPath $ostimBreastfeedingScene -Destination $packageOStimScene
 # wording stay data-driven, while SkyrimNet.json owns integration messages.
 $packageConfig = Join-Path $stageDir "SKSE\Plugins\StorageUtilData\MMEAlerts"
 New-Item -ItemType Directory -Force -Path $packageConfig | Out-Null
-foreach ($configName in @("SkyrimNet.json", "Thoughts.json", "MilkCravings.json", "Injection.json", "TentacleEffectNarration.json", "ArmorCheckReminders.json", "NonMilkmaidDrinkNotifications.json", "ForcedMilkMaidConversion.json")) {
+foreach ($configName in @("SkyrimNet.json", "Thoughts.json", "MilkCravings.json", "Injection.json", "TentacleEffectNarration.json", "ArmorCheckReminders.json", "NonMilkmaidDrinkNotifications.json", "ForcedMilkMaidConversion.json", "CustomArmorRegistry.json", "DwemerArmorStories.json")) {
     $configPath = Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\$configName"
     if (!(Test-Path -LiteralPath $configPath)) {
         throw "Required JSON configuration is missing: $configPath"
@@ -312,6 +330,7 @@ if (Test-Path -LiteralPath $testSoundRoot) {
 Copy-Item -LiteralPath (Join-Path $projectRoot "README.md") -Destination $stageDir
 $packageDocs = Join-Path $stageDir "Docs"
 New-Item -ItemType Directory -Force -Path $packageDocs | Out-Null
+Copy-Item -LiteralPath (Join-Path $projectRoot "docs\Milking-Diagnostics.md") -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\SkyrimNet-New-Milk-Maid-Action.md") -Destination $packageDocs
 $apiDoc = Join-Path $projectRoot "docs\MMEExtensions-Modding-API.md"
 if (!(Test-Path -LiteralPath $apiDoc)) {

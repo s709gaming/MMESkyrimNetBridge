@@ -310,8 +310,8 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
     EndIf
     String actorName = ResolveActorName(wearer, "The Milk Maid")
     MMEArmorScript.ReportArmor(diagnostic, "equip narration detected | actor=" + actorName + " | role=" + role + " | armor=" + equippedArmor.GetName() + " | matched=" + matchSource + " | classification=" + armorType)
-    If armorClass == 0
-        MMEArmorScript.ReportArmor(diagnostic, "equip narration skipped: Unsupported")
+    If armorClass == 0 || armorClass == 4
+        MMEArmorScript.ReportArmor(diagnostic, "equip narration skipped: Unsupported or dedicated Dwemer Armor")
         Return -3
     EndIf
     ; Phase 2: select the independent Player/NPC toggle after classification.
@@ -1113,7 +1113,7 @@ String Function BuildNearbyArmorStatus(Actor candidate) Global
     EndIf
     Bool diagnostic = MMEArmorScript.GetArmorDiagnostic()
     MMEArmorScript.ReportArmor(diagnostic, "nearby tracker checked | actor=" + actorName + " | armor=" + armorName + " | matched=" + matchSource + " | classification=" + armorType)
-    If armorClass == 0
+    If armorClass == 0 || armorClass == 4
         Return ""
     EndIf
 

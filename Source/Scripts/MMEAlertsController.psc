@@ -103,6 +103,7 @@ Function InitializeController(Bool reportStatus = False)
     BeginSexLabFallbackGrace("controller initialization")
     RegisterMilkingEvents()
     RegisterDhlpEvents()
+    MMEDwemerArmor.ValidateConfiguration()
     ; Do not enter scripts whose bytecode imports SkyrimNetApi when the optional
     ; plugin is absent. Their internal guards remain defense in depth, but this
     ; outer boundary keeps the non-Skyrim.Net startup path completely isolated.
@@ -124,6 +125,9 @@ Function InitializeController(Bool reportStatus = False)
     ; initialization cannot clear an active cooldown.
     UnregisterForModEvent("MMEExtensions_ArmorEquipped")
     RegisterForModEvent("MMEExtensions_ArmorEquipped", "OnArmorEquipped")
+    UnregisterForModEvent("MMEExtensions_ArmorUnequipped")
+    RegisterForModEvent("MMEExtensions_ArmorUnequipped", "OnArmorUnequipped")
+    MMECustomArmorRegistry.AuditRegistry()
     UnregisterForModEvent("MMEExtensions_DungeonBossChestActivated")
     RegisterForModEvent("MMEExtensions_DungeonBossChestActivated", "OnDungeonBossChestActivated")
     UnregisterForModEvent("MMEExtensions_DungeonRegularChestActivated")
@@ -380,6 +384,7 @@ Function DisableController()
     UnregisterForModEvent("MMEExtensions_MMEEffectRemoved")
     UnregisterForMenu("Dialogue Menu")
     UnregisterForModEvent("MMEExtensions_ArmorEquipped")
+    UnregisterForModEvent("MMEExtensions_ArmorUnequipped")
     UnregisterForModEvent("MMEExtensions_InnPalaceEntered")
     UnregisterForModEvent("MMEExtensions_InnPalaceExited")
     UnregisterForModEvent("MME_AddMilkMaid")
@@ -387,6 +392,7 @@ Function DisableController()
     UnregisterForModEvent("MilkQuest.StartMilkingMachine")
     UnregisterForModEvent("MilkQuest.StopMilkingMachine")
     UnregisterForModEvent("MME_MilkingDone")
+    UnregisterForModEvent("MME_MilkCycleComplete")
     UnregisterForModEvent("dhlp-Suspend")
     UnregisterForModEvent("dhlp-Resume")
     StorageUtil.UnsetIntValue(None, DhlpSuspendedKey)
@@ -1197,7 +1203,29 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
         MMEArmorScript.ReportArmor(diagnostic, "armor resolve failed | " + pluginName + ":" + (localArmorForm as Int))
         Return
     EndIf
+    MMECustomArmorRegistry.HandleCustomArmorEquipped(wearer, equippedArmor)
     MMEArmorScript.HandleArmorEquipped(wearer, equippedArmor)
+EndEvent
+
+; Cleans up JSON-backed Living/Parasite effects after the exact ARMO leaves.
+Event OnArmorUnequipped(String eventName, String pluginName, Float localArmorForm, Form sender)
+    If !IsExtensionsEnabled()
+        Return
+    EndIf
+    Actor wearer = sender as Actor
+    If wearer == None || pluginName == ""
+        MMELog.MasterDiagnostic("[MME Extensions Custom Armor] unequip rejected: actor or plugin missing")
+        Return
+    EndIf
+    Armor unequippedArmor = Game.GetFormFromFile(localArmorForm as Int, pluginName) as Armor
+    If unequippedArmor == None
+        MMELog.MasterDiagnostic("[MME Extensions Custom Armor] armor resolve failed on unequip | " + pluginName + ":" + (localArmorForm as Int))
+        Return
+    EndIf
+    MMECustomArmorRegistry.HandleCustomArmorUnequipped(wearer, unequippedArmor)
+    If MMECustomArmorRegistry.ClassifyCustomArmor(unequippedArmor) == 4
+        MMEDwemerArmor.HandleArmorRemoved(wearer)
+    EndIf
 EndEvent
 
 ; Adds coverage for third-party mods using MME's public creation request.
@@ -1295,9 +1323,12 @@ Function RegisterMilkingEvents()
     UnregisterForModEvent("MilkQuest.StartMilkingMachine")
     UnregisterForModEvent("MilkQuest.StopMilkingMachine")
     UnregisterForModEvent("MME_MilkingDone")
+    UnregisterForModEvent("MME_MilkCycleComplete")
     RegisterForModEvent("MilkQuest.StartMilkingMachine", "OnMMEMilkingStart")
     RegisterForModEvent("MilkQuest.StopMilkingMachine", "OnMMEMilkingStop")
     RegisterForModEvent("MME_MilkingDone", "OnMMEMilkingDone")
+    RegisterForModEvent("MME_MilkCycleComplete", "OnMMEMilkCycleComplete")
+    MMEMilkingDiagnostics.ResetWatchdogs()
 EndFunction
 
 ; Subscribes to the DHLP Suspend/Resume convention used by other mods before
@@ -1363,6 +1394,10 @@ Event OnMMEMilkingStart(Form actorForm, Int animationSpeed, Int milkingType)
         Return
     EndIf
     Actor milkMaid = actorForm as Actor
+    ; Dwemer Mode 4 resets MME's animation flag before this authoritative
+    ; start event. Reassert its prepared standing event here so its ordering
+    ; matches MME's original Living/Parasite Mode-3 sequence.
+    MMEDwemerArmor.HandleMMEMilkingStart(milkMaid)
     ConfirmOrCancelAutoSelfMilking(milkMaid)
     If !IsNearbyMilkMaid(milkMaid)
         Return
@@ -1399,6 +1434,18 @@ Event OnMMEMilkingDone(Form actorForm, Int bottles, Int boobgasmCount, Int cumCo
     ; per-actor state prevents the normal stop/done pair from playing twice.
     Actor milkMaid = actorForm as Actor
     FinishMilking(milkMaid)
+EndEvent
+
+; MME sends this after completing its normal production batch. The event has no
+; actor payload, so the dedicated Dwemer service performs one native nearby scan.
+; SendModEvent appends the fourth sender argument to the three explicit values.
+Event OnMMEMilkCycleComplete(String eventName, String strArg, Float numArg, Form sender)
+    MMEMilkingDiagnostics.Trace("completion event received | sender=" + sender)
+    If !IsExtensionsEnabled()
+        MMEMilkingDiagnostics.Trace("completion ignored | Extensions disabled")
+        Return
+    EndIf
+    MMEDwemerArmor.ProcessNearbyDwemerArmor()
 EndEvent
 
 ; Clears per-actor session state and emits one nearby end reaction at most.
@@ -1625,6 +1672,7 @@ EndFunction
 
 ; Services independent local-capacity and SkyrimNet status schedules.
 Event OnUpdate()
+    MMEMilkingDiagnostics.CheckWatchdogs()
     ; Snapshot due flags before executing work so each deadline is serviced at
     ; most once per callback. Capacity and Skyrim.Net share the same actor scan.
     If !IsExtensionsEnabled()

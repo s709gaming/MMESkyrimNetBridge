@@ -7,3 +7,4 @@ Bool Property MME_SubjectSlave Auto Conditional
 Int Property MME_FreeMaidSlots Auto Conditional
 Float Property MME_SubjectMilk Auto Conditional
 Float Property MME_TargetMilk Auto Conditional
+Bool Property Buffs Auto

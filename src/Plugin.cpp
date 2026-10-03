@@ -43,6 +43,7 @@ namespace
     constexpr auto kMMEEffectRemovedEvent = "MMEExtensions_MMEEffectRemoved";
     constexpr auto kPotionEvent = "MMEExtensions_PotionConsumed";
     constexpr auto kArmorEvent = "MMEExtensions_ArmorEquipped";
+    constexpr auto kArmorUnequippedEvent = "MMEExtensions_ArmorUnequipped";
     constexpr auto kDungeonBossChestEvent = "MMEExtensions_DungeonBossChestActivated";
     constexpr auto kDungeonRegularChestEvent = "MMEExtensions_DungeonRegularChestActivated";
     constexpr auto kInnPalaceEnteredEvent = "MMEExtensions_InnPalaceEntered";
@@ -640,7 +641,7 @@ namespace
         SKSE::log::info("potion equip sent: actor {:08X}, {}:{:06X}", actor->GetFormID(), sourceFile->GetFilename(), potion->GetLocalFormID());
     }
 
-    void SendArmorEvent(RE::Actor* actor, RE::TESForm* armor)
+    void SendArmorEvent(RE::Actor* actor, RE::TESForm* armor, bool equipped)
     {
         auto* source = SKSE::GetModCallbackEventSource();
         auto* sourceFile = armor ? armor->GetFile(0) : nullptr;
@@ -648,13 +649,13 @@ namespace
             return;
         }
         SKSE::ModCallbackEvent event{
-            RE::BSFixedString(kArmorEvent),
+            RE::BSFixedString(equipped ? kArmorEvent : kArmorUnequippedEvent),
             RE::BSFixedString(sourceFile->GetFilename()),
             static_cast<float>(armor->GetLocalFormID()),
             actor
         };
         source->SendEvent(&event);
-        SKSE::log::info("armor equip sent: actor {:08X}, {}:{:06X}", actor->GetFormID(), sourceFile->GetFilename(), armor->GetLocalFormID());
+        SKSE::log::info("armor {} sent: actor {:08X}, {}:{:06X}", equipped ? "equip" : "unequip", actor->GetFormID(), sourceFile->GetFilename(), armor->GetLocalFormID());
     }
 
     class LifecycleEventSink final :
@@ -816,7 +817,7 @@ namespace
             const RE::TESEquipEvent* event,
             RE::BSTEventSource<RE::TESEquipEvent>*) override
         {
-            if (!event || !event->equipped || !event->actor) {
+            if (!event || !event->actor) {
                 return RE::BSEventNotifyControl::kContinue;
             }
             // Player potion consumption is owned by the quest alias because the
@@ -824,11 +825,11 @@ namespace
             // This global sink covers NPC consumables plus all armor candidates.
             auto* actor = event->actor->As<RE::Actor>();
             auto* item = RE::TESForm::LookupByID(event->baseObject);
-            if (actor && item && item->GetFormType() == RE::FormType::AlchemyItem &&
+            if (event->equipped && actor && item && item->GetFormType() == RE::FormType::AlchemyItem &&
                 actor != RE::PlayerCharacter::GetSingleton()) {
                 SendPotionEvent(actor, item);
             } else if (actor && item && item->GetFormType() == RE::FormType::Armor) {
-                SendArmorEvent(actor, item);
+                SendArmorEvent(actor, item, event->equipped);
             }
             return RE::BSEventNotifyControl::kContinue;
         }

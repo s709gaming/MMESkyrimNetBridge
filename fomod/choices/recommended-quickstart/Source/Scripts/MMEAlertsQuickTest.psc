@@ -6,6 +6,7 @@ String QuickStartGrantKey = "MMEExtensions.QuickStart.Granted"
 String QuickStartMilkCuirassGrantKey = "MMEExtensions.QuickStart.MilkCuirassGranted"
 String QuickStartTentacleMeatGrantKey = "MMEExtensions.QuickStart.TentacleMeatGranted"
 String QuickStartDDOpenStraitjacketGrantKey = "MMEExtensions.QuickStart.DDOpenStraitjacketGranted"
+String QuickStartDwarvenDeviousCuirassGrantKey = "MMEExtensions.QuickStart.DwarvenDeviousCuirassGranted"
 Bool milkVarietyGranted = False
 Bool quickStartScheduled = False
 
@@ -24,7 +25,8 @@ Function ScheduleTestSetup()
     If StorageUtil.GetIntValue(None, QuickStartGrantKey, 0) != 0 \
     && StorageUtil.GetIntValue(None, QuickStartMilkCuirassGrantKey, 0) != 0 \
     && StorageUtil.GetIntValue(None, QuickStartTentacleMeatGrantKey, 0) != 0 \
-    && StorageUtil.GetIntValue(None, QuickStartDDOpenStraitjacketGrantKey, 0) != 0
+    && StorageUtil.GetIntValue(None, QuickStartDDOpenStraitjacketGrantKey, 0) != 0 \
+    && StorageUtil.GetIntValue(None, QuickStartDwarvenDeviousCuirassGrantKey, 0) != 0
         Return
     EndIf
     quickStartScheduled = True
@@ -47,6 +49,7 @@ Function ApplyTestSetup()
     EndIf
     GrantMilkCuirassOnce(playerActor)
     GrantOptionalArmorBonuses(playerActor)
+    GrantDwarvenDeviousCuirassOnce(playerActor)
     If milkVarietyGranted || StorageUtil.GetIntValue(None, QuickStartGrantKey, 0) != 0
         Return
     EndIf
@@ -96,6 +99,28 @@ Function GrantOptionalArmorBonuses(Actor playerActor)
         If Game.GetModByName(deviousDevicesPlugin) != 255
             GrantOptionalArmor(playerActor, deviousDevicesPlugin, 0x039C6F) ; Black Ebonite Straitjacket (Open)
         EndIf
+    EndIf
+EndFunction
+
+; Optional test support for the JSON-backed Living Armor registry. The latch is
+; deliberately left unset while the plugin is absent, allowing a later install
+; to receive the unenchanted test cuirass without a new save or MCM reset.
+Function GrantDwarvenDeviousCuirassOnce(Actor playerActor)
+    If playerActor == None || StorageUtil.GetIntValue(None, QuickStartDwarvenDeviousCuirassGrantKey, 0) != 0
+        Return
+    EndIf
+    String pluginName = "DwarvenDeviousCuirass.esp"
+    If Game.GetModByName(pluginName) == 255
+        Return
+    EndIf
+
+    Armor unenchantedCuirass = Game.GetFormFromFile(0x000800, pluginName) as Armor
+    If unenchantedCuirass != None
+        playerActor.AddItem(unenchantedCuirass, 1, False)
+        StorageUtil.SetIntValue(None, QuickStartDwarvenDeviousCuirassGrantKey, 1)
+        MMEArmorScript.ReportArmor(MMEArmorScript.GetArmorDiagnostic(), "Recommended QuickStart granted the unenchanted Dwarven Devious Cuirass")
+    Else
+        MMELog.Alarm("[MME Extensions QuickStart] DwarvenDeviousCuirass.esp is loaded, but the unenchanted cuirass did not resolve")
     EndIf
 EndFunction
 

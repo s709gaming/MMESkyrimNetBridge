@@ -1,7 +1,7 @@
 # MME Extensions Modding API
 
 This document describes the stable Papyrus entry points and ModEvents intended
-for other Skyrim mods. The current API version is **5**.
+for other Skyrim mods. The current API version is **8**.
 
 Use `MMEExtensionsAPI.psc`. Do not call `MMEDebug`, `MMENewMilkMaid`,
 `MMEOStimBreastfeeding`, or the Skyrim.Net bridge scripts directly. Those are
@@ -40,7 +40,7 @@ check `GetAPIVersion()` before depending on features introduced by a later API.
 Int version = MMEExtensionsAPI.GetAPIVersion()
 ```
 
-Returns `5` for this release.
+Returns `8` for this release.
 
 ### IsMilkMaid
 
@@ -51,6 +51,128 @@ Bool registered = MMEExtensionsAPI.IsMilkMaid(targetActor)
 Backend-neutral. Returns whether the actor is currently registered as an MME
 Milk Maid. `None` returns false. This is a registration query, not a general
 actor-availability or scene-safety check.
+
+### Story popups
+
+API version 8 provides backend-neutral access to the same large, game-pausing
+story presentation used by MME's Living/Parasite and Lactacid sequences. These
+functions only present text. They do not start animations, narration, sounds,
+milking, or Milk Maid conversion.
+
+```papyrus
+Bool shown = MMEExtensionsAPI.ShowStoryPopup(
+    targetActor,
+    "A strange warmth spreads through {ActorName}."
+)
+```
+
+`targetActor` supplies the name used for `{actor}` and `{ActorName}`. It may be
+the player or an NPC, but the story box is always shown to the player. `true`
+means valid text was submitted to Skyrim's message box; Skyrim does not expose
+whether or when the player dismissed it.
+
+Data-driven integrations can select a random entry from a PapyrusUtil typed
+`stringList` pool:
+
+```papyrus
+Bool shown = MMEExtensionsAPI.ShowRandomStoryPopup(
+    targetActor,
+    "/MyMod/Stories",
+    "transformation_start",
+    "Something strange happens to {ActorName}."
+)
+```
+
+The corresponding `SKSE/Plugins/StorageUtilData/MyMod/Stories.json` structure
+is:
+
+```json
+{
+  "stringList": {
+    "transformation_start": [
+      "Magic gathers around {ActorName}.",
+      "{actor} feels an unfamiliar power awakening."
+    ]
+  }
+}
+```
+
+The optional fallback is displayed when the file is missing or malformed, the
+pool is absent or empty, or the selected entry is blank. Without a usable pool
+or fallback, the function returns `false`. Configuration failures use MME
+Extensions' smoke-alarm trace, while ordinary successful activity is logged
+only when the master Papyrus logging toggle is enabled. Callers remain
+responsible for their own feature toggle, timing, and eligibility checks.
+
+### Custom armor registry
+
+API version 6 adds an unlimited, persistent compatibility registry for armor
+that should behave like MME equipment without consuming one of MME's ten
+array entries. Categories are:
+
+- `1`: Milking Armor
+- `2`: Living Armor
+- `3`: Living Parasite
+- `4`: Dwemer Armor
+
+```papyrus
+Int armorClass = MMEExtensionsAPI.GetArmorClass(targetArmor)
+Bool added = MMEExtensionsAPI.RegisterCustomArmor("MyArmor.esp", 0x812, 2)
+Bool removed = MMEExtensionsAPI.UnregisterCustomArmor("MyArmor.esp", 0x812, 2)
+```
+
+`RegisterCustomArmor` and `UnregisterCustomArmor` use a plugin-local FormID,
+the same ID expected by `Game.GetFormFromFile`; do not pass a load-order
+prefix. Registration is saved immediately to
+`SKSE/Plugins/StorageUtilData/MMEAlerts/CustomArmorRegistry.json` and survives
+save changes because it is a mod-level compatibility setting. A form can be in
+only one custom category. Both functions return `false` for invalid input,
+unresolved/not-found forms, duplicates, or a failed save.
+
+The four custom-only queries distinguish this registry from MME's built-in
+forms and arrays:
+
+```papyrus
+Bool milkArmor = MMEExtensionsAPI.IsCustomMilkArmor(targetArmor)
+Bool livingArmor = MMEExtensionsAPI.IsCustomLivingArmor(targetArmor)
+Bool parasiteArmor = MMEExtensionsAPI.IsCustomParasiteArmor(targetArmor)
+Bool dwemerArmor = MMEExtensionsAPI.IsCustomDwemerArmor(targetArmor)
+```
+
+For integrations that cannot know a form identity in advance, broad display
+name fallbacks are also available:
+
+```papyrus
+Bool added = MMEExtensionsAPI.RegisterCustomArmorName("Example Living Armor", 2)
+Bool removed = MMEExtensionsAPI.UnregisterCustomArmorName("Example Living Armor", 2)
+```
+
+Exact-form registration is strongly preferred. A display name can be shared
+by unrelated records or changed by another mod or translation.
+
+On equip, a custom entry follows its matching behavior: it can
+register the wearer as a Milk Maid, and Living/Parasite armor applies MME's
+living-armor passive and minimum Lactacid state. On unequip, the passive is
+removed only after no other recognized Living/Parasite armor remains worn.
+Original MME classifications always win, preventing duplicate effects.
+
+Dwemer Armor is deliberately independent. It does not receive the Living or
+Parasite passive, narration, Thoughts, or service-reminder behavior. Its
+dedicated system checks MME's authoritative maximum capacity after production
+cycles and automatically invokes MME's external milking route at 90 percent.
+
+Users may also edit the JSON directly. Exact entries use this format, with the
+third field serving only as a readable label:
+
+```json
+"DwarvenDeviousCuirass.esp|2048|Dwarven Devious Cuirass"
+```
+
+The shipped defaults classify only the unenchanted Dwarven Devious Cuirass
+record (`0x800`) as Dwemer Armor. The enchanted `0x80A` record is unsupported.
+Compatibility is inert when that plugin is absent and does not require Devious Devices. Normal registry activity is logged
+only when the master Papyrus logging toggle is enabled; malformed configuration
+or failed persistence uses the existing always-on smoke-alarm logging path.
 
 ### IsOStimBreastfeedingAvailable
 

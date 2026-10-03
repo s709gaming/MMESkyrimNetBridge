@@ -16,8 +16,17 @@ EndFunction
 Float Function getLactacidCurrent(Actor akActor) Global
     Return 0.0
 EndFunction
+Bool Function setLactacidCurrent(Actor akActor, Float Value) Global
+    Return False
+EndFunction
 Bool Function changeLactacidCurrent(Actor akActor, Float Delta) Global
     Return False
+EndFunction
+Int Function getBreastRows(Actor akActor) Global
+    Return 1
+EndFunction
+Int Function setBreastRows(Actor akActor, Int Value) Global
+    Return Value
 EndFunction
 Function changeMilkCurrent(Actor akActor, Float Delta, Bool enforceMaxValue) Global
 EndFunction

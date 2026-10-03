@@ -718,7 +718,7 @@ class ServiceTests(unittest.TestCase):
 
         self.assertIn('Scriptname MMEExtensionsAPI Hidden', api)
         self.assertIn('Int Function GetAPIVersion() Global', api)
-        self.assertIn('Return 2', api)
+        self.assertIn('Return 6', api)
         self.assertIn('Bool Function IsMilkMaid(Actor target) Global', api)
         self.assertIn('Return MMEArmorScript.IsMMEMilkMaid(target)', api)
         self.assertIn('Bool Function StartOStimBreastfeeding(Actor milkSource, Actor drinker) Global', api)

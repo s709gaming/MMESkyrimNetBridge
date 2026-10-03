@@ -49,6 +49,11 @@ Bool Function TryShow(Actor speaker) Global
     String poolName = "noarmor"
     If wornArmor != None
         armorClass = MMEArmorScript.ClassifyArmor(milkController, wornArmor, "service-reminder", playerActor)
+        If armorClass == 4
+            ; Dwemer flavor/reminder content is intentionally reserved for its
+            ; later dedicated expansion, never borrowed from an old category.
+            Return False
+        EndIf
         ; Tentacle/Spriggan and the three configured arrays receive a concrete
         ; class above. Other canonical/special MME protections (for example an
         ; unmapped native breast form) must not fall through as ordinary armor.
