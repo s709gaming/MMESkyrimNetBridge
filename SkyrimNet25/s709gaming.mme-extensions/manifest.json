@@ -78,6 +78,6 @@
         ]
       }
     ],
-    "attestation": "The shared MME Extensions Papyrus callbacks have been tested in game without save corruption or quest breakage. The SkyrimNet 25 external-layer packaging remains subject to in-game compatibility testing."
+    "attestation": "The shared MME Extensions Papyrus callbacks have been tested in game without save corruption or quest breakage. The Skyrim.Net 25+ external layer validates successfully with the official Beta 26 content validator."
   }
 }

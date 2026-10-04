@@ -194,12 +194,11 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('mme_player_gives_milk_to_speaker_to_drink.yaml', build)
         self.assertIn('mme_speaker_gives_milk_to_player_to_drink.yaml', build)
 
-    def test_skyrimnet25_fomod_bundle_is_generated_from_canonical_content(self):
+    def test_skyrimnet25_plus_bundle_is_always_installed_from_canonical_content(self):
         manifest_path = ROOT / 'SkyrimNet25/s709gaming.mme-extensions/manifest.json'
         manifest = json.loads(manifest_path.read_text())
         fomod = (ROOT / 'fomod/ModuleConfig.xml').read_text()
         build = (ROOT / 'build-package.ps1').read_text()
-        maintenance = (ROOT / 'SkyrimNet25/README.md').read_text()
 
         self.assertEqual(manifest['id'], 's709gaming.mme-extensions')
         self.assertEqual(manifest['type'], 'bundle')
@@ -218,12 +217,14 @@ class ServiceTests(unittest.TestCase):
         for action_path in (ROOT / 'SkyrimNetActions').glob('*.yaml'):
             self.assertIn('eligibilityRules:', action_path.read_text(), action_path.name)
 
-        self.assertIn('type="SelectAtMostOne"', fomod)
-        self.assertIn('Install SkyrimNet 25 compatibility', fomod)
-        self.assertIn('fomod\\choices\\skyrimnet25\\s709gaming.mme-extensions', fomod)
+        self.assertNotIn('Leave unchecked for SkyrimNet 24', fomod)
+        self.assertNotIn('Install SkyrimNet 25 compatibility', fomod)
+        self.assertIn('<folder source="SKSE" destination="SKSE"', fomod)
+        self.assertNotIn('SKSE\\Plugins\\SkyrimNet\\prompts"', build)
+        self.assertNotIn('SKSE\\Plugins\\SkyrimNet\\config\\actions', build)
+        self.assertIn('SKSE\\Plugins\\SkyrimNet\\external\\$skyrimNet25PluginId', build)
         self.assertIn('SkyrimNet25\\$skyrimNet25PluginId', build)
         self.assertIn('ToLowerInvariant() + ".yaml"', build)
-        self.assertIn('The actions and prompts are not duplicated here.', maintenance)
 
     def test_targeted_new_milkmaid_action_reuses_native_mme_conversion(self):
         action = (ROOT / 'SkyrimNetActions/mme_make_target_new_milkmaid.yaml').read_text()

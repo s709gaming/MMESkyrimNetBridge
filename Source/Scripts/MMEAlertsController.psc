@@ -6,6 +6,10 @@ Function OnTentaclePlayerLine(String response, Int success)
     MMEAlertsSkyrimNet.PlayTentaclePlayerLine(response, success)
 EndFunction
 
+Function OnDwemerEffectPlayerLine(String response, Int success)
+    MMEAlertsSkyrimNet.PlayDwemerEffectPlayerLine(response, success)
+EndFunction
+
 Function OnNewMilkMaidPlayerLine(String response, Int success)
     MMEAlertsSkyrimNet.PlayNewMilkMaidPlayerLine(response, success)
 EndFunction
@@ -54,6 +58,7 @@ Bool OpeningDialogueAlarmActive = False
 Float NextThoughtGameTime = 0.0
 Float NextBoundThoughtGameTime = 0.0
 Float NextInjectionGameTime = 0.0
+Float NextDwemerEffectGameTime = 0.0
 Float NextMilkCravingGameTime = 0.0
 Float NextMilkCravingGiveInGameTime = 0.0
 Float NextAutoSelfMilkingGameTime = 0.0
@@ -87,6 +92,7 @@ Function InitializeController(Bool reportStatus = False)
     ; while disabled so Skyrim cannot retain a stale dialogue choice.
     RefreshOStimDialogueAvailability()
     MMEArmorScript.RestorePlayerMovementIfNeeded(Game.GetPlayer(), MMEArmorScript.GetArmorDiagnostic())
+    MMEArmorIntroduction.RestorePlayerMovementIfNeeded(Game.GetPlayer(), "controller initialization")
     If !IsExtensionsEnabled()
         DisableController()
         If reportStatus
@@ -104,6 +110,8 @@ Function InitializeController(Bool reportStatus = False)
     RegisterMilkingEvents()
     RegisterDhlpEvents()
     MMEDwemerArmor.ValidateConfiguration()
+    MMETimedArmorLock.AuditCatalogs()
+    MMETimedArmorLock.RecoverAfterLoad()
     ; Do not enter scripts whose bytecode imports SkyrimNetApi when the optional
     ; plugin is absent. Their internal guards remain defense in depth, but this
     ; outer boundary keeps the non-Skyrim.Net startup path completely isolated.
@@ -175,21 +183,29 @@ EndFunction
 ; The native bridge has already restricted this event to curated vanilla/DLC
 ; boss-chest bases. The sender is the actor who activated the placed chest;
 ; chestIdentity uniquely keys the one-shot roll without a record override.
-Event OnDungeonBossChestActivated(String eventName, String chestIdentity, Float baseLocalID, Form sender)
+Event OnDungeonBossChestActivated(String eventName, String chestIdentity, Float dwemerRuinFlag, Form sender)
     Actor targetActor = sender as Actor
-    MMELog.MasterDiagnostic("[MME Extensions Dungeon Chest] native boss activation | chest=" + chestIdentity + " | base=" + baseLocalID as Int)
-    Int conversionCompleted = MMEDungeonChestConversion.HandleActivation(targetActor, chestIdentity, True)
-    If conversionCompleted != 1
-        MMEChestMilkTrap.HandleActivation(targetActor, chestIdentity, True)
+    Bool inDwemerRuin = dwemerRuinFlag >= 0.5
+    MMELog.MasterDiagnostic("[MME Extensions Dungeon Chest] native boss activation | chest=" + chestIdentity + " | Dwemer ruin=" + inDwemerRuin)
+    Int armorCompleted = MMEChestArmorTrap.HandleActivation(targetActor, chestIdentity, inDwemerRuin)
+    If armorCompleted != 1
+        Int conversionCompleted = MMEDungeonChestConversion.HandleActivation(targetActor, chestIdentity, True)
+        If conversionCompleted != 1
+            MMEChestMilkTrap.HandleActivation(targetActor, chestIdentity, True)
+        EndIf
     EndIf
 EndEvent
 
-Event OnDungeonRegularChestActivated(String eventName, String chestIdentity, Float baseLocalID, Form sender)
+Event OnDungeonRegularChestActivated(String eventName, String chestIdentity, Float dwemerRuinFlag, Form sender)
     Actor targetActor = sender as Actor
-    MMELog.MasterDiagnostic("[MME Extensions Dungeon Chest] native regular activation | chest=" + chestIdentity + " | base=" + baseLocalID as Int)
-    Int conversionCompleted = MMEDungeonChestConversion.HandleActivation(targetActor, chestIdentity, False)
-    If conversionCompleted != 1
-        MMEChestMilkTrap.HandleActivation(targetActor, chestIdentity, False)
+    Bool inDwemerRuin = dwemerRuinFlag >= 0.5
+    MMELog.MasterDiagnostic("[MME Extensions Dungeon Chest] native regular activation | chest=" + chestIdentity + " | Dwemer ruin=" + inDwemerRuin)
+    Int armorCompleted = MMEChestArmorTrap.HandleActivation(targetActor, chestIdentity, inDwemerRuin)
+    If armorCompleted != 1
+        Int conversionCompleted = MMEDungeonChestConversion.HandleActivation(targetActor, chestIdentity, False)
+        If conversionCompleted != 1
+            MMEChestMilkTrap.HandleActivation(targetActor, chestIdentity, False)
+        EndIf
     EndIf
 EndEvent
 
@@ -565,6 +581,7 @@ Function RefreshGameTimeScheduling()
     ScheduleNextThought(now)
     ScheduleNextBoundThought(now)
     ScheduleNextInjection(now)
+    ScheduleNextDwemerEffect(now)
     RestoreMilkCravingScheduling(now)
     RestoreAutoSelfMilkingScheduling(now)
     ArmNextGameTimeUpdate(now)
@@ -587,6 +604,12 @@ EndFunction
 Function RefreshInjectionScheduling()
     Float now = Utility.GetCurrentGameTime()
     ScheduleNextInjection(now)
+    ArmNextGameTimeUpdate(now)
+EndFunction
+
+Function RefreshDwemerEffectScheduling()
+    Float now = Utility.GetCurrentGameTime()
+    ScheduleNextDwemerEffect(now)
     ArmNextGameTimeUpdate(now)
 EndFunction
 
@@ -657,6 +680,19 @@ Function ScheduleNextInjection(Float now)
     Float nextInterval = MMETentacleEffects.CalculateNextInterval(baseInterval, variation)
     NextInjectionGameTime = now + (nextInterval / 24.0)
     MMETentacleEffects.TraceDiagnostic(False, "schedule armed | next=" + nextInterval + " game hours")
+EndFunction
+
+Function ScheduleNextDwemerEffect(Float now)
+    If !MMEDwemerEffects.IsEnabled()
+        NextDwemerEffectGameTime = 0.0
+        MMEDwemerEffects.TraceDiagnostic(False, "schedule disabled")
+        Return
+    EndIf
+    Float baseInterval = JsonUtil.GetFloatValue(SettingsFile, "dwemerEffectInterval", 12.0)
+    Float variation = JsonUtil.GetFloatValue(SettingsFile, "dwemerEffectVariation", 4.0)
+    Float nextInterval = MMEDwemerEffects.CalculateNextInterval(baseInterval, variation)
+    NextDwemerEffectGameTime = now + (nextInterval / 24.0)
+    MMEDwemerEffects.TraceDiagnostic(False, "schedule armed | next=" + nextInterval + " game hours")
 EndFunction
 
 Function RestoreMilkCravingScheduling(Float now)
@@ -893,6 +929,9 @@ Function ArmNextGameTimeUpdate(Float now)
     If NextInjectionGameTime > 0.0 && (nextDeadline <= 0.0 || NextInjectionGameTime < nextDeadline)
         nextDeadline = NextInjectionGameTime
     EndIf
+    If NextDwemerEffectGameTime > 0.0 && (nextDeadline <= 0.0 || NextDwemerEffectGameTime < nextDeadline)
+        nextDeadline = NextDwemerEffectGameTime
+    EndIf
     If NextMilkCravingGameTime > 0.0 && (nextDeadline <= 0.0 || NextMilkCravingGameTime < nextDeadline)
         nextDeadline = NextMilkCravingGameTime
     EndIf
@@ -901,6 +940,10 @@ Function ArmNextGameTimeUpdate(Float now)
     EndIf
     If NextAutoSelfMilkingGameTime > 0.0 && (nextDeadline <= 0.0 || NextAutoSelfMilkingGameTime < nextDeadline)
         nextDeadline = NextAutoSelfMilkingGameTime
+    EndIf
+    Float nextTimedArmorDeadline = MMETimedArmorLock.GetNextDeadline()
+    If nextTimedArmorDeadline > 0.0 && (nextDeadline <= 0.0 || nextTimedArmorDeadline < nextDeadline)
+        nextDeadline = nextTimedArmorDeadline
     EndIf
     If nextDeadline <= 0.0
         Return
@@ -912,11 +955,17 @@ Function ArmNextGameTimeUpdate(Float now)
     RegisterForSingleUpdateGameTime(delayHours)
 EndFunction
 
+Function RefreshTimedArmorScheduling()
+    Float now = Utility.GetCurrentGameTime()
+    ArmNextGameTimeUpdate(now)
+EndFunction
+
 Function StopGameTimeScheduling()
     UnregisterForUpdateGameTime()
     NextThoughtGameTime = 0.0
     NextBoundThoughtGameTime = 0.0
     NextInjectionGameTime = 0.0
+    NextDwemerEffectGameTime = 0.0
     CancelMilkCraving("game-time scheduling stopped")
     ClearAutoSelfMilkingQueue("game-time scheduling stopped")
 EndFunction
@@ -926,12 +975,18 @@ Event OnUpdateGameTime()
     Bool thoughtDue = NextThoughtGameTime > 0.0 && now >= NextThoughtGameTime
     Bool boundThoughtDue = NextBoundThoughtGameTime > 0.0 && now >= NextBoundThoughtGameTime
     Bool injectionDue = NextInjectionGameTime > 0.0 && now >= NextInjectionGameTime
+    Bool dwemerEffectDue = NextDwemerEffectGameTime > 0.0 && now >= NextDwemerEffectGameTime
     Bool milkCravingDue = NextMilkCravingGameTime > 0.0 && now >= NextMilkCravingGameTime
     Bool milkCravingGiveInDue = NextMilkCravingGiveInGameTime > 0.0 && now >= NextMilkCravingGiveInGameTime
     Bool autoSelfMilkingDue = NextAutoSelfMilkingGameTime > 0.0 && now >= NextAutoSelfMilkingGameTime
-    If !thoughtDue && !boundThoughtDue && !injectionDue && !milkCravingDue && !milkCravingGiveInDue && !autoSelfMilkingDue
+    Float timedArmorDeadline = MMETimedArmorLock.GetNextDeadline()
+    Bool timedArmorDue = timedArmorDeadline > 0.0 && now >= timedArmorDeadline
+    If !thoughtDue && !boundThoughtDue && !injectionDue && !dwemerEffectDue && !milkCravingDue && !milkCravingGiveInDue && !autoSelfMilkingDue && !timedArmorDue
         ArmNextGameTimeUpdate(now)
         Return
+    EndIf
+    If timedArmorDue
+        MMETimedArmorLock.ResolveDue(now)
     EndIf
     If autoSelfMilkingDue
         ResolveDueAutoSelfMilking(now)
@@ -943,7 +998,7 @@ Event OnUpdateGameTime()
         milkCravingDue = False
     EndIf
     Actor[] nearbyActors
-    If thoughtDue || boundThoughtDue || injectionDue || milkCravingDue
+    If thoughtDue || boundThoughtDue || injectionDue || dwemerEffectDue || milkCravingDue
         ; Never cast None to an array: the VM rejects that cast, and the compiler
         ; can reuse its temporary for the native result, causing a type mismatch.
         nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
@@ -960,6 +1015,10 @@ Event OnUpdateGameTime()
     If injectionDue
         MMETentacleEffects.RunInjectionCheck(nearbyActors, False)
         ScheduleNextInjection(now)
+    EndIf
+    If dwemerEffectDue
+        MMEDwemerEffects.RunEffectCheck(nearbyActors, False)
+        ScheduleNextDwemerEffect(now)
     EndIf
     If milkCravingDue
         NextMilkCravingGameTime = 0.0
@@ -986,6 +1045,11 @@ EndEvent
 Function RunArmorInjectionCheckNow()
     Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
     MMETentacleEffects.RunInjectionCheck(nearbyActors, True)
+EndFunction
+
+Function RunDwemerEffectCheckNow()
+    Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
+    MMEDwemerEffects.RunEffectCheck(nearbyActors, True)
 EndFunction
 
 ; Exposes one dependency-free quest condition for the optional dialogue INFOs.
@@ -1204,6 +1268,11 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
         Return
     EndIf
     MMECustomArmorRegistry.HandleCustomArmorEquipped(wearer, equippedArmor)
+    MMETimedArmorLock.TryLockRegisteredEquip(wearer, equippedArmor)
+    If MMEArmorIntroduction.TryAutomatic(wearer, equippedArmor)
+        MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] ordinary equip reaction suppressed after successful introduction | actor=" + GetActorName(wearer))
+        Return
+    EndIf
     MMEArmorScript.HandleArmorEquipped(wearer, equippedArmor)
 EndEvent
 
@@ -1220,6 +1289,10 @@ Event OnArmorUnequipped(String eventName, String pluginName, Float localArmorFor
     Armor unequippedArmor = Game.GetFormFromFile(localArmorForm as Int, pluginName) as Armor
     If unequippedArmor == None
         MMELog.MasterDiagnostic("[MME Extensions Custom Armor] armor resolve failed on unequip | " + pluginName + ":" + (localArmorForm as Int))
+        Return
+    EndIf
+    If MMETimedArmorLock.HandleUnequip(wearer, unequippedArmor)
+        MMELog.MasterDiagnostic("[MME Extensions Timed Armor] ordinary unequip cleanup suppressed after protected re-equip | actor=" + GetActorName(wearer))
         Return
     EndIf
     MMECustomArmorRegistry.HandleCustomArmorUnequipped(wearer, unequippedArmor)
@@ -1297,6 +1370,9 @@ EndFunction
 
 ; Receives low-cost lifecycle signals from the optional CommonLibSSE-NG DLL.
 Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form sender)
+    If reason == "load"
+        MMEArmorIntroduction.RestorePlayerMovementIfNeeded(Game.GetPlayer(), "native load event")
+    EndIf
     If !IsExtensionsEnabled()
         Return
     EndIf

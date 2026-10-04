@@ -1,7 +1,7 @@
 Scriptname MMEExtensionsAPI Hidden
 
 ; =============================================================================
-; MME Extensions public Papyrus API (version 8)
+; MME Extensions public Papyrus API (version 10)
 ; =============================================================================
 ; This is the stable entry point for other mods. Call these wrappers instead
 ; of MMEDebug, MMENewMilkMaid, MMEOStimBreastfeeding, or other internal scripts.
@@ -15,7 +15,7 @@ Scriptname MMEExtensionsAPI Hidden
 ; transaction finishes. Listen for the documented ModEvents to observe results.
 
 Int Function GetAPIVersion() Global
-    Return 8
+    Return 10
 EndFunction
 
 ; Backend-neutral query. Returns true only for a current, authoritative MME
@@ -37,6 +37,59 @@ EndFunction
 ; used when the file or pool cannot provide a valid entry.
 Bool Function ShowRandomStoryPopup(Actor subject, String configFile, String poolName, String fallbackText = "") Global
     Return MMEStoryPopup.ShowRandomStoryPopup(subject, configFile, poolName, fallbackText, "Public API")
+EndFunction
+
+; Backend-neutral one-time armor presentation introduced in API version 9.
+; Supports Living (2), Parasite (3), and Dwemer (4) armor. It displays the
+; category story, plays the shared high sound, and runs the safe kneeling
+; animation, but does not create a Milk Maid. A successful call is latent and
+; returns after the approximately ten-second presentation has been cleaned up.
+Bool Function TryFirstArmorIntroduction(Actor target, Armor equippedArmor) Global
+    Return MMEArmorIntroduction.TryIntroduction(target, equippedArmor, "Public API")
+EndFunction
+
+Bool Function HasSeenArmorIntroduction(Actor target, Int armorClass) Global
+    Return MMEArmorIntroduction.HasSeen(target, armorClass)
+EndFunction
+
+Bool Function ResetArmorIntroduction(Actor target, Int armorClass) Global
+    Return MMEArmorIntroduction.Reset(target, armorClass)
+EndFunction
+
+; Standalone timed armor bonds introduced in API version 10. These calls do
+; not require Devious Devices. Registered forms must be chest armor using slot
+; 32; armorClass uses the same 1-4 values as the custom armor registry.
+Bool Function RegisterTimedArmor(String pluginName, Int localFormID, Int armorClass) Global
+    Return MMETimedArmorLock.RegisterArmor(pluginName, localFormID, armorClass)
+EndFunction
+
+Bool Function UnregisterTimedArmor(String pluginName, Int localFormID) Global
+    Return MMETimedArmorLock.UnregisterArmor(pluginName, localFormID)
+EndFunction
+
+; durationDays below zero reads the MCM duration (default 3, range 0-30).
+; The armor must already be registered; successful locks publish
+; MMEExtensions_TimedArmorLocked.
+Bool Function TryLockTimedArmor(Actor target, Armor targetArmor, Float durationDays = -1.0) Global
+    Return MMETimedArmorLock.TryLock(target, targetArmor, durationDays, "Public API")
+EndFunction
+
+; Clears MME Extensions' protection, unequips the armor, and publishes
+; MMEExtensions_TimedArmorReleased when successful.
+Bool Function ReleaseTimedArmor(Actor target) Global
+    Return MMETimedArmorLock.Release(target, "Public API")
+EndFunction
+
+Bool Function IsTimedArmorLocked(Actor target) Global
+    Return MMETimedArmorLock.IsLocked(target)
+EndFunction
+
+Armor Function GetTimedLockedArmor(Actor target) Global
+    Return MMETimedArmorLock.GetLockedArmor(target)
+EndFunction
+
+Float Function GetTimedArmorDaysRemaining(Actor target) Global
+    Return MMETimedArmorLock.GetDaysRemaining(target)
 EndFunction
 
 ; Backend-neutral custom armor classification introduced in API version 6.

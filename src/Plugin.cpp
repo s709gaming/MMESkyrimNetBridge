@@ -6,8 +6,11 @@
 #include <RE/A/ActiveEffect.h>
 #include <RE/B/BGSKeyword.h>
 #include <RE/B/BGSLocation.h>
+#include <RE/C/ContainerMenu.h>
 #include <RE/E/EffectSetting.h>
+#include <RE/M/MenuOpenCloseEvent.h>
 #include <RE/M/MenuTopicManager.h>
+#include <RE/M/Misc.h>
 #include <RE/N/NativeFunction.h>
 #include <RE/S/ScriptEventSourceHolder.h>
 #include <RE/T/TESFile.h>
@@ -24,9 +27,11 @@
 #include <RE/T/TESTopicInfo.h>
 #include <RE/T/TESSleepStopEvent.h>
 #include <RE/T/TESWaitStopEvent.h>
+#include <RE/U/UI.h>
 
 #include <spdlog/sinks/basic_file_sink.h>
 
+#include <chrono>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -66,7 +71,9 @@ namespace
 
     RE::BGSKeyword* g_locTypeInn = nullptr;
     RE::BGSKeyword* g_locTypeCity = nullptr;
+    RE::BGSKeyword* g_locSetDwarvenRuin = nullptr;
     std::unordered_map<RE::FormID, SocialVenueKind> g_socialVenueForms;
+    std::unordered_map<RE::FormID, std::chrono::steady_clock::time_point> g_chestActivationTimes;
 
     void InitializeSocialVenueForms()
     {
@@ -78,6 +85,7 @@ namespace
 
         g_locTypeInn = dataHandler->LookupForm<RE::BGSKeyword>(0x01CB87, "Skyrim.esm");
         g_locTypeCity = dataHandler->LookupForm<RE::BGSKeyword>(0x013168, "Skyrim.esm");
+        g_locSetDwarvenRuin = dataHandler->LookupForm<RE::BGSKeyword>(0x0130F0, "Skyrim.esm");
         g_socialVenueForms.clear();
         const auto addVenue = [&](RE::FormID localID, SocialVenueKind kind) {
             if (auto* location = dataHandler->LookupForm<RE::BGSLocation>(localID, "Skyrim.esm")) {
@@ -107,6 +115,73 @@ namespace
         SKSE::log::info(
             "social venue forms initialized: LocTypeInn={}, LocTypeCity={}, explicit locations={}",
             g_locTypeInn != nullptr, g_locTypeCity != nullptr, g_socialVenueForms.size());
+    }
+
+    bool IsInDwarvenRuin(RE::TESObjectREFR* reference)
+    {
+        if (!reference || !g_locSetDwarvenRuin) {
+            return false;
+        }
+        auto* location = reference->GetCurrentLocation();
+        std::unordered_set<RE::FormID> visited;
+        for (std::uint32_t depth = 0; location && depth < 16; ++depth) {
+            if (!visited.insert(location->GetFormID()).second) {
+                break;
+            }
+            if (location->HasKeyword(g_locSetDwarvenRuin)) {
+                return true;
+            }
+            location = location->parentLoc;
+        }
+        return false;
+    }
+
+    bool IsChestActivationDebounced(RE::TESObjectREFR* chest)
+    {
+        if (!chest) {
+            return true;
+        }
+        const auto now = std::chrono::steady_clock::now();
+        const auto id = chest->GetFormID();
+        if (const auto it = g_chestActivationTimes.find(id); it != g_chestActivationTimes.end() &&
+            now - it->second < std::chrono::seconds(30)) {
+            SKSE::log::debug("dungeon chest activation suppressed by 30-second debounce: ref {:08X}", id);
+            return true;
+        }
+        g_chestActivationTimes[id] = now;
+        if (g_chestActivationTimes.size() > 1024) {
+            for (auto it = g_chestActivationTimes.begin(); it != g_chestActivationTimes.end();) {
+                if (now - it->second >= std::chrono::seconds(30)) {
+                    it = g_chestActivationTimes.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool IsCuratedDungeonBossChest(RE::TESBoundObject* baseObject);
+    bool IsCuratedDungeonRegularChest(RE::TESBoundObject* baseObject);
+    void SendDungeonChestEvent(
+        const char* eventName, const char* chestKind, RE::TESObjectREFR* chest,
+        RE::Actor* activator, RE::TESBoundObject* baseObject);
+
+    void ProcessOpenedDungeonChest(RE::TESObjectREFR* chest, RE::Actor* activator)
+    {
+        if (!chest || !activator || chest->IsLocked()) {
+            return;
+        }
+        auto* baseObject = chest->GetBaseObject();
+        if (IsCuratedDungeonBossChest(baseObject)) {
+            if (!IsChestActivationDebounced(chest)) {
+                SendDungeonChestEvent(kDungeonBossChestEvent, "boss", chest, activator, baseObject);
+            }
+        } else if (IsCuratedDungeonRegularChest(baseObject)) {
+            if (!IsChestActivationDebounced(chest)) {
+                SendDungeonChestEvent(kDungeonRegularChestEvent, "regular", chest, activator, baseObject);
+            }
+        }
     }
 
     SocialVenue FindSocialVenue(RE::BGSLocation* location)
@@ -307,7 +382,7 @@ namespace
         SKSE::ModCallbackEvent event{
             RE::BSFixedString(eventName),
             RE::BSFixedString(chestIdentity),
-            static_cast<float>(baseObject->GetLocalFormID()),
+            IsInDwarvenRuin(chest) ? 1.0f : 0.0f,
             activator
         };
         source->SendEvent(&event);
@@ -666,7 +741,8 @@ namespace
         public RE::BSTEventSink<RE::TESMagicEffectApplyEvent>,
         public RE::BSTEventSink<RE::TESActiveEffectApplyRemoveEvent>,
         public RE::BSTEventSink<RE::TESEquipEvent>,
-        public RE::BSTEventSink<RE::TESActivateEvent>
+        public RE::BSTEventSink<RE::TESActivateEvent>,
+        public RE::BSTEventSink<RE::MenuOpenCloseEvent>
     {
     public:
         static LifecycleEventSink* GetSingleton()
@@ -688,6 +764,7 @@ namespace
             holder->AddEventSink<RE::TESActiveEffectApplyRemoveEvent>(this);
             holder->AddEventSink<RE::TESEquipEvent>(this);
             holder->AddEventSink<RE::TESActivateEvent>(this);
+            RE::UI::GetSingleton()->AddEventSink<RE::MenuOpenCloseEvent>(this);
             SKSE::log::info("Lifecycle event sinks registered");
         }
 
@@ -842,12 +919,25 @@ namespace
                 return RE::BSEventNotifyControl::kContinue;
             }
             auto* activator = event->actionRef->As<RE::Actor>();
-            auto* baseObject = event->objectActivated->GetBaseObject();
-            if (activator && IsCuratedDungeonBossChest(baseObject)) {
-                SendDungeonChestEvent(kDungeonBossChestEvent, "boss", event->objectActivated.get(), activator, baseObject);
-            } else if (activator && IsCuratedDungeonRegularChest(baseObject)) {
-                SendDungeonChestEvent(kDungeonRegularChestEvent, "regular", event->objectActivated.get(), activator, baseObject);
+            // Player activation fires before lockpicking succeeds. Dispatch the
+            // player's trap only when ContainerMenu proves the chest opened.
+            if (activator && activator != RE::PlayerCharacter::GetSingleton()) {
+                ProcessOpenedDungeonChest(event->objectActivated.get(), activator);
             }
+            return RE::BSEventNotifyControl::kContinue;
+        }
+
+        RE::BSEventNotifyControl ProcessEvent(
+            const RE::MenuOpenCloseEvent* event,
+            RE::BSTEventSource<RE::MenuOpenCloseEvent>*) override
+        {
+            if (!event || !event->opening || event->menuName != RE::ContainerMenu::MENU_NAME) {
+                return RE::BSEventNotifyControl::kContinue;
+            }
+            const auto targetHandle = RE::ContainerMenu::GetTargetRefHandle();
+            RE::NiPointer<RE::TESObjectREFR> target;
+            RE::LookupReferenceByHandle(targetHandle, target);
+            ProcessOpenedDungeonChest(target.get(), RE::PlayerCharacter::GetSingleton());
             return RE::BSEventNotifyControl::kContinue;
         }
     };

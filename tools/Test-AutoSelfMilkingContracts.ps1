@@ -23,7 +23,7 @@ Assert-Contract ($controller -match 'NextAutoSelfMilkingGameTime > 0\.0.*nextDea
 Assert-Contract ($controller -match 'ConfirmOrCancelAutoSelfMilking\(milkMaid\)') "authoritative MME start event clears or confirms pending work"
 Assert-Contract ($controller -match 'MMELog\.MasterDiagnostic\("\[MME Extensions Auto Self-Milking\]') "normal footprints use master Papyrus logging"
 Assert-Contract ($controller -match 'MMELog\.Alarm\("\[MME Extensions Auto Self-Milking\] FAILURE:') "dependency and dispatch failures use smoke alarms"
-Assert-Contract ($mcm -match 'Return 134') "MCM version includes auto self-milking migration 134"
+Assert-Contract ($mcm -match 'Return 13[5-9]|Return 1[4-9][0-9]') "MCM version retains auto self-milking migration 134 or later"
 Assert-Contract ($mcm -match '"enableAutoSelfMilking", 1') "Auto Self-Milking defaults on"
 Assert-Contract ($mcm -match '"autoSelfMilkingDelayHours", 1\.0') "self-milking delay defaults to one game hour"
 Assert-Contract ($mcm -match 'autoSelfMilkingDelayOption[\s\S]*SetSliderDialogRange\(0\.0, 24\.0\)') "MCM delay spans zero to 24 game hours"

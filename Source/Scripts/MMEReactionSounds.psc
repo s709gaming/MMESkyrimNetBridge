@@ -26,6 +26,33 @@ Sound Function Resolve(Actor sourceActor, Int femaleMarkerFormID) Global
     Return Game.GetFormFromFile(localFormID, "MMEAlert.esp") as Sound
 EndFunction
 
+; Plays the shared sex-aware high pool without conversion-specific state. This
+; is suitable for rare presentation sequences that own their own deduplication.
+Int Function PlayPresentationHighMoan(Actor sourceActor, String requestLabel = "Presentation") Global
+    String settingsFile = "/MMEAlerts/Settings"
+    If sourceActor == None || sourceActor.IsDead() || sourceActor.IsDisabled() || !sourceActor.Is3DLoaded()
+        MMELog.MasterDiagnostic("[MME Extensions " + requestLabel + " Sound] skipped: actor unavailable")
+        Return -1
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enableReactionSounds", 1) != 1
+        MMELog.MasterDiagnostic("[MME Extensions " + requestLabel + " Sound] skipped: global reaction sounds disabled | actor=" + sourceActor)
+        Return 0
+    EndIf
+    Sound reaction = Resolve(sourceActor, 0x000856)
+    If reaction == None
+        MMELog.Alarm("[MME Extensions " + requestLabel + " Sound] failed: high sound marker unresolved | actor=" + sourceActor)
+        Return -1
+    EndIf
+    Int instance = reaction.Play(sourceActor)
+    If instance <= 0
+        MMELog.MasterDiagnostic("[MME Extensions " + requestLabel + " Sound] failed: Sound.Play returned " + instance + " | actor=" + sourceActor)
+        Return -1
+    EndIf
+    Sound.SetInstanceVolume(instance, JsonUtil.GetFloatValue(settingsFile, "reactionSoundVolume", 100.0) / 100.0)
+    MMELog.MasterDiagnostic("[MME Extensions " + requestLabel + " Sound] played high moan | instance=" + instance + " | actor=" + sourceActor)
+    Return instance
+EndFunction
+
 ; Plays the shared sex-aware high pool once near the beginning of a confirmed
 ; Milk Maid conversion. MME can report the same transition through both its
 ; effect and public event, while the forced API confirms it directly, so an

@@ -14,6 +14,29 @@ Bool Function StartKneeling(Actor target, String owner, String requestLabel, Boo
     Return StartSelected(target, owner, requestLabel, "Kneeling", "ZaZAPCHorFd", diagnostic, wasEstablishedMilkmaid)
 EndFunction
 
+; Presentation-only entry point for one-shot armor introductions. Unlike the
+; ordinary reaction path, this deliberately does not require Milk Maid status;
+; it retains the same lifecycle, scene, restraint, and cooperative-lock safety.
+Bool Function StartPresentationKneeling(Actor target, String owner, String requestLabel, Bool diagnostic) Global
+    If target == None
+        Report(diagnostic, requestLabel, "rejected: actor missing")
+        Return False
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    String blocked = MMEAnimationSafety.GetStartBlockReason(target, milkController, True)
+    If blocked != ""
+        Report(diagnostic, requestLabel, "rejected: " + blocked)
+        Return False
+    EndIf
+    If !MMEAnimationSafety.TryAcquire(target, owner)
+        Report(diagnostic, requestLabel, "rejected: ownership acquisition failed")
+        Return False
+    EndIf
+    Debug.SendAnimationEvent(target, "ZaZAPCHorFd")
+    Report(False, requestLabel, "presentation Kneeling started: ZaZAPCHorFd on " + GetActorName(target))
+    Return True
+EndFunction
+
 Bool Function StartSelected(Actor target, String owner, String requestLabel, String animationKind, String animationEvent, Bool diagnostic, Bool wasEstablishedMilkmaid = True) Global
     ; Phase 1: validate trigger-time identity. A Lactacid drink can create a Milk
     ; Maid during the same event; the pre-trigger flag prevents that conversion

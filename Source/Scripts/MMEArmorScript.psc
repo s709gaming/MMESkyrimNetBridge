@@ -147,6 +147,11 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
         ReportArmorStrip(diagnostic, sourceLabel + " slot=32 | armor=<none> | decision=BLOCKED")
         Return False
     EndIf
+    If MMETimedArmorLock.IsLocked(target) && MMETimedArmorLock.GetLockedArmor(target) == slotArmor
+        ReportArmorStrip(diagnostic, sourceLabel + " decision=BLOCKED | protection=active timed armor bond")
+        MMELog.MasterDiagnostic("[MME Extensions Timed Armor] armor stripping bypassed | actor=" + GetActorName(target) + " | armor=" + GetArmorName(slotArmor))
+        Return False
+    EndIf
     ReportArmorStrip(diagnostic, sourceLabel + " slot=32 | armor=" + GetArmorName(slotArmor))
     String protectionReason = ""
     If IsStripAllArmorEnabled()

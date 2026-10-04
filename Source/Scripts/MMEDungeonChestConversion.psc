@@ -32,13 +32,12 @@ Int Function HandleActivation(Actor targetActor, String chestIdentity, Bool boss
         Return 0
     EndIf
 
-    ; An already registered Milk Maid cannot benefit from this conversion.
-    ; Resolve the chest quietly so repeated activation cannot spam the generic
-    ; forced-conversion rejection notification. Report() keeps the reason in
-    ; the existing Papyrus diagnostic channels without adding another toggle.
-    If MMEExtensionsAPI.IsMilkMaid(targetActor)
-        StorageUtil.SetIntValue(None, resolvedKey, 1)
-        Report("conversion skipped because target is already a Milk Maid | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(targetActor))
+    ; Eligibility is established before rolling. Existing Milk Maids are
+    ; excluded individually, allowing the curse to leap to another nearby
+    ; allied woman without consuming this chest's one-shot conversion roll.
+    Actor conversionTarget = MMEChestTrapTargets.SelectTarget(targetActor, 2, 1500.0)
+    If conversionTarget == None
+        Report("conversion skipped; no eligible nearby allied non-Milk-Maid | kind=" + chestKind + " | chest=" + chestIdentity)
         Return 0
     EndIf
 
@@ -52,22 +51,22 @@ Int Function HandleActivation(Actor targetActor, String chestIdentity, Bool boss
         ; Resolve a failed roll permanently so repeatedly opening one chest
         ; cannot be used to reroll the configured probability.
         StorageUtil.SetIntValue(None, resolvedKey, 1)
-        Report("chance missed | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(targetActor) + " | chance=" + chance)
+        Report("chance missed | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(conversionTarget) + " | chance=" + chance)
         Return 0
     EndIf
 
     StorageUtil.SetIntValue(None, pendingKey, 1)
-    Report("conversion requested | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(targetActor) + " | chance=" + chance)
-    Bool created = MMEExtensionsAPI.TryCreateMilkMaidForcedAnimated(targetActor)
+    Report("conversion requested | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(conversionTarget) + " | chance=" + chance)
+    Bool created = MMEExtensionsAPI.TryCreateMilkMaidForcedAnimated(conversionTarget)
     StorageUtil.UnsetIntValue(None, pendingKey)
     If created
         StorageUtil.SetIntValue(None, resolvedKey, 1)
-        Report("conversion complete | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(targetActor))
+        Report("conversion complete | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(conversionTarget))
         Return 1
     Else
         ; Capacity and temporary actor-state failures do not consume the chest.
         ; It may be tried again after the underlying condition is corrected.
-        Report("conversion rejected | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(targetActor))
+        Report("conversion rejected | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(conversionTarget))
     EndIf
     Return 0
 EndFunction

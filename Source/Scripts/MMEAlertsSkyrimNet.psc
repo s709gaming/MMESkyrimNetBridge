@@ -147,7 +147,7 @@ String Function BuildTentacleEffectNarration(String actorName, Bool milkIncrease
     EndIf
     ; Mirror the proven Armor Thoughts grounding: name the immediate situation,
     ; bind it to the selected actor, and explicitly forbid a subject change.
-    Return "Immediate situation involving " + actorName + ": " + content + " Your next response must be specifically about this event. Stay focused on the armor and the effects stated here; do not change subjects or invent additional effects."
+    Return "Immediate situation involving " + actorName + ": " + content + " Your next response must be specifically about this event. Treat the living or parasite armor's teasing as pleasurable, silly, playful, positive, and suggestive, never frightening or threatening. Respond in character with one short fresh reaction. Stay focused on the armor and the effects stated here; do not change subjects, merely repeat the situation, or invent additional effects."
 EndFunction
 
 ; Choose uniformly within the matching outcome only. Consecutive repeats are
@@ -181,6 +181,104 @@ String Function RenderTentacleNarrationActorToken(String promptTemplate, String 
     EndIf
     String afterToken = StringUtil.Substring(promptTemplate, tokenIndex + StringUtil.GetLength("{ACTOR}"))
     Return beforeToken + actorName + afterToken
+EndFunction
+
+; Class-4 parallel to Tentacle Effects. Gameplay remains in MMEDwemerEffects;
+; this boundary owns only optional Skyrim.Net publication and player-only TTS.
+Function NarrateDwemerEffect(Actor wearer, Float milkAdded, Int arousalBefore, Bool arousalSent, Bool diagnostic = False) Global
+    String settingsFile = "/MMEAlerts/Settings"
+    Bool enabled = JsonUtil.GetIntValue(settingsFile, "enableDwemerEffectNarration", 1) == 1
+    Int chance = JsonUtil.GetIntValue(settingsFile, "dwemerEffectNarrationChance", 100)
+    If chance < 0
+        chance = 0
+    ElseIf chance > 100
+        chance = 100
+    EndIf
+    String actorName = MMEThoughts.ResolveActorName(wearer)
+    MMEDwemerEffects.TraceDiagnostic(False, "narration | enabled=" + enabled + " | chance=" + chance + "% | wearer=" + actorName + " | milk delta=" + milkAdded + " | arousal event=" + arousalSent)
+    If !enabled || !IsExtensionsEnabled() || wearer == None || wearer.IsChild()
+        MMEDwemerEffects.TraceDiagnostic(diagnostic, "narration skipped: disabled or invalid wearer; roll not made")
+        Return
+    EndIf
+    Bool isPlayer = wearer == Game.GetPlayer()
+    If isPlayer && JsonUtil.GetIntValue(settingsFile, "enableDwemerEffectPlayerNarration", 1) != 1
+        MMEDwemerEffects.TraceDiagnostic(diagnostic, "narration skipped: player narration disabled; roll not made")
+        Return
+    EndIf
+    If !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
+        MMEDwemerEffects.TraceDiagnostic(diagnostic, "narration skipped: Skyrim.Net unavailable or disabled; roll not made")
+        Return
+    EndIf
+    Int roll = Utility.RandomInt(1, 100)
+    MMEDwemerEffects.TraceDiagnostic(False, "narration roll=" + roll + "/" + chance)
+    If roll > chance
+        Return
+    EndIf
+
+    Int arousalAfter = -1
+    If arousalSent && arousalBefore >= 0
+        arousalAfter = MMEArousalBridge.GetCurrentArousal(wearer)
+    EndIf
+    Bool arousalIncreased = arousalSent && arousalBefore >= 0 && arousalAfter > arousalBefore
+    String content = BuildDwemerEffectNarration(actorName, milkAdded > 0.0, arousalIncreased, diagnostic)
+    If content == ""
+        Return
+    EndIf
+    If isPlayer
+        MMEAlertsController bridge = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+        If bridge == None
+            MMELog.Alarm("[MME Extensions Dwemer Effects] player narration callback unavailable")
+            Return
+        EndIf
+        String contextJson = "{\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
+        Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnDwemerEffectPlayerLine")
+        MMEDwemerEffects.TraceDiagnostic(False, "player-only generation queue result=" + queued + " (1=queued); no bystander fallback")
+        Return
+    EndIf
+    content += " React from your own perspective as the affected Dwemer armor wearer."
+    Int result = SkyrimNetApi.DirectNarration(content, wearer, Game.GetPlayer())
+    MMEDwemerEffects.TraceDiagnostic(False, "NPC DirectNarration result=" + result + " | wearer=" + actorName)
+EndFunction
+
+Function PlayDwemerEffectPlayerLine(String response, Int success) Global
+    Bool diagnostic = MMEDwemerEffects.IsDiagnosticEnabled()
+    If success != 1 || response == ""
+        MMEDwemerEffects.TraceDiagnostic(diagnostic, "player-only generation failed; no fallback")
+        Return
+    EndIf
+    If !IsExtensionsEnabled() || !IsAvailable() || !MMEDwemerEffects.IsEnabled()
+        Return
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDwemerEffectNarration", 1) != 1 || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDwemerEffectPlayerNarration", 1) != 1 || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1 || Game.GetPlayer().IsChild()
+        MMEDwemerEffects.TraceDiagnostic(diagnostic, "player-only playback cancelled: narration disabled or player invalid")
+        Return
+    EndIf
+    Int result = SkyrimNetApi.TriggerPlayerTTS(response)
+    MMEDwemerEffects.TraceDiagnostic(False, "player-only TTS result=" + result + " (0=accepted)")
+EndFunction
+
+String Function BuildDwemerEffectNarration(String actorName, Bool milkIncreased, Bool arousalIncreased, Bool diagnostic = False) Global
+    String configFile = "/MMEAlerts/DwemerEffectNarration"
+    If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
+        MMELog.Alarm("[MME Extensions Dwemer Effects] narration JSON missing or malformed; using fallback")
+    EndIf
+    String promptTemplate = ""
+    If milkIncreased && arousalIncreased
+        promptTemplate = SelectTentacleNarrationTemplate(configFile, ".milkAndArousal", "{actor} shivers as Dwemer armor stimulates her breasts and leaves her more aroused.")
+    ElseIf milkIncreased
+        promptTemplate = SelectTentacleNarrationTemplate(configFile, ".milk", "{actor}'s breasts ache with milk as the Dwemer device teases her.")
+    ElseIf arousalIncreased
+        promptTemplate = SelectTentacleNarrationTemplate(configFile, ".arousal", "{actor} moans as Dwemer armor teases her nipples.")
+    Else
+        MMEDwemerEffects.TraceDiagnostic(diagnostic, "narration skipped: neither milk nor arousal increase was confirmed")
+        Return ""
+    EndIf
+    String content = RenderTentacleNarrationActorToken(promptTemplate, actorName)
+    If content == ""
+        MMELog.Alarm("[MME Extensions Dwemer Effects] narration template is missing a supported actor token")
+        Return ""
+    EndIf
+    Return "Immediate situation involving " + actorName + ": " + content + " Your next response must be specifically about this event. Treat the Dwemer machinery's mechanical teasing as pleasurable, silly, playful, positive, and suggestive, never frightening, painful, or threatening. Respond in character with one short fresh reaction. Stay focused on the Dwemer armor, its gears and mechanisms, and the effects stated here; do not change subjects, merely repeat the situation, or invent additional effects."
 EndFunction
 
 ; Registers callbacks used by actor-specific MME prompt modules.

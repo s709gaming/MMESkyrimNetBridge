@@ -7,6 +7,7 @@ GlobalVariable Property MMEExt_BlacksmithArmorState Auto
 GlobalVariable Property MMEExt_AlchemistLivingArmorState Auto
 GlobalVariable Property MMEExt_MageParasiteArmorState Auto
 GlobalVariable Property MMEExt_MageReverseLevelAvailable Auto
+GlobalVariable Property MMEExt_TrapArmorRemovalState Auto
 Bool serviceSucceeded = False
 
 Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
@@ -16,6 +17,7 @@ Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
     If MMEExt_MageReverseLevelAvailable != None
         MMEExt_MageReverseLevelAvailable.SetValue(0.0)
     EndIf
+    SetTrapArmorDialogueState(0)
     ; Preserve MME's complete opening behavior exactly once before its existing
     ; linked choices and our two new choices evaluate their conditions.
     Parent.Fragment_00(akSpeakerRef)
@@ -25,11 +27,25 @@ Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
     SetDialogueState(GetLiveServiceState(akSpeakerRef as Actor))
     MMEAlchemistDialogue.SetDialogueState(MMEExt_AlchemistLivingArmorState, MMEAlchemistDialogue.GetLiveServiceState(akSpeakerRef as Actor))
     MMEMageDialogue.SetDialogueState(MMEExt_MageParasiteArmorState, MMEMageDialogue.GetLiveServiceState(akSpeakerRef as Actor))
+    SetTrapArmorDialogueState(MMETrapArmorDialogue.GetLiveServiceState(akSpeakerRef as Actor))
     ; The live trace records the published state here, before the controller's
     ; deferred snapshot checks whether Skyrim actually exposed the expected INFO.
     MMEDiagnostics.ObserveBlacksmithDialogueState(akSpeakerRef as Actor)
     MMEDiagnostics.ObserveAlchemistDialogueState(akSpeakerRef as Actor)
     MMEDiagnostics.ObserveMageDialogueState(akSpeakerRef as Actor)
+EndFunction
+
+Function Fragment_RemoveTimedTrapArmor(ObjectReference akSpeakerRef)
+    SetTrapArmorDialogueState(0)
+    CompleteVendorService(akSpeakerRef, "TrapArmor/Release", MMETrapArmorDialogue.TryVendorRelease(akSpeakerRef as Actor))
+EndFunction
+
+Function SetTrapArmorDialogueState(Int value)
+    If MMEExt_TrapArmorRemovalState != None
+        MMEExt_TrapArmorRemovalState.SetValue(value as Float)
+    Else
+        MMELog.Alarm("[MME Extensions Trap Armor Dialogue] FAILURE: dialogue-state Global is unbound", 2)
+    EndIf
 EndFunction
 
 Function Fragment_AddLivingArmor(ObjectReference akSpeakerRef)

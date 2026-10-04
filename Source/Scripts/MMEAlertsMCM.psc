@@ -13,6 +13,16 @@ Int reversePlayerLevelOption
 Int reverseApplyOption
 Int reverseRemoveOption
 Int reverseTraceOption
+Int timedArmorDurationOption
+Int timedArmorReleaseOption
+Int chestArmorTrapOption
+Int livingArmorChestTrapOption
+Int parasiteArmorChestTrapOption
+Int dwemerArmorChestTrapOption
+Int dwemerArmorOutsideRuinsOption
+Int dwemerRuinArmorTrapChanceOption
+Int chestArmorTrapChanceOption
+Int chestArmorTrapCooldownOption
 Int dungeonChestMilkMaidOption
 Int dungeonChestMilkMaidChanceOption
 Int regularChestMilkMaidOption
@@ -203,6 +213,17 @@ Int armorInjectionDiagnosticOption
 Int armorInjectionNarrationOption
 Int armorInjectionPlayerNarrationOption
 Int armorInjectionNarrationChanceOption
+Int dwemerEffectOption
+Int dwemerEffectIntervalOption
+Int dwemerEffectVariationOption
+Int dwemerEffectChanceOption
+Int dwemerEffectNotificationOption
+Int dwemerEffectSoundOption
+Int dwemerEffectDiagnosticOption
+Int dwemerEffectNarrationOption
+Int dwemerEffectPlayerNarrationOption
+Int dwemerEffectNarrationChanceOption
+Int runDwemerEffectCheckOption
 Int runArmorInjectionCheckOption
 Int diagnosticNotificationsOption
 Int diagnosticPapyrusTraceOption
@@ -244,7 +265,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 134
+    Return 138
 EndFunction
 
 Function SetPageNames()
@@ -341,6 +362,16 @@ Function EnsureDefaults()
         JsonUtil.SetFloatValue(SettingsFile, "chestMilkTrapCooldownVariation", 0.0)
         JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrapNotification", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrapNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableChestArmorTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableLivingArmorChestTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableParasiteArmorChestTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableDwemerArmorChestTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableDwemerArmorOutsideRuins", 0)
+        JsonUtil.SetIntValue(SettingsFile, "dwemerRuinArmorTrapChance", 25)
+        JsonUtil.SetIntValue(SettingsFile, "chestArmorTrapChance", 5)
+        JsonUtil.SetFloatValue(SettingsFile, "chestArmorTrapCooldownHours", 4.0)
+        JsonUtil.SetIntValue(SettingsFile, "chestArmorTrapMigration137", 1)
+        JsonUtil.SetIntValue(SettingsFile, "chestArmorCategoryMigration138", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableGuildTavernMilkDrinking", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableJarlResidenceMilkDrinking", 1)
@@ -513,6 +544,10 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationChance", 100)
         JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationMigration105", 1)
         JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationMigration106", 1)
+        SetDwemerEffectDefaults()
+        JsonUtil.SetIntValue(SettingsFile, "dwemerEffectMigration135", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "timedArmorLockDays", 3.0)
+        JsonUtil.SetIntValue(SettingsFile, "timedArmorMigration136", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "diagnosticsPageMigration91", 1)
@@ -1001,6 +1036,14 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsTraceMigration88", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+
+    If JsonUtil.GetIntValue(SettingsFile, "chestArmorCategoryMigration138", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableLivingArmorChestTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableParasiteArmorChestTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableDwemerArmorChestTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "chestArmorCategoryMigration138", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
     ; Adds a Skyrim.Net-only recursion guard without changing dialogue access.
     If JsonUtil.GetIntValue(SettingsFile, "breastfeedingActionCooldownMigration89", 0) == 0
         JsonUtil.SetFloatValue(SettingsFile, "breastfeedingActionCooldown", 45.0)
@@ -1328,6 +1371,38 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "autoSelfMilkingMigration134", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "dwemerEffectMigration135", 0) == 0
+        SetDwemerEffectDefaults()
+        JsonUtil.SetIntValue(SettingsFile, "dwemerEffectMigration135", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "timedArmorMigration136", 0) == 0
+        JsonUtil.SetFloatValue(SettingsFile, "timedArmorLockDays", 3.0)
+        JsonUtil.SetIntValue(SettingsFile, "timedArmorMigration136", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "chestArmorTrapMigration137", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableChestArmorTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableDwemerArmorOutsideRuins", 0)
+        JsonUtil.SetIntValue(SettingsFile, "dwemerRuinArmorTrapChance", 25)
+        JsonUtil.SetIntValue(SettingsFile, "chestArmorTrapChance", 5)
+        JsonUtil.SetFloatValue(SettingsFile, "chestArmorTrapCooldownHours", 4.0)
+        JsonUtil.SetIntValue(SettingsFile, "chestArmorTrapMigration137", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+EndFunction
+
+Function SetDwemerEffectDefaults()
+    JsonUtil.SetIntValue(SettingsFile, "enableDwemerEffects", 1)
+    JsonUtil.SetFloatValue(SettingsFile, "dwemerEffectInterval", 12.0)
+    JsonUtil.SetFloatValue(SettingsFile, "dwemerEffectVariation", 4.0)
+    JsonUtil.SetIntValue(SettingsFile, "dwemerEffectChance", 100)
+    JsonUtil.SetIntValue(SettingsFile, "enableDwemerEffectNotifications", 1)
+    JsonUtil.SetIntValue(SettingsFile, "enableDwemerEffectSounds", 1)
+    JsonUtil.SetIntValue(SettingsFile, "enableDwemerEffectNarration", 1)
+    JsonUtil.SetIntValue(SettingsFile, "enableDwemerEffectPlayerNarration", 1)
+    JsonUtil.SetIntValue(SettingsFile, "dwemerEffectNarrationChance", 100)
+    JsonUtil.SetIntValue(SettingsFile, "enableDwemerEffectDiagnostics", 0)
 EndFunction
 
 Function SetArmorReactionDefaults()
@@ -1377,6 +1452,16 @@ Event OnPageReset(String page)
     reverseApplyOption = -1
     reverseRemoveOption = -1
     reverseTraceOption = -1
+    timedArmorDurationOption = -1
+    timedArmorReleaseOption = -1
+    chestArmorTrapOption = -1
+    livingArmorChestTrapOption = -1
+    parasiteArmorChestTrapOption = -1
+    dwemerArmorChestTrapOption = -1
+    dwemerArmorOutsideRuinsOption = -1
+    dwemerRuinArmorTrapChanceOption = -1
+    chestArmorTrapChanceOption = -1
+    chestArmorTrapCooldownOption = -1
     dungeonChestMilkMaidOption = -1
     dungeonChestMilkMaidChanceOption = -1
     regularChestMilkMaidOption = -1
@@ -1571,6 +1656,17 @@ Event OnPageReset(String page)
     armorInjectionPlayerNarrationOption = -1
     armorInjectionNarrationChanceOption = -1
     runArmorInjectionCheckOption = -1
+    dwemerEffectOption = -1
+    dwemerEffectIntervalOption = -1
+    dwemerEffectVariationOption = -1
+    dwemerEffectChanceOption = -1
+    dwemerEffectNotificationOption = -1
+    dwemerEffectSoundOption = -1
+    dwemerEffectDiagnosticOption = -1
+    dwemerEffectNarrationOption = -1
+    dwemerEffectPlayerNarrationOption = -1
+    dwemerEffectNarrationChanceOption = -1
+    runDwemerEffectCheckOption = -1
     diagnosticNotificationsOption = -1
     diagnosticPapyrusTraceOption = -1
     papyrusTraceOption = -1
@@ -1610,6 +1706,23 @@ Event OnPageReset(String page)
     diagnosticMageBusFailureOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
     If page == "Misc"
+        AddHeaderOption("Trapped Armor Chests")
+        chestArmorTrapOption = AddToggleOption("Master Trap Chest Toggle", JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap", 1) == 1)
+        Int armorTrapFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap", 1) != 1
+            armorTrapFlags = OPTION_FLAG_DISABLED
+        EndIf
+        livingArmorChestTrapOption = AddToggleOption("Living Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableLivingArmorChestTrap", 1) == 1, armorTrapFlags)
+        parasiteArmorChestTrapOption = AddToggleOption("Parasite Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableParasiteArmorChestTrap", 1) == 1, armorTrapFlags)
+        dwemerArmorChestTrapOption = AddToggleOption("Dwemer Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableDwemerArmorChestTrap", 1) == 1, armorTrapFlags)
+        Int dwemerTrapFlags = armorTrapFlags
+        If JsonUtil.GetIntValue(SettingsFile, "enableDwemerArmorChestTrap", 1) != 1
+            dwemerTrapFlags = OPTION_FLAG_DISABLED
+        EndIf
+        dwemerArmorOutsideRuinsOption = AddToggleOption("Dwemer Armor Outside Ruins", JsonUtil.GetIntValue(SettingsFile, "enableDwemerArmorOutsideRuins", 0) == 1, dwemerTrapFlags)
+        dwemerRuinArmorTrapChanceOption = AddSliderOption("Dwemer Ruin Chance", JsonUtil.GetIntValue(SettingsFile, "dwemerRuinArmorTrapChance", 25), "{0}%", dwemerTrapFlags)
+        chestArmorTrapChanceOption = AddSliderOption("General Trap Chance", JsonUtil.GetIntValue(SettingsFile, "chestArmorTrapChance", 5), "{0}%", armorTrapFlags)
+        chestArmorTrapCooldownOption = AddSliderOption("Armor Trap Cooldown", JsonUtil.GetFloatValue(SettingsFile, "chestArmorTrapCooldownHours", 4.0), "{0} game hours", armorTrapFlags)
         AddHeaderOption("Milk Maid Chest Traps")
         dungeonChestMilkMaidOption = AddToggleOption("Boss Chests", JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1) == 1)
         Int dungeonChestChanceFlags = OPTION_FLAG_NONE
@@ -1643,6 +1756,13 @@ Event OnPageReset(String page)
         chestMilkTrapVariationOption = AddSliderOption("Random Variation", JsonUtil.GetFloatValue(SettingsFile, "chestMilkTrapCooldownVariation", 0.0), "+/- {0} game hours", chestMilkTrapFlags)
         chestMilkTrapNotificationOption = AddToggleOption("Chest Drink Notification", JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrapNotification", 1) == 1, chestMilkTrapFlags)
         chestMilkTrapNarrationOption = AddToggleOption("Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrapNarration", 1) == 1, chestMilkTrapFlags)
+        AddHeaderOption("Timed Armor Bond")
+        timedArmorDurationOption = AddSliderOption("Lock Duration", JsonUtil.GetFloatValue(SettingsFile, "timedArmorLockDays", 3.0), "{0} game days")
+        Int timedArmorReleaseFlags = OPTION_FLAG_DISABLED
+        If MMETimedArmorLock.IsLocked(Game.GetPlayer())
+            timedArmorReleaseFlags = OPTION_FLAG_NONE
+        EndIf
+        timedArmorReleaseOption = AddTextOption("Release Player Armor", "RELEASE", timedArmorReleaseFlags)
         AddHeaderOption("Debug")
         reverseApplyOption = AddTextOption("Apply Reverse Leveling", "APPLY")
         reverseRemoveOption = AddTextOption("Remove Reverse Leveling", "REMOVE")
@@ -1914,6 +2034,21 @@ Event OnPageReset(String page)
         AddHeaderOption("Debug")
         armorInjectionDiagnosticOption = AddToggleOption("Enable Effect Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", 0) == 1)
         runArmorInjectionCheckOption = AddTextOption("Run Effect Check Now", "RUN")
+        SetCursorPosition(1)
+        AddHeaderOption("Dwemer Armor Effects")
+        dwemerEffectOption = AddToggleOption("Enable Dwemer Effects", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffects", 1) == 1)
+        dwemerEffectIntervalOption = AddSliderOption("Base Effect Interval", JsonUtil.GetFloatValue(SettingsFile, "dwemerEffectInterval", 12.0), "{0} game hours")
+        dwemerEffectVariationOption = AddSliderOption("Interval Variation (+/-)", JsonUtil.GetFloatValue(SettingsFile, "dwemerEffectVariation", 4.0), "{0} game hours")
+        dwemerEffectChanceOption = AddSliderOption("Effect Chance", JsonUtil.GetIntValue(SettingsFile, "dwemerEffectChance", 100), "{0}%")
+        dwemerEffectNotificationOption = AddToggleOption("Show Effect Notifications", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectNotifications", 1) == 1)
+        dwemerEffectSoundOption = AddToggleOption("Notification Sound", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectSounds", 1) == 1)
+        AddHeaderOption("Dwemer Skyrim.Net Narration")
+        dwemerEffectNarrationOption = AddToggleOption("Enable Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectNarration", 1) == 1)
+        dwemerEffectPlayerNarrationOption = AddToggleOption("Enable Player Narration", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectPlayerNarration", 1) == 1)
+        dwemerEffectNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "dwemerEffectNarrationChance", 100), "{0}%")
+        AddHeaderOption("Dwemer Debug")
+        dwemerEffectDiagnosticOption = AddToggleOption("Enable Effect Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectDiagnostics", 0) == 1)
+        runDwemerEffectCheckOption = AddTextOption("Run Dwemer Check Now", "RUN")
         Return
     EndIf
     If page == "Troubleshoot"
@@ -2040,7 +2175,13 @@ EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
-    If option == innPalaceMilkDrinkingOption
+    If option == timedArmorDurationOption
+        SetInfoText("How many game days supported chest armor remains locked after equip. Zero releases immediately; default 3 days, range 0-30. This standalone system does not require Devious Devices.")
+        Return
+    ElseIf option == timedArmorReleaseOption
+        SetInfoText("Debug release for the player's current timed armor bond. It clears MME Extensions' lock and unequips that chest piece.")
+        Return
+    ElseIf option == innPalaceMilkDrinkingOption
         SetInfoText("After entering an inn or enabled special social venue, wait a randomized delay and make one random eligible loaded NPC drink ordinary HearthFires milk through the normal API. Default on.")
         Return
     ElseIf option == guildTavernMilkDrinkingOption
@@ -2087,6 +2228,31 @@ Event OnOptionHighlight(Int option)
         Return
     ElseIf option == autoSelfMilkingDelayOption
         SetInfoText("Game-time delay between the Milk Full trigger and MME's original self-milking scene. The actor must still be nearby, full, valid, and not already milking. Default 1 hour, range 0-24.")
+        Return
+    EndIf
+    If option == chestArmorTrapOption
+        SetInfoText("Master switch for JSON-backed Living, Parasite and Dwemer treasure-chest armor traps. Default on.")
+        Return
+    ElseIf option == livingArmorChestTrapOption
+        SetInfoText("Allow configured Living Armor pieces in the general treasure-chest trap pool. Default on.")
+        Return
+    ElseIf option == parasiteArmorChestTrapOption
+        SetInfoText("Allow configured Parasite Armor pieces in the general treasure-chest trap pool. Default on.")
+        Return
+    ElseIf option == dwemerArmorChestTrapOption
+        SetInfoText("Allow configured Dwemer Armor pieces in Dwemer-ruin and permitted outside-ruin trap pools. Default on.")
+        Return
+    ElseIf option == dwemerArmorOutsideRuinsOption
+        SetInfoText("Allow configured Dwemer armor to join the general random armor pool outside Dwemer ruins. Default off.")
+        Return
+    ElseIf option == dwemerRuinArmorTrapChanceOption
+        SetInfoText("Separate first roll in Dwemer ruins. A success selects only configured Dwemer armor. Default 25%, adjustable in 5% steps.")
+        Return
+    ElseIf option == chestArmorTrapChanceOption
+        SetInfoText("General random Living or Parasite armor roll after the Dwemer-only roll misses. Default 5%, adjustable in 5% steps.")
+        Return
+    ElseIf option == chestArmorTrapCooldownOption
+        SetInfoText("Shared cooldown started only after armor is successfully equipped and locked. Default 4 game hours, range 0-24.")
         Return
     EndIf
     If option == dungeonChestMilkMaidOption
@@ -2451,6 +2617,28 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Chance of one Skyrim.Net request per successful effect check. Only confirmed milk/arousal increases are described. Default 100%.")
     ElseIf option == runArmorInjectionCheckOption
         SetInfoText("Run the real Tentacle Effects production path immediately without waiting for its timer.")
+    ElseIf option == dwemerEffectOption
+        SetInfoText("Periodically apply the configured milk and arousal bonuses to nearby Milk Maids wearing independent class-4 Dwemer Armor.")
+    ElseIf option == dwemerEffectIntervalOption
+        SetInfoText("Set the independent base delay between Dwemer checks in game-time hours.")
+    ElseIf option == dwemerEffectVariationOption
+        SetInfoText("Randomly subtract or add this many game-time hours. The final interval never falls below one hour.")
+    ElseIf option == dwemerEffectChanceOption
+        SetInfoText("Set each eligible Dwemer Armor wearer's independent chance to be affected during a check.")
+    ElseIf option == dwemerEffectNotificationOption
+        SetInfoText("Show one JSON-driven Dwemer flavor notification per successful cycle.")
+    ElseIf option == dwemerEffectSoundOption
+        SetInfoText("Play the existing low reaction sound on the notification wearer. Uses the global sound toggle and volume.")
+    ElseIf option == dwemerEffectDiagnosticOption
+        SetInfoText("Show detailed Dwemer candidate and effect results. Master Papyrus Logging records sparse footprints independently.")
+    ElseIf option == dwemerEffectNarrationOption
+        SetInfoText("Let the focused Dwemer Armor wearer react through Skyrim.Net after a successful effect.")
+    ElseIf option == dwemerEffectPlayerNarrationOption
+        SetInfoText("Allow player-only TTS when the affected wearer is the player. No NPC fallback is selected when disabled.")
+    ElseIf option == dwemerEffectNarrationChanceOption
+        SetInfoText("Chance of one Skyrim.Net request per successful Dwemer effect check.")
+    ElseIf option == runDwemerEffectCheckOption
+        SetInfoText("Run the real Dwemer Effects production path immediately without waiting for its timer.")
     ElseIf option == diagnosticNotificationsOption
         SetInfoText("Show short audit results as in-game notifications. Enabled by default.")
     ElseIf option == diagnosticPapyrusTraceOption
@@ -2536,7 +2724,43 @@ EndEvent
 
 ; Persists toggle changes and refreshes only controllers affected by that option.
 Event OnOptionSelect(Int option)
-    If option == dungeonChestMilkMaidOption
+    If option == timedArmorReleaseOption
+        MMETimedArmorLock.Release(Game.GetPlayer(), "MCM Debug")
+        ForcePageReset()
+        Return
+    ElseIf option == chestArmorTrapOption
+        Int armorTrapValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableChestArmorTrap", armorTrapValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, armorTrapValue == 1)
+        ForcePageReset()
+        Return
+    ElseIf option == livingArmorChestTrapOption
+        Int livingTrapValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableLivingArmorChestTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableLivingArmorChestTrap", livingTrapValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, livingTrapValue == 1)
+        Return
+    ElseIf option == parasiteArmorChestTrapOption
+        Int parasiteTrapValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableParasiteArmorChestTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableParasiteArmorChestTrap", parasiteTrapValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, parasiteTrapValue == 1)
+        Return
+    ElseIf option == dwemerArmorChestTrapOption
+        Int dwemerTrapValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDwemerArmorChestTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableDwemerArmorChestTrap", dwemerTrapValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, dwemerTrapValue == 1)
+        ForcePageReset()
+        Return
+    ElseIf option == dwemerArmorOutsideRuinsOption
+        Int outsideValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDwemerArmorOutsideRuins", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableDwemerArmorOutsideRuins", outsideValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, outsideValue == 1)
+        Return
+    ElseIf option == dungeonChestMilkMaidOption
         Int dungeonChestValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableDungeonChestMilkMaid", dungeonChestValue)
         JsonUtil.Save(SettingsFile, False)
@@ -2784,6 +3008,28 @@ Event OnOptionSelect(Int option)
             controller.RunArmorInjectionCheckNow()
         Else
             Debug.Notification("Tentacle Effects: controller unavailable")
+        EndIf
+    ElseIf option == dwemerEffectOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffects", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableDwemerEffects", value)
+        SetToggleOptionValue(option, value == 1)
+        RefreshDwemerEffectSchedule()
+    ElseIf option == dwemerEffectSoundOption
+        ToggleArmorSetting(option, "enableDwemerEffectSounds", 1)
+    ElseIf option == dwemerEffectNotificationOption
+        ToggleArmorSetting(option, "enableDwemerEffectNotifications", 1)
+    ElseIf option == dwemerEffectDiagnosticOption
+        ToggleArmorSetting(option, "enableDwemerEffectDiagnostics", 0)
+    ElseIf option == dwemerEffectNarrationOption
+        ToggleArmorSetting(option, "enableDwemerEffectNarration", 1)
+    ElseIf option == dwemerEffectPlayerNarrationOption
+        ToggleArmorSetting(option, "enableDwemerEffectPlayerNarration", 1)
+    ElseIf option == runDwemerEffectCheckOption
+        MMEAlertsController dwemerController = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+        If dwemerController != None
+            dwemerController.RunDwemerEffectCheckNow()
+        Else
+            Debug.Notification("Dwemer Effects: controller unavailable")
         EndIf
     ElseIf option == diagnosticNotificationsOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticNotifications", 1)
@@ -3259,6 +3505,13 @@ Function RefreshArmorInjectionSchedule()
     EndIf
 EndFunction
 
+Function RefreshDwemerEffectSchedule()
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller != None
+        controller.RefreshDwemerEffectScheduling()
+    EndIf
+EndFunction
+
 Function RefreshMilkCravingSchedule()
     MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
     If controller != None
@@ -3275,7 +3528,31 @@ EndFunction
 
 ; Configures the shared sound-volume and capacity-interval slider dialogs.
 Event OnOptionSliderOpen(Int option)
-    If option == dungeonChestMilkMaidChanceOption
+    If option == timedArmorDurationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "timedArmorLockDays", 3.0))
+        SetSliderDialogDefaultValue(3.0)
+        SetSliderDialogRange(0.0, 30.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == dwemerRuinArmorTrapChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "dwemerRuinArmorTrapChance", 25))
+        SetSliderDialogDefaultValue(25.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+        Return
+    ElseIf option == chestArmorTrapChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "chestArmorTrapChance", 5))
+        SetSliderDialogDefaultValue(5.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+        Return
+    ElseIf option == chestArmorTrapCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "chestArmorTrapCooldownHours", 4.0))
+        SetSliderDialogDefaultValue(4.0)
+        SetSliderDialogRange(0.0, 24.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == dungeonChestMilkMaidChanceOption
         SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "dungeonChestMilkMaidChance", 100))
         SetSliderDialogDefaultValue(100.0)
         SetSliderDialogRange(0.0, 100.0)
@@ -3442,6 +3719,26 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(100.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(5.0)
+    ElseIf option == dwemerEffectIntervalOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "dwemerEffectInterval", 12.0))
+        SetSliderDialogDefaultValue(12.0)
+        SetSliderDialogRange(1.0, 864.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == dwemerEffectVariationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "dwemerEffectVariation", 4.0))
+        SetSliderDialogDefaultValue(4.0)
+        SetSliderDialogRange(0.0, 12.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == dwemerEffectChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "dwemerEffectChance", 100))
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+    ElseIf option == dwemerEffectNarrationChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "dwemerEffectNarrationChance", 100))
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
     ElseIf option == skyrimNetStatusIntervalOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0))
         SetSliderDialogDefaultValue(15.0)
@@ -3582,7 +3879,27 @@ EndEvent
 
 ; Saves accepted slider values and reschedules polling when its interval changes.
 Event OnOptionSliderAccept(Int option, Float value)
-    If option == dungeonChestMilkMaidChanceOption
+    If option == timedArmorDurationOption
+        JsonUtil.SetFloatValue(SettingsFile, "timedArmorLockDays", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game days")
+        Return
+    ElseIf option == dwemerRuinArmorTrapChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "dwemerRuinArmorTrapChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        Return
+    ElseIf option == chestArmorTrapChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "chestArmorTrapChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        Return
+    ElseIf option == chestArmorTrapCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "chestArmorTrapCooldownHours", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        Return
+    ElseIf option == dungeonChestMilkMaidChanceOption
         JsonUtil.SetIntValue(SettingsFile, "dungeonChestMilkMaidChance", value as Int)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0}%")
@@ -3729,6 +4046,24 @@ Event OnOptionSliderAccept(Int option, Float value)
         SetSliderOptionValue(option, value, "{0}%")
     ElseIf option == armorInjectionNarrationChanceOption
         JsonUtil.SetIntValue(SettingsFile, "armorInjectionNarrationChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+    ElseIf option == dwemerEffectIntervalOption
+        JsonUtil.SetFloatValue(SettingsFile, "dwemerEffectInterval", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        RefreshDwemerEffectSchedule()
+    ElseIf option == dwemerEffectVariationOption
+        JsonUtil.SetFloatValue(SettingsFile, "dwemerEffectVariation", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        RefreshDwemerEffectSchedule()
+    ElseIf option == dwemerEffectChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "dwemerEffectChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+    ElseIf option == dwemerEffectNarrationChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "dwemerEffectNarrationChance", value as Int)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0}%")
     ElseIf option == skyrimNetStatusIntervalOption

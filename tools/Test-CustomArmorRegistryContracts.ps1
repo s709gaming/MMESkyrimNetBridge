@@ -28,7 +28,7 @@ Assert-Contract ($armor -match 'Function ClassifyOriginalArmor' -and $armor -mat
 Assert-Contract ($native -match 'MMEExtensions_ArmorUnequipped' -and $native -match 'SendArmorEvent\(actor, item, event->equipped\)') "native bridge publishes equip and unequip"
 Assert-Contract ($controller -match 'RegisterForModEvent\("MMEExtensions_ArmorUnequipped", "OnArmorUnequipped"\)') "controller subscribes to native unequip"
 Assert-Contract ($controller -match 'MMECustomArmorRegistry\.HandleCustomArmorEquipped' -and $controller -match 'MMECustomArmorRegistry\.HandleCustomArmorUnequipped') "controller delegates both armor transitions"
-Assert-Contract ($api -match 'Return 8' -and $api -match 'Function IsCustomDwemerArmor\(' -and $api -match 'Function RegisterCustomArmor\(' -and $api -match 'Function UnregisterCustomArmor\(') "public API version 8 retains Dwemer query, add, and remove"
+Assert-Contract ($api -match 'Return 10' -and $api -match 'Function IsCustomDwemerArmor\(' -and $api -match 'Function RegisterCustomArmor\(' -and $api -match 'Function UnregisterCustomArmor\(') "public API version 10 retains Dwemer query, add, and remove"
 Assert-Contract ($build -match '"MMECustomArmorRegistry"' -and $build -match '"CustomArmorRegistry\.json"') "build packages the registry script and JSON"
 Assert-Contract ($quickStart -match 'Game\.GetModByName\(pluginName\) == 255' -and $quickStart -match 'DwarvenDeviousCuirass\.esp') "Quick Start keeps Dwarven Devious Cuirass optional"
 Assert-Contract ($quickStart -match 'Game\.GetFormFromFile\(0x000800, pluginName\)' -and $quickStart -notmatch 'Game\.GetFormFromFile\(0x00080A, pluginName\)') "Quick Start grants only the unenchanted Dwarven cuirass"

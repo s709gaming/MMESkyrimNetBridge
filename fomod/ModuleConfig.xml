@@ -55,21 +55,6 @@
 
           </plugins>
         </group>
-        <group name="Leave unchecked for SkyrimNet 24" type="SelectAtMostOne">
-          <plugins order="Explicit">
-
-            <plugin name="Install SkyrimNet 25 compatibility">
-              <description>Check this only when using SkyrimNet 0.25 or newer. Adds the manifest-backed external content plugin required by SkyrimNet 25. Leave unchecked for SkyrimNet 24.</description>
-              <files>
-                <folder source="fomod\choices\skyrimnet25\s709gaming.mme-extensions" destination="SKSE\Plugins\SkyrimNet\external\s709gaming.mme-extensions" priority="10" />
-              </files>
-              <typeDescriptor>
-                <type name="Optional" />
-              </typeDescriptor>
-            </plugin>
-
-          </plugins>
-        </group>
         <group name="Optional mod compatibility" type="SelectAny">
           <plugins order="Explicit">
 
@@ -87,6 +72,46 @@
                         <fileDependency file="OMania.esp" state="Active" />
                       </dependencies>
                       <type name="Recommended" />
+                    </pattern>
+                  </patterns>
+                </dependencyType>
+              </typeDescriptor>
+            </plugin>
+
+            <plugin name="Trap Treasure Chest with Tentacle Armor">
+              <description>Requires the c5kev Tentacle Armor mod. For treasure chests with a more... hands-on surprise. Tentacles included. Personal space not included.</description>
+              <files>
+                <file source="fomod\choices\timed-armor-c5kev\TimedArmor_C5Kev.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\TimedArmor_C5Kev.json" priority="10" />
+              </files>
+              <typeDescriptor>
+                <dependencyType>
+                  <defaultType name="NotUsable" />
+                  <patterns>
+                    <pattern>
+                      <dependencies operator="And">
+                        <fileDependency file="C5Kev's Tentacled Terrors Of Tamriel 3BA.esp" state="Active" />
+                      </dependencies>
+                      <type name="Required" />
+                    </pattern>
+                  </patterns>
+                </dependencyType>
+              </typeDescriptor>
+            </plugin>
+
+            <plugin name="Trap Treasure Chest with Devious Dwemer Armor">
+              <description>Requires Devious Dwarven Cuirass Armor. For treasure chests with an ancient Dwemer surprise. Questionable machinery included.</description>
+              <files>
+                <file source="fomod\choices\timed-armor-dwemer\TimedArmor_Dwemer.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\TimedArmor_Dwemer.json" priority="10" />
+              </files>
+              <typeDescriptor>
+                <dependencyType>
+                  <defaultType name="NotUsable" />
+                  <patterns>
+                    <pattern>
+                      <dependencies operator="And">
+                        <fileDependency file="DwarvenDeviousCuirass.esp" state="Active" />
+                      </dependencies>
+                      <type name="Required" />
                     </pattern>
                   </patterns>
                 </dependencyType>

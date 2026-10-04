@@ -12,15 +12,6 @@ Bool Function HandleActivation(Actor sourceActor, String chestIdentity, Bool bos
         Return False
     EndIf
 
-    Float nowReal = Utility.GetCurrentRealTime()
-    String lastIdentity = StorageUtil.GetStringValue(None, "MMEExtensions.ChestDrink.LastIdentity", "")
-    Float lastReal = StorageUtil.GetFloatValue(None, "MMEExtensions.ChestDrink.LastActivation", -10.0)
-    If lastIdentity == chestIdentity && nowReal - lastReal >= 0.0 && nowReal - lastReal < 2.0
-        Return False
-    EndIf
-    StorageUtil.SetStringValue(None, "MMEExtensions.ChestDrink.LastIdentity", chestIdentity)
-    StorageUtil.SetFloatValue(None, "MMEExtensions.ChestDrink.LastActivation", nowReal)
-
     Float nowGame = Utility.GetCurrentGameTime()
     Float nextAllowed = StorageUtil.GetFloatValue(None, "MMEExtensions.ChestDrink.NextAllowedGameDay", -1.0)
     If nextAllowed > nowGame
@@ -39,7 +30,7 @@ Bool Function HandleActivation(Actor sourceActor, String chestIdentity, Bool bos
         Return False
     EndIf
 
-    Actor drinker = SelectNearbyDrinker(sourceActor, 2000.0)
+    Actor drinker = MMEChestTrapTargets.SelectTarget(sourceActor, 3, 1500.0)
     If drinker == None
         Report("no eligible nearby adult humanoid | chest=" + chestIdentity)
         Return False
@@ -96,53 +87,6 @@ Bool Function HandleActivation(Actor sourceActor, String chestIdentity, Bool bos
     StorageUtil.SetFloatValue(None, "MMEExtensions.ChestDrink.NextAllowedGameDay", nowGame + (rolledHours / 24.0))
     Report("complete | chest=" + chestIdentity + " | actor=" + GetActorName(drinker) + " | milk=" + GetMilkName(milkItem) + " | cooldown hours=" + rolledHours)
     Return True
-EndFunction
-
-Actor Function SelectNearbyDrinker(Actor sourceActor, Float radius) Global
-    Actor playerActor = Game.GetPlayer()
-    Actor[] priorityActors = new Actor[128]
-    Actor[] otherActors = new Actor[128]
-    Int priorityCount = 0
-    Int otherCount = 0
-
-    If IsNearbyEligible(playerActor, sourceActor, radius)
-        priorityActors[priorityCount] = playerActor
-        priorityCount += 1
-    EndIf
-    Cell currentCell = sourceActor.GetParentCell()
-    If currentCell != None
-        Int count = currentCell.GetNumRefs(43)
-        Int i = 0
-        While i < count && (priorityCount < 128 || otherCount < 128)
-            Actor candidate = currentCell.GetNthRef(i, 43) as Actor
-            If candidate != None && candidate != playerActor && IsNearbyEligible(candidate, sourceActor, radius)
-                Bool priority = candidate.IsPlayerTeammate() || candidate.GetRelationshipRank(playerActor) >= 1
-                If priority && priorityCount < 128
-                    priorityActors[priorityCount] = candidate
-                    priorityCount += 1
-                ElseIf !priority && otherCount < 128
-                    ; Neutral and hostile adults deliberately share one fallback
-                    ; pool; we distinguish only player/allies versus everyone.
-                    otherActors[otherCount] = candidate
-                    otherCount += 1
-                EndIf
-            EndIf
-            i += 1
-        EndWhile
-    EndIf
-    If priorityCount > 0
-        Return priorityActors[Utility.RandomInt(0, priorityCount - 1)]
-    ElseIf otherCount > 0
-        Return otherActors[Utility.RandomInt(0, otherCount - 1)]
-    EndIf
-    Return None
-EndFunction
-
-Bool Function IsNearbyEligible(Actor candidate, Actor center, Float radius) Global
-    If !MMEForcedMilkDrink.IsEligibleActor(candidate) || center == None
-        Return False
-    EndIf
-    Return candidate.GetParentCell() == center.GetParentCell() && center.GetDistance(candidate) <= radius
 EndFunction
 
 Form Function SelectExoticMilk() Global

@@ -1,7 +1,7 @@
 # MME Extensions Modding API
 
 This document describes the stable Papyrus entry points and ModEvents intended
-for other Skyrim mods. The current API version is **8**.
+for other Skyrim mods. The current API version is **10**.
 
 Use `MMEExtensionsAPI.psc`. Do not call `MMEDebug`, `MMENewMilkMaid`,
 `MMEOStimBreastfeeding`, or the Skyrim.Net bridge scripts directly. Those are
@@ -40,7 +40,7 @@ check `GetAPIVersion()` before depending on features introduced by a later API.
 Int version = MMEExtensionsAPI.GetAPIVersion()
 ```
 
-Returns `8` for this release.
+Returns `10` for this release.
 
 ### IsMilkMaid
 
@@ -103,6 +103,81 @@ or fallback, the function returns `false`. Configuration failures use MME
 Extensions' smoke-alarm trace, while ordinary successful activity is logged
 only when the master Papyrus logging toggle is enabled. Callers remain
 responsible for their own feature toggle, timing, and eligibility checks.
+
+### First armor introduction
+
+API version 9 adds a backend-neutral, one-time presentation for Living Armor
+(`2`), Living Parasite/Tentacle Armor (`3`), and Dwemer Armor (`4`). It uses
+the configured story pool, shared high reaction sound, and safe kneeling
+animation. It does not create or register a Milk Maid.
+
+```papyrus
+Bool completed = MMEExtensionsAPI.TryFirstArmorIntroduction(targetActor, equippedArmor)
+Bool alreadySeen = MMEExtensionsAPI.HasSeenArmorIntroduction(targetActor, 4)
+Bool reset = MMEExtensionsAPI.ResetArmorIntroduction(targetActor, 4)
+```
+
+`TryFirstArmorIntroduction` validates and classifies the supplied armor. It
+returns `false` for unsupported armor, an already-seen actor/category pair, or
+when combat, restraint, another scene, or another MME Extensions animation
+owns the actor. A blocked request is not marked and can be retried later. A
+successful request is latent for approximately ten seconds while it owns and
+then safely releases the presentation animation.
+
+Automatic equip handling invokes this sequence only for the player because a
+story popup pauses the player's game even when its subject is an NPC. Other
+mods may explicitly call the API for an NPC when that global pause is desired.
+Completion is stored per actor and category. `ResetArmorIntroduction` clears
+only the requested category, which is useful for controlled replay or testing.
+
+The editable pools are in
+`SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorIntroductionStories.json`:
+
+- `living_first_equip`
+- `parasite_first_equip`
+- `dwemer_first_equip`
+
+Ordinary lifecycle footprints use the master Papyrus logging toggle. Missing
+or malformed story data and an unresolved sound record use the established
+smoke-alarm trace.
+
+### Timed armor bonds
+
+API version 10 provides a reusable, standalone chest-armor lock. It does not
+depend on Devious Devices. The built-in FOMOD catalogs cover the six C5Kev
+Living/Parasite cuirasses and the unenchanted Dwarven Devious Cuirass; other
+mods can register exact forms at runtime.
+
+```papyrus
+Bool added = MMEExtensionsAPI.RegisterTimedArmor("MyArmor.esp", 0x812, 2)
+Bool locked = MMEExtensionsAPI.TryLockTimedArmor(targetActor, targetArmor)
+Float daysLeft = MMEExtensionsAPI.GetTimedArmorDaysRemaining(targetActor)
+Armor lockedArmor = MMEExtensionsAPI.GetTimedLockedArmor(targetActor)
+Bool isLocked = MMEExtensionsAPI.IsTimedArmorLocked(targetActor)
+Bool released = MMEExtensionsAPI.ReleaseTimedArmor(targetActor)
+Bool removed = MMEExtensionsAPI.UnregisterTimedArmor("MyArmor.esp", 0x812)
+```
+
+`RegisterTimedArmor` requires a resolvable slot-32 `Armor` form and saves it to
+`SKSE/Plugins/StorageUtilData/MMEAlerts/TimedArmorRegistry.json` immediately.
+`armorClass` uses the custom-registry values `1` through `4` and is retained
+for compatibility metadata. Registration alone does not equip or classify the
+armor; it opts that exact form into automatic timed protection when equipped.
+
+`TryLockTimedArmor` accepts an optional duration in game days. A negative value
+uses the user's MCM value (default `3`, range `0` through `30`). The actor can
+own only one timed chest lock. During the bond, MME Extensions re-equips the
+piece after an external removal and suppresses its own armor-strip route. A
+resisted player removal displays a random editable line from
+`TimedArmorNotifications.json` instead of using Skyrim's generic hard-lock
+message. The
+player receives a visible **Special Armor Bond** Active Effect; NPC state is
+tracked without adding a visible spell. `ReleaseTimedArmor` is also the public
+hook for future blacksmith or quest-based removal mechanics.
+
+Normal lifecycle footprints obey the master Papyrus logging toggle. Missing
+records, malformed installed catalogs, failed protection, and failed release
+use the smoke-alarm channel.
 
 ### Custom armor registry
 
@@ -373,6 +448,29 @@ SexLab no-strip rules, configured thresholds, and engine verification remain
 authoritative. `true` means slot 32 armor was actually removed; `false` includes
 safe rejection, insufficient fullness, protected equipment, and unavailable
 actors.
+
+## Timed armor lifecycle events
+
+The timed armor service publishes these events:
+
+- `MMEExtensions_TimedArmorLocked`
+- `MMEExtensions_TimedArmorReequipped`
+- `MMEExtensions_TimedArmorReleased`
+- `MMEExtensions_TimedArmorFailed`
+
+Every event uses this exact payload order:
+
+1. `Form actor`
+2. `Form armor`
+3. `Float days` — configured duration when locked, remaining duration when
+   re-equipped, and `0.0` on release/failure where no duration applies
+4. `String source` — for example `Automatic Equip`, `Public API`,
+   `Timer Expired`, or a concise failure reason
+
+Register again from `OnPlayerLoadGame`, as with all SKSE ModEvents. A
+`TimedArmorReequipped` event means an early removal was resisted, not that a
+new lock began. A `TimedArmorFailed` event is exceptional and should not be
+used as the normal expiration signal.
 
 ## Available milk transaction event
 
