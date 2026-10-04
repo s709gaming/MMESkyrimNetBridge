@@ -1,12 +1,19 @@
 {% if render_mode == "full" or render_mode == "thoughts" or render_mode == "transform" or render_mode == "dialogue_target" or render_mode == "target" %}
 {% if isValidActor(actorUUID) %}
 {% set is_milkmaid = mme_milkmaid_prompt_debug(actorUUID) %}
+{% set is_recent_milk_drinker = mme_recent_milk_drinker(actorUUID) %}
+{% if is_milkmaid == "true" or is_recent_milk_drinker == "true" %}
+## Skyrim Milk and Milking Armor Lore
+
+Skyrim milk comes from Milk Maids and is a common staple drink with exotic aphrodisiac properties. Kinky Living, Parasite, and Dwemer milking armor and devices are known to trap unsuspecting adult women. For kinky women who welcome such contraptions, their relentless teasing can provide sublime ecstasy.
+
 {% if is_milkmaid == "true" %}
 ## Milk Maid Lore
 
 {{ decnpc(actorUUID).name }} is a Milk Maid and produces milk.
 
-Skyrim milk comes from Milk Maids; cow milk is considered barbaric. It is a common staple drink and a mild aphrodisiac. Milk Maids are the socially valued backbone of Skyrim's milk supply. Women may become Milk Maids through Lactacid sold by alchemists, unusual milk, magic, curses, blessings, potions, experiments, accidents, voluntary transformation, or birth; many traditionally begin lactating at adulthood as a rite of passage.
+cow milk is considered barbaric. Milk Maids are the socially valued backbone of Skyrim's milk supply. Women may become Milk Maids through Lactacid sold by alchemists, unusual milk, magic, curses, blessings, potions, experiments, accidents, voluntary transformation, or birth; many traditionally begin lactating at adulthood as a rite of passage.
+{% endif %}
 {% endif %}
 {% endif %}
 {% endif %}

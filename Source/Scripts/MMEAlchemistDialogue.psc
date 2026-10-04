@@ -77,6 +77,8 @@ Bool Function TryAddLivingArmor(Actor alchemist, GlobalVariable stateGlobal) Glo
     EndIf
     Debug.Notification(armorName + " Added to Basic Living Armor")
     MMELog.Diagnostic("[MME Extensions Alchemist] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
+    Bool introduced = MMEArmorIntroduction.TryIntroduction(playerActor, wornArmor, "Alchemist Living Armor service")
+    MMELog.MasterDiagnostic("[MME Extensions Alchemist] immediate Living introduction result=" + introduced + " | armor=" + armorName)
     Return True
 EndFunction
 

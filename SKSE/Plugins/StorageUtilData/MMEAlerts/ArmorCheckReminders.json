@@ -34,6 +34,13 @@
     "notices the parasite stirring",
     "eyes the creature clinging to you"
   ],
+  "dwemerarmor": [
+    "spots your devious Dwemer armor",
+    "recognizes your intimate Dwemer machinery",
+    "notices your armor's devious Dwemer modifications",
+    "eyes the Dwemer milking device hidden in your armor",
+    "recognizes the teasing Dwemer mechanism you're wearing"
+  ],
   "reaction": [
     "and smirks.",
     "and grins.",

@@ -96,6 +96,8 @@ Bool Function TryAddParasiteArmor(Actor mage, GlobalVariable stateGlobal) Global
     EndIf
     Debug.Notification(armorName + " Added to Parasite Living Armor")
     MMELog.Diagnostic("[MME Extensions Mage] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
+    Bool introduced = MMEArmorIntroduction.TryIntroduction(playerActor, wornArmor, "Mage Parasite Armor service")
+    MMELog.MasterDiagnostic("[MME Extensions Mage] immediate Parasite introduction result=" + introduced + " | armor=" + armorName)
     Return True
 EndFunction
 

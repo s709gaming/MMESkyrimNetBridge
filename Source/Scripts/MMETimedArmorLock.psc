@@ -260,6 +260,10 @@ Bool Function TryLockRegisteredEquip(Actor target, Armor targetArmor) Global
     If !IsRegisteredArmor(targetArmor)
         Return False
     EndIf
+    If target != Game.GetPlayer() && MMEChestArmorTrap.IsTrapEquipPending(target, targetArmor)
+        Trace("automatic lock bypassed for NPC chest-trap equip | actor=" + GetActorName(target) + " | armor=" + targetArmor.GetName())
+        Return False
+    EndIf
     Return TryLock(target, targetArmor, -1.0, "Automatic Equip")
 EndFunction
 
@@ -373,10 +377,32 @@ Function ResolveDue(Float now) Global
         ElseIf !IsLocked(target)
             StorageUtil.FormListRemoveAt(None, GetActorListKey(), index)
         ElseIf StorageUtil.GetFloatValue(target, GetDeadlineKey(), 0.0) <= now
-            Release(target, "Timer Expired")
+            Expire(target)
         EndIf
         index -= 1
     EndWhile
+EndFunction
+
+Function Expire(Actor target) Global
+    If target == None || !IsLocked(target)
+        Trace("expiration skipped | no active lock")
+        Return
+    EndIf
+    Armor targetArmor = GetLockedArmor(target)
+    Int armorClass = GetRegisteredArmorClass(targetArmor)
+    ; Parasite armor becomes removable at its deadline but remains on its
+    ; wearer. Explicit API, vendor and MCM releases still use Release() and
+    ; therefore retain their existing immediate-unequip behavior.
+    If armorClass == 3
+        ClearState(target)
+        RefreshPlayerIndicator(target)
+        Debug.Notification(GetActorName(target) + "'s armor is satisfied and willing to release its well milked morsel!")
+        Trace("parasite timer expired | lock cleared; armor intentionally retained | actor=" + GetActorName(target) + " | armor=" + targetArmor.GetName() + " | equipped=" + target.IsEquipped(targetArmor))
+        Publish("MMEExtensions_TimedArmorReleased", target, targetArmor, 0.0, "Timer Expired")
+        RefreshScheduling()
+    Else
+        Release(target, "Timer Expired")
+    EndIf
 EndFunction
 
 Function RecoverAfterLoad() Global

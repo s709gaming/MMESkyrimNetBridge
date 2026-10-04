@@ -7,6 +7,10 @@ String Function GetConfigFile() Global
     Return "/MMEAlerts/CustomArmorRegistry"
 EndFunction
 
+String Function GetDwemerArtisanKey() Global
+    Return "MMEExtensions.CustomArmorRegistry.DwemerArtisanForms"
+EndFunction
+
 String Function GetFormKey(Int armorClass) Global
     If armorClass == 1
         Return "milk_forms"
@@ -87,6 +91,10 @@ Int Function ClassifyCustomArmor(Armor targetArmor, Bool traceMatch = False) Glo
         armorClass = MatchNameClass(targetArmor, 4)
         source = "name fallback"
     EndIf
+    If armorClass == 0 && IsArtisanDwemerArmor(targetArmor)
+        armorClass = 4
+        source = "blacksmith attachment"
+    EndIf
     If armorClass == 0
         armorClass = MatchNameClass(targetArmor, 2)
     EndIf
@@ -100,6 +108,57 @@ Int Function ClassifyCustomArmor(Armor targetArmor, Bool traceMatch = False) Glo
         Trace("classified | armor=" + GetArmorName(targetArmor) + " | class=" + GetClassLabel(armorClass) + " | source=" + source)
     EndIf
     Return armorClass
+EndFunction
+
+Bool Function IsArtisanDwemerArmor(Armor targetArmor) Global
+    If targetArmor == None
+        Return False
+    EndIf
+    Return StorageUtil.FormListFind(None, GetDwemerArtisanKey(), targetArmor) >= 0
+EndFunction
+
+Bool Function RegisterArtisanDwemerArmor(Armor targetArmor) Global
+    If targetArmor == None
+        Trace("artisan register rejected | missing armor")
+        Return False
+    EndIf
+    String armorName = GetArmorName(targetArmor)
+    If ClassifyCustomArmor(targetArmor) > 0
+        Trace("artisan register skipped | armor already has a custom class | " + armorName)
+        Return False
+    EndIf
+    If StorageUtil.FormListAdd(None, GetDwemerArtisanKey(), targetArmor, False) < 0
+        Alarm("artisan exact-form register failed | " + armorName)
+        Return False
+    EndIf
+    If !IsArtisanDwemerArmor(targetArmor) || ClassifyCustomArmor(targetArmor) != 4
+        Alarm("artisan register saved but Dwemer classification verification failed | " + armorName)
+        Return False
+    EndIf
+    Trace("artisan Dwemer attachment registered | armor=" + armorName)
+    Return True
+EndFunction
+
+Bool Function UnregisterArtisanDwemerArmor(Armor targetArmor) Global
+    If targetArmor == None
+        Trace("artisan unregister rejected | missing armor")
+        Return False
+    EndIf
+    String armorName = targetArmor.GetName()
+    If !IsArtisanDwemerArmor(targetArmor)
+        Trace("artisan unregister skipped | attachment not found | " + armorName)
+        Return False
+    EndIf
+    If StorageUtil.FormListRemove(None, GetDwemerArtisanKey(), targetArmor, True) <= 0
+        Alarm("artisan exact-form unregister failed | " + armorName)
+        Return False
+    EndIf
+    If IsArtisanDwemerArmor(targetArmor)
+        Alarm("artisan unregister saved but attachment remains registered | " + armorName)
+        Return False
+    EndIf
+    Trace("artisan Dwemer attachment unregistered | armor=" + armorName)
+    Return True
 EndFunction
 
 Int Function MatchExactClass(Armor targetArmor, Int armorClass) Global
@@ -142,6 +201,19 @@ Function AuditRegistry() Global
         Alarm("registry JSON is missing or malformed")
         Return
     EndIf
+    ; Builds before 0.5.1 stored blacksmith attachments by display name. A
+    ; generic name such as "clothes" consequently classified every matching
+    ; outfit in a loaded town. Remove that unsafe legacy state once; new
+    ; attachments live as exact save-persistent Form references instead.
+    If JsonUtil.GetIntValue(GetConfigFile(), "artisan_exact_form_migration", 0) == 0
+        JsonUtil.StringListClear(GetConfigFile(), "dwemer_artisan_names")
+        JsonUtil.SetIntValue(GetConfigFile(), "artisan_exact_form_migration", 1)
+        If !JsonUtil.Save(GetConfigFile(), False)
+            Alarm("legacy artisan-name migration could not be saved")
+        Else
+            Trace("legacy artisan-name registry cleared; exact-form storage active")
+        EndIf
+    EndIf
     Int armorClass = 1
     While armorClass <= 4
         String keyName = GetFormKey(armorClass)
@@ -183,18 +255,28 @@ Function HandleCustomArmorEquipped(Actor wearer, Armor equippedArmor) Global
     EndIf
 
     Trace("equip detected | actor=" + MMEArmorScript.GetActorName(wearer) + " | armor=" + GetArmorName(equippedArmor) + " | class=" + GetClassLabel(armorClass))
+    ActorBase wearerBase = wearer.GetLeveledActorBase()
+    If wearerBase == None || (wearerBase.GetSex() != 1 && !(wearerBase.GetSex() == 0 && milkController.MaleMaids))
+        Trace("equip compatibility stopped | actor sex is not enabled by MME")
+        Return
+    EndIf
     If !MMEArmorScript.IsMMEMilkMaid(wearer, milkController)
+        ; A registered armor is a base form, not a unique inventory instance.
+        ; Never convert NPCs merely because they equip one: deliberate NPC
+        ; conversion belongs to the public forced-conversion routes.
+        If wearer != Game.GetPlayer()
+            Trace("equip compatibility stopped | NPC equip cannot create Milk Maid | actor=" + MMEArmorScript.GetActorName(wearer) + " | armor=" + GetArmorName(equippedArmor))
+            Return
+        EndIf
+        If milkController.MilkQC == None || milkController.MilkQC.MME_FreeMaidSlots <= 0
+            Trace("equip compatibility stopped | no free MME Milk Maid slot | actor=" + MMEArmorScript.GetActorName(wearer))
+            Return
+        EndIf
         Trace("Milk Maid assignment requested | actor=" + MMEArmorScript.GetActorName(wearer))
         milkController.AssignSlotMaid(wearer)
     EndIf
     If !MMEArmorScript.IsMMEMilkMaid(wearer, milkController)
         Trace("equip compatibility stopped | Milk Maid assignment unavailable")
-        Return
-    EndIf
-
-    ActorBase wearerBase = wearer.GetLeveledActorBase()
-    If wearerBase == None || (wearerBase.GetSex() != 1 && !(wearerBase.GetSex() == 0 && milkController.MaleMaids))
-        Trace("equip compatibility stopped | actor sex is not enabled by MME")
         Return
     EndIf
 
@@ -205,6 +287,9 @@ Function HandleCustomArmorEquipped(Actor wearer, Armor equippedArmor) Global
         If MME_Storage.getLactacidCurrent(wearer) < 1.0
             MME_Storage.setLactacidCurrent(wearer, 1.0)
             Trace("Dwemer Lactacid raised to 1 | actor=" + MMEArmorScript.GetActorName(wearer))
+        EndIf
+        If wearer == Game.GetPlayer()
+            Debug.Notification(armorName + "'s kinky milking and teasing devices attach to your most intimate places")
         EndIf
         Trace("Dwemer equip compatibility complete | dedicated system owns reactions")
         Return

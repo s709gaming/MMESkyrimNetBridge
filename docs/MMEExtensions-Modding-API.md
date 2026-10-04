@@ -1,7 +1,7 @@
 # MME Extensions Modding API
 
 This document describes the stable Papyrus entry points and ModEvents intended
-for other Skyrim mods. The current API version is **10**.
+for other Skyrim mods. The current API version is **11**.
 
 Use `MMEExtensionsAPI.psc`. Do not call `MMEDebug`, `MMENewMilkMaid`,
 `MMEOStimBreastfeeding`, or the Skyrim.Net bridge scripts directly. Those are
@@ -225,6 +225,21 @@ Bool removed = MMEExtensionsAPI.UnregisterCustomArmorName("Example Living Armor"
 Exact-form registration is strongly preferred. A display name can be shared
 by unrelated records or changed by another mod or translation.
 
+API version 11 adds reversible, form-oriented Dwemer attachment helpers:
+
+```papyrus
+Bool installed = MMEExtensionsAPI.InstallDwemerAttachment(targetArmor)
+Bool attached = MMEExtensionsAPI.HasDwemerAttachment(targetArmor)
+Bool removed = MMEExtensionsAPI.RemoveDwemerAttachment(targetArmor)
+```
+
+These helpers use the dedicated `dwemer_artisan_names` list. Removal can only
+delete entries installed through this attachment API; it cannot unregister
+built-in or third-party exact-form Dwemer support. Identity is based on the
+armor's display name, so unrelated records with the same translated name are
+treated as one attachment. `InstallDwemerAttachment` rejects armor already
+recognized by any MME Extensions armor category.
+
 On equip, a custom entry follows its matching behavior: it can
 register the wearer as a Milk Maid, and Living/Parasite armor applies MME's
 living-armor passive and minimum Lactacid state. On unequip, the passive is
@@ -232,7 +247,9 @@ removed only after no other recognized Living/Parasite armor remains worn.
 Original MME classifications always win, preventing duplicate effects.
 
 Dwemer Armor is deliberately independent. It does not receive the Living or
-Parasite passive, narration, Thoughts, or service-reminder behavior. Its
+Parasite passive, narration, or Thoughts behavior. Blacksmith conversations
+may show its compact armor-reminder wording on the shared service-reminder
+cooldown. Its
 dedicated system checks MME's authoritative maximum capacity after production
 cycles and automatically invokes MME's external milking route at 90 percent.
 

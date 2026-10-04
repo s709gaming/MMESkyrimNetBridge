@@ -6,10 +6,21 @@ Actor Function SelectTarget(Actor center, Int mode, Float radius = 1500.0) Globa
     If center == None
         Return None
     EndIf
+    Actor playerActor = Game.GetPlayer()
+    Bool playerEligible = IsEligible(playerActor, center, mode, radius)
+    Bool allowNearbyAllies = AreNearbyAlliesEnabled(mode)
+    Trace("scope | mode=" + mode + " | nearby allies=" + allowNearbyAllies + " | player eligible=" + playerEligible)
+    If !allowNearbyAllies
+        If playerEligible
+            Trace("selected | mode=" + mode + " | scope=player only | actor=" + GetActorName(playerActor))
+            Return playerActor
+        EndIf
+        Trace("no target | mode=" + mode + " | scope=player only | player ineligible")
+        Return None
+    EndIf
     Actor[] candidates = new Actor[128]
     Int count = 0
-    Actor playerActor = Game.GetPlayer()
-    If IsEligible(playerActor, center, mode, radius)
+    If playerEligible
         candidates[count] = playerActor
         count += 1
     EndIf
@@ -33,6 +44,19 @@ Actor Function SelectTarget(Actor center, Int mode, Float radius = 1500.0) Globa
     Actor selected = candidates[Utility.RandomInt(0, count - 1)]
     Trace("selected | mode=" + mode + " | actor=" + GetActorName(selected))
     Return selected
+EndFunction
+
+Bool Function AreNearbyAlliesEnabled(Int mode) Global
+    String settings = "/MMEAlerts/Settings"
+    If mode == 1
+        Return JsonUtil.GetIntValue(settings, "enableArmorTrapNearbyAllies", 1) == 1
+    ElseIf mode == 2
+        Return JsonUtil.GetIntValue(settings, "enableMilkMaidTrapNearbyAllies", 1) == 1
+    ElseIf mode == 3
+        Return JsonUtil.GetIntValue(settings, "enableMilkDrinkTrapNearbyAllies", 1) == 1
+    EndIf
+    MMELog.Alarm("[MME Extensions Chest Targets] FAILURE: unknown target-selection mode=" + mode)
+    Return False
 EndFunction
 
 Bool Function IsEligible(Actor candidate, Actor center, Int mode, Float radius) Global

@@ -50,9 +50,12 @@ Bool Function TryShow(Actor speaker) Global
     If wornArmor != None
         armorClass = MMEArmorScript.ClassifyArmor(milkController, wornArmor, "service-reminder", playerActor)
         If armorClass == 4
-            ; Dwemer flavor/reminder content is intentionally reserved for its
-            ; later dedicated expansion, never borrowed from an old category.
-            Return False
+            ; Dwemer machinery is a blacksmith specialty. It shares the same
+            ; controller-owned cooldown as every other armor reminder.
+            If serviceRole != "Blacksmith"
+                Return False
+            EndIf
+            poolName = "dwemerarmor"
         EndIf
         ; Tentacle/Spriggan and the three configured arrays receive a concrete
         ; class above. Other canonical/special MME protections (for example an
@@ -67,7 +70,7 @@ Bool Function TryShow(Actor speaker) Global
             poolName = "livingarmor"
         ElseIf armorClass == 3
             poolName = "parasitearmor"
-        Else
+        ElseIf armorClass != 4
             poolName = "regulararmor"
         EndIf
     EndIf
@@ -167,6 +170,8 @@ String Function GetCompactObservation(String poolName) Global
         Return "watches your living armor stir"
     ElseIf poolName == "parasitearmor"
         Return "notices the parasite"
+    ElseIf poolName == "dwemerarmor"
+        Return "spots your devious Dwemer fittings"
     EndIf
     Return "studies your equipment"
 EndFunction

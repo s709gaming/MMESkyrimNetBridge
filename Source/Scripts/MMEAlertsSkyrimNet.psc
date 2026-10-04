@@ -303,6 +303,8 @@ Function RegisterPromptDecorator() Global
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid prompt decorator registration result " + result)
     Int breastfeedingResult = SkyrimNetApi.RegisterDecorator("mme_breastfeeding_role", "MMEAlertsSkyrimNet", "BreastfeedingPromptRole")
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Breastfeeding prompt decorator registration result " + breastfeedingResult)
+    Int recentDrinkerResult = SkyrimNetApi.RegisterDecorator("mme_recent_milk_drinker", "MMEAlertsSkyrimNet", "RecentMilkDrinkerPrompt")
+    MMELog.Diagnostic("[MMEAlert SkyrimNet] Recent milk drinker prompt decorator registration result " + recentDrinkerResult)
 EndFunction
 
 Function SetBreastfeedingPromptState(Actor participant, String role, Int threadID) Global
@@ -367,6 +369,32 @@ String Function MilkmaidPromptDebug(Actor milkMaid) Global
     EndIf
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 0) == 1
         MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid lore rendered for " + ResolveActorName(milkMaid, "unnamed actor"))
+    EndIf
+    Return "true"
+EndFunction
+
+Function MarkRecentMilkDrinker(Actor drinker) Global
+    If drinker == None
+        Return
+    EndIf
+    StorageUtil.SetFloatValue(drinker, "MME.Extensions.SkyrimNet.RecentMilkDrink", Utility.GetCurrentRealTime())
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 0) == 1
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] recent milk drinker marked | actor=" + ResolveActorName(drinker, "unnamed actor"))
+    EndIf
+EndFunction
+
+String Function RecentMilkDrinkerPrompt(Actor drinker) Global
+    If !IsExtensionsEnabled() || drinker == None || !StorageUtil.HasFloatValue(drinker, "MME.Extensions.SkyrimNet.RecentMilkDrink")
+        Return ""
+    EndIf
+    Float markedAt = StorageUtil.GetFloatValue(drinker, "MME.Extensions.SkyrimNet.RecentMilkDrink", -120.0)
+    Float now = Utility.GetCurrentRealTime()
+    If markedAt > now || now - markedAt > 90.0
+        StorageUtil.UnsetFloatValue(drinker, "MME.Extensions.SkyrimNet.RecentMilkDrink")
+        Return ""
+    EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 0) == 1
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] recent milk drinker lore rendered | actor=" + ResolveActorName(drinker, "unnamed actor"))
     EndIf
     Return "true"
 EndFunction
@@ -456,6 +484,10 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
     ElseIf armorClass == 3
         narrationType = "Living Parasite"
         content = actorName + " has just equipped Living Parasite armor. Its parasitic tentacles tease and stimulate her breasts while pleasurably drawing out her milk. Treat the parasite's behavior as kinky and fun, not frightening. Generate a short, humorous, suggestive, and playful reaction specifically about this equip event. Create a fresh reaction; do not merely repeat this description or change subjects."
+    EndIf
+    If MMEChestArmorTrap.IsTrapEquipPending(wearer, equippedArmor)
+        content += " This armor sprang from a magically trapped treasure chest and unexpectedly wrapped itself around " + actorName + ". Acknowledge the chest's mischievous surprise and treat the ambush as exaggerated, playful, suggestive, pleasurable, and funny rather than frightening."
+        MMEArmorScript.ReportArmor(diagnostic, "equip narration received chest-trap origin | actor=" + actorName + " | type=" + narrationType)
     EndIf
     MMEArmorScript.ReportArmor(diagnostic, "equip narration sending | api=targeted DirectNarration | target=" + actorName + " | role=" + role + " | type=" + narrationType + " | tone=humorous/suggestive/playful")
     Int result = SkyrimNetApi.DirectNarration(content, None, wearer)
@@ -759,7 +791,7 @@ Function NarrateChestMilkDrink(Actor drinker, String milkName, String chestKind)
         chestKind = "treasure chest"
     EndIf
     String situation = actorName + " is magically forced to drink " + milkName + " from the " + chestKind + "."
-    String content = "Immediate situation: " + situation + " Prioritize " + actorName + " as the speaker. Have them react immediately and enthusiastically, as if a wonderful sensation is coursing through them. Keep the response short, playful, positive, and focused on the magical forced drink; do not invent a different source for the milk."
+    String content = "Immediate situation: " + situation + " Prioritize " + actorName + " as the speaker and have them react immediately, enthusiastically, and with delightful overstatement. The trapped chest may surprise them, but milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as their first milk drink or as surprise merely because milk has its normal effects. Generate one short, silly, suggestive reaction filled with mischievous milk innuendo and clever adult humor, like an animated comedy slipping a joke past the younger audience. Make the magical chest feel comically brazen. Stay focused on the magical forced drink; do not become graphically explicit or invent a different milk source, additional effects, fear, pain, or genuine distress."
     Int result = SkyrimNetApi.DirectNarration(content, None, drinker)
     If result != 0
         MMELog.Alarm("[MME Extensions Chest Milk Narration] FAILURE: Skyrim.Net rejected request [" + result + "] for " + actorName)
@@ -896,12 +928,14 @@ Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String r
         MMELog.Alarm("[MME Extensions Drink Narration] FAILURE: verified NPC drink reached Skyrim.Net without a rendered JSON reaction; using safe fallback context")
         renderedReaction = actorName + " drinks some milk."
     EndIf
-    String content = "Immediate situation: " + renderedReaction + " Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on " + actorName + " and only the effects actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+    String content = "Immediate situation: " + renderedReaction + " Prioritize " + actorName + " as the speaker and let them react to what is happening to their own body. Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as their first milk drink or express surprise merely because milk has its normal effects. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted, mischievous, and character-appropriate, like an animated comedy slipping a joke past the younger audience. Stay focused on " + actorName + " and only the effects actually described. Create a fresh joke or reaction; do not merely repeat the situation, become graphically explicit, change subjects, or invent additional effects."
     If MMEAlertsController.AreArmsRestrained(drinker)
-        content = "Immediate situation: " + renderedReaction + " " + actorName + " also has restrained arms. Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on " + actorName + " and only the effects actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+        content += " " + actorName + " also has restrained arms. Treat this as comically inconvenient and fertile ground for cheeky innuendo. Exaggerate the awkwardness without inventing new restraints, danger, pain, or additional effects."
     EndIf
     If !establishedMilkmaid
         content += " Factual boundary: " + actorName + " is not a Milk Maid, and this drink did not add breast milk, breast fullness, breast weight, swelling, growth, leaking, or lactation. Do not imply or invent any of those effects."
+    Else
+        content += " " + actorName + " is an established Milk Maid. You may joke about confirmed milk, breast-fullness, sensitivity, or arousal effects described in the immediate situation, but do not add effects that were not reported."
     EndIf
     If diagnosticTest
         MMELog.Status("[MME Extensions Global NPC Drink Test] 04 SKYRIM.NET DISPATCH | route=" + route + " | actor=" + actorName + " | cooldown bypassed")
@@ -990,11 +1024,11 @@ Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem, String renderedRe
     If drinkName == ""
         drinkName = "some milk"
     EndIf
-    String content = "The player just drank " + drinkName + ". Their breasts are becoming heavier and more sensitive. React creatively with playful, suggestive humor. Don't simply restate the event."
+    String content = "Immediate situation: The player just drank " + drinkName + ". Their breasts are becoming heavier and more sensitive. Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as the player's first milk drink or express surprise merely because milk has its normal effects. Prefer one appropriate nearby character reacting to the player; do not make two characters speak simultaneously. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted and mischievous, like an animated comedy slipping a joke past the younger audience. Do not merely repeat the situation, become graphically explicit, change subjects, or invent additional effects."
     If renderedReaction != ""
-        content = "Immediate situation: " + renderedReaction + " Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on the player and only the effects actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+        content = "Immediate situation: " + renderedReaction + " Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as the player's first milk drink or express surprise merely because milk has its normal effects. Prefer one appropriate nearby character reacting to the player; do not make two characters speak simultaneously. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted and mischievous, like an animated comedy slipping a joke past the younger audience. Stay focused on the player and only the effects actually described. Create a fresh joke or reaction; do not merely repeat the situation, become graphically explicit, change subjects, or invent additional effects."
         If MMEAlertsController.AreArmsRestrained(drinker)
-            content = "Immediate situation: " + renderedReaction + " The player also has restrained arms. Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on the player and only the effects actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+            content += " The player also has restrained arms. Treat this as comically inconvenient and fertile ground for cheeky innuendo. Exaggerate the awkwardness without inventing new restraints, danger, pain, or additional effects."
         EndIf
     Else
         String restrainedContent = BuildRestrainedPlayerDrinkContent(drinker, drinkName)
@@ -1743,7 +1777,7 @@ String Function BuildRestrainedPlayerDrinkContent(Actor playerActor, String drin
     If playerActor == None || !MMEAlertsController.AreArmsRestrained(playerActor)
         Return ""
     EndIf
-    Return "The player just drank " + drinkName + " despite having their arms restrained. Their breasts are becoming heavier and more sensitive. React creatively with playful, suggestive humor about the situation. Don't simply restate the event."
+    Return "Immediate situation: The player just drank " + drinkName + " despite having their arms restrained. Their breasts are becoming heavier and more sensitive. Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as the player's first milk drink or express surprise merely because milk has its normal effects. Prefer one appropriate nearby character reacting to the player; do not make two characters speak simultaneously. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted and mischievous, like an animated comedy slipping a joke past the younger audience. Treat the restrained arms as comically inconvenient and fertile ground for cheeky innuendo, but do not invent new restraints, danger, pain, or additional effects. Do not merely repeat the situation or become graphically explicit."
 EndFunction
 
 String Function ResolveActorName(Actor actorRef, String fallbackName) Global

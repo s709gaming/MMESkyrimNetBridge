@@ -8,6 +8,45 @@ String Function GetDwemerCatalog() Global
     Return "/MMEAlerts/TimedArmor_Dwemer"
 EndFunction
 
+String Function GetTrapArmorKey() Global
+    Return "MMEExtensions.ChestArmor.PendingArmor"
+EndFunction
+
+String Function GetTrapTimeKey() Global
+    Return "MMEExtensions.ChestArmor.PendingTime"
+EndFunction
+
+Function MarkTrapEquip(Actor target, Armor targetArmor) Global
+    If target == None || targetArmor == None
+        Return
+    EndIf
+    StorageUtil.SetFormValue(target, GetTrapArmorKey(), targetArmor)
+    StorageUtil.SetFloatValue(target, GetTrapTimeKey(), Utility.GetCurrentRealTime())
+    Trace("trap origin marked | actor=" + GetActorName(target) + " | armor=" + targetArmor.GetName())
+EndFunction
+
+Bool Function IsTrapEquipPending(Actor target, Armor targetArmor) Global
+    If target == None || targetArmor == None || StorageUtil.GetFormValue(target, GetTrapArmorKey(), None) != targetArmor
+        Return False
+    EndIf
+    Float markedAt = StorageUtil.GetFloatValue(target, GetTrapTimeKey(), -30.0)
+    Float now = Utility.GetCurrentRealTime()
+    If markedAt > now || now - markedAt > 30.0
+        ClearTrapEquip(target, "stale marker")
+        Return False
+    EndIf
+    Return True
+EndFunction
+
+Function ClearTrapEquip(Actor target, String reason = "consumed") Global
+    If target == None
+        Return
+    EndIf
+    StorageUtil.UnsetFormValue(target, GetTrapArmorKey())
+    StorageUtil.UnsetFloatValue(target, GetTrapTimeKey())
+    Trace("trap origin cleared | actor=" + GetActorName(target) + " | reason=" + reason)
+EndFunction
+
 ; Return 1 only after an armor is equipped and synchronously locked. A zero
 ; lets the controller continue to conversion and milk-drink outcomes.
 Int Function HandleActivation(Actor opener, String chestIdentity, Bool inDwemerRuin) Global
@@ -64,10 +103,24 @@ Int Function HandleActivation(Actor opener, String chestIdentity, Bool inDwemerR
     If target.GetItemCount(selected) <= 0
         target.AddItem(selected, 1, True)
     EndIf
-    Bool locked = MMETimedArmorLock.TryLock(target, selected, -1.0, "Treasure Chest Trap")
-    If !locked || !target.IsEquipped(selected) || !MMETimedArmorLock.IsLocked(target)
-        Alarm("equip/lock failed | actor=" + GetActorName(target) + " | armor=" + selected.GetName())
-        Return 0
+    MarkTrapEquip(target, selected)
+    If target == Game.GetPlayer()
+        Bool locked = MMETimedArmorLock.TryLock(target, selected, -1.0, "Treasure Chest Trap")
+        If !locked || !target.IsEquipped(selected) || !MMETimedArmorLock.IsLocked(target)
+            ClearTrapEquip(target, "player equip/lock failed")
+            Alarm("equip/lock failed | actor=" + GetActorName(target) + " | armor=" + selected.GetName())
+            Return 0
+        EndIf
+    Else
+        ; Followers and allied NPCs receive every armor reaction and passive,
+        ; but remain free to change equipment immediately.
+        target.EquipItem(selected, False, True)
+        If !target.IsEquipped(selected)
+            ClearTrapEquip(target, "NPC equip failed")
+            Alarm("unlocked NPC equip failed | actor=" + GetActorName(target) + " | armor=" + selected.GetName())
+            Return 0
+        EndIf
+        Trace("NPC timed lock intentionally bypassed | actor=" + GetActorName(target) + " | armor=" + selected.GetName())
     EndIf
     Float cooldown = JsonUtil.GetFloatValue(settings, "chestArmorTrapCooldownHours", 4.0)
     If cooldown < 0.0

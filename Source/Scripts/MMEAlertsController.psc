@@ -1267,13 +1267,20 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
         MMEArmorScript.ReportArmor(diagnostic, "armor resolve failed | " + pluginName + ":" + (localArmorForm as Int))
         Return
     EndIf
+    Bool chestTrapEquip = MMEChestArmorTrap.IsTrapEquipPending(wearer, equippedArmor)
     MMECustomArmorRegistry.HandleCustomArmorEquipped(wearer, equippedArmor)
     MMETimedArmorLock.TryLockRegisteredEquip(wearer, equippedArmor)
     If MMEArmorIntroduction.TryAutomatic(wearer, equippedArmor)
+        If chestTrapEquip
+            MMEChestArmorTrap.ClearTrapEquip(wearer, "first introduction consumed equip")
+        EndIf
         MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] ordinary equip reaction suppressed after successful introduction | actor=" + GetActorName(wearer))
         Return
     EndIf
     MMEArmorScript.HandleArmorEquipped(wearer, equippedArmor)
+    If chestTrapEquip
+        MMEChestArmorTrap.ClearTrapEquip(wearer, "equip handler complete")
+    EndIf
 EndEvent
 
 ; Cleans up JSON-backed Living/Parasite effects after the exact ARMO leaves.

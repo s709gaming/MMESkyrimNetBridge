@@ -14,6 +14,8 @@ $dwemer = Get-Content -LiteralPath (Join-Path $projectRoot "fomod\choices\timed-
 $notifications = Get-Content -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\TimedArmorNotifications.json") -Raw | ConvertFrom-Json
 $dialogue = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMETrapArmorDialogue.psc") -Raw
 $dialogueFragments = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEBlacksmithDialogue.psc") -Raw
+$venueDrink = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEInnPalaceMilkEvent.psc") -Raw
+$chestTargets = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEChestTrapTargets.psc") -Raw
 
 function Assert-Match([string]$Text, [string]$Pattern, [string]$Message) {
     if ($Text -notmatch $Pattern) { throw $Message }
@@ -32,8 +34,18 @@ if ($lockScript -match 'EquipItem\(targetArmor, True, True\)') { throw "Timed ar
 Assert-Match $lockScript 'EquipItem\(targetArmor, False, True\)' "Timed armor must silently restore the removed armor through the native event path."
 Assert-Match $lockScript 'ShowUnequipResistedNotification\(target\)' "A resisted removal must show the playful JSON notification."
 Assert-Match $lockScript 'The armor magically wraps around you\. Enjoy it for the next ' "Initial trapped-armor notification is missing."
+Assert-Match $lockScript 'ElseIf StorageUtil\.GetFloatValue\(target, GetDeadlineKey\(\), 0\.0\) <= now\s+Expire\(target\)' "Due timed armor must route through the class-aware expiration path."
+Assert-Match $lockScript 'If armorClass == 3\s+ClearState\(target\)' "Parasite expiration must clear the lock without calling the explicit release path."
+Assert-Match $lockScript "armor is satisfied and willing to release its well milked morsel!" "Requested Parasite expiration notification is missing."
+Assert-Match $lockScript 'lock cleared; armor intentionally retained' "Parasite expiration needs a master-trace footprint for retained equipment."
+Assert-Match $lockScript 'Else\s+Release\(target, "Timer Expired"\)' "Living and Dwemer timer expiration must retain their existing automatic release behavior."
 Assert-Match $lockScript 'MMELog\.MasterDiagnostic' "Timed armor footprints must use the master trace gate."
 Assert-Match $lockScript 'MMELog\.Alarm' "Timed armor needs smoke alarms for material failures."
+Assert-Match $lockScript 'target != Game\.GetPlayer\(\) && MMEChestArmorTrap\.IsTrapEquipPending' "NPC chest-trap equips must bypass the automatic timed lock."
+Assert-Match $trapScript 'If target == Game\.GetPlayer\(\)' "Chest armor must reserve timed locks for the player."
+Assert-Match $trapScript 'NPC timed lock intentionally bypassed' "Unlocked NPC trap armor needs a master-trace footprint."
+Assert-Match $trapScript 'Function MarkTrapEquip' "Chest armor must mark trap-origin equips for downstream narration."
+Assert-Match $controller 'MMEChestArmorTrap\.ClearTrapEquip' "The central equip handler must clear consumed trap-origin state."
 Assert-Match $controller 'MMETimedArmorLock\.GetNextDeadline\(\)' "Controller shared scheduler is missing the timed armor deadline."
 Assert-Match $controller 'MMETimedArmorLock\.ResolveDue\(now\)' "Controller does not resolve expired timed armor."
 Assert-Match $mcm '"timedArmorLockDays", 3\.0' "MCM default must be three game days."
@@ -45,7 +57,7 @@ foreach ($setting in 'enableLivingArmorChestTrap', 'enableParasiteArmorChestTrap
 Assert-Match $nativeSource 'event->menuName != RE::ContainerMenu::MENU_NAME' "Player traps must wait for the actual container menu."
 Assert-Match $nativeSource 'activator != RE::PlayerCharacter::GetSingleton\(\)' "Raw player activation must not dispatch a chest trap before lockpicking."
 Assert-Match $nativeSource 'chest->IsLocked\(\)' "NPC chest activation must reject locked containers."
-Assert-Match $api 'Return 10' "Public API version must be 10."
+Assert-Match $api 'Return 11' "Public API version must be 11."
 Assert-Match $api 'Function RegisterTimedArmor' "Public registration facade is missing."
 Assert-Match $api 'Function ReleaseTimedArmor' "Public release facade is missing."
 Assert-Match $fomod "C5Kev's Tentacled Terrors Of Tamriel 3BA\.esp" "FOMOD C5Kev auto-detection is missing."
@@ -62,5 +74,21 @@ Assert-Match $dialogue 'armorClass == 2 \|\| armorClass == 3' "Living and parasi
 Assert-Match $dialogue '!speaker\.IsInFaction\(apothecaryFaction\) && !speaker\.IsInFaction\(courtWizardFaction\)' "Living and parasite armor must route to alchemists or court wizards."
 Assert-Match $dialogueFragments 'Fragment_RemoveTimedTrapArmor' "The dialogue result fragment for timed armor release is missing."
 Assert-Match $dialogueFragments 'SetTrapArmorDialogueState' "The opening wrapper does not refresh the timed armor dialogue gate."
+Assert-Match $venueDrink 'SelectRandomDrinker\(radius, venueKind == 4\)' "Unique-NPC preference must apply only to town venue events."
+Assert-Match $venueDrink 'baseInfo\.IsUnique\(\)' "Town drink selection must classify unique actor bases."
+Assert-Match $venueDrink '"townUniqueNPCPreferenceChance", 75' "Town unique-NPC preference must default to 75 percent."
+Assert-Match $venueDrink 'If !preferenceEnabled' "Disabled preference must preserve uniform combined-pool selection."
+Assert-Match $venueDrink 'genericCount <= 0' "Unique preference must safely fall back when the generic pool is empty."
+Assert-Match $mcm 'townUniqueNPCPreferenceMigration139' "MCM must retain the unique-NPC preference migration."
+Assert-Match $mcm '"enableTownUniqueNPCPreference", 1' "Town unique-NPC preference must default on."
+Assert-Match $mcm 'SetSliderDialogDefaultValue\(75\.0\)' "Town unique-NPC preference slider must default to 75 percent."
+Assert-Match $mcm 'SetSliderDialogInterval\(5\.0\)' "MCM must retain five-percent slider intervals."
+foreach ($setting in 'enableArmorTrapNearbyAllies', 'enableMilkMaidTrapNearbyAllies', 'enableMilkDrinkTrapNearbyAllies') {
+    Assert-Match $mcm ('"' + $setting + '", 1') "MCM must default-enable and migrate $setting."
+    Assert-Match $chestTargets ('"' + $setting + '", 1') "Shared chest targeting must enforce $setting."
+}
+Assert-Match $mcm 'Return 14[1-9]|Return 1[5-9][0-9]' "MCM version must include independent nearby-ally targeting migration."
+Assert-Match $chestTargets 'If !allowNearbyAllies[\s\S]*If playerEligible[\s\S]*Return playerActor[\s\S]*Return None' "Player-only scope must select only an eligible player and otherwise decline."
+Assert-Match $chestTargets 'unknown target-selection mode' "Unknown chest target modes need a smoke alarm."
 
 Write-Host "Timed armor lock contracts passed."

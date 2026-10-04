@@ -12,7 +12,7 @@ function Assert-Contract([bool]$condition, [string]$message) {
     Write-Host "PASS: $message" -ForegroundColor Green
 }
 
-Assert-Contract ($api -match 'Return 10' -and $api -match 'Bool Function ShowStoryPopup\(' -and $api -match 'Bool Function ShowRandomStoryPopup\(') "public API version 10 retains direct and pooled story calls"
+Assert-Contract ($api -match 'Return 11' -and $api -match 'Bool Function ShowStoryPopup\(' -and $api -match 'Bool Function ShowRandomStoryPopup\(') "public API version 11 retains direct and pooled story calls"
 Assert-Contract ($story -match 'Debug\.MessageBox\(renderedStory\)' -and $story -match 'Return True') "valid story text reaches Skyrim's game-pausing message box"
 Assert-Contract ($story -match 'JsonUtil\.JsonExists\(configFile\)' -and $story -match 'JsonUtil\.IsGood\(configFile\)') "pooled stories validate JSON existence and parsing"
 Assert-Contract ($story -match 'JsonUtil\.StringListCount\(configFile, poolName\)' -and $story -match 'JsonUtil\.StringListGet\(configFile, poolName') "pooled stories use MME-compatible typed stringList access"

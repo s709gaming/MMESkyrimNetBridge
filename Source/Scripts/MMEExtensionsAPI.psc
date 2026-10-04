@@ -1,7 +1,7 @@
 Scriptname MMEExtensionsAPI Hidden
 
 ; =============================================================================
-; MME Extensions public Papyrus API (version 10)
+; MME Extensions public Papyrus API (version 11)
 ; =============================================================================
 ; This is the stable entry point for other mods. Call these wrappers instead
 ; of MMEDebug, MMENewMilkMaid, MMEOStimBreastfeeding, or other internal scripts.
@@ -15,7 +15,7 @@ Scriptname MMEExtensionsAPI Hidden
 ; transaction finishes. Listen for the documented ModEvents to observe results.
 
 Int Function GetAPIVersion() Global
-    Return 10
+    Return 11
 EndFunction
 
 ; Backend-neutral query. Returns true only for a current, authoritative MME
@@ -138,6 +138,24 @@ EndFunction
 
 Bool Function UnregisterCustomArmorName(String armorName, Int armorClass) Global
     Return MMECustomArmorRegistry.UnregisterArmorName(armorName, armorClass)
+EndFunction
+
+; Form-oriented Dwemer attachment helpers introduced in API version 11. These
+; use a dedicated display-name list so removal can never delete a built-in or
+; third-party exact-form Dwemer registration.
+Bool Function InstallDwemerAttachment(Armor targetArmor) Global
+    If targetArmor == None || GetArmorClass(targetArmor) != 0
+        Return False
+    EndIf
+    Return MMECustomArmorRegistry.RegisterArtisanDwemerArmor(targetArmor)
+EndFunction
+
+Bool Function RemoveDwemerAttachment(Armor targetArmor) Global
+    Return MMECustomArmorRegistry.UnregisterArtisanDwemerArmor(targetArmor)
+EndFunction
+
+Bool Function HasDwemerAttachment(Armor targetArmor) Global
+    Return MMECustomArmorRegistry.IsArtisanDwemerArmor(targetArmor)
 EndFunction
 
 ; OStim-only availability query. True means OStim is detected, supported, and

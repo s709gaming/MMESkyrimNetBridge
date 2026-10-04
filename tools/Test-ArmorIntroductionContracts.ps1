@@ -8,6 +8,9 @@ $sounds = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMERe
 $api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw
 $build = Get-Content -LiteralPath (Join-Path $projectRoot "build-package.ps1") -Raw
 $stories = Get-Content -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\ArmorIntroductionStories.json") -Raw | ConvertFrom-Json
+$alchemist = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlchemistDialogue.psc") -Raw
+$mage = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEMageDialogue.psc") -Raw
+$dwemerBlacksmith = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDwemerBlacksmithDialogue.psc") -Raw
 
 function Assert-Contract([bool]$condition, [string]$message) {
     if (!$condition) { throw "FAIL: $message" }
@@ -24,6 +27,7 @@ Assert-Contract ($intro -notmatch 'AssignSlotMaid|MakeTargetNewMilkMaid|TryCreat
 Assert-Contract ($intro -match 'target\.SetDontMove\(True\)' -and $intro -match 'target\.SetDontMove\(False\)' -and $intro -match 'MMEExtensions\.ArmorIntroduction\.PlayerMovementLocked') "player movement lock has symmetric marker-owned cleanup"
 Assert-Contract ($controller -match 'RestorePlayerMovementIfNeeded\(Game\.GetPlayer\(\), "controller initialization"\)' -and $controller -match 'RestorePlayerMovementIfNeeded\(Game\.GetPlayer\(\), "native load event"\)') "startup and load lifecycle recover an interrupted movement lock"
 Assert-Contract ($controller -match 'Event OnNativeLifecycle[\s\S]*RestorePlayerMovementIfNeeded[\s\S]*If !IsExtensionsEnabled') "load recovery runs before the master-enable early return"
-Assert-Contract ($api -match 'Return 10' -and $api -match 'TryFirstArmorIntroduction' -and $api -match 'HasSeenArmorIntroduction' -and $api -match 'ResetArmorIntroduction') "API version 10 retains trigger, query, and reset calls"
+Assert-Contract ($api -match 'Return 11' -and $api -match 'TryFirstArmorIntroduction' -and $api -match 'HasSeenArmorIntroduction' -and $api -match 'ResetArmorIntroduction') "API version 11 retains trigger, query, and reset calls"
 Assert-Contract ($stories.stringList.living_first_equip.Count -gt 0 -and $stories.stringList.parasite_first_equip.Count -gt 0 -and $stories.stringList.dwemer_first_equip.Count -gt 0) "all three JSON story pools contain a fallback-editable entry"
+Assert-Contract ($alchemist -match 'TryIntroduction\(playerActor, wornArmor, "Alchemist Living Armor service"\)' -and $mage -match 'TryIntroduction\(playerActor, wornArmor, "Mage Parasite Armor service"\)' -and $dwemerBlacksmith -match 'TryIntroduction\(playerActor, wornArmor, "Blacksmith Dwemer attachment service"\)') "successful artisan services immediately request their guarded armor introduction"
 Assert-Contract ($build -match '"MMEArmorIntroduction"' -and $build -match 'ArmorIntroductionStories\.json' -and $build -match 'Test-ArmorIntroductionContracts\.ps1') "release build compiles, packages, and contract-tests the feature"

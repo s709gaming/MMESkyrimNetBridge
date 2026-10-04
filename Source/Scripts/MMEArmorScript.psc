@@ -152,7 +152,13 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
         MMELog.MasterDiagnostic("[MME Extensions Timed Armor] armor stripping bypassed | actor=" + GetActorName(target) + " | armor=" + GetArmorName(slotArmor))
         Return False
     EndIf
-    ReportArmorStrip(diagnostic, sourceLabel + " slot=32 | armor=" + GetArmorName(slotArmor))
+    Int armorCategory = GetArmorStripCategory(slotArmor)
+    String armorKind = GetArmorStripCategoryLabel(armorCategory)
+    ReportArmorStrip(diagnostic, sourceLabel + " slot=32 | armor=" + GetArmorName(slotArmor) + " | type=" + armorKind)
+    If !IsArmorStripCategoryEnabled(armorCategory)
+        ReportArmorStrip(diagnostic, sourceLabel + " type=" + armorKind + " | decision=BLOCKED | category toggle disabled")
+        Return False
+    EndIf
     String protectionReason = ""
     If IsStripAllArmorEnabled()
         ; Temporary override: bypass MME armor protection classification. The
@@ -180,15 +186,9 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
         Return False
     EndIf
 
-    Float threshold = GetArmorThreshold(slotArmor)
-    String armorKind = "clothes"
-    If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD2, "Skyrim.esm") as Keyword)
-        armorKind = "heavy armor"
-    ElseIf slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD3, "Skyrim.esm") as Keyword)
-        armorKind = "light armor"
-    EndIf
-    ; Thresholds are fullness percentages (0-100). 0 means the armor type is
-    ; forbidden, 100 means strip at full, and fullness can legitimately exceed
+    Float threshold = GetArmorThresholdForCategory(armorCategory)
+    ; Thresholds are fullness percentages (0-100). Category toggles forbid a
+    ; type independently; 100 means strip at full, and fullness can legitimately exceed
     ; 100% when MME stores more milk than the current maximum.
     Float maximum = MME_Storage.getMilkMaximum(target)
     If maximum <= 0.0
@@ -340,20 +340,56 @@ Float Function GetArmorThreshold(Armor slotArmor) Global
     If slotArmor == None
         Return 0.0
     EndIf
+    Return GetArmorThresholdForCategory(GetArmorStripCategory(slotArmor))
+EndFunction
+
+; 1=clothing/fallback, 2=light, 3=heavy. Heavy wins if a malformed armor carries
+; both standard Skyrim keywords; untyped slot-32 outfits preserve the historic
+; clothing fallback.
+Int Function GetArmorStripCategory(Armor slotArmor) Global
+    If slotArmor == None
+        Return 1
+    EndIf
+    If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD2, "Skyrim.esm") as Keyword)
+        Return 3
+    ElseIf slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD3, "Skyrim.esm") as Keyword)
+        Return 2
+    EndIf
+    Return 1
+EndFunction
+
+String Function GetArmorStripCategoryLabel(Int armorCategory) Global
+    If armorCategory == 3
+        Return "heavy armor"
+    ElseIf armorCategory == 2
+        Return "light armor"
+    EndIf
+    Return "clothes"
+EndFunction
+
+Bool Function IsArmorStripCategoryEnabled(Int armorCategory) Global
+    String settingsFile = "/MMEAlerts/Settings"
+    If armorCategory == 3
+        Return JsonUtil.GetIntValue(settingsFile, "enableArmorStripHeavy", 1) == 1
+    ElseIf armorCategory == 2
+        Return JsonUtil.GetIntValue(settingsFile, "enableArmorStripLight", 1) == 1
+    EndIf
+    Return JsonUtil.GetIntValue(settingsFile, "enableArmorStripClothing", 1) == 1
+EndFunction
+
+Float Function GetArmorThresholdForCategory(Int armorCategory) Global
     String settingsFile = "/MMEAlerts/Settings"
     If JsonUtil.GetIntValue(settingsFile, "enableExtensionsArmorStripping", 1) == 1
-        If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD2, "Skyrim.esm") as Keyword)
-            Return JsonUtil.GetFloatValue(settingsFile, "armorStripHeavyPercent", 100.0)
-        EndIf
-        If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD3, "Skyrim.esm") as Keyword)
-            Return JsonUtil.GetFloatValue(settingsFile, "armorStripLightPercent", 100.0)
+        If armorCategory == 3
+            Return JsonUtil.GetFloatValue(settingsFile, "armorStripHeavyPercent", 70.0)
+        ElseIf armorCategory == 2
+            Return JsonUtil.GetFloatValue(settingsFile, "armorStripLightPercent", 85.0)
         EndIf
         Return JsonUtil.GetFloatValue(settingsFile, "armorStripClothingPercent", 100.0)
     EndIf
-    If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD2, "Skyrim.esm") as Keyword)
+    If armorCategory == 3
         Return 4.0
-    EndIf
-    If slotArmor.HasKeyword(Game.GetFormFromFile(0x6BBD3, "Skyrim.esm") as Keyword)
+    ElseIf armorCategory == 2
         Return 8.0
     EndIf
     Return 12.0

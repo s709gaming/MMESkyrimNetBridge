@@ -60,7 +60,7 @@ Bool Function ProcessDue(Location venue, Int venueKind, Float radius = 2000.0) G
         Return False
     EndIf
 
-    Actor drinker = SelectRandomDrinker(radius)
+    Actor drinker = SelectRandomDrinker(radius, venueKind == 4)
     If drinker == None
         Report("no eligible NPC was loaded when the timer fired")
         Return False
@@ -79,10 +79,13 @@ Bool Function ProcessDue(Location venue, Int venueKind, Float radius = 2000.0) G
         Return False
     EndIf
 
-    ; The equip observer may process before or after the API returns. This call
-    ; guarantees the dedicated message, while the idempotent context suppresses
-    ; the ordinary notification whenever that observer arrives.
-    ShowNotificationIfOwned(drinker, normalMilk)
+    ; The native equip observer is asynchronous. Give its completed effect
+    ; pipeline first chance to provide the randomized, outcome-aware flavor
+    ; line; use the plain thirsty message only as a failure watchdog.
+    Utility.Wait(1.0)
+    If StorageUtil.GetIntValue(drinker, "MMEExtensions.InnPalaceDrink.Notified", 0) != 1
+        ShowNotificationIfOwned(drinker, normalMilk)
+    EndIf
 
     Float cooldownHours = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "innPalaceDrinkCooldownHours", 4.0)
     If cooldownHours < 0.0
@@ -113,25 +116,63 @@ Bool Function IsVenueKindEnabled(Int venueKind) Global
     Return False
 EndFunction
 
-Actor Function SelectRandomDrinker(Float radius) Global
+Actor Function SelectRandomDrinker(Float radius, Bool applyTownPreference = False) Global
     Actor playerActor = Game.GetPlayer()
     Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(radius)
-    Actor[] candidates = new Actor[128]
-    Int candidateCount = 0
+    Actor[] uniqueCandidates = new Actor[128]
+    Actor[] genericCandidates = new Actor[128]
+    Int uniqueCount = 0
+    Int genericCount = 0
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     Int i = 0
-    While i < nearbyActors.Length && candidateCount < 128
+    While i < nearbyActors.Length && uniqueCount + genericCount < 128
         Actor candidate = nearbyActors[i]
         If candidate != None && candidate != playerActor && IsEligibleCandidate(candidate, milkController)
-            candidates[candidateCount] = candidate
-            candidateCount += 1
+            ActorBase baseInfo = candidate.GetLeveledActorBase()
+            If baseInfo != None && baseInfo.IsUnique()
+                uniqueCandidates[uniqueCount] = candidate
+                uniqueCount += 1
+            Else
+                genericCandidates[genericCount] = candidate
+                genericCount += 1
+            EndIf
         EndIf
         i += 1
     EndWhile
-    If candidateCount <= 0
+    If uniqueCount + genericCount <= 0
         Return None
     EndIf
-    Return candidates[Utility.RandomInt(0, candidateCount - 1)]
+    Bool preferenceEnabled = applyTownPreference && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableTownUniqueNPCPreference", 1) == 1
+    Int preference = 0
+    If preferenceEnabled
+        preference = JsonUtil.GetIntValue("/MMEAlerts/Settings", "townUniqueNPCPreferenceChance", 75)
+        If preference < 0
+            preference = 0
+        ElseIf preference > 100
+            preference = 100
+        EndIf
+    EndIf
+    If !preferenceEnabled
+        Int allPick = Utility.RandomInt(0, uniqueCount + genericCount - 1)
+        If allPick < uniqueCount
+            Actor selectedAnyUnique = uniqueCandidates[allPick]
+            Report("target selected | town preference disabled | unique=" + uniqueCount + " | generic=" + genericCount + " | pool=combined | actor=" + MMEForcedMilkDrink.GetActorName(selectedAnyUnique))
+            Return selectedAnyUnique
+        EndIf
+        Actor selectedAnyGeneric = genericCandidates[allPick - uniqueCount]
+        Report("target selected | town preference disabled | unique=" + uniqueCount + " | generic=" + genericCount + " | pool=combined | actor=" + MMEForcedMilkDrink.GetActorName(selectedAnyGeneric))
+        Return selectedAnyGeneric
+    EndIf
+    Int preferenceRoll = Utility.RandomInt(1, 100)
+    Bool chooseUnique = uniqueCount > 0 && preferenceRoll <= preference
+    If chooseUnique || genericCount <= 0
+        Actor selectedUnique = uniqueCandidates[Utility.RandomInt(0, uniqueCount - 1)]
+        Report("target selected | town preference=" + applyTownPreference + " | unique=" + uniqueCount + " | generic=" + genericCount + " | chance=" + preference + " | roll=" + preferenceRoll + " | pool=unique | actor=" + MMEForcedMilkDrink.GetActorName(selectedUnique))
+        Return selectedUnique
+    EndIf
+    Actor selectedGeneric = genericCandidates[Utility.RandomInt(0, genericCount - 1)]
+    Report("target selected | town preference=" + applyTownPreference + " | unique=" + uniqueCount + " | generic=" + genericCount + " | chance=" + preference + " | roll=" + preferenceRoll + " | pool=generic | actor=" + MMEForcedMilkDrink.GetActorName(selectedGeneric))
+    Return selectedGeneric
 EndFunction
 
 Bool Function IsEligibleCandidate(Actor candidate, MilkQUEST milkController) Global
@@ -169,13 +210,19 @@ EndFunction
 ; Returns true whenever this exact venue transaction owns the HUD message.
 ; That lets every ordinary effect and narration run while preventing duplicate
 ; generic drink text.
-Bool Function ShowNotificationIfOwned(Actor drinker, Form milkItem) Global
+Bool Function ShowNotificationIfOwned(Actor drinker, Form milkItem, String renderedReaction = "") Global
     If !HasOwnedContext(drinker, milkItem)
         Return False
     EndIf
     If StorageUtil.GetIntValue(drinker, "MMEExtensions.InnPalaceDrink.Notified", 0) != 1
         StorageUtil.SetIntValue(drinker, "MMEExtensions.InnPalaceDrink.Notified", 1)
-        Debug.Notification(MMEForcedMilkDrink.GetActorName(drinker) + " is thirsty and drinks some milk!")
+        If renderedReaction != ""
+            Debug.Notification(renderedReaction)
+            Report("randomized drink reaction shown | actor=" + MMEForcedMilkDrink.GetActorName(drinker))
+        Else
+            Debug.Notification(MMEForcedMilkDrink.GetActorName(drinker) + " is thirsty and drinks some milk!")
+            Report("fallback drink notification shown | actor=" + MMEForcedMilkDrink.GetActorName(drinker))
+        EndIf
     EndIf
     Return True
 EndFunction

@@ -102,6 +102,9 @@ Event OnNativePotionConsumed(String eventName, String pluginName, Float localFor
     If drinkKind == 0
         Return
     EndIf
+    ; This marker feeds actor-specific Skyrim.Net lore even when a specialized
+    ; transaction suppresses duplicate gameplay processing later in the event.
+    MMEAlertsSkyrimNet.MarkRecentMilkDrinker(drinker)
     ; MME/OStim breastfeeding equips a real basic-milk item as native parity.
     ; A validated breastfeeding session owns its narrow completion effects, so
     ; do not route that synthetic equip through the full ordinary drink pipeline.
@@ -328,7 +331,7 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
             Debug.Notification("NPC Milk: effects disabled for " + actorName)
         EndIf
         String genericReaction = MMENPCDrinkDialogue.BuildDrinkReaction(drinker, drinkItem, establishedMilkmaid, 0.0, False)
-        If MMEInnPalaceMilkEvent.ShowNotificationIfOwned(drinker, drinkItem)
+        If MMEInnPalaceMilkEvent.ShowNotificationIfOwned(drinker, drinkItem, genericReaction)
             ; Dedicated social-venue feedback owns this verified transaction.
         ElseIf MMEChestMilkTrap.ShowNotificationIfOwned(drinker, drinkItem)
             ; Dedicated chest feedback owns this verified transaction.
@@ -493,7 +496,7 @@ Function ShowNPCDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded
     String configFile = "/MMEAlerts/Settings"
     Bool diagnostic = JsonUtil.GetIntValue(configFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1
     If drinker != None && drinkItem != None
-        If MMEInnPalaceMilkEvent.ShowNotificationIfOwned(drinker, drinkItem)
+        If MMEInnPalaceMilkEvent.ShowNotificationIfOwned(drinker, drinkItem, renderedReaction)
             Return
         ElseIf MMEChestMilkTrap.ShowNotificationIfOwned(drinker, drinkItem)
             Return
@@ -627,6 +630,7 @@ EndFunction
 
 ; Broadcasts a normalized drink event for future native/SkyrimNet consumers.
 Function PublishDrinkEvent(Actor drinker, Form drinkItem, Int drinkKind) Global
+    MMEAlertsSkyrimNet.MarkRecentMilkDrinker(drinker)
     Int handle = ModEvent.Create("MMEAlerts_DrinkDetected")
     If handle
         ModEvent.PushForm(handle, drinker)

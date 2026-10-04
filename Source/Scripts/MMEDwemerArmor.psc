@@ -33,6 +33,13 @@ String Function GetAnimationOwner() Global
     Return "DwemerArmorMilking"
 EndFunction
 
+; Vanilla's direct blue sibling to the green shader used by MME's
+; MilkForSpriggan effect. Resolving Skyrim.esm keeps this presentation
+; dependency-free and applies equally to every independent class-4 armor.
+EffectShader Function GetActivationShader() Global
+    Return Game.GetFormFromFile(0x0005D608, "Skyrim.esm") as EffectShader
+EndFunction
+
 Function ValidateConfiguration() Global
     String configFile = GetConfigFile()
     If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
@@ -160,17 +167,23 @@ Function RunDwemerMilking(Actor candidate, MilkQUEST milkController, Float start
     Bool controlsDisabled = False
     Bool npcUnconscious = False
     Int soundInstance = -1
+    EffectShader activationShader = GetActivationShader()
 
     Report("sequence start | actor=" + GetActorName(candidate))
-    If milkController.TakeHoldSound != None
-        soundInstance = milkController.TakeHoldSound.Play(candidate)
+    If activationShader != None
+        activationShader.Play(candidate, 5.0)
+        Report("blue activation shader started | actor=" + GetActorName(candidate) + " | shader=EnchBlueFXShader | duration=5s")
+        ; Match the original Living Armor possession cadence: its green shader
+        ; leads a five-second TakeHoldSound prelude before forced milking begins.
         Utility.Wait(5.0)
-        If soundInstance > 0
-            Sound.StopInstance(soundInstance)
-        EndIf
+        Report("blue activation prelude complete | actor=" + GetActorName(candidate) + " | dispatching milking sequence")
     Else
-        MMELog.Alarm("[MME Extensions Dwemer Armor] possession sound unavailable | continuing without sound")
+        MMELog.Alarm("[MME Extensions Dwemer Armor] blue activation shader unavailable | Skyrim.esm:0005D608 | actor=" + GetActorName(candidate))
     EndIf
+    ; MilkQUEST.TakeHoldSound is not populated in every MME installation.
+    ; Use the bridge's authored, sex-aware sound marker so this presentation
+    ; never depends on an optional property from the upstream quest.
+    soundInstance = MMEReactionSounds.PlayPresentationHighMoan(candidate, "Dwemer Armor Milking")
 
     If milkController.MilkStory && candidate == Game.GetPlayer()
         StoryDisplay("start")
@@ -232,7 +245,7 @@ Function RunDwemerMilking(Actor candidate, MilkQUEST milkController, Float start
         StoryDisplay("end")
     EndIf
 
-    CleanupSequence(candidate, milkController, animationStarted, controlsDisabled, npcUnconscious)
+    CleanupSequence(candidate, milkController, animationStarted, controlsDisabled, npcUnconscious, activationShader)
     Float endingMilk = MME_Storage.getMilkCurrent(candidate)
     If endingMilk >= startingMilk
         MMELog.Alarm("[MME Extensions Dwemer Armor] MME milking returned without reducing milk | actor=" + GetActorName(candidate) + " | before=" + startingMilk + " | after=" + endingMilk)
@@ -268,8 +281,12 @@ String Function PickStandingAnimation() Global
     Return animationEvent
 EndFunction
 
-Function CleanupSequence(Actor candidate, MilkQUEST milkController, Bool animationStarted, Bool controlsDisabled, Bool npcUnconscious) Global
+Function CleanupSequence(Actor candidate, MilkQUEST milkController, Bool animationStarted, Bool controlsDisabled, Bool npcUnconscious, EffectShader activationShader = None) Global
     If candidate != None
+        If activationShader != None
+            activationShader.Stop(candidate)
+            Report("blue activation shader cleanup | actor=" + GetActorName(candidate))
+        EndIf
         If animationStarted && StorageUtil.GetIntValue(candidate, GetAnimationDispatchedKey(), 0) == 1
             Utility.Wait(1.0)
             Debug.SendAnimationEvent(candidate, "IdleForceDefaultState")

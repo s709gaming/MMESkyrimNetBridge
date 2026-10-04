@@ -55,7 +55,7 @@ String Function ApplyPostDrink(Actor target, Form drinkItem, Bool diagnostic = F
     MMENPCDialog.TraceDialogueTiming("11D non-Milkmaid reaction sound returned", target)
     MMENPCDialog.TraceDialogueTiming("11E non-Milkmaid notification dispatch", target)
     String renderedReaction = BuildDrinkReaction(target, drinkItem, False, 0.0, arousalSent)
-    If MMEInnPalaceMilkEvent.ShowNotificationIfOwned(target, drinkItem)
+    If MMEInnPalaceMilkEvent.ShowNotificationIfOwned(target, drinkItem, renderedReaction)
         ; The social-venue transaction owns its exact factual HUD line.
     ElseIf !MMEChestMilkTrap.ShowNotificationIfOwned(target, drinkItem)
         ShowNotification(target, renderedReaction)

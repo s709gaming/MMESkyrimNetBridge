@@ -19,7 +19,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
-$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMETentacleEffects", "MMEDwemerEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMETrapArmorDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMEExtensionsAPI", "MMEExtensionsNative")
+$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMETentacleEffects", "MMEDwemerEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMETrapArmorDialogue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $diagnosticOverrideSource = Join-Path $projectRoot "Source\MMEDiagnosticOverrides"
 $diagnosticOverrideNames = @("MilkQUEST", "MME_StartMilking")
@@ -75,7 +75,9 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 & (Join-Path $projectRoot "tools\Test-AutoSelfMilkingContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-StoryPopupContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-ArmorIntroductionContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-ArmorStrippingCategoryContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-CustomArmorRegistryContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-DwemerBlacksmithDialogueContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-DwemerArmorContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-DwemerEffectsContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-TimedArmorLockContracts.ps1")
@@ -382,6 +384,10 @@ if (Test-Path -LiteralPath $pluginPath) {
     & dotnet run --project $dialogueRepairProject -- --check-trap-dialogue $pluginPath
     if ($LASTEXITCODE -ne 0) {
         throw "MMEAlert.esp failed timed trap armor service dialogue validation."
+    }
+    & dotnet run --project $dialogueRepairProject -- --check-dwemer-blacksmith-dialogue $pluginPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "MMEAlert.esp failed Dwemer blacksmith attachment dialogue validation."
     }
     if (!$pluginText.Contains("MMEExt_OStimDialogueAvailable") -or
         $pluginText.Contains("::OStimDialogueAvailable_var")) {

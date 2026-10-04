@@ -26,10 +26,17 @@ Assert-Contract ($controller -match 'MMEDwemerArmor\.HandleMMEMilkingStart\(milk
 Assert-Contract ($dwemer -match 'Function StoryDAS\(' -and $dwemer -match 'Function StoryDAE\(') "dedicated Dwemer start and end story functions exist"
 Assert-Contract ($dwemer -match 'MMEStoryPopup\.ShowRandomStoryPopup\(Game\.GetPlayer\(\), GetConfigFile\(\), poolName' -and $dwemer -match 'dwemerarmorstart' -and $dwemer -match 'dwemerarmorend') "story lookup uses the shared facade with dedicated stable keys"
 Assert-Contract ($dwemer -match 'MMELog\.MasterDiagnostic\("\[MME Extensions Dwemer Armor\]') "ordinary footprints use the master Papyrus logging toggle"
+Assert-Contract ($dwemer -match 'Game\.GetFormFromFile\(0x0005D608, "Skyrim\.esm"\) as EffectShader') "Dwemer milking resolves vanilla EnchBlueFXShader"
+Assert-Contract ($dwemer -match 'activationShader\.Play\(candidate, 5\.0\)') "Dwemer milking starts the blue activation shader before dispatch"
+Assert-Contract ($dwemer -match 'activationShader\.Stop\(candidate\)') "Dwemer sequence cleanup stops the activation shader"
+$shaderPreludeIndex = $dwemer.IndexOf('Utility.Wait(5.0)')
+$milkingDispatchIndex = $dwemer.IndexOf('milkController.Milking(candidate, 0, 4, 0)')
+Assert-Contract ($shaderPreludeIndex -ge 0 -and $milkingDispatchIndex -gt $shaderPreludeIndex) "Dwemer blue activation receives its full prelude before milking dispatch"
+Assert-Contract ($dwemer -match 'blue activation shader unavailable') "missing blue shader uses the smoke-alarm channel"
 Assert-Contract ($dwemer -notmatch 'SkyrimNetApi|DirectNarration|SendContext') "future Skyrim.Net narration is not implemented early"
 Assert-Contract ($armor -match 'If armorClass == 4[\s\S]*reaction delegated to dedicated Dwemer Armor system') "ordinary equip reactions delegate class 4"
 Assert-Contract ($skyrimNet -match 'armorClass == 0 \|\| armorClass == 4') "existing Skyrim.Net armor routes exclude class 4"
-Assert-Contract ($thoughts -match 'If armorClass == 4' -and $reminder -match 'If armorClass == 4') "thoughts and service reminders exclude class 4"
+Assert-Contract ($thoughts -match 'If armorClass == 4' -and $reminder -match 'If armorClass == 4' -and $reminder -match 'serviceRole != "Blacksmith"') "thoughts exclude class 4 while reminders reserve it for blacksmiths"
 Assert-Contract ($controller -match 'MMEDwemerArmor\.ValidateConfiguration\(\)' -and $controller -match 'MMEDwemerArmor\.HandleArmorRemoved\(') "controller validates and forwards removal to the dedicated service"
 Assert-Contract ($stories.stringList.dwemerarmorstart.Count -gt 0 -and $stories.stringList.dwemerarmorend.Count -gt 0) "Dwemer story JSON uses MME typed stringList start and end pools"
 Assert-Contract ($dwemer -notmatch 'threshold skipped \| already latched' -and $dwemer -match 'legacy threshold latch cleared') "legacy threshold latches cannot block later valid cycles"

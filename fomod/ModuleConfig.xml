@@ -79,7 +79,7 @@
             </plugin>
 
             <plugin name="Trap Treasure Chest with Tentacle Armor">
-              <description>Requires the c5kev Tentacle Armor mod. For treasure chests with a more... hands-on surprise. Tentacles included. Personal space not included.</description>
+              <description>Requires C5Kev's Tentacled Terrors Of Tamriel 3BA and its active plugin, C5Kev's Tentacled Terrors Of Tamriel 3BA.esp. Download: https://www.nexusmods.com/skyrimspecialedition/mods/62644?tab=files. For treasure chests with a more... hands-on surprise. Tentacles included. Personal space not included.</description>
               <files>
                 <file source="fomod\choices\timed-armor-c5kev\TimedArmor_C5Kev.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\TimedArmor_C5Kev.json" priority="10" />
               </files>
@@ -99,7 +99,7 @@
             </plugin>
 
             <plugin name="Trap Treasure Chest with Devious Dwemer Armor">
-              <description>Requires Devious Dwarven Cuirass Armor. For treasure chests with an ancient Dwemer surprise. Questionable machinery included.</description>
+              <description>Requires Dwarven Devious Cuirass - 3BA SE/AE and its active base plugin, DwarvenDeviousCuirass.esp. Download: https://www.loverslab.com/files/file/23018-dwarven-devious-cuirass-3ba-seae/. The separate Devious Devices add-on ESP is not required. For treasure chests with an ancient Dwemer surprise. Questionable machinery included.</description>
               <files>
                 <file source="fomod\choices\timed-armor-dwemer\TimedArmor_Dwemer.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\TimedArmor_Dwemer.json" priority="10" />
               </files>

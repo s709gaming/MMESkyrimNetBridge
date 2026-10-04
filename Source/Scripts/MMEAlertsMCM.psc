@@ -16,6 +16,7 @@ Int reverseTraceOption
 Int timedArmorDurationOption
 Int timedArmorReleaseOption
 Int chestArmorTrapOption
+Int armorTrapNearbyAlliesOption
 Int livingArmorChestTrapOption
 Int parasiteArmorChestTrapOption
 Int dwemerArmorChestTrapOption
@@ -24,10 +25,12 @@ Int dwemerRuinArmorTrapChanceOption
 Int chestArmorTrapChanceOption
 Int chestArmorTrapCooldownOption
 Int dungeonChestMilkMaidOption
+Int milkMaidTrapNearbyAlliesOption
 Int dungeonChestMilkMaidChanceOption
 Int regularChestMilkMaidOption
 Int regularChestMilkMaidChanceOption
 Int chestMilkTrapOption
+Int milkDrinkTrapNearbyAlliesOption
 Int chestMilkTrapChanceOption
 Int chestMilkTrapCooldownOption
 Int chestMilkTrapVariationOption
@@ -38,6 +41,8 @@ Int guildTavernMilkDrinkingOption
 Int jarlResidenceMilkDrinkingOption
 Int townMilkDrinkOption
 Int townMilkDrinkChanceOption
+Int townUniqueNPCPreferenceOption
+Int townUniqueNPCPreferenceChanceOption
 Int innPalaceDrinkDelayOption
 Int innPalaceDrinkVariationOption
 Int innPalaceDrinkCooldownOption
@@ -173,6 +178,9 @@ Int npcMilkingArmorNarrationCooldownOption
 Int armorDebugOption
 Int armorLookupForensicsOption
 Int extensionsArmorStrippingOption
+Int armorStripHeavyEnabledOption
+Int armorStripLightEnabledOption
+Int armorStripClothingEnabledOption
 Int armorStripHeavyThresholdOption
 Int armorStripLightThresholdOption
 Int armorStripClothingThresholdOption
@@ -265,7 +273,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 138
+    Return 142
 EndFunction
 
 Function SetPageNames()
@@ -281,7 +289,7 @@ Function SetPageNames()
     Pages[4] = "Armor"
     Pages[5] = "Skyrim.Net"
     Pages[6] = "Milk Armor Thoughts"
-    Pages[7] = "Tentacle Effects"
+    Pages[7] = "Armor Effects"
     Pages[8] = "Misc"
     Pages[9] = "Debug"
     Pages[10] = "Troubleshoot"
@@ -363,6 +371,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrapNotification", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrapNarration", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableChestArmorTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorTrapNearbyAllies", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableLivingArmorChestTrap", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableParasiteArmorChestTrap", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableDwemerArmorChestTrap", 1)
@@ -372,11 +381,17 @@ Function EnsureDefaults()
         JsonUtil.SetFloatValue(SettingsFile, "chestArmorTrapCooldownHours", 4.0)
         JsonUtil.SetIntValue(SettingsFile, "chestArmorTrapMigration137", 1)
         JsonUtil.SetIntValue(SettingsFile, "chestArmorCategoryMigration138", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidTrapNearbyAllies", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkTrapNearbyAllies", 1)
+        JsonUtil.SetIntValue(SettingsFile, "chestNearbyAlliesMigration140", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableGuildTavernMilkDrinking", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableJarlResidenceMilkDrinking", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableTownMilkDrink", 1)
         JsonUtil.SetIntValue(SettingsFile, "townMilkDrinkChance", 25)
+        JsonUtil.SetIntValue(SettingsFile, "enableTownUniqueNPCPreference", 1)
+        JsonUtil.SetIntValue(SettingsFile, "townUniqueNPCPreferenceChance", 75)
+        JsonUtil.SetIntValue(SettingsFile, "townUniqueNPCPreferenceMigration139", 1)
         JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkDelaySeconds", 11.0)
         JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", 10.0)
         JsonUtil.SetFloatValue(SettingsFile, "innPalaceDrinkCooldownHours", 4.0)
@@ -482,8 +497,8 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "playerMilkMaidConversionChance", 100)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyPercent", 100.0)
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightPercent", 100.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyPercent", 70.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightPercent", 85.0)
         JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNotification", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorStripMoan", 1)
@@ -955,11 +970,11 @@ Function EnsureDefaults()
         JsonUtil.Save(SettingsFile, False)
     EndIf
     ; Configurable armor stripping adds MCM fullness-percentage sliders and
-    ; capacity-poll stripping for the player. Percent defaults start at 100.
+    ; capacity-poll stripping for the player. Defaults reflect armor weight.
     If JsonUtil.GetIntValue(SettingsFile, "armorStrippingFeatureMigration80", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyPercent", 100.0)
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightPercent", 100.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyPercent", 70.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightPercent", 85.0)
         JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0)
         JsonUtil.SetIntValue(SettingsFile, "armorStrippingFeatureMigration80", 1)
         JsonUtil.Save(SettingsFile, False)
@@ -971,12 +986,12 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "armorStrippingDiagnosticConsolidation81", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
-    ; The stripping thresholds are now fullness percentages. Establish 100/100/100
+    ; The stripping thresholds are now fullness percentages. Establish 70/85/100
     ; once for saves that already carried the earlier absolute keys; the old
     ; absolute keys are left inert and are no longer read anywhere.
     If JsonUtil.GetIntValue(SettingsFile, "armorStrippingPercentMigration82", 0) == 0
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyPercent", 100.0)
-        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightPercent", 100.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyPercent", 70.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightPercent", 85.0)
         JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0)
         JsonUtil.SetIntValue(SettingsFile, "armorStrippingPercentMigration82", 1)
         JsonUtil.Save(SettingsFile, False)
@@ -1034,6 +1049,15 @@ Function EnsureDefaults()
     If JsonUtil.GetIntValue(SettingsFile, "milkMaidThoughtsTraceMigration88", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0)
         JsonUtil.SetIntValue(SettingsFile, "milkMaidThoughtsTraceMigration88", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Category toggles are additive. Existing saves retain their threshold
+    ; choices, while fresh saves inherit the stratified defaults above.
+    If JsonUtil.GetIntValue(SettingsFile, "armorStripCategoriesMigration142", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripHeavy", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripLight", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripClothing", 1)
+        JsonUtil.SetIntValue(SettingsFile, "armorStripCategoriesMigration142", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
 
@@ -1390,6 +1414,23 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "chestArmorTrapMigration137", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Favors named, unique NPCs over generic actors for town-entry drinks while
+    ; preserving a safe fallback to whichever eligible pool is available.
+    If JsonUtil.GetIntValue(SettingsFile, "townUniqueNPCPreferenceMigration139", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableTownUniqueNPCPreference", 1)
+        JsonUtil.SetIntValue(SettingsFile, "townUniqueNPCPreferenceChance", 75)
+        JsonUtil.SetIntValue(SettingsFile, "townUniqueNPCPreferenceMigration139", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Adds independent player-only targeting controls for all three treasure-
+    ; chest outcomes. Existing saves retain the established nearby-ally behavior.
+    If JsonUtil.GetIntValue(SettingsFile, "chestNearbyAlliesMigration140", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorTrapNearbyAllies", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidTrapNearbyAllies", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkTrapNearbyAllies", 1)
+        JsonUtil.SetIntValue(SettingsFile, "chestNearbyAlliesMigration140", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetDwemerEffectDefaults()
@@ -1455,6 +1496,7 @@ Event OnPageReset(String page)
     timedArmorDurationOption = -1
     timedArmorReleaseOption = -1
     chestArmorTrapOption = -1
+    armorTrapNearbyAlliesOption = -1
     livingArmorChestTrapOption = -1
     parasiteArmorChestTrapOption = -1
     dwemerArmorChestTrapOption = -1
@@ -1463,10 +1505,12 @@ Event OnPageReset(String page)
     chestArmorTrapChanceOption = -1
     chestArmorTrapCooldownOption = -1
     dungeonChestMilkMaidOption = -1
+    milkMaidTrapNearbyAlliesOption = -1
     dungeonChestMilkMaidChanceOption = -1
     regularChestMilkMaidOption = -1
     regularChestMilkMaidChanceOption = -1
     chestMilkTrapOption = -1
+    milkDrinkTrapNearbyAlliesOption = -1
     chestMilkTrapChanceOption = -1
     chestMilkTrapCooldownOption = -1
     chestMilkTrapVariationOption = -1
@@ -1477,6 +1521,8 @@ Event OnPageReset(String page)
     jarlResidenceMilkDrinkingOption = -1
     townMilkDrinkOption = -1
     townMilkDrinkChanceOption = -1
+    townUniqueNPCPreferenceOption = -1
+    townUniqueNPCPreferenceChanceOption = -1
     innPalaceDrinkDelayOption = -1
     innPalaceDrinkVariationOption = -1
     innPalaceDrinkCooldownOption = -1
@@ -1615,6 +1661,9 @@ Event OnPageReset(String page)
     armorDebugOption = -1
     armorLookupForensicsOption = -1
     extensionsArmorStrippingOption = -1
+    armorStripHeavyEnabledOption = -1
+    armorStripLightEnabledOption = -1
+    armorStripClothingEnabledOption = -1
     armorStripHeavyThresholdOption = -1
     armorStripLightThresholdOption = -1
     armorStripClothingThresholdOption = -1
@@ -1712,6 +1761,7 @@ Event OnPageReset(String page)
         If JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap", 1) != 1
             armorTrapFlags = OPTION_FLAG_DISABLED
         EndIf
+        armorTrapNearbyAlliesOption = AddToggleOption("Armor Traps Target Nearby Allies", JsonUtil.GetIntValue(SettingsFile, "enableArmorTrapNearbyAllies", 1) == 1, armorTrapFlags)
         livingArmorChestTrapOption = AddToggleOption("Living Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableLivingArmorChestTrap", 1) == 1, armorTrapFlags)
         parasiteArmorChestTrapOption = AddToggleOption("Parasite Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableParasiteArmorChestTrap", 1) == 1, armorTrapFlags)
         dwemerArmorChestTrapOption = AddToggleOption("Dwemer Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableDwemerArmorChestTrap", 1) == 1, armorTrapFlags)
@@ -1724,6 +1774,7 @@ Event OnPageReset(String page)
         chestArmorTrapChanceOption = AddSliderOption("General Trap Chance", JsonUtil.GetIntValue(SettingsFile, "chestArmorTrapChance", 5), "{0}%", armorTrapFlags)
         chestArmorTrapCooldownOption = AddSliderOption("Armor Trap Cooldown", JsonUtil.GetFloatValue(SettingsFile, "chestArmorTrapCooldownHours", 4.0), "{0} game hours", armorTrapFlags)
         AddHeaderOption("Milk Maid Chest Traps")
+        milkMaidTrapNearbyAlliesOption = AddToggleOption("Milk Maid Curse Targets Nearby Allies", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidTrapNearbyAllies", 1) == 1)
         dungeonChestMilkMaidOption = AddToggleOption("Boss Chests", JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1) == 1)
         Int dungeonChestChanceFlags = OPTION_FLAG_NONE
         If JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1) != 1
@@ -1751,6 +1802,7 @@ Event OnPageReset(String page)
         If JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrap", 1) != 1
             chestMilkTrapFlags = OPTION_FLAG_DISABLED
         EndIf
+        milkDrinkTrapNearbyAlliesOption = AddToggleOption("Milk Drink Curse Targets Nearby Allies", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkTrapNearbyAllies", 1) == 1, chestMilkTrapFlags)
         chestMilkTrapChanceOption = AddSliderOption("Chest Trap Chance", JsonUtil.GetIntValue(SettingsFile, "chestMilkTrapChance", 33), "{0}%", chestMilkTrapFlags)
         chestMilkTrapCooldownOption = AddSliderOption("Base Cooldown", JsonUtil.GetFloatValue(SettingsFile, "chestMilkTrapCooldownHours", 1.0), "{0} game hours", chestMilkTrapFlags)
         chestMilkTrapVariationOption = AddSliderOption("Random Variation", JsonUtil.GetFloatValue(SettingsFile, "chestMilkTrapCooldownVariation", 0.0), "+/- {0} game hours", chestMilkTrapFlags)
@@ -1784,6 +1836,12 @@ Event OnPageReset(String page)
             townDrinkFlags = OPTION_FLAG_DISABLED
         EndIf
         townMilkDrinkChanceOption = AddSliderOption("Town Drink Chance", JsonUtil.GetIntValue(SettingsFile, "townMilkDrinkChance", 25), "{0}%", townDrinkFlags)
+        townUniqueNPCPreferenceOption = AddToggleOption("Favor Unique Town NPCs", JsonUtil.GetIntValue(SettingsFile, "enableTownUniqueNPCPreference", 1) == 1, townDrinkFlags)
+        Int uniquePreferenceFlags = townDrinkFlags
+        If JsonUtil.GetIntValue(SettingsFile, "enableTownUniqueNPCPreference", 1) != 1
+            uniquePreferenceFlags = OPTION_FLAG_DISABLED
+        EndIf
+        townUniqueNPCPreferenceChanceOption = AddSliderOption("Unique NPC Preference", JsonUtil.GetIntValue(SettingsFile, "townUniqueNPCPreferenceChance", 75), "{0}%", uniquePreferenceFlags)
         Int sharedVenueFlags = OPTION_FLAG_NONE
         If JsonUtil.GetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1) != 1 && JsonUtil.GetIntValue(SettingsFile, "enableTownMilkDrink", 1) != 1
             sharedVenueFlags = OPTION_FLAG_DISABLED
@@ -1901,9 +1959,24 @@ Event OnPageReset(String page)
         If narrationFlags == OPTION_FLAG_NONE && JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarration", 1) != 1
             narrationFlags = OPTION_FLAG_DISABLED
         EndIf
-        armorStripHeavyThresholdOption = AddSliderOption("Heavy Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyPercent", 100.0), "{0}%", stripFlags)
-        armorStripLightThresholdOption = AddSliderOption("Light Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripLightPercent", 100.0), "{0}%", stripFlags)
-        armorStripClothingThresholdOption = AddSliderOption("Clothing Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0), "{0}%", stripFlags)
+        armorStripHeavyEnabledOption = AddToggleOption("Enable Heavy Armor Stripping", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripHeavy", 1) == 1, stripFlags)
+        Int heavyStripFlags = stripFlags
+        If heavyStripFlags == OPTION_FLAG_NONE && JsonUtil.GetIntValue(SettingsFile, "enableArmorStripHeavy", 1) != 1
+            heavyStripFlags = OPTION_FLAG_DISABLED
+        EndIf
+        armorStripHeavyThresholdOption = AddSliderOption("Heavy Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyPercent", 70.0), "{0}%", heavyStripFlags)
+        armorStripLightEnabledOption = AddToggleOption("Enable Light Armor Stripping", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripLight", 1) == 1, stripFlags)
+        Int lightStripFlags = stripFlags
+        If lightStripFlags == OPTION_FLAG_NONE && JsonUtil.GetIntValue(SettingsFile, "enableArmorStripLight", 1) != 1
+            lightStripFlags = OPTION_FLAG_DISABLED
+        EndIf
+        armorStripLightThresholdOption = AddSliderOption("Light Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripLightPercent", 85.0), "{0}%", lightStripFlags)
+        armorStripClothingEnabledOption = AddToggleOption("Enable Clothing Stripping", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripClothing", 1) == 1, stripFlags)
+        Int clothingStripFlags = stripFlags
+        If clothingStripFlags == OPTION_FLAG_NONE && JsonUtil.GetIntValue(SettingsFile, "enableArmorStripClothing", 1) != 1
+            clothingStripFlags = OPTION_FLAG_DISABLED
+        EndIf
+        armorStripClothingThresholdOption = AddSliderOption("Clothing Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0), "{0}%", clothingStripFlags)
         AddHeaderOption("Armor Strip Reactions")
         armorStripNotificationOption = AddToggleOption("Strip Notification", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNotification", 1) == 1, stripFlags)
         armorStripMoanOption = AddToggleOption("Strip Moan", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripMoan", 1) == 1, stripFlags)
@@ -2019,7 +2092,7 @@ Event OnPageReset(String page)
         boundMilkDrinkReactionChanceOption = AddSliderOption("Milk Drink Reaction Chance", JsonUtil.GetIntValue(SettingsFile, "boundMilkDrinkReactionChance", 50), "{0}%")
         Return
     EndIf
-    If page == "Tentacle Effects"
+    If page == "Armor Effects"
         AddHeaderOption("Living and Parasite Armor")
         armorInjectionOption = AddToggleOption("Enable Tentacle Effects", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjections", 1) == 1)
         armorInjectionIntervalOption = AddSliderOption("Base Effect Interval", JsonUtil.GetFloatValue(SettingsFile, "armorInjectionInterval", 12.0), "{0} game hours")
@@ -2196,6 +2269,12 @@ Event OnOptionHighlight(Int option)
     ElseIf option == townMilkDrinkChanceOption
         SetInfoText("Chance to schedule a drink when entering a major-city location. Failed rolls are silent and do not start the cooldown. Default 25%, range 0-100% in 5% steps.")
         Return
+    ElseIf option == townUniqueNPCPreferenceOption
+        SetInfoText("Favor named, unique NPCs over generic NPCs such as guards when a town drink selects its actor. Safely falls back when only one pool is available. Default on.")
+        Return
+    ElseIf option == townUniqueNPCPreferenceChanceOption
+        SetInfoText("Chance to choose an eligible unique NPC when both unique and generic town candidates are nearby. Default 75%, range 0-100% in 5% steps.")
+        Return
     ElseIf option == innPalaceDrinkDelayOption
         SetInfoText("Base real-time delay after entering a supported venue. Default 11 seconds.")
         Return
@@ -2233,6 +2312,9 @@ Event OnOptionHighlight(Int option)
     If option == chestArmorTrapOption
         SetInfoText("Master switch for JSON-backed Living, Parasite and Dwemer treasure-chest armor traps. Default on.")
         Return
+    ElseIf option == armorTrapNearbyAlliesOption
+        SetInfoText("Allow treasure-chest armor traps to select eligible nearby allied female NPCs as well as the player. Turn off for player-only targeting. Default on.")
+        Return
     ElseIf option == livingArmorChestTrapOption
         SetInfoText("Allow configured Living Armor pieces in the general treasure-chest trap pool. Default on.")
         Return
@@ -2258,6 +2340,9 @@ Event OnOptionHighlight(Int option)
     If option == dungeonChestMilkMaidOption
         SetInfoText("Curated vanilla and DLC dungeon boss chests forcibly convert their eligible activator into a Milk Maid. Each placed chest rolls once after success or a missed chance. Default on.")
         Return
+    ElseIf option == milkMaidTrapNearbyAlliesOption
+        SetInfoText("Allow treasure-chest Milk Maid curses to select eligible nearby allied female NPCs as well as the player. Turn off for player-only targeting. Default on.")
+        Return
     ElseIf option == dungeonChestMilkMaidChanceOption
         SetInfoText("Chance that an eligible dungeon boss chest activation attempts forced Milk Maid conversion. Default 100%, range 0-100 in 5% steps.")
         Return
@@ -2269,6 +2354,9 @@ Event OnOptionHighlight(Int option)
         Return
     ElseIf option == chestMilkTrapOption
         SetInfoText("After the conversion trap declines, curated boss and ordinary treasure chests may force one nearby adult humanoid to drink random Succubus, Vampire, or Werewolf milk. Player and allies are prioritized. Default on.")
+        Return
+    ElseIf option == milkDrinkTrapNearbyAlliesOption
+        SetInfoText("Allow exotic-milk chest curses to select eligible nearby allied female NPCs as well as the player. Turn off for player-only targeting. Default on.")
         Return
     ElseIf option == chestMilkTrapChanceOption
         SetInfoText("Chance per eligible chest activation. A failed roll does not start the shared cooldown. Default 10%, range 0-100 in 5% steps.")
@@ -2493,12 +2581,18 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Set the real-time delay after a service armor reminder appears before another eligible conversation can show one.")
     ElseIf option == stripAllArmorOverrideOption
         SetInfoText("Temporary workaround: ignore MME armor protection classification and strip whatever is in slot 32 when the fullness threshold says strip. Devious Devices and SexLab no-strip protections still apply.")
+    ElseIf option == armorStripHeavyEnabledOption
+        SetInfoText("Allow milk fullness to remove heavy slot-32 armor. Disable this to protect all heavy body armor regardless of fullness.")
     ElseIf option == armorStripHeavyThresholdOption
-        SetInfoText("Unequip heavy body armor when the player's fullness reaches this percentage. 0 forbids this armor type; 100 strips at full.")
+        SetInfoText("Unequip heavy body armor when the player's fullness reaches this percentage. Use the Heavy Armor toggle to forbid stripping this category.")
+    ElseIf option == armorStripLightEnabledOption
+        SetInfoText("Allow milk fullness to remove light slot-32 armor. Disable this to protect all light body armor regardless of fullness.")
     ElseIf option == armorStripLightThresholdOption
-        SetInfoText("Unequip light body armor when the player's fullness reaches this percentage. 0 forbids this armor type; 100 strips at full.")
+        SetInfoText("Unequip light body armor when the player's fullness reaches this percentage. Use the Light Armor toggle to forbid stripping this category.")
+    ElseIf option == armorStripClothingEnabledOption
+        SetInfoText("Allow milk fullness to remove slot-32 clothing and untyped outfits. Disable this to protect the entire clothing category.")
     ElseIf option == armorStripClothingThresholdOption
-        SetInfoText("Unequip clothing when the player's fullness reaches this percentage. 0 forbids this armor type; 100 strips at full.")
+        SetInfoText("Unequip clothing when the player's fullness reaches this percentage. Use the Clothing toggle to forbid stripping this category.")
     ElseIf option == armorStripNotificationOption
         SetInfoText("Show a notification when milk fullness forces your worn armor or clothing off.")
     ElseIf option == armorStripMoanOption
@@ -2735,6 +2829,12 @@ Event OnOptionSelect(Int option)
         SetToggleOptionValue(option, armorTrapValue == 1)
         ForcePageReset()
         Return
+    ElseIf option == armorTrapNearbyAlliesOption
+        Int armorAlliesValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorTrapNearbyAllies", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorTrapNearbyAllies", armorAlliesValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, armorAlliesValue == 1)
+        Return
     ElseIf option == livingArmorChestTrapOption
         Int livingTrapValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableLivingArmorChestTrap", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableLivingArmorChestTrap", livingTrapValue)
@@ -2767,6 +2867,12 @@ Event OnOptionSelect(Int option)
         SetToggleOptionValue(option, dungeonChestValue == 1)
         ForcePageReset()
         Return
+    ElseIf option == milkMaidTrapNearbyAlliesOption
+        Int maidAlliesValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidTrapNearbyAllies", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidTrapNearbyAllies", maidAlliesValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, maidAlliesValue == 1)
+        Return
     ElseIf option == regularChestMilkMaidOption
         Int regularChestValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableRegularChestMilkMaid", regularChestValue)
@@ -2780,6 +2886,12 @@ Event OnOptionSelect(Int option)
         JsonUtil.Save(SettingsFile, False)
         SetToggleOptionValue(option, chestMilkTrapValue == 1)
         ForcePageReset()
+        Return
+    ElseIf option == milkDrinkTrapNearbyAlliesOption
+        Int drinkAlliesValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkTrapNearbyAllies", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkTrapNearbyAllies", drinkAlliesValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, drinkAlliesValue == 1)
         Return
     ElseIf option == chestMilkTrapNotificationOption
         Int chestNotificationValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrapNotification", 1)
@@ -2817,6 +2929,13 @@ Event OnOptionSelect(Int option)
         JsonUtil.SetIntValue(SettingsFile, "enableTownMilkDrink", townDrinkValue)
         JsonUtil.Save(SettingsFile, False)
         SetToggleOptionValue(option, townDrinkValue == 1)
+        ForcePageReset()
+        Return
+    ElseIf option == townUniqueNPCPreferenceOption
+        Int uniquePreferenceValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableTownUniqueNPCPreference", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableTownUniqueNPCPreference", uniquePreferenceValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, uniquePreferenceValue == 1)
         ForcePageReset()
         Return
     ElseIf option == milkCravingsOption
@@ -3270,6 +3389,21 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableStripAllArmor", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableStripAllArmor", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == armorStripHeavyEnabledOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorStripHeavy", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripHeavy", value)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
+    ElseIf option == armorStripLightEnabledOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorStripLight", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripLight", value)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
+    ElseIf option == armorStripClothingEnabledOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorStripClothing", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArmorStripClothing", value)
+        SetToggleOptionValue(option, value == 1)
+        ForcePageReset()
     ElseIf option == armorStripNotificationOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNotification", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorStripNotification", value)
@@ -3594,6 +3728,12 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(5.0)
         Return
+    ElseIf option == townUniqueNPCPreferenceChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "townUniqueNPCPreferenceChance", 75))
+        SetSliderDialogDefaultValue(75.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+        Return
     ElseIf option == innPalaceDrinkVariationOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", 10.0))
         SetSliderDialogDefaultValue(10.0)
@@ -3850,13 +3990,13 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(10.0, 3600.0)
         SetSliderDialogInterval(10.0)
     ElseIf option == armorStripHeavyThresholdOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyPercent", 100.0))
-        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyPercent", 70.0))
+        SetSliderDialogDefaultValue(70.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == armorStripLightThresholdOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripLightPercent", 100.0))
-        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "armorStripLightPercent", 85.0))
+        SetSliderDialogDefaultValue(85.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == armorStripClothingThresholdOption
@@ -3931,6 +4071,11 @@ Event OnOptionSliderAccept(Int option, Float value)
         Return
     ElseIf option == townMilkDrinkChanceOption
         JsonUtil.SetIntValue(SettingsFile, "townMilkDrinkChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        Return
+    ElseIf option == townUniqueNPCPreferenceChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "townUniqueNPCPreferenceChance", value as Int)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0}%")
         Return
