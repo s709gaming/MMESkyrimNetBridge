@@ -33,6 +33,16 @@ For animation behavior generation, use the appropriate option for your setup:
 You generally only need one behavior generator.
 
 ---
+## Devious loot for trapped treasure chest
+
+Tentacles:
+https://www.nexusmods.com/skyrimspecialedition/mods/62644?tab=files
+
+Mech Suits:
+https://www.loverslab.com/files/file/23018-dwarven-devious-cuirass-3ba-seae/
+
+Does not require Devious Devices mod.
+---
 ## 3ba Milk Cuirass
 If you use 3ba body shape, download this, or your body may look funny wearing milk cuirass.
 https://www.loverslab.com/topic/156760-milk-mod-economy-mme-cbbebhunp3ba-leseae-new-milk-harness-body-slide/
@@ -66,11 +76,9 @@ Required by the MME Extensions CommonLibSSE-NG DLL.
 
 Tested on:
 
-**Skyrim SE / AE 1.6.1170**
+**Skyrim SE / AE 1.7.104**
 
-Built with CommonLibSSE-NG 8.3.0 for the current Skyrim 1.7.x runtime family,
-including the version-5 Address Library format. This path is build-supported
-but still needs an in-game validation pass on Skyrim 1.7.99/1.7.104.
+Built with CommonLibSSE-NG 8.3.0 for the current Skyrim 1.7.x runtime family.
 
 ---
 
