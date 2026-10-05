@@ -16,12 +16,12 @@ function Assert-Contract([bool]$condition, [string]$message) {
     Write-Host "PASS: $message" -ForegroundColor Green
 }
 
-Assert-Contract ($config.dwemer_forms -contains "DwarvenDeviousCuirass.esp|2048|Dwarven Devious Cuirass") "unenchantable Dwarven cuirass defaults to independent Dwemer Armor"
-Assert-Contract ($config.living_forms -notcontains "DwarvenDeviousCuirass.esp|2048|Dwarven Devious Cuirass") "Dwarven cuirass is isolated from Living Armor"
-Assert-Contract ($config.dwemer_forms -notcontains "DwarvenDeviousCuirass.esp|2058|Dwarven Devious Cuirass") "enchanted Dwarven cuirass remains unsupported"
+Assert-Contract (($config.dwemer_forms | Where-Object { $_ -like "DwarvenDeviousCuirass.esp|2048|Dwarven Devious Cuirass*" }).Count -eq 1) "unenchantable Dwarven cuirass defaults to independent Dwemer Armor"
+Assert-Contract (($config.living_forms | Where-Object { $_ -like "DwarvenDeviousCuirass.esp|2048|*" }).Count -eq 0) "Dwarven cuirass is isolated from Living Armor"
+Assert-Contract (($config.dwemer_forms | Where-Object { $_ -like "DwarvenDeviousCuirass.esp|2058|*" }).Count -eq 0) "enchanted Dwarven cuirass remains unsupported"
 Assert-Contract ($registry -match 'StorageUtil\.FormListAdd\(None, GetDwemerArtisanKey\(\), targetArmor, False\)' -and $registry -match 'StorageUtil\.FormListRemove\(None, GetDwemerArtisanKey\(\), targetArmor, True\)') "artisan attachments use exact save-persistent forms"
 Assert-Contract ($registry -match 'StringListClear\(GetConfigFile\(\), "dwemer_artisan_names"\)') "unsafe legacy display-name attachments are migrated away"
-Assert-Contract ($registry -match 'MME_FreeMaidSlots <= 0') "custom armor conversion refuses a full MME registry before AssignSlotMaid"
+Assert-Contract ($registry -notmatch 'MME_FreeMaidSlots <= 0' -and $registry -match 'dedicated player slot') "player armor conversion preserves MilkQUEST MilkMaid[0] semantics"
 Assert-Contract ($registry -match 'If wearer != Game\.GetPlayer\(\)') "custom armor equip conversion is player-only"
 Assert-Contract ($registry -match 'NPC equip cannot create Milk Maid') "blocked NPC equip conversion leaves a master-trace footprint"
 Assert-Contract ($registry -match 'MMELog\.MasterDiagnostic\("\[MME Extensions Custom Armor\]') "normal footprints use master Papyrus logging"

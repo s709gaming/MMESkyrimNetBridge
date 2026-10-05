@@ -95,3 +95,22 @@ Bool Function StartExisting(Actor candidate, Bool allowPlayer = True, Bool requi
     milkController.MilkSelf.Cast(candidate)
     Return True
 EndFunction
+
+; Extensions-owned automatic route. Special body armor keeps control of slot
+; 32, preventing original MilkSelf from replacing trapped armor with MilkCuirass.
+Bool Function StartCompatible(Actor candidate, Bool allowPlayer = True, Bool requireFull = False, Bool requireNearby = False) Global
+    If GetInvalidReason(candidate, allowPlayer, requireFull, requireNearby) != ""
+        Return False
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Armor wornArmor = candidate.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
+    Int armorClass = MMEArmorScript.ClassifyArmor(milkController, wornArmor, "automatic self-milking", candidate)
+    If armorClass == 4
+        MMELog.MasterDiagnostic("[MME Extensions Auto Self-Milking] Dwemer armor retained; dedicated milking requested | actor=" + GetActorName(candidate))
+        Return MMEDwemerArmor.TryCandidate(candidate, milkController)
+    ElseIf armorClass == 2 || armorClass == 3
+        MMELog.MasterDiagnostic("[MME Extensions Auto Self-Milking] Living/Parasite armor retained; ordinary MilkSelf suppressed | actor=" + GetActorName(candidate))
+        Return True
+    EndIf
+    Return StartExisting(candidate, allowPlayer, requireFull, requireNearby)
+EndFunction

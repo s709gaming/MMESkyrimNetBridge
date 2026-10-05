@@ -68,6 +68,8 @@ Int debugMilkReportOption
 Int debugMilkingEventsOption
 Int milkmaidLevelBonusOption
 Int flatMilkBonusOption
+Int maidWeightScalingOption
+Int maidWeightPerLevelOption
 Int addMilkDebugOption
 Int breastfeedingMilkEffectsOption
 Int breastfeedingMilkEffectsDebugOption
@@ -273,7 +275,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 142
+    Return 143
 EndFunction
 
 Function SetPageNames()
@@ -417,6 +419,8 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableMilkingEventDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1)
         JsonUtil.SetFloatValue(SettingsFile, "flatMilkBonus", 1.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMaidLevelWeightScaling", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "maidWeightPerLevel", 1.0)
         JsonUtil.SetIntValue(SettingsFile, "enableAddMilkDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffectsDebug", 0)
@@ -1431,6 +1435,12 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "chestNearbyAlliesMigration140", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "maidWeightScalingMigration143", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableMaidLevelWeightScaling", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "maidWeightPerLevel", 1.0)
+        JsonUtil.SetIntValue(SettingsFile, "maidWeightScalingMigration143", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetDwemerEffectDefaults()
@@ -1551,6 +1561,8 @@ Event OnPageReset(String page)
     debugMilkingEventsOption = -1
     milkmaidLevelBonusOption = -1
     flatMilkBonusOption = -1
+    maidWeightScalingOption = -1
+    maidWeightPerLevelOption = -1
     addMilkDebugOption = -1
     breastfeedingMilkEffectsOption = -1
     breastfeedingMilkEffectsDebugOption = -1
@@ -1795,6 +1807,13 @@ Event OnPageReset(String page)
         AddHeaderOption("Reverse Milk Maid Leveling")
         reverseDurationOption = AddSliderOption("Reverse Leveling Duration", MMEReverseLevel.GetDuration(), "{0} game hours")
         reversePlayerLevelOption = AddSliderOption("Minimum Milk Maid Level", MMEReverseLevel.GetRequiredLevel(), "{0}")
+        AddHeaderOption("Milk Maid Weight")
+        maidWeightScalingOption = AddToggleOption("Scale Weight with Maid Level", MMEMaidWeightScaling.IsEnabled())
+        Int maidWeightFlags = OPTION_FLAG_NONE
+        If !MMEMaidWeightScaling.IsEnabled()
+            maidWeightFlags = OPTION_FLAG_DISABLED
+        EndIf
+        maidWeightPerLevelOption = AddSliderOption("Weight per Maid Level", MMEMaidWeightScaling.GetWeightPerLevel(), "+{0}", maidWeightFlags)
         SetCursorPosition(1)
         AddHeaderOption("Exotic Milk Chest Trap")
         chestMilkTrapOption = AddToggleOption("Enable Exotic Milk Trap", JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrap", 1) == 1)
@@ -2429,6 +2448,10 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Add MME Milkmaid Level divided by 2 to every recognized milk drink.")
     ElseIf option == flatMilkBonusOption
         SetInfoText("Add this much milk per MME or regular milk drink.")
+    ElseIf option == maidWeightScalingOption
+        SetInfoText("Increase every registered Milk Maid's actor weight as her MME Maid level rises. Turning this off restores the baseline recorded before MME Extensions changed it. Weight changes can expose neck seams on some NPC replacers.")
+    ElseIf option == maidWeightPerLevelOption
+        SetInfoText("Add this many actor-weight points per MME Maid level. Range 0-10; final Skyrim actor weight is clamped to 100.")
     ElseIf option == lactacidMultiplierOption
         SetInfoText("Multiply Lactacid's Flat Bonus from 0 to 2. MME Level Bonus is separate.")
     ElseIf option == npcDrinkAnimationOption
@@ -3310,6 +3333,16 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotifications", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == maidWeightScalingOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMaidLevelWeightScaling", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMaidLevelWeightScaling", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
+        SetOptionFlags(maidWeightPerLevelOption, OPTION_FLAG_DISABLED)
+        If value == 1
+            SetOptionFlags(maidWeightPerLevelOption, OPTION_FLAG_NONE)
+        EndIf
+        MMEMaidWeightScaling.ReconcileAll("MCM toggle changed")
     ElseIf option == playerMilkMaidConversionOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkMaidConversion", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerMilkMaidConversion", value)
@@ -3909,6 +3942,11 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(20.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
+    ElseIf option == maidWeightPerLevelOption
+        SetSliderDialogStartValue(MMEMaidWeightScaling.GetWeightPerLevel())
+        SetSliderDialogDefaultValue(1.0)
+        SetSliderDialogRange(0.0, 10.0)
+        SetSliderDialogInterval(1.0)
     ElseIf option == nonMilkmaidFemaleArousalOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 20.0))
         SetSliderDialogDefaultValue(20.0)
@@ -4228,6 +4266,11 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.SetFloatValue(SettingsFile, "flatMilkBonus", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "+{1} milk")
+    ElseIf option == maidWeightPerLevelOption
+        JsonUtil.SetFloatValue(SettingsFile, "maidWeightPerLevel", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "+{0}")
+        MMEMaidWeightScaling.ReconcileAll("MCM weight-per-level changed")
     ElseIf option == lactacidMultiplierOption
         JsonUtil.SetFloatValue(SettingsFile, "lactacidFlatMultiplier", value)
         JsonUtil.Save(SettingsFile, False)

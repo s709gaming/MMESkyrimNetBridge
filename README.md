@@ -1,6 +1,6 @@
 # 🥛 MME EXTENSIONS
 
-**Release status:** 1.2.1  
+**Release status:** 1.2.2  
 **Main requirement:** Milk Mod Economy (and its requirements)
 
 📥 **Download:**  

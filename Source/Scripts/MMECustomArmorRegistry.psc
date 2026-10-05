@@ -117,6 +117,34 @@ Bool Function IsArtisanDwemerArmor(Armor targetArmor) Global
     Return StorageUtil.FormListFind(None, GetDwemerArtisanKey(), targetArmor) >= 0
 EndFunction
 
+; Presentation is intentionally separate from class-4 mechanics. Only exact
+; entries explicitly marked deviousSuit receive full-body restraint lore.
+; Artisan and unprofiled future entries conservatively use attachment lore.
+String Function GetDwemerPresentationProfile(Armor targetArmor) Global
+    If targetArmor == None
+        Return "artisanAttachment"
+    EndIf
+    If IsArtisanDwemerArmor(targetArmor)
+        Return "artisanAttachment"
+    EndIf
+    String[] entries = JsonUtil.PathStringElements(GetConfigFile(), ".dwemer_forms")
+    Int index = 0
+    While index < entries.Length
+        String[] parts = StringUtil.Split(entries[index], "|")
+        If parts.Length >= 2 && parts[0] != "" && parts[1] != ""
+            Armor configuredArmor = Game.GetFormFromFile(parts[1] as Int, parts[0]) as Armor
+            If configuredArmor != None && configuredArmor == targetArmor
+                If parts.Length >= 4 && parts[3] == "deviousSuit"
+                    Return "deviousSuit"
+                EndIf
+                Return "artisanAttachment"
+            EndIf
+        EndIf
+        index += 1
+    EndWhile
+    Return "artisanAttachment"
+EndFunction
+
 Bool Function RegisterArtisanDwemerArmor(Armor targetArmor) Global
     If targetArmor == None
         Trace("artisan register rejected | missing armor")
@@ -268,11 +296,12 @@ Function HandleCustomArmorEquipped(Actor wearer, Armor equippedArmor) Global
             Trace("equip compatibility stopped | NPC equip cannot create Milk Maid | actor=" + MMEArmorScript.GetActorName(wearer) + " | armor=" + GetArmorName(equippedArmor))
             Return
         EndIf
-        If milkController.MilkQC == None || milkController.MilkQC.MME_FreeMaidSlots <= 0
-            Trace("equip compatibility stopped | no free MME Milk Maid slot | actor=" + MMEArmorScript.GetActorName(wearer))
-            Return
-        EndIf
-        Trace("Milk Maid assignment requested | actor=" + MMEArmorScript.GetActorName(wearer))
+        ; MilkQUEST reserves MilkMaid[0] for the player. AssignSlotMaid writes
+        ; that unique slot directly and deliberately bypasses the NPC-only
+        ; MME_FreeMaidSlots/Milklvl0fix capacity gate. Do not preflight the
+        ; player through the NPC counter or a full NPC registry blocks a valid
+        ; player conversion.
+        Trace("Milk Maid assignment requested through dedicated player slot | actor=" + MMEArmorScript.GetActorName(wearer))
         milkController.AssignSlotMaid(wearer)
     EndIf
     If !MMEArmorScript.IsMMEMilkMaid(wearer, milkController)

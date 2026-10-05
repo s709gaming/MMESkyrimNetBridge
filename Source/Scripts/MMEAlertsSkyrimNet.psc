@@ -257,6 +257,129 @@ Function PlayDwemerEffectPlayerLine(String response, Int success) Global
     MMEDwemerEffects.TraceDiagnostic(False, "player-only TTS result=" + result + " (0=accepted)")
 EndFunction
 
+; First equip, familiar re-equip, and dedicated Dwemer milking reactions share
+; one compact lore document. The affected wearer is always the speaker.
+Function NarrateDwemerSuitEvent(Actor wearer, Armor equippedArmor, String eventKey) Global
+    String settingsFile = "/MMEAlerts/Settings"
+    String actorName = MMEThoughts.ResolveActorName(wearer)
+    If !IsExtensionsEnabled() || !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
+        MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] skipped: Skyrim.Net or Extensions disabled | event=" + eventKey)
+        Return
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enableDwemerEffectNarration", 1) != 1
+        MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] skipped: Dwemer narration disabled | event=" + eventKey)
+        Return
+    EndIf
+    If !IsValidDwemerSuitSpeaker(wearer)
+        MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] skipped: wearer is not a valid adult female humanoid | actor=" + actorName)
+        Return
+    EndIf
+    Bool isPlayer = wearer == Game.GetPlayer()
+    String roleToggle = "enableNPCMilkArmorEquipNarration"
+    If isPlayer
+        roleToggle = "enablePlayerMilkArmorEquipNarration"
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, roleToggle, 1) != 1
+        MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] skipped: global armor narration disabled for wearer role | actor=" + actorName)
+        Return
+    EndIf
+    If isPlayer && JsonUtil.GetIntValue(settingsFile, "enableDwemerEffectPlayerNarration", 1) != 1
+        MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] skipped: player Dwemer narration disabled")
+        Return
+    EndIf
+
+    String profile = MMECustomArmorRegistry.GetDwemerPresentationProfile(equippedArmor)
+    String prompt = BuildDwemerSuitPrompt(actorName, profile, eventKey)
+    If prompt == ""
+        Return
+    EndIf
+    If isPlayer
+        MMEAlertsController bridge = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+        If bridge == None
+            MMELog.Alarm("[MME Extensions Dwemer Suit Narration] player callback unavailable | event=" + eventKey)
+            Return
+        EndIf
+        String contextJson = "{\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(prompt) + "\"}"
+        Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnDwemerSuitPlayerLine")
+        MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] player queue result=" + queued + " | profile=" + profile + " | event=" + eventKey + " | actor=" + actorName)
+        Return
+    EndIf
+    Int result = SkyrimNetApi.DirectNarration(prompt, wearer, Game.GetPlayer())
+    MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] NPC DirectNarration result=" + result + " | profile=" + profile + " | event=" + eventKey + " | actor=" + actorName)
+EndFunction
+
+Function PlayDwemerSuitPlayerLine(String response, Int success) Global
+    If success != 1 || response == ""
+        MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] player generation failed")
+        Return
+    EndIf
+    If !IsExtensionsEnabled() || !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1 \
+    || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDwemerEffectNarration", 1) != 1 \
+    || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDwemerEffectPlayerNarration", 1) != 1 \
+    || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePlayerMilkArmorEquipNarration", 1) != 1 \
+    || !IsValidDwemerSuitSpeaker(Game.GetPlayer())
+        MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] player playback cancelled by live gates")
+        Return
+    EndIf
+    Int result = SkyrimNetApi.TriggerPlayerTTS(response)
+    MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] player TTS result=" + result + " (0=accepted)")
+EndFunction
+
+Bool Function IsValidDwemerSuitSpeaker(Actor wearer) Global
+    If wearer == None || wearer.IsChild() || wearer.IsDead() || wearer.IsDisabled()
+        Return False
+    EndIf
+    ActorBase baseInfo = wearer.GetLeveledActorBase()
+    If baseInfo == None || baseInfo.GetSex() != 1
+        Return False
+    EndIf
+    Keyword actorTypeNPC = Keyword.GetKeyword("ActorTypeNPC")
+    Race wearerRace = wearer.GetRace()
+    Return actorTypeNPC != None && wearerRace != None && wearerRace.HasKeyword(actorTypeNPC)
+EndFunction
+
+String Function BuildDwemerSuitPrompt(String actorName, String profile, String eventKey) Global
+    String configFile = "/MMEAlerts/DwemerSuitNarration"
+    If profile != "deviousSuit"
+        configFile = "/MMEAlerts/DwemerAttachmentNarration"
+    EndIf
+    If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
+        MMELog.Alarm("[MME Extensions Dwemer Suit Narration] JSON missing or malformed")
+        Return ""
+    EndIf
+    String core = JsonUtil.GetStringValue(configFile, "core", "")
+    String eventPrompt = JsonUtil.GetStringValue(configFile, eventKey, "")
+    If core == ""
+        MMELog.Alarm("[MME Extensions Dwemer Suit Narration] missing core prompt | profile=" + profile + " | event=" + eventKey + " | using fallback")
+        core = GetDwemerProfileFallback(profile)
+    EndIf
+    If eventPrompt == ""
+        MMELog.Alarm("[MME Extensions Dwemer Suit Narration] missing event prompt | profile=" + profile + " | event=" + eventKey + " | using fallback")
+        eventPrompt = GetDwemerEventFallback(profile, eventKey)
+    EndIf
+    Return "Affected wearer: " + actorName + ". Presentation profile: " + profile + ". " + core + " Immediate event: " + eventPrompt + " Write one fresh, short, coherent first-person reaction spoken by " + actorName + ". Make it natural, speakable adult dialogue. Let alarm or anticipation surge rapidly into overwhelming pleasure and manic happiness. Add one light touch of playful absurdity or innuendo that may earn a chuckle, but keep the emotion stronger than the joke. Convey gasping, laughter, and failing composure through the words, not written sound effects. Do not use stuttering, repeated syllables, spelled-out laughter, or excessive punctuation. Do not quote a stock example, narrate in third person, or repeat these instructions."
+EndFunction
+
+String Function GetDwemerProfileFallback(String profile) Global
+    If profile == "deviousSuit"
+        Return "A Dwemer suit restrains an adult woman and floods her with aphrodisiacs, stimulation, and mechanical milking. Her reaction rockets from 0 to 10: shock becomes ecstatic overload, breathless laughter, failing thoughts, and manic glee. She knows the situation is absurd and humiliating but feels far too wonderful to care."
+    EndIf
+    Return "Hidden Dwemer machinery inside an adult woman's ordinary armor delivers aphrodisiacs, teasing, and milking without restraining her. Her reaction races from 0 to 10 into breathless pleasure, lost composure, manic glee, and embarrassed anticipation."
+EndFunction
+
+String Function GetDwemerEventFallback(String profile, String eventKey) Global
+    If eventKey == "firstEquip"
+        Return "The device activates for the first time. Escalate instantly from startled protest to overwhelmed, laughing ecstasy."
+    ElseIf eventKey == "reequip"
+        Return "She recognizes the familiar mechanism and becomes embarrassingly eager before it fully activates."
+    ElseIf eventKey == "milkingStart"
+        Return "The milking cycle begins and sends her from intense anticipation into incoherent, manic delight."
+    ElseIf eventKey == "milkingEnd"
+        Return "The cycle ends with her dazed, satisfied, grinning, and already craving the next one."
+    EndIf
+    Return "The Dwemer mechanism activates and drives her rapidly into overwhelming, breathless, manic glee."
+EndFunction
+
 String Function BuildDwemerEffectNarration(String actorName, Bool milkIncreased, Bool arousalIncreased, Bool diagnostic = False) Global
     String configFile = "/MMEAlerts/DwemerEffectNarration"
     If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)

@@ -10,6 +10,10 @@ Function OnDwemerEffectPlayerLine(String response, Int success)
     MMEAlertsSkyrimNet.PlayDwemerEffectPlayerLine(response, success)
 EndFunction
 
+Function OnDwemerSuitPlayerLine(String response, Int success)
+    MMEAlertsSkyrimNet.PlayDwemerSuitPlayerLine(response, success)
+EndFunction
+
 Function OnNewMilkMaidPlayerLine(String response, Int success)
     MMEAlertsSkyrimNet.PlayNewMilkMaidPlayerLine(response, success)
 EndFunction
@@ -129,6 +133,8 @@ Function InitializeController(Bool reportStatus = False)
     ; TESTopicInfoEvent observer. Refresh this registration after every load.
     UnregisterForMenu("Dialogue Menu")
     RegisterForMenu("Dialogue Menu")
+    UnregisterForMenu("Journal Menu")
+    RegisterForMenu("Journal Menu")
     ; Reminder timestamps are shared through StorageUtil so redundant controller
     ; initialization cannot clear an active cooldown.
     UnregisterForModEvent("MMEExtensions_ArmorEquipped")
@@ -136,6 +142,7 @@ Function InitializeController(Bool reportStatus = False)
     UnregisterForModEvent("MMEExtensions_ArmorUnequipped")
     RegisterForModEvent("MMEExtensions_ArmorUnequipped", "OnArmorUnequipped")
     MMECustomArmorRegistry.AuditRegistry()
+    MMEMaidWeightScaling.ReconcileAll("controller initialized")
     UnregisterForModEvent("MMEExtensions_DungeonBossChestActivated")
     RegisterForModEvent("MMEExtensions_DungeonBossChestActivated", "OnDungeonBossChestActivated")
     UnregisterForModEvent("MMEExtensions_DungeonRegularChestActivated")
@@ -468,6 +475,14 @@ Event OnMenuOpen(String menuName)
             NextArmorReminder = Utility.GetCurrentRealTime() + 0.25
             ScheduleNextUpdate()
         EndIf
+    EndIf
+EndEvent
+
+; Both SkyUI MCMs live inside Journal Menu. Reconcile after it closes so level
+; edits made in original MME are observed without modifying MME's scripts.
+Event OnMenuClose(String menuName)
+    If menuName == "Journal Menu" && IsExtensionsEnabled()
+        MMEMaidWeightScaling.ReconcileAll("Journal Menu closed")
     EndIf
 EndEvent
 
@@ -882,9 +897,9 @@ Function ResolveDueAutoSelfMilking(Float now)
             Else
                 ReportAutoSelfMilking("delay expired | actor=" + actorName + " | validation=passed")
                 StorageUtil.SetIntValue(candidate, AutoSelfMilkingDispatchKey, 1)
-                Bool dispatched = MMESelfMilking.StartExisting(candidate, True, True, True)
+                Bool dispatched = MMESelfMilking.StartCompatible(candidate, True, True, True)
                 If dispatched
-                    ReportAutoSelfMilking("MilkSelf cast dispatched | actor=" + actorName)
+                    ReportAutoSelfMilking("compatible self-milking route dispatched | actor=" + actorName)
                 Else
                     StorageUtil.UnsetIntValue(candidate, AutoSelfMilkingDispatchKey)
                     MMELog.Alarm("[MME Extensions Auto Self-Milking] FAILURE: validated request was rejected during MilkSelf dispatch | actor=" + actorName)
@@ -1268,6 +1283,12 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
         Return
     EndIf
     Bool chestTrapEquip = MMEChestArmorTrap.IsTrapEquipPending(wearer, equippedArmor)
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    Bool dwemerEquip = MMEArmorScript.ClassifyArmor(milkController, equippedArmor, "Dwemer narration equip", wearer) == 4
+    Bool dwemerSeen = False
+    If dwemerEquip
+        dwemerSeen = MMEArmorIntroduction.HasSeenArmor(wearer, 4, equippedArmor)
+    EndIf
     MMECustomArmorRegistry.HandleCustomArmorEquipped(wearer, equippedArmor)
     MMETimedArmorLock.TryLockRegisteredEquip(wearer, equippedArmor)
     If MMEArmorIntroduction.TryAutomatic(wearer, equippedArmor)
@@ -1275,6 +1296,18 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
             MMEChestArmorTrap.ClearTrapEquip(wearer, "first introduction consumed equip")
         EndIf
         MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] ordinary equip reaction suppressed after successful introduction | actor=" + GetActorName(wearer))
+        Return
+    EndIf
+    If dwemerEquip
+        String dwemerEquipEvent = "reequip"
+        If !dwemerSeen
+            dwemerEquipEvent = "firstEquip"
+            MMEArmorIntroduction.MarkSeenArmor(wearer, 4, equippedArmor, "NPC/compatibility first equip narration")
+        EndIf
+        MMEAlertsSkyrimNet.NarrateDwemerSuitEvent(wearer, equippedArmor, dwemerEquipEvent)
+        If chestTrapEquip
+            MMEChestArmorTrap.ClearTrapEquip(wearer, "Dwemer narration handled equip")
+        EndIf
         Return
     EndIf
     MMEArmorScript.HandleArmorEquipped(wearer, equippedArmor)
@@ -1373,6 +1406,9 @@ Function CheckMilkmaidCreation(Actor candidate, String source, Bool ownsPendingM
         ModEvent.PushForm(handle, candidate)
         ModEvent.Send(handle)
     EndIf
+    ; Cosmetic weight work is deliberately last. A compatibility failure here
+    ; must never suppress conversion feedback, narration, or the public event.
+    MMEMaidWeightScaling.ReconcileActor(candidate, "Milk Maid created")
 EndFunction
 
 ; Receives low-cost lifecycle signals from the optional CommonLibSSE-NG DLL.
@@ -1495,7 +1531,11 @@ Event OnMMEMilkingStart(Form actorForm, Int animationSpeed, Int milkingType)
         MMELog.Diagnostic("[MMEAlert] MILKING START: " + GetActorName(milkMaid))
     EndIf
     PlayMilkingReaction(milkMaid, True)
-    MMEAlertsSkyrimNet.SendMilkingStart(milkMaid)
+    If !MMEDwemerArmor.IsSequenceActive(milkMaid)
+        MMEAlertsSkyrimNet.SendMilkingStart(milkMaid)
+    Else
+        MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] generic milking_start suppressed")
+    EndIf
     PublishMilkingEvent("MMEAlerts_MilkingStart", milkMaid)
 EndEvent
 
@@ -1517,6 +1557,7 @@ Event OnMMEMilkingDone(Form actorForm, Int bottles, Int boobgasmCount, Int cumCo
     ; per-actor state prevents the normal stop/done pair from playing twice.
     Actor milkMaid = actorForm as Actor
     FinishMilking(milkMaid)
+    MMEMaidWeightScaling.ReconcileActor(milkMaid, "MME milking completed")
 EndEvent
 
 ; MME sends this after completing its normal production batch. The event has no
@@ -1528,6 +1569,7 @@ Event OnMMEMilkCycleComplete(String eventName, String strArg, Float numArg, Form
         MMEMilkingDiagnostics.Trace("completion ignored | Extensions disabled")
         Return
     EndIf
+    MMEMaidWeightScaling.ReconcileAll("MME milk cycle completed")
     MMEDwemerArmor.ProcessNearbyDwemerArmor()
 EndEvent
 
@@ -1543,7 +1585,11 @@ Function FinishMilking(Actor milkMaid)
             MMELog.Diagnostic("[MMEAlert] MILKING END: " + GetActorName(milkMaid))
         EndIf
         PlayMilkingReaction(milkMaid, False)
-        MMEAlertsSkyrimNet.SendMilkingEnd(milkMaid)
+        If !MMEDwemerArmor.IsSequenceActive(milkMaid)
+            MMEAlertsSkyrimNet.SendMilkingEnd(milkMaid)
+        Else
+            MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] generic milking_end suppressed")
+        EndIf
         PublishMilkingEvent("MMEAlerts_MilkingEnd", milkMaid)
     EndIf
 EndFunction

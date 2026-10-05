@@ -57,6 +57,46 @@ Bool Function HasSeen(Actor target, Int armorClass) Global
     Return StorageUtil.GetIntValue(target, markerKey, 0) == 1
 EndFunction
 
+String Function GetDwemerProfileMarkerKey(Armor equippedArmor) Global
+    String profile = MMECustomArmorRegistry.GetDwemerPresentationProfile(equippedArmor)
+    If profile == "deviousSuit"
+        Return "MMEExtensions.ArmorIntroduction.DwemerSuit"
+    EndIf
+    Return "MMEExtensions.ArmorIntroduction.DwemerAttachment"
+EndFunction
+
+Bool Function HasSeenArmor(Actor target, Int armorClass, Armor equippedArmor) Global
+    If armorClass != 4
+        Return HasSeen(target, armorClass)
+    EndIf
+    If target == None
+        Return False
+    EndIf
+    Return StorageUtil.GetIntValue(target, GetDwemerProfileMarkerKey(equippedArmor), 0) == 1
+EndFunction
+
+Function MarkSeenArmor(Actor target, Int armorClass, Armor equippedArmor, String source = "internal") Global
+    If armorClass != 4
+        MarkSeen(target, armorClass, source)
+        Return
+    EndIf
+    If target == None
+        Return
+    EndIf
+    String markerKey = GetDwemerProfileMarkerKey(equippedArmor)
+    StorageUtil.SetIntValue(target, markerKey, 1)
+    Report("profile marker written | actor=" + GetActorName(target) + " | profile=" + MMECustomArmorRegistry.GetDwemerPresentationProfile(equippedArmor) + " | source=" + source)
+EndFunction
+
+Function MarkSeen(Actor target, Int armorClass, String source = "internal") Global
+    String markerKey = GetMarkerKey(armorClass)
+    If target == None || markerKey == ""
+        Return
+    EndIf
+    StorageUtil.SetIntValue(target, markerKey, 1)
+    Report("marker written | actor=" + GetActorName(target) + " | class=" + MMEArmorScript.GetArmorTypeLabel(armorClass) + " | source=" + source)
+EndFunction
+
 Bool Function Reset(Actor target, Int armorClass) Global
     String markerKey = GetMarkerKey(armorClass)
     If target == None || markerKey == ""
@@ -90,7 +130,7 @@ Bool Function TryIntroduction(Actor target, Armor equippedArmor, String sourceLa
         Report("skipped: unsupported armor class | actor=" + GetActorName(target) + " | source=" + sourceLabel)
         Return False
     EndIf
-    If HasSeen(target, armorClass)
+    If HasSeenArmor(target, armorClass, equippedArmor)
         Report("skipped: introduction already seen | actor=" + GetActorName(target) + " | class=" + armorType)
         Return False
     EndIf
@@ -111,7 +151,11 @@ Bool Function TryIntroduction(Actor target, Armor equippedArmor, String sourceLa
     Int soundResult = MMEReactionSounds.PlayPresentationHighMoan(target, requestLabel)
     Report("sound result=" + soundResult + " | actor=" + GetActorName(target) + " | class=" + armorType)
 
-    StorageUtil.SetIntValue(target, GetMarkerKey(armorClass), 1)
+    If armorClass == 4
+        MMEAlertsSkyrimNet.NarrateDwemerSuitEvent(target, equippedArmor, "firstEquip")
+    EndIf
+
+    MarkSeenArmor(target, armorClass, equippedArmor, sourceLabel)
     Report("marker written after animation dispatch | actor=" + GetActorName(target) + " | class=" + armorType)
     MMEReactionAnimation.Finish(target, animationStarted, owner, 10.0, requestLabel, True)
     If playerMovementLocked

@@ -19,7 +19,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
-$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMETentacleEffects", "MMEDwemerEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMETrapArmorDialogue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMEExtensionsAPI", "MMEExtensionsNative")
+$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMETentacleEffects", "MMEDwemerEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMETrapArmorDialogue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $diagnosticOverrideSource = Join-Path $projectRoot "Source\MMEDiagnosticOverrides"
 $diagnosticOverrideNames = @("MilkQUEST", "MME_StartMilking")
@@ -73,6 +73,7 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 & (Join-Path $projectRoot "tools\Test-ReactionSoundContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-MilkCravingContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-AutoSelfMilkingContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-MaidWeightScalingContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-StoryPopupContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-ArmorIntroductionContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-ArmorStrippingCategoryContracts.ps1")
@@ -179,7 +180,7 @@ Copy-Item -LiteralPath $ostimBreastfeedingScene -Destination $packageOStimScene
 # wording stay data-driven, while SkyrimNet.json owns integration messages.
 $packageConfig = Join-Path $stageDir "SKSE\Plugins\StorageUtilData\MMEAlerts"
 New-Item -ItemType Directory -Force -Path $packageConfig | Out-Null
-foreach ($configName in @("SkyrimNet.json", "Thoughts.json", "MilkCravings.json", "Injection.json", "TentacleEffectNarration.json", "DwemerEffectNotifications.json", "DwemerEffectNarration.json", "ArmorCheckReminders.json", "NonMilkmaidDrinkNotifications.json", "ForcedMilkMaidConversion.json", "CustomArmorRegistry.json", "DwemerArmorStories.json", "ArmorIntroductionStories.json", "TimedArmorRegistry.json", "TimedArmorNotifications.json")) {
+foreach ($configName in @("SkyrimNet.json", "Thoughts.json", "MilkCravings.json", "Injection.json", "TentacleEffectNarration.json", "DwemerEffectNotifications.json", "DwemerEffectNarration.json", "DwemerSuitNarration.json", "DwemerAttachmentNarration.json", "ArmorCheckReminders.json", "NonMilkmaidDrinkNotifications.json", "ForcedMilkMaidConversion.json", "CustomArmorRegistry.json", "DwemerArmorStories.json", "ArmorIntroductionStories.json", "TimedArmorRegistry.json", "TimedArmorNotifications.json")) {
     $configPath = Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\$configName"
     if (!(Test-Path -LiteralPath $configPath)) {
         throw "Required JSON configuration is missing: $configPath"

@@ -33,6 +33,10 @@ String Function GetAnimationOwner() Global
     Return "DwemerArmorMilking"
 EndFunction
 
+Bool Function IsSequenceActive(Actor candidate) Global
+    Return candidate != None && StorageUtil.GetIntValue(candidate, GetSequenceKey(), 0) == 1
+EndFunction
+
 ; Vanilla's direct blue sibling to the green shader used by MME's
 ; MilkForSpriggan effect. Resolving Skyrim.esm keeps this presentation
 ; dependency-free and applies equally to every independent class-4 armor.
@@ -188,6 +192,8 @@ Function RunDwemerMilking(Actor candidate, MilkQUEST milkController, Float start
     If milkController.MilkStory && candidate == Game.GetPlayer()
         StoryDisplay("start")
     EndIf
+    Armor narrationArmor = candidate.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
+    MMEAlertsSkyrimNet.NarrateDwemerSuitEvent(candidate, narrationArmor, "milkingStart")
 
     String animationBlock = GetAnimationBlockReason(candidate, milkController)
     If milkController.MobileMilkingAnims && animationBlock == ""
@@ -249,6 +255,8 @@ Function RunDwemerMilking(Actor candidate, MilkQUEST milkController, Float start
     Float endingMilk = MME_Storage.getMilkCurrent(candidate)
     If endingMilk >= startingMilk
         MMELog.Alarm("[MME Extensions Dwemer Armor] MME milking returned without reducing milk | actor=" + GetActorName(candidate) + " | before=" + startingMilk + " | after=" + endingMilk)
+    Else
+        MMEAlertsSkyrimNet.NarrateDwemerSuitEvent(candidate, narrationArmor, "milkingEnd")
     EndIf
     Report("sequence end | actor=" + GetActorName(candidate) + " | milkBefore=" + startingMilk + " | milkAfter=" + endingMilk)
 EndFunction
