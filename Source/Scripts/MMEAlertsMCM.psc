@@ -180,6 +180,7 @@ Int npcMilkingArmorNarrationCooldownOption
 Int armorDebugOption
 Int armorLookupForensicsOption
 Int extensionsArmorStrippingOption
+Int milkingEquipmentRefitOption
 Int armorStripHeavyEnabledOption
 Int armorStripLightEnabledOption
 Int armorStripClothingEnabledOption
@@ -275,7 +276,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 143
+    Return 144
 EndFunction
 
 Function SetPageNames()
@@ -421,6 +422,7 @@ Function EnsureDefaults()
         JsonUtil.SetFloatValue(SettingsFile, "flatMilkBonus", 1.0)
         JsonUtil.SetIntValue(SettingsFile, "enableMaidLevelWeightScaling", 1)
         JsonUtil.SetFloatValue(SettingsFile, "maidWeightPerLevel", 1.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkingEquipmentRefits", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableAddMilkDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffectsDebug", 0)
@@ -1441,6 +1443,11 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "maidWeightScalingMigration143", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "milkingEquipmentRefitMigration144", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkingEquipmentRefits", 1)
+        JsonUtil.SetIntValue(SettingsFile, "milkingEquipmentRefitMigration144", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetDwemerEffectDefaults()
@@ -1673,6 +1680,7 @@ Event OnPageReset(String page)
     armorDebugOption = -1
     armorLookupForensicsOption = -1
     extensionsArmorStrippingOption = -1
+    milkingEquipmentRefitOption = -1
     armorStripHeavyEnabledOption = -1
     armorStripLightEnabledOption = -1
     armorStripClothingEnabledOption = -1
@@ -1973,6 +1981,7 @@ Event OnPageReset(String page)
         If JsonUtil.GetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1) != 1
             stripFlags = OPTION_FLAG_DISABLED
         EndIf
+        milkingEquipmentRefitOption = AddToggleOption("Require Milking Equipment Refits", JsonUtil.GetIntValue(SettingsFile, "enableMilkingEquipmentRefits", 1) == 1, stripFlags)
         stripAllArmorOverrideOption = AddToggleOption("Strip All Armor / Ignore Protection", JsonUtil.GetIntValue(SettingsFile, "enableStripAllArmor", 0) == 1, stripFlags)
         Int narrationFlags = stripFlags
         If narrationFlags == OPTION_FLAG_NONE && JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarration", 1) != 1
@@ -2598,6 +2607,8 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report armor-strip narration triggers, gates, chance, cooldown, and Skyrim.Net results.")
     ElseIf option == extensionsArmorStrippingOption
         SetInfoText("Take over armor stripping from Milk Mod Economy. While enabled, MME's original stripping is disabled and these fullness thresholds are used instead.")
+    ElseIf option == milkingEquipmentRefitOption
+        SetInfoText("After the player's personal Maid Level increases, ordinary registered Milking Equipment follows normal fullness stripping rules until a blacksmith refits it. Original MME cuirasses and special armor are always ignored.")
     ElseIf option == armorCheckReminderOption
         SetInfoText("Show one brief notification when an eligible blacksmith, alchemist, or court wizard notices the armor state recognized by MME.")
     ElseIf option == armorCheckReminderCooldownOption
@@ -3410,9 +3421,17 @@ Event OnOptionSelect(Int option)
     ElseIf option == extensionsArmorStrippingOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableExtensionsArmorStripping", value)
+        JsonUtil.Save(SettingsFile, False)
         SetToggleOptionValue(option, value == 1)
         MMEArmorScript.ApplyArmorStrippingMasterToggle()
+        MMEMilkingEquipmentRefit.HandleSettingsChanged("armor stripping master changed")
         ForcePageReset()
+    ElseIf option == milkingEquipmentRefitOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkingEquipmentRefits", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkingEquipmentRefits", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
+        MMEMilkingEquipmentRefit.HandleSettingsChanged("refit toggle changed")
     ElseIf option == armorCheckReminderOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorCheckReminder", value)

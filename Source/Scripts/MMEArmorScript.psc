@@ -167,6 +167,11 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
         If bypassedProtection != "" && diagnostic
             MMELog.Diagnostic("[MMEAlert Armor Stripping] " + sourceLabel + " override=Strip All Armor | actor=" + GetActorName(target) + " | armor=" + GetArmorName(slotArmor) + " | formID=" + slotArmor.GetFormID() + " | MME protection ignored=" + bypassedProtection)
         EndIf
+    ElseIf MMEMilkingEquipmentRefit.ShouldBypassMilkingEquipmentProtection(target, slotArmor, milkController)
+        ; A player whose personal Maid Level outgrew ordinary registered
+        ; MilkingEquipment temporarily follows normal fullness thresholds. The
+        ; refit service excludes original MME and every special armor category.
+        MMELog.MasterDiagnostic("[MME Extensions Milking Refit] stripping uses ordinary " + armorKind + " rules | armor=" + GetArmorName(slotArmor) + " | source=" + sourceLabel)
     Else
         protectionReason = GetMMEArmorProtectionReason(milkController, slotArmor, sourceLabel, target)
     EndIf

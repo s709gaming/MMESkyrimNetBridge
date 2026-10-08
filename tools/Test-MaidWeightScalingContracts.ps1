@@ -17,5 +17,5 @@ Assert-Contract ($service -match 'external weight change rebased') "later appear
 Assert-Contract ($controller -match 'OnMenuClose\(String menuName\)[\s\S]*Journal Menu[\s\S]*MMEMaidWeightScaling\.ReconcileAll') "closing either MCM reconciles original MME level edits"
 Assert-Contract ($controller -match 'MME milk cycle completed' -and $controller -match 'MME milking completed' -and $controller -match 'Milk Maid created') "authoritative gameplay transitions reconcile weight"
 Assert-Contract ($controller -match 'ModEvent\.Send\(handle\)[\s\S]*MMEMaidWeightScaling\.ReconcileActor\(candidate, "Milk Maid created"\)') "cosmetic weight work cannot interrupt conversion feedback or its public event"
-Assert-Contract ($mcm -match 'Return 143' -and $mcm -match 'Scale Weight with Maid Level' -and $mcm -match 'SetSliderDialogRange\(0\.0, 10\.0\)' -and $mcm -match 'SetSliderDialogInterval\(1\.0\)') "MCM migration, default-on toggle and 0-10 step-1 slider exist"
+Assert-Contract ($mcm -match 'Return 14[4-9]' -and $mcm -match 'Scale Weight with Maid Level' -and $mcm -match 'SetSliderDialogRange\(0\.0, 10\.0\)' -and $mcm -match 'SetSliderDialogInterval\(1\.0\)') "MCM migration, default-on toggle and 0-10 step-1 slider exist"
 Assert-Contract ($build -match '"MMEMaidWeightScaling"') "release build compiles and packages the service"

@@ -143,6 +143,7 @@ Function InitializeController(Bool reportStatus = False)
     RegisterForModEvent("MMEExtensions_ArmorUnequipped", "OnArmorUnequipped")
     MMECustomArmorRegistry.AuditRegistry()
     MMEMaidWeightScaling.ReconcileAll("controller initialized")
+    MMEMilkingEquipmentRefit.Reconcile("controller initialized")
     UnregisterForModEvent("MMEExtensions_DungeonBossChestActivated")
     RegisterForModEvent("MMEExtensions_DungeonBossChestActivated", "OnDungeonBossChestActivated")
     UnregisterForModEvent("MMEExtensions_DungeonRegularChestActivated")
@@ -483,6 +484,7 @@ EndEvent
 Event OnMenuClose(String menuName)
     If menuName == "Journal Menu" && IsExtensionsEnabled()
         MMEMaidWeightScaling.ReconcileAll("Journal Menu closed")
+        MMEMilkingEquipmentRefit.Reconcile("Journal Menu closed")
     EndIf
 EndEvent
 
@@ -1290,6 +1292,7 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
         dwemerSeen = MMEArmorIntroduction.HasSeenArmor(wearer, 4, equippedArmor)
     EndIf
     MMECustomArmorRegistry.HandleCustomArmorEquipped(wearer, equippedArmor)
+    MMEMilkingEquipmentRefit.HandleArmorEquipped(wearer, equippedArmor)
     MMETimedArmorLock.TryLockRegisteredEquip(wearer, equippedArmor)
     If MMEArmorIntroduction.TryAutomatic(wearer, equippedArmor)
         If chestTrapEquip
@@ -1409,6 +1412,9 @@ Function CheckMilkmaidCreation(Actor candidate, String source, Bool ownsPendingM
     ; Cosmetic weight work is deliberately last. A compatibility failure here
     ; must never suppress conversion feedback, narration, or the public event.
     MMEMaidWeightScaling.ReconcileActor(candidate, "Milk Maid created")
+    If candidate == Game.GetPlayer()
+        MMEMilkingEquipmentRefit.Reconcile("Milk Maid created")
+    EndIf
 EndFunction
 
 ; Receives low-cost lifecycle signals from the optional CommonLibSSE-NG DLL.
@@ -1558,6 +1564,9 @@ Event OnMMEMilkingDone(Form actorForm, Int bottles, Int boobgasmCount, Int cumCo
     Actor milkMaid = actorForm as Actor
     FinishMilking(milkMaid)
     MMEMaidWeightScaling.ReconcileActor(milkMaid, "MME milking completed")
+    If milkMaid == Game.GetPlayer()
+        MMEMilkingEquipmentRefit.Reconcile("MME milking completed")
+    EndIf
 EndEvent
 
 ; MME sends this after completing its normal production batch. The event has no
@@ -1570,6 +1579,7 @@ Event OnMMEMilkCycleComplete(String eventName, String strArg, Float numArg, Form
         Return
     EndIf
     MMEMaidWeightScaling.ReconcileAll("MME milk cycle completed")
+    MMEMilkingEquipmentRefit.Reconcile("MME milk cycle completed")
     MMEDwemerArmor.ProcessNearbyDwemerArmor()
 EndEvent
 

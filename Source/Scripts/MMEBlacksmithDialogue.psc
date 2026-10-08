@@ -9,6 +9,7 @@ GlobalVariable Property MMEExt_MageParasiteArmorState Auto
 GlobalVariable Property MMEExt_MageReverseLevelAvailable Auto
 GlobalVariable Property MMEExt_TrapArmorRemovalState Auto
 GlobalVariable Property MMEExt_DwemerBlacksmithArmorState Auto
+GlobalVariable Property MMEExt_MilkingEquipmentRefitState Auto
 Bool serviceSucceeded = False
 
 Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
@@ -20,6 +21,7 @@ Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
     EndIf
     SetTrapArmorDialogueState(0)
     MMEDwemerBlacksmithDialogue.SetDialogueState(MMEExt_DwemerBlacksmithArmorState, 0)
+    SetMilkingEquipmentRefitState(0)
     ; Preserve MME's complete opening behavior exactly once before its existing
     ; linked choices and our two new choices evaluate their conditions.
     Parent.Fragment_00(akSpeakerRef)
@@ -31,11 +33,25 @@ Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
     MMEMageDialogue.SetDialogueState(MMEExt_MageParasiteArmorState, MMEMageDialogue.GetLiveServiceState(akSpeakerRef as Actor))
     SetTrapArmorDialogueState(MMETrapArmorDialogue.GetLiveServiceState(akSpeakerRef as Actor))
     MMEDwemerBlacksmithDialogue.SetDialogueState(MMEExt_DwemerBlacksmithArmorState, MMEDwemerBlacksmithDialogue.GetLiveServiceState(akSpeakerRef as Actor))
+    SetMilkingEquipmentRefitState(MMEMilkingEquipmentRefit.GetLiveServiceState(akSpeakerRef as Actor))
     ; The live trace records the published state here, before the controller's
     ; deferred snapshot checks whether Skyrim actually exposed the expected INFO.
     MMEDiagnostics.ObserveBlacksmithDialogueState(akSpeakerRef as Actor)
     MMEDiagnostics.ObserveAlchemistDialogueState(akSpeakerRef as Actor)
     MMEDiagnostics.ObserveMageDialogueState(akSpeakerRef as Actor)
+EndFunction
+
+Function Fragment_RefitMilkingEquipment(ObjectReference akSpeakerRef)
+    SetMilkingEquipmentRefitState(0)
+    CompleteVendorService(akSpeakerRef, "Blacksmith/RefitMilkingEquipment", MMEMilkingEquipmentRefit.TryRefit(akSpeakerRef as Actor))
+EndFunction
+
+Function SetMilkingEquipmentRefitState(Int value)
+    If MMEExt_MilkingEquipmentRefitState != None
+        MMEExt_MilkingEquipmentRefitState.SetValue(value as Float)
+    Else
+        MMELog.Alarm("[MME Extensions Milking Refit] FAILURE: dialogue-state Global is unbound", 2)
+    EndIf
 EndFunction
 
 Function Fragment_InstallDwemerAttachment(ObjectReference akSpeakerRef)

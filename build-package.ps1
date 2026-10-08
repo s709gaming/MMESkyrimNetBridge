@@ -19,7 +19,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
-$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMETentacleEffects", "MMEDwemerEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMETrapArmorDialogue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMEExtensionsAPI", "MMEExtensionsNative")
+$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMETrapArmorDialogue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $diagnosticOverrideSource = Join-Path $projectRoot "Source\MMEDiagnosticOverrides"
 $diagnosticOverrideNames = @("MilkQUEST", "MME_StartMilking")
@@ -74,6 +74,7 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 & (Join-Path $projectRoot "tools\Test-MilkCravingContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-AutoSelfMilkingContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-MaidWeightScalingContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-MilkingEquipmentRefitContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-StoryPopupContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-ArmorIntroductionContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-ArmorStrippingCategoryContracts.ps1")
@@ -440,6 +441,13 @@ if (Test-Path -LiteralPath $pluginPath) {
         !$pluginText.Contains("I'm stuck. Can you help get this off me?") -or
         !$pluginText.Contains("Oh, look at you. Thoroughly defeated by your own wardrobe. Hold still, I'll tease it off.")) {
         throw "MMEAlert.esp is missing the timed trap armor service dialogue records or requested text."
+    }
+    if (!$pluginText.Contains("MMEExt_MilkingEquipmentRefitState") -or
+        !$pluginText.Contains("MMEExt_MilkingEquipmentRefitTopic") -or
+        !$pluginText.Contains("Fragment_RefitMilkingEquipment") -or
+        !$pluginText.Contains("My tits are getting too big for my milking equipment. Can you refit it?") -or
+        !$pluginText.Contains("Sure thing. Hold still, I'll give the girls a little more room to breathe.")) {
+        throw "MMEAlert.esp is missing the milking-equipment refit dialogue records or requested text."
     }
     Copy-Item -LiteralPath $pluginPath -Destination $stageDir
 } else {
