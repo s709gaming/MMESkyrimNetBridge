@@ -28,6 +28,12 @@ $scriptNames += "MMEMilkingDiagnostics"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
 $standardDefaultsOutputDir = Join-Path $projectRoot "fomod\choices\standard\Scripts"
+$elsieFixSourceDir = Join-Path $projectRoot "fomod\choices\elsie-compatibility\Source\Scripts"
+$elsieFixOutputDir = Join-Path $projectRoot "fomod\choices\elsie-compatibility\Scripts"
+$elsieFixPlugin = Join-Path $projectRoot "fomod\choices\elsie-compatibility\MME Extensions - Elsie LaVache Fix.esp"
+$elsieFixChangelog = Join-Path $projectRoot "docs\ELSIE-LAVACHE-FIX-CHANGELOG.md"
+$elsieSdkSource = Join-Path $projectRoot "tools\elsie-sdk"
+$installedElsiePlugin = Join-Path $gameRoot "Data\CP_Elsie.esp"
 $skyrimNet25PluginId = "s709gaming.mme-extensions"
 $skyrimNet25SourceDir = Join-Path $projectRoot "SkyrimNet25\$skyrimNet25PluginId"
 $skyrimNet25ManifestPath = Join-Path $skyrimNet25SourceDir "manifest.json"
@@ -53,6 +59,14 @@ if (!(Test-Path -LiteralPath (Join-Path $quickStartSourceDir "MMEAlertsQuickTest
 }
 if (!(Test-Path -LiteralPath (Join-Path $standardDefaultsSourceDir "MMEAlertsFlatRateDefaults.psc"))) {
     throw "Vanilla defaults source script not found: $standardDefaultsSourceDir\MMEAlertsFlatRateDefaults.psc"
+}
+foreach ($elsieScript in @("ELV_DiaGreets_PlayerAliasScript", "ELVPlayerAliasscript")) {
+    if (!(Test-Path -LiteralPath (Join-Path $elsieFixSourceDir "$elsieScript.psc"))) {
+        throw "Elsie fix source script not found: $elsieFixSourceDir\$elsieScript.psc"
+    }
+}
+if (!(Test-Path -LiteralPath $elsieFixChangelog)) {
+    throw "Elsie-only changelog not found: $elsieFixChangelog"
 }
 if (!(Test-Path -LiteralPath $ostimBreastfeedingScene)) {
     throw "OStim female/female breastfeeding scene is missing: $ostimBreastfeedingScene"
@@ -118,6 +132,28 @@ finally {
     Pop-Location
 }
 
+# Compile the optional Elsie compatibility replacements against minimal API
+# declarations. This avoids compiling or packaging Elsie's original sources.
+New-Item -ItemType Directory -Force -Path $elsieFixOutputDir | Out-Null
+$elsieImports = "$elsieFixSourceDir;$sourceDir;$elsieSdkSource;$mmeSdkSource;$skseSource;$vanillaSource"
+foreach ($elsieScript in @("ELV_DiaGreets_PlayerAliasScript", "ELVPlayerAliasscript")) {
+    Write-Host "Compiling Elsie compatibility override $elsieScript.psc..." -ForegroundColor Cyan
+    & $compiler "$elsieScript.psc" "-f=$flags" "-i=$elsieImports" "-o=$elsieFixOutputDir"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Compilation failed for Elsie compatibility override $elsieScript"
+    }
+}
+
+# Rebuild the record patch when the original Elsie plugin is locally available.
+# Otherwise retain the checked-in, round-trip-verified compatibility plugin.
+if (Test-Path -LiteralPath $installedElsiePlugin) {
+    & (Join-Path $projectRoot "tools\Build-ElsieFix.ps1")
+    if ($LASTEXITCODE -ne 0) { throw "Elsie compatibility patch generation failed" }
+}
+if (!(Test-Path -LiteralPath $elsieFixPlugin)) {
+    throw "Elsie compatibility patch is missing: $elsieFixPlugin"
+}
+
 # The Vanilla profile replaces the real defaults quest script with an inert
 # compatible implementation, so it can never change MME settings.
 New-Item -ItemType Directory -Force -Path $standardDefaultsOutputDir | Out-Null
@@ -153,6 +189,9 @@ $fomodSource = Join-Path $projectRoot "fomod"
 If (Test-Path -LiteralPath $fomodSource) {
     Copy-Item -LiteralPath $fomodSource -Destination $stageDir -Recurse
 }
+$packageDocs = Join-Path $stageDir "docs"
+New-Item -ItemType Directory -Force -Path $packageDocs | Out-Null
+Copy-Item -LiteralPath $elsieFixChangelog -Destination $packageDocs
 
 # Copy the active compiled scripts and matching sources.
 foreach ($scriptName in $scriptNames) {

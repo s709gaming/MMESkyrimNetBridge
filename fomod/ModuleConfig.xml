@@ -78,6 +78,31 @@
               </typeDescriptor>
             </plugin>
 
+            <plugin name="Elsie LaVache 3.4 Stability Fix">
+              <description>Requires the original Elsie LaVache 3.4 and its active CP_Elsie.esp. Fixes an empty generic greeting that can produce silent dialogue, repairs broken player-alias script bindings, and restores guarded dialogue cleanup. Automatically installed when Elsie is active.</description>
+              <files>
+                <file source="fomod\choices\elsie-compatibility\MME Extensions - Elsie LaVache Fix.esp" destination="MME Extensions - Elsie LaVache Fix.esp" priority="20" />
+                <file source="fomod\choices\elsie-compatibility\Scripts\ELV_DiaGreets_PlayerAliasScript.pex" destination="Scripts\ELV_DiaGreets_PlayerAliasScript.pex" priority="20" />
+                <file source="fomod\choices\elsie-compatibility\Scripts\ELVPlayerAliasscript.pex" destination="Scripts\ELVPlayerAliasscript.pex" priority="20" />
+                <file source="fomod\choices\elsie-compatibility\Source\Scripts\ELV_DiaGreets_PlayerAliasScript.psc" destination="Source\Scripts\ELV_DiaGreets_PlayerAliasScript.psc" priority="20" />
+                <file source="fomod\choices\elsie-compatibility\Source\Scripts\ELVPlayerAliasscript.psc" destination="Source\Scripts\ELVPlayerAliasscript.psc" priority="20" />
+                <file source="docs\ELSIE-LAVACHE-FIX-CHANGELOG.md" destination="Docs\MME Extensions - Elsie LaVache Fix Changelog.md" priority="20" />
+              </files>
+              <typeDescriptor>
+                <dependencyType>
+                  <defaultType name="NotUsable" />
+                  <patterns>
+                    <pattern>
+                      <dependencies operator="And">
+                        <fileDependency file="CP_Elsie.esp" state="Active" />
+                      </dependencies>
+                      <type name="Required" />
+                    </pattern>
+                  </patterns>
+                </dependencyType>
+              </typeDescriptor>
+            </plugin>
+
             <plugin name="Trap Treasure Chest with Tentacle Armor">
               <description>Requires C5Kev's Tentacled Terrors Of Tamriel 3BA and its active plugin, C5Kev's Tentacled Terrors Of Tamriel 3BA.esp. Download: https://www.nexusmods.com/skyrimspecialedition/mods/62644?tab=files. For treasure chests with a more... hands-on surprise. Tentacles included. Personal space not included.</description>
               <files>
