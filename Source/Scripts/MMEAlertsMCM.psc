@@ -72,6 +72,9 @@ Int maidWeightScalingOption
 Int maidWeightPerLevelOption
 Int addMilkDebugOption
 Int breastfeedingMilkEffectsOption
+Int elsieDetectedOption
+Int elsieBreastfeedingMilkEffectsOption
+Int elsieBreastfeedingTestOption
 Int breastfeedingMilkEffectsDebugOption
 Int lactacidMultiplierOption
 Int skyrimNetDrinkDiagnosticOption
@@ -237,11 +240,8 @@ Int dwemerEffectNarrationChanceOption
 Int runDwemerEffectCheckOption
 Int runArmorInjectionCheckOption
 Int diagnosticNotificationsOption
-Int diagnosticPapyrusTraceOption
 Int papyrusTraceOption
-Int specificDiagnosticTraceOption
-Int vendorAnimationTraceOption
-Int milkDialogueTimingTraceOption
+Int verbosePapyrusTraceOption
 Int diagnosticRefreshGateOption
 Int diagnosticInstallAuditOption
 Int diagnosticMilkDrinkAuditOption
@@ -425,6 +425,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableMilkingEquipmentRefits", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableAddMilkDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableElsieBreastfeedingMilkEffects", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffectsDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "breastfeedingMilkEffectsMigration86", 1)
         JsonUtil.SetFloatValue(SettingsFile, "lactacidFlatMultiplier", 2.0)
@@ -1191,6 +1192,7 @@ Function EnsureDefaults()
     ; Master/subsystem Papyrus tracing for the post-dialogue vendor animation bus.
     If JsonUtil.GetIntValue(SettingsFile, "vendorAnimationTraceMigration111", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enablePapyrusTrace", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableVerbosePapyrusLogging", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableVendorAnimationTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "vendorAnimationTraceMigration111", 1)
         JsonUtil.Save(SettingsFile, False)
@@ -1448,6 +1450,27 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "milkingEquipmentRefitMigration144", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Optional Elsie scenes use the established breastfeeding transaction but
+    ; retain an independent, default-on control for existing saves.
+    If JsonUtil.GetIntValue(SettingsFile, "elsieBreastfeedingMigration145", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableElsieBreastfeedingMilkEffects", 1)
+        JsonUtil.SetIntValue(SettingsFile, "elsieBreastfeedingMigration145", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Consolidates the four former developer-facing trace categories behind one
+    ; high-volume switch. Preserve an explicitly enabled legacy category once.
+    If JsonUtil.GetIntValue(SettingsFile, "verbosePapyrusLoggingMigration146", 0) == 0
+        Int verboseLogging = 0
+        If JsonUtil.GetIntValue(SettingsFile, "enableSpecificDiagnosticTrace", 0) == 1 \
+        || JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0) == 1 \
+        || JsonUtil.GetIntValue(SettingsFile, "enableVendorAnimationTrace", 0) == 1 \
+        || JsonUtil.GetIntValue(SettingsFile, "enableMilkDialogueTimingTrace", 0) == 1
+            verboseLogging = 1
+        EndIf
+        JsonUtil.SetIntValue(SettingsFile, "enableVerbosePapyrusLogging", verboseLogging)
+        JsonUtil.SetIntValue(SettingsFile, "verbosePapyrusLoggingMigration146", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetDwemerEffectDefaults()
@@ -1572,6 +1595,9 @@ Event OnPageReset(String page)
     maidWeightPerLevelOption = -1
     addMilkDebugOption = -1
     breastfeedingMilkEffectsOption = -1
+    elsieDetectedOption = -1
+    elsieBreastfeedingMilkEffectsOption = -1
+    elsieBreastfeedingTestOption = -1
     breastfeedingMilkEffectsDebugOption = -1
     lactacidMultiplierOption = -1
     skyrimNetDrinkDiagnosticOption = -1
@@ -1737,11 +1763,8 @@ Event OnPageReset(String page)
     dwemerEffectNarrationChanceOption = -1
     runDwemerEffectCheckOption = -1
     diagnosticNotificationsOption = -1
-    diagnosticPapyrusTraceOption = -1
     papyrusTraceOption = -1
-    specificDiagnosticTraceOption = -1
-    vendorAnimationTraceOption = -1
-    milkDialogueTimingTraceOption = -1
+    verbosePapyrusTraceOption = -1
     diagnosticRefreshGateOption = -1
     diagnosticInstallAuditOption = -1
     diagnosticMilkDrinkAuditOption = -1
@@ -1904,6 +1927,14 @@ Event OnPageReset(String page)
         lactacidMultiplierOption = AddSliderOption("Lactacid Multiplier", JsonUtil.GetFloatValue(SettingsFile, "lactacidFlatMultiplier", 2.0), "x{1}")
         AddHeaderOption("Breastfeeding")
         breastfeedingMilkEffectsOption = AddToggleOption("Breastfeeding Gives Milk", JsonUtil.GetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", 1) == 1)
+        Bool elsieDetected = MMEElsieBreastfeeding.IsDetected()
+        elsieDetectedOption = AddToggleOption("Elsie LaVache Detected", elsieDetected, OPTION_FLAG_DISABLED)
+        Int elsieMilkFlags = OPTION_FLAG_NONE
+        If !MMEElsieBreastfeeding.IsAvailable()
+            elsieMilkFlags = OPTION_FLAG_DISABLED
+        EndIf
+        elsieBreastfeedingMilkEffectsOption = AddToggleOption("Elsie Breastfeeding Gives Milk", JsonUtil.GetIntValue(SettingsFile, "enableElsieBreastfeedingMilkEffects", 1) == 1, elsieMilkFlags)
+        elsieBreastfeedingTestOption = AddTextOption("Test Elsie Auto Breastfeeding", "RUN", elsieMilkFlags)
         AddHeaderOption("NPC Milk Drinking")
         npcMilkEffectsOption = AddToggleOption("NPC Milk Effects", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1) == 1)
         npcDrinkNotificationsOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1) == 1)
@@ -2189,21 +2220,13 @@ Event OnPageReset(String page)
         diagnosticMageBusStopOption = AddTextOption("Last Mage Bus Stop", MMEDiagnostics.GetMageDialogueBusStop(), OPTION_FLAG_DISABLED)
         diagnosticMageBusFailureOption = AddTextOption("Last Mage Bus Failure", MMEDiagnostics.GetMageDialogueBusFailure(), OPTION_FLAG_DISABLED)
         SetCursorPosition(1)
-        AddHeaderOption("Papyrus Trace")
-        papyrusTraceOption = AddToggleOption("Master Papyrus Logging", JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) == 1)
-        Int specificTraceFlags = OPTION_FLAG_NONE
+        AddHeaderOption("Papyrus Logging")
+        papyrusTraceOption = AddToggleOption("Papyrus Logging", JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) == 1)
+        Int verboseTraceFlags = OPTION_FLAG_NONE
         If JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) != 1
-            specificTraceFlags = OPTION_FLAG_DISABLED
+            verboseTraceFlags = OPTION_FLAG_DISABLED
         EndIf
-        specificDiagnosticTraceOption = AddToggleOption("Specific Diagnostic Traces", JsonUtil.GetIntValue(SettingsFile, "enableSpecificDiagnosticTrace", 0) == 1, specificTraceFlags)
-        Int diagnosticTraceFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) != 1 || JsonUtil.GetIntValue(SettingsFile, "enableSpecificDiagnosticTrace", 0) != 1
-            diagnosticTraceFlags = OPTION_FLAG_DISABLED
-        EndIf
-        diagnosticPapyrusTraceOption = AddToggleOption("Papyrus Audit Trace", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0) == 1, diagnosticTraceFlags)
-        Int vendorTraceFlags = diagnosticTraceFlags
-        vendorAnimationTraceOption = AddToggleOption("Vendor Animation", JsonUtil.GetIntValue(SettingsFile, "enableVendorAnimationTrace", 0) == 1, vendorTraceFlags)
-        milkDialogueTimingTraceOption = AddToggleOption("Milk Dialogue Timing", JsonUtil.GetIntValue(SettingsFile, "enableMilkDialogueTimingTrace", 0) == 1, vendorTraceFlags)
+        verbosePapyrusTraceOption = AddToggleOption("Verbose Papyrus Logging", JsonUtil.GetIntValue(SettingsFile, "enableVerbosePapyrusLogging", 0) == 1, verboseTraceFlags)
         Return
     EndIf
     If page == "Debug"
@@ -2549,6 +2572,12 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Report the full player milk-drink transaction: detection, sound, milk bonus math, arousal, notification, and MME add results.")
     ElseIf option == breastfeedingMilkEffectsOption
         SetInfoText("After a validated OStim or SexLab breastfeeding scene completes, apply only the milk and milk-drink arousal bonuses to the drinker.")
+    ElseIf option == elsieDetectedOption
+        SetInfoText("Read-only detection status for Elsie LaVache 3.4. Install the recommended Elsie FOMOD compatibility patch to enable its breastfeeding integration.")
+    ElseIf option == elsieBreastfeedingMilkEffectsOption
+        SetInfoText("After a completed Elsie ELV_Taste breastfeeding scene, give the drinker the normal MME Extensions breastfeeding milk effects. Also requires Breastfeeding Gives Milk above. Default on.")
+    ElseIf option == elsieBreastfeedingTestOption
+        SetInfoText("Start one checked Elsie-style breastfeeding scene using a nearby Milk Maid and customer. Uses the same repaired SexLab starter and completion route as Elsie's autonomous scene.")
     ElseIf option == breastfeedingMilkEffectsDebugOption
         SetInfoText("Show one short result when breastfeeding milk and arousal effects apply or are skipped.")
     ElseIf option == skyrimNetDrinkDiagnosticOption
@@ -2769,16 +2798,10 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Run the real Dwemer Effects production path immediately without waiting for its timer.")
     ElseIf option == diagnosticNotificationsOption
         SetInfoText("Show short audit results as in-game notifications. Enabled by default.")
-    ElseIf option == diagnosticPapyrusTraceOption
-        SetInfoText("Write the same audit results to Papyrus.0.log with the [MME Extensions Diagnostics] prefix.")
     ElseIf option == papyrusTraceOption
-        SetInfoText("Master switch for the focused Papyrus trace categories below. Logging is off by default and does not control gameplay.")
-    ElseIf option == specificDiagnosticTraceOption
-        SetInfoText("Allow detailed problem-specific Papyrus traces. Requires Master Papyrus Logging. Gameplay notifications, sparse status messages, and serious failure alarms are independent.")
-    ElseIf option == vendorAnimationTraceOption
-        SetInfoText("Trace every vendor-animation bus stop from the selected final service INFO through Dialogue Menu close, PlayIdle acceptance, and reset.")
-    ElseIf option == milkDialogueTimingTraceOption
-        SetInfoText("Log the earliest Papyrus-visible selection signal, INFO end, validation, consumption, Give dispatch, three-second hold, and effects. Requires Master Papyrus Logging; changes no gameplay.")
+        SetInfoText("Record useful feature milestones, state changes, and rejection reasons in Papyrus.0.log. Logging is off by default and does not control gameplay.")
+    ElseIf option == verbosePapyrusTraceOption
+        SetInfoText("Record high-volume audit, timing, animation, API, lookup, and transaction details. Enable only while reproducing a problem. Requires Papyrus Logging.")
     ElseIf option == diagnosticRefreshGateOption
         SetInfoText("Recalculate the shared OStim dialogue gate without relying on the optional native DLL.")
     ElseIf option == diagnosticInstallAuditOption
@@ -3188,27 +3211,14 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticNotifications", value)
         SetToggleOptionValue(option, value == 1)
-    ElseIf option == diagnosticPapyrusTraceOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableDiagnosticPapyrusTrace", value)
-        SetToggleOptionValue(option, value == 1)
     ElseIf option == papyrusTraceOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePapyrusTrace", value)
         SetToggleOptionValue(option, value == 1)
         ForcePageReset()
-    ElseIf option == specificDiagnosticTraceOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSpecificDiagnosticTrace", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableSpecificDiagnosticTrace", value)
-        SetToggleOptionValue(option, value == 1)
-        ForcePageReset()
-    ElseIf option == vendorAnimationTraceOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableVendorAnimationTrace", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableVendorAnimationTrace", value)
-        SetToggleOptionValue(option, value == 1)
-    ElseIf option == milkDialogueTimingTraceOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkDialogueTimingTrace", 0)
-        JsonUtil.SetIntValue(SettingsFile, "enableMilkDialogueTimingTrace", value)
+    ElseIf option == verbosePapyrusTraceOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableVerbosePapyrusLogging", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableVerbosePapyrusLogging", value)
         SetToggleOptionValue(option, value == 1)
     ElseIf option == diagnosticRefreshGateOption
         MMEDiagnostics.RefreshDialogueGate()
@@ -3328,6 +3338,12 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == elsieBreastfeedingMilkEffectsOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableElsieBreastfeedingMilkEffects", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableElsieBreastfeedingMilkEffects", value)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == elsieBreastfeedingTestOption
+        MMEElsieBreastfeeding.RunNearbyTest()
     ElseIf option == breastfeedingMilkEffectsDebugOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBreastfeedingMilkEffectsDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffectsDebug", value)

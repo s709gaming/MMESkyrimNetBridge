@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("elsie-fix-builder")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+40256d7f78537fe8b1ea0b2241b7cdeb4fa8d5e0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7aab7643e59eb8ab4c3ca39e5956d06d4748cc9a")]
 [assembly: System.Reflection.AssemblyProductAttribute("elsie-fix-builder")]
 [assembly: System.Reflection.AssemblyTitleAttribute("elsie-fix-builder")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

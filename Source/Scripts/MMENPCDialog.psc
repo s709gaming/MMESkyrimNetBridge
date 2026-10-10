@@ -443,7 +443,7 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
 EndFunction
 
 Bool Function IsDialogueTimingTraceEnabled() Global
-    Return JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePapyrusTrace", 0) == 1 && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkDialogueTimingTrace", 0) == 1
+    Return MMELog.IsDiagnosticEnabled()
 EndFunction
 
 Function TraceDialogueTiming(String stage, Actor target = None) Global

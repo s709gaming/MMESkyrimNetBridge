@@ -11,7 +11,7 @@ $testDirectory = Join-Path ([IO.Path]::GetTempPath()) ('MME-ScanArrayTests-' + [
 New-Item -ItemType Directory -Path $testDirectory | Out-Null
 Push-Location $testDirectory
 try {
-    foreach ($scriptName in @('MMEAlertsController', 'MMETentacleEffects', 'MMEThoughts', 'MMEOStimIntegration')) {
+    foreach ($scriptName in @('MMEAlertsController', 'MMETentacleEffects', 'MMEThoughts', 'MMEOStimIntegration', 'MMEOManiaCompatibility')) {
         Copy-Item -LiteralPath (Join-Path $CompiledDirectory "$scriptName.pex") -Destination $testDirectory
         & $Assembler $scriptName -D -Q
         if ($LASTEXITCODE -ne 0) { throw "Disassembly failed: $scriptName" }
@@ -20,7 +20,7 @@ try {
         foreach ($line in Get-Content -LiteralPath "$scriptName.disassemble.pas") {
             if ($line -match '^\s*\.function\s+(\S+)') {
                 $arrayVariables = @{}
-                $inspectFunction = $scriptName -ne 'MMEAlertsController' -or $matches[1] -in @('OnUpdateGameTime', 'RunArmorInjectionCheckNow', 'ScanNearbyMilkMaids')
+            $inspectFunction = $scriptName -ne 'MMEAlertsController' -or $matches[1] -in @('OnUpdateGameTime', 'RunArmorInjectionCheckNow', 'ScanNearbyMilkMaids')
             }
             if ($line -match '^\s*\.(?:local|param)\s+(\S+)\s+\S+\[\]') {
                 $arrayVariables[$matches[1]] = $true

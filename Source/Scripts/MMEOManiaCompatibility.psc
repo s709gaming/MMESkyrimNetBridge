@@ -66,8 +66,11 @@ Bool Function ConvertOneNearbyPregnancy(Float radius = 2000.0) Global
     || JsonUtil.GetIntValue(GetConfigFile(), "pregnancyCreatesMilkMaid", 1) != 1
         Return False
     EndIf
+    ; The native bridge always returns an array, including a zero-length array.
+    ; Never compare a Papyrus array with None: the compiler emits an invalid
+    ; None-to-array cast before the branch can run.
     Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(radius)
-    If nearbyActors == None
+    If nearbyActors.Length == 0
         Return False
     EndIf
     Int index = 0

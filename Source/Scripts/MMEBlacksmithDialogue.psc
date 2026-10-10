@@ -119,7 +119,7 @@ Function CompleteVendorService(ObjectReference akSpeakerRef, String route, Bool 
     MMEDebug service = MMEDiagnostics.GetDebugService()
     If service != None
         service.HandleVendorServiceResult(akSpeakerRef as Actor, route, succeeded)
-    ElseIf JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePapyrusTrace", 0) == 1 && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVendorAnimationTrace", 0) == 1
+    ElseIf MMELog.IsDiagnosticEnabled()
         MMELog.Alarm("[MME Extensions Vendor Animation Bus] STOP: persistent MMEDebug service unavailable | route=" + route)
     EndIf
 EndFunction

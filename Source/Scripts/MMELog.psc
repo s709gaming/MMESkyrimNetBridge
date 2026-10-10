@@ -9,7 +9,7 @@ Bool Function IsDiagnosticEnabled() Global
     If JsonUtil.GetIntValue(settingsFile, "enablePapyrusTrace", 0) != 1
         Return False
     EndIf
-    Return JsonUtil.GetIntValue(settingsFile, "enableSpecificDiagnosticTrace", 0) == 1
+    Return JsonUtil.GetIntValue(settingsFile, "enableVerbosePapyrusLogging", 0) == 1
 EndFunction
 
 Function Diagnostic(String reportText, Int severity = 0) Global

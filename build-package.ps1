@@ -19,7 +19,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
-$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMETrapArmorDialogue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMEExtensionsAPI", "MMEExtensionsNative")
+$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMETrapArmorDialogue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMEElsieBreastfeeding", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $diagnosticOverrideSource = Join-Path $projectRoot "Source\MMEDiagnosticOverrides"
 $diagnosticOverrideNames = @("MilkQUEST", "MME_StartMilking")
@@ -60,7 +60,7 @@ if (!(Test-Path -LiteralPath (Join-Path $quickStartSourceDir "MMEAlertsQuickTest
 if (!(Test-Path -LiteralPath (Join-Path $standardDefaultsSourceDir "MMEAlertsFlatRateDefaults.psc"))) {
     throw "Vanilla defaults source script not found: $standardDefaultsSourceDir\MMEAlertsFlatRateDefaults.psc"
 }
-foreach ($elsieScript in @("ELV_DiaGreets_PlayerAliasScript", "ELVPlayerAliasscript")) {
+foreach ($elsieScript in @("ELV_DiaGreets_PlayerAliasScript", "ELVPlayerAliasscript", "ELV_MMNPC_Scene_milk", "ELV_MMNPC_Scene_milkingTime")) {
     if (!(Test-Path -LiteralPath (Join-Path $elsieFixSourceDir "$elsieScript.psc"))) {
         throw "Elsie fix source script not found: $elsieFixSourceDir\$elsieScript.psc"
     }
@@ -98,6 +98,8 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 & (Join-Path $projectRoot "tools\Test-DwemerEffectsContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-TimedArmorLockContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-MilkingDiagnosticContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-ElsieBreastfeedingContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-PapyrusLoggingContracts.ps1")
 New-Item -ItemType Directory -Force -Path $compiledDir | Out-Null
 $imports = "$sourceDir;$skyUiSdkSource;$mmeSdkSource;$ostimSdkSource;$omaniaSdkSource;$skyrimNetSdkSource;$skseSource;$vanillaSource"
 foreach ($scriptName in $scriptNames) {
@@ -136,7 +138,7 @@ finally {
 # declarations. This avoids compiling or packaging Elsie's original sources.
 New-Item -ItemType Directory -Force -Path $elsieFixOutputDir | Out-Null
 $elsieImports = "$elsieFixSourceDir;$sourceDir;$elsieSdkSource;$mmeSdkSource;$skseSource;$vanillaSource"
-foreach ($elsieScript in @("ELV_DiaGreets_PlayerAliasScript", "ELVPlayerAliasscript")) {
+foreach ($elsieScript in @("ELV_DiaGreets_PlayerAliasScript", "ELVPlayerAliasscript", "ELV_MMNPC_Scene_milk", "ELV_MMNPC_Scene_milkingTime")) {
     Write-Host "Compiling Elsie compatibility override $elsieScript.psc..." -ForegroundColor Cyan
     & $compiler "$elsieScript.psc" "-f=$flags" "-i=$elsieImports" "-o=$elsieFixOutputDir"
     if ($LASTEXITCODE -ne 0) {

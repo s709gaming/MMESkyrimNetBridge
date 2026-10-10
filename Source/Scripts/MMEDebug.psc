@@ -594,7 +594,7 @@ Function ReleaseVendorAnimationMovementLock()
 EndFunction
 
 Bool Function IsVendorAnimationTraceEnabled()
-    Return JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) == 1 && JsonUtil.GetIntValue(SettingsFile, "enableVendorAnimationTrace", 0) == 1
+    Return MMELog.IsDiagnosticEnabled()
 EndFunction
 
 Function ClearVendorAnimationBus(Bool unregisterMenu = True)
@@ -704,8 +704,13 @@ Event OnNewMilkMaidSexLabEnding(String eventName, String threadIDText, Float num
     EndIf
     sslBaseAnimation straightAnimation = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar")
     sslBaseAnimation lesbianAnimation = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding")
-    Bool recognizedBreastfeeding = (straightAnimation != None && thread.Animation == straightAnimation) || (lesbianAnimation != None && thread.Animation == lesbianAnimation)
+    Bool elsieTaste = MMEElsieBreastfeeding.IsTasteAnimation(milkController, thread)
+    Bool recognizedBreastfeeding = (straightAnimation != None && thread.Animation == straightAnimation) || (lesbianAnimation != None && thread.Animation == lesbianAnimation) || elsieTaste
     If !recognizedBreastfeeding
+        Return
+    EndIf
+    If elsieTaste && !MMEElsieBreastfeeding.IsEnabled()
+        MMELog.MasterDiagnostic("[MME Extensions Elsie BF] ELV_Taste completion skipped: compatibility patch or Elsie milk-effects toggle is off | thread=" + threadID)
         Return
     EndIf
     String completionIntent = ""
@@ -732,6 +737,10 @@ Event OnNewMilkMaidSexLabEnding(String eventName, String threadIDText, Float num
     ; dialogue fragments, which launch SexLab without an Extensions marker.
     Actor completedSource = positions[0]
     Actor completedDrinker = positions[1]
+    If elsieTaste && (!MMEElsieBreastfeeding.IsSafeParticipant(completedSource) || !MMEElsieBreastfeeding.IsSafeParticipant(completedDrinker) || completedSource == completedDrinker)
+        MMELog.Alarm("[MME Extensions Elsie BF] ROUTE CLOG | ELV_Taste completed with invalid source/drinker actors | thread=" + threadID)
+        Return
+    EndIf
     Int index = 0
     While index < positions.Length
         Actor participant = positions[index]
@@ -742,7 +751,15 @@ Event OnNewMilkMaidSexLabEnding(String eventName, String threadIDText, Float num
     ; proves this mod owns the gameplay completion. Do not animate an unrelated
     ; scene that happens to reuse either registrar.
     If StorageUtil.HasFloatValue(completedSource, "MME.MilkMaid.Level")
+        If elsieTaste
+            MMELog.MasterDiagnostic("[MME Extensions Elsie BF] ELV_Taste completion recognized | source=" + completedSource + " | drinker=" + completedDrinker + " | thread=" + threadID)
+        EndIf
         CompleteBreastfeedingDrink(completedSource, completedDrinker, "SexLab", threadID, completionIntent)
+        If elsieTaste
+            MMELog.MasterDiagnostic("[MME Extensions Elsie BF] milk transaction handed off | thread=" + threadID)
+        EndIf
+    ElseIf elsieTaste
+        MMELog.MasterDiagnostic("[MME Extensions Elsie BF] ELV_Taste completion skipped: position 0 is not an MME Milk Maid | source=" + completedSource + " | thread=" + threadID)
     EndIf
 EndEvent
 
@@ -1169,7 +1186,7 @@ Bool Function ShouldSuppressBreastfeedingDrink(Actor drinker)
             If thread.HasTag("Breastfeeding")
                 Return True
             EndIf
-            If milkController.SexLab.AnimSlots != None && (thread.Animation == milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding") || thread.Animation == milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar"))
+            If milkController.SexLab.AnimSlots != None && (thread.Animation == milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding") || thread.Animation == milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar") || (MMEElsieBreastfeeding.IsEnabled() && MMEElsieBreastfeeding.IsTasteAnimation(milkController, thread)))
                 Return True
             EndIf
         EndIf

@@ -137,7 +137,7 @@ Function RunBlacksmithDialogueBus(Actor candidate, Bool openingObserved = False)
     If service == None
         Return
     EndIf
-    Bool writeTrace = IsBlacksmithDialogueTraceEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDiagnosticPapyrusTrace", 0) == 1
+    Bool writeTrace = IsBlacksmithDialogueTraceEnabled() || MMELog.IsDiagnosticEnabled()
     GlobalVariable stateGlobal = Game.GetFormFromFile(0x000881, "MMEAlert.esp") as GlobalVariable
     Form addTopic = Game.GetFormFromFile(0x000882, "MMEAlert.esp")
     Form removeTopic = Game.GetFormFromFile(0x000883, "MMEAlert.esp")
@@ -319,7 +319,7 @@ Function RunAlchemistDialogueBus(Actor candidate, Bool openingObserved = False) 
     If service == None
         Return
     EndIf
-    Bool writeTrace = IsAlchemistDialogueTraceEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDiagnosticPapyrusTrace", 0) == 1
+    Bool writeTrace = IsAlchemistDialogueTraceEnabled() || MMELog.IsDiagnosticEnabled()
     GlobalVariable stateGlobal = Game.GetFormFromFile(0x000886, "MMEAlert.esp") as GlobalVariable
     Form addTopic = Game.GetFormFromFile(0x000887, "MMEAlert.esp")
     Form removeTopic = Game.GetFormFromFile(0x000888, "MMEAlert.esp")
@@ -501,7 +501,7 @@ Function RunMageDialogueBus(Actor candidate, Bool openingObserved = False) Globa
     If service == None
         Return
     EndIf
-    Bool writeTrace = IsMageDialogueTraceEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDiagnosticPapyrusTrace", 0) == 1
+    Bool writeTrace = IsMageDialogueTraceEnabled() || MMELog.IsDiagnosticEnabled()
     GlobalVariable stateGlobal = Game.GetFormFromFile(0x00088B, "MMEAlert.esp") as GlobalVariable
     Form addTopic = Game.GetFormFromFile(0x00088C, "MMEAlert.esp")
     Form removeTopic = Game.GetFormFromFile(0x00088D, "MMEAlert.esp")
@@ -847,7 +847,7 @@ Function Report(String reportText, Int severity = 0) Global
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDiagnosticNotifications", 1) == 1
         Debug.Notification("MME Diagnostics: " + reportText)
     EndIf
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDiagnosticPapyrusTrace", 0) == 1
+    If MMELog.IsDiagnosticEnabled()
         MMELog.Diagnostic("[MME Extensions Diagnostics] " + reportText, severity)
     EndIf
 EndFunction

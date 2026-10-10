@@ -78,14 +78,19 @@
               </typeDescriptor>
             </plugin>
 
-            <plugin name="Elsie LaVache 3.4 Stability Fix">
-              <description>Requires the original Elsie LaVache 3.4 and its active CP_Elsie.esp. Fixes an empty generic greeting that can produce silent dialogue, repairs broken player-alias script bindings, and restores guarded dialogue cleanup. Automatically installed when Elsie is active.</description>
+            <plugin name="Elsie LaVache 3.4 — Recommended Compatibility Patch">
+              <description>Elsie LaVache is a large erotic Milk Maid mod featuring new quests, characters, dialogue, and breastfeeding mechanics. This recommended patch fixes silent dialogue and broken script behavior, improves stability, and lets Elsie breastfeeding animations provide MME Extensions milk-drinking effects. Requires an active CP_Elsie.esp and is automatically selected when detected.</description>
               <files>
+                <file source="fomod\choices\elsie-compatibility\ElsieCompatibility.json" destination="SKSE\Plugins\StorageUtilData\MMEAlerts\ElsieCompatibility.json" priority="20" />
                 <file source="fomod\choices\elsie-compatibility\MME Extensions - Elsie LaVache Fix.esp" destination="MME Extensions - Elsie LaVache Fix.esp" priority="20" />
                 <file source="fomod\choices\elsie-compatibility\Scripts\ELV_DiaGreets_PlayerAliasScript.pex" destination="Scripts\ELV_DiaGreets_PlayerAliasScript.pex" priority="20" />
                 <file source="fomod\choices\elsie-compatibility\Scripts\ELVPlayerAliasscript.pex" destination="Scripts\ELVPlayerAliasscript.pex" priority="20" />
+                <file source="fomod\choices\elsie-compatibility\Scripts\ELV_MMNPC_Scene_milk.pex" destination="Scripts\ELV_MMNPC_Scene_milk.pex" priority="20" />
+                <file source="fomod\choices\elsie-compatibility\Scripts\ELV_MMNPC_Scene_milkingTime.pex" destination="Scripts\ELV_MMNPC_Scene_milkingTime.pex" priority="20" />
                 <file source="fomod\choices\elsie-compatibility\Source\Scripts\ELV_DiaGreets_PlayerAliasScript.psc" destination="Source\Scripts\ELV_DiaGreets_PlayerAliasScript.psc" priority="20" />
                 <file source="fomod\choices\elsie-compatibility\Source\Scripts\ELVPlayerAliasscript.psc" destination="Source\Scripts\ELVPlayerAliasscript.psc" priority="20" />
+                <file source="fomod\choices\elsie-compatibility\Source\Scripts\ELV_MMNPC_Scene_milk.psc" destination="Source\Scripts\ELV_MMNPC_Scene_milk.psc" priority="20" />
+                <file source="fomod\choices\elsie-compatibility\Source\Scripts\ELV_MMNPC_Scene_milkingTime.psc" destination="Source\Scripts\ELV_MMNPC_Scene_milkingTime.psc" priority="20" />
                 <file source="docs\ELSIE-LAVACHE-FIX-CHANGELOG.md" destination="Docs\MME Extensions - Elsie LaVache Fix Changelog.md" priority="20" />
               </files>
               <typeDescriptor>
