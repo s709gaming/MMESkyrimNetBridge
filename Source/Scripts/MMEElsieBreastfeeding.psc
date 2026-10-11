@@ -113,9 +113,14 @@ Bool Function RunNearbyTest() Global
     Actor playerActor = Game.GetPlayer()
     Actor milkSource = None
     Actor drinker = None
-    Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(2000.0)
+    ; Papyrus can emit an invalid None-to-Actor[] cast for direct array
+    ; initialization. Keep declaration and assignment separate.
+    Actor[] nearbyActors
+    nearbyActors = MMEExtensionsNative.GetNearbyActors(2000.0)
     Int index = 0
-    While nearbyActors != None && index < nearbyActors.Length
+    ; The native function always returns a vector (empty only if runtime
+    ; singletons are unavailable), so the length check is the safe guard.
+    While index < nearbyActors.Length
         Actor candidate = nearbyActors[index]
         If candidate != playerActor && IsSafeParticipant(candidate)
             If milkSource == None && StorageUtil.HasFloatValue(candidate, "MME.MilkMaid.Level")
@@ -134,7 +139,7 @@ Bool Function RunNearbyTest() Global
     EndIf
     If milkSource == playerActor && (drinker == None || drinker == playerActor)
         index = 0
-        While nearbyActors != None && index < nearbyActors.Length && drinker == None
+        While index < nearbyActors.Length && drinker == None
             Actor candidate = nearbyActors[index]
             If candidate != playerActor && IsSafeParticipant(candidate)
                 drinker = candidate

@@ -698,8 +698,13 @@ Event OnNewMilkMaidSexLabEnding(String eventName, String threadIDText, Float num
     If thread == None
         Return
     EndIf
-    Actor[] positions = thread.Positions
-    If positions == None || positions.Length < 2
+    ; Use a two-step assignment so the compiler does not emit an invalid
+    ; None-to-Actor[] cast when the SexLab positions property is read.
+    Actor[] positions
+    positions = thread.Positions
+    ; SexLab supplies a positions array for an active controller. Comparing an
+    ; array with None makes this compiler emit an invalid array cast.
+    If positions.Length < 2
         Return
     EndIf
     sslBaseAnimation straightAnimation = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar")

@@ -21,8 +21,8 @@ $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
 $scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMETrapArmorDialogue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMEElsieBreastfeeding", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
-$diagnosticOverrideSource = Join-Path $projectRoot "Source\MMEDiagnosticOverrides"
-$diagnosticOverrideNames = @("MilkQUEST", "MME_StartMilking")
+$mmeCompatibilityOverrideSource = Join-Path $projectRoot "Source\MMECompatibilityOverrides"
+$mmeCompatibilityOverrideNames = @("MilkQUEST")
 $diagnosticSdk = Join-Path $projectRoot "tools\mme-diagnostic-sdk"
 $scriptNames += "MMEMilkingDiagnostics"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
@@ -97,7 +97,7 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 & (Join-Path $projectRoot "tools\Test-DwemerArmorContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-DwemerEffectsContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-TimedArmorLockContracts.ps1")
-& (Join-Path $projectRoot "tools\Test-MilkingDiagnosticContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-MMECompatibilityOverrideContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-ElsieBreastfeedingContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-PapyrusLoggingContracts.ps1")
 New-Item -ItemType Directory -Force -Path $compiledDir | Out-Null
@@ -111,11 +111,11 @@ foreach ($scriptName in $scriptNames) {
 }
 
 # Reject the compiled array-cast regression before replacing the release ZIP.
-# Compile diagnostic base-MME overrides against full installed framework sources,
-# not the deliberately minimal SDK declarations used by Extensions scripts.
-foreach ($overrideName in $diagnosticOverrideNames) {
-    & $compiler (Join-Path $diagnosticOverrideSource "$overrideName.psc") "-f=$flags" "-i=$diagnosticOverrideSource;$diagnosticSdk;$imports" "-o=$compiledDir"
-    if ($LASTEXITCODE -ne 0) { throw "Compilation failed for diagnostic override $overrideName" }
+# Compile the narrow base-MME compatibility override against the full installed
+# framework sources, not the deliberately minimal SDK declarations.
+foreach ($overrideName in $mmeCompatibilityOverrideNames) {
+    & $compiler (Join-Path $mmeCompatibilityOverrideSource "$overrideName.psc") "-f=$flags" "-i=$mmeCompatibilityOverrideSource;$diagnosticSdk;$imports" "-o=$compiledDir"
+    if ($LASTEXITCODE -ne 0) { throw "Compilation failed for MME compatibility override $overrideName" }
 }
 & (Join-Path $projectRoot "tools\Test-ScanArrayContracts.ps1") -CompiledDirectory $compiledDir -Assembler (Join-Path (Split-Path -Parent $compiler) "PapyrusAssembler.exe")
 
@@ -202,9 +202,9 @@ foreach ($scriptName in $scriptNames) {
 }
 
 # The lifecycle feature requires the CommonLibSSE-NG SE/AE/VR bridge.
-foreach ($overrideName in $diagnosticOverrideNames) {
+foreach ($overrideName in $mmeCompatibilityOverrideNames) {
     Copy-Item -LiteralPath (Join-Path $compiledDir "$overrideName.pex") -Destination $packageScripts
-    Copy-Item -LiteralPath (Join-Path $diagnosticOverrideSource "$overrideName.psc") -Destination $packageSources
+    Copy-Item -LiteralPath (Join-Path $mmeCompatibilityOverrideSource "$overrideName.psc") -Destination $packageSources
 }
 if (!(Test-Path -LiteralPath $nativeDll)) {
     throw "Native lifecycle DLL missing. Run build-native.ps1 first: $nativeDll"
@@ -360,7 +360,7 @@ if (Test-Path -LiteralPath $testSoundRoot) {
 Copy-Item -LiteralPath (Join-Path $projectRoot "README.md") -Destination $stageDir
 $packageDocs = Join-Path $stageDir "Docs"
 New-Item -ItemType Directory -Force -Path $packageDocs | Out-Null
-Copy-Item -LiteralPath (Join-Path $projectRoot "docs\Milking-Diagnostics.md") -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MME-Compatibility-Override.md") -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\SkyrimNet-New-Milk-Maid-Action.md") -Destination $packageDocs
 $apiDoc = Join-Path $projectRoot "docs\MMEExtensions-Modding-API.md"
 if (!(Test-Path -LiteralPath $apiDoc)) {

@@ -392,7 +392,6 @@ Event OnInit()
 EndEvent
 
 Event OnUpdate()
-	MMEMilkingDiagnostics.Trace("timer real-time entry | poll=" + MilkPoll + " | enabled=" + MilkFlag)
 	if MilkPoll != 0
 		if MilkPoll > 24
 			RegisterForSingleUpdate(MilkPoll)
@@ -407,7 +406,6 @@ Event OnUpdate()
 EndEvent
 
 Event OnUpdateGameTime()
-	MMEMilkingDiagnostics.Trace("timer game-time entry | poll=" + MilkPoll + " | enabled=" + MilkFlag)
 	if MilkPoll != 0
 		if MilkPoll <= 24
 			RegisterForSingleUpdateGameTime (MilkPoll)
@@ -427,16 +425,13 @@ Function GetCurrentHourOfDay()
 ;	Time *= 24 									; skyrim hours spend in game
 ;	Time *= 60 									; skyrim minutes spend in game
 
-	MMEMilkingDiagnostics.Trace("clock check | now=" + Time + " | last=" + LastTimeMilked)
 	if LastTimeMilked != 0
 		int scriptupdatetimes = ((Math.Floor(Time*24)) - (Math.Floor(LastTimeMilked*24)))
-		MMEMilkingDiagnostics.Trace("elapsed game hours=" + scriptupdatetimes)
 		if scriptupdatetimes >= 1 
 			ActorCheck(scriptupdatetimes)
 			LastTimeMilked = Time
 		endif
 	else
-		MMEMilkingDiagnostics.Trace("clock initialized; no production this tick")
 		LastTimeMilked = Time
 	endif
 EndFunction
@@ -471,7 +466,6 @@ Event OnKeyDown(int keyCode)
 			
 			If akActor != None && (MILKmaid.find(akActor) != -1 || MILKslave.find(akActor) != -1)
 				if StorageUtil.GetIntValue(akActor, "MME.MilkMaid.IsAnimating") == 1 && akActor.HasSpell( BeingMilkedPassive ) && akActor == PlayerRef && MobileMilkingAnims						;Changes random animation
-					MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 					Debug.SendAnimationEvent(akActor,JsonUtil.StringListGet("/MME/Strings", "standingmilkinganimations", Utility.RandomInt(0, JsonUtil.StringListCount("/MME/Strings", "standingmilkinganimations") - 1)))
 				endif
 				Float MilkCnt = MME_Storage.getMilkCurrent(akActor)
@@ -509,7 +503,6 @@ Event OnKeyUp(Int KeyCode, Float HoldTime)
 						If akActor == PlayerRef
 							Game.EnablePlayerControls() ;(True,True,True,True,True,True,True,True,0)
 						EndIf
-						MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 						Debug.SendAnimationEvent(akActor,"IdleForceDefaultState")
 						StorageUtil.SetIntValue(akActor, "MME.MilkMaid.IsAnimating", 0)
 					EndIf
@@ -540,7 +533,6 @@ EndEvent
 ;----------------------------------------------------------------------------
 
 Function ActorCheck(int t)
-	MMEMilkingDiagnostics.BeginCycle(t)
 	debug.Trace("MilkModEconomy ActorCheck cycle")
 	int i = 0
 	If PlayerRef != None
@@ -577,8 +569,6 @@ Function ActorCheck(int t)
 			i += 1
 		EndWhile
 		
-		MMEMilkingDiagnostics.Trace("cycle complete; dispatch MME_MilkCycleComplete")
-		MMEMilkingDiagnostics.EndCycle()
 		SendModEvent( "MME_MilkCycleComplete" )
 	else
 		Debug.Messagebox("MilkModEconomy PlayerRef is None, mod is broken, have a nice day!")
@@ -871,7 +861,6 @@ Function MilkCycle(Actor akActor, int t)
 		endif
 	endif
 		
-	MMEMilkingDiagnostics.ArmorSnapshot(akActor, maidArmor, MilkCnt, MilkMax, IsMilkingArmor, IsBabyArmor, self)
 	;events based on equipped armor(milking,estus etc)
 	if maidArmor != None && MME_Storage.getBreastRows(akActor) == 1
 		if IsBabyArmor
@@ -908,7 +897,6 @@ Function MilkCycle(Actor akActor, int t)
 				akActor.equipitem(Game.GetFormFromFile(0x57A7A, "Skyrim.esm"),false,true)	;skooma
 			endif
 			int random = Utility.RandomInt((0-MilkCnt) as int, (MilkMax-MilkCnt) as int)
-			MMEMilkingDiagnostics.Trace("living roll | actor=" + MaidName + " | roll=" + random + " | passes=" + (random == MilkMax || random < 0) + " | sexEligible=" + (akActor.GetLeveledActorBase().GetSex() == 1 || MaleMaids) + " | near=" + akActor.IsNearPlayer() + " | SexLabBusy=" + SexLab.IsActorActive(akActor))
 			if (random == MilkMax || random < 0) && (akActor.GetLeveledActorBase().GetSex() == 1 || MaleMaids == true) && akActor.IsNearPlayer() && !SexLab.IsActorActive(akActor)
 				;Estrus Chaurus+  
 				if (StringUtil.Find(maidArmor.getname(), "Tentacle Armor" ) >= 0 || StringUtil.Find(maidArmor.getname(), "Tentacle Parasite" ) >= 0 || ParasiteLivingArmor.find(maidArmor.getname()) >= 0)\
@@ -927,10 +915,6 @@ Function MilkCycle(Actor akActor, int t)
 					endIf
 					Milking(akActor, 0, 4, 0)
 				elseif akActor.IsNearPlayer()
-					MMEMilkingDiagnostics.Trigger(akActor)
-					If MilkForSpriggan == None
-						MMEMilkingDiagnostics.AlarmOnce("missingSpriggan", "required MilkForSpriggan spell is None")
-					EndIf
 					MilkForSpriggan.cast(akActor)
 				endif
 			endif
@@ -969,32 +953,31 @@ EndFunction
 Function AssignSlot(Actor akActor)
 	If akActor == PlayerREF
 		if PlayerCantBeMilkmaid == true
-			MMEMilkingDiagnostics.Trace("original MME return/early exit")
 			return
 		endif
 		MILKmaid[0] = akActor
 	Else
-		int i = 0
+		; Slot 0 is reserved for the player. Start at slot 1 and increment
+		; after reading so a 20-entry array never attempts index 20.
+		int i = 1
 		int count = 0
 		int t = MILKmaid.Find(none,1)
 
 		If t == -1
 			Debug.notification("No more Milk Maid slots")
-			MMEMilkingDiagnostics.Trace("original MME return/early exit")
 			return
 		Else
 			While i < MilkMaid.Length
-				i += 1
 				If MilkMaid[i] != None
 					count += 1
 				EndIf
+				i += 1
 			EndWhile
 			
 			;Debug.notification(MilkMaid.Length + " " + count + " " + Milklvl0fix )
 
 			If count >= Milklvl0fix()
 				Debug.notification("No more Milk Maid slots")
-				MMEMilkingDiagnostics.Trace("original MME return/early exit")
 				return
 			Else
 				MILKmaid[t] = akActor
@@ -1010,32 +993,31 @@ EndFunction
 Function AssignSlotMaid(Actor akActor)
 	If akActor == PlayerREF
 		if PlayerCantBeMilkmaid == true
-			MMEMilkingDiagnostics.Trace("original MME return/early exit")
 			return
 		endif
 		MILKmaid[0] = akActor
 	Else
-		int i = 0
+		; Slot 0 is reserved for the player. Start at slot 1 and increment
+		; after reading so a 20-entry array never attempts index 20.
+		int i = 1
 		int count = 0
 		int t = MILKmaid.Find(none,1)
 
 		If t == -1
 			Debug.Notification(JsonUtil.GetStringValue("/MME/Strings", "assignslotnomaidsslots"))
-			MMEMilkingDiagnostics.Trace("original MME return/early exit")
 			return
 		Else
 			While i < MilkMaid.Length
-				i += 1
 				If MilkMaid[i] != None
 					count += 1
 				EndIf
+				i += 1
 			EndWhile
 			
 			;Debug.notification(MilkMaid.Length + " " + count + " " + Milklvl0fix )
 
 			If count >= Milklvl0fix()
 				Debug.Notification(JsonUtil.GetStringValue("/MME/Strings", "assignslotnomaidsslots"))
-				MMEMilkingDiagnostics.Trace("original MME return/early exit")
 				return
 			Else
 				MILKmaid[t] = akActor
@@ -1052,7 +1034,6 @@ Function AssignSlotSlave(Actor akActor, Int Level, Float Milk)
 	If akActor == PlayerREF
 		String MaidName = akActor.GetLeveledActorBase().GetName()
 		Debug.Notification(formatString(JsonUtil.GetStringValue("/MME/Strings", "assignslotactorispc"), MaidName))
-		MMEMilkingDiagnostics.Trace("original MME return/early exit")
 		return
 	EndIf
 	int i = MILKSlave.Find(none)
@@ -1064,7 +1045,6 @@ Function AssignSlotSlave(Actor akActor, Int Level, Float Milk)
 		CurrentSize(akActor)
 	Else
 		Debug.Notification(JsonUtil.GetStringValue("/MME/Strings", "assignslotnoslaveslots"))
-		MMEMilkingDiagnostics.Trace("original MME return/early exit")
 		return
 	Endif
 EndFunction
@@ -1081,7 +1061,6 @@ Function AssignSlotSlaveToMaid(Actor akActor)
 	Else
 		String MaidName = akActor.GetLeveledActorBase().GetName()
 		Debug.Notification(formatString(JsonUtil.GetStringValue("/MME/Strings", "assignslotstm"), MaidName))
-		MMEMilkingDiagnostics.Trace("original MME return/early exit")
 		return
 	Endif
 EndFunction
@@ -1095,7 +1074,6 @@ Function AssignSlotMaidToSlave(Actor akActor)
 			MILKSlave[i] = akActor
 		Else
 			Debug.Notification(JsonUtil.GetStringValue("/MME/Strings", "assignslotnoslaveslots"))
-			MMEMilkingDiagnostics.Trace("original MME return/early exit")
 			return
 		Endif
 		StorageUtil.SetIntValue(akActor,"MME.MilkMaid.IsSlave", 1)
@@ -1105,7 +1083,6 @@ Function AssignSlotMaidToSlave(Actor akActor)
 	Else
 		String MaidName = akActor.GetLeveledActorBase().GetName()
 		Debug.Notification(formatString(JsonUtil.GetStringValue("/MME/Strings", "assignslotmts"), MaidName))
-		MMEMilkingDiagnostics.Trace("original MME return/early exit")
 		return
 	Endif
 EndFunction
@@ -1259,12 +1236,10 @@ Function MilkingToContainer(Actor akActor, int i, int Mode, int MilkingType, obj
 EndFunction
 
 Function Milking(Actor akActor, int i, int Mode, int MilkingType)
-	MMEMilkingDiagnostics.EnterMilking(akActor, Mode)
 	MilkingCycle(akActor, i, Mode, MilkingType, none)
 EndFunction
 
 Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectreference MilkBarrel = none)
-	MMEMilkingDiagnostics.Trace("milking cycle entry | actor=" + akActor + " | mode=" + Mode + " | storyEnabled=" + MilkStory + " | player=" + (akActor == PlayerREF))
 	;Mode == 0 - Pump Milking
 	;Mode == 1 - Other Milking(hands)
 	;Mode == 2 - Equipment Milking
@@ -1279,7 +1254,6 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 		;if MilkingType != 1						;prevents msg spam from aidrivenplayer bound milkpump, since its activates script endlessly,
 			Debug.notification(akActor.GetLeveledActorBase().GetName() + " already being milked, if something went wrong, remove Milking passive spell from Milk Maid debug menu")
 		;endif
-		MMEMilkingDiagnostics.Trace("original MME return/early exit")
 		return									; prevents multiple scripts running
 	endif
 	akActor.AddSpell( BeingMilkedPassive, false )	; prevents multiple scripts running, if removed, milking will stop
@@ -1372,7 +1346,6 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 					Game.EnablePlayerControls() ;(True,True,True,True,True,True,True,True,0)
 					Game.SetPlayerAIDriven(false)
 				endif
-			MMEMilkingDiagnostics.Trace("original MME return/early exit")
 			return
 		else
 			IsMilkingBlocked = true
@@ -1390,7 +1363,6 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 						Game.SetPlayerAIDriven(false)
 					endif
 					akActor.RemoveSpell( BeingMilkedPassive )
-					MMEMilkingDiagnostics.Trace("original MME return/early exit")
 					return
 				else
 					IsMilkingBlocked = true
@@ -1433,10 +1405,8 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 					Game.EnablePlayerControls() ;(True,True,True,True,True,True,True,True,0)
 					Game.SetPlayerAIDriven(false)
 				endif
-				MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 				Debug.SendAnimationEvent(akActor,"IdleForceDefaultState")
 				akActor.RemoveSpell( BeingMilkedPassive )
-				MMEMilkingDiagnostics.Trace("original MME return/early exit")
 				return
 			endif
 		endif
@@ -1477,7 +1447,6 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 								Game.EnablePlayerControls() ;(True,True,True,True,True,True,True,True,0)
 								Game.SetPlayerAIDriven(false)
 							endif
-							MMEMilkingDiagnostics.Trace("original MME return/early exit")
 							return
 						else
 							IsMilkingBlocked = true
@@ -1550,7 +1519,6 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 	elseif MilkCnt < 1
 		Debug.Notification(akActor.GetLeveledActorBase().GetName() + " have no milk!")
 		akActor.RemoveSpell( BeingMilkedPassive )
-		MMEMilkingDiagnostics.Trace("original MME return/early exit")
 		return
 	else
 		if cuirass != None && !(cuirass == TITS4 || cuirass == TITS6 || cuirass == TITS8)
@@ -1569,7 +1537,6 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				|| BasicLivingArmor.find(CuirassName) >= 0 \
 				|| ParasiteLivingArmor.find(CuirassName) >= 0
 				Mode = 3
-				MMEMilkingDiagnostics.Trace("forced armor mode selected | storyEnabled=" + MilkStory + " | player=" + (akActor == PlayerREF) + " | gender=" + akActorGender + " | maleAllowed=" + MaleMaids)
 				int soundInstance02 = TakeHoldSound.Play(akActor)
 				Utility.Wait( 5.0 )													;wait for possession sound to play
 				If MilkStory && akActor == PlayerREF && (akActorGender != "Male" || (akActorGender == "Male" && MaleMaids))
@@ -1634,7 +1601,6 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 ;							elseif mpas == 3
 ;								Debug.SendAnimationEvent(akActor,"ZaZAPCHorFC")
 ;							endif
-							MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 							Debug.SendAnimationEvent(akActor,JsonUtil.StringListGet("/MME/Strings", "standingmilkinganimations", Utility.RandomInt(0, JsonUtil.StringListCount("/MME/Strings", "standingmilkinganimations") - 1)))
 							StorageUtil.SetIntValue(akActor, "MME.MilkMaid.IsAnimating", 1)
 						EndIf
@@ -1649,7 +1615,6 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 			EndIf
 			IsMilkingBlocked = true
 			akActor.RemoveSpell( BeingMilkedPassive )
-			MMEMilkingDiagnostics.Trace("original MME return/early exit")
 			return
 		EndIf
 	endif
@@ -1759,11 +1724,9 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 							;bound/unbound animation +: no anal/vaginal vairations
 							if MilkingType == 0 && LastAnimation != "ZaZMOMFreeFurn_05"+anivar
 								LastAnimation = "ZaZMOMFreeFurn_05"
-								MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 								Debug.SendAnimationEvent(akActor, LastAnimation+anivar)
 							elseif MilkingType != 0 && LastAnimation != "ZaZMOMBoundFurn_05"+anivar
 								LastAnimation = "ZaZMOMBoundFurn_05"
-								MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 								Debug.SendAnimationEvent(akActor, LastAnimation+anivar)
 							endif
 							
@@ -1834,21 +1797,17 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				if MilkingType == 0
 					if mpas == 1 && LastAnimation != "ZaZMOMFreeFurn_11"+anivar
 						LastAnimation = "ZaZMOMFreeFurn_11"
-						MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 						Debug.SendAnimationEvent(akActor, LastAnimation+anivar)
 					elseif mpas == 2 && LastAnimation != "ZaZMOMFreeFurn_12"+anivar
 						LastAnimation = "ZaZMOMFreeFurn_12"
-						MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 						Debug.SendAnimationEvent(akActor, LastAnimation+anivar)
 					endif
 				elseif MilkingType != 0
 					if mpas == 1 && LastAnimation != "ZaZMOMBoundFurn_11"+anivar
 						LastAnimation = "ZaZMOMBoundFurn_11"
-						MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 						Debug.SendAnimationEvent(akActor, LastAnimation+anivar)
 					elseif mpas == 2 && LastAnimation != "ZaZMOMBoundFurn_12"+anivar
 						LastAnimation = "ZaZMOMBoundFurn_12"
-						MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 						Debug.SendAnimationEvent(akActor, LastAnimation+anivar)
 					endif
 				endif
@@ -1991,21 +1950,17 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				if MilkingType == 0
 					if mpas == 1 && LastAnimation != "ZaZMOMFreeFurn_07"+anivar
 						LastAnimation = "ZaZMOMFreeFurn_07"
-						MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 						Debug.SendAnimationEvent(akActor, LastAnimation+anivar)
 					elseif mpas == 2 && LastAnimation != "ZaZMOMFreeFurn_08"+anivar
 						LastAnimation = "ZaZMOMFreeFurn_08"
-						MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 						Debug.SendAnimationEvent(akActor, LastAnimation+anivar)
 					endif
 				elseif MilkingType != 0
 					if mpas == 1 && LastAnimation != "ZaZMOMBoundFurn_07"+anivar
 						LastAnimation = "ZaZMOMBoundFurn_07"
-						MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 						Debug.SendAnimationEvent(akActor, LastAnimation+anivar)
 					elseif mpas == 2 && LastAnimation != "ZaZMOMBoundFurn_08"+anivar
 						LastAnimation = "ZaZMOMBoundFurn_08"
-						MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 						Debug.SendAnimationEvent(akActor, LastAnimation+anivar)
 					endif
 				endif
@@ -2208,7 +2163,6 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 		
 		If Mode != 4
 			Utility.Wait(1)
-			MMEMilkingDiagnostics.Trace("animation dispatch | actor=" + akActor)
 			Debug.SendAnimationEvent(akActor,"IdleForceDefaultState")
 		endif
 		
@@ -2312,7 +2266,6 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 	Endif
 	
 	int handle = ModEvent.Create("MME_MilkingDone")
-	MMEMilkingDiagnostics.Trace("milking sequence end | actor=" + akActor + " | mode=" + Mode + " | completionHandle=" + handle)
 	if (handle)
 		ModEvent.PushForm(handle, akActor)
 		ModEvent.PushInt(handle, bottles)
@@ -2540,10 +2493,6 @@ EndFunction
 ;----------------------------------------------------------------------------
 
 Function StoryDisplay(String StoryState , String StoryType)
-	MMEMilkingDiagnostics.Trace("story dispatch | state=" + StoryState + " | type=" + StoryType + " | poolCount=" + JsonUtil.StringListCount("/MME/Strings_Stories", StoryType + StoryState))
-	If JsonUtil.StringListCount("/MME/Strings_Stories", StoryType + StoryState) < 2
-		MMEMilkingDiagnostics.AlarmOnce("storyPool", "original story pool has fewer than two entries: " + StoryType + StoryState)
-	EndIf
 	int i
 	i = Utility.RandomInt(1, JsonUtil.StringListCount("/MME/Strings_Stories", StoryType + StoryState) - 1)
 	
@@ -2733,7 +2682,6 @@ Function MultiBreastChange(Actor akActor)
 			akActor.RemoveItem(cuirass, 1, true)
 		endif
 		debug.Trace("MilkModEconomy MultiBreastChange() "+akActorName+" is not maid/slave exiting")
-		MMEMilkingDiagnostics.Trace("original MME return/early exit")
 		return
 	endif
 	

@@ -11,7 +11,7 @@ $testDirectory = Join-Path ([IO.Path]::GetTempPath()) ('MME-ScanArrayTests-' + [
 New-Item -ItemType Directory -Path $testDirectory | Out-Null
 Push-Location $testDirectory
 try {
-    foreach ($scriptName in @('MMEAlertsController', 'MMETentacleEffects', 'MMEThoughts', 'MMEOStimIntegration', 'MMEOManiaCompatibility')) {
+    foreach ($scriptName in @('MMEAlertsController', 'MMETentacleEffects', 'MMEThoughts', 'MMEOStimIntegration', 'MMEOManiaCompatibility', 'MMEElsieBreastfeeding', 'MMEDebug')) {
         Copy-Item -LiteralPath (Join-Path $CompiledDirectory "$scriptName.pex") -Destination $testDirectory
         & $Assembler $scriptName -D -Q
         if ($LASTEXITCODE -ne 0) { throw "Disassembly failed: $scriptName" }
@@ -20,7 +20,15 @@ try {
         foreach ($line in Get-Content -LiteralPath "$scriptName.disassemble.pas") {
             if ($line -match '^\s*\.function\s+(\S+)') {
                 $arrayVariables = @{}
-            $inspectFunction = $scriptName -ne 'MMEAlertsController' -or $matches[1] -in @('OnUpdateGameTime', 'RunArmorInjectionCheckNow', 'ScanNearbyMilkMaids')
+                if ($scriptName -eq 'MMEAlertsController') {
+                    $inspectFunction = $matches[1] -in @('OnUpdateGameTime', 'RunArmorInjectionCheckNow', 'ScanNearbyMilkMaids')
+                } elseif ($scriptName -eq 'MMEElsieBreastfeeding') {
+                    $inspectFunction = $matches[1] -eq 'RunNearbyTest'
+                } elseif ($scriptName -eq 'MMEDebug') {
+                    $inspectFunction = $matches[1] -eq 'OnNewMilkMaidSexLabEnding'
+                } else {
+                    $inspectFunction = $true
+                }
             }
             if ($line -match '^\s*\.(?:local|param)\s+(\S+)\s+\S+\[\]') {
                 $arrayVariables[$matches[1]] = $true

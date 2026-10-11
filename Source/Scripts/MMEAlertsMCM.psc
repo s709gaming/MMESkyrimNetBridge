@@ -2410,13 +2410,13 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Allow exotic-milk chest curses to select eligible nearby allied female NPCs as well as the player. Turn off for player-only targeting. Default on.")
         Return
     ElseIf option == chestMilkTrapChanceOption
-        SetInfoText("Chance per eligible chest activation. A failed roll does not start the shared cooldown. Default 10%, range 0-100 in 5% steps.")
+        SetInfoText("Chance per eligible chest activation. A failed roll does not start the shared cooldown. Default 33%, range 0-100 in 5% steps.")
         Return
     ElseIf option == chestMilkTrapCooldownOption
-        SetInfoText("Shared game-time cooldown started only after a verified forced drink. Default 4 game hours.")
+        SetInfoText("Shared game-time cooldown started only after a verified forced drink. Default 1 game hour.")
         Return
     ElseIf option == chestMilkTrapVariationOption
-        SetInfoText("Random hours added to or subtracted from the base cooldown. The final cooldown is never below one game hour. Default +/-4 hours.")
+        SetInfoText("Random hours added to or subtracted from the base cooldown. The final cooldown is never below one game hour. Default 0 hours.")
         Return
     ElseIf option == chestMilkTrapNotificationOption
         SetInfoText("Show a factual HUD notification naming the selected actor and exotic milk after the forced drink. Works without Skyrim.Net. Default on.")
