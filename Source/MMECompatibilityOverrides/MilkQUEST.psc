@@ -3,6 +3,21 @@ Scriptname MilkQUEST extends Quest
 
 SexLabFramework property SexLab auto
 
+Bool MMEExtMissingExpressionReported = False
+
+Function MMEExtApplyExpressionSafe(Actor akActor, String expressionName, Int strength)
+	if akActor == none || SexLab == none
+		return
+	endif
+	sslBaseExpression selectedExpression = SexLab.GetExpressionByName(expressionName)
+	if selectedExpression != none
+		selectedExpression.ApplyTo(akActor, strength)
+	elseif !MMEExtMissingExpressionReported
+		MMEExtMissingExpressionReported = True
+		MMELog.MasterDiagnostic("[MME Extensions MME Compatibility] SexLab expression unavailable; facial expression skipped | expression=" + expressionName, 1)
+	endif
+EndFunction
+
 MilkECON Property MilkE Auto 
 MilkQUEST_Conditions Property MilkQC Auto
 CompanionsHousekeepingScript Property CHScript Auto 
@@ -1835,13 +1850,13 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				
 				if DDGag == false || ZaZGagOpen == false
 					if Expression == 1
-						SexLab.GetExpressionByName("Happy").ApplyTo(akActor, Utility.RandomInt(30, 50))
+						MMEExtApplyExpressionSafe(akActor, "Happy", Utility.RandomInt(30, 50))
 					elseif Expression == 2
-						SexLab.GetExpressionByName("Pleasure").ApplyTo(akActor, Utility.RandomInt(30, 100))
+						MMEExtApplyExpressionSafe(akActor, "Pleasure", Utility.RandomInt(30, 100))
 					elseif Expression == 3
-						SexLab.GetExpressionByName("Joy").ApplyTo(akActor, Utility.RandomInt(30, 100))
+						MMEExtApplyExpressionSafe(akActor, "Joy", Utility.RandomInt(30, 100))
 					elseif Expression == 4
-						SexLab.GetExpressionByName("Pained").ApplyTo(akActor, Utility.RandomInt(50, 70))
+						MMEExtApplyExpressionSafe(akActor, "Pained", Utility.RandomInt(50, 70))
 					endif
 				endif
 
@@ -1987,13 +2002,13 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				;endif
 				if DDGag == false || ZaZGag == false
 					if Expression == 1
-						SexLab.GetExpressionByName("Happy").ApplyTo(akActor, Utility.RandomInt(30, 50))
+						MMEExtApplyExpressionSafe(akActor, "Happy", Utility.RandomInt(30, 50))
 					elseif Expression == 2
-						SexLab.GetExpressionByName("Pleasure").ApplyTo(akActor, Utility.RandomInt(30, 100))
+						MMEExtApplyExpressionSafe(akActor, "Pleasure", Utility.RandomInt(30, 100))
 					elseif Expression == 3
-						SexLab.GetExpressionByName("Joy").ApplyTo(akActor, Utility.RandomInt(30, 100))
+						MMEExtApplyExpressionSafe(akActor, "Joy", Utility.RandomInt(30, 100))
 					elseif Expression == 4
-						SexLab.GetExpressionByName("Pained").ApplyTo(akActor, Utility.RandomInt(50, 70))
+						MMEExtApplyExpressionSafe(akActor, "Pained", Utility.RandomInt(50, 70))
 					endif
 				endif
 

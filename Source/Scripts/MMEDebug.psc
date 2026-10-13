@@ -209,54 +209,22 @@ Bool Function StartSexLabBreastfeeding(Actor milkSource, Actor drinker, String c
     EndIf
     SexLabTrace(requestID, diagnostic, "PRE-COMMIT VALIDATION PASS | SEXLAB AVAILABLE")
 
-    ActorBase drinkerBase = drinker.GetLeveledActorBase()
-    String animationName = "zjBreastFeeding"
-    If drinkerBase != None && drinkerBase.GetSex() == 0
-        animationName = "zjBreastFeedingVar"
-    EndIf
-    sslBaseAnimation animation = milkController.SexLab.AnimSlots.GetbyRegistrar(animationName)
-    If animation == None
+    String backend = MMESexLabBreastfeedingBackend.GetBackendName()
+    If !MMESexLabBreastfeedingBackend.IsAvailable(milkController)
         ReleaseSexLabPair(milkSource, drinker, requestID)
-        SexLabTrace(requestID, diagnostic, "FAIL: no compatible animation selected | registrar=" + animationName + " | actors released")
+        SexLabTrace(requestID, diagnostic, "FAIL: compatible breastfeeding scenes unavailable | backend=" + backend + " | actors released")
+        MMELog.Alarm("[MME Extensions SexLab BF] ROUTE CLOG | start requested without compatible scenes | backend=" + backend)
         Return False
     EndIf
-    sslBaseAnimation[] animations = new sslBaseAnimation[1]
-    animations[0] = animation
-    SexLabTrace(requestID, diagnostic, "ANIMATION SELECTED | registrar=" + animationName + " | animation=" + animation)
-
-    sslThreadModel model = milkController.SexLab.NewThread()
-    If model == None
+    SexLabTrace(requestID, diagnostic, "SEXLAB START REQUESTED | backend=" + backend)
+    Int threadID = MMESexLabBreastfeedingBackend.StartBreastfeeding(milkController, milkSource, drinker, "MMEExtensionsBreastfeeding")
+    If threadID < 0
         ReleaseSexLabPair(milkSource, drinker, requestID)
-        SexLabTrace(requestID, diagnostic, "FAIL: SexLab NewThread returned None | actors released")
+        SexLabTrace(requestID, diagnostic, "FAIL: backend rejected breastfeeding scene | backend=" + backend + " | actors released")
+        MMELog.Alarm("[MME Extensions SexLab BF] FAILURE | scene start rejected | backend=" + backend)
         Return False
     EndIf
-    SexLabTrace(requestID, diagnostic, "THREAD CREATED | model=" + model)
-    If model.AddActor(milkSource) < 0
-        model.Initialize()
-        ReleaseSexLabPair(milkSource, drinker, requestID)
-        SexLabTrace(requestID, diagnostic, "FAIL: source AddActor rejected | actors released | SexLab slot initialized")
-        Return False
-    EndIf
-    SexLabTrace(requestID, diagnostic, "SOURCE ADDED")
-    If model.AddActor(drinker) < 0
-        model.Initialize()
-        ReleaseSexLabPair(milkSource, drinker, requestID)
-        SexLabTrace(requestID, diagnostic, "FAIL: drinker AddActor rejected | actors released | SexLab slot initialized")
-        Return False
-    EndIf
-    SexLabTrace(requestID, diagnostic, "DRINKER ADDED")
-    model.SetAnimations(animations)
-    model.SetHook("MMEExtensionsBreastfeeding")
-    SexLabTrace(requestID, diagnostic, "SEXLAB START REQUESTED")
-    sslThreadController thread = model.StartThread()
-    If thread == None
-        model.Initialize()
-        ReleaseSexLabPair(milkSource, drinker, requestID)
-        SexLabTrace(requestID, diagnostic, "FAIL: SexLab StartThread returned None | actors released | SexLab slot initialized")
-        Return False
-    EndIf
-    Int threadID = model.tid
-    SexLabTrace(requestID, diagnostic, "SEXLAB START REQUESTED | thread=" + threadID)
+    SexLabTrace(requestID, diagnostic, "SEXLAB START REQUESTED | backend=" + backend + " | thread=" + threadID)
 
     Int checks = 0
     While checks < 20 && (!milkController.SexLab.IsActorActive(milkSource) || !milkController.SexLab.IsActorActive(drinker))
@@ -264,7 +232,7 @@ Bool Function StartSexLabBreastfeeding(Actor milkSource, Actor drinker, String c
         checks += 1
     EndWhile
     If !milkController.SexLab.IsActorActive(milkSource) || !milkController.SexLab.IsActorActive(drinker)
-        thread.EndAnimation(True)
+        MMESexLabBreastfeedingBackend.EndOwnedScene(milkController, threadID)
         ReleaseSexLabPair(milkSource, drinker, requestID)
         SexLabTrace(requestID, diagnostic, "FAIL: SexLab startup not confirmed | thread=" + threadID + " | owned thread ended | actors released")
         Return False
@@ -656,7 +624,59 @@ Bool Function ArmMMENewMilkMaidSexLab(Actor milkSource, Actor drinker)
     ActiveSexLabMMEStarted = False
     ActiveSexLabIntentRequestID = requestID
     SendModEvent("MMEExtensionsNewMilkMaidSexLabTimeout", requestID as String)
-    MMENewMilkMaid.TraceSexLabStop(6, "CreateMilkMaid intent armed")
+    MMENewMilkMaid.TraceSexLabStop(6, "CreateMilkMaid intent armed by dedicated dialogue INFO | request=" + requestID)
+    Return True
+EndFunction
+
+; Called only by MMENewMilkMaid.Fragment_CreateMilkMaidSexLab immediately
+; after that dedicated INFO invokes MME's original StartSex fragment. This is
+; the ownership boundary: ordinary breastfeeding never calls this function.
+Bool Function ClaimMMENewMilkMaidSexLabStartup(Actor milkSource, Actor drinker)
+    Int requestID = ActiveSexLabIntentRequestID
+    If requestID <= 0 || ActiveSexLabSemanticIntent != "CreateMilkMaidSexLab" \
+    || ActiveSexLabIntentSource != milkSource || ActiveSexLabIntentDrinker != drinker \
+    || ActiveSexLabIntentThreadID >= 0
+        MMENewMilkMaid.TraceSexLabStop(7, "dedicated startup claim rejected: request identity changed", True)
+        Return False
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milkController == None || milkController.SexLab == None
+        MMENewMilkMaid.TraceSexLabStop(7, "dedicated startup claim failed: SexLab unavailable", True)
+        ClearSexLabIntent()
+        Return False
+    EndIf
+    Int checks = 0
+    sslThreadController thread
+    While checks < 50 && thread == None
+        thread = milkController.SexLab.GetActorController(milkSource)
+        If thread == None
+            Utility.Wait(0.1)
+        EndIf
+        checks += 1
+    EndWhile
+    Actor[] startupPositions
+    If thread != None
+        startupPositions = thread.Positions
+    EndIf
+    If thread == None || startupPositions.Length < 2 \
+    || startupPositions[0] != milkSource || startupPositions[1] != drinker
+        MMENewMilkMaid.TraceSexLabStop(7, "dedicated startup claim failed: exact controller/pair not found", True)
+        ClearSexLabIntent()
+        Return False
+    EndIf
+    Int threadID = thread.tid
+    If !MMESexLabBreastfeedingBackend.IsBreastfeedingThread(milkController, thread, threadID)
+        MMENewMilkMaid.TraceSexLabStop(7, "dedicated startup claim failed: controller is not a breastfeeding scene", True)
+        ClearSexLabIntent()
+        Return False
+    EndIf
+    ActiveSexLabIntentThreadID = threadID
+    ReleaseSexLabPair(milkSource, drinker, requestID)
+    ActiveSexLabIntentRequestID = 0
+    MMEAlertsSkyrimNet.SetBreastfeedingPromptState(milkSource, "source", threadID)
+    MMEAlertsSkyrimNet.SetBreastfeedingPromptState(drinker, "drinker", threadID)
+    LastNewMilkMaidSexLabBusThreadID = threadID
+    MMENewMilkMaid.TraceSexLabStop(7, "dedicated startup bound to exact thread=" + threadID + " | request=" + requestID)
     Return True
 EndFunction
 
@@ -666,15 +686,8 @@ Event OnNewMilkMaidSexLabTimeout(String eventName, String requestIDText, Float n
     Int requestID = requestIDText as Int
     Utility.WaitMenuMode(SexLabIntentClaimTimeout)
     If ActiveSexLabSemanticIntent == "CreateMilkMaidSexLab" && ActiveSexLabIntentThreadID < 0 && ActiveSexLabIntentRequestID == requestID
-        MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-        If milkController != None && milkController.SexLab != None && ActiveSexLabIntentSource != None && ActiveSexLabIntentDrinker != None && milkController.SexLab.IsActorActive(ActiveSexLabIntentSource) && milkController.SexLab.IsActorActive(ActiveSexLabIntentDrinker)
-            ; SexLab scenes can be user-extended. Keep the intent alive while the
-            ; exact expected pair remains active, then check again later.
-            SendModEvent("MMEExtensionsNewMilkMaidSexLabTimeout", requestID as String)
-        Else
-            MMENewMilkMaid.TraceSexLabStop(8, "matching MME breastfeeding scene never reached AnimationEnding", True)
-            ClearSexLabIntent()
-        EndIf
+        MMENewMilkMaid.TraceSexLabStop(8, "dedicated dialogue did not bind an exact SexLab thread before timeout", True)
+        ClearSexLabIntent()
     EndIf
 EndEvent
 
@@ -707,10 +720,8 @@ Event OnNewMilkMaidSexLabEnding(String eventName, String threadIDText, Float num
     If positions.Length < 2
         Return
     EndIf
-    sslBaseAnimation straightAnimation = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar")
-    sslBaseAnimation lesbianAnimation = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding")
     Bool elsieTaste = MMEElsieBreastfeeding.IsTasteAnimation(milkController, thread)
-    Bool recognizedBreastfeeding = (straightAnimation != None && thread.Animation == straightAnimation) || (lesbianAnimation != None && thread.Animation == lesbianAnimation) || elsieTaste
+    Bool recognizedBreastfeeding = MMESexLabBreastfeedingBackend.IsBreastfeedingThread(milkController, thread, threadID) || elsieTaste
     If !recognizedBreastfeeding
         Return
     EndIf
@@ -719,20 +730,14 @@ Event OnNewMilkMaidSexLabEnding(String eventName, String threadIDText, Float num
         Return
     EndIf
     String completionIntent = ""
-    If ActiveSexLabSemanticIntent == "CreateMilkMaidSexLab" && ActiveSexLabIntentThreadID < 0 && ActiveSexLabIntentSource != None && ActiveSexLabIntentDrinker != None
+    If ActiveSexLabSemanticIntent == "CreateMilkMaidSexLab" && ActiveSexLabIntentThreadID == threadID && ActiveSexLabIntentSource != None && ActiveSexLabIntentDrinker != None
         Actor milkSource = ActiveSexLabIntentSource
         Actor drinker = ActiveSexLabIntentDrinker
         If positions[0] == milkSource && positions[1] == drinker
-            Int requestID = ActiveSexLabIntentRequestID
-            ActiveSexLabIntentThreadID = threadID
             completionIntent = ActiveSexLabSemanticIntent
-            ReleaseSexLabPair(milkSource, drinker, requestID)
-            ActiveSexLabIntentRequestID = 0
-            MMEAlertsSkyrimNet.SetBreastfeedingPromptState(milkSource, "source", ActiveSexLabIntentThreadID)
-            MMEAlertsSkyrimNet.SetBreastfeedingPromptState(drinker, "drinker", ActiveSexLabIntentThreadID)
             LastNewMilkMaidSexLabBusThreadID = threadID
-            MMENewMilkMaid.TraceSexLabStop(8, "AnimationEnding claimed | thread=" + ActiveSexLabIntentThreadID)
-            MMENewMilkMaid.TraceSexLabStop(9, "source/drinker and breastfeeding animation confirmed")
+            MMENewMilkMaid.TraceSexLabStop(8, "exact bound AnimationEnding received | thread=" + ActiveSexLabIntentThreadID)
+            MMENewMilkMaid.TraceSexLabStop(9, "bound thread, source/drinker, and breastfeeding animation confirmed")
             ObserveNewMilkMaidSexLabMode4(milkController)
         EndIf
     EndIf
@@ -790,22 +795,16 @@ Function ObserveDialogueSexLabBreastfeeding(Actor milkSource, Actor drinker)
     If milkSource == None || drinker == None
         SexLabTrace(requestID, diagnostic, "FAIL: dialogue source or drinker did not resolve")
         Return
-    ElseIf milkController == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
+    ElseIf milkController == None || milkController.SexLab == None
         SexLabTrace(requestID, diagnostic, "FAIL: MME/SexLab framework unavailable")
         Return
     EndIf
     SexLabTrace(requestID, diagnostic, "SOURCE RESOLVED | DRINKER RESOLVED | SEXLAB AVAILABLE")
-    String animationName = "zjBreastFeeding"
-    ActorBase drinkerBase = drinker.GetLeveledActorBase()
-    If drinkerBase != None && drinkerBase.GetSex() == 0
-        animationName = "zjBreastFeedingVar"
-    EndIf
-    sslBaseAnimation animation = milkController.SexLab.AnimSlots.GetbyRegistrar(animationName)
-    If animation == None
-        SexLabTrace(requestID, diagnostic, "FAIL: no compatible animation selected | registrar=" + animationName)
+    If !MMESexLabBreastfeedingBackend.IsAvailable(milkController)
+        SexLabTrace(requestID, diagnostic, "FAIL: no compatible breastfeeding scenes | backend=" + MMESexLabBreastfeedingBackend.GetBackendName())
         Return
     EndIf
-    SexLabTrace(requestID, diagnostic, "ANIMATION SELECTED | registrar=" + animationName + " | animation=" + animation)
+    SexLabTrace(requestID, diagnostic, "SCENES AVAILABLE | backend=" + MMESexLabBreastfeedingBackend.GetBackendName())
     Int checks = 0
     While checks < 20 && (!milkController.SexLab.IsActorActive(milkSource) || !milkController.SexLab.IsActorActive(drinker))
         Utility.Wait(0.1)
@@ -821,6 +820,10 @@ Function ObserveDialogueSexLabBreastfeeding(Actor milkSource, Actor drinker)
         Return
     EndIf
     Int threadID = thread.tid
+    If !MMESexLabBreastfeedingBackend.IsBreastfeedingThread(milkController, thread, threadID)
+        SexLabTrace(requestID, diagnostic, "FAIL: dialogue scene is not recognized by backend=" + MMESexLabBreastfeedingBackend.GetBackendName())
+        Return
+    EndIf
     MMEAlertsSkyrimNet.SetBreastfeedingPromptState(milkSource, "source", threadID)
     MMEAlertsSkyrimNet.SetBreastfeedingPromptState(drinker, "drinker", threadID)
     SexLabTrace(requestID, diagnostic, "SEXLAB START CONFIRMED | SESSION ACTIVE | thread=" + threadID)
@@ -1164,10 +1167,7 @@ Function ClearSexLabIntent()
 EndFunction
 
 Bool Function IsOriginalMMESexLabBreastfeedingAvailable(MilkQUEST milkController) Global
-    If milkController == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
-        Return False
-    EndIf
-    Return milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar") != None && milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding") != None
+    Return MMESexLabBreastfeedingBackend.IsAvailable(milkController)
 EndFunction
 
 ; The native MME SexLab hook and the OStim parity adapter equip basic milk at
@@ -1191,7 +1191,7 @@ Bool Function ShouldSuppressBreastfeedingDrink(Actor drinker)
             If thread.HasTag("Breastfeeding")
                 Return True
             EndIf
-            If milkController.SexLab.AnimSlots != None && (thread.Animation == milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding") || thread.Animation == milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar") || (MMEElsieBreastfeeding.IsEnabled() && MMEElsieBreastfeeding.IsTasteAnimation(milkController, thread)))
+            If MMESexLabBreastfeedingBackend.IsBreastfeedingThread(milkController, thread, thread.tid) || (MMEElsieBreastfeeding.IsEnabled() && MMEElsieBreastfeeding.IsTasteAnimation(milkController, thread))
                 Return True
             EndIf
         EndIf

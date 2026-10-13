@@ -47,6 +47,12 @@ Function Fragment_RefitMilkingEquipment(ObjectReference akSpeakerRef)
 EndFunction
 
 Function SetMilkingEquipmentRefitState(Int value)
+    ; Older saves can retain the script instance created before this property
+    ; was correctly bound in the plugin. Resolve the local Global form once so
+    ; those saves heal without requiring a restart or clean save.
+    If MMEExt_MilkingEquipmentRefitState == None
+        MMEExt_MilkingEquipmentRefitState = Game.GetFormFromFile(0x0008A7, "MMEAlert.esp") as GlobalVariable
+    EndIf
     If MMEExt_MilkingEquipmentRefitState != None
         MMEExt_MilkingEquipmentRefitState.SetValue(value as Float)
     Else

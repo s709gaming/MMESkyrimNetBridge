@@ -97,6 +97,7 @@ Function InitializeController(Bool reportStatus = False)
     RefreshOStimDialogueAvailability()
     MMEArmorScript.RestorePlayerMovementIfNeeded(Game.GetPlayer(), MMEArmorScript.GetArmorDiagnostic())
     MMEArmorIntroduction.RestorePlayerMovementIfNeeded(Game.GetPlayer(), "controller initialization")
+    MMEReactionAnimation.RestorePlayerMovementIfNeeded(Game.GetPlayer(), "controller initialization")
     If !IsExtensionsEnabled()
         DisableController()
         If reportStatus
@@ -260,28 +261,21 @@ Function CancelInnPalaceDrink(String reason = "canceled")
     PendingInnPalaceVenueKind = 0
 EndFunction
 
-; MME computes this conditional from the same two registrars during its load
-; script. Refreshing the cached value fixes load-order staleness without
-; weakening the original requirement or coupling SexLab to OStim.
+; Refresh MME's cached dialogue condition through the selected SexLab backend.
+; Standard SexLab uses the original registrars; the optional P+ facade checks
+; the two converted SLSB scenes without leaking P+-only types into this script.
 Bool Function RefreshMMESexLabAnimationGate(String reason = "event")
-    ; MME caches registrar availability in a quest-condition Boolean. Resolve
-    ; the live SexLab animation slots first; missing interfaces are diagnostic,
-    ; never a reason to force the original dialogue gate open.
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None || milkController.MilkQC == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
+    If milkController == None || milkController.MilkQC == None || milkController.SexLab == None
         RefreshNewMilkMaidDialogueAvailability(False)
         MMELog.Diagnostic("[MME Extensions SexLab BF] gate refresh skipped: MME/SexLab interface unavailable | " + reason)
         Return False
     EndIf
-    Bool straightFound = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar") != None
-    Bool lesbianFound = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding") != None
-    Bool liveGate = straightFound && lesbianFound
-    ; Match MME's own AND requirement exactly. This refresh repairs stale cache
-    ; state but does not relax registration or gameplay conditions.
+    Bool liveGate = MMESexLabBreastfeedingBackend.IsAvailable(milkController)
     Bool oldGate = milkController.MilkQC.MME_BreasfeedingAnimationsCheck
     milkController.MilkQC.MME_BreasfeedingAnimationsCheck = liveGate
     RefreshNewMilkMaidDialogueAvailability(liveGate)
-    MMELog.Diagnostic("[MME Extensions SexLab BF] refreshed MME gate " + DiagnosticBool(oldGate) + " -> " + DiagnosticBool(liveGate) + " | zjBreastFeedingVar(Straight)=" + DiagnosticBool(straightFound) + " zjBreastFeeding(Lesbian)=" + DiagnosticBool(lesbianFound) + " | " + reason)
+    MMELog.Diagnostic("[MME Extensions SexLab BF] refreshed MME gate " + DiagnosticBool(oldGate) + " -> " + DiagnosticBool(liveGate) + " | backend=" + MMESexLabBreastfeedingBackend.GetBackendName() + " | " + reason)
     Return liveGate
 EndFunction
 
@@ -323,23 +317,11 @@ Function CheckSexLabFallbackAfterGrace()
 
     NextSexLabFallbackCheck = 0.0
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None || milkController.SexLab == None || milkController.SexLab.AnimSlots == None
+    If milkController == None || milkController.SexLab == None
         MMELog.Alarm("[MME Extensions SexLab BF] ROUTE CLOG | OStim is off but the MME/SexLab animation interface remained unavailable after 60 seconds")
         Return
     EndIf
-    Bool straightFound = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeedingVar") != None
-    Bool lesbianFound = milkController.SexLab.AnimSlots.GetbyRegistrar("zjBreastFeeding") != None
-    String missing = ""
-    If !straightFound
-        missing = "zjBreastFeedingVar (Straight)"
-    EndIf
-    If !lesbianFound
-        If missing != ""
-            missing += ", "
-        EndIf
-        missing += "zjBreastFeeding (Lesbian)"
-    EndIf
-    MMELog.Alarm("[MME Extensions SexLab BF] ROUTE CLOG | OStim is off but required registrar(s) remained missing after 60 seconds: " + missing)
+    MMELog.Alarm("[MME Extensions SexLab BF] ROUTE CLOG | OStim is off but required breastfeeding scenes remained unavailable after 60 seconds | backend=" + MMESexLabBreastfeedingBackend.GetBackendName())
 EndFunction
 
 ; Skyrim.Net resolves quest action scripts from the existing quest instance.
@@ -1421,6 +1403,7 @@ EndFunction
 Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form sender)
     If reason == "load"
         MMEArmorIntroduction.RestorePlayerMovementIfNeeded(Game.GetPlayer(), "native load event")
+        MMEReactionAnimation.RestorePlayerMovementIfNeeded(Game.GetPlayer(), "native load event")
     EndIf
     If !IsExtensionsEnabled()
         Return

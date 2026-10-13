@@ -19,7 +19,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
-$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMETrapArmorDialogue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMEElsieBreastfeeding", "MMEExtensionsAPI", "MMEExtensionsNative")
+$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMETrapArmorDialogue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMESexLabBreastfeedingBackend", "MMEElsieBreastfeeding", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $mmeCompatibilityOverrideSource = Join-Path $projectRoot "Source\MMECompatibilityOverrides"
 $mmeCompatibilityOverrideNames = @("MilkQUEST")
@@ -34,6 +34,10 @@ $elsieFixPlugin = Join-Path $projectRoot "fomod\choices\elsie-compatibility\MME 
 $elsieFixChangelog = Join-Path $projectRoot "docs\ELSIE-LAVACHE-FIX-CHANGELOG.md"
 $elsieSdkSource = Join-Path $projectRoot "tools\elsie-sdk"
 $installedElsiePlugin = Join-Path $gameRoot "Data\CP_Elsie.esp"
+$sexLabPPlusChoiceSource = Join-Path $projectRoot "fomod\choices\sexlab-pplus\Source\Scripts"
+$sexLabPPlusChoiceOutput = Join-Path $projectRoot "fomod\choices\sexlab-pplus\Scripts"
+$sexLabPPlusSdkSource = Join-Path $projectRoot "tools\sexlab-pplus-sdk"
+$sexLabPPlusCredit = Join-Path $projectRoot "docs\SEXLAB-PPLUS-COMPATIBILITY.md"
 $skyrimNet25PluginId = "s709gaming.mme-extensions"
 $skyrimNet25SourceDir = Join-Path $projectRoot "SkyrimNet25\$skyrimNet25PluginId"
 $skyrimNet25ManifestPath = Join-Path $skyrimNet25SourceDir "manifest.json"
@@ -68,6 +72,34 @@ foreach ($elsieScript in @("ELV_DiaGreets_PlayerAliasScript", "ELVPlayerAliasscr
 if (!(Test-Path -LiteralPath $elsieFixChangelog)) {
     throw "Elsie-only changelog not found: $elsieFixChangelog"
 }
+if (!(Test-Path -LiteralPath $sexLabPPlusCredit)) {
+    throw "SexLab P+ compatibility credit and installation document not found: $sexLabPPlusCredit"
+}
+$sexLabPPlusRequiredFiles = @(
+    "Scripts\MilkPlayerLoadGame.pex",
+    "Scripts\MME_Dialogues.pex",
+    "Source\Scripts\MilkPlayerLoadGame.psc",
+    "Source\Scripts\MME_Dialogues.psc",
+    "SKSE\SexLab\Registry\3jiouBreastFeeding.slr",
+    "SKSE\SexLab\Registry\Source\3jiouBreastFeeding.slsb.json",
+    "meshes\actors\character\behaviors\FNIS_3jiouBreastFeeding_Behavior.hkx",
+    "meshes\actors\character\animations\3jiouBreastFeeding\FNIS_3jiouBreastFeeding_List.txt"
+)
+$sexLabPPlusRequiredFiles += @(
+    "3jiou_BreastFeeding_Lesbian_A1_S1.HKX", "3jiou_BreastFeeding_Lesbian_A1_S2.HKX",
+    "3jiou_BreastFeeding_Lesbian_A1_S3.HKX", "3jiou_BreastFeeding_Lesbian_A1_S4.HKX",
+    "3jiou_BreastFeeding_Lesbian_A2_S1.HKX", "3jiou_BreastFeeding_Lesbian_A2_S2.HKX",
+    "3jiou_BreastFeeding_Lesbian_A2_S3.HKX", "3jiou_BreastFeeding_Lesbian_A2_S4.HKX",
+    "3jiou_BreastFeeding_Straight_A1_S1.HKX", "3jiou_BreastFeeding_Straight_A1_S2.HKX",
+    "3jiou_BreastFeeding_Straight_A1_S3.HKX", "3jiou_BreastFeeding_Straight_A2_S1.HKX",
+    "3jiou_BreastFeeding_Straight_A2_S2.HKX", "3jiou_BreastFeeding_Straight_A2_S3.HKX"
+) | ForEach-Object { "meshes\actors\character\animations\3jiouBreastFeeding\$_" }
+foreach ($relativePPlusFile in $sexLabPPlusRequiredFiles) {
+    $absolutePPlusFile = Join-Path (Join-Path $projectRoot "fomod\choices\sexlab-pplus") $relativePPlusFile
+    if (!(Test-Path -LiteralPath $absolutePPlusFile)) {
+        throw "All-in-one SexLab P+ compatibility asset is missing: $absolutePPlusFile"
+    }
+}
 if (!(Test-Path -LiteralPath $ostimBreastfeedingScene)) {
     throw "OStim female/female breastfeeding scene is missing: $ostimBreastfeedingScene"
 }
@@ -99,6 +131,7 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 & (Join-Path $projectRoot "tools\Test-TimedArmorLockContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-MMECompatibilityOverrideContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-ElsieBreastfeedingContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-SexLabPPlusCompatibilityContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-PapyrusLoggingContracts.ps1")
 New-Item -ItemType Directory -Force -Path $compiledDir | Out-Null
 $imports = "$sourceDir;$skyUiSdkSource;$mmeSdkSource;$ostimSdkSource;$omaniaSdkSource;$skyrimNetSdkSource;$skseSource;$vanillaSource"
@@ -118,6 +151,22 @@ foreach ($overrideName in $mmeCompatibilityOverrideNames) {
     if ($LASTEXITCODE -ne 0) { throw "Compilation failed for MME compatibility override $overrideName" }
 }
 & (Join-Path $projectRoot "tools\Test-ScanArrayContracts.ps1") -CompiledDirectory $compiledDir -Assembler (Join-Path (Split-Path -Parent $compiler) "PapyrusAssembler.exe")
+
+# Compile the optional P+ facade against P+'s actual API sources. No P+-only
+# type is permitted in the common scripts or the standard facade.
+New-Item -ItemType Directory -Force -Path $sexLabPPlusChoiceOutput | Out-Null
+Push-Location $sexLabPPlusChoiceSource
+try {
+    Write-Host "Compiling SexLab P+ breastfeeding backend..." -ForegroundColor Cyan
+    $pplusImports = "$sexLabPPlusChoiceSource;$sexLabPPlusSdkSource;$skseSource;$vanillaSource"
+    & $compiler "MMESexLabBreastfeedingBackend.psc" "-f=$flags" "-i=$pplusImports" "-o=$sexLabPPlusChoiceOutput"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Compilation failed for SexLab P+ breastfeeding backend"
+    }
+}
+finally {
+    Pop-Location
+}
 
 # The base package is inert; compile the Recommended-only QuickStart override
 # into its FOMOD choice folder with the same script name.
@@ -362,6 +411,7 @@ $packageDocs = Join-Path $stageDir "Docs"
 New-Item -ItemType Directory -Force -Path $packageDocs | Out-Null
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MME-Compatibility-Override.md") -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\SkyrimNet-New-Milk-Maid-Action.md") -Destination $packageDocs
+Copy-Item -LiteralPath $sexLabPPlusCredit -Destination $packageDocs
 $apiDoc = Join-Path $projectRoot "docs\MMEExtensions-Modding-API.md"
 if (!(Test-Path -LiteralPath $apiDoc)) {
     throw "Required public API documentation is missing: $apiDoc"
@@ -431,6 +481,10 @@ if (Test-Path -LiteralPath $pluginPath) {
     & dotnet run --project $dialogueRepairProject -- --check-dwemer-blacksmith-dialogue $pluginPath
     if ($LASTEXITCODE -ne 0) {
         throw "MMEAlert.esp failed Dwemer blacksmith attachment dialogue validation."
+    }
+    & dotnet run --project $dialogueRepairProject -- --check-milking-refit-dialogue $pluginPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "MMEAlert.esp failed typed milking-equipment refit dialogue validation."
     }
     if (!$pluginText.Contains("MMEExt_OStimDialogueAvailable") -or
         $pluginText.Contains("::OStimDialogueAvailable_var")) {

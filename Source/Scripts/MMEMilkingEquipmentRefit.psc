@@ -123,10 +123,9 @@ Int Function GetLiveServiceState(Actor blacksmith) Global
     If !ValidateParticipants(blacksmith, playerActor, milkController) || !NeedsRefit()
         Return 0
     EndIf
-    Armor wornArmor = playerActor.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
-    If !IsEligibleOrdinaryMilkingEquipment(wornArmor, milkController)
-        Return 0
-    EndIf
+    ; The pending fit state is the service ticket. Requiring the undersized
+    ; equipment to remain worn creates a circular lock because that same state
+    ; deliberately lets normal stripping rules remove it.
     Return 1
 EndFunction
 
@@ -138,9 +137,9 @@ Bool Function TryRefit(Actor blacksmith) Global
         Return False
     EndIf
     Armor wornArmor = playerActor.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
-    If !IsEligibleOrdinaryMilkingEquipment(wornArmor, milkController)
-        Reject("eligible registered Milking Equipment is no longer worn")
-        Return False
+    String refitContext = "off-body"
+    If IsEligibleOrdinaryMilkingEquipment(wornArmor, milkController)
+        refitContext = "equipped"
     EndIf
     Int currentLevel = MME_Storage.getMaidLevel(playerActor)
     StorageUtil.SetIntValue(playerActor, FittedLevelKey(), currentLevel)
@@ -148,12 +147,12 @@ Bool Function TryRefit(Actor blacksmith) Global
     StorageUtil.UnsetIntValue(playerActor, NeedsRefitKey())
     If StorageUtil.GetIntValue(playerActor, NeedsRefitKey(), 0) != 0 \
     || StorageUtil.GetIntValue(playerActor, FittedLevelKey(), -1) != currentLevel
-        Alarm("refit state did not persist | level=" + currentLevel + " | armor=" + GetArmorName(wornArmor))
+        Alarm("refit state did not persist | level=" + currentLevel + " | context=" + refitContext + " | armor=" + GetArmorName(wornArmor))
         Debug.Notification("The refit failed; no changes were made")
         Return False
     EndIf
     Debug.Notification("Your milking equipment now fits again")
-    Trace("refit complete | level=" + currentLevel + " | armor=" + GetArmorName(wornArmor) + " | blacksmith=" + MMEForcedMilkDrink.GetActorName(blacksmith))
+    Trace("refit complete | level=" + currentLevel + " | context=" + refitContext + " | armor=" + GetArmorName(wornArmor) + " | blacksmith=" + MMEForcedMilkDrink.GetActorName(blacksmith))
     Return True
 EndFunction
 

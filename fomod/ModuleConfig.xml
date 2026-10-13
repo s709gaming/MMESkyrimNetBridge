@@ -58,6 +58,41 @@
         <group name="Optional mod compatibility" type="SelectAny">
           <plugins order="Explicit">
 
+            <plugin name="All-in-One SexLab P+ Compatibility">
+              <description>Complete SexLab P+ support for MME Extensions and MME breastfeeding. Includes the approved MME script fixes, converted 3jiou breastfeeding animations, SLSB registry, and MME Extensions P+ backend. SexLab P+ itself is still required; the separate MME SLP+ Edit is not. IMPORTANT: rerun FNIS or your compatible behavior generator after installation. Select this manually if Vortex does not detect P+ automatically.</description>
+              <files>
+                <folder source="fomod\choices\sexlab-pplus\meshes" destination="meshes" priority="30" />
+                <folder source="fomod\choices\sexlab-pplus\SKSE" destination="SKSE" priority="30" />
+                <file source="fomod\choices\sexlab-pplus\Scripts\MilkPlayerLoadGame.pex" destination="Scripts\MilkPlayerLoadGame.pex" priority="30" />
+                <file source="fomod\choices\sexlab-pplus\Scripts\MME_Dialogues.pex" destination="Scripts\MME_Dialogues.pex" priority="30" />
+                <file source="fomod\choices\sexlab-pplus\Scripts\MMESexLabBreastfeedingBackend.pex" destination="Scripts\MMESexLabBreastfeedingBackend.pex" priority="30" />
+                <file source="fomod\choices\sexlab-pplus\Source\Scripts\MilkPlayerLoadGame.psc" destination="Source\Scripts\MilkPlayerLoadGame.psc" priority="30" />
+                <file source="fomod\choices\sexlab-pplus\Source\Scripts\MME_Dialogues.psc" destination="Source\Scripts\MME_Dialogues.psc" priority="30" />
+                <file source="fomod\choices\sexlab-pplus\Source\Scripts\MMESexLabBreastfeedingBackend.psc" destination="Source\Scripts\MMESexLabBreastfeedingBackend.psc" priority="30" />
+                <file source="docs\SEXLAB-PPLUS-COMPATIBILITY.md" destination="Docs\MME Extensions - SexLab P+ Compatibility.md" priority="30" />
+              </files>
+              <typeDescriptor>
+                <dependencyType>
+                  <defaultType name="Optional" />
+                  <patterns>
+                    <pattern>
+                      <dependencies operator="And">
+                        <fileDependency file="Scripts\SexLabThread.pex" state="Active" />
+                        <fileDependency file="Scripts\SexlabRegistry.pex" state="Active" />
+                      </dependencies>
+                      <type name="Required" />
+                    </pattern>
+                    <pattern>
+                      <dependencies operator="And">
+                        <fileDependency file="SKSE\CustomConsole\SexLabPPlus.yaml" state="Active" />
+                      </dependencies>
+                      <type name="Required" />
+                    </pattern>
+                  </patterns>
+                </dependencyType>
+              </typeDescriptor>
+            </plugin>
+
             <plugin name="Install OMania compatibility">
               <description>Detects every implanted OMania pregnancy through OMania's authoritative API and uses MME Extensions' forced animated API to create Milk Maids. Automatically recommended when OMania.esp is active. The Troubleshoot page provides a manual Dragon Egg potion test.</description>
               <files>

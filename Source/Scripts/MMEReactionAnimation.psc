@@ -2,6 +2,10 @@ Scriptname MMEReactionAnimation Hidden
 
 ; Shared executor for short free-arm Standing and Kneeling reactions. Trigger-
 ; specific settings, notifications, and Skyrim.Net work stay with callers.
+String Function GetPlayerMovementOwnerKey() Global
+    Return "MMEExtensions.ReactionAnimation.PlayerMovementOwner"
+EndFunction
+
 Bool Function Start(Actor target, String owner, String requestLabel, Bool diagnostic, Bool wasEstablishedMilkmaid = True) Global
     Return StartStanding(target, owner, requestLabel, diagnostic, wasEstablishedMilkmaid)
 EndFunction
@@ -94,6 +98,7 @@ Bool Function StartSelected(Actor target, String owner, String requestLabel, Str
     EndIf
 
     Debug.SendAnimationEvent(target, animationEvent)
+    LockPlayerMovement(target, owner, requestLabel)
     Report(False, requestLabel, animationKind + " started: " + animationEvent + " on " + GetActorName(target))
     Return True
 EndFunction
@@ -126,7 +131,48 @@ Function Reset(Actor target, String owner, String requestLabel, Bool diagnostic)
     Else
         Report(diagnostic, requestLabel, "finished without reset: " + blocked)
     EndIf
+    ; Release translation even when combat, a scene, or another system took
+    ; animation control during the hold. The owner marker prevents this cleanup
+    ; from unlocking a newer MME Extensions reaction.
+    UnlockPlayerMovement(target, owner, requestLabel)
     MMEAnimationSafety.Release(target, owner)
+EndFunction
+
+Function LockPlayerMovement(Actor target, String owner, String requestLabel) Global
+    If target == None || target != Game.GetPlayer() || owner == ""
+        Return
+    EndIf
+    StorageUtil.SetStringValue(target, GetPlayerMovementOwnerKey(), owner)
+    target.SetDontMove(True)
+    Report(False, requestLabel, "PLAYER movement locked for reaction hold")
+EndFunction
+
+Function UnlockPlayerMovement(Actor target, String owner, String requestLabel = "Reaction cleanup") Global
+    If target == None || target != Game.GetPlayer() || owner == ""
+        Return
+    EndIf
+    If StorageUtil.GetStringValue(target, GetPlayerMovementOwnerKey(), "") != owner
+        Return
+    EndIf
+    StorageUtil.UnsetStringValue(target, GetPlayerMovementOwnerKey())
+    target.SetDontMove(False)
+    Report(False, requestLabel, "PLAYER movement unlocked")
+EndFunction
+
+; Startup/load recovery for a save interrupted during the latent reaction hold.
+; This runs before the extension master-toggle early return in the controller.
+Function RestorePlayerMovementIfNeeded(Actor target, String reason = "controller recovery") Global
+    If target == None || target != Game.GetPlayer()
+        Return
+    EndIf
+    String owner = StorageUtil.GetStringValue(target, GetPlayerMovementOwnerKey(), "")
+    If owner == ""
+        Return
+    EndIf
+    StorageUtil.UnsetStringValue(target, GetPlayerMovementOwnerKey())
+    target.SetDontMove(False)
+    MMEAnimationSafety.Release(target, owner)
+    Report(False, "Reaction recovery", "PLAYER emergency movement recovery | reason=" + reason + " | owner=" + owner)
 EndFunction
 
 String Function PickStandingAnimation(String requestLabel, Bool diagnostic) Global

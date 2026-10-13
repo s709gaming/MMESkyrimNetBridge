@@ -16,8 +16,18 @@ if ($fixedLoops.Count -ne 2) {
 if ($source -notmatch 'SendModEvent\( "MME_MilkCycleComplete" \)') {
     throw "The compatibility override lost the cycle-complete integration hook"
 }
+if ($source -match 'GetExpressionByName\([^\r\n]+\)\.ApplyTo') {
+    throw "The MME compatibility override still chains ApplyTo onto a possibly missing SexLab expression"
+}
+if ($source -notmatch 'Function MMEExtApplyExpressionSafe' -or
+    ([regex]::Matches($source, 'MMEExtApplyExpressionSafe\(akActor,').Count -ne 8)) {
+    throw "Both MME milking loops must route all eight facial-expression calls through the null-safe helper"
+}
+if ($source -notmatch 'MMELog\.MasterDiagnostic' -or $source -notmatch 'MMEExtMissingExpressionReported') {
+    throw "Missing SexLab expressions must leave one master-debug breadcrumb without per-tick spam"
+}
 if (Test-Path -LiteralPath (Join-Path $projectRoot "Source\MMECompatibilityOverrides\MME_StartMilking.psc")) {
     throw "The diagnostic MME_StartMilking override must not ship"
 }
 
-Write-Host "PASS: minimal MME override fixes both NPC assignment loops and retains only the required cycle hook"
+Write-Host "PASS: minimal MME override fixes NPC assignment loops, preserves the cycle hook, and safely handles missing SexLab expressions"

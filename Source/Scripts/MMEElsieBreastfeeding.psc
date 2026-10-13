@@ -79,33 +79,27 @@ Int Function StartAutonomousFeed(Actor milkSource, Actor drinker, String caller 
         Return -1
     EndIf
 
-    String registrar = "zjBreastFeedingVar"
-    If drinker.GetLeveledActorBase() != None && drinker.GetLeveledActorBase().GetSex() == 1
-        registrar = "zjBreastFeeding"
+    String backend = MMESexLabBreastfeedingBackend.GetBackendName()
+    MMELog.MasterDiagnostic(prefix + "starting SexLab scene | caller=" + caller + " | backend=" + backend + " | source=" + milkSource + " | drinker=" + drinker)
+    Int threadID = MMESexLabBreastfeedingBackend.StartBreastfeeding(milkController, milkSource, drinker, "MMEExtensionsElsieBreastfeeding")
+    ; ELV_Taste is a legacy Elsie registrar and has no known SLSB conversion.
+    ; Preserve it only as a Standard SexLab fallback.
+    If threadID < 0 && !MMESexLabBreastfeedingBackend.IsPPlus()
+        sslBaseAnimation tasteAnimation = milkController.SexLab.AnimSlots.GetbyRegistrar("ELV_Taste")
+        If tasteAnimation != None
+            Actor[] participants = new Actor[2]
+            participants[0] = milkSource
+            participants[1] = drinker
+            sslBaseAnimation[] animations = new sslBaseAnimation[1]
+            animations[0] = tasteAnimation
+            threadID = milkController.SexLab.StartSex(participants, animations)
+        EndIf
     EndIf
-    sslBaseAnimation selectedAnimation = milkController.SexLab.AnimSlots.GetbyRegistrar(registrar)
-    If selectedAnimation == None
-        MMELog.MasterDiagnostic(prefix + "registrar unavailable | registrar=" + registrar + " | caller=" + caller)
-        registrar = "ELV_Taste"
-        selectedAnimation = milkController.SexLab.AnimSlots.GetbyRegistrar(registrar)
-    EndIf
-    If selectedAnimation == None
-        MMELog.Alarm(prefix + "FAILURE | no compatible breastfeeding animation is registered | caller=" + caller)
-        Return -1
-    EndIf
-
-    Actor[] participants = new Actor[2]
-    participants[0] = milkSource
-    participants[1] = drinker
-    sslBaseAnimation[] animations = new sslBaseAnimation[1]
-    animations[0] = selectedAnimation
-    MMELog.MasterDiagnostic(prefix + "starting SexLab scene | caller=" + caller + " | registrar=" + registrar + " | source=" + milkSource + " | drinker=" + drinker)
-    Int threadID = milkController.SexLab.StartSex(participants, animations)
     If threadID < 0
-        MMELog.Alarm(prefix + "FAILURE | SexLab rejected autonomous breastfeeding scene | caller=" + caller + " | registrar=" + registrar)
+        MMELog.Alarm(prefix + "FAILURE | SexLab rejected autonomous breastfeeding scene | caller=" + caller + " | backend=" + backend)
         Return -1
     EndIf
-    MMELog.MasterDiagnostic(prefix + "StartSex accepted | caller=" + caller + " | registrar=" + registrar + " | thread=" + threadID)
+    MMELog.MasterDiagnostic(prefix + "scene start accepted | caller=" + caller + " | backend=" + backend + " | thread=" + threadID)
     Return threadID
 EndFunction
 

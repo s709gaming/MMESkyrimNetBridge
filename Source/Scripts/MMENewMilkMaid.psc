@@ -32,9 +32,10 @@ Function Fragment_CreateMilkMaidSexLab(ObjectReference akSpeakerRef)
 
     TraceSexLabStop(7, "MME breastfeeding requested")
     Parent.Fragment_02(akSpeakerRef)
-    ; MME's StartSex call is asynchronous. The persistent service claims the
-    ; exact resulting thread from SexLab's AnimationEnding event, before its
-    ; controller resets the ordered Positions used by MME.
+    ; Bind this dedicated INFO's transaction to the exact controller created by
+    ; its own StartSex call. Actor-pair matching at scene teardown is not proof
+    ; of ownership because the same pair can use ordinary breastfeeding too.
+    service.ClaimMMENewMilkMaidSexLabStartup(milkSource, candidate)
 EndFunction
 
 Bool Function StartRequest(Actor milkSource, Actor candidate) Global

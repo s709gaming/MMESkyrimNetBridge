@@ -330,6 +330,17 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('CompleteBreastfeedingDrink(completedSource, completedDrinker, "SexLab", threadID, completionIntent)', ending)
         self.assertEqual(service.count('CompleteBreastfeedingDrink(milkSource, drinker, "OStim"'), 2)
 
+    def test_new_milk_maid_sexlab_intent_is_bound_to_the_dedicated_threads_controller(self):
+        service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
+        dialogue = (ROOT / 'Source/Scripts/MMENewMilkMaid.psc').read_text()
+        ending = service.split('Event OnNewMilkMaidSexLabEnding(', 1)[1].split('EndEvent', 1)[0]
+        claim = service.split('Bool Function ClaimMMENewMilkMaidSexLabStartup(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('service.ClaimMMENewMilkMaidSexLabStartup(milkSource, candidate)', dialogue)
+        self.assertIn('GetActorController(milkSource)', claim)
+        self.assertIn('ActiveSexLabIntentThreadID = threadID', claim)
+        self.assertIn('ActiveSexLabIntentThreadID == threadID', ending)
+        self.assertNotIn('ActiveSexLabIntentThreadID < 0', ending)
+
     def test_breastfeeding_scene_start_equip_remains_suppressed(self):
         service = (ROOT / 'Source/Scripts/MMEDebug.psc').read_text()
         tracker = (ROOT / 'Source/Scripts/MMEDrinkTracker.psc').read_text()
