@@ -1497,6 +1497,15 @@ Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form send
         CancelInnPalaceDrink("save loaded")
         UnregisterForMenu("Dialogue Menu")
         RegisterForMenu("Dialogue Menu")
+        ; The native lifecycle signal survives saves whose permanent player
+        ; ActiveMagicEffect predates its OnPlayerLoadGame handler. Rebuild the
+        ; authoritative real-time deadlines here as well so arousal monitoring
+        ; cannot remain silently stopped after loading one of those saves.
+        UpdatePolling()
+        MMELog.MasterDiagnostic("[MME Extensions Lifecycle] real-time polling rebuilt after load | nextArousalScan=" + NextArousalEffectUpdate)
+        If MMEArousalEffects.IsEnabled() && NextArousalEffectUpdate <= 0.0
+            MMELog.Alarm("[MME Extensions Arousal Effects] FAILURE: load recovery left enabled arousal monitoring without a scheduled scan")
+        EndIf
     EndIf
     RefreshMMESexLabAnimationGate("lifecycle " + reason)
     RefreshCapacity(reason)

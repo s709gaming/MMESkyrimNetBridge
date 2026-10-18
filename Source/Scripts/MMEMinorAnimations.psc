@@ -53,6 +53,11 @@ Bool Function StartIdle(Actor target, Idle animationIdle, String owner, Bool hol
     If holdMovement && target != Game.GetPlayer()
         StorageUtil.SetStringValue(target, "MMEExtensions.MinorAnimation.MovementOwner", owner)
         target.SetDontMove(True)
+        ; Interrupt an already-running travel package before asking the graph to
+        ; enter a stationary idle. Without this, a walking NPC can keep sliding
+        ; even though PlayIdle reports that it accepted the drink animation.
+        target.EvaluatePackage()
+        MMELog.MasterDiagnostic("[MME Extensions Minor Animation] movement locked and package interrupted | actor=" + GetActorName(target) + " | owner=" + owner)
     EndIf
 
     Bool accepted = target.PlayIdle(animationIdle)
@@ -122,6 +127,7 @@ Function ReleaseMovement(Actor target, String owner) Global
     target.SetDontMove(False)
     If target != Game.GetPlayer()
         target.EvaluatePackage()
+        MMELog.MasterDiagnostic("[MME Extensions Minor Animation] movement released and package reevaluated | actor=" + GetActorName(target) + " | owner=" + owner)
     EndIf
 EndFunction
 

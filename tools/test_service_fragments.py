@@ -472,6 +472,22 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('target.SetDontMove(False)', minor)
         self.assertIn('target.EvaluatePackage()', minor)
         self.assertIn('Float duration = 3.0', minor)
+        start_idle = minor.split('Bool Function StartIdle(', 1)[1].split('EndFunction', 1)[0]
+        self.assertLess(start_idle.index('target.SetDontMove(True)'), start_idle.index('target.EvaluatePackage()'))
+        self.assertLess(start_idle.index('target.EvaluatePackage()'), start_idle.index('target.PlayIdle(animationIdle)'))
+        release = minor.split('Function ReleaseMovement(', 1)[1].split('EndFunction', 1)[0]
+        self.assertLess(release.index('target.SetDontMove(False)'), release.index('target.EvaluatePackage()'))
+        self.assertIn('MMELog.MasterDiagnostic', start_idle)
+        self.assertIn('MMELog.MasterDiagnostic', release)
+
+    def test_native_load_rearms_arousal_polling(self):
+        controller = (ROOT / 'Source/Scripts/MMEAlertsController.psc').read_text()
+        lifecycle = controller.split('Event OnNativeLifecycle(', 1)[1].split('EndEvent', 1)[0]
+        load_branch = lifecycle.split('If reason == "load"', 2)[2].split('EndIf', 1)[0]
+        self.assertIn('UpdatePolling()', load_branch)
+        self.assertIn('real-time polling rebuilt after load', load_branch)
+        self.assertIn('MMEArousalEffects.IsEnabled() && NextArousalEffectUpdate <= 0.0', load_branch)
+        self.assertIn('MMELog.Alarm', load_branch)
 
     def test_drink_adapter_uses_minor_animation_service(self):
         drink = (ROOT / 'Source/Scripts/MMEDrinkAnimation.psc').read_text()
