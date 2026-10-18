@@ -4,7 +4,7 @@ Int Property tid Auto
 Actor[] Property Positions Auto
 sslBaseAnimation Property Animation Auto Hidden
 
-Int Function AddActor(Actor actorRef, Bool isVictim = False)
+Int Function AddActor(Actor actorRef, Bool isVictim = False, sslBaseVoice voice = None, Bool forceSilent = False)
     Return -1
 EndFunction
 

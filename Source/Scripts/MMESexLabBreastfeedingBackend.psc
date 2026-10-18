@@ -37,11 +37,14 @@ Int Function StartBreastfeeding(MilkQUEST milkController, Actor milkSource, Acto
     If model == None
         Return -1
     EndIf
-    If model.AddActor(milkSource) < 0
+    ; Papyrus bytecode records the supplied argument count. SexLab 1.66d's
+    ; AddActor contract has four parameters even though the final three have
+    ; source-level defaults, so pass all four explicitly for runtime binding.
+    If model.AddActor(milkSource, False, None, False) < 0
         model.Initialize()
         Return -1
     EndIf
-    If model.AddActor(drinker) < 0
+    If model.AddActor(drinker, False, None, False) < 0
         model.Initialize()
         Return -1
     EndIf

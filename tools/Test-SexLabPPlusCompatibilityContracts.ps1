@@ -2,6 +2,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 $standard = Get-Content -LiteralPath (Join-Path $root 'Source\Scripts\MMESexLabBreastfeedingBackend.psc') -Raw
 $pplus = Get-Content -LiteralPath (Join-Path $root 'fomod\choices\sexlab-pplus\Source\Scripts\MMESexLabBreastfeedingBackend.psc') -Raw
+$standardSdk = Get-Content -LiteralPath (Join-Path $root 'tools\mme-sdk\sslThreadModel.psc') -Raw
 $controller = Get-Content -LiteralPath (Join-Path $root 'Source\Scripts\MMEAlertsController.psc') -Raw
 $debug = Get-Content -LiteralPath (Join-Path $root 'Source\Scripts\MMEDebug.psc') -Raw
 $fomod = Get-Content -LiteralPath (Join-Path $root 'fomod\ModuleConfig.xml') -Raw
@@ -18,6 +19,8 @@ function Assert-Contract([bool]$condition, [string]$message) {
 Assert-Contract ($standard.Contains('zjBreastFeedingVar') -and $standard.Contains('zjBreastFeeding')) 'standard backend retains both original MME registrars'
 Assert-Contract ($standard.Contains('StartBreastfeeding') -and $standard.Contains('IsBreastfeedingThread')) 'standard backend exposes the shared facade contract'
 Assert-Contract (!$standard.Contains('SexLabThread') -and !$standard.Contains('StartSceneEx')) 'standard backend contains no P+-only API types'
+Assert-Contract ($standard.Contains('model.AddActor(milkSource, False, None, False)') -and $standard.Contains('model.AddActor(drinker, False, None, False)')) 'standard backend supplies SexLab 1.66d AddActor all four runtime arguments'
+Assert-Contract ($standardSdk.Contains('Int Function AddActor(Actor actorRef, Bool isVictim = False, sslBaseVoice voice = None, Bool forceSilent = False)')) 'standard compile SDK mirrors SexLab 1.66d four-argument AddActor contract'
 Assert-Contract ($pplus.Contains('e4j6zbhk') -and $pplus.Contains('6otwp8mm')) 'P+ backend owns both converted SLSB scene IDs'
 Assert-Contract ($pplus.Contains('StartSceneEx') -and $pplus.Contains('GetActiveScene')) 'P+ backend starts and recognizes SLSB scenes through the P+ API'
 Assert-Contract ($controller.Contains('MMESexLabBreastfeedingBackend.IsAvailable')) 'controller delegates the shared MME dialogue gate to the selected backend'
