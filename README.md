@@ -76,6 +76,7 @@ Automatic town milk drinking now includes silly in-game notifications, and uniqu
 Leave a completely full Milk Maid waiting around long enough, and she may eventually decide to solve the problem herself.
 
 ## 🤖 SKYRIM.NET INTEGRATION
+https://github.com/MinLL/SkyrimNet-GamePlugin
 
 Skyrim.Net is optional, but it's one of the largest parts of MME Extensions.
 
@@ -85,7 +86,9 @@ That includes drinking milk, milking, breastfeeding, fullness, Milk Maid creatio
 
 Depending on your settings, this can produce NPC dialogue, actions, notifications, sounds, animations, and AI narration.
 
-**FREE:** Skyrim.Net has an "Enable TTS For Silent NPCs" option that uses PocketTTS to voice silent modded dialogue, including dialogue from Elsie Lavache and this mod.
+**FREE:** Skyrim.Net has an "Enable TTS For Silent NPCs" option that uses PocketTTS to voice BASE silent modded dialogue, including dialogue from Elsie Lavache and this mod.
+
+**PAID:** Depending on settings, cost 30 to 50 CENTS per hour on cheapest settings to generate dialog and actions for role play. Its really good though. 
 
 Your companions are no longer contractually obligated to pretend nothing weird is happening.
 
