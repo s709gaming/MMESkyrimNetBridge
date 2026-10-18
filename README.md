@@ -6,7 +6,8 @@
 📥 **Download:**  
 https://www.loverslab.com/files/file/50820-mme-milk-mod-economy-extensions/
 
-✅ **Skyrim SE/AE 1.7.1.0.1 is now supported!**  
+✅ **The latest Skyrim SE/AE runtime (1.7.104) is supported!**
+
 *OStim has not updated as of 10/4/2026.*
 
 📚 **Full Requirements & Recommended Setup:**  
@@ -84,7 +85,7 @@ That includes drinking milk, milking, breastfeeding, fullness, Milk Maid creatio
 
 Depending on your settings, this can produce NPC dialogue, actions, notifications, sounds, animations, and AI narration.
 
-FREE: Skyrim.net has a free "Enable TTS For Silent Npcs" option that voices all modded dialog without sound, includes Elsie Lavache and this mod, via PocketTTS.
+**FREE:** Skyrim.Net has an "Enable TTS For Silent NPCs" option that uses PocketTTS to voice silent modded dialogue, including dialogue from Elsie Lavache and this mod.
 
 Your companions are no longer contractually obligated to pretend nothing weird is happening.
 
@@ -130,7 +131,7 @@ Blacksmiths, Alchemists, and Court Wizards can provide some highly questionable 
 - ⚙️ Blacksmiths can install a kinky Dwemer milking attachment inside your armor, turning perfectly respectable protection into something much more enthusiastic.
 - 💉 Tentacles periodically inject aphrodisiac and encourage additional milk production.
 
-The first time Tentacle or Dwemer Armor is fitted by a blacksmith, a new introductory story can play for the appropriate armor type.
+The first time Tentacle or Dwemer armor is fitted by a blacksmith, a new introductory story can play for the appropriate armor type.
 
 Your armor is no longer merely protective equipment. It's thirsty.
 
@@ -204,8 +205,8 @@ https://github.com/s709gaming/MMESkyrimNetBridge
 - GoodProvider - Reference for SexLab implementation
 - Chajapa - For Elsie Lavache
 - Venomr - Tips on fixing Elsie Lavache
-- Thorax339 - Tips on integrating Sexlab P+
-- Scrab for his many lewd mods
+- Thorax339 - Tips on integrating SexLab P+
+- Scrab - His many lewd mods
 
 ## 📜 LICENSE / PERMISSIONS
 

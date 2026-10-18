@@ -32,38 +32,21 @@ For animation behavior generation, use the appropriate option for your setup:
 
 You generally only need one behavior generator.
 
----
-## Devious loot for trapped treasure chest
-
-Tentacles:
-https://www.nexusmods.com/skyrimspecialedition/mods/62644?tab=files
-
-Mech Suits:
-https://www.loverslab.com/files/file/23018-dwarven-devious-cuirass-3ba-seae/
-
-Does not require Devious Devices mod.
----
-## 3ba Milk Cuirass
-If you use 3ba body shape, download this, or your body may look funny wearing milk cuirass.
-https://www.loverslab.com/topic/156760-milk-mod-economy-mme-cbbebhunp3ba-leseae-new-milk-harness-body-slide/
-
----
-
 ## SexLab Framework - SE / AE
 
 https://www.loverslab.com/files/file/20058-sexlab-se-sex-animation-framework-v166b-01182024/
 
-## (Optional) SexLab P+ (a high performance patch for SexLab. READ its requirements carefully!)
-
-https://www.loverslab.com/files/file/25318-sexlab-p/
-
-Required by **Milk Mod Economy as a MASTER**. The very popular but optional **Devious Devices** ecosystem also depends on it. The original was designed that way.
+Required by **Milk Mod Economy as a master**. The very popular but optional **Devious Devices** ecosystem also depends on it. The original mod was designed that way.
 
 Used for small but essential background functions and compatibility.
 
+## (Optional) SexLab P+ (a high-performance patch for SexLab. READ its requirements carefully!)
+
+https://www.loverslab.com/files/file/25318-sexlab-p/
+
 **OStim Compatibility:** MME Extensions allows Milk Mod Economy to use the OStim ecosystem and animations.
 
-**OStim and SexLab can coexist.** OStim can handle the animations for this mod, while SexLab remains in the background for required MME functions and backwards compatibility with Devious Devices and other mods in the MME ecosystem.
+**OStim and SexLab can coexist.** OStim can handle the animations for this mod, while SexLab remains in the background for required MME functions and backward compatibility with Devious Devices and other mods in the MME ecosystem.
 
 
 ---
@@ -82,11 +65,32 @@ Tested on:
 
 **Skyrim SE / AE 1.7.104**
 
-Built with CommonLibSSE-NG 8.3.0 for the current Skyrim 1.7.x runtime family.
+Built with CommonLibSSE-NG 8.3.0 for the current Skyrim 1.7.104 runtime.
 
 ---
 
-# 2. Skyrim VR Requirements
+# 2. Optional Requirements for Specific Features
+
+## Devious Loot for Trapped Treasure Chests
+
+Tentacles:
+https://www.nexusmods.com/skyrimspecialedition/mods/62644?tab=files
+
+Mech Suits:
+https://www.loverslab.com/files/file/23018-dwarven-devious-cuirass-3ba-seae/
+
+Does not require the Devious Devices mod.
+
+---
+
+## 3BA Milk Cuirass
+
+If you use the 3BA body shape, download this, or your body may look funny while wearing the milk cuirass.
+https://www.loverslab.com/topic/156760-milk-mod-economy-mme-cbbebhunp3ba-leseae-new-milk-harness-body-slide/
+
+---
+
+# 3. Skyrim VR Requirements
 
 Tested on:
 
@@ -110,7 +114,7 @@ MME Extensions supports Skyrim VR, but VR remains less extensively tested than S
 
 ---
 
-# 3. Recommended for Breast Scaling
+# 4. Recommended for Breast Scaling
 
 These are **not hard requirements for MME Extensions itself**.
 
@@ -163,7 +167,7 @@ https://www.loverslab.com/topic/133779-cbbe-3bbb-advanced/#findComment-2820451
 
 ---
 
-# 4. Optional Integrations
+# 5. Optional Integrations
 
 None of these are required for the core MME Extensions features.
 
@@ -217,18 +221,17 @@ Skyrim.Net enables features such as:
 
 Improves the surrounding SexLab experience with additional AI roleplay, narration, reactions, and actions.
 
-Cost under a dollar an hour to use on minimal settings.
+Costs less than a dollar an hour to use on minimal settings.
 
-Voices ALL npc unvoiced dialog from ANY mod. 
+Voices ALL unvoiced NPC dialogue from ANY mod.
 
-On right side menu of Skyrim.net web UI:
+In the right-side menu of the Skyrim.Net web UI:
 
-Settings > Audio & Voice > Under "Dialogue Replacement" 
-[x] "Enable TTS for Silent NPC".
+Settings > Audio & Voice > Under "Dialogue Replacement," enable "TTS for Silent NPC."
 
-To disable Skyrim.net AI features, but keep free AI voice generation:
+To disable Skyrim.Net AI features but keep free AI voice generation:
 
-Under Quick Toggles top right, toggle off "Skyrim.net Enabled"
+Under Quick Toggles in the top-right corner, toggle off "Skyrim.Net Enabled."
 
 MME Extensions' local sounds, notifications, milk effects, animations, and normal dialogue work without Skyrim.Net.
 
@@ -250,10 +253,10 @@ Useful alongside MME Extensions, but not required.
 
 https://github.com/GoodProvider/SkyrimNet_SexLab
 
-Adds AI voice dialog to Sexlab scenes.
+Adds AI-voiced dialogue to SexLab scenes.
 ---
 
-# 5. MME Ecosystem & Content Suggestions
+# 6. MME Ecosystem & Content Suggestions
 
 None of these are required by **MME Extensions**.
 
@@ -298,9 +301,9 @@ https://www.loverslab.com/topic/187761-being-a-cow-alternate-version/
 
 **Extreme content.**
 
-Can gradually transform the player or followers into increasingly cow-like humanoid.
+Can gradually transform the player or followers into increasingly cow-like humanoids.
 
-VERY cow themed focused and the transformation can be interpreted as something like a Daedric curse if you want it to fit Skyrim's world.
+It is VERY cow-focused, and the transformation can be interpreted as something like a Daedric curse if you want it to fit Skyrim's world.
 
 **Warning:** Very taste-dependent. It may require significant visual and MCM tweaking to disable transformations or features you do not want.
 
@@ -318,7 +321,7 @@ It can make Milk Mod Economy feel more mechanically connected to ordinary gamepl
 
 ---
 
-# 6. Optional Physics
+# 7. Optional Physics
 
 These are not required by MME Extensions itself, but are commonly useful with 3BA.
 
@@ -340,7 +343,7 @@ Depending on your setup, 3BA can use CBPC, FSMP, or a combination of both.
 
 ---
 
-# 7. Optional Personal Visual Setup
+# 8. Optional Personal Visual Setup
 
 The mods below are **NOT required** for MME Extensions.
 
