@@ -1,0 +1,5 @@
+b MMEExt_Arousal_F_L1 femaleArousedLevel1.hkx
+b MMEExt_Arousal_F_L2 femaleArousedLevel2.hkx
+b MMEExt_Arousal_F_L3 femaleArousedLevel3.hkx
+b MMEExt_Arousal_M_L1 maleArousedLevel1.hkx
+b MMEExt_Arousal_M_L2 maleArousedLevel2.hkx

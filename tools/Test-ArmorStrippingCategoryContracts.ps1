@@ -9,7 +9,7 @@ function Assert-Contract([bool]$condition, [string]$message) {
     Write-Host "PASS: $message" -ForegroundColor Green
 }
 
-Assert-Contract ($mcm -match 'Int Function GetVersion\(\)\s+Return 14[3-9]') "MCM version includes category controls"
+Assert-Contract ($mcm -match 'Int Function GetVersion\(\)\s+Return (14[3-9]|1[5-9][0-9])') "MCM version includes category controls"
 Assert-Contract ($mcm -match 'armorStripCategoriesMigration142' -and $mcm -match '"enableArmorStripHeavy", 1' -and $mcm -match '"enableArmorStripLight", 1' -and $mcm -match '"enableArmorStripClothing", 1') "all three category toggles migrate enabled"
 Assert-Contract ($mcm -match 'armorStripHeavyPercent", 70\.0' -and $mcm -match 'armorStripLightPercent", 85\.0' -and $mcm -match 'armorStripClothingPercent", 100\.0') "fresh thresholds default to heavy 70, light 85, clothing 100"
 Assert-Contract ($mcm -match 'Enable Heavy Armor Stripping' -and $mcm -match 'Enable Light Armor Stripping' -and $mcm -match 'Enable Clothing Stripping') "Armor MCM exposes all category toggles"

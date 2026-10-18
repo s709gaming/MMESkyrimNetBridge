@@ -46,7 +46,7 @@ Bool Function TryShow(Actor speaker) Global
     ; Papyrus string identifiers are case-insensitive and can normalize a value
     ; to an already-interned lowercase spelling. JsonUtil paths are case-
     ; sensitive, so every shipped pool key is deliberately lowercase.
-    String poolName = "noarmor"
+    String poolName = "notice_none"
     If wornArmor != None
         armorClass = MMEArmorScript.ClassifyArmor(milkController, wornArmor, "service-reminder", playerActor)
         If armorClass == 4
@@ -55,7 +55,7 @@ Bool Function TryShow(Actor speaker) Global
             If serviceRole != "Blacksmith"
                 Return False
             EndIf
-            poolName = "dwemerarmor"
+            poolName = "notice_dwemer"
         EndIf
         ; Tentacle/Spriggan and the three configured arrays receive a concrete
         ; class above. Other canonical/special MME protections (for example an
@@ -65,18 +65,18 @@ Bool Function TryShow(Actor speaker) Global
             Return False
         EndIf
         If armorClass == 1
-            poolName = "milkingarmor"
+            poolName = "notice_milking"
         ElseIf armorClass == 2
-            poolName = "livingarmor"
+            poolName = "notice_living"
         ElseIf armorClass == 3
-            poolName = "parasitearmor"
+            poolName = "notice_parasite"
         ElseIf armorClass != 4
-            poolName = "regulararmor"
+            poolName = "notice_regular"
         EndIf
     EndIf
 
     String[] observations = JsonUtil.PathStringElements(configFile, "." + poolName)
-    String[] reactions = JsonUtil.PathStringElements(configFile, ".reaction")
+    String[] reactions = JsonUtil.PathStringElements(configFile, ".notice_reaction")
     If observations.Length == 0 || reactions.Length == 0
         ReportStop("wording pool missing or empty: " + poolName, speaker, serviceRole)
         Return False
@@ -160,17 +160,17 @@ String Function ResolveActorName(Actor speaker) Global
 EndFunction
 
 String Function GetCompactObservation(String poolName) Global
-    If poolName == "noarmor"
+    If poolName == "notice_none"
         Return "notices you're bare"
-    ElseIf poolName == "regulararmor"
+    ElseIf poolName == "notice_regular"
         Return "eyes your armor"
-    ElseIf poolName == "milkingarmor"
+    ElseIf poolName == "notice_milking"
         Return "notices your milking gear"
-    ElseIf poolName == "livingarmor"
+    ElseIf poolName == "notice_living"
         Return "watches your living armor stir"
-    ElseIf poolName == "parasitearmor"
+    ElseIf poolName == "notice_parasite"
         Return "notices the parasite"
-    ElseIf poolName == "dwemerarmor"
+    ElseIf poolName == "notice_dwemer"
         Return "spots your devious Dwemer fittings"
     EndIf
     Return "studies your equipment"

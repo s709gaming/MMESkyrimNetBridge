@@ -20,8 +20,8 @@ String Function NeedsRefitKey() Global
     Return "MMEExtensions.MilkingRefit.NeedsRefit"
 EndFunction
 
-String Function LastNoticeTimeKey() Global
-    Return "MMEExtensions.MilkingRefit.LastNoticeTime"
+String Function RemovalNoticeShownKey() Global
+    Return "MMEExtensions.MilkingRefit.RemovalNoticeShown"
 EndFunction
 
 Bool Function IsFeatureEnabled() Global
@@ -61,9 +61,9 @@ Function Reconcile(String source = "unspecified") Global
     If currentLevel > previousLevel
         StorageUtil.SetIntValue(playerActor, NeedsRefitKey(), 1)
         Trace("refit armed | previous=" + previousLevel + " | current=" + currentLevel + " | fitted=" + fittedLevel + " | source=" + source)
-        ShowReminder(playerActor, True)
     ElseIf currentLevel < previousLevel && currentLevel <= fittedLevel
         StorageUtil.UnsetIntValue(playerActor, NeedsRefitKey())
+        StorageUtil.UnsetIntValue(playerActor, RemovalNoticeShownKey())
         Trace("refit cleared after level decrease | previous=" + previousLevel + " | current=" + currentLevel + " | fitted=" + fittedLevel + " | source=" + source)
     EndIf
     StorageUtil.SetIntValue(playerActor, LastObservedLevelKey(), currentLevel)
@@ -79,10 +79,6 @@ Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
         Return
     EndIf
     Reconcile("player armor equipped")
-    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If ShouldBypassMilkingEquipmentProtection(wearer, equippedArmor, milkController)
-        ShowReminder(playerActor, False)
-    EndIf
 EndFunction
 
 Bool Function ShouldBypassMilkingEquipmentProtection(Actor wearer, Armor wornArmor, MilkQUEST milkController) Global
@@ -91,7 +87,12 @@ Bool Function ShouldBypassMilkingEquipmentProtection(Actor wearer, Armor wornArm
     EndIf
     Bool eligible = IsEligibleOrdinaryMilkingEquipment(wornArmor, milkController)
     If eligible
-        Trace("ordinary MilkingEquipment protection bypass permitted | armor=" + GetArmorName(wornArmor))
+        Int customClass = MMECustomArmorRegistry.ClassifyCustomArmor(wornArmor)
+        If customClass == 4
+            Trace("unlocked Dwemer Armor protection bypass permitted | armor=" + GetArmorName(wornArmor))
+        Else
+            Trace("ordinary MilkingEquipment protection bypass permitted | armor=" + GetArmorName(wornArmor))
+        EndIf
     EndIf
     Return eligible
 EndFunction
@@ -100,7 +101,10 @@ Bool Function IsEligibleOrdinaryMilkingEquipment(Armor wornArmor, MilkQUEST milk
     If wornArmor == None || milkController == None
         Return False
     EndIf
-    ; Original MME equipment and every special armor class remain protected.
+    ; Original MME equipment, Living Armor, and Parasite Armor remain
+    ; protected. Independent class-4 Dwemer Armor may follow the refit rules;
+    ; the shared stripping evaluator rejects active timed and framework locks
+    ; before it reaches this eligibility exception.
     If wornArmor == milkController.MilkCuirass || wornArmor == milkController.MilkCuirassFuta \
     || wornArmor == milkController.TITS4 || wornArmor == milkController.TITS6 || wornArmor == milkController.TITS8
         Return False
@@ -110,8 +114,13 @@ Bool Function IsEligibleOrdinaryMilkingEquipment(Armor wornArmor, MilkQUEST milk
         Return False
     EndIf
     If MMEArmorScript.FindBasicLivingArmorNameDirect(milkController, armorName) >= 0 \
-    || MMEArmorScript.FindParasiteLivingArmorNameDirect(milkController, armorName) >= 0 \
-    || MMECustomArmorRegistry.ClassifyCustomArmor(wornArmor) > 0
+    || MMEArmorScript.FindParasiteLivingArmorNameDirect(milkController, armorName) >= 0
+        Return False
+    EndIf
+    Int customClass = MMECustomArmorRegistry.ClassifyCustomArmor(wornArmor)
+    If customClass == 4
+        Return True
+    ElseIf customClass > 0
         Return False
     EndIf
     Return MMEArmorScript.CountMilkingEquipmentMatchesDirect(milkController, armorName) == 1
@@ -139,12 +148,17 @@ Bool Function TryRefit(Actor blacksmith) Global
     Armor wornArmor = playerActor.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
     String refitContext = "off-body"
     If IsEligibleOrdinaryMilkingEquipment(wornArmor, milkController)
-        refitContext = "equipped"
+        If MMECustomArmorRegistry.ClassifyCustomArmor(wornArmor) == 4
+            refitContext = "equipped Dwemer Armor"
+        Else
+            refitContext = "equipped Milking Equipment"
+        EndIf
     EndIf
     Int currentLevel = MME_Storage.getMaidLevel(playerActor)
     StorageUtil.SetIntValue(playerActor, FittedLevelKey(), currentLevel)
     StorageUtil.SetIntValue(playerActor, LastObservedLevelKey(), currentLevel)
     StorageUtil.UnsetIntValue(playerActor, NeedsRefitKey())
+    StorageUtil.UnsetIntValue(playerActor, RemovalNoticeShownKey())
     If StorageUtil.GetIntValue(playerActor, NeedsRefitKey(), 0) != 0 \
     || StorageUtil.GetIntValue(playerActor, FittedLevelKey(), -1) != currentLevel
         Alarm("refit state did not persist | level=" + currentLevel + " | context=" + refitContext + " | armor=" + GetArmorName(wornArmor))
@@ -172,19 +186,20 @@ Bool Function ValidateParticipants(Actor blacksmith, Actor playerActor, MilkQUES
         && !playerActor.IsInFaction(milkController.MilkSlaveFaction)
 EndFunction
 
-Function ShowReminder(Actor playerActor, Bool force = False) Global
-    If playerActor == None
+; Called only after the shared stripping evaluator verifies that an ordinary
+; MilkingEquipment item actually left slot 32 because refit protection was
+; bypassed. One notice per pending episode avoids repeated wardrobe spam.
+Function HandleSuccessfulRemoval(Actor playerActor, Armor removedArmor) Global
+    If playerActor == None || playerActor != Game.GetPlayer() || !NeedsRefit()
         Return
     EndIf
-    Float now = Utility.GetCurrentRealTime()
-    Float last = StorageUtil.GetFloatValue(playerActor, LastNoticeTimeKey(), -100.0)
-    If !force && now - last < 5.0
-        Trace("equip reminder rate-limited")
+    If StorageUtil.GetIntValue(playerActor, RemovalNoticeShownKey(), 0) == 1
+        Trace("successful removal reminder already shown | armor=" + GetArmorName(removedArmor))
         Return
     EndIf
+    StorageUtil.SetIntValue(playerActor, RemovalNoticeShownKey(), 1)
     Debug.Notification("Your chests have gotten too big! Visit the blacksmith!")
-    StorageUtil.SetFloatValue(playerActor, LastNoticeTimeKey(), now)
-    Trace("refit reminder shown")
+    Trace("successful removal reminder shown | armor=" + GetArmorName(removedArmor))
 EndFunction
 
 Function Baseline(Actor playerActor, Int currentLevel, String reason) Global
@@ -192,6 +207,7 @@ Function Baseline(Actor playerActor, Int currentLevel, String reason) Global
     StorageUtil.SetIntValue(playerActor, LastObservedLevelKey(), currentLevel)
     StorageUtil.SetIntValue(playerActor, FittedLevelKey(), currentLevel)
     StorageUtil.UnsetIntValue(playerActor, NeedsRefitKey())
+    StorageUtil.UnsetIntValue(playerActor, RemovalNoticeShownKey())
     Trace("baseline established | level=" + currentLevel + " | " + reason)
 EndFunction
 
@@ -203,7 +219,7 @@ Function ClearState(Actor playerActor, String reason) Global
     StorageUtil.UnsetIntValue(playerActor, LastObservedLevelKey())
     StorageUtil.UnsetIntValue(playerActor, FittedLevelKey())
     StorageUtil.UnsetIntValue(playerActor, NeedsRefitKey())
-    StorageUtil.UnsetFloatValue(playerActor, LastNoticeTimeKey())
+    StorageUtil.UnsetIntValue(playerActor, RemovalNoticeShownKey())
     Trace("state cleared | " + reason)
 EndFunction
 

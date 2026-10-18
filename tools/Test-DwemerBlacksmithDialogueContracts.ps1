@@ -17,9 +17,9 @@ Assert-Contract ($service -match 'IsArtisanDwemerArmor' -and $service -match 'Re
 Assert-Contract ($service -match 'MMETimedArmorLock\.IsLocked' -and $service -match 'GetLockedArmor') "active timed armor is protected"
 Assert-Contract ($service -match 'MMELog\.MasterDiagnostic' -and $service -match 'MMELog\.Alarm') "master footprints and smoke alarms are present"
 Assert-Contract ($wrapper -match 'MMEExt_DwemerBlacksmithArmorState' -and $wrapper -match 'Fragment_InstallDwemerAttachment' -and $wrapper -match 'Fragment_RemoveDwemerAttachment') "Hey there wrapper exposes Dwemer state and fragments"
-Assert-Contract ($reminder -match 'serviceRole != "Blacksmith"' -and $reminder -match 'poolName = "dwemerarmor"') "Dwemer reminder is blacksmith-only"
-Assert-Contract ($config.dwemerarmor.Count -gt 0) "Dwemer reminder pool is populated"
-foreach ($line in $config.dwemerarmor) {
+Assert-Contract ($reminder -match 'serviceRole != "Blacksmith"' -and $reminder -match 'poolName = "notice_dwemer"') "Dwemer reminder is blacksmith-only"
+Assert-Contract ($config.notice_dwemer.Count -gt 0) "Dwemer reminder pool is populated"
+foreach ($line in $config.notice_dwemer) {
     Assert-Contract ($line.Length -le 58) "Dwemer observation leaves HUD room for speaker and reaction: $line"
 }
 Assert-Contract ($build -match '"MMEDwemerBlacksmithDialogue"') "build compiles and packages the new service"

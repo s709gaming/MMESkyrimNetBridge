@@ -15,7 +15,9 @@ Int reverseRemoveOption
 Int reverseTraceOption
 Int timedArmorDurationOption
 Int timedArmorReleaseOption
+Int timedNPCArmorReleaseOption
 Int chestArmorTrapOption
+Int repeatTrapArmorStoriesOption
 Int armorTrapNearbyAlliesOption
 Int livingArmorChestTrapOption
 Int parasiteArmorChestTrapOption
@@ -64,6 +66,11 @@ Int capacityOption
 Int pollingOption
 Int notificationOption
 Int pollingIntervalOption
+Int breastBounceNotificationOption
+Int breastBounceSoundOption
+Int breastBounceIntervalOption
+Int breastBounceVariationOption
+Int breastBounceDelayOption
 Int debugMilkReportOption
 Int debugMilkingEventsOption
 Int milkmaidLevelBonusOption
@@ -92,6 +99,14 @@ Int skyrimNetStatusOption
 Int arousalStatusOption
 Int milkDrinkArousalOption
 Int milkDrinkArousalAmountOption
+Int arousalEffectsOption
+Int arousalEffectNotificationsOption
+Int arousalEffectSoundsOption
+Int arousalEffectAnimationsOption
+Int arousalEffectCooldownOption
+Int arousalLowThresholdOption
+Int arousalMediumThresholdOption
+Int arousalHighThresholdOption
 Int sexLabBreastfeedingDebugOption
 Int newMilkmaidDialogueTraceOption
 Int newMilkmaidSexLabTraceOption
@@ -184,6 +199,7 @@ Int armorDebugOption
 Int armorLookupForensicsOption
 Int extensionsArmorStrippingOption
 Int milkingEquipmentRefitOption
+Int repeatOrdinaryArmorStoriesOption
 Int armorStripHeavyEnabledOption
 Int armorStripLightEnabledOption
 Int armorStripClothingEnabledOption
@@ -276,7 +292,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 144
+    Return 153
 EndFunction
 
 Function SetPageNames()
@@ -374,6 +390,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrapNotification", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableChestMilkTrapNarration", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableChestArmorTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableRepeatTrapArmorStories", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorTrapNearbyAllies", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableLivingArmorChestTrap", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableParasiteArmorChestTrap", 1)
@@ -383,6 +400,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "chestArmorTrapChance", 5)
         JsonUtil.SetFloatValue(SettingsFile, "chestArmorTrapCooldownHours", 4.0)
         JsonUtil.SetIntValue(SettingsFile, "chestArmorTrapMigration137", 1)
+        JsonUtil.SetIntValue(SettingsFile, "repeatTrapArmorStoriesMigration150", 1)
         JsonUtil.SetIntValue(SettingsFile, "chestArmorCategoryMigration138", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidTrapNearbyAllies", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkTrapNearbyAllies", 1)
@@ -423,6 +441,8 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableMaidLevelWeightScaling", 1)
         JsonUtil.SetFloatValue(SettingsFile, "maidWeightPerLevel", 1.0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkingEquipmentRefits", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableRepeatOrdinaryArmorStories", 1)
+        JsonUtil.SetIntValue(SettingsFile, "repeatOrdinaryArmorStoriesMigration151", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableAddMilkDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableElsieBreastfeedingMilkEffects", 1)
@@ -474,8 +494,19 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkArousal", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 20.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 10.0)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalDiagnostic", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEffects", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEffectNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEffectSounds", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEffectAnimations", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "arousalEffectCooldown", 15.0)
+        JsonUtil.SetIntValue(SettingsFile, "arousalLowThreshold", 20)
+        JsonUtil.SetIntValue(SettingsFile, "arousalMediumThreshold", 50)
+        JsonUtil.SetIntValue(SettingsFile, "arousalHighThreshold", 80)
+        JsonUtil.SetIntValue(SettingsFile, "arousalEffectsMigration147", 1)
+        JsonUtil.SetIntValue(SettingsFile, "arousalMonitorDefaultsMigration148", 1)
+        JsonUtil.SetIntValue(SettingsFile, "arousalAnimationsMigration152", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidSexLabTrace", 0)
@@ -1471,6 +1502,62 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "verbosePapyrusLoggingMigration146", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Adds nearby adult arousal-threshold notifications and sex-aware sounds.
+    ; Presentation is crossing-based and intentionally contains no animation or
+    ; Skyrim.Net behavior in this release.
+    If JsonUtil.GetIntValue(SettingsFile, "arousalEffectsMigration147", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEffects", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEffectNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEffectSounds", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "arousalEffectCooldown", 15.0)
+        JsonUtil.SetIntValue(SettingsFile, "arousalLowThreshold", 20)
+        JsonUtil.SetIntValue(SettingsFile, "arousalMediumThreshold", 50)
+        JsonUtil.SetIntValue(SettingsFile, "arousalHighThreshold", 80)
+        JsonUtil.SetIntValue(SettingsFile, "arousalEffectsMigration147", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Arousal Reactions is an observational monitor. Milk drinking retains its
+    ; separate, modest compatibility boost.
+    If JsonUtil.GetIntValue(SettingsFile, "arousalMonitorDefaultsMigration148", 0) == 0
+        JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 10.0)
+        JsonUtil.SetIntValue(SettingsFile, "arousalMonitorDefaultsMigration148", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Correct the short-lived zero-default build without changing any nonzero
+    ; value a player deliberately configured.
+    If JsonUtil.GetIntValue(SettingsFile, "milkDrinkArousalDefaultMigration149", 0) == 0
+        If JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 10.0) == 0.0
+            JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", 10.0)
+        EndIf
+        JsonUtil.SetIntValue(SettingsFile, "milkDrinkArousalDefaultMigration149", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "repeatTrapArmorStoriesMigration150", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableRepeatTrapArmorStories", 1)
+        JsonUtil.SetIntValue(SettingsFile, "repeatTrapArmorStoriesMigration150", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "repeatOrdinaryArmorStoriesMigration151", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableRepeatOrdinaryArmorStories", 1)
+        JsonUtil.SetIntValue(SettingsFile, "repeatOrdinaryArmorStoriesMigration151", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Adds registered three-second arousal clips without changing the existing
+    ; threshold, notification, sound, selection, or cooldown defaults.
+    If JsonUtil.GetIntValue(SettingsFile, "arousalAnimationsMigration152", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEffectAnimations", 1)
+        JsonUtil.SetIntValue(SettingsFile, "arousalAnimationsMigration152", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "breastBounceEffectsMigration153", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableBreastBounceNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBreastBounceSounds", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "breastBounceIntervalHours", 24.0)
+        JsonUtil.SetFloatValue(SettingsFile, "breastBounceVariationHours", 4.0)
+        JsonUtil.SetFloatValue(SettingsFile, "breastBounceMaximumDelaySeconds", 30.0)
+        JsonUtil.SetIntValue(SettingsFile, "breastBounceEffectsMigration153", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetDwemerEffectDefaults()
@@ -1535,7 +1622,9 @@ Event OnPageReset(String page)
     reverseTraceOption = -1
     timedArmorDurationOption = -1
     timedArmorReleaseOption = -1
+    timedNPCArmorReleaseOption = -1
     chestArmorTrapOption = -1
+    repeatTrapArmorStoriesOption = -1
     armorTrapNearbyAlliesOption = -1
     livingArmorChestTrapOption = -1
     parasiteArmorChestTrapOption = -1
@@ -1581,6 +1670,7 @@ Event OnPageReset(String page)
     ; Rebuild option IDs on every page render; SkyUI IDs are ephemeral and must
     ; never be persisted. Runtime values are always reread from JsonUtil.
     EnsureDefaults()
+    NormalizeArousalThresholdSettings()
     soundsOption = -1
     volumeOption = -1
     capacityOption = -1
@@ -1615,6 +1705,14 @@ Event OnPageReset(String page)
     arousalStatusOption = -1
     milkDrinkArousalOption = -1
     milkDrinkArousalAmountOption = -1
+    arousalEffectsOption = -1
+    arousalEffectNotificationsOption = -1
+    arousalEffectSoundsOption = -1
+    arousalEffectAnimationsOption = -1
+    arousalEffectCooldownOption = -1
+    arousalLowThresholdOption = -1
+    arousalMediumThresholdOption = -1
+    arousalHighThresholdOption = -1
     sexLabBreastfeedingDebugOption = -1
     newMilkmaidDialogueTraceOption = -1
     newMilkmaidSexLabTraceOption = -1
@@ -1707,6 +1805,7 @@ Event OnPageReset(String page)
     armorLookupForensicsOption = -1
     extensionsArmorStrippingOption = -1
     milkingEquipmentRefitOption = -1
+    repeatOrdinaryArmorStoriesOption = -1
     armorStripHeavyEnabledOption = -1
     armorStripLightEnabledOption = -1
     armorStripClothingEnabledOption = -1
@@ -1805,6 +1904,7 @@ Event OnPageReset(String page)
             armorTrapFlags = OPTION_FLAG_DISABLED
         EndIf
         armorTrapNearbyAlliesOption = AddToggleOption("Armor Traps Target Nearby Allies", JsonUtil.GetIntValue(SettingsFile, "enableArmorTrapNearbyAllies", 1) == 1, armorTrapFlags)
+        repeatTrapArmorStoriesOption = AddToggleOption("Repeat Trap Armor Stories", JsonUtil.GetIntValue(SettingsFile, "enableRepeatTrapArmorStories", 1) == 1, armorTrapFlags)
         livingArmorChestTrapOption = AddToggleOption("Living Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableLivingArmorChestTrap", 1) == 1, armorTrapFlags)
         parasiteArmorChestTrapOption = AddToggleOption("Parasite Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableParasiteArmorChestTrap", 1) == 1, armorTrapFlags)
         dwemerArmorChestTrapOption = AddToggleOption("Dwemer Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableDwemerArmorChestTrap", 1) == 1, armorTrapFlags)
@@ -1865,6 +1965,7 @@ Event OnPageReset(String page)
             timedArmorReleaseFlags = OPTION_FLAG_NONE
         EndIf
         timedArmorReleaseOption = AddTextOption("Release Player Armor", "RELEASE", timedArmorReleaseFlags)
+        timedNPCArmorReleaseOption = AddTextOption("Release Nearby NPC Armor", "RELEASE")
         AddHeaderOption("Debug")
         reverseApplyOption = AddTextOption("Apply Reverse Leveling", "APPLY")
         reverseRemoveOption = AddTextOption("Remove Reverse Leveling", "REMOVE")
@@ -1995,7 +2096,24 @@ Event OnPageReset(String page)
         If JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkArousal", 1) != 1
             arousalFlags = OPTION_FLAG_DISABLED
         EndIf
-        milkDrinkArousalAmountOption = AddSliderOption("Arousal Per Milk", JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 20.0), "+{0}", arousalFlags)
+        milkDrinkArousalAmountOption = AddSliderOption("Arousal Per Milk", JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 10.0), "+{0}", arousalFlags)
+        AddHeaderOption("Arousal Reactions")
+        Int arousalEffectMasterFlags = OPTION_FLAG_DISABLED
+        If arousalAvailable
+            arousalEffectMasterFlags = OPTION_FLAG_NONE
+        EndIf
+        arousalEffectsOption = AddToggleOption("Enable Arousal Reactions", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffects", 1) == 1, arousalEffectMasterFlags)
+        Int arousalEffectFlags = arousalEffectMasterFlags
+        If JsonUtil.GetIntValue(SettingsFile, "enableArousalEffects", 1) != 1
+            arousalEffectFlags = OPTION_FLAG_DISABLED
+        EndIf
+        arousalEffectNotificationsOption = AddToggleOption("Show Arousal Notifications", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectNotifications", 1) == 1, arousalEffectFlags)
+        arousalEffectSoundsOption = AddToggleOption("Play Arousal Sounds", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectSounds", 1) == 1, arousalEffectFlags)
+        arousalEffectAnimationsOption = AddToggleOption("Play Arousal Animations", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectAnimations", 1) == 1, arousalEffectFlags)
+        arousalEffectCooldownOption = AddSliderOption("Reaction Cooldown", JsonUtil.GetFloatValue(SettingsFile, "arousalEffectCooldown", 15.0), "{0} seconds", arousalEffectFlags)
+        arousalLowThresholdOption = AddSliderOption("Low Threshold", JsonUtil.GetIntValue(SettingsFile, "arousalLowThreshold", 20), "{0}", arousalEffectFlags)
+        arousalMediumThresholdOption = AddSliderOption("Medium Threshold", JsonUtil.GetIntValue(SettingsFile, "arousalMediumThreshold", 50), "{0}", arousalEffectFlags)
+        arousalHighThresholdOption = AddSliderOption("High Threshold", JsonUtil.GetIntValue(SettingsFile, "arousalHighThreshold", 80), "{0}", arousalEffectFlags)
         Return
     EndIf
     If page == "Armor"
@@ -2042,6 +2160,8 @@ Event OnPageReset(String page)
         armorStripNarrationOption = AddToggleOption("Skyrim.Net Strip Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarration", 1) == 1, stripFlags)
         armorStripNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "armorStripNarrationChance", 100), "{0}%", narrationFlags)
         armorStripNarrationCooldownOption = AddSliderOption("Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "armorStripNarrationCooldown", 300.0) / 60.0, "{0} minutes", narrationFlags)
+        AddHeaderOption("Armor Story Reactions")
+        repeatOrdinaryArmorStoriesOption = AddToggleOption("Repeat Equipped Armor Stories", JsonUtil.GetIntValue(SettingsFile, "enableRepeatOrdinaryArmorStories", 1) == 1)
         AddHeaderOption("Milking Armor")
         playerMilkingArmorEquipMoanOption = AddToggleOption("Player Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipMoan", 1) == 1)
         playerMilkingArmorEquipAnimationOption = AddToggleOption("Player Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipAnimation", 0) == 1)
@@ -2295,6 +2415,12 @@ Event OnPageReset(String page)
     pollingOption = AddToggleOption("Enable Capacity Polling", JsonUtil.GetIntValue(SettingsFile, "enableCapacityPolling", 1) == 1)
     pollingIntervalOption = AddSliderOption("Capacity Polling Interval", JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 15.0), "{0} seconds")
     notificationOption = AddToggleOption("Enable Capacity Notifications", JsonUtil.GetIntValue(SettingsFile, "enableCapacityNotifications", 1) == 1)
+    AddHeaderOption("Breast Bounce Reactions")
+    breastBounceNotificationOption = AddToggleOption("Breast Bounce Notifications", JsonUtil.GetIntValue(SettingsFile, "enableBreastBounceNotifications", 1) == 1)
+    breastBounceSoundOption = AddToggleOption("Breast Bounce Sounds", JsonUtil.GetIntValue(SettingsFile, "enableBreastBounceSounds", 1) == 1)
+    breastBounceIntervalOption = AddSliderOption("Reaction Interval", JsonUtil.GetFloatValue(SettingsFile, "breastBounceIntervalHours", 24.0), "{0} game hours")
+    breastBounceVariationOption = AddSliderOption("Interval Variation", JsonUtil.GetFloatValue(SettingsFile, "breastBounceVariationHours", 4.0), "+/- {0} game hours")
+    breastBounceDelayOption = AddSliderOption("Maximum Reaction Delay", JsonUtil.GetFloatValue(SettingsFile, "breastBounceMaximumDelaySeconds", 30.0), "{0} seconds")
 EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
@@ -2304,6 +2430,24 @@ Event OnOptionHighlight(Int option)
         Return
     ElseIf option == timedArmorReleaseOption
         SetInfoText("Debug release for the player's current timed armor bond. It clears MME Extensions' lock and unequips that chest piece.")
+        Return
+    ElseIf option == breastBounceNotificationOption
+        SetInfoText("Shows occasional playful breast-bounce flavor for one nearby adult female Milk Maid.")
+        Return
+    ElseIf option == breastBounceSoundOption
+        SetInfoText("Plays a mild sound below half capacity, or a medium moan and breast-slap sound at half capacity or higher.")
+        Return
+    ElseIf option == breastBounceIntervalOption
+        SetInfoText("Base time between nearby Milk Maid reactions. Default 24 game hours; range 1-36.")
+        Return
+    ElseIf option == breastBounceVariationOption
+        SetInfoText("Random variation added to or subtracted from the reaction interval. Default 4 game hours.")
+        Return
+    ElseIf option == breastBounceDelayOption
+        SetInfoText("Maximum random real-time delay after a Milk Maid is selected. Default 30 seconds; range 0-60.")
+        Return
+    ElseIf option == timedNPCArmorReleaseOption
+        SetInfoText("Debug release for nearby allied or follower NPCs wearing supported Living, Parasite, or Dwemer armor. Armor stays in their inventory.")
         Return
     ElseIf option == innPalaceMilkDrinkingOption
         SetInfoText("After entering an inn or enabled special social venue, wait a randomized delay and make one random eligible loaded NPC drink ordinary HearthFires milk through the normal API. Default on.")
@@ -2364,7 +2508,10 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Master switch for JSON-backed Living, Parasite and Dwemer treasure-chest armor traps. Default on.")
         Return
     ElseIf option == armorTrapNearbyAlliesOption
-        SetInfoText("Allow treasure-chest armor traps to select eligible nearby allied female NPCs as well as the player. Turn off for player-only targeting. Default on.")
+        SetInfoText("Allow treasure-chest armor traps to select and lock eligible nearby allied female NPCs as well as the player. Turn off for player-only targeting and to prevent new NPC armor locks. Default on.")
+        Return
+    ElseIf option == repeatTrapArmorStoriesOption
+        SetInfoText("Replay the category story, sound, and animation whenever a treasure-chest trap successfully equips Living, Parasite, or Dwemer armor. Protective forced re-equips do not count. Default on.")
         Return
     ElseIf option == livingArmorChestTrapOption
         SetInfoText("Allow configured Living Armor pieces in the general treasure-chest trap pool. Default on.")
@@ -2637,7 +2784,9 @@ Event OnOptionHighlight(Int option)
     ElseIf option == extensionsArmorStrippingOption
         SetInfoText("Take over armor stripping from Milk Mod Economy. While enabled, MME's original stripping is disabled and these fullness thresholds are used instead.")
     ElseIf option == milkingEquipmentRefitOption
-        SetInfoText("After the player's personal Maid Level increases, ordinary registered Milking Equipment follows normal fullness stripping rules until a blacksmith refits it. Original MME cuirasses and special armor are always ignored.")
+        SetInfoText("After the player's personal Maid Level increases, ordinary Milking Equipment and unlocked Dwemer Armor follow normal fullness stripping rules until a blacksmith refits them. Timed locks, Devious Devices, Living Armor, Parasite Armor, and original MME cuirasses remain protected.")
+    ElseIf option == repeatOrdinaryArmorStoriesOption
+        SetInfoText("Replay Living, Parasite, or Dwemer armor stories for ordinary player/NPC equips and successful blacksmith, alchemist, or court-wizard installations. Chest traps use their separate Misc toggle; timed-lock recovery is excluded. Default on.")
     ElseIf option == armorCheckReminderOption
         SetInfoText("Show one brief notification when an eligible blacksmith, alchemist, or court wizard notices the armor state recognized by MME.")
     ElseIf option == armorCheckReminderCooldownOption
@@ -2715,9 +2864,25 @@ Event OnOptionHighlight(Int option)
     ElseIf option == arousalStatusOption
         SetInfoText("Read-only. Enabled when SexLabAroused.esm is active.")
     ElseIf option == milkDrinkArousalOption
-        SetInfoText("Raise player arousal after drinking recognized milk.")
+        SetInfoText("Optionally raise arousal after drinking recognized milk. The nearby Arousal Reactions monitor remains observational. Default gain is 0.")
     ElseIf option == milkDrinkArousalAmountOption
-        SetInfoText("Set arousal added per recognized milk drink.")
+        SetInfoText("Set optional arousal added per recognized milk drink. Default 0; this does not control the observational Arousal Reactions monitor.")
+    ElseIf option == arousalEffectsOption
+        SetInfoText("Every five seconds, watch nearby adult humanoids for upward arousal-threshold crossings and select at most one random actor for a reaction. Includes the player. Default on.")
+    ElseIf option == arousalEffectNotificationsOption
+        SetInfoText("Show one random sex-appropriate notification for the selected actor and arousal tier. Default on.")
+    ElseIf option == arousalEffectSoundsOption
+        SetInfoText("Play the existing mild, medium, or strong sex-aware reaction sound for the selected actor. Also respects the global moaning-sounds toggle. Default on.")
+    ElseIf option == arousalEffectAnimationsOption
+        SetInfoText("Play a sex- and tier-specific three-second animation while holding the actor in place. Never starts in combat or an active scene. Requires rerunning Pandora, Nemesis, or FNIS after installation. Default on.")
+    ElseIf option == arousalEffectCooldownOption
+        SetInfoText("Minimum real-time delay between nearby arousal reactions. Default 15 seconds, range 0-600 in 5-second steps.")
+    ElseIf option == arousalLowThresholdOption
+        SetInfoText("Minimum arousal for mild reactions. Must remain at least 5 points below Medium. Default 20.")
+    ElseIf option == arousalMediumThresholdOption
+        SetInfoText("Minimum arousal for noticeable reactions. Must remain between Low and High with 5-point gaps. Default 50.")
+    ElseIf option == arousalHighThresholdOption
+        SetInfoText("Minimum arousal for the strongest reactions. Must remain at least 5 points above Medium. Default 80.")
     ElseIf option == sexLabBreastfeedingDebugOption
         SetInfoText("Diagnose MME's original SexLab breastfeeding route when Hey there executes. Never changes eligibility.")
     ElseIf option == milkMaidThoughtsOption
@@ -2879,6 +3044,10 @@ Event OnOptionSelect(Int option)
         MMETimedArmorLock.Release(Game.GetPlayer(), "MCM Debug")
         ForcePageReset()
         Return
+    ElseIf option == timedNPCArmorReleaseOption
+        MMEFollowerArmorRescue.TryDebugRescueNearbyCompanions()
+        ForcePageReset()
+        Return
     ElseIf option == chestArmorTrapOption
         Int armorTrapValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableChestArmorTrap", armorTrapValue)
@@ -2891,6 +3060,12 @@ Event OnOptionSelect(Int option)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorTrapNearbyAllies", armorAlliesValue)
         JsonUtil.Save(SettingsFile, False)
         SetToggleOptionValue(option, armorAlliesValue == 1)
+        Return
+    ElseIf option == repeatTrapArmorStoriesOption
+        Int repeatTrapStoryValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableRepeatTrapArmorStories", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableRepeatTrapArmorStories", repeatTrapStoryValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, repeatTrapStoryValue == 1)
         Return
     ElseIf option == livingArmorChestTrapOption
         Int livingTrapValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableLivingArmorChestTrap", 1)
@@ -3066,6 +3241,18 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMMEExtensions", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == breastBounceNotificationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBreastBounceNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBreastBounceNotifications", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
+        RefreshBreastBounceSchedule()
+    ElseIf option == breastBounceSoundOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBreastBounceSounds", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBreastBounceSounds", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
+        RefreshBreastBounceSchedule()
         MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
         If controller != None
             If value == 1
@@ -3517,6 +3704,8 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMageDialogueTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMageDialogueTrace", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == repeatOrdinaryArmorStoriesOption
+        ToggleArmorSetting(option, "enableRepeatOrdinaryArmorStories", 1)
     ElseIf option == playerMilkingArmorEquipMoanOption
         ToggleArmorSetting(option, "enablePlayerMilkingArmorEquipMoan", 1)
     ElseIf option == playerMilkingArmorEquipAnimationOption
@@ -3610,6 +3799,30 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == arousalEffectsOption && MMEArousalBridge.IsAvailable()
+        Int arousalEffectsValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArousalEffects", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEffects", arousalEffectsValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, arousalEffectsValue == 1)
+        MMEArousalEffects.ResetBaselines("MCM master toggle changed")
+        MMEAlertsController arousalController = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+        If arousalController != None
+            arousalController.UpdatePolling()
+        EndIf
+        ForcePageReset()
+        Return
+    ElseIf option == arousalEffectNotificationsOption
+        Int arousalNotificationsValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEffectNotifications", arousalNotificationsValue)
+        SetToggleOptionValue(option, arousalNotificationsValue == 1)
+    ElseIf option == arousalEffectSoundsOption
+        Int arousalSoundsValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectSounds", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEffectSounds", arousalSoundsValue)
+        SetToggleOptionValue(option, arousalSoundsValue == 1)
+    ElseIf option == arousalEffectAnimationsOption
+        Int arousalAnimationsValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectAnimations", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEffectAnimations", arousalAnimationsValue)
+        SetToggleOptionValue(option, arousalAnimationsValue == 1)
     ElseIf option == milkDrinkArousalOption && MMEArousalBridge.IsAvailable()
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkArousal", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkArousal", value)
@@ -3714,6 +3927,13 @@ Function RefreshDwemerEffectSchedule()
     EndIf
 EndFunction
 
+Function RefreshBreastBounceSchedule()
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller != None
+        controller.RefreshBreastBounceScheduling()
+    EndIf
+EndFunction
+
 Function RefreshMilkCravingSchedule()
     MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
     If controller != None
@@ -3728,9 +3948,41 @@ Function RefreshAutoSelfMilkingSchedule()
     EndIf
 EndFunction
 
+Function NormalizeArousalThresholdSettings()
+    Int[] thresholds = MMEArousalEffects.GetNormalizedThresholds()
+    Int low = JsonUtil.GetIntValue(SettingsFile, "arousalLowThreshold", 20)
+    Int medium = JsonUtil.GetIntValue(SettingsFile, "arousalMediumThreshold", 50)
+    Int high = JsonUtil.GetIntValue(SettingsFile, "arousalHighThreshold", 80)
+    If low != thresholds[0] || medium != thresholds[1] || high != thresholds[2]
+        JsonUtil.SetIntValue(SettingsFile, "arousalLowThreshold", thresholds[0])
+        JsonUtil.SetIntValue(SettingsFile, "arousalMediumThreshold", thresholds[1])
+        JsonUtil.SetIntValue(SettingsFile, "arousalHighThreshold", thresholds[2])
+        JsonUtil.Save(SettingsFile, False)
+        MMEArousalEffects.ResetBaselines("invalid MCM thresholds normalized")
+    EndIf
+EndFunction
+
 ; Configures the shared sound-volume and capacity-interval slider dialogs.
 Event OnOptionSliderOpen(Int option)
-    If option == timedArmorDurationOption
+    If option == breastBounceIntervalOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "breastBounceIntervalHours", 24.0))
+        SetSliderDialogDefaultValue(24.0)
+        SetSliderDialogRange(1.0, 36.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == breastBounceVariationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "breastBounceVariationHours", 4.0))
+        SetSliderDialogDefaultValue(4.0)
+        SetSliderDialogRange(0.0, 12.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == breastBounceDelayOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "breastBounceMaximumDelaySeconds", 30.0))
+        SetSliderDialogDefaultValue(30.0)
+        SetSliderDialogRange(0.0, 60.0)
+        SetSliderDialogInterval(5.0)
+        Return
+    ElseIf option == timedArmorDurationOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "timedArmorLockDays", 3.0))
         SetSliderDialogDefaultValue(3.0)
         SetSliderDialogRange(0.0, 30.0)
@@ -3973,10 +4225,30 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(0.0, 2.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == milkDrinkArousalAmountOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 20.0))
-        SetSliderDialogDefaultValue(20.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 10.0))
+        SetSliderDialogDefaultValue(10.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
+    ElseIf option == arousalEffectCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "arousalEffectCooldown", 15.0))
+        SetSliderDialogDefaultValue(15.0)
+        SetSliderDialogRange(0.0, 600.0)
+        SetSliderDialogInterval(5.0)
+    ElseIf option == arousalLowThresholdOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "arousalLowThreshold", 20))
+        SetSliderDialogDefaultValue(20.0)
+        SetSliderDialogRange(0.0, JsonUtil.GetIntValue(SettingsFile, "arousalMediumThreshold", 50) - 5)
+        SetSliderDialogInterval(5.0)
+    ElseIf option == arousalMediumThresholdOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "arousalMediumThreshold", 50))
+        SetSliderDialogDefaultValue(50.0)
+        SetSliderDialogRange(JsonUtil.GetIntValue(SettingsFile, "arousalLowThreshold", 20) + 5, JsonUtil.GetIntValue(SettingsFile, "arousalHighThreshold", 80) - 5)
+        SetSliderDialogInterval(5.0)
+    ElseIf option == arousalHighThresholdOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "arousalHighThreshold", 80))
+        SetSliderDialogDefaultValue(80.0)
+        SetSliderDialogRange(JsonUtil.GetIntValue(SettingsFile, "arousalMediumThreshold", 50) + 5, 100.0)
+        SetSliderDialogInterval(5.0)
     ElseIf option == maidWeightPerLevelOption
         SetSliderDialogStartValue(MMEMaidWeightScaling.GetWeightPerLevel())
         SetSliderDialogDefaultValue(1.0)
@@ -4092,7 +4364,25 @@ EndEvent
 
 ; Saves accepted slider values and reschedules polling when its interval changes.
 Event OnOptionSliderAccept(Int option, Float value)
-    If option == timedArmorDurationOption
+    If option == breastBounceIntervalOption
+        JsonUtil.SetFloatValue(SettingsFile, "breastBounceIntervalHours", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        RefreshBreastBounceSchedule()
+        Return
+    ElseIf option == breastBounceVariationOption
+        JsonUtil.SetFloatValue(SettingsFile, "breastBounceVariationHours", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "+/- {0} game hours")
+        RefreshBreastBounceSchedule()
+        Return
+    ElseIf option == breastBounceDelayOption
+        JsonUtil.SetFloatValue(SettingsFile, "breastBounceMaximumDelaySeconds", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+        RefreshBreastBounceSchedule()
+        Return
+    ElseIf option == timedArmorDurationOption
         JsonUtil.SetFloatValue(SettingsFile, "timedArmorLockDays", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} game days")
@@ -4314,6 +4604,25 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "+{0}")
+    ElseIf option == arousalEffectCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "arousalEffectCooldown", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == arousalLowThresholdOption
+        JsonUtil.SetIntValue(SettingsFile, "arousalLowThreshold", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}")
+        MMEArousalEffects.ResetBaselines("low threshold changed")
+    ElseIf option == arousalMediumThresholdOption
+        JsonUtil.SetIntValue(SettingsFile, "arousalMediumThreshold", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}")
+        MMEArousalEffects.ResetBaselines("medium threshold changed")
+    ElseIf option == arousalHighThresholdOption
+        JsonUtil.SetIntValue(SettingsFile, "arousalHighThreshold", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}")
+        MMEArousalEffects.ResetBaselines("high threshold changed")
     ElseIf option == nonMilkmaidFemaleArousalOption
         JsonUtil.SetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", value)
         JsonUtil.Save(SettingsFile, False)

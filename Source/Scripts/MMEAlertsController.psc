@@ -45,6 +45,7 @@ String AutoSelfMilkingDueKey = "MMEExtensions.AutoSelfMilking.Due"
 String AutoSelfMilkingDispatchKey = "MMEExtensions.AutoSelfMilking.Dispatched"
 Float NearbyRange = 2000.0
 Float NextCapacityUpdate = 0.0
+Float NextArousalEffectUpdate = 0.0
 Float NextSkyrimNetUpdate = 0.0
 Float NextDebugUpdate = 0.0
 Float NextThoughtDebugUpdate = 0.0
@@ -63,10 +64,13 @@ Float NextThoughtGameTime = 0.0
 Float NextBoundThoughtGameTime = 0.0
 Float NextInjectionGameTime = 0.0
 Float NextDwemerEffectGameTime = 0.0
+Float NextBreastBounceGameTime = 0.0
 Float NextMilkCravingGameTime = 0.0
 Float NextMilkCravingGiveInGameTime = 0.0
 Float NextAutoSelfMilkingGameTime = 0.0
 Actor ActiveMilkCravingActor = None
+Actor PendingBreastBounceActor = None
+Float NextBreastBouncePresentation = 0.0
 String ArmorCheckReminderShownAtKey = "MMEExtensions.ArmorReminder.ShownAt"
 String ArmorCheckReminderAttemptAtKey = "MMEExtensions.ArmorReminder.AttemptAt"
 Bool Property OStimDialogueAvailable Auto Conditional
@@ -117,6 +121,9 @@ Function InitializeController(Bool reportStatus = False)
     MMEDwemerArmor.ValidateConfiguration()
     MMETimedArmorLock.AuditCatalogs()
     MMETimedArmorLock.RecoverAfterLoad()
+    ; Resolve or discard verification work retained across a save/load before
+    ; the shared real-time scheduler is armed again.
+    MMEArmorRemoval.ResolveDueVerifications(Utility.GetCurrentRealTime())
     ; Do not enter scripts whose bytecode imports SkyrimNetApi when the optional
     ; plugin is absent. Their internal guards remain defense in depth, but this
     ; outer boundary keeps the non-Skyrim.Net startup path completely isolated.
@@ -407,11 +414,14 @@ Function DisableController()
         SkyrimNetApi.UnregisterAction("StartMilkMaidSelfMilking")
     EndIf
     NextCapacityUpdate = 0.0
+    NextArousalEffectUpdate = 0.0
     NextSkyrimNetUpdate = 0.0
     NextDebugUpdate = 0.0
     NextThoughtDebugUpdate = 0.0
     NextArmorCheck = 0.0
     NextArmorReminder = 0.0
+    NextBreastBouncePresentation = 0.0
+    PendingBreastBounceActor = None
     ArmorReminderRetries = 0
     MMEArmorScript.CancelPlayerArmorCheck(Game.GetPlayer())
     ; Restore MME's own stripping while MME Extensions is disabled.
@@ -581,6 +591,7 @@ Function RefreshGameTimeScheduling()
     ScheduleNextBoundThought(now)
     ScheduleNextInjection(now)
     ScheduleNextDwemerEffect(now)
+    ScheduleNextBreastBounce(now)
     RestoreMilkCravingScheduling(now)
     RestoreAutoSelfMilkingScheduling(now)
     ArmNextGameTimeUpdate(now)
@@ -610,6 +621,15 @@ Function RefreshDwemerEffectScheduling()
     Float now = Utility.GetCurrentGameTime()
     ScheduleNextDwemerEffect(now)
     ArmNextGameTimeUpdate(now)
+EndFunction
+
+Function RefreshBreastBounceScheduling()
+    Float now = Utility.GetCurrentGameTime()
+    PendingBreastBounceActor = None
+    NextBreastBouncePresentation = 0.0
+    ScheduleNextBreastBounce(now)
+    ArmNextGameTimeUpdate(now)
+    ScheduleNextUpdate()
 EndFunction
 
 ; MCM changes reset only an idle craving cycle. An actor who is already
@@ -692,6 +712,19 @@ Function ScheduleNextDwemerEffect(Float now)
     Float nextInterval = MMEDwemerEffects.CalculateNextInterval(baseInterval, variation)
     NextDwemerEffectGameTime = now + (nextInterval / 24.0)
     MMEDwemerEffects.TraceDiagnostic(False, "schedule armed | next=" + nextInterval + " game hours")
+EndFunction
+
+Function ScheduleNextBreastBounce(Float now)
+    If !MMEBreastBounceEffects.IsEnabled()
+        NextBreastBounceGameTime = 0.0
+        PendingBreastBounceActor = None
+        NextBreastBouncePresentation = 0.0
+        MMEBreastBounceEffects.Report("schedule disabled")
+        Return
+    EndIf
+    Float nextInterval = MMEBreastBounceEffects.CalculateNextInterval()
+    NextBreastBounceGameTime = now + (nextInterval / 24.0)
+    MMEBreastBounceEffects.Report("schedule armed | next=" + nextInterval + " game hours")
 EndFunction
 
 Function RestoreMilkCravingScheduling(Float now)
@@ -931,6 +964,9 @@ Function ArmNextGameTimeUpdate(Float now)
     If NextDwemerEffectGameTime > 0.0 && (nextDeadline <= 0.0 || NextDwemerEffectGameTime < nextDeadline)
         nextDeadline = NextDwemerEffectGameTime
     EndIf
+    If NextBreastBounceGameTime > 0.0 && (nextDeadline <= 0.0 || NextBreastBounceGameTime < nextDeadline)
+        nextDeadline = NextBreastBounceGameTime
+    EndIf
     If NextMilkCravingGameTime > 0.0 && (nextDeadline <= 0.0 || NextMilkCravingGameTime < nextDeadline)
         nextDeadline = NextMilkCravingGameTime
     EndIf
@@ -965,6 +1001,9 @@ Function StopGameTimeScheduling()
     NextBoundThoughtGameTime = 0.0
     NextInjectionGameTime = 0.0
     NextDwemerEffectGameTime = 0.0
+    NextBreastBounceGameTime = 0.0
+    PendingBreastBounceActor = None
+    NextBreastBouncePresentation = 0.0
     CancelMilkCraving("game-time scheduling stopped")
     ClearAutoSelfMilkingQueue("game-time scheduling stopped")
 EndFunction
@@ -975,12 +1014,13 @@ Event OnUpdateGameTime()
     Bool boundThoughtDue = NextBoundThoughtGameTime > 0.0 && now >= NextBoundThoughtGameTime
     Bool injectionDue = NextInjectionGameTime > 0.0 && now >= NextInjectionGameTime
     Bool dwemerEffectDue = NextDwemerEffectGameTime > 0.0 && now >= NextDwemerEffectGameTime
+    Bool breastBounceDue = NextBreastBounceGameTime > 0.0 && now >= NextBreastBounceGameTime
     Bool milkCravingDue = NextMilkCravingGameTime > 0.0 && now >= NextMilkCravingGameTime
     Bool milkCravingGiveInDue = NextMilkCravingGiveInGameTime > 0.0 && now >= NextMilkCravingGiveInGameTime
     Bool autoSelfMilkingDue = NextAutoSelfMilkingGameTime > 0.0 && now >= NextAutoSelfMilkingGameTime
     Float timedArmorDeadline = MMETimedArmorLock.GetNextDeadline()
     Bool timedArmorDue = timedArmorDeadline > 0.0 && now >= timedArmorDeadline
-    If !thoughtDue && !boundThoughtDue && !injectionDue && !dwemerEffectDue && !milkCravingDue && !milkCravingGiveInDue && !autoSelfMilkingDue && !timedArmorDue
+    If !thoughtDue && !boundThoughtDue && !injectionDue && !dwemerEffectDue && !breastBounceDue && !milkCravingDue && !milkCravingGiveInDue && !autoSelfMilkingDue && !timedArmorDue
         ArmNextGameTimeUpdate(now)
         Return
     EndIf
@@ -997,7 +1037,7 @@ Event OnUpdateGameTime()
         milkCravingDue = False
     EndIf
     Actor[] nearbyActors
-    If thoughtDue || boundThoughtDue || injectionDue || dwemerEffectDue || milkCravingDue
+    If thoughtDue || boundThoughtDue || injectionDue || dwemerEffectDue || breastBounceDue || milkCravingDue
         ; Never cast None to an array: the VM rejects that cast, and the compiler
         ; can reuse its temporary for the native result, causing a type mismatch.
         nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
@@ -1018,6 +1058,22 @@ Event OnUpdateGameTime()
     If dwemerEffectDue
         MMEDwemerEffects.RunEffectCheck(nearbyActors, False)
         ScheduleNextDwemerEffect(now)
+    EndIf
+    If breastBounceDue
+        NextBreastBounceGameTime = 0.0
+        PendingBreastBounceActor = MMEBreastBounceEffects.SelectCandidate(nearbyActors)
+        If PendingBreastBounceActor != None
+            Float bounceDelay = MMEBreastBounceEffects.CalculatePresentationDelay()
+            If bounceDelay <= 0.0
+                MMEBreastBounceEffects.Present(PendingBreastBounceActor)
+                PendingBreastBounceActor = None
+            Else
+                NextBreastBouncePresentation = Utility.GetCurrentRealTime() + bounceDelay
+                MMEBreastBounceEffects.Report("presentation armed | actor=" + MMEBreastBounceEffects.GetActorName(PendingBreastBounceActor) + " | delay=" + bounceDelay + " seconds")
+                ScheduleNextUpdate()
+            EndIf
+        EndIf
+        ScheduleNextBreastBounce(now)
     EndIf
     If milkCravingDue
         NextMilkCravingGameTime = 0.0
@@ -1267,8 +1323,10 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
         Return
     EndIf
     Bool chestTrapEquip = MMEChestArmorTrap.IsTrapEquipPending(wearer, equippedArmor)
+    Bool alreadyTimedLocked = MMETimedArmorLock.IsLocked(wearer) && MMETimedArmorLock.GetLockedArmor(wearer) == equippedArmor
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    Bool dwemerEquip = MMEArmorScript.ClassifyArmor(milkController, equippedArmor, "Dwemer narration equip", wearer) == 4
+    Int armorClass = MMEArmorScript.ClassifyArmor(milkController, equippedArmor, "armor story equip", wearer)
+    Bool dwemerEquip = armorClass == 4
     Bool dwemerSeen = False
     If dwemerEquip
         dwemerSeen = MMEArmorIntroduction.HasSeenArmor(wearer, 4, equippedArmor)
@@ -1276,12 +1334,36 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
     MMECustomArmorRegistry.HandleCustomArmorEquipped(wearer, equippedArmor)
     MMEMilkingEquipmentRefit.HandleArmorEquipped(wearer, equippedArmor)
     MMETimedArmorLock.TryLockRegisteredEquip(wearer, equippedArmor)
-    If MMEArmorIntroduction.TryAutomatic(wearer, equippedArmor)
+    Bool trapStoryAttempted = False
+    If chestTrapEquip && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableRepeatTrapArmorStories", 1) == 1
+        trapStoryAttempted = True
+        MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] chest trap requested repeatable story | actor=" + GetActorName(wearer))
+        Bool trapStoryPlayed = MMEExtensionsAPI.TryTrapArmorEquipStory(wearer, equippedArmor)
+        MMEChestArmorTrap.ClearTrapEquip(wearer, "repeatable trap story handled equip")
+        chestTrapEquip = False
+        If trapStoryPlayed
+            MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] chest trap story completed | actor=" + GetActorName(wearer))
+            Return
+        EndIf
+        MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] chest trap story safely rejected; ordinary introduction suppressed | actor=" + GetActorName(wearer))
+    EndIf
+    If !trapStoryAttempted && (!alreadyTimedLocked || chestTrapEquip) && MMEArmorIntroduction.TryAutomatic(wearer, equippedArmor)
         If chestTrapEquip
             MMEChestArmorTrap.ClearTrapEquip(wearer, "first introduction consumed equip")
         EndIf
         MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] ordinary equip reaction suppressed after successful introduction | actor=" + GetActorName(wearer))
         Return
+    EndIf
+    If !trapStoryAttempted && !chestTrapEquip && !alreadyTimedLocked && armorClass >= 1 && armorClass <= 4 \
+        && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableRepeatOrdinaryArmorStories", 1) == 1
+        MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] ordinary equip requested repeatable story | actor=" + GetActorName(wearer) + " | class=" + armorClass)
+        If MMEExtensionsAPI.TryRepeatArmorEquipStory(wearer, equippedArmor)
+            MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] ordinary equip story completed | actor=" + GetActorName(wearer) + " | class=" + armorClass)
+            Return
+        EndIf
+        MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] ordinary equip story safely rejected; normal armor reaction continues | actor=" + GetActorName(wearer) + " | class=" + armorClass)
+    ElseIf alreadyTimedLocked && !chestTrapEquip && armorClass >= 1 && armorClass <= 4
+        MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] repeat story skipped for existing timed-lock equip | actor=" + GetActorName(wearer) + " | class=" + armorClass)
     EndIf
     If dwemerEquip
         String dwemerEquipEvent = "reequip"
@@ -1316,6 +1398,7 @@ Event OnArmorUnequipped(String eventName, String pluginName, Float localArmorFor
         MMELog.MasterDiagnostic("[MME Extensions Custom Armor] armor resolve failed on unequip | " + pluginName + ":" + (localArmorForm as Int))
         Return
     EndIf
+    MMEArmorRemoval.HandleArmorUnequipped(wearer, unequippedArmor)
     If MMETimedArmorLock.HandleUnequip(wearer, unequippedArmor)
         MMELog.MasterDiagnostic("[MME Extensions Timed Armor] ordinary unequip cleanup suppressed after protected re-equip | actor=" + GetActorName(wearer))
         Return
@@ -1628,6 +1711,7 @@ Function UpdatePolling()
     UnregisterForUpdate()
     If !IsExtensionsEnabled()
         NextCapacityUpdate = 0.0
+        NextArousalEffectUpdate = 0.0
         NextSkyrimNetUpdate = 0.0
         NextDebugUpdate = 0.0
         NextThoughtDebugUpdate = 0.0
@@ -1641,6 +1725,13 @@ Function UpdatePolling()
         NextCapacityUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 15.0)
     Else
         NextCapacityUpdate = 0.0
+    EndIf
+    If MMEArousalEffects.IsEnabled()
+        NextArousalEffectUpdate = now + MMEArousalEffects.GetScanInterval()
+        MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] scheduler armed | interval=" + MMEArousalEffects.GetScanInterval() + " seconds")
+    Else
+        NextArousalEffectUpdate = 0.0
+        MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] scheduler inactive | feature disabled or arousal framework unavailable")
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1 || JsonUtil.GetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", 1) == 1
         NextSkyrimNetUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
@@ -1690,12 +1781,29 @@ Function ScheduleNextUpdate()
     Float now = Utility.GetCurrentRealTime()
     Float delay = 0.0
     Float candidate = 0.0
+    Float armorRemovalDeadline = MMEArmorRemoval.GetNextVerificationDeadline()
+    If armorRemovalDeadline > 0.0
+        candidate = armorRemovalDeadline - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        delay = candidate
+    EndIf
     If NextCapacityUpdate > 0.0
         candidate = NextCapacityUpdate - now
         If candidate <= 0.0
             candidate = 0.01
         EndIf
         delay = candidate
+    EndIf
+    If NextArousalEffectUpdate > 0.0
+        candidate = NextArousalEffectUpdate - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
     EndIf
     If NextSkyrimNetUpdate > 0.0
         candidate = NextSkyrimNetUpdate - now
@@ -1778,6 +1886,15 @@ Function ScheduleNextUpdate()
             delay = candidate
         EndIf
     EndIf
+    If NextBreastBouncePresentation > 0.0
+        candidate = NextBreastBouncePresentation - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
+    EndIf
     If delay > 0.0
         ; The dialogue-menu armor reminder needs a short retry. All other work
         ; is intentionally throttled to one second to avoid tight Papyrus loops.
@@ -1798,8 +1915,11 @@ Event OnUpdate()
     ; Snapshot due flags before executing work so each deadline is serviced at
     ; most once per callback. Capacity and Skyrim.Net share the same actor scan.
     If !IsExtensionsEnabled()
+        NextArousalEffectUpdate = 0.0
         NextArmorCheck = 0.0
         NextArmorReminder = 0.0
+        NextBreastBouncePresentation = 0.0
+        PendingBreastBounceActor = None
         NextSexLabFallbackCheck = 0.0
         NextOManiaCompatibilityCheck = 0.0
         CancelInnPalaceDrink("extensions disabled")
@@ -1809,7 +1929,10 @@ Event OnUpdate()
         Return
     EndIf
     Float now = Utility.GetCurrentRealTime()
+    Float armorRemovalDeadline = MMEArmorRemoval.GetNextVerificationDeadline()
+    Bool armorRemovalDue = armorRemovalDeadline > 0.0 && now >= armorRemovalDeadline
     Bool capacityDue = NextCapacityUpdate > 0.0 && now >= NextCapacityUpdate
+    Bool arousalEffectDue = NextArousalEffectUpdate > 0.0 && now >= NextArousalEffectUpdate
     Bool skyrimNetDue = NextSkyrimNetUpdate > 0.0 && now >= NextSkyrimNetUpdate
     Bool debugDue = NextDebugUpdate > 0.0 && now >= NextDebugUpdate
     Bool thoughtDebugDue = NextThoughtDebugUpdate > 0.0 && now >= NextThoughtDebugUpdate
@@ -1818,13 +1941,24 @@ Event OnUpdate()
     Bool sexLabFallbackDue = NextSexLabFallbackCheck > 0.0 && now >= NextSexLabFallbackCheck
     Bool oManiaCompatibilityDue = NextOManiaCompatibilityCheck > 0.0 && now >= NextOManiaCompatibilityCheck
     Bool innPalaceDrinkDue = NextInnPalaceDrink > 0.0 && now >= NextInnPalaceDrink
-    If capacityDue || skyrimNetDue || thoughtDebugDue
-        ScanNearbyMilkMaids(skyrimNetDue, capacityDue, thoughtDebugDue)
+    Bool breastBouncePresentationDue = NextBreastBouncePresentation > 0.0 && now >= NextBreastBouncePresentation
+    If armorRemovalDue
+        MMEArmorRemoval.ResolveDueVerifications(now)
+    EndIf
+    If capacityDue || skyrimNetDue || thoughtDebugDue || arousalEffectDue
+        ScanNearbyMilkMaids(skyrimNetDue, capacityDue, thoughtDebugDue, arousalEffectDue)
     EndIf
     ; Advance recurring deadlines from this callback's timestamp. One-shot
     ; armor deadlines are cleared only when their work is consumed.
     If capacityDue
         NextCapacityUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 15.0)
+    EndIf
+    If arousalEffectDue
+        If MMEArousalEffects.IsEnabled()
+            NextArousalEffectUpdate = now + MMEArousalEffects.GetScanInterval()
+        Else
+            NextArousalEffectUpdate = 0.0
+        EndIf
     EndIf
     If skyrimNetDue
         NextSkyrimNetUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
@@ -1865,6 +1999,12 @@ Event OnUpdate()
         CancelInnPalaceDrink("timer fired")
         MMEInnPalaceMilkEvent.ProcessDue(venue, venueKind, NearbyRange)
     EndIf
+    If breastBouncePresentationDue
+        Actor bounceActor = PendingBreastBounceActor
+        PendingBreastBounceActor = None
+        NextBreastBouncePresentation = 0.0
+        MMEBreastBounceEffects.Present(bounceActor)
+    EndIf
     ; Earlier scan/diagnostic work may be latent. Re-read real time so an
     ; armor timer that became due during this update fires in this same pass.
     now = Utility.GetCurrentRealTime()
@@ -1880,6 +2020,12 @@ Event OnUpdate()
     ; that became overdue while a latent scan or diagnostic was running.
     ScheduleNextUpdate()
 EndEvent
+
+; Public entry used by the stateless armor-removal facade. It only recomputes
+; the existing shared timer and creates no additional polling registration.
+Function RefreshArmorRemovalScheduling()
+    ScheduleNextUpdate()
+EndFunction
 
 String Function DiagnosticBool(Bool value)
     If value
@@ -2038,13 +2184,16 @@ Int Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactio
 EndFunction
 
 ; Scans the current cell and selects one highest-priority capacity sound.
-Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReactions = True, Bool runRapidThought = False)
+Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReactions = True, Bool runRapidThought = False, Bool processArousalEffects = False)
     ; Phase 1: scan the player and current cell once for all consumers. Only
     ; loaded actors inside NearbyRange are considered; MME membership is checked
     ; again by ProcessActor/Skyrim.Net helpers before publication.
     Actor[] reactionActors = new Actor[128]
     Int[] reactionKinds = new Int[128]
     Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
+    If processArousalEffects
+        MMEArousalEffects.ProcessNearbyActors(nearbyActors)
+    EndIf
     If runRapidThought
         MMEThoughts.RunFastDebug(nearbyActors)
     EndIf
@@ -2057,7 +2206,7 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     EndIf
     ; Thought-only deadlines exit after the shared pipeline consumes the native
     ; result; capacity/status enumeration remains reserved for its own deadlines.
-    If runRapidThought && !publishSkyrimNet && !processReactions
+    If (runRapidThought || processArousalEffects) && !publishSkyrimNet && !processReactions
         Return
     EndIf
 

@@ -430,7 +430,10 @@ namespace
             return RE::BSContainer::ForEachResult::kContinue;
         });
 
-        SKSE::log::info("Native nearby scan returned {} actors within {:.0f} units", result.size(), radius);
+        // Arousal effects may request this shared snapshot every five seconds.
+        // Keep successful scans below the production info threshold; failures
+        // and feature-level state remain visible through gated Papyrus traces.
+        SKSE::log::debug("Native nearby scan returned {} actors within {:.0f} units", result.size(), radius);
         return result;
     }
 

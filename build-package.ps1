@@ -11,6 +11,7 @@ $skyUiSdkSource = Join-Path $projectRoot "tools\skyui-sdk"
 $mmeSdkSource = Join-Path $projectRoot "tools\mme-sdk"
 $ostimSdkSource = Join-Path $projectRoot "tools\ostim-sdk"
 $omaniaSdkSource = Join-Path $projectRoot "tools\omania-sdk"
+$arousalSdkSource = Join-Path $projectRoot "tools\arousal-sdk"
 $skyrimNetSdkSource = Join-Path $projectRoot "tools\skyrimnet-sdk"
 $sourceDir = Join-Path $projectRoot "Source\Scripts"
 $compiledDir = Join-Path $projectRoot "Scripts"
@@ -19,7 +20,7 @@ $stageDir = Join-Path $distDir "MME Extensions"
 $zipPath = Join-Path $distDir "MME Extensions.zip"
 $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
-$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMETrapArmorDialogue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMESexLabBreastfeedingBackend", "MMEElsieBreastfeeding", "MMEExtensionsAPI", "MMEExtensionsNative")
+$scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEBreastBounceEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEArousalEffects", "MMEArousalAnimations", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMEArmorRemoval", "MMETrapArmorDialogue", "MMEFollowerArmorRescue", "TIF_MMEExtFollowerArmorRescue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMESexLabBreastfeedingBackend", "MMEElsieBreastfeeding", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $mmeCompatibilityOverrideSource = Join-Path $projectRoot "Source\MMECompatibilityOverrides"
 $mmeCompatibilityOverrideNames = @("MilkQUEST")
@@ -121,6 +122,8 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 & (Join-Path $projectRoot "tools\Test-AutoSelfMilkingContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-MaidWeightScalingContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-MilkingEquipmentRefitContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-FollowerArmorRescueContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-ArmorRemovalContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-StoryPopupContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-ArmorIntroductionContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-ArmorStrippingCategoryContracts.ps1")
@@ -133,8 +136,11 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 & (Join-Path $projectRoot "tools\Test-ElsieBreastfeedingContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-SexLabPPlusCompatibilityContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-PapyrusLoggingContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-ArousalEffectsContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-BreastBounceContracts.ps1")
+
 New-Item -ItemType Directory -Force -Path $compiledDir | Out-Null
-$imports = "$sourceDir;$skyUiSdkSource;$mmeSdkSource;$ostimSdkSource;$omaniaSdkSource;$skyrimNetSdkSource;$skseSource;$vanillaSource"
+$imports = "$sourceDir;$skyUiSdkSource;$mmeSdkSource;$ostimSdkSource;$omaniaSdkSource;$arousalSdkSource;$skyrimNetSdkSource;$skseSource;$vanillaSource"
 foreach ($scriptName in $scriptNames) {
     Write-Host "Compiling $scriptName.psc..." -ForegroundColor Cyan
     & $compiler "$scriptName.psc" "-f=$flags" "-i=$imports" "-o=$compiledDir"
@@ -271,7 +277,7 @@ Copy-Item -LiteralPath $ostimBreastfeedingScene -Destination $packageOStimScene
 # wording stay data-driven, while SkyrimNet.json owns integration messages.
 $packageConfig = Join-Path $stageDir "SKSE\Plugins\StorageUtilData\MMEAlerts"
 New-Item -ItemType Directory -Force -Path $packageConfig | Out-Null
-foreach ($configName in @("SkyrimNet.json", "Thoughts.json", "MilkCravings.json", "Injection.json", "TentacleEffectNarration.json", "DwemerEffectNotifications.json", "DwemerEffectNarration.json", "DwemerSuitNarration.json", "DwemerAttachmentNarration.json", "ArmorCheckReminders.json", "NonMilkmaidDrinkNotifications.json", "ForcedMilkMaidConversion.json", "CustomArmorRegistry.json", "DwemerArmorStories.json", "ArmorIntroductionStories.json", "TimedArmorRegistry.json", "TimedArmorNotifications.json")) {
+foreach ($configName in @("SkyrimNet.json", "Thoughts.json", "MilkCravings.json", "ArousalEffects.json", "BreastBounceNotifications.json", "Injection.json", "TentacleEffectNarration.json", "DwemerEffectNotifications.json", "DwemerEffectNarration.json", "DwemerSuitNarration.json", "DwemerAttachmentNarration.json", "ArmorCheckReminders.json", "NonMilkmaidDrinkNotifications.json", "ForcedMilkMaidConversion.json", "CustomArmorRegistry.json", "DwemerArmorStories.json", "ArmorIntroductionStories.json", "TimedArmorRegistry.json", "TimedArmorNotifications.json")) {
     $configPath = Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\$configName"
     if (!(Test-Path -LiteralPath $configPath)) {
         throw "Required JSON configuration is missing: $configPath"
@@ -401,7 +407,34 @@ foreach ($contentFile in Get-ChildItem -LiteralPath $skyrimNet25StageDir -File -
 # Package the SSEEdit-built randomized voice pools and the two legacy test files.
 $testSoundRoot = Join-Path $projectRoot "assets\sounds"
 if (Test-Path -LiteralPath $testSoundRoot) {
-    Get-ChildItem -LiteralPath $testSoundRoot | Copy-Item -Destination $packageSounds -Recurse
+    Get-ChildItem -LiteralPath $testSoundRoot -Directory | ForEach-Object {
+        $destination = Join-Path $packageSounds $_.Name
+        New-Item -ItemType Directory -Force -Path $destination | Out-Null
+        Get-ChildItem -LiteralPath $_.FullName -File -Filter '*.wav' | Copy-Item -Destination $destination
+    }
+}
+
+# Standalone arousal clips are dispatched through generated behavior events,
+# not OAR or ESP IDLE records. FNIS, Nemesis, or Pandora must consume this list.
+$arousalAnimationRoot = Join-Path $projectRoot "assets\animations"
+$arousalAnimationFiles = @(
+    "female aroused\femaleArousedLevel1.hkx",
+    "female aroused\femaleArousedLevel2.hkx",
+    "female aroused\femaleArousedLevel3.hkx",
+    "male aroused\maleArousedLevel1.hkx",
+    "male aroused\maleArousedLevel2.hkx",
+    "FNIS_MMEExtensionsArousal_List.txt"
+)
+foreach ($relativeAnimation in $arousalAnimationFiles) {
+    $sourceAnimation = Join-Path $arousalAnimationRoot $relativeAnimation
+    if (!(Test-Path -LiteralPath $sourceAnimation)) {
+        throw "Required arousal animation asset is missing: $sourceAnimation"
+    }
+}
+$packageArousalAnimations = Join-Path $stageDir "meshes\actors\character\animations\MMEExtensionsArousal"
+New-Item -ItemType Directory -Force -Path $packageArousalAnimations | Out-Null
+foreach ($relativeAnimation in $arousalAnimationFiles) {
+    Copy-Item -LiteralPath (Join-Path $arousalAnimationRoot $relativeAnimation) -Destination $packageArousalAnimations
 }
 
 # Ship the project overview. Keep the generically named LICENSE file out of the
@@ -417,6 +450,11 @@ if (!(Test-Path -LiteralPath $apiDoc)) {
     throw "Required public API documentation is missing: $apiDoc"
 }
 Copy-Item -LiteralPath $apiDoc -Destination $packageDocs
+$arousalAnimationDoc = Join-Path $projectRoot "docs\AROUSAL-ANIMATIONS.md"
+if (!(Test-Path -LiteralPath $arousalAnimationDoc)) {
+    throw "Required arousal animation installation guide is missing: $arousalAnimationDoc"
+}
+Copy-Item -LiteralPath $arousalAnimationDoc -Destination $packageDocs
 
 $spidConfig = Join-Path $projectRoot "MMEAlert_DISTR.ini"
 If (Test-Path -LiteralPath $spidConfig) {
@@ -486,6 +524,10 @@ if (Test-Path -LiteralPath $pluginPath) {
     if ($LASTEXITCODE -ne 0) {
         throw "MMEAlert.esp failed typed milking-equipment refit dialogue validation."
     }
+    & dotnet run --project $dialogueRepairProject -- --check-follower-armor-rescue-dialogue $pluginPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "MMEAlert.esp failed follower armor rescue dialogue validation."
+    }
     if (!$pluginText.Contains("MMEExt_OStimDialogueAvailable") -or
         $pluginText.Contains("::OStimDialogueAvailable_var")) {
         throw "MMEAlert.esp still uses the unreliable OStim quest-variable dialogue gate. Run the updated tools\AddMMEExtensionsOStimBreastfeedingDialogue.pas in SSEEdit and save the plugin before packaging."
@@ -543,6 +585,13 @@ if (Test-Path -LiteralPath $pluginPath) {
         !$pluginText.Contains("My tits are getting too big for my milking equipment. Can you refit it?") -or
         !$pluginText.Contains("Sure thing. Hold still, I'll give the girls a little more room to breathe.")) {
         throw "MMEAlert.esp is missing the milking-equipment refit dialogue records or requested text."
+    }
+    if (!$pluginText.Contains("MMEExt_FollowerArmorRescueState") -or
+        !$pluginText.Contains("MMEExt_FollowerArmorRescueTopic") -or
+        !$pluginText.Contains("Fragment_RescueFollowerArmor") -or
+        !$pluginText.Contains("Someone traveling with me had a rather embarrassing armor accident. Could you help?") -or
+        !$pluginText.Contains("An accident, naturally. The armor looks smitten, your friends look suspiciously delighted, and somehow I'm the one expected to separate them. Bring them over.")) {
+        throw "MMEAlert.esp is missing the follower armor rescue dialogue records or requested text."
     }
     Copy-Item -LiteralPath $pluginPath -Destination $stageDir
 } else {

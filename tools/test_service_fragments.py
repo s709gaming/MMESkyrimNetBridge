@@ -167,7 +167,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('giveMilkActionCooldown", 0.0', cooldown)
         self.assertIn('If cooldown < 0.0', cooldown)
         self.assertIn('drinkBalanceDefaultsMigration118', mcm)
-        self.assertIn('milkDrinkArousal", 20.0', mcm)
+        self.assertIn('milkDrinkArousal", 10.0', mcm)
         self.assertIn('nonMilkmaidFemaleArousal", 20.0', mcm)
         self.assertIn('nonMilkmaidMaleArousal", 20.0', mcm)
         self.assertIn('lastGiveMilkActionRealTime', cooldown)

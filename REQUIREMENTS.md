@@ -53,6 +53,10 @@ https://www.loverslab.com/topic/156760-milk-mod-economy-mme-cbbebhunp3ba-leseae-
 
 https://www.loverslab.com/files/file/20058-sexlab-se-sex-animation-framework-v166b-01182024/
 
+## (Optional) SexLab P+ (a high performance patch for SexLab. READ its requirements carefully!)
+
+https://www.loverslab.com/files/file/25318-sexlab-p/
+
 Required by **Milk Mod Economy as a MASTER**. The very popular but optional **Devious Devices** ecosystem also depends on it. The original was designed that way.
 
 Used for small but essential background functions and compatibility.
@@ -211,6 +215,21 @@ Skyrim.Net enables features such as:
 - Self-milking.
 - Breastfeeding / milk-sharing.
 
+Improves the surrounding SexLab experience with additional AI roleplay, narration, reactions, and actions.
+
+Cost under a dollar an hour to use on minimal settings.
+
+Voices ALL npc unvoiced dialog from ANY mod. 
+
+On right side menu of Skyrim.net web UI:
+
+Settings > Audio & Voice > Under "Dialogue Replacement" 
+[x] "Enable TTS for Silent NPC".
+
+To disable Skyrim.net AI features, but keep free AI voice generation:
+
+Under Quick Toggles top right, toggle off "Skyrim.net Enabled"
+
 MME Extensions' local sounds, notifications, milk effects, animations, and normal dialogue work without Skyrim.Net.
 
 ---
@@ -231,17 +250,7 @@ Useful alongside MME Extensions, but not required.
 
 https://github.com/GoodProvider/SkyrimNet_SexLab
 
-Optional Skyrim.Net / SexLab integration.
-
-MME Extensions already includes its own:
-
-- Milk Maid self-milking action.
-- Breastfeeding / milk-sharing action.
-
-SkyrimNet_SexLab is **not required** for those features.
-
-It can still improve the surrounding SexLab experience with additional scene-aware context, narration, reactions, and actions.
-
+Adds AI voice dialog to Sexlab scenes.
 ---
 
 # 5. MME Ecosystem & Content Suggestions
@@ -251,6 +260,17 @@ None of these are required by **MME Extensions**.
 These are additional mods and community resources that can expand Milk Mod Economy or help build a larger MME-focused setup.
 
 Some are small additions while others substantially change gameplay. Read their requirements and compatibility notes before adding them to an existing save.
+
+## Elsie Lavache
+
+https://www.loverslab.com/topic/81744-elsie-lavache-for-mme-v34/
+
+Elsie Lavache adds lewd quests and lets you transform your favorite Skyrim women into milky bimbos. MME Extensions now gives the milk they "share" an extra kick! Cups not provided~
+
+- 🥛 **Enhanced Milk Effects:** Milk shared through Elsie Lavache now packs a bigger punch.
+- 🤖 **Skyrim.Net Synergy:** Elsie provides the foundation for lewd roleplay, while Skyrim.Net can give NPCs a voice and take those interactions to another level.
+
+> 💡 **Free NPC Voices:** Skyrim.Net can voice Elsie Lavache's base dialogue for FREE! Just enable NPC voices in Skyrim.net settings. No money required.
 
 ## Breast Controls / Scaling for MME
 

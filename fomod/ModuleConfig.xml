@@ -7,6 +7,8 @@
     <folder source="Source" destination="Source" priority="0" />
     <folder source="SKSE" destination="SKSE" priority="0" />
     <folder source="Sound" destination="Sound" priority="0" />
+    <folder source="meshes" destination="meshes" priority="0" />
+    <folder source="Docs" destination="Docs" priority="0" />
     <folder source="SEQ" destination="SEQ" priority="0" />
     <file source="MMEAlert.esp" destination="MMEAlert.esp" priority="0" />
     <file source="MMEAlert_DISTR.ini" destination="MMEAlert_DISTR.ini" priority="0" />

@@ -1,7 +1,7 @@
 # MME Extensions Modding API
 
 This document describes the stable Papyrus entry points and ModEvents intended
-for other Skyrim mods. The current API version is **11**.
+for other Skyrim mods. The current API version is **16**.
 
 Use `MMEExtensionsAPI.psc`. Do not call `MMEDebug`, `MMENewMilkMaid`,
 `MMEOStimBreastfeeding`, or the Skyrim.Net bridge scripts directly. Those are
@@ -40,7 +40,30 @@ check `GetAPIVersion()` before depending on features introduced by a later API.
 Int version = MMEExtensionsAPI.GetAPIVersion()
 ```
 
-Returns `10` for this release.
+Returns `16` for this release.
+
+### TryPlayArousalAnimation
+
+API version 15 exposes the same sex- and tier-aware animation facade used by
+the automatic arousal threshold monitor:
+
+```papyrus
+Bool completed = MMEExtensionsAPI.TryPlayArousalAnimation(targetActor, 2)
+```
+
+`tier` must be 1, 2, or 3. The target may be the player or an adult humanoid
+NPC. The call is latent for approximately three seconds. It rejects combat,
+milking, mounted or seated actors, active SexLab/OStim scenes, restrained arms,
+and actors already owned by another MME Extensions animation. During accepted
+playback it holds the actor in place and restores movement afterward.
+
+The call honors **Arousal → Play Arousal Animations**. It does not change
+arousal, display a notification, or play a sound. The supplied male level-2
+clip intentionally serves both tiers 2 and 3.
+
+These are registered behavior events rather than OAR replacements. End users
+must rerun Pandora, Nemesis, or FNIS after installation before the events can
+play. Papyrus cannot detect whether that generation step was completed.
 
 ### IsMilkMaid
 
@@ -106,8 +129,9 @@ responsible for their own feature toggle, timing, and eligibility checks.
 
 ### First armor introduction
 
-API version 9 adds a backend-neutral, one-time presentation for Living Armor
-(`2`), Living Parasite/Tentacle Armor (`3`), and Dwemer Armor (`4`). It uses
+API version 9 added a backend-neutral, one-time presentation for Living Armor
+(`2`), Living Parasite/Tentacle Armor (`3`), and Dwemer Armor (`4`). API
+version 16 extends the same calls to regular Milking Equipment (`1`). It uses
 the configured story pool, shared high reaction sound, and safe kneeling
 animation. It does not create or register a Milk Maid.
 
@@ -136,6 +160,8 @@ The editable pools are in
 - `living_first_equip`
 - `parasite_first_equip`
 - `dwemer_first_equip`
+- `milking_first_equip`
+- `milking_repeat_equip`
 
 Ordinary lifecycle footprints use the master Papyrus logging toggle. Missing
 or malformed story data and an unresolved sound record use the established
@@ -178,6 +204,30 @@ hook for future blacksmith or quest-based removal mechanics.
 Normal lifecycle footprints obey the master Papyrus logging toggle. Missing
 records, malformed installed catalogs, failed protection, and failed release
 use the smoke-alarm channel.
+
+### Special armor removal
+
+API version 14 exposes the guarded removal transaction used by the MCM and
+blacksmith service. It recognizes equipped Living (`2`), Parasite (`3`), and
+Dwemer (`4`) body armor from either original MME classification or the custom
+registry.
+
+```papyrus
+Bool accepted = MMEExtensionsAPI.ReleasePlayerSpecialArmor()
+Int acceptedNPCs = MMEExtensionsAPI.ReleaseNearbyNPCSpecialArmor(2000.0)
+```
+
+`ReleasePlayerSpecialArmor` targets only the player. The nearby-NPC call scans
+from the player and accepts loaded, living adult humanoid allies in the same
+cell and within the requested radius. It excludes the player, hostile actors,
+and actors busy in combat, milking, SexLab, OStim, or another owned reaction.
+The radius defaults to `2000` units and is clamped to `0` through `10000`.
+
+Both calls are asynchronous: `true` or a positive count means Skyrim accepted
+the guarded removal request, not that the native unequip event has already
+arrived. MME Extensions observes that event and performs a controller-scheduled
+verification after three seconds. Ordinary progress uses the master Papyrus
+trace toggle; armor still equipped after the grace period raises a smoke alarm.
 
 ### Custom armor registry
 

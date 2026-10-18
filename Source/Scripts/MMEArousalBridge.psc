@@ -53,7 +53,7 @@ Bool Function ApplyConfiguredMilkArousalForActor(Actor target, String sourceLabe
         Return False
     EndIf
 
-    Float configuredAmount = JsonUtil.GetFloatValue(settingsFile, "milkDrinkArousal", 20.0)
+    Float configuredAmount = JsonUtil.GetFloatValue(settingsFile, "milkDrinkArousal", 10.0)
     Return ApplyArousalAmountForActor(target, configuredAmount, sourceLabel, showDiagnostic)
 EndFunction
 
@@ -89,11 +89,26 @@ Bool Function ApplyArousalAmountForActor(Actor target, Float configuredAmount, S
         EndIf
         Return False
     EndIf
+    ; Prefer the compatibility quest's direct API. OSL 2.9.3 can accumulate
+    ; duplicate slaUpdateExposure registrations after repeated load callbacks,
+    ; causing one event to apply twice. SLA/OSL expose this legacy method.
+    slaFrameworkScr framework = Game.GetFormFromFile(0x04290F, "SexLabAroused.esm") as slaFrameworkScr
+    If framework != None
+        Int directResult = framework.UpdateActorExposure(target, amountToSend as Int)
+        If showDiagnostic
+            Int arousalAfterDirect = GetCurrentArousal(target)
+            Report(True, "direct UpdateActorExposure result=" + directResult + ": " + actorName + " " + arousalBefore + " -> " + arousalAfterDirect + " | source=" + sourceLabel)
+        Else
+            Report(False, "direct UpdateActorExposure sent for " + actorName + " (+" + amountToSend + ") | source=" + sourceLabel)
+        EndIf
+        Return True
+    EndIf
+
+    ; Older or incomplete compatibility installs retain the public ModEvent as
+    ; a fallback. The event owns the state change; reads are diagnostic only.
     Int handle = ModEvent.Create("slaUpdateExposure")
-    ; Phase 2: use SLA's public ModEvent contract. The event owns the actual state
-    ; change; the before/after faction ranks are diagnostic observations only.
     If handle == 0
-        Report(showDiagnostic, "failed: slaUpdateExposure event creation returned 0")
+        Report(showDiagnostic, "failed: framework quest unavailable and slaUpdateExposure event creation returned 0")
         Return False
     EndIf
     ModEvent.PushForm(handle, target)
@@ -120,6 +135,22 @@ Int Function GetCurrentArousal(Actor actorRef) Global
     If actorRef == None || !IsAvailable()
         Return -1
     EndIf
+    ; Every supported SLA/OSL fork implements this legacy compatibility quest.
+    ; OSL forwards it to its native state, while SLA Redux/NG return their own
+    ; authoritative value. Prefer it over a faction rank that may be stale or
+    ; absent for NPCs in native-backed implementations.
+    slaFrameworkScr framework = Game.GetFormFromFile(0x04290F, "SexLabAroused.esm") as slaFrameworkScr
+    If framework != None
+        Int frameworkResult = framework.GetActorArousal(actorRef)
+        If frameworkResult >= 0
+            If frameworkResult > 100
+                Return 100
+            EndIf
+            Return frameworkResult
+        EndIf
+    EndIf
+    ; Retain the original faction read as a compatibility fallback for an older
+    ; installation whose framework quest cannot be resolved.
     Faction arousalFaction = Game.GetFormFromFile(0x03FC36, "SexLabAroused.esm") as Faction
     If arousalFaction == None || !actorRef.IsInFaction(arousalFaction)
         Return -1

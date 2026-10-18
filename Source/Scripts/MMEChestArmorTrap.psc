@@ -104,23 +104,14 @@ Int Function HandleActivation(Actor opener, String chestIdentity, Bool inDwemerR
         target.AddItem(selected, 1, True)
     EndIf
     MarkTrapEquip(target, selected)
-    If target == Game.GetPlayer()
-        Bool locked = MMETimedArmorLock.TryLock(target, selected, -1.0, "Treasure Chest Trap")
-        If !locked || !target.IsEquipped(selected) || !MMETimedArmorLock.IsLocked(target)
-            ClearTrapEquip(target, "player equip/lock failed")
-            Alarm("equip/lock failed | actor=" + GetActorName(target) + " | armor=" + selected.GetName())
-            Return 0
-        EndIf
-    Else
-        ; Followers and allied NPCs receive every armor reaction and passive,
-        ; but remain free to change equipment immediately.
-        target.EquipItem(selected, False, True)
-        If !target.IsEquipped(selected)
-            ClearTrapEquip(target, "NPC equip failed")
-            Alarm("unlocked NPC equip failed | actor=" + GetActorName(target) + " | armor=" + selected.GetName())
-            Return 0
-        EndIf
-        Trace("NPC timed lock intentionally bypassed | actor=" + GetActorName(target) + " | armor=" + selected.GetName())
+    ; SelectTarget already enforces the nearby-allies toggle. Every selected
+    ; wearer therefore receives the same timed trap; disabling that toggle
+    ; keeps armor traps player-only and prevents new NPC locks.
+    Bool locked = MMETimedArmorLock.TryLock(target, selected, -1.0, "Treasure Chest Trap")
+    If !locked || !target.IsEquipped(selected) || !MMETimedArmorLock.IsLocked(target)
+        ClearTrapEquip(target, "equip/lock failed")
+        Alarm("equip/lock failed | actor=" + GetActorName(target) + " | armor=" + selected.GetName())
+        Return 0
     EndIf
     Float cooldown = JsonUtil.GetFloatValue(settings, "chestArmorTrapCooldownHours", 4.0)
     If cooldown < 0.0

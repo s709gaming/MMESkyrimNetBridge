@@ -62,7 +62,12 @@ Bool Function TryInstall(Actor blacksmith) Global
     EndIf
     MMECustomArmorRegistry.HandleCustomArmorEquipped(playerActor, wornArmor)
     Debug.Notification("Dwemer milking attachment installed in " + wornArmor.GetName())
-    Bool introduced = MMEArmorIntroduction.TryIntroduction(playerActor, wornArmor, "Blacksmith Dwemer attachment service")
+    Bool introduced = False
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableRepeatOrdinaryArmorStories", 1) == 1
+        introduced = MMEExtensionsAPI.TryRepeatArmorEquipStory(playerActor, wornArmor)
+    Else
+        introduced = MMEArmorIntroduction.TryIntroduction(playerActor, wornArmor, "Blacksmith Dwemer attachment service")
+    EndIf
     Trace("immediate Dwemer introduction result=" + introduced + " | armor=" + wornArmor.GetName())
     Trace("install complete | armor=" + wornArmor.GetName())
     Return True

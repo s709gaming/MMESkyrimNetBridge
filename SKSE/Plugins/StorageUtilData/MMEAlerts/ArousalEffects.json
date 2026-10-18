@@ -1,0 +1,44 @@
+{
+  "low_female": [
+    "{actor} shifts her weight. Her thighs clench together. Just once.",
+    "{actor} bites her lip. Her mind has wandered somewhere indecent.",
+    "{actor} stretches slowly. Her body is waking up in all the wrong places.",
+    "{actor} hums softly. Her hips sway without her permission.",
+    "{actor} fans herself. Her cheeks are hot and her thighs are hotter."
+  ],
+  "low_male": [
+    "{actor} shifts his stance. His body has opinions it shouldn't.",
+    "{actor} clears his throat. His body is already standing at attention.",
+    "{actor} flexes. His thoughts have wandered somewhere they shouldn't.",
+    "{actor} exhales slowly. His mind has wandered somewhere indecent.",
+    "{actor} sighs dreamily. He is undressing someone in his head."
+  ],
+  "medium_female": [
+    "{actor}'s breathing deepens. Her body is running hot and getting hotter.",
+    "{actor} crosses her legs. Then uncrosses them. Then crosses them.",
+    "{actor} squirms. She would very much like a moment alone. Just one.",
+    "{actor} whispers something. No one heard it, but it was not innocent.",
+    "{actor} presses a hand to her chest. Her breathing is ragged and her thighs are tight."
+  ],
+  "medium_male": [
+    "{actor}'s voice drops an octave. His thoughts drop lower.",
+    "{actor} rolls his shoulders. He is failing to think of anything else.",
+    "{actor}'s hands flex. His body is demanding relief, and he is ignoring it.",
+    "{actor} mutters under his breath. Whatever it was, it was not decent.",
+    "{actor} groans quietly. That was not a pain noise."
+  ],
+  "high_female": [
+    "{actor} is visibly flushed. Her body has stopped taking orders.",
+    "{actor} lets out a moan. Her hand claps over her mouth a moment too late.",
+    "{actor}'s hips shift. She is aching somewhere low and deep.",
+    "{actor} trembles. Her body is begging for something it shouldn't.",
+    "{actor}'s knees buckle. Her body is demanding more, and it wants it now."
+  ],
+  "high_male": [
+    "{actor} growls low. His body is done being patient.",
+    "{actor}'s hands shake. His body is past the point of listening.",
+    "{actor} groans. He immediately pretends he didn't.",
+    "{actor} shifts his hips. He is hard and pretending not to be.",
+    "{actor}'s breath hitches. His body is demanding attention. Now."
+  ]
+}

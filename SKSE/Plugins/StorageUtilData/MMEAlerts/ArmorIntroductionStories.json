@@ -1,5 +1,10 @@
 {
   "stringList": {
+    "milking_first_equip": [
+      "The milking armor snaps snugly around {ActorName}'s chest, its enchanted cups warming instantly against her skin. A gentle vibration blossoms into a rhythmic massage, drawing a surprised little moan from her lips. She blushes, then giggles as the armor cheerfully begins its first teasing routine.",
+      "As {ActorName} slips into the milking armor, the soft lining molds itself perfectly to her curves. The cups tighten with a playful squeeze, followed by a soothing, tingling hum. She gasps, her knees briefly wobbling before a delighted smile crosses her face. This might become her favorite piece of equipment.",
+      "The moment {ActorName} fastens the final strap, the milking armor springs eagerly to life. Its cups begin pulsing in a warm, steady rhythm, catching her completely off guard. \"Mmm!\" she hums, biting back a laugh as the contraption gives another enthusiastic squeeze. Apparently, modesty wasn't included in the design."
+    ],
     "living_first_equip": [
       "The armor twitches, then unfurls. Living tendrils wrap around your chest and hips, squeezing your breasts, teasing your nipples. One tendril curls between your thighs, slick with aphrodisiac, and strokes your clit in lazy circles. You moan as it pushes deeper, filling you with heat, while the other tendrils hold you tight and milk your pleasure in slow, pulsing waves."
     ],
@@ -8,6 +13,41 @@
     ],
     "dwemer_first_equip": [
       "The Dwemer device snaps around your chest and waist. You gasp as cold metal cups your breasts, teasing your nipples. A warm hum vibrates against your clit, and thin needles slide into your thighs, pumping aphrodisiac straight into your blood. You moan, grinding helplessly as the mechanism milks your cunt with slow, expert strokes."
+    ],
+    "living_trap_equip": [
+      "The armor twitches, then unfurls. Living tendrils wrap around {ActorName}'s chest and hips, squeezing {ActorName}'s breasts and teasing {ActorName}'s nipples. One slick tendril curls between {ActorName}'s thighs, strokes {ActorName}'s clit in lazy circles, then pushes deeper with a bloom of aphrodisiac heat while the rest milk {ActorName}'s pleasure in slow, pulsing waves.",
+      "Armor plates soften into braided vines, winding around {ActorName}'s ribs and thighs. Suctioning buds cup {ActorName}'s breasts, tug at {ActorName}'s nipples, and a lower tendril paints {ActorName}'s clit with aphrodisiac before sliding inside. The vines tighten with every pulse, kneading {ActorName}'s body in rolling contractions until {ActorName}'s hips jerk.",
+      "The chestpiece liquefies and spirals down {ActorName}'s torso, pinning {ActorName}'s waist in warm bands. Tendrils cup {ActorName}'s breasts, flick {ActorName}'s nipples, and one coils around {ActorName}'s clit, slickening it before pressing in. A rhythmic squeeze travels from {ActorName}'s thighs to {ActorName}'s belly, milking {ActorName} in steady, deliberate strokes."
+    ],
+    "parasite_trap_equip": [
+      "The parasite pulses, then bursts open--tentacles surge out, binding {ActorName}'s waist and cupping {ActorName}'s breasts. {ActorName} yelps as one slides between {ActorName}'s legs, slick and eager; it teases {ActorName}'s clit, then pushes inside, pumping tingling aphrodisiac deep into {ActorName}'s belly. The tendrils milk {ActorName}'s body with every breath until {ActorName} is dripping and desperate.",
+      "A parasite crawls up {ActorName}'s spine and splits into tendrils at {ActorName}'s ribs. Suction cups fasten around {ActorName}'s breasts, pulling at {ActorName}'s nipples, while a lower tendril laps {ActorName}'s clit with cool, tingling secretion. It enters {ActorName} in a slow corkscrew, and the parasite contracts in time with {ActorName}'s pulse, milking {ActorName} from the inside.",
+      "The parasite swells at {ActorName}'s navel, then erupts into a cage of tendrils around {ActorName}'s waist and thighs. One tendril cups {ActorName}'s breasts, another latches onto {ActorName}'s nipples, and a third parts {ActorName}'s folds to tease {ActorName}'s clit. It pushes in with a warm flood of aphrodisiac, then pulses deep in rhythmic waves that leave {ActorName} grinding and overfull."
+    ],
+    "dwemer_trap_equip": [
+      "The Dwemer device snaps around {ActorName}'s chest and waist. Cold metal cups {ActorName}'s breasts, teasing {ActorName}'s nipples, while a warm hum vibrates against {ActorName}'s clit. Thin needles slide into {ActorName}'s thighs, pumping aphrodisiac straight into {ActorName}'s blood; {ActorName} moans and grinds helplessly as the mechanism milks {ActorName}'s cunt with slow, expert strokes.",
+      "Brass bands clamp around {ActorName}'s ribs and hips, and articulated cups knead {ActorName}'s breasts. Tiny pistons tease {ActorName}'s nipples, a vibrating plate settles against {ActorName}'s clit, and microneedles pierce {ActorName}'s thighs with spreading aphrodisiac heat. An inner sleeve begins a measured, rolling suction, milking {ActorName} with mechanical patience.",
+      "A Dwemer harness locks around {ActorName}'s torso, metal petals cupping {ActorName}'s breasts and suctioning {ActorName}'s nipples. A low hum throbs against {ActorName}'s clit while needles sink into {ActorName}'s thighs and pump aphrodisiac into {ActorName}'s blood. The lower mechanism pistons into {ActorName}'s cunt in an expert rhythm, tightening and releasing until {ActorName}'s legs shake."
+    ],
+    "milking_repeat_equip": [
+      "The milking armor snaps snugly around {ActorName}'s chest, its enchanted cups warming instantly against her skin. A gentle vibration blossoms into a rhythmic massage, drawing a surprised little moan from her lips. She blushes, then giggles as the armor cheerfully begins its first teasing routine.",
+      "As {ActorName} slips into the milking armor, the soft lining molds itself perfectly to her curves. The cups tighten with a playful squeeze, followed by a soothing, tingling hum. She gasps, her knees briefly wobbling before a delighted smile crosses her face. This might become her favorite piece of equipment.",
+      "The moment {ActorName} fastens the final strap, the milking armor springs eagerly to life. Its cups begin pulsing in a warm, steady rhythm, catching her completely off guard. \"Mmm!\" she hums, biting back a laugh as the contraption gives another enthusiastic squeeze. Apparently, modesty wasn't included in the design."
+    ],
+    "living_repeat_equip": [
+      "The armor twitches, then unfurls. Living tendrils wrap around {ActorName}'s chest and hips, squeezing {ActorName}'s breasts and teasing {ActorName}'s nipples. One slick tendril curls between {ActorName}'s thighs, strokes {ActorName}'s clit in lazy circles, then pushes deeper with a bloom of aphrodisiac heat while the rest milk {ActorName}'s pleasure in slow, pulsing waves.",
+      "Armor plates soften into braided vines, winding around {ActorName}'s ribs and thighs. Suctioning buds cup {ActorName}'s breasts, tug at {ActorName}'s nipples, and a lower tendril paints {ActorName}'s clit with aphrodisiac before sliding inside. The vines tighten with every pulse, kneading {ActorName}'s body in rolling contractions until {ActorName}'s hips jerk.",
+      "The chestpiece liquefies and spirals down {ActorName}'s torso, pinning {ActorName}'s waist in warm bands. Tendrils cup {ActorName}'s breasts, flick {ActorName}'s nipples, and one coils around {ActorName}'s clit, slickening it before pressing in. A rhythmic squeeze travels from {ActorName}'s thighs to {ActorName}'s belly, milking {ActorName} in steady, deliberate strokes."
+    ],
+    "parasite_repeat_equip": [
+      "The parasite pulses, then bursts open--tentacles surge out, binding {ActorName}'s waist and cupping {ActorName}'s breasts. {ActorName} yelps as one slides between {ActorName}'s legs, slick and eager; it teases {ActorName}'s clit, then pushes inside, pumping tingling aphrodisiac deep into {ActorName}'s belly. The tendrils milk {ActorName}'s body with every breath until {ActorName} is dripping and desperate.",
+      "A parasite crawls up {ActorName}'s spine and splits into tendrils at {ActorName}'s ribs. Suction cups fasten around {ActorName}'s breasts, pulling at {ActorName}'s nipples, while a lower tendril laps {ActorName}'s clit with cool, tingling secretion. It enters {ActorName} in a slow corkscrew, and the parasite contracts in time with {ActorName}'s pulse, milking {ActorName} from the inside.",
+      "The parasite swells at {ActorName}'s navel, then erupts into a cage of tendrils around {ActorName}'s waist and thighs. One tendril cups {ActorName}'s breasts, another latches onto {ActorName}'s nipples, and a third parts {ActorName}'s folds to tease {ActorName}'s clit. It pushes in with a warm flood of aphrodisiac, then pulses deep in rhythmic waves that leave {ActorName} grinding and overfull."
+    ],
+    "dwemer_repeat_equip": [
+      "The Dwemer device snaps around {ActorName}'s chest and waist. Cold metal cups {ActorName}'s breasts, teasing {ActorName}'s nipples, while a warm hum vibrates against {ActorName}'s clit. Thin needles slide into {ActorName}'s thighs, pumping aphrodisiac straight into {ActorName}'s blood; {ActorName} moans and grinds helplessly as the mechanism milks {ActorName}'s cunt with slow, expert strokes.",
+      "Brass bands clamp around {ActorName}'s ribs and hips, and articulated cups knead {ActorName}'s breasts. Tiny pistons tease {ActorName}'s nipples, a vibrating plate settles against {ActorName}'s clit, and microneedles pierce {ActorName}'s thighs with spreading aphrodisiac heat. An inner sleeve begins a measured, rolling suction, milking {ActorName} with mechanical patience.",
+      "A Dwemer harness locks around {ActorName}'s torso, metal petals cupping {ActorName}'s breasts and suctioning {ActorName}'s nipples. A low hum throbs against {ActorName}'s clit while needles sink into {ActorName}'s thighs and pump aphrodisiac into {ActorName}'s blood. The lower mechanism pistons into {ActorName}'s cunt in an expert rhythm, tightening and releasing until {ActorName}'s legs shake."
     ]
   }
 }

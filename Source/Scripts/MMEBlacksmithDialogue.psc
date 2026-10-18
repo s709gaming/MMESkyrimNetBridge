@@ -10,7 +10,9 @@ GlobalVariable Property MMEExt_MageReverseLevelAvailable Auto
 GlobalVariable Property MMEExt_TrapArmorRemovalState Auto
 GlobalVariable Property MMEExt_DwemerBlacksmithArmorState Auto
 GlobalVariable Property MMEExt_MilkingEquipmentRefitState Auto
+GlobalVariable Property MMEExt_FollowerArmorRescueState Auto
 Bool serviceSucceeded = False
+Bool followerRescueAttempted = False
 
 Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
     SetDialogueState(0)
@@ -22,6 +24,7 @@ Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
     SetTrapArmorDialogueState(0)
     MMEDwemerBlacksmithDialogue.SetDialogueState(MMEExt_DwemerBlacksmithArmorState, 0)
     SetMilkingEquipmentRefitState(0)
+    SetFollowerArmorRescueState(0)
     ; Preserve MME's complete opening behavior exactly once before its existing
     ; linked choices and our two new choices evaluate their conditions.
     Parent.Fragment_00(akSpeakerRef)
@@ -34,11 +37,44 @@ Function Fragment_RefreshBlacksmithArmorState(ObjectReference akSpeakerRef)
     SetTrapArmorDialogueState(MMETrapArmorDialogue.GetLiveServiceState(akSpeakerRef as Actor))
     MMEDwemerBlacksmithDialogue.SetDialogueState(MMEExt_DwemerBlacksmithArmorState, MMEDwemerBlacksmithDialogue.GetLiveServiceState(akSpeakerRef as Actor))
     SetMilkingEquipmentRefitState(MMEMilkingEquipmentRefit.GetLiveServiceState(akSpeakerRef as Actor))
+    SetFollowerArmorRescueState(MMEFollowerArmorRescue.GetLiveServiceState(akSpeakerRef as Actor))
     ; The live trace records the published state here, before the controller's
     ; deferred snapshot checks whether Skyrim actually exposed the expected INFO.
     MMEDiagnostics.ObserveBlacksmithDialogueState(akSpeakerRef as Actor)
     MMEDiagnostics.ObserveAlchemistDialogueState(akSpeakerRef as Actor)
     MMEDiagnostics.ObserveMageDialogueState(akSpeakerRef as Actor)
+EndFunction
+
+Function Fragment_RescueFollowerArmor(ObjectReference akSpeakerRef)
+    followerRescueAttempted = True
+    MMELog.MasterDiagnostic("[MME Extensions Follower Armor Rescue] dialogue begin fragment entered")
+    SetFollowerArmorRescueState(0)
+    CompleteVendorService(akSpeakerRef, "Blacksmith/RescueFollowerArmor", MMEFollowerArmorRescue.TryRescueNearbyCompanions(akSpeakerRef as Actor))
+EndFunction
+
+; Skyrim can finish a response without dispatching its begin fragment on some
+; dialogue paths. The dedicated end fragment provides an idempotent fallback,
+; then preserves the shared vendor-animation completion bus.
+Function Fragment_RescueFollowerArmorCompleted(ObjectReference akSpeakerRef)
+    If !followerRescueAttempted
+        MMELog.MasterDiagnostic("[MME Extensions Follower Armor Rescue] begin fragment was missed; end fallback dispatching service")
+        Fragment_RescueFollowerArmor(akSpeakerRef)
+    EndIf
+    followerRescueAttempted = False
+    Fragment_ServiceCompleted(akSpeakerRef)
+EndFunction
+
+Function SetFollowerArmorRescueState(Int value)
+    ; Heal the persistent opening INFO script on saves created before this
+    ; property existed, matching the milking-refit upgrade path above.
+    If MMEExt_FollowerArmorRescueState == None
+        MMEExt_FollowerArmorRescueState = Game.GetFormFromFile(0x0008AA, "MMEAlert.esp") as GlobalVariable
+    EndIf
+    If MMEExt_FollowerArmorRescueState != None
+        MMEExt_FollowerArmorRescueState.SetValue(value as Float)
+    Else
+        MMELog.Alarm("[MME Extensions Follower Armor Rescue] FAILURE: dialogue-state Global is unbound", 2)
+    EndIf
 EndFunction
 
 Function Fragment_RefitMilkingEquipment(ObjectReference akSpeakerRef)
@@ -74,6 +110,12 @@ Function Fragment_RemoveTimedTrapArmor(ObjectReference akSpeakerRef)
 EndFunction
 
 Function SetTrapArmorDialogueState(Int value)
+    ; Existing saves can retain the opening INFO script instance from before
+    ; this property was bound. Resolve the local Global once, just like the
+    ; refit and follower-rescue state properties above.
+    If MMEExt_TrapArmorRemovalState == None
+        MMEExt_TrapArmorRemovalState = Game.GetFormFromFile(0x00089F, "MMEAlert.esp") as GlobalVariable
+    EndIf
     If MMEExt_TrapArmorRemovalState != None
         MMEExt_TrapArmorRemovalState.SetValue(value as Float)
     Else
@@ -213,6 +255,13 @@ Bool Function TryAddMilkArmor(Actor blacksmith)
     EndIf
     Debug.Notification(armorName + " Added to Milking Equipment")
     MMELog.Diagnostic("[MME Extensions Blacksmith] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
+    Bool introduced = False
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableRepeatOrdinaryArmorStories", 1) == 1
+        introduced = MMEExtensionsAPI.TryRepeatArmorEquipStory(playerActor, wornArmor)
+    Else
+        introduced = MMEArmorIntroduction.TryIntroduction(playerActor, wornArmor, "Blacksmith Milking Armor service")
+    EndIf
+    MMELog.MasterDiagnostic("[MME Extensions Blacksmith] immediate Milking Armor introduction result=" + introduced + " | armor=" + armorName)
     Return True
 EndFunction
 

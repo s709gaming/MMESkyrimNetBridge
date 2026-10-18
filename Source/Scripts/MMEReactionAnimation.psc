@@ -6,6 +6,10 @@ String Function GetPlayerMovementOwnerKey() Global
     Return "MMEExtensions.ReactionAnimation.PlayerMovementOwner"
 EndFunction
 
+String Function GetMovementActorListKey() Global
+    Return "MMEExtensions.ReactionAnimation.MovementActors"
+EndFunction
+
 Bool Function Start(Actor target, String owner, String requestLabel, Bool diagnostic, Bool wasEstablishedMilkmaid = True) Global
     Return StartStanding(target, owner, requestLabel, diagnostic, wasEstablishedMilkmaid)
 EndFunction
@@ -37,7 +41,41 @@ Bool Function StartPresentationKneeling(Actor target, String owner, String reque
         Return False
     EndIf
     Debug.SendAnimationEvent(target, "ZaZAPCHorFd")
+    ; Presentation kneeling must hold both players and NPCs. Without this,
+    ; follower packages can translate an NPC across the floor while the knees-
+    ; down animation remains active.
+    LockMovement(target, owner, requestLabel)
     Report(False, requestLabel, "presentation Kneeling started: ZaZAPCHorFd on " + GetActorName(target))
+    Return True
+EndFunction
+
+; General-purpose entry point for short, explicitly registered behavior events.
+; Unlike StartSelected, this does not require Milk Maid status. The caller owns
+; event selection and duration; this facade owns scene safety and movement.
+Bool Function StartCustomEvent(Actor target, String owner, String requestLabel, String animationEvent, Bool holdMovement = True, Bool diagnostic = True) Global
+    If target == None
+        Report(diagnostic, requestLabel, "rejected: actor missing")
+        Return False
+    EndIf
+    If animationEvent == ""
+        Report(diagnostic, requestLabel, "rejected: animation event missing")
+        Return False
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    String blocked = MMEAnimationSafety.GetStartBlockReason(target, milkController, True)
+    If blocked != ""
+        Report(diagnostic, requestLabel, "rejected: " + blocked)
+        Return False
+    EndIf
+    If !MMEAnimationSafety.TryAcquire(target, owner)
+        Report(diagnostic, requestLabel, "rejected: ownership acquisition failed")
+        Return False
+    EndIf
+    Debug.SendAnimationEvent(target, animationEvent)
+    If holdMovement
+        LockMovement(target, owner, requestLabel)
+    EndIf
+    Report(False, requestLabel, "custom event started: " + animationEvent + " on " + GetActorName(target))
     Return True
 EndFunction
 
@@ -134,7 +172,7 @@ Function Reset(Actor target, String owner, String requestLabel, Bool diagnostic)
     ; Release translation even when combat, a scene, or another system took
     ; animation control during the hold. The owner marker prevents this cleanup
     ; from unlocking a newer MME Extensions reaction.
-    UnlockPlayerMovement(target, owner, requestLabel)
+    UnlockMovement(target, owner, requestLabel)
     MMEAnimationSafety.Release(target, owner)
 EndFunction
 
@@ -142,37 +180,77 @@ Function LockPlayerMovement(Actor target, String owner, String requestLabel) Glo
     If target == None || target != Game.GetPlayer() || owner == ""
         Return
     EndIf
+    LockMovement(target, owner, requestLabel)
+EndFunction
+
+Function LockMovement(Actor target, String owner, String requestLabel) Global
+    If target == None || owner == ""
+        Return
+    EndIf
     StorageUtil.SetStringValue(target, GetPlayerMovementOwnerKey(), owner)
+    StorageUtil.FormListAdd(None, GetMovementActorListKey(), target, False)
     target.SetDontMove(True)
-    Report(False, requestLabel, "PLAYER movement locked for reaction hold")
+    Report(False, requestLabel, "movement locked for reaction hold | actor=" + GetActorName(target) + " | owner=" + owner)
 EndFunction
 
 Function UnlockPlayerMovement(Actor target, String owner, String requestLabel = "Reaction cleanup") Global
     If target == None || target != Game.GetPlayer() || owner == ""
         Return
     EndIf
+    UnlockMovement(target, owner, requestLabel)
+EndFunction
+
+Function UnlockMovement(Actor target, String owner, String requestLabel = "Reaction cleanup") Global
+    If target == None || owner == ""
+        Return
+    EndIf
     If StorageUtil.GetStringValue(target, GetPlayerMovementOwnerKey(), "") != owner
         Return
     EndIf
     StorageUtil.UnsetStringValue(target, GetPlayerMovementOwnerKey())
+    StorageUtil.FormListRemove(None, GetMovementActorListKey(), target, True)
     target.SetDontMove(False)
-    Report(False, requestLabel, "PLAYER movement unlocked")
+    If target != Game.GetPlayer()
+        target.EvaluatePackage()
+    EndIf
+    Report(False, requestLabel, "movement unlocked | actor=" + GetActorName(target) + " | owner=" + owner)
 EndFunction
 
 ; Startup/load recovery for a save interrupted during the latent reaction hold.
 ; This runs before the extension master-toggle early return in the controller.
 Function RestorePlayerMovementIfNeeded(Actor target, String reason = "controller recovery") Global
-    If target == None || target != Game.GetPlayer()
-        Return
+    ; Recover every actor held by an interrupted presentation. The target
+    ; argument remains for backward-compatible player recovery from older saves.
+    Int index = StorageUtil.FormListCount(None, GetMovementActorListKey()) - 1
+    While index >= 0
+        Actor heldActor = StorageUtil.FormListGet(None, GetMovementActorListKey(), index) as Actor
+        If heldActor == None
+            StorageUtil.FormListRemoveAt(None, GetMovementActorListKey(), index)
+        Else
+            String heldOwner = StorageUtil.GetStringValue(heldActor, GetPlayerMovementOwnerKey(), "")
+            If heldOwner != ""
+                StorageUtil.UnsetStringValue(heldActor, GetPlayerMovementOwnerKey())
+                heldActor.SetDontMove(False)
+                If heldActor != Game.GetPlayer()
+                    heldActor.EvaluatePackage()
+                EndIf
+                MMEAnimationSafety.Release(heldActor, heldOwner)
+                Report(False, "Reaction recovery", "emergency movement recovery | actor=" + GetActorName(heldActor) + " | reason=" + reason + " | owner=" + heldOwner)
+            EndIf
+            StorageUtil.FormListRemoveAt(None, GetMovementActorListKey(), index)
+        EndIf
+        index -= 1
+    EndWhile
+
+    If target != None
+        String legacyOwner = StorageUtil.GetStringValue(target, GetPlayerMovementOwnerKey(), "")
+        If legacyOwner != ""
+            StorageUtil.UnsetStringValue(target, GetPlayerMovementOwnerKey())
+            target.SetDontMove(False)
+            MMEAnimationSafety.Release(target, legacyOwner)
+            Report(False, "Reaction recovery", "legacy movement recovery | actor=" + GetActorName(target) + " | reason=" + reason + " | owner=" + legacyOwner)
+        EndIf
     EndIf
-    String owner = StorageUtil.GetStringValue(target, GetPlayerMovementOwnerKey(), "")
-    If owner == ""
-        Return
-    EndIf
-    StorageUtil.UnsetStringValue(target, GetPlayerMovementOwnerKey())
-    target.SetDontMove(False)
-    MMEAnimationSafety.Release(target, owner)
-    Report(False, "Reaction recovery", "PLAYER emergency movement recovery | reason=" + reason + " | owner=" + owner)
 EndFunction
 
 String Function PickStandingAnimation(String requestLabel, Bool diagnostic) Global

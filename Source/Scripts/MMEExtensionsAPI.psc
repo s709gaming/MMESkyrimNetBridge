@@ -1,7 +1,7 @@
 Scriptname MMEExtensionsAPI Hidden
 
 ; =============================================================================
-; MME Extensions public Papyrus API (version 11)
+; MME Extensions public Papyrus API (version 15)
 ; =============================================================================
 ; This is the stable entry point for other mods. Call these wrappers instead
 ; of MMEDebug, MMENewMilkMaid, MMEOStimBreastfeeding, or other internal scripts.
@@ -15,7 +15,15 @@ Scriptname MMEExtensionsAPI Hidden
 ; transaction finishes. Listen for the documented ModEvents to observe results.
 
 Int Function GetAPIVersion() Global
-    Return 11
+    Return 16
+EndFunction
+
+; Version 15: plays the configured sex-aware arousal clip for tier 1-3 on any
+; otherwise safe adult humanoid. This latent call owns and immobilizes the actor
+; for three seconds, then restores movement. It honors the Arousal Animations
+; MCM toggle and does not alter arousal, display text, or play a sound.
+Bool Function TryPlayArousalAnimation(Actor target, Int tier) Global
+    Return MMEArousalAnimations.TryPlay(target, tier, "Public API")
 EndFunction
 
 ; Backend-neutral query. Returns true only for a current, authoritative MME
@@ -40,12 +48,27 @@ Bool Function ShowRandomStoryPopup(Actor subject, String configFile, String pool
 EndFunction
 
 ; Backend-neutral one-time armor presentation introduced in API version 9.
-; Supports Living (2), Parasite (3), and Dwemer (4) armor. It displays the
+; Supports Milking (1), Living (2), Parasite (3), and Dwemer (4) armor. It displays the
 ; category story, plays the shared high sound, and runs the safe kneeling
 ; animation, but does not create a Milk Maid. A successful call is latent and
 ; returns after the approximately ten-second presentation has been cleaned up.
 Bool Function TryFirstArmorIntroduction(Actor target, Armor equippedArmor) Global
     Return MMEArmorIntroduction.TryIntroduction(target, equippedArmor, "Public API")
+EndFunction
+
+; Repeatable, backend-neutral presentation for a confirmed trapped-armor equip.
+; Supports player or NPC Milking, Living, Parasite, and Dwemer armor. This does not
+; equip or lock armor and does not create a Milk Maid. Successful calls are
+; latent for roughly ten seconds while the shared animation is owned.
+Bool Function TryTrapArmorEquipStory(Actor target, Armor equippedArmor) Global
+    Return MMEArmorIntroduction.TryTrapIntroduction(target, equippedArmor, "Public API/Trap Armor Equip Story")
+EndFunction
+
+; Repeatable presentation for an ordinary equip or an artisan installation.
+; This does not prove who initiated the equip, equip or lock the armor, or
+; create a Milk Maid. It supports both the player and NPC wearers.
+Bool Function TryRepeatArmorEquipStory(Actor target, Armor equippedArmor) Global
+    Return MMEArmorIntroduction.TryRepeatIntroduction(target, equippedArmor, "Public API/Repeat Armor Equip Story")
 EndFunction
 
 Bool Function HasSeenArmorIntroduction(Actor target, Int armorClass) Global
@@ -90,6 +113,19 @@ EndFunction
 
 Float Function GetTimedArmorDaysRemaining(Actor target) Global
     Return MMETimedArmorLock.GetDaysRemaining(target)
+EndFunction
+
+; Version 14: removes the player's currently worn Living, Parasite, or Dwemer
+; body armor. True means the asynchronous removal request was accepted; native
+; completion is verified separately through the shared controller.
+Bool Function ReleasePlayerSpecialArmor() Global
+    Return MMEArmorRemoval.ReleasePlayerArmor("Public API/Player Armor Removal")
+EndFunction
+
+; Version 14: removes supported armor from every eligible allied NPC near the
+; player. Returns the number of accepted asynchronous removal requests.
+Int Function ReleaseNearbyNPCSpecialArmor(Float radius = 2000.0) Global
+    Return MMEArmorRemoval.ReleaseNearbyNPCArmor(radius, "Public API/NPC Armor Removal")
 EndFunction
 
 ; Backend-neutral custom armor classification introduced in API version 6.

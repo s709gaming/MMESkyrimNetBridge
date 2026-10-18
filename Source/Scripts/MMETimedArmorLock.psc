@@ -249,7 +249,11 @@ Bool Function TryLock(Actor target, Armor targetArmor, Float durationDays = -1.0
     If durationDays > shownDays
         shownDays += 1
     EndIf
-    Debug.Notification("The armor magically wraps around you. Enjoy it for the next " + shownDays + " days!")
+    If target == Game.GetPlayer()
+        Debug.Notification("The armor magically wraps around you. Enjoy it for the next " + shownDays + " days!")
+    Else
+        Debug.Notification(GetActorName(target) + " is trapped in the armor for " + shownDays + " days!")
+    EndIf
     Trace("lock complete | source=" + source + " | actor=" + GetActorName(target) + " | armor=" + targetArmor.GetName() + " | days=" + durationDays + " | deadline=" + deadline)
     Publish("MMEExtensions_TimedArmorLocked", target, targetArmor, durationDays, source)
     RefreshScheduling()
@@ -260,9 +264,16 @@ Bool Function TryLockRegisteredEquip(Actor target, Armor targetArmor) Global
     If !IsRegisteredArmor(targetArmor)
         Return False
     EndIf
-    If target != Game.GetPlayer() && MMEChestArmorTrap.IsTrapEquipPending(target, targetArmor)
-        Trace("automatic lock bypassed for NPC chest-trap equip | actor=" + GetActorName(target) + " | armor=" + targetArmor.GetName())
-        Return False
+    If target != Game.GetPlayer()
+        If JsonUtil.GetIntValue(GetSettingsFile(), "enableArmorTrapNearbyAllies", 1) != 1
+            Trace("automatic NPC lock bypassed by nearby-allies toggle | actor=" + GetActorName(target) + " | armor=" + targetArmor.GetName())
+            Return False
+        ElseIf MMEChestArmorTrap.IsTrapEquipPending(target, targetArmor)
+            ; The chest transaction owns the synchronous lock. Its later native
+            ; equip event must not attempt a second lock or duplicate feedback.
+            Trace("automatic lock bypassed after NPC chest transaction | actor=" + GetActorName(target) + " | armor=" + targetArmor.GetName())
+            Return False
+        EndIf
     EndIf
     Return TryLock(target, targetArmor, -1.0, "Automatic Equip")
 EndFunction
@@ -319,6 +330,16 @@ Function ShowUnequipResistedNotification(Actor target) Global
 EndFunction
 
 Bool Function Release(Actor target, String source = "API") Global
+    Return ReleaseInternal(target, source, True)
+EndFunction
+
+; Group services use the same exact-form release transaction without producing
+; one HUD notification per companion. The caller owns the aggregate summary.
+Bool Function ReleaseQuiet(Actor target, String source = "API") Global
+    Return ReleaseInternal(target, source, False)
+EndFunction
+
+Bool Function ReleaseInternal(Actor target, String source, Bool showNotification) Global
     If target == None || !IsLocked(target)
         Trace("release skipped | no active lock | source=" + source)
         Return False
@@ -329,12 +350,12 @@ Bool Function Release(Actor target, String source = "API") Global
     If targetArmor != None && target.IsEquipped(targetArmor)
         target.UnequipItem(targetArmor, False, True)
     EndIf
-    If targetArmor != None && target.IsEquipped(targetArmor)
-        Alarm("release failed: armor remains equipped | actor=" + GetActorName(target) + " | armor=" + targetArmor.GetName())
-        Publish("MMEExtensions_TimedArmorFailed", target, targetArmor, 0.0, "Release Failed")
-        Return False
+    ; UnequipItem is asynchronous. The native event can arrive several seconds
+    ; later, so an immediate IsEquipped check is not a valid failure signal.
+    ; Guarded service calls use MMEArmorRemoval's scheduled verification.
+    If showNotification
+        Debug.Notification(GetActorName(target) + " is released from the armor.")
     EndIf
-    Debug.Notification(GetActorName(target) + " is released from the armor.")
     Trace("release complete | source=" + source + " | actor=" + GetActorName(target))
     Publish("MMEExtensions_TimedArmorReleased", target, targetArmor, 0.0, source)
     RefreshScheduling()

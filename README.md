@@ -1,6 +1,6 @@
 # 🥛 MME EXTENSIONS
 
-**Release status:** 1.2.2  
+**Release status:** 1.3  
 **Main requirement:** Milk Mod Economy (and its requirements)
 
 📥 **Download:**  
@@ -84,7 +84,7 @@ That includes drinking milk, milking, breastfeeding, fullness, Milk Maid creatio
 
 Depending on your settings, this can produce NPC dialogue, actions, notifications, sounds, animations, and AI narration.
 
-Narration prompts have also been made sillier, because apparently the narrator has opinions now.
+FREE: Skyrim.net has a free "Enable TTS For Silent Npcs" option that voices all modded dialog without sound, includes Elsie Lavache and this mod, via PocketTTS.
 
 Your companions are no longer contractually obligated to pretend nothing weird is happening.
 
@@ -93,6 +93,25 @@ Your companions are no longer contractually obligated to pretend nothing weird i
 SexLab remains part of the original MME ecosystem and is still required by mods such as Devious Devices.
 
 MME Extensions allows OStim to take over supported animation gameplay and interact with the modern OStim ecosystem instead.
+
+## ⚡ SEXLAB P+ SUPPORT
+
+https://www.loverslab.com/files/file/25318-sexlab-p/
+
+Who needs OStim when you can enjoy a newer, faster SexLab?
+
+MME Extensions now supports **SexLab P+**, giving players another modern animation option while maintaining compatibility with the existing SexLab ecosystem.
+
+## 🐄 ELSIE LAVACHE INTEGRATION
+
+https://www.loverslab.com/topic/81744-elsie-lavache-for-mme-v34/
+
+Elsie Lavache adds lewd quests and lets you transform your favorite Skyrim women into milky bimbos. MME Extensions now gives the milk they "share" an extra kick! Cups not provided~
+
+- 🥛 **Enhanced Milk Effects:** Milk shared through Elsie Lavache now packs a bigger punch.
+- 🤖 **Skyrim.Net Synergy:** Elsie provides the foundation for lewd roleplay, while Skyrim.Net can give NPCs a voice and take those interactions to another level.
+
+> 💡 **Free NPC Voices:** Skyrim.Net can voice Elsie Lavache's base dialogue for FREE via PocketTTS! Just enable "Enable TTS For Silent NPCs" in Skyrim.net settings. No money required.
 
 ## 👙 ARMOR STRIPPING
 
@@ -125,7 +144,7 @@ Reactions can appear through:
 - 🔊 Lewd moaning.
 - 🤖 Optional Skyrim.Net AI narration and actions.
 
-They can react to fullness, milking equipment, Living or Parasite armor, Dwemer devices, restraints, or the suspicious absence of anything designed to deal with their current proportions.
+They can react to fullness, breast bouncing, milking equipment, Living or Parasite armor, Dwemer devices, restraints, or the suspicious absence of anything designed to deal with their current proportions.
 
 Sometimes the intrusive thoughts win.
 
@@ -183,6 +202,10 @@ https://github.com/s709gaming/MMESkyrimNetBridge
 - Alandste and contributors - CommonLibSSE-NG
 - Tetherball88 - Reference for OStim implementation
 - GoodProvider - Reference for SexLab implementation
+- Chajapa - For Elsie Lavache
+- Venomr - Tips on fixing Elsie Lavache
+- Thorax339 - Tips on integrating Sexlab P+
+- Scrab for his many lewd mods
 
 ## 📜 LICENSE / PERMISSIONS
 

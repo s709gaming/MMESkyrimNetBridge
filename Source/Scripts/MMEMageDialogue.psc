@@ -96,7 +96,12 @@ Bool Function TryAddParasiteArmor(Actor mage, GlobalVariable stateGlobal) Global
     EndIf
     Debug.Notification(armorName + " Added to Parasite Living Armor")
     MMELog.Diagnostic("[MME Extensions Mage] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
-    Bool introduced = MMEArmorIntroduction.TryIntroduction(playerActor, wornArmor, "Mage Parasite Armor service")
+    Bool introduced = False
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableRepeatOrdinaryArmorStories", 1) == 1
+        introduced = MMEExtensionsAPI.TryRepeatArmorEquipStory(playerActor, wornArmor)
+    Else
+        introduced = MMEArmorIntroduction.TryIntroduction(playerActor, wornArmor, "Mage Parasite Armor service")
+    EndIf
     MMELog.MasterDiagnostic("[MME Extensions Mage] immediate Parasite introduction result=" + introduced + " | armor=" + armorName)
     Return True
 EndFunction

@@ -160,6 +160,7 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
         Return False
     EndIf
     String protectionReason = ""
+    Bool refitProtectionBypassed = False
     If IsStripAllArmorEnabled()
         ; Temporary override: bypass MME armor protection classification. The
         ; reason is still resolved so diagnostics can prove what was ignored.
@@ -169,8 +170,10 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
         EndIf
     ElseIf MMEMilkingEquipmentRefit.ShouldBypassMilkingEquipmentProtection(target, slotArmor, milkController)
         ; A player whose personal Maid Level outgrew ordinary registered
-        ; MilkingEquipment temporarily follows normal fullness thresholds. The
-        ; refit service excludes original MME and every special armor category.
+        ; MilkingEquipment or unlocked class-4 Dwemer Armor temporarily follows
+        ; normal fullness thresholds. Timed locks were rejected above; DD and
+        ; SexLab protections remain authoritative below.
+        refitProtectionBypassed = True
         MMELog.MasterDiagnostic("[MME Extensions Milking Refit] stripping uses ordinary " + armorKind + " rules | armor=" + GetArmorName(slotArmor) + " | source=" + sourceLabel)
     Else
         protectionReason = GetMMEArmorProtectionReason(milkController, slotArmor, sourceLabel, target)
@@ -216,15 +219,21 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
     EndIf
     ReportArmorStrip(diagnostic, sourceLabel + " result=STRIPPED | " + armorKind + " | fullness=" + fullnessPct + "% >= " + threshold + "%")
     ; Only a verified removal may trigger the optional post-strip reactions.
-    HandleSuccessfulArmorStrip(target, slotArmor, fullnessPct, threshold, sourceLabel)
+    HandleSuccessfulArmorStrip(target, slotArmor, fullnessPct, threshold, sourceLabel, refitProtectionBypassed)
     Return True
 EndFunction
 
 ; Dispatches the optional post-strip reactions once the shared evaluator has
 ; verified that the armor actually left slot 32. Reachable from every route
 ; (drink/equip/poll) through the one shared evaluator.
-Function HandleSuccessfulArmorStrip(Actor wearer, Armor strippedArmor, Float fullnessPct, Float thresholdPct, String sourceLabel) Global
-    HandleArmorStripNotification(wearer, strippedArmor)
+Function HandleSuccessfulArmorStrip(Actor wearer, Armor strippedArmor, Float fullnessPct, Float thresholdPct, String sourceLabel, Bool refitRemoval = False) Global
+    If refitRemoval
+        ; The refit service owns the one actionable HUD message. Avoid stacking
+        ; it with the generic capacity notification for the same removal.
+        MMEMilkingEquipmentRefit.HandleSuccessfulRemoval(wearer, strippedArmor)
+    Else
+        HandleArmorStripNotification(wearer, strippedArmor)
+    EndIf
     PlayArmorStripMoan(wearer)
     MMEAlertsSkyrimNet.NarrateArmorStrip(wearer, strippedArmor, sourceLabel, fullnessPct, thresholdPct)
 EndFunction
