@@ -407,10 +407,17 @@ foreach ($contentFile in Get-ChildItem -LiteralPath $skyrimNet25StageDir -File -
 # Package the SSEEdit-built randomized voice pools and the two legacy test files.
 $testSoundRoot = Join-Path $projectRoot "assets\sounds"
 if (Test-Path -LiteralPath $testSoundRoot) {
-    Get-ChildItem -LiteralPath $testSoundRoot -Directory | ForEach-Object {
-        $destination = Join-Path $packageSounds $_.Name
-        New-Item -ItemType Directory -Force -Path $destination | Out-Null
-        Get-ChildItem -LiteralPath $_.FullName -File -Filter '*.wav' | Copy-Item -Destination $destination
+    $sourceSoundFiles = @(Get-ChildItem -LiteralPath $testSoundRoot -Recurse -File -Filter '*.wav')
+    foreach ($soundFile in $sourceSoundFiles) {
+        $relativeSoundPath = $soundFile.FullName.Substring($testSoundRoot.Length).TrimStart('\', '/')
+        $destinationSound = Join-Path $packageSounds $relativeSoundPath
+        New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destinationSound) | Out-Null
+        Copy-Item -LiteralPath $soundFile.FullName -Destination $destinationSound
+    }
+
+    $packagedSoundFiles = @(Get-ChildItem -LiteralPath $packageSounds -Recurse -File -Filter '*.wav')
+    if ($packagedSoundFiles.Count -ne $sourceSoundFiles.Count) {
+        throw "Sound packaging mismatch: expected $($sourceSoundFiles.Count) WAV files, packaged $($packagedSoundFiles.Count)."
     }
 }
 
