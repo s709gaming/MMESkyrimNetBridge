@@ -33,7 +33,7 @@ Assert-Contract ($armor -match 'Function ClassifyOriginalArmor' -and $armor -mat
 Assert-Contract ($native -match 'MMEExtensions_ArmorUnequipped' -and $native -match 'SendArmorEvent\(actor, item, event->equipped\)') "native bridge publishes equip and unequip"
 Assert-Contract ($controller -match 'RegisterForModEvent\("MMEExtensions_ArmorUnequipped", "OnArmorUnequipped"\)') "controller subscribes to native unequip"
 Assert-Contract ($controller -match 'MMECustomArmorRegistry\.HandleCustomArmorEquipped' -and $controller -match 'MMECustomArmorRegistry\.HandleCustomArmorUnequipped') "controller delegates both armor transitions"
-Assert-Contract ($api -match 'Return 1[56]' -and $api -match 'Function IsCustomDwemerArmor\(' -and $api -match 'Function RegisterCustomArmor\(' -and $api -match 'Function UnregisterCustomArmor\(') "public API version 15 or later retains generic Dwemer registry calls"
+Assert-Contract ($api -match 'Return 1[5-9]' -and $api -match 'Function IsCustomDwemerArmor\(' -and $api -match 'Function RegisterCustomArmor\(' -and $api -match 'Function UnregisterCustomArmor\(') "public API version 15 or later retains generic Dwemer registry calls"
 Assert-Contract ($api -match 'Function InstallDwemerAttachment\(' -and $api -match 'Function RemoveDwemerAttachment\(' -and $api -match 'Function HasDwemerAttachment\(') "public API exposes reversible artisan Dwemer attachments"
 Assert-Contract ($build -match '"MMECustomArmorRegistry"' -and $build -match '"CustomArmorRegistry\.json"') "build packages the registry script and JSON"
 Assert-Contract ($quickStart -match 'Game\.GetModByName\(pluginName\) == 255' -and $quickStart -match 'DwarvenDeviousCuirass\.esp') "Quick Start keeps Dwarven Devious Cuirass optional"

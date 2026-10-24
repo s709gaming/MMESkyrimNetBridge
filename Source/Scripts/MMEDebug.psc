@@ -1203,24 +1203,24 @@ EndFunction
 ; MMEDrinkTracker's potion transaction: MME already equips a basic milk at
 ; scene start and ShouldSuppressBreastfeedingDrink prevents that synthetic
 ; equip from applying these effects early or twice.
-Function CompleteBreastfeedingDrink(Actor milkSource, Actor drinker, String backend, Int threadID, String semanticIntent = "")
+Bool Function CompleteBreastfeedingDrink(Actor milkSource, Actor drinker, String backend, Int threadID, String semanticIntent = "")
     String configFile = "/MMEAlerts/Settings"
     Bool diagnostic = JsonUtil.GetIntValue(configFile, "enableBreastfeedingMilkEffectsDebug", 0) == 1
     If milkSource == None || drinker == None || milkSource == drinker
         MMELog.Alarm("[MME Extensions BF Drink] FAILURE: verified " + backend + " completion had invalid source/drinker actors | thread=" + threadID)
-        Return
+        Return False
     EndIf
     If !StorageUtil.HasFloatValue(milkSource, "MME.MilkMaid.Level")
         BreastfeedingDrinkReport(diagnostic, "ignored non-MME source | backend=" + backend + " | thread=" + threadID)
-        Return
+        Return False
     EndIf
     If ClaimBreastfeedingCompletion(drinker, backend, threadID)
         BreastfeedingDrinkReport(diagnostic, "duplicate completion suppressed | backend=" + backend + " | thread=" + threadID)
-        Return
+        Return False
     EndIf
     If JsonUtil.GetIntValue(configFile, "enableBreastfeedingMilkEffects", 1) != 1
         BreastfeedingDrinkReport(diagnostic, "skipped | toggle off | backend=" + backend + " | thread=" + threadID)
-        Return
+        Return False
     EndIf
 
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
@@ -1230,7 +1230,7 @@ Function CompleteBreastfeedingDrink(Actor milkSource, Actor drinker, String back
     EndIf
     If basicMilk == None
         MMELog.Alarm("[MME Extensions BF Drink] FAILURE: MME basic milk form did not resolve after verified " + backend + " completion")
-        Return
+        Return False
     EndIf
 
     ; Breastfeeding counts as ordinary MME milk, never Lactacid. Disabling the
@@ -1264,7 +1264,7 @@ Function CompleteBreastfeedingDrink(Actor milkSource, Actor drinker, String back
     String renderedReaction = MMENPCDrinkDialogue.BuildBreastfeedingReaction(milkSource, drinker, isMilkMaid, milkAdded, arousalSent)
     If renderedReaction == ""
         MMELog.Alarm("[MME Extensions BF Drink] FAILURE: verified " + backend + " completion produced a blank JSON reaction")
-        Return
+        Return False
     EndIf
     MMEMilkDrinkEffects.PlayDrinkReaction(drinker, diagnostic)
     MMENPCDrinkDialogue.ShowBreastfeedingNotification(drinker, isMilkMaid, renderedReaction)
@@ -1284,6 +1284,7 @@ Function CompleteBreastfeedingDrink(Actor milkSource, Actor drinker, String back
         result += " | conversion narration reserved"
     EndIf
     BreastfeedingDrinkReport(diagnostic, result)
+    Return True
 EndFunction
 
 ; Retained as a save-compatible no-op. Breastfeeding has no inventory drink and

@@ -20,7 +20,7 @@ Assert-Contract ($effect.Contains('(current / maximum) >= 0.5')) '50-percent ful
 Assert-Contract ($effect.Contains('0x0008B1') -and !$effect.Contains('MME Extensions - Breast Bounce Sounds.esp')) 'MMEAlert breast-slap SOUN marker is missing'
 Assert-Contract ($controller.Contains('NextBreastBounceGameTime')) 'game-time schedule is missing'
 Assert-Contract ($controller.Contains('NextBreastBouncePresentation')) 'real-time delayed presentation is missing'
-Assert-Contract ($mcm.Contains('Return 153')) 'MCM migration version is not 153'
+Assert-Contract ($mcm -match 'Return 15[3-9]') 'MCM migration version is older than 153'
 Assert-Contract ($mcm.Contains('Breast Bounce Notifications') -and $mcm.Contains('Breast Bounce Sounds')) 'MCM toggles are missing'
 Assert-Contract ($json.low.Count -ge 5 -and $json.high.Count -ge 5) 'notification pools are incomplete'
 Assert-Contract (Test-Path -LiteralPath $wav) 'converted slap WAV is missing'

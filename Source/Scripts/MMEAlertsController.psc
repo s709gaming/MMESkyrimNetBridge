@@ -46,6 +46,7 @@ String AutoSelfMilkingDispatchKey = "MMEExtensions.AutoSelfMilking.Dispatched"
 Float NearbyRange = 2000.0
 Float NextCapacityUpdate = 0.0
 Float NextArousalEffectUpdate = 0.0
+Float NextBodyEffectsUpdate = 0.0
 Float NextSkyrimNetUpdate = 0.0
 Float NextDebugUpdate = 0.0
 Float NextThoughtDebugUpdate = 0.0
@@ -151,6 +152,7 @@ Function InitializeController(Bool reportStatus = False)
     RegisterForModEvent("MMEExtensions_ArmorUnequipped", "OnArmorUnequipped")
     MMECustomArmorRegistry.AuditRegistry()
     MMEMaidWeightScaling.ReconcileAll("controller initialized")
+    MMEBodyEffects.Reconcile("controller initialized")
     MMEMilkingEquipmentRefit.Reconcile("controller initialized")
     UnregisterForModEvent("MMEExtensions_DungeonBossChestActivated")
     RegisterForModEvent("MMEExtensions_DungeonBossChestActivated", "OnDungeonBossChestActivated")
@@ -415,6 +417,8 @@ Function DisableController()
     EndIf
     NextCapacityUpdate = 0.0
     NextArousalEffectUpdate = 0.0
+    NextBodyEffectsUpdate = 0.0
+    MMEBodyEffects.ClearOwnedEffects(Game.GetPlayer(), "controller disabled")
     NextSkyrimNetUpdate = 0.0
     NextDebugUpdate = 0.0
     NextThoughtDebugUpdate = 0.0
@@ -476,6 +480,7 @@ EndEvent
 Event OnMenuClose(String menuName)
     If menuName == "Journal Menu" && IsExtensionsEnabled()
         MMEMaidWeightScaling.ReconcileAll("Journal Menu closed")
+        MMEBodyEffects.Reconcile("Journal Menu closed")
         MMEMilkingEquipmentRefit.Reconcile("Journal Menu closed")
     EndIf
 EndEvent
@@ -1640,6 +1645,7 @@ Event OnMMEMilkingDone(Form actorForm, Int bottles, Int boobgasmCount, Int cumCo
     FinishMilking(milkMaid)
     MMEMaidWeightScaling.ReconcileActor(milkMaid, "MME milking completed")
     If milkMaid == Game.GetPlayer()
+        MMEBodyEffects.Reconcile("MME milking completed")
         MMEMilkingEquipmentRefit.Reconcile("MME milking completed")
     EndIf
 EndEvent
@@ -1654,6 +1660,7 @@ Event OnMMEMilkCycleComplete(String eventName, String strArg, Float numArg, Form
         Return
     EndIf
     MMEMaidWeightScaling.ReconcileAll("MME milk cycle completed")
+    MMEBodyEffects.Reconcile("MME milk cycle completed")
     MMEMilkingEquipmentRefit.Reconcile("MME milk cycle completed")
     MMEDwemerArmor.ProcessNearbyDwemerArmor()
 EndEvent
@@ -1721,6 +1728,7 @@ Function UpdatePolling()
     If !IsExtensionsEnabled()
         NextCapacityUpdate = 0.0
         NextArousalEffectUpdate = 0.0
+        NextBodyEffectsUpdate = 0.0
         NextSkyrimNetUpdate = 0.0
         NextDebugUpdate = 0.0
         NextThoughtDebugUpdate = 0.0
@@ -1741,6 +1749,13 @@ Function UpdatePolling()
     Else
         NextArousalEffectUpdate = 0.0
         MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] scheduler inactive | feature disabled or arousal framework unavailable")
+    EndIf
+    If MMEBodyEffects.IsAnyFeatureEnabled()
+        NextBodyEffectsUpdate = now + MMEBodyEffects.GetUpdateInterval()
+        MMELog.MasterDiagnostic("[MME Extensions Body] scheduler armed | interval=" + MMEBodyEffects.GetUpdateInterval() + " seconds")
+    Else
+        NextBodyEffectsUpdate = 0.0
+        MMEBodyEffects.Reconcile("body scheduler disabled")
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1 || JsonUtil.GetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", 1) == 1
         NextSkyrimNetUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
@@ -1807,6 +1822,15 @@ Function ScheduleNextUpdate()
     EndIf
     If NextArousalEffectUpdate > 0.0
         candidate = NextArousalEffectUpdate - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
+    EndIf
+    If NextBodyEffectsUpdate > 0.0
+        candidate = NextBodyEffectsUpdate - now
         If candidate <= 0.0
             candidate = 0.01
         EndIf
@@ -1925,6 +1949,8 @@ Event OnUpdate()
     ; most once per callback. Capacity and Skyrim.Net share the same actor scan.
     If !IsExtensionsEnabled()
         NextArousalEffectUpdate = 0.0
+        NextBodyEffectsUpdate = 0.0
+        MMEBodyEffects.ClearOwnedEffects(Game.GetPlayer(), "Extensions disabled")
         NextArmorCheck = 0.0
         NextArmorReminder = 0.0
         NextBreastBouncePresentation = 0.0
@@ -1942,6 +1968,7 @@ Event OnUpdate()
     Bool armorRemovalDue = armorRemovalDeadline > 0.0 && now >= armorRemovalDeadline
     Bool capacityDue = NextCapacityUpdate > 0.0 && now >= NextCapacityUpdate
     Bool arousalEffectDue = NextArousalEffectUpdate > 0.0 && now >= NextArousalEffectUpdate
+    Bool bodyEffectsDue = NextBodyEffectsUpdate > 0.0 && now >= NextBodyEffectsUpdate
     Bool skyrimNetDue = NextSkyrimNetUpdate > 0.0 && now >= NextSkyrimNetUpdate
     Bool debugDue = NextDebugUpdate > 0.0 && now >= NextDebugUpdate
     Bool thoughtDebugDue = NextThoughtDebugUpdate > 0.0 && now >= NextThoughtDebugUpdate
@@ -1957,6 +1984,9 @@ Event OnUpdate()
     If capacityDue || skyrimNetDue || thoughtDebugDue || arousalEffectDue
         ScanNearbyMilkMaids(skyrimNetDue, capacityDue, thoughtDebugDue, arousalEffectDue)
     EndIf
+    If bodyEffectsDue
+        MMEBodyEffects.Reconcile("shared scheduler")
+    EndIf
     ; Advance recurring deadlines from this callback's timestamp. One-shot
     ; armor deadlines are cleared only when their work is consumed.
     If capacityDue
@@ -1967,6 +1997,13 @@ Event OnUpdate()
             NextArousalEffectUpdate = now + MMEArousalEffects.GetScanInterval()
         Else
             NextArousalEffectUpdate = 0.0
+        EndIf
+    EndIf
+    If bodyEffectsDue
+        If MMEBodyEffects.IsAnyFeatureEnabled()
+            NextBodyEffectsUpdate = now + MMEBodyEffects.GetUpdateInterval()
+        Else
+            NextBodyEffectsUpdate = 0.0
         EndIf
     EndIf
     If skyrimNetDue

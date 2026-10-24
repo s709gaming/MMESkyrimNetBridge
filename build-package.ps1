@@ -22,6 +22,7 @@ $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
 $scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEBreastBounceEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEArousalEffects", "MMEArousalAnimations", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMEArmorRemoval", "MMETrapArmorDialogue", "MMEFollowerArmorRescue", "TIF_MMEExtFollowerArmorRescue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMESexLabBreastfeedingBackend", "MMEElsieBreastfeeding", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
+$scriptNames += "MMEBodyEffects"
 $mmeCompatibilityOverrideSource = Join-Path $projectRoot "Source\MMECompatibilityOverrides"
 $mmeCompatibilityOverrideNames = @("MilkQUEST")
 $diagnosticSdk = Join-Path $projectRoot "tools\mme-diagnostic-sdk"
@@ -35,6 +36,10 @@ $elsieFixPlugin = Join-Path $projectRoot "fomod\choices\elsie-compatibility\MME 
 $elsieFixChangelog = Join-Path $projectRoot "docs\ELSIE-LAVACHE-FIX-CHANGELOG.md"
 $elsieSdkSource = Join-Path $projectRoot "tools\elsie-sdk"
 $installedElsiePlugin = Join-Path $gameRoot "Data\CP_Elsie.esp"
+$jugsPatchSourceDir = Join-Path $projectRoot "fomod\choices\jugs-compatibility\Source\Scripts"
+$jugsPatchOutputDir = Join-Path $projectRoot "fomod\choices\jugs-compatibility\Scripts"
+$jugsSdkSource = Join-Path $projectRoot "tools\jugs-sdk"
+$jugsChangelog = Join-Path $projectRoot "docs\JUGS-COMPATIBILITY-CHANGELOG.md"
 $sexLabPPlusChoiceSource = Join-Path $projectRoot "fomod\choices\sexlab-pplus\Source\Scripts"
 $sexLabPPlusChoiceOutput = Join-Path $projectRoot "fomod\choices\sexlab-pplus\Scripts"
 $sexLabPPlusSdkSource = Join-Path $projectRoot "tools\sexlab-pplus-sdk"
@@ -73,9 +78,13 @@ foreach ($elsieScript in @("ELV_DiaGreets_PlayerAliasScript", "ELVPlayerAliasscr
 if (!(Test-Path -LiteralPath $elsieFixChangelog)) {
     throw "Elsie-only changelog not found: $elsieFixChangelog"
 }
+if (!(Test-Path -LiteralPath $jugsChangelog)) {
+    throw "JUGS compatibility changelog not found: $jugsChangelog"
+}
 if (!(Test-Path -LiteralPath $sexLabPPlusCredit)) {
     throw "SexLab P+ compatibility credit and installation document not found: $sexLabPPlusCredit"
 }
+& (Join-Path $projectRoot "tools\Patch-SexLabPPlusRegistry.ps1")
 $sexLabPPlusRequiredFiles = @(
     "Scripts\MilkPlayerLoadGame.pex",
     "Scripts\MME_Dialogues.pex",
@@ -134,10 +143,12 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 & (Join-Path $projectRoot "tools\Test-TimedArmorLockContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-MMECompatibilityOverrideContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-ElsieBreastfeedingContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-JugsCompatibilityContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-SexLabPPlusCompatibilityContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-PapyrusLoggingContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-ArousalEffectsContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-BreastBounceContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-BodyEffectsContracts.ps1")
 
 New-Item -ItemType Directory -Force -Path $compiledDir | Out-Null
 $imports = "$sourceDir;$skyUiSdkSource;$mmeSdkSource;$ostimSdkSource;$omaniaSdkSource;$arousalSdkSource;$skyrimNetSdkSource;$skseSource;$vanillaSource"
@@ -211,6 +222,19 @@ if (!(Test-Path -LiteralPath $elsieFixPlugin)) {
     throw "Elsie compatibility patch is missing: $elsieFixPlugin"
 }
 
+# Compile the optional JUGS replacement scripts against narrow API declarations.
+# The FOMOD installs these only when Jugs.esp is active.
+New-Item -ItemType Directory -Force -Path $jugsPatchOutputDir | Out-Null
+$jugsImports = "$jugsPatchSourceDir;$jugsSdkSource;$sourceDir;$skseSource;$vanillaSource"
+$jugsPatchScripts = @(Get-ChildItem -LiteralPath $jugsPatchSourceDir -Filter "*.psc" | Sort-Object Name)
+foreach ($jugsScript in $jugsPatchScripts) {
+    Write-Host "Compiling JUGS compatibility override $($jugsScript.Name)..." -ForegroundColor Cyan
+    & $compiler $jugsScript.Name "-f=$flags" "-i=$jugsImports" "-o=$jugsPatchOutputDir"
+    if ($LASTEXITCODE -ne 0) {
+        throw "Compilation failed for JUGS compatibility override $($jugsScript.BaseName)"
+    }
+}
+
 # The Vanilla profile replaces the real defaults quest script with an inert
 # compatible implementation, so it can never change MME settings.
 New-Item -ItemType Directory -Force -Path $standardDefaultsOutputDir | Out-Null
@@ -249,6 +273,7 @@ If (Test-Path -LiteralPath $fomodSource) {
 $packageDocs = Join-Path $stageDir "docs"
 New-Item -ItemType Directory -Force -Path $packageDocs | Out-Null
 Copy-Item -LiteralPath $elsieFixChangelog -Destination $packageDocs
+Copy-Item -LiteralPath $jugsChangelog -Destination $packageDocs
 
 # Copy the active compiled scripts and matching sources.
 foreach ($scriptName in $scriptNames) {

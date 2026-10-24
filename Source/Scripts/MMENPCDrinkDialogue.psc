@@ -48,7 +48,9 @@ String Function ApplyPostDrink(Actor target, Form drinkItem, Bool diagnostic = F
         amount = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "nonMilkmaidMaleArousal", 20.0)
     EndIf
     MMENPCDialog.TraceDialogueTiming("11A non-Milkmaid arousal dispatch", target)
+    Int arousalBefore = MMEArousalBridge.GetCurrentArousal(target)
     Bool arousalSent = MMEArousalBridge.ApplyArousalAmountForActor(target, amount, "drank " + drinkItem.GetName(), diagnostic)
+    MMEArousalBridge.RecordMilkDrinkResult(target, arousalBefore, amount, arousalSent)
     MMENPCDialog.TraceDialogueTiming("11B non-Milkmaid arousal complete", target)
     MMENPCDialog.TraceDialogueTiming("11C non-Milkmaid reaction sound dispatch", target)
     MMEMilkDrinkEffects.PlayDrinkReaction(target, diagnostic)

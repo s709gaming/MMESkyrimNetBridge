@@ -60,8 +60,8 @@
         <group name="Optional mod compatibility" type="SelectAny">
           <plugins order="Explicit">
 
-            <plugin name="All-in-One SexLab P+ Compatibility">
-              <description>Complete SexLab P+ support for MME Extensions and MME breastfeeding. Includes the approved MME script fixes, converted 3jiou breastfeeding animations, SLSB registry, and MME Extensions P+ backend. SexLab P+ itself is still required; the separate MME SLP+ Edit is not. IMPORTANT: rerun FNIS or your compatible behavior generator after installation. Select this manually if Vortex does not detect P+ automatically.</description>
+            <plugin name="All-in-One SexLab P+ Compatibility — READ INSTRUCTIONS CAREFULLY">
+              <description>READ THE SEXLAB P+ INSTRUCTIONS CAREFULLY. Complete SexLab P+ support for MME Extensions and MME breastfeeding. Includes the approved MME script fixes, converted 3jiou breastfeeding animations, SLSB registry, and MME Extensions P+ backend. SexLab P+ itself is still required; the separate MME SLP+ Edit is not. IMPORTANT: rerun FNIS or your compatible behavior generator after installation. Select this manually if Vortex does not detect P+ automatically.</description>
               <files>
                 <folder source="fomod\choices\sexlab-pplus\meshes" destination="meshes" priority="30" />
                 <folder source="fomod\choices\sexlab-pplus\SKSE" destination="SKSE" priority="30" />
@@ -137,6 +137,28 @@
                     <pattern>
                       <dependencies operator="And">
                         <fileDependency file="CP_Elsie.esp" state="Active" />
+                      </dependencies>
+                      <type name="Required" />
+                    </pattern>
+                  </patterns>
+                </dependencyType>
+              </typeDescriptor>
+            </plugin>
+
+            <plugin name="JUGS — Stability and MME Compatibility Patch">
+              <description>Recommended when JUGS is installed. Adds guarded SexLab scene startup, repairs participant and Soulgem Oven queue handling, and routes JUGS Milk Maid conversion through MME Extensions' supported API. Automatically selected when Jugs.esp is active.</description>
+              <files>
+                <folder source="fomod\choices\jugs-compatibility\Scripts" destination="Scripts" priority="20" />
+                <folder source="fomod\choices\jugs-compatibility\Source\Scripts" destination="Source\Scripts" priority="20" />
+                <file source="docs\JUGS-COMPATIBILITY-CHANGELOG.md" destination="Docs\MME Extensions - JUGS Compatibility Changelog.md" priority="20" />
+              </files>
+              <typeDescriptor>
+                <dependencyType>
+                  <defaultType name="NotUsable" />
+                  <patterns>
+                    <pattern>
+                      <dependencies operator="And">
+                        <fileDependency file="Jugs.esp" state="Active" />
                       </dependencies>
                       <type name="Required" />
                     </pattern>

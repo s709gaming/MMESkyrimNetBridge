@@ -58,7 +58,7 @@ foreach ($setting in 'enableLivingArmorChestTrap', 'enableParasiteArmorChestTrap
 Assert-Match $nativeSource 'event->menuName != RE::ContainerMenu::MENU_NAME' "Player traps must wait for the actual container menu."
 Assert-Match $nativeSource 'activator != RE::PlayerCharacter::GetSingleton\(\)' "Raw player activation must not dispatch a chest trap before lockpicking."
 Assert-Match $nativeSource 'chest->IsLocked\(\)' "NPC chest activation must reject locked containers."
-Assert-Match $api 'Return 1[56]' "Public API version must be 15 or later."
+Assert-Match $api 'Return 1[5-9]' "Public API version must be 15 or later."
 Assert-Match $api 'Function RegisterTimedArmor' "Public registration facade is missing."
 Assert-Match $api 'Function ReleaseTimedArmor' "Public release facade is missing."
 Assert-Match $fomod "C5Kev's Tentacled Terrors Of Tamriel 3BA\.esp" "FOMOD C5Kev auto-detection is missing."

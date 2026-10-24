@@ -31,7 +31,35 @@ Bool Function ApplyMilkDrinkArousalForActor(Actor drinker, Form drinkItem, Bool 
     If drinkItem != None && drinkItem.GetName() != ""
         itemName = drinkItem.GetName()
     EndIf
-    Return ApplyConfiguredMilkArousalForActor(drinker, "drank " + itemName, showDiagnostic)
+    Int arousalBefore = GetCurrentArousal(drinker)
+    Float configuredAmount = JsonUtil.GetFloatValue(GetSettingsFile(), "milkDrinkArousal", 10.0)
+    Bool sent = ApplyConfiguredMilkArousalForActor(drinker, "drank " + itemName, showDiagnostic)
+    RecordMilkDrinkResult(drinker, arousalBefore, configuredAmount, sent)
+    Return sent
+EndFunction
+
+; Shared completion boundary for the configured Milk Maid route and the
+; sex-specific ordinary-adult milk route. Older SLA event fallbacks can update
+; asynchronously, so use the bounded requested result when the immediate read
+; has not caught up yet.
+Function RecordMilkDrinkResult(Actor target, Int arousalBefore, Float requestedAmount, Bool sent) Global
+    If target == None || !sent
+        Return
+    EndIf
+    Int arousalAfter = GetCurrentArousal(target)
+    If arousalBefore >= 0 && arousalAfter <= arousalBefore
+        Float boundedAmount = requestedAmount
+        If boundedAmount < 0.0
+            boundedAmount = 0.0
+        ElseIf boundedAmount > 100.0
+            boundedAmount = 100.0
+        EndIf
+        arousalAfter = (arousalBefore as Float + boundedAmount) as Int
+        If arousalAfter > 100
+            arousalAfter = 100
+        EndIf
+    EndIf
+    MMEArousalEffects.RecordMilkDrinkCrossing(target, arousalBefore, arousalAfter)
 EndFunction
 
 ; Actor-safe implementation shared by milk drinking and armor injections.

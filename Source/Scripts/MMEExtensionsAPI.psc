@@ -1,7 +1,7 @@
 Scriptname MMEExtensionsAPI Hidden
 
 ; =============================================================================
-; MME Extensions public Papyrus API (version 15)
+; MME Extensions public Papyrus API (version 17)
 ; =============================================================================
 ; This is the stable entry point for other mods. Call these wrappers instead
 ; of MMEDebug, MMENewMilkMaid, MMEOStimBreastfeeding, or other internal scripts.
@@ -15,7 +15,34 @@ Scriptname MMEExtensionsAPI Hidden
 ; transaction finishes. Listen for the documented ModEvents to observe results.
 
 Int Function GetAPIVersion() Global
-    Return 16
+    Return 17
+EndFunction
+
+; Version 17: commits the gameplay effects for one externally owned,
+; successfully completed breastfeeding scene. The caller remains responsible
+; for starting, observing, and completing its scene. This call does not consume
+; an inventory item or play the cup-drinking animation.
+Bool Function CompleteBreastfeedingMilkShare(Actor milkSource, Actor drinker, String backend, Int sceneID) Global
+    String prefix = "[MME Extensions BF API] "
+    If milkSource == None || drinker == None || milkSource == drinker
+        MMELog.Alarm(prefix + "rejected invalid source/drinker pair | backend=" + backend + " | scene=" + sceneID)
+        Return False
+    EndIf
+    If milkSource.IsDead() || drinker.IsDead() || milkSource.IsDisabled() || drinker.IsDisabled() || milkSource.IsDeleted() || drinker.IsDeleted() || milkSource.IsChild() || drinker.IsChild()
+        MMELog.MasterDiagnostic(prefix + "rejected unavailable participant | backend=" + backend + " | scene=" + sceneID, 1)
+        Return False
+    EndIf
+    If !IsMilkMaid(milkSource)
+        MMELog.MasterDiagnostic(prefix + "rejected non-Milk-Maid source | source=" + milkSource.GetDisplayName() + " | backend=" + backend + " | scene=" + sceneID, 1)
+        Return False
+    EndIf
+    MMEDebug service = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
+    If service == None
+        MMELog.Alarm(prefix + "FAILURE: persistent breastfeeding service unavailable | backend=" + backend + " | scene=" + sceneID)
+        Return False
+    EndIf
+    MMELog.MasterDiagnostic(prefix + "accepted completion handoff | source=" + milkSource.GetDisplayName() + " | drinker=" + drinker.GetDisplayName() + " | backend=" + backend + " | scene=" + sceneID)
+    Return service.CompleteBreastfeedingDrink(milkSource, drinker, backend, sceneID, "ExternalBreastfeedingAPI")
 EndFunction
 
 ; Version 15: plays the configured sex-aware arousal clip for tier 1-3 on any

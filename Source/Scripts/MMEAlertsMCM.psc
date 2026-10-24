@@ -77,6 +77,14 @@ Int milkmaidLevelBonusOption
 Int flatMilkBonusOption
 Int maidWeightScalingOption
 Int maidWeightPerLevelOption
+Int customMilkSpeedDebuffOption
+Int milkSpeedMediumThresholdOption
+Int milkSpeedMediumPenaltyOption
+Int milkSpeedHighThresholdOption
+Int milkSpeedHighPenaltyOption
+Int maidLevelSpeedScalingOption
+Int customMilkWeightOption
+Int milkWeightMultiplierOption
 Int addMilkDebugOption
 Int breastfeedingMilkEffectsOption
 Int elsieDetectedOption
@@ -103,7 +111,12 @@ Int arousalEffectsOption
 Int arousalEffectNotificationsOption
 Int arousalEffectSoundsOption
 Int arousalEffectAnimationsOption
+Int arousalMilkMaidRouteOption
+Int arousalMilkDrinkRouteOption
+Int arousalEveryoneRouteOption
+Int arousalEffectDelayOption
 Int arousalEffectCooldownOption
+Int arousalEffectCooldownVariationOption
 Int arousalLowThresholdOption
 Int arousalMediumThresholdOption
 Int arousalHighThresholdOption
@@ -292,11 +305,11 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 153
+    Return 155
 EndFunction
 
 Function SetPageNames()
-    Pages = new String[11]
+    Pages = new String[12]
     Pages[0] = "General"
     Pages[1] = "Milk Drinking"
     ; Build these page names at runtime so Papyrus's case-insensitive string
@@ -305,13 +318,14 @@ Function SetPageNames()
     ; while rendering invisibly in the sidebar.
     Pages[2] = "A" + "nimations "
     Pages[3] = "A" + "rousal "
-    Pages[4] = "Armor"
-    Pages[5] = "Skyrim.Net"
-    Pages[6] = "Milk Armor Thoughts"
-    Pages[7] = "Armor Effects"
-    Pages[8] = "Misc"
-    Pages[9] = "Debug"
-    Pages[10] = "Troubleshoot"
+    Pages[4] = "Body"
+    Pages[5] = "Armor"
+    Pages[6] = "Skyrim.Net"
+    Pages[7] = "Milk Armor Thoughts"
+    Pages[8] = "Armor Effects"
+    Pages[9] = "Misc"
+    Pages[10] = "Debug"
+    Pages[11] = "Troubleshoot"
 EndFunction
 
 ; Creates the MCM pages and initializes controllers on first registration.
@@ -440,6 +454,15 @@ Function EnsureDefaults()
         JsonUtil.SetFloatValue(SettingsFile, "flatMilkBonus", 1.0)
         JsonUtil.SetIntValue(SettingsFile, "enableMaidLevelWeightScaling", 1)
         JsonUtil.SetFloatValue(SettingsFile, "maidWeightPerLevel", 1.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableCustomMilkSpeedDebuff", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkSpeedMediumThreshold", 50.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkSpeedMediumPenalty", 3.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkSpeedHighThreshold", 100.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkSpeedHighPenalty", 10.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMaidLevelSpeedScaling", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableCustomMilkWeight", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkWeightMultiplier", 1.0)
+        JsonUtil.SetIntValue(SettingsFile, "bodyEffectsMigration155", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkingEquipmentRefits", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableRepeatOrdinaryArmorStories", 1)
         JsonUtil.SetIntValue(SettingsFile, "repeatOrdinaryArmorStoriesMigration151", 1)
@@ -500,13 +523,19 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableArousalEffectNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalEffectSounds", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalEffectAnimations", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "arousalEffectCooldown", 15.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalMilkMaidRoute", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalMilkDrinkRoute", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEveryoneRoute", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "arousalEffectDelay", 5.0)
+        JsonUtil.SetFloatValue(SettingsFile, "arousalEffectCooldown", 5.0)
+        JsonUtil.SetFloatValue(SettingsFile, "arousalEffectCooldownVariation", 0.0)
         JsonUtil.SetIntValue(SettingsFile, "arousalLowThreshold", 20)
         JsonUtil.SetIntValue(SettingsFile, "arousalMediumThreshold", 50)
         JsonUtil.SetIntValue(SettingsFile, "arousalHighThreshold", 80)
         JsonUtil.SetIntValue(SettingsFile, "arousalEffectsMigration147", 1)
         JsonUtil.SetIntValue(SettingsFile, "arousalMonitorDefaultsMigration148", 1)
         JsonUtil.SetIntValue(SettingsFile, "arousalAnimationsMigration152", 1)
+        JsonUtil.SetIntValue(SettingsFile, "arousalEligibilityMigration154", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableNewMilkmaidSexLabTrace", 0)
@@ -1558,6 +1587,34 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "breastBounceEffectsMigration153", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Restricts ordinary nearby reactions to Milk Maids while allowing any
+    ; recognized milk drink to qualify when it directly crosses a threshold.
+    If JsonUtil.GetIntValue(SettingsFile, "arousalEligibilityMigration154", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalMilkMaidRoute", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalMilkDrinkRoute", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEveryoneRoute", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "arousalEffectDelay", 5.0)
+        If JsonUtil.GetFloatValue(SettingsFile, "arousalEffectCooldown", 15.0) == 15.0
+            JsonUtil.SetFloatValue(SettingsFile, "arousalEffectCooldown", 5.0)
+        EndIf
+        JsonUtil.SetFloatValue(SettingsFile, "arousalEffectCooldownVariation", 0.0)
+        JsonUtil.SetIntValue(SettingsFile, "arousalEligibilityMigration154", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    ; Opt-in replacements for MME's original unmilked speed/carry penalties.
+    ; Existing maid appearance-weight keys are intentionally untouched.
+    If JsonUtil.GetIntValue(SettingsFile, "bodyEffectsMigration155", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableCustomMilkSpeedDebuff", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkSpeedMediumThreshold", 50.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkSpeedMediumPenalty", 3.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkSpeedHighThreshold", 100.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkSpeedHighPenalty", 10.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMaidLevelSpeedScaling", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableCustomMilkWeight", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkWeightMultiplier", 1.0)
+        JsonUtil.SetIntValue(SettingsFile, "bodyEffectsMigration155", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetDwemerEffectDefaults()
@@ -1683,6 +1740,14 @@ Event OnPageReset(String page)
     flatMilkBonusOption = -1
     maidWeightScalingOption = -1
     maidWeightPerLevelOption = -1
+    customMilkSpeedDebuffOption = -1
+    milkSpeedMediumThresholdOption = -1
+    milkSpeedMediumPenaltyOption = -1
+    milkSpeedHighThresholdOption = -1
+    milkSpeedHighPenaltyOption = -1
+    maidLevelSpeedScalingOption = -1
+    customMilkWeightOption = -1
+    milkWeightMultiplierOption = -1
     addMilkDebugOption = -1
     breastfeedingMilkEffectsOption = -1
     elsieDetectedOption = -1
@@ -1709,7 +1774,12 @@ Event OnPageReset(String page)
     arousalEffectNotificationsOption = -1
     arousalEffectSoundsOption = -1
     arousalEffectAnimationsOption = -1
+    arousalMilkMaidRouteOption = -1
+    arousalMilkDrinkRouteOption = -1
+    arousalEveryoneRouteOption = -1
+    arousalEffectDelayOption = -1
     arousalEffectCooldownOption = -1
+    arousalEffectCooldownVariationOption = -1
     arousalLowThresholdOption = -1
     arousalMediumThresholdOption = -1
     arousalHighThresholdOption = -1
@@ -1896,6 +1966,35 @@ Event OnPageReset(String page)
     diagnosticMageBusStopOption = -1
     diagnosticMageBusFailureOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
+    If page == "Body"
+        AddHeaderOption("Movement Speed")
+        customMilkSpeedDebuffOption = AddToggleOption("Custom Milk Speed Debuff", JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkSpeedDebuff", 0) == 1)
+        Int speedFlags = OPTION_FLAG_DISABLED
+        If JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkSpeedDebuff", 0) == 1
+            speedFlags = OPTION_FLAG_NONE
+        EndIf
+        milkSpeedMediumThresholdOption = AddSliderOption("Medium Milk Threshold", JsonUtil.GetFloatValue(SettingsFile, "milkSpeedMediumThreshold", 50.0), "{0}%", speedFlags)
+        milkSpeedMediumPenaltyOption = AddSliderOption("Medium Speed Debuff", JsonUtil.GetFloatValue(SettingsFile, "milkSpeedMediumPenalty", 3.0), "{0}%", speedFlags)
+        milkSpeedHighThresholdOption = AddSliderOption("High Milk Threshold", JsonUtil.GetFloatValue(SettingsFile, "milkSpeedHighThreshold", 100.0), "{0}%", speedFlags)
+        milkSpeedHighPenaltyOption = AddSliderOption("High Speed Debuff", JsonUtil.GetFloatValue(SettingsFile, "milkSpeedHighPenalty", 10.0), "{0}%", speedFlags)
+        maidLevelSpeedScalingOption = AddToggleOption("Milk Maid Level Speed Scaling", JsonUtil.GetIntValue(SettingsFile, "enableMaidLevelSpeedScaling", 0) == 1, speedFlags)
+        AddHeaderOption("Milk Weight")
+        customMilkWeightOption = AddToggleOption("Milk Has Weight", JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkWeight", 0) == 1)
+        Int milkWeightFlags = OPTION_FLAG_DISABLED
+        If JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkWeight", 0) == 1
+            milkWeightFlags = OPTION_FLAG_NONE
+        EndIf
+        milkWeightMultiplierOption = AddSliderOption("Milk Weight Multiplier", JsonUtil.GetFloatValue(SettingsFile, "milkWeightMultiplier", 1.0), "x{0}", milkWeightFlags)
+        SetCursorPosition(1)
+        AddHeaderOption("Milk Maid Appearance")
+        maidWeightScalingOption = AddToggleOption("Scale Weight with Maid Level", MMEMaidWeightScaling.IsEnabled())
+        Int maidWeightFlags = OPTION_FLAG_NONE
+        If !MMEMaidWeightScaling.IsEnabled()
+            maidWeightFlags = OPTION_FLAG_DISABLED
+        EndIf
+        maidWeightPerLevelOption = AddSliderOption("Weight per Maid Level", MMEMaidWeightScaling.GetWeightPerLevel(), "+{0}", maidWeightFlags)
+        Return
+    EndIf
     If page == "Misc"
         AddHeaderOption("Trapped Armor Chests")
         chestArmorTrapOption = AddToggleOption("Master Trap Chest Toggle", JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap", 1) == 1)
@@ -1938,13 +2037,6 @@ Event OnPageReset(String page)
         AddHeaderOption("Reverse Milk Maid Leveling")
         reverseDurationOption = AddSliderOption("Reverse Leveling Duration", MMEReverseLevel.GetDuration(), "{0} game hours")
         reversePlayerLevelOption = AddSliderOption("Minimum Milk Maid Level", MMEReverseLevel.GetRequiredLevel(), "{0}")
-        AddHeaderOption("Milk Maid Weight")
-        maidWeightScalingOption = AddToggleOption("Scale Weight with Maid Level", MMEMaidWeightScaling.IsEnabled())
-        Int maidWeightFlags = OPTION_FLAG_NONE
-        If !MMEMaidWeightScaling.IsEnabled()
-            maidWeightFlags = OPTION_FLAG_DISABLED
-        EndIf
-        maidWeightPerLevelOption = AddSliderOption("Weight per Maid Level", MMEMaidWeightScaling.GetWeightPerLevel(), "+{0}", maidWeightFlags)
         SetCursorPosition(1)
         AddHeaderOption("Exotic Milk Chest Trap")
         chestMilkTrapOption = AddToggleOption("Enable Exotic Milk Trap", JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrap", 1) == 1)
@@ -2110,7 +2202,12 @@ Event OnPageReset(String page)
         arousalEffectNotificationsOption = AddToggleOption("Show Arousal Notifications", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectNotifications", 1) == 1, arousalEffectFlags)
         arousalEffectSoundsOption = AddToggleOption("Play Arousal Sounds", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectSounds", 1) == 1, arousalEffectFlags)
         arousalEffectAnimationsOption = AddToggleOption("Play Arousal Animations", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectAnimations", 1) == 1, arousalEffectFlags)
-        arousalEffectCooldownOption = AddSliderOption("Reaction Cooldown", JsonUtil.GetFloatValue(SettingsFile, "arousalEffectCooldown", 15.0), "{0} seconds", arousalEffectFlags)
+        arousalMilkMaidRouteOption = AddToggleOption("Always React for Milk Maids", JsonUtil.GetIntValue(SettingsFile, "enableArousalMilkMaidRoute", 1) == 1, arousalEffectFlags)
+        arousalMilkDrinkRouteOption = AddToggleOption("React After Milk Drinking", JsonUtil.GetIntValue(SettingsFile, "enableArousalMilkDrinkRoute", 1) == 1, arousalEffectFlags)
+        arousalEveryoneRouteOption = AddToggleOption("Include Everyone Else", JsonUtil.GetIntValue(SettingsFile, "enableArousalEveryoneRoute", 0) == 1, arousalEffectFlags)
+        arousalEffectDelayOption = AddSliderOption("Reaction Delay", JsonUtil.GetFloatValue(SettingsFile, "arousalEffectDelay", 5.0), "{0} seconds", arousalEffectFlags)
+        arousalEffectCooldownOption = AddSliderOption("Reaction Cooldown", JsonUtil.GetFloatValue(SettingsFile, "arousalEffectCooldown", 5.0), "{0} seconds", arousalEffectFlags)
+        arousalEffectCooldownVariationOption = AddSliderOption("Cooldown Randomization", JsonUtil.GetFloatValue(SettingsFile, "arousalEffectCooldownVariation", 0.0), "+/- {0} seconds", arousalEffectFlags)
         arousalLowThresholdOption = AddSliderOption("Low Threshold", JsonUtil.GetIntValue(SettingsFile, "arousalLowThreshold", 20), "{0}", arousalEffectFlags)
         arousalMediumThresholdOption = AddSliderOption("Medium Threshold", JsonUtil.GetIntValue(SettingsFile, "arousalMediumThreshold", 50), "{0}", arousalEffectFlags)
         arousalHighThresholdOption = AddSliderOption("High Threshold", JsonUtil.GetIntValue(SettingsFile, "arousalHighThreshold", 80), "{0}", arousalEffectFlags)
@@ -2627,6 +2724,22 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Add MME Milkmaid Level divided by 2 to every recognized milk drink.")
     ElseIf option == flatMilkBonusOption
         SetInfoText("Add this much milk per MME or regular milk drink.")
+    ElseIf option == customMilkSpeedDebuffOption
+        SetInfoText("Use MME Extensions' threshold-based player speed penalty. Default off. Disable MME's original unmilked speed debuff first to prevent stacking.")
+    ElseIf option == milkSpeedMediumThresholdOption
+        SetInfoText("Milk fullness percentage that activates the medium penalty. The high tier replaces it rather than stacking.")
+    ElseIf option == milkSpeedMediumPenaltyOption
+        SetInfoText("Player movement-speed penalty at the medium milk threshold.")
+    ElseIf option == milkSpeedHighThresholdOption
+        SetInfoText("Milk fullness percentage that activates the high penalty. High wins if both thresholds are equal.")
+    ElseIf option == milkSpeedHighPenaltyOption
+        SetInfoText("Player movement-speed penalty at the high milk threshold.")
+    ElseIf option == maidLevelSpeedScalingOption
+        SetInfoText("Scale the selected speed penalty from 1x at Maid level 0 to 2x at level 100. Default off.")
+    ElseIf option == customMilkWeightOption
+        SetInfoText("Reduce player carry capacity by current milk times the multiplier. Default off. Disable MME's matching unmilked debuff first to prevent stacking.")
+    ElseIf option == milkWeightMultiplierOption
+        SetInfoText("Carry-weight penalty applied per unit of milk, from 1x to 10x.")
     ElseIf option == maidWeightScalingOption
         SetInfoText("Increase every registered Milk Maid's actor weight as her MME Maid level rises. Turning this off restores the baseline recorded before MME Extensions changed it. Weight changes can expose neck seams on some NPC replacers.")
     ElseIf option == maidWeightPerLevelOption
@@ -2875,8 +2988,18 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Play the existing mild, medium, or strong sex-aware reaction sound for the selected actor. Also respects the global moaning-sounds toggle. Default on.")
     ElseIf option == arousalEffectAnimationsOption
         SetInfoText("Play a sex- and tier-specific three-second animation while holding the actor in place. Never starts in combat or an active scene. Requires rerunning Pandora, Nemesis, or FNIS after installation. Default on.")
+    ElseIf option == arousalMilkMaidRouteOption
+        SetInfoText("Allow established Milk Maids to react whenever they cross an arousal threshold. Combined with the other eligibility routes using OR logic. Default on.")
+    ElseIf option == arousalMilkDrinkRouteOption
+        SetInfoText("Allow any valid adult to react when a recognized milk drink directly raises them across an arousal threshold. Default on.")
+    ElseIf option == arousalEveryoneRouteOption
+        SetInfoText("Allow unrelated nearby adults to react to threshold crossings. Leave this off to keep reactions tied to Milk Maids and milk drinking.")
+    ElseIf option == arousalEffectDelayOption
+        SetInfoText("Wait before presenting a qualified threshold reaction, allowing the drink animation to finish. Default 5 seconds, range 0-60.")
     ElseIf option == arousalEffectCooldownOption
-        SetInfoText("Minimum real-time delay between nearby arousal reactions. Default 15 seconds, range 0-600 in 5-second steps.")
+        SetInfoText("Minimum real-time delay between presented arousal reactions. Default 5 seconds, range 0-600 in 5-second steps.")
+    ElseIf option == arousalEffectCooldownVariationOption
+        SetInfoText("Randomly subtract or add up to this many seconds to each new reaction cooldown. Default 0 seconds.")
     ElseIf option == arousalLowThresholdOption
         SetInfoText("Minimum arousal for mild reactions. Must remain at least 5 points below Medium. Default 20.")
     ElseIf option == arousalMediumThresholdOption
@@ -3547,6 +3670,26 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enablePlayerDrinkNotifications", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == customMilkSpeedDebuffOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkSpeedDebuff", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableCustomMilkSpeedDebuff", value)
+        JsonUtil.Save(SettingsFile, False)
+        MMEBodyEffects.Reconcile("MCM speed toggle changed")
+        (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
+        ForcePageReset()
+    ElseIf option == maidLevelSpeedScalingOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMaidLevelSpeedScaling", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableMaidLevelSpeedScaling", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
+        MMEBodyEffects.Reconcile("MCM level scaling changed")
+    ElseIf option == customMilkWeightOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkWeight", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableCustomMilkWeight", value)
+        JsonUtil.Save(SettingsFile, False)
+        MMEBodyEffects.Reconcile("MCM milk weight toggle changed")
+        (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
+        ForcePageReset()
     ElseIf option == maidWeightScalingOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMaidLevelWeightScaling", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMaidLevelWeightScaling", value)
@@ -3823,6 +3966,23 @@ Event OnOptionSelect(Int option)
         Int arousalAnimationsValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectAnimations", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArousalEffectAnimations", arousalAnimationsValue)
         SetToggleOptionValue(option, arousalAnimationsValue == 1)
+    ElseIf option == arousalMilkMaidRouteOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArousalMilkMaidRoute", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalMilkMaidRoute", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
+        MMEArousalEffects.ResetBaselines("Milk Maid eligibility changed")
+    ElseIf option == arousalMilkDrinkRouteOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArousalMilkDrinkRoute", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalMilkDrinkRoute", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
+    ElseIf option == arousalEveryoneRouteOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArousalEveryoneRoute", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableArousalEveryoneRoute", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
+        MMEArousalEffects.ResetBaselines("everyone-else eligibility changed")
     ElseIf option == milkDrinkArousalOption && MMEArousalBridge.IsAvailable()
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkArousal", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkDrinkArousal", value)
@@ -4229,9 +4389,19 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(10.0)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
+    ElseIf option == arousalEffectDelayOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "arousalEffectDelay", 5.0))
+        SetSliderDialogDefaultValue(5.0)
+        SetSliderDialogRange(0.0, 60.0)
+        SetSliderDialogInterval(5.0)
     ElseIf option == arousalEffectCooldownOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "arousalEffectCooldown", 15.0))
-        SetSliderDialogDefaultValue(15.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "arousalEffectCooldown", 5.0))
+        SetSliderDialogDefaultValue(5.0)
+        SetSliderDialogRange(0.0, 600.0)
+        SetSliderDialogInterval(5.0)
+    ElseIf option == arousalEffectCooldownVariationOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "arousalEffectCooldownVariation", 0.0))
+        SetSliderDialogDefaultValue(0.0)
         SetSliderDialogRange(0.0, 600.0)
         SetSliderDialogInterval(5.0)
     ElseIf option == arousalLowThresholdOption
@@ -4249,6 +4419,31 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(80.0)
         SetSliderDialogRange(JsonUtil.GetIntValue(SettingsFile, "arousalMediumThreshold", 50) + 5, 100.0)
         SetSliderDialogInterval(5.0)
+    ElseIf option == milkSpeedMediumThresholdOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkSpeedMediumThreshold", 50.0))
+        SetSliderDialogDefaultValue(50.0)
+        SetSliderDialogRange(0.0, JsonUtil.GetFloatValue(SettingsFile, "milkSpeedHighThreshold", 100.0))
+        SetSliderDialogInterval(5.0)
+    ElseIf option == milkSpeedMediumPenaltyOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkSpeedMediumPenalty", 3.0))
+        SetSliderDialogDefaultValue(3.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == milkSpeedHighThresholdOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkSpeedHighThreshold", 100.0))
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(JsonUtil.GetFloatValue(SettingsFile, "milkSpeedMediumThreshold", 50.0), 100.0)
+        SetSliderDialogInterval(5.0)
+    ElseIf option == milkSpeedHighPenaltyOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkSpeedHighPenalty", 10.0))
+        SetSliderDialogDefaultValue(10.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == milkWeightMultiplierOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkWeightMultiplier", 1.0))
+        SetSliderDialogDefaultValue(1.0)
+        SetSliderDialogRange(1.0, 10.0)
+        SetSliderDialogInterval(1.0)
     ElseIf option == maidWeightPerLevelOption
         SetSliderDialogStartValue(MMEMaidWeightScaling.GetWeightPerLevel())
         SetSliderDialogDefaultValue(1.0)
@@ -4591,6 +4786,31 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.SetFloatValue(SettingsFile, "flatMilkBonus", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "+{1} milk")
+    ElseIf option == milkSpeedMediumThresholdOption
+        JsonUtil.SetFloatValue(SettingsFile, "milkSpeedMediumThreshold", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEBodyEffects.Reconcile("MCM medium threshold changed")
+    ElseIf option == milkSpeedMediumPenaltyOption
+        JsonUtil.SetFloatValue(SettingsFile, "milkSpeedMediumPenalty", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEBodyEffects.Reconcile("MCM medium penalty changed")
+    ElseIf option == milkSpeedHighThresholdOption
+        JsonUtil.SetFloatValue(SettingsFile, "milkSpeedHighThreshold", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEBodyEffects.Reconcile("MCM high threshold changed")
+    ElseIf option == milkSpeedHighPenaltyOption
+        JsonUtil.SetFloatValue(SettingsFile, "milkSpeedHighPenalty", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEBodyEffects.Reconcile("MCM high penalty changed")
+    ElseIf option == milkWeightMultiplierOption
+        JsonUtil.SetFloatValue(SettingsFile, "milkWeightMultiplier", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "x{0}")
+        MMEBodyEffects.Reconcile("MCM milk weight multiplier changed")
     ElseIf option == maidWeightPerLevelOption
         JsonUtil.SetFloatValue(SettingsFile, "maidWeightPerLevel", value)
         JsonUtil.Save(SettingsFile, False)
@@ -4604,10 +4824,18 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.SetFloatValue(SettingsFile, "milkDrinkArousal", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "+{0}")
+    ElseIf option == arousalEffectDelayOption
+        JsonUtil.SetFloatValue(SettingsFile, "arousalEffectDelay", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
     ElseIf option == arousalEffectCooldownOption
         JsonUtil.SetFloatValue(SettingsFile, "arousalEffectCooldown", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} seconds")
+    ElseIf option == arousalEffectCooldownVariationOption
+        JsonUtil.SetFloatValue(SettingsFile, "arousalEffectCooldownVariation", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "+/- {0} seconds")
     ElseIf option == arousalLowThresholdOption
         JsonUtil.SetIntValue(SettingsFile, "arousalLowThreshold", value as Int)
         JsonUtil.Save(SettingsFile, False)

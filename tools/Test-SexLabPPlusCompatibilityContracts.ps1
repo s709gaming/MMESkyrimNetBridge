@@ -9,6 +9,8 @@ $fomod = Get-Content -LiteralPath (Join-Path $root 'fomod\ModuleConfig.xml') -Ra
 $choiceRoot = Join-Path $root 'fomod\choices\sexlab-pplus'
 $registry = Get-Content -LiteralPath (Join-Path $choiceRoot 'SKSE\SexLab\Registry\Source\3jiouBreastFeeding.slsb.json') -Raw
 $registryData = $registry | ConvertFrom-Json
+$compiledRegistryPath = Join-Path $choiceRoot 'SKSE\SexLab\Registry\3jiouBreastFeeding.slr'
+$compiledRegistry = [IO.File]::ReadAllBytes($compiledRegistryPath)
 $fnisList = Get-Content -LiteralPath (Join-Path $choiceRoot 'meshes\actors\character\animations\3jiouBreastFeeding\FNIS_3jiouBreastFeeding_List.txt')
 
 function Assert-Contract([bool]$condition, [string]$message) {
@@ -27,7 +29,7 @@ Assert-Contract ($controller.Contains('MMESexLabBreastfeedingBackend.IsAvailable
 Assert-Contract (!$controller.Contains('Bool straightFound = milkController.SexLab.AnimSlots.GetbyRegistrar')) 'controller no longer closes the gate from legacy registrar checks'
 Assert-Contract ($debug.Contains('MMESexLabBreastfeedingBackend.StartBreastfeeding') -and $debug.Contains('MMESexLabBreastfeedingBackend.IsBreastfeedingThread')) 'SexLab starts and completions share the backend facade'
 Assert-Contract (!$debug.Contains('String animationName = "zjBreastFeeding"')) 'common transaction no longer selects legacy animations directly'
-Assert-Contract ($fomod.Contains('All-in-One SexLab P+ Compatibility')) 'FOMOD identifies the unified P+ compatibility option'
+Assert-Contract ($fomod.Contains('All-in-One SexLab P+ Compatibility — READ INSTRUCTIONS CAREFULLY') -and $fomod.Contains('READ THE SEXLAB P+ INSTRUCTIONS CAREFULLY.')) 'FOMOD identifies the unified P+ compatibility option and keeps its warning visible'
 Assert-Contract ($fomod.Contains('Scripts\SexLabThread.pex') -and $fomod.Contains('Scripts\SexlabRegistry.pex')) 'FOMOD detects P+ from two framework-owned scripts'
 Assert-Contract ($fomod.Contains('SKSE\CustomConsole\SexLabPPlus.yaml')) 'FOMOD has a P+-unique best-effort detection marker'
 Assert-Contract ($fomod.Contains('<defaultType name="Optional" />')) 'P+ option remains manually selectable when Vortex cannot classify loose files as active'
@@ -39,7 +41,19 @@ Assert-Contract ((Test-Path -LiteralPath (Join-Path $choiceRoot 'Scripts\MME_Dia
 Assert-Contract ((Get-ChildItem -LiteralPath (Join-Path $choiceRoot 'meshes\actors\character\animations\3jiouBreastFeeding') -Filter '*.HKX' -File).Count -eq 14) 'all fourteen converted breastfeeding animation files are bundled'
 Assert-Contract ((Test-Path -LiteralPath (Join-Path $choiceRoot 'meshes\actors\character\behaviors\FNIS_3jiouBreastFeeding_Behavior.hkx')) -and (Test-Path -LiteralPath (Join-Path $choiceRoot 'SKSE\SexLab\Registry\3jiouBreastFeeding.slr'))) 'converted behavior and runtime SLSB registry are bundled'
 Assert-Contract ($registry.Contains('e4j6zbhk') -and $registry.Contains('6otwp8mm')) 'bundled registry declares both scene IDs used by the P+ backend'
-Assert-Contract ($registry.Contains('"submissive":true')) 'bundled registry retains the milk-source submissive role used for actor ordering'
+Assert-Contract ($registryData.scenes.e4j6zbhk.positions[0].submissive -eq $true -and $registryData.scenes.'6otwp8mm'.positions[0].submissive -eq $true) 'bundled registry retains the milk-source submissive role used for actor ordering'
+Assert-Contract (!$registryData.scenes.e4j6zbhk.positions[0].sex.male -and $registryData.scenes.e4j6zbhk.positions[0].sex.female -and $registryData.scenes.e4j6zbhk.positions[1].sex.male -and !$registryData.scenes.e4j6zbhk.positions[1].sex.female) 'straight scene constrains the source to female/futa and the drinker to male/futa'
+Assert-Contract (!$registryData.scenes.'6otwp8mm'.positions[0].sex.male -and !$registryData.scenes.'6otwp8mm'.positions[1].sex.male) 'lesbian scene constrains both positions to female/futa actors'
+Assert-Contract ($registryData.scenes.'6otwp8mm'.tags -contains 'lesbian' -and $registryData.scenes.'6otwp8mm'.tags -notcontains 'straight' -and $registryData.scenes.'6otwp8mm'.tags -notcontains 'mf') 'lesbian scene no longer advertises straight or MF tags'
+Assert-Contract ($pplus.Contains('MMELog.MasterDiagnostic') -and $pplus.Contains('MMELog.Alarm')) 'P+ backend emits master-gated role footprints and smoke alarms'
+$positionFlags = @()
+for ($i = 0; $i -le $compiledRegistry.Length - 14; $i++) {
+    if ($compiledRegistry[$i] -eq 0 -and $compiledRegistry[$i + 2] -eq 0 -and $compiledRegistry[$i + 3] -eq 0 -and $compiledRegistry[$i + 4] -eq 3 -and $compiledRegistry[$i + 5] -eq 232 -and $compiledRegistry[$i + 6] -eq 1 -and $compiledRegistry[$i + 7] -eq 0 -and $compiledRegistry[$i + 9] -eq 0 -and $compiledRegistry[$i + 10] -eq 0 -and $compiledRegistry[$i + 11] -eq 3 -and $compiledRegistry[$i + 12] -eq 232 -and $compiledRegistry[$i + 13] -eq 0) {
+        $positionFlags += ,@($compiledRegistry[$i + 1], $compiledRegistry[$i + 8])
+        $i += 13
+    }
+}
+Assert-Contract ($positionFlags.Count -eq 2 -and $positionFlags[0][0] -eq 6 -and $positionFlags[0][1] -eq 5 -and $positionFlags[1][0] -eq 6 -and $positionFlags[1][1] -eq 6) 'compiled SLR enforces straight and lesbian milk-source/drinker sex roles'
 Assert-Contract ($fomod.Contains('rerun FNIS or your compatible behavior generator')) 'FOMOD warns that P+ animations require behavior generation'
 $registryEvents = @($registryData.scenes.PSObject.Properties.Value | ForEach-Object { $_.stages } | ForEach-Object { $_.positions } | ForEach-Object { $_.event })
 $fnisEvents = @($fnisList | ForEach-Object { if ($_ -match '^b\s+j90d(\S+)\s+(\S+\.hkx)$') { $Matches[1] } })

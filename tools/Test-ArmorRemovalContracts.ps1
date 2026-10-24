@@ -12,7 +12,7 @@ function Assert-Contract([bool]$condition, [string]$message) {
     Write-Host "PASS: $message"
 }
 
-Assert-Contract ($api -match 'Return 1[56]' -and $api -match 'ReleasePlayerSpecialArmor' -and $api -match 'ReleaseNearbyNPCSpecialArmor') "API version 15 or later retains player and nearby-allied-NPC removal facades"
+Assert-Contract ($api -match 'Return 1[5-9]' -and $api -match 'ReleasePlayerSpecialArmor' -and $api -match 'ReleaseNearbyNPCSpecialArmor') "API version 15 or later retains player and nearby-allied-NPC removal facades"
 Assert-Contract ($service -match 'armorClass == 2 \|\| armorClass == 3 \|\| armorClass == 4') "shared service accepts only Living, Parasite, and Dwemer armor"
 Assert-Contract ($service -match 'candidate != playerActor' -and $service -match 'IsPlayerTeammate' -and $service -match 'GetRelationshipRank') "AOE excludes the player and targets allied NPCs"
 Assert-Contract ($service -match 'MMEAnimationSafety\.GetStartBlockReason') "NPC AOE preserves shared scene, combat, and animation safety"

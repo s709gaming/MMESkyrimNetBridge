@@ -29,7 +29,64 @@ Function ResetBaselines(String reason = "settings changed") Global
     EndIf
     StorageUtil.SetIntValue(None, generationKey, generation)
     StorageUtil.UnsetFloatValue(None, "MMEExtensions.ArousalEffects.LastReaction")
+    StorageUtil.UnsetFloatValue(None, "MMEExtensions.ArousalEffects.LastCooldown")
     MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] baselines reset | generation=" + generation + " | reason=" + reason)
+EndFunction
+
+; Records only a threshold crossing caused by a recognized milk-drink arousal
+; change. Presentation remains owned by the existing five-second nearby scan so
+; drink animations get time to finish and this facade creates no second loop.
+Function RecordMilkDrinkCrossing(Actor target, Int arousalBefore, Int arousalAfter) Global
+    If target == None || !IsEnabled()
+        Return
+    EndIf
+    If arousalBefore < 0 || arousalAfter < 0
+        AlarmOnce("MMEExtensions.ArousalEffects.Alarm.MilkArousalUnreadable", "[MME Extensions Arousal Effects] FAILURE: a recognized milk arousal update returned an unreadable before/after value")
+        Return
+    EndIf
+    ClearAlarm("MMEExtensions.ArousalEffects.Alarm.MilkArousalUnreadable")
+    Int[] thresholds = GetNormalizedThresholds()
+    Int beforeTier = DetermineTier(arousalBefore, thresholds)
+    Int afterTier = DetermineTier(arousalAfter, thresholds)
+    If afterTier <= beforeTier
+        MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] milk drink did not cross upward | actor=" + GetActorName(target) + " | arousal=" + arousalBefore + " -> " + arousalAfter + " | tier=" + beforeTier + " -> " + afterTier)
+        Return
+    EndIf
+    QueueReaction(target, afterTier, "milk drink")
+    MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] milk crossing queued | actor=" + GetActorName(target) + " | arousal=" + arousalBefore + " -> " + arousalAfter + " | tier=" + beforeTier + " -> " + afterTier)
+EndFunction
+
+Function QueueReaction(Actor target, Int tier, String route) Global
+    If target == None || tier < 1 || tier > 3
+        AlarmOnce("MMEExtensions.ArousalEffects.Alarm.PendingTier", "[MME Extensions Arousal Effects] FAILURE: attempted to queue an invalid pending reaction tier")
+        Return
+    EndIf
+    ClearAlarm("MMEExtensions.ArousalEffects.Alarm.PendingTier")
+    Int existingTier = StorageUtil.GetIntValue(target, "MMEExtensions.ArousalEffects.PendingTier", 0)
+    If tier > existingTier
+        StorageUtil.SetIntValue(target, "MMEExtensions.ArousalEffects.PendingTier", tier)
+    EndIf
+    Float now = Utility.GetCurrentRealTime()
+    Float delay = JsonUtil.GetFloatValue(GetSettingsFile(), "arousalEffectDelay", 5.0)
+    If delay < 0.0
+        delay = 0.0
+    ElseIf delay > 60.0
+        delay = 60.0
+    EndIf
+    Float existingReady = StorageUtil.GetFloatValue(target, "MMEExtensions.ArousalEffects.PendingReady", -1.0)
+    Float readyAt = now + delay
+    If existingReady < now || readyAt < existingReady
+        StorageUtil.SetFloatValue(target, "MMEExtensions.ArousalEffects.PendingReady", readyAt)
+    EndIf
+    StorageUtil.SetFloatValue(target, "MMEExtensions.ArousalEffects.PendingExpires", readyAt + 30.0)
+    StorageUtil.SetStringValue(target, "MMEExtensions.ArousalEffects.PendingRoute", route)
+EndFunction
+
+Function ClearPendingReaction(Actor target) Global
+    StorageUtil.UnsetIntValue(target, "MMEExtensions.ArousalEffects.PendingTier")
+    StorageUtil.UnsetFloatValue(target, "MMEExtensions.ArousalEffects.PendingReady")
+    StorageUtil.UnsetFloatValue(target, "MMEExtensions.ArousalEffects.PendingExpires")
+    StorageUtil.UnsetStringValue(target, "MMEExtensions.ArousalEffects.PendingRoute")
 EndFunction
 
 ; Updates every valid actor's state, then presents at most one uniformly random
@@ -50,6 +107,7 @@ Bool Function ProcessNearbyActors(Actor[] scannedActors) Global
     Int crossingCount = 0
     Int baselineCount = 0
     Int readableCount = 0
+    Int queuedCount = 0
     Actor selectedActor = None
     Int selectedTier = 0
     Int selectedArousal = -1
@@ -68,13 +126,44 @@ Bool Function ProcessNearbyActors(Actor[] scannedActors) Global
                 If actorGeneration != generation || previousTier < 0
                     baselineCount += 1
                 ElseIf currentTier > previousTier
-                    crossingCount += 1
-                    ; Reservoir selection keeps every crossing equally likely
-                    ; without allocating another fixed-size Papyrus array.
-                    If Utility.RandomInt(1, crossingCount) == 1
-                        selectedActor = candidate
-                        selectedTier = currentTier
-                        selectedArousal = arousal
+                    Bool milkMaidRoute = JsonUtil.GetIntValue(GetSettingsFile(), "enableArousalMilkMaidRoute", 1) == 1 && MMEAlertsController.IsKnownMilkmaid(candidate)
+                    Bool everyoneRoute = JsonUtil.GetIntValue(GetSettingsFile(), "enableArousalEveryoneRoute", 0) == 1
+                    If milkMaidRoute
+                        QueueReaction(candidate, currentTier, "Milk Maid")
+                        queuedCount += 1
+                    ElseIf everyoneRoute
+                        QueueReaction(candidate, currentTier, "everyone else")
+                        queuedCount += 1
+                    Else
+                        MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] crossing filtered | actor=" + GetActorName(candidate) + " | neither Milk Maid nor everyone-else route qualified")
+                    EndIf
+                EndIf
+
+                Int pendingTier = StorageUtil.GetIntValue(candidate, "MMEExtensions.ArousalEffects.PendingTier", 0)
+                If pendingTier > 0
+                    Float now = Utility.GetCurrentRealTime()
+                    Float readyAt = StorageUtil.GetFloatValue(candidate, "MMEExtensions.ArousalEffects.PendingReady", now)
+                    Float expiresAt = StorageUtil.GetFloatValue(candidate, "MMEExtensions.ArousalEffects.PendingExpires", readyAt + 30.0)
+                    String pendingRoute = StorageUtil.GetStringValue(candidate, "MMEExtensions.ArousalEffects.PendingRoute", "")
+                    Bool routeEnabled = pendingRoute == "milk drink" && JsonUtil.GetIntValue(GetSettingsFile(), "enableArousalMilkDrinkRoute", 1) == 1
+                    If pendingRoute == "Milk Maid"
+                        routeEnabled = JsonUtil.GetIntValue(GetSettingsFile(), "enableArousalMilkMaidRoute", 1) == 1 && MMEAlertsController.IsKnownMilkmaid(candidate)
+                    ElseIf pendingRoute == "everyone else"
+                        routeEnabled = JsonUtil.GetIntValue(GetSettingsFile(), "enableArousalEveryoneRoute", 0) == 1
+                    EndIf
+                    If now > expiresAt || !routeEnabled
+                        MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] pending reaction discarded | actor=" + GetActorName(candidate) + " | route=" + pendingRoute + " | expired=" + (now > expiresAt))
+                        ClearPendingReaction(candidate)
+                    ElseIf now >= readyAt
+                        crossingCount += 1
+                        ; Reservoir selection keeps every ready actor equally
+                        ; likely; all simultaneous ready entries are consumed.
+                        If Utility.RandomInt(1, crossingCount) == 1
+                            selectedActor = candidate
+                            selectedTier = pendingTier
+                            selectedArousal = arousal
+                        EndIf
+                        ClearPendingReaction(candidate)
                     EndIf
                 EndIf
             EndIf
@@ -90,12 +179,15 @@ Bool Function ProcessNearbyActors(Actor[] scannedActors) Global
     If baselineCount > 0
         MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] quiet baselines established | actors=" + baselineCount + " | generation=" + generation)
     EndIf
+    If queuedCount > 0
+        MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] delayed reactions queued | count=" + queuedCount)
+    EndIf
     If crossingCount <= 0 || selectedActor == None
         Return False
     EndIf
 
     Float now = Utility.GetCurrentRealTime()
-    Float cooldown = JsonUtil.GetFloatValue(GetSettingsFile(), "arousalEffectCooldown", 15.0)
+    Float cooldown = StorageUtil.GetFloatValue(None, "MMEExtensions.ArousalEffects.LastCooldown", JsonUtil.GetFloatValue(GetSettingsFile(), "arousalEffectCooldown", 5.0))
     If cooldown < 0.0
         cooldown = 0.0
     ElseIf cooldown > 600.0
@@ -117,9 +209,34 @@ Bool Function ProcessNearbyActors(Actor[] scannedActors) Global
         ; Dispatch can make one bounded five-second retry. Start cooldown when
         ; presentation actually occurs rather than at the original crossing.
         StorageUtil.SetFloatValue(None, "MMEExtensions.ArousalEffects.LastReaction", Utility.GetCurrentRealTime())
-        MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] reaction presented | actor=" + GetActorName(selectedActor) + " | tier=" + selectedTier + " | arousal=" + selectedArousal + " | candidates=" + crossingCount)
+        Float nextCooldown = RollCooldown()
+        StorageUtil.SetFloatValue(None, "MMEExtensions.ArousalEffects.LastCooldown", nextCooldown)
+        MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] reaction presented | actor=" + GetActorName(selectedActor) + " | tier=" + selectedTier + " | arousal=" + selectedArousal + " | candidates=" + crossingCount + " | next cooldown=" + nextCooldown)
     EndIf
     Return presented
+EndFunction
+
+Float Function RollCooldown() Global
+    Float baseCooldown = JsonUtil.GetFloatValue(GetSettingsFile(), "arousalEffectCooldown", 5.0)
+    Float variation = JsonUtil.GetFloatValue(GetSettingsFile(), "arousalEffectCooldownVariation", 0.0)
+    If baseCooldown < 0.0
+        baseCooldown = 0.0
+    ElseIf baseCooldown > 600.0
+        baseCooldown = 600.0
+    EndIf
+    If variation < 0.0
+        variation = 0.0
+    ElseIf variation > 600.0
+        variation = 600.0
+    EndIf
+    Float result = baseCooldown
+    If variation > 0.0
+        result += Utility.RandomFloat(0.0 - variation, variation)
+    EndIf
+    If result < 0.0
+        result = 0.0
+    EndIf
+    Return result
 EndFunction
 
 Bool Function IsValidCandidate(Actor candidate) Global

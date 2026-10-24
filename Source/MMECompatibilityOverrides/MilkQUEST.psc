@@ -1429,11 +1429,11 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 		if Feeding 
 			if (ZaZGag == true && ZaZGagOpen == false)
 				IsFeedingBlocked = true
-				Debug.Messagebox("Gag prevents feeding")
+				MMELog.MasterDiagnostic("[MME Extensions MME Compatibility] feeding blocked by closed ZaZ gag | actor=" + akActor.GetDisplayName())
 			elseif Plugin_DDI
 				if (DDGag == true && DDGagOpen == false)
 					IsFeedingBlocked = true
-					Debug.Messagebox("Gag prevents feeding")
+					MMELog.MasterDiagnostic("[MME Extensions MME Compatibility] feeding blocked by closed Devious Devices gag | actor=" + akActor.GetDisplayName())
 				endif
 			endif
 		endif
