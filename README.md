@@ -129,6 +129,8 @@ Elsie Lavache adds lewd quests and lets you transform your favorite Skyrim women
 
 > 💡 **Free NPC Voices:** Skyrim.Net can voice Elsie Lavache's base dialogue for FREE via PocketTTS! Just enable "Enable TTS For Silent NPCs" in Skyrim.Net settings. No money required.
 
+> Turn off "SkyrimNet Enabled" under "Quick Toggles" top right to stop PAID features, but still use TTS.
+
 ## 🍼 JUGS INTEGRATION
 
 https://www.loverslab.com/topic/42635-jugs/page/14/#findComment-4211824
