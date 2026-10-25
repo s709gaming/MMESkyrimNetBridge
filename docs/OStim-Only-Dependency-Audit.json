@@ -1,0 +1,395 @@
+{
+  "job": "MME direct SexLab form dependency audit and source inventory",
+  "scope": {
+    "plugins": [
+      "MilkModNEW.esp"
+    ],
+    "defined_in": false,
+    "winner_fields": false
+  },
+  "total": 6,
+  "complete": true,
+  "notes": [
+    "Direct record links: all 318 SexLab-defined records queried against MME; six results inspected from MilkModNEW.esp.",
+    "Source inventory is lexical; compiled/transitive script closure remains an implementation acceptance gate.",
+    "No generated output was used as an authored base."
+  ],
+  "records": [
+    {
+      "formid": "000D62:MilkModNEW.esp",
+      "type": "Armor",
+      "editorid": "MME_6TITS",
+      "name": null,
+      "winner": "MilkModNEW.esp",
+      "fields": {
+        "Keywords[0]": "02F16E:SexLab.esm"
+      }
+    },
+    {
+      "formid": "000D67:MilkModNEW.esp",
+      "type": "Armor",
+      "editorid": "MME_MilkCuirass_FUTA",
+      "name": null,
+      "winner": "MilkModNEW.esp",
+      "fields": {
+        "Keywords[0]": "02F16E:SexLab.esm"
+      }
+    },
+    {
+      "formid": "001D8D:MilkModNEW.esp",
+      "type": "Armor",
+      "editorid": "MME_4TITS",
+      "name": null,
+      "winner": "MilkModNEW.esp",
+      "fields": {
+        "Keywords[0]": "02F16E:SexLab.esm"
+      }
+    },
+    {
+      "formid": "001D8E:MilkModNEW.esp",
+      "type": "Armor",
+      "editorid": "MME_8TITS",
+      "name": null,
+      "winner": "MilkModNEW.esp",
+      "fields": {
+        "Keywords[0]": "02F16E:SexLab.esm"
+      }
+    },
+    {
+      "formid": "005B10:MilkModNEW.esp",
+      "type": "Armor",
+      "editorid": "MME_MilkCuirass",
+      "name": null,
+      "winner": "MilkModNEW.esp",
+      "fields": {
+        "Keywords[0]": "02F16E:SexLab.esm"
+      }
+    },
+    {
+      "formid": "00E209:MilkModNEW.esp",
+      "type": "Quest",
+      "editorid": "MME_MilkQUEST",
+      "name": null,
+      "winner": "MilkModNEW.esp",
+      "fields": {
+        "VirtualMachineAdapter.Scripts[1].Properties[101].Object": "000D62:SexLab.esm"
+      }
+    }
+  ],
+  "script_inventory": [
+    {
+      "script": "MilkLactacidScr.psc",
+      "sha256": "1882ce3ed3e43ded51b80b99d44d18f46d46d3810761293c34faba395accb9a2",
+      "matches": [
+        {
+          "line": 61,
+          "code": "If (MilkQ.SexLab.IsValidActor(akTarget))"
+        },
+        {
+          "line": 78,
+          "code": "MilkQ.SexLab.PickVoice(akTarget).Moan(akTarget, Utility.RandomInt (70, 100), false)"
+        },
+        {
+          "line": 97,
+          "code": "if akTarget == PlayerREF && !MilkQ.SexLab.IsActorActive(akTarget)"
+        }
+      ]
+    },
+    {
+      "script": "MilkMCM.psc",
+      "sha256": "ea06f4b1ce401184434cc009e170f72f0b178182fdbef6078ad3acce2640d5dc",
+      "matches": [
+        {
+          "line": 703,
+          "code": "AddTextOption(\"SexLab Aroused\", MilkQ.Plugin_SLA, OPTION_FLAG_DISABLED)"
+        },
+        {
+          "line": 716,
+          "code": "AddTextOption(\"SexLab-StoriesDevious\", MilkQ.Plugin_SLSD, OPTION_FLAG_DISABLED)"
+        },
+        {
+          "line": 718,
+          "code": "AddTextOption(\"\t_SLSD_CowHarness\", (Game.GetFormFromFile(0x4395 , \"SexLab-StoriesDevious.esp\") as Keyword).GetString(), OPTION_FLAG_DISABLED)"
+        },
+        {
+          "line": 719,
+          "code": "AddTextOption(\"\t_SLSD_CowMilker\", (Game.GetFormFromFile(0x18D18 , \"SexLab-StoriesDevious.esp\") as Keyword).GetString(), OPTION_FLAG_DISABLED)"
+        }
+      ]
+    },
+    {
+      "script": "MilkPlayerLoadGame.psc",
+      "sha256": "1d4770b002258a88458c6cf6312456a0bb036772f6407e78435c07893028115a",
+      "matches": [
+        {
+          "line": 139,
+          "code": "Actor[] actors = MilkQ.SexLab.HookActors(_args)"
+        },
+        {
+          "line": 140,
+          "code": "sslBaseAnimation animation = MilkQ.SexLab.HookAnimation(_args)"
+        },
+        {
+          "line": 168,
+          "code": "Actor[] actors = MilkQ.SexLab.HookActors(_args)"
+        },
+        {
+          "line": 181,
+          "code": "Actor[] actors = MilkQ.SexLab.HookActors(_args)"
+        },
+        {
+          "line": 199,
+          "code": "sslBaseAnimation animation = MilkQ.SexLab.HookAnimation(_argString)"
+        },
+        {
+          "line": 209,
+          "code": "sslBaseAnimation animation = MilkQ.SexLab.HookAnimation(_args)"
+        },
+        {
+          "line": 339,
+          "code": "if SexLabUtil.GetVersion() < 15903"
+        },
+        {
+          "line": 340,
+          "code": "Debug.MessageBox( \"SexLab is too old\" + SexLabUtil.GetVersion())"
+        },
+        {
+          "line": 376,
+          "code": "if MilkQ.SexLab.AnimSlots.GetbyRegistrar(\"zjBreastFeedingVar\") && MilkQ.SexLab.AnimSlots.GetbyRegistrar(\"zjBreastFeeding\")"
+        }
+      ]
+    },
+    {
+      "script": "MilkPUMP.psc",
+      "sha256": "dac9ba9729c18ca233cf95223be0b19d119eeaae28e0951d052edf1c611d5599",
+      "matches": [
+        {
+          "line": 8,
+          "code": "IF !akActor.HasSpell( MilkQ.BeingMilkedPassive ) && akActor.GetSitState() <= 3 && akActor.GetSitState() > 0 && MilkQ.Sexlab.IsValidActor(akActor)"
+        }
+      ]
+    },
+    {
+      "script": "MilkPUMP_milkbarrel_example.psc",
+      "sha256": "8979220067fa75305d881cd4915cfda67b09d08cfd79380afc836e80ef9ef9b6",
+      "matches": [
+        {
+          "line": 10,
+          "code": "IF !akActor.HasSpell( MilkQ.BeingMilkedPassive ) && akActor.GetSitState() <= 3 && akActor.GetSitState() > 0  && MilkQ.Sexlab.IsValidActor(akActor)"
+        }
+      ]
+    },
+    {
+      "script": "MilkQUEST.psc",
+      "sha256": "605af69df97a1266af67e9f6e8d0c1db8be9cb3db038fe3b1622aa1ad9199805",
+      "matches": [
+        {
+          "line": 4,
+          "code": "SexLabFramework property SexLab auto"
+        },
+        {
+          "line": 881,
+          "code": "if MilkCnt >= MilkMax * 0.75 && akActor.IsNearPlayer() && !SexLab.IsActorActive(akActor)"
+        },
+        {
+          "line": 900,
+          "code": "if (random == MilkMax || random < 0) && (akActor.GetLeveledActorBase().GetSex() == 1 || MaleMaids == true) && akActor.IsNearPlayer() && !SexLab.IsActorActive(akActor)"
+        },
+        {
+          "line": 921,
+          "code": "elseif akActor == PlayerREF && !ArmorStrippingDisabled && Sexlab.IsStrippable(maidArmor)"
+        },
+        {
+          "line": 947,
+          "code": "if MilkCnt >= MilkMax * 0.75 && akActor.IsNearPlayer() && !SexLab.IsActorActive(akActor)"
+        },
+        {
+          "line": 1462,
+          "code": "if (cuirass != None && (Sexlab.IsStrippable(cuirass) || MilkCuirass == cuirass)) || cuirass == None"
+        },
+        {
+          "line": 1548,
+          "code": "ElseIf (DDArmbinder == false && DDYoke == false) && Sexlab.IsStrippable(cuirass)"
+        },
+        {
+          "line": 1651,
+          "code": "SexLab.ForbidActor(akActor)"
+        },
+        {
+          "line": 1652,
+          "code": "akActor.AddToFaction(SexLab.AnimatingFaction)"
+        },
+        {
+          "line": 1820,
+          "code": "SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (70, 100), true)"
+        },
+        {
+          "line": 1823,
+          "code": "SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (30, 100), true)"
+        },
+        {
+          "line": 1826,
+          "code": "SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (30, 100), false)"
+        },
+        {
+          "line": 1834,
+          "code": "SexLab.GetExpressionByName(\"Happy\").ApplyTo(akActor, Utility.RandomInt(30, 50))"
+        },
+        {
+          "line": 1836,
+          "code": "SexLab.GetExpressionByName(\"Pleasure\").ApplyTo(akActor, Utility.RandomInt(30, 100))"
+        },
+        {
+          "line": 1838,
+          "code": "SexLab.GetExpressionByName(\"Joy\").ApplyTo(akActor, Utility.RandomInt(30, 100))"
+        },
+        {
+          "line": 1840,
+          "code": "SexLab.GetExpressionByName(\"Pained\").ApplyTo(akActor, Utility.RandomInt(50, 70))"
+        },
+        {
+          "line": 1973,
+          "code": "SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (70, 100), true)"
+        },
+        {
+          "line": 1976,
+          "code": "SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (30, 100), true)"
+        },
+        {
+          "line": 1979,
+          "code": "SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (30, 100), false)"
+        },
+        {
+          "line": 1986,
+          "code": "SexLab.GetExpressionByName(\"Happy\").ApplyTo(akActor, Utility.RandomInt(30, 50))"
+        },
+        {
+          "line": 1988,
+          "code": "SexLab.GetExpressionByName(\"Pleasure\").ApplyTo(akActor, Utility.RandomInt(30, 100))"
+        },
+        {
+          "line": 1990,
+          "code": "SexLab.GetExpressionByName(\"Joy\").ApplyTo(akActor, Utility.RandomInt(30, 100))"
+        },
+        {
+          "line": 1992,
+          "code": "SexLab.GetExpressionByName(\"Pained\").ApplyTo(akActor, Utility.RandomInt(50, 70))"
+        },
+        {
+          "line": 2022,
+          "code": "SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (70, 100), false)"
+        },
+        {
+          "line": 2087,
+          "code": "SexLab.ClearMFG(akActor)"
+        },
+        {
+          "line": 2121,
+          "code": "If cuirass != None && (Sexlab.IsStrippable(cuirass) || MilkCuirass == cuirass)"
+        },
+        {
+          "line": 2154,
+          "code": "if cuirass != None && (Sexlab.IsStrippable(cuirass) || MilkCuirass == cuirass)"
+        },
+        {
+          "line": 2260,
+          "code": "SexLab.AllowActor(akActor)"
+        },
+        {
+          "line": 2261,
+          "code": "akActor.RemoveFromFaction(SexLab.AnimatingFaction)"
+        },
+        {
+          "line": 2908,
+          "code": "If Game.GetModbyName(\"SexLab-StoriesDevious.esp\") != 255"
+        },
+        {
+          "line": 2909,
+          "code": "debug.Trace(\"MilkModEconomy SexLab-StoriesDevious.esp found\")"
+        },
+        {
+          "line": 2912,
+          "code": "debug.Trace(\"MilkModEconomy SexLab-StoriesDevious.esp not found\")"
+        },
+        {
+          "line": 3571,
+          "code": "if akActor.GetLeveledActorBase().GetSex() == 1 && SexLab.GetGender(akActor) == 1 && hasSchlong != True"
+        },
+        {
+          "line": 3573,
+          "code": "elseif akActor.GetLeveledActorBase().GetSex() == 0 && SexLab.GetGender(akActor) == 0"
+        },
+        {
+          "line": 3575,
+          "code": "elseif akActor.GetLeveledActorBase().GetSex() > 1 || SexLab.GetGender(akActor) > 1"
+        }
+      ]
+    },
+    {
+      "script": "MME_BodyMod.psc",
+      "sha256": "e0b6ef5b07c203539533536f8ae1b56c64844bfc0108ef72cef6ae446d8554cc",
+      "matches": [
+        {
+          "line": 7,
+          "code": "If Game.GetModbyName(\"SexLab Inflation Framework.esp\") != 255"
+        }
+      ]
+    },
+    {
+      "script": "MME_CheckForSpriggan.psc",
+      "sha256": "9c50f43bdb8435d1d3d5b9cacbc48ad8488e5f0cd22a0737afe4fc1fc86bdbc8",
+      "matches": [
+        {
+          "line": 54,
+          "code": "elseif akActor.GetWornForm(Armor.GetMaskForSlot(32)) == akBaseObject && !MilkQ.ArmorStrippingDisabled && MilkQ.Sexlab.IsStrippable(akBaseObject)"
+        }
+      ]
+    },
+    {
+      "script": "MME_Dialogues.psc",
+      "sha256": "71c8d8908d2032e35bcc304eca64ba2c9c9813355af7f3d3573eb586f311d215",
+      "matches": [
+        {
+          "line": 48,
+          "code": "sslBaseAnimation[] anims"
+        },
+        {
+          "line": 49,
+          "code": "anims = new sslBaseAnimation[1]"
+        },
+        {
+          "line": 62,
+          "code": "anims[0] = MilkQ.SexLab.AnimSlots.GetbyRegistrar(\"zjBreastFeedingVar\")"
+        },
+        {
+          "line": 64,
+          "code": "anims[0] = MilkQ.SexLab.AnimSlots.GetbyRegistrar(\"zjBreastFeeding\")"
+        },
+        {
+          "line": 67,
+          "code": "MilkQ.SexLab.StartSex(sexActors, anims)"
+        }
+      ]
+    },
+    {
+      "script": "MME_SLSD.psc",
+      "sha256": "f3bfe2105d5e09a669430d33901973080d01e8c909b12214bb3fccec810cffd9",
+      "matches": [
+        {
+          "line": 11,
+          "code": "if akActor.WornHasKeyword((Game.GetFormFromFile(0x4395 , \"SexLab-StoriesDevious.esp\") as Keyword)) || akActor.WornHasKeyword((Game.GetFormFromFile(0x18D18 , \"SexLab-StoriesDevious.esp\") as Keyword))"
+        }
+      ]
+    },
+    {
+      "script": "MME_StartMilking.psc",
+      "sha256": "39037791bb70f788d6ebdef04461d71cbc3a503f709ae3127fc6b614b36ea4ba",
+      "matches": [
+        {
+          "line": 5,
+          "code": "IF !akTarget.HasSpell( MilkQ.BeingMilkedPassive ) && !akTarget.IsInCombat() && !akTarget.IsOnMount() && MilkQ.SexLab.IsValidActor(akTarget)"
+        }
+      ]
+    }
+  ]
+}

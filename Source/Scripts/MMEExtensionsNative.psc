@@ -8,7 +8,7 @@ Int Function GetMovementSlapSession() Global Native
 
 ; Papyrus declarations for the SKSE/CommonLib native bridge. Keep every name and
 ; signature synchronized with RegisterPapyrus in src/Plugin.cpp; compiled callers
-; depend on this ABI. Functions observe engine state only and never edit records.
+; depend on this ABI. Morph functions edit only our owned runtime morph key; records are never edited.
 
 ; Returns the player followed by loaded actors in the same cell and radius.
 Actor[] Function GetNearbyActors(Float radius) Global Native
@@ -37,3 +37,12 @@ String[] Function GetFormSourceFiles(Form target) Global Native
 
 ; Returns the live parent DIAL for an INFO.
 Form Function GetParentTopic(Form info) Global Native
+
+; Optional RaceMenu calls are resolved dynamically by the DLL; no NiOverride
+; Papyrus dependency. Apply queues ordered clear/set/refresh completion and
+; reports its token through MMEExtensions_MaidBodyComplete; no latent save stack.
+Bool Function IsBodyMorphAvailable() Global Native
+Bool Function ApplyMaidBodyMorphs(Actor target, String[] names, Float[] values, Int token) Global Native
+
+; Actor/token-specific native rejection or readback failure detail.
+String Function GetMaidBodyFailureReason(Actor target, Int token) Global Native

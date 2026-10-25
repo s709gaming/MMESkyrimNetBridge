@@ -1,0 +1,128 @@
+{
+    "backend":  "OStim-only",
+    "runtimeValidated":  false,
+    "pairs":  [
+                  {
+                      "script":  "MilkLactacidScr",
+                      "sourceSHA256":  "309EF41D7C8E39F2E9168DE5B9DBB1A09364953D168968CFBCA7525DA214F7A0",
+                      "compiledSHA256":  "CD935F0C1A6DF7E1BE6E31F25D80B689490EE8CDA10BC8F9CEBA600F7358275E"
+                  },
+                  {
+                      "script":  "MilkPlayerLoadGame",
+                      "sourceSHA256":  "8BF5FF9AEE52D84410576B522FA19BE67C1E5025D1C82D063AA26B14F060B5B2",
+                      "compiledSHA256":  "8B82015D831268A1814342C03E7AA6468391A4B7D619418C8D4A9224DE7845EC"
+                  },
+                  {
+                      "script":  "MilkPUMP",
+                      "sourceSHA256":  "EE8E3CC80350C87598E51DB1F097481C019385D48E351BEB3E7478CE1EFA8498",
+                      "compiledSHA256":  "D4B9C22D4FBA057405927A4964ED93A1CA5D7970FB897F9AE8E0D3C4BD2C0E32"
+                  },
+                  {
+                      "script":  "MilkPUMP_milkbarrel_example",
+                      "sourceSHA256":  "2B674A3DBD1CC9CC974779E9FF8A9C91A7250C1B676E1350286EE5C8FD8DD057",
+                      "compiledSHA256":  "EDA615F256627753B540E6496AB9211089F7CE38451354A1BD0323F8704AEB8E"
+                  },
+                  {
+                      "script":  "MilkQUEST",
+                      "sourceSHA256":  "9A0FC1D05E28A695176898F8262F61C2F3EB2E49BF294EA935D12B0192A09A66",
+                      "compiledSHA256":  "DCAC99CF1015AEECE037EBBEECF0C41B3B8FBAA43F2757E58D15299325DD1D25"
+                  },
+                  {
+                      "script":  "MMEAlertsController",
+                      "sourceSHA256":  "969386E5EBA0A005CD29AD1F5CD87F3C0C450224BCB9364917B324F79C27B1D0",
+                      "compiledSHA256":  "5A86E6064120FC5759E399A419D92F3EDF5CE678FCF72891A704C5645630E78B"
+                  },
+                  {
+                      "script":  "MMEAlertsSkyrimNet",
+                      "sourceSHA256":  "C697F59E6915734A05E6CA59081DE6B61FC4C9076B7AC9D40804FE0ABD959CBF",
+                      "compiledSHA256":  "5E630206ACF85B3B3FCE36D2DEA23EEC56D1E46B1C22FD7F2153135DD7475B44"
+                  },
+                  {
+                      "script":  "MMEAnimationSafety",
+                      "sourceSHA256":  "1EC49A41946AA26C6F904C2F208891FF4E0DC821B692432446BCB747C1D0F33E",
+                      "compiledSHA256":  "8BE36719F92FD55C22ABA2D154E045FD17198FC9C360F6F3CA3A4AC562EE4655"
+                  },
+                  {
+                      "script":  "MMEArmorScript",
+                      "sourceSHA256":  "E092FF9B954C1AEC141C79AC992CD7400C84DA1FEA99CEA3AB99EAE7CC1169F5",
+                      "compiledSHA256":  "23FA43DDDCA5D3A281568B7BFB856DDB1B0BE5226F2F8FDE01FAE551E6A66B8B"
+                  },
+                  {
+                      "script":  "MMEDebug",
+                      "sourceSHA256":  "759525DDFBB207047F6FE724403640FE7D9A52DE6614C394C3ABB211E903EEEF",
+                      "compiledSHA256":  "AF72E911CDDE8DAEEC4444DD8B0EABBA746F0073ED9F12D32995C99236C6E6C9"
+                  },
+                  {
+                      "script":  "MMEDiagnostics",
+                      "sourceSHA256":  "016EA413381EB11132CFC7655AEE3EF6A1BC0FB0BF3E6B40C8C80E8C127C9CFF",
+                      "compiledSHA256":  "8DCEA62FE3B2866E349D9676FDFAB5B1CAF65A3302BED48DCAAD8D3328E43A5C"
+                  },
+                  {
+                      "script":  "MMEDwemerArmor",
+                      "sourceSHA256":  "DED1319767C00DF8EE355A66DE1EEB012DB0E5F01A531D0DA1281F1E7288C1CF",
+                      "compiledSHA256":  "1F0E9E921E9A6B011FAC9C8C245D4D095188F7722B8C3659985F4289E81C1A94"
+                  },
+                  {
+                      "script":  "MMEElsieBreastfeeding",
+                      "sourceSHA256":  "3033557CD8B6CBF27C41B905269763E77F7193783BB10472BE6D31A07FE0CD09",
+                      "compiledSHA256":  "2C56D9824C1669C8E9CB9187B8A1277BBC9BD83B203DB93353D6D567DC698DF0"
+                  },
+                  {
+                      "script":  "MMEFrameworkBackend",
+                      "sourceSHA256":  "D8ED8562939EDD6D3EE102FEE2A4109B6E7E24F6D86ECF44EA1030A64B5A5938",
+                      "compiledSHA256":  "30F1BE00075C366D1F40044BBA1B61590EDB84C51C5CBD28037862B9B8C9B509"
+                  },
+                  {
+                      "script":  "MMENewMilkMaid",
+                      "sourceSHA256":  "812A43069C8FDFF771D9E88E2123128ECC34AC17E89ED3DB397F2E36FBF9599F",
+                      "compiledSHA256":  "B587E02C6BC3AAD8B50306D36074DF8C353DE3E68EE89CECBE4ADFB704D6584E"
+                  },
+                  {
+                      "script":  "MMEOStimBreastfeeding",
+                      "sourceSHA256":  "10B1D614B0210B6DF79208B74FF06C951F69A7B690ABF6DF364FDC89C192761F",
+                      "compiledSHA256":  "5907BE2C0F5FA103527688781C2E4860A3DD7C972FAC0E77E5BC5586EEA3B1AC"
+                  },
+                  {
+                      "script":  "MMEOStimIntegration",
+                      "sourceSHA256":  "E930FC9FC5D1D6715B73525CB67743EE95889265A5FF59167CCEC8757FA3AC34",
+                      "compiledSHA256":  "CEB66D331529B5D28F0D616BA5BEDCAB1F9044E944FAE3830CD53C69268C6D72"
+                  },
+                  {
+                      "script":  "MMESexLabBreastfeedingBackend",
+                      "sourceSHA256":  "21981AE962D47B4071A1FBEA24D6833F1D552E022B7DB034EA4B8588590FC414",
+                      "compiledSHA256":  "5577724510AF462A5DC3F08F420873E862165D82A65A6EE2C548BDF9EE4C8275"
+                  },
+                  {
+                      "script":  "MME_CheckForSpriggan",
+                      "sourceSHA256":  "34669E3B39B07F6AECF7FB2B73C24B7E4862762E29848F938CD128629DDD4730",
+                      "compiledSHA256":  "2FE6871A5FE4BEA774CB48701D3F21E730F2A68D3908446870C16382E7225FC3"
+                  },
+                  {
+                      "script":  "MME_DDi",
+                      "sourceSHA256":  "FBA868BD564078F76B6255A48461A523E0A47CEC9114895D85C05FE8D3CA6B31",
+                      "compiledSHA256":  "53AEA714CA6D7D797EBF3E24728148B01B26BA468F5D0923CABA98191F23C45D"
+                  },
+                  {
+                      "script":  "MME_Dialogues",
+                      "sourceSHA256":  "83556D524B4A3745342C2FB136AAA41EA2CE1501BE063FA9739E68BE159861E8",
+                      "compiledSHA256":  "AFAFD7A95848A37EC5674884D1EFA75171CF5ED8986D323AFAF2D79E456F834B"
+                  },
+                  {
+                      "script":  "MME_MilkSuccubus",
+                      "sourceSHA256":  "5A1CF90E1F65300217879ABF98E6AE07A7E586EE83DEDE6BB084388FE2BB3DB6",
+                      "compiledSHA256":  "B56FCA8D6EFE0D655851B27CD5A835FCC921E98FCD1CFF54067B88F78F358841"
+                  },
+                  {
+                      "script":  "MME_StartMilking",
+                      "sourceSHA256":  "6FDCD1784B7B65ACD52A41106D4F736AED84DCAAF76F2417D4EB61711DF4F168",
+                      "compiledSHA256":  "860D235BD9D147E4D51517B458DA8E21705BBA83A6BC5D1D0403AF6A4066A10B"
+                  },
+                  {
+                      "script":  "MME_zbf",
+                      "sourceSHA256":  "EE4665FBFB927B028DC23E22E75F7349B938839BCAA3B1837A42ED62843D1C8B",
+                      "compiledSHA256":  "56240E3CB262296E98FCF979BC76843FB5667689CED78DB32CB596620D172639"
+                  }
+              ],
+    "pluginSHA256":  "A6B81CB57E7234B52A0909703500AE0143CB92EEE1F323275247F9CC6F116A0D",
+    "dialoguePluginSHA256":  "B200CE155CFE849753CC9AE22E3851136B67D9581F27C253E78C3E2DE80D2B4C"
+}

@@ -12,6 +12,11 @@
 #include <RE/M/MenuTopicManager.h>
 #include <RE/M/Misc.h>
 #include <RE/N/NativeFunction.h>
+#include <RE/F/FunctionArguments.h>
+#include <RE/I/IStackCallbackFunctor.h>
+#include <cmath>
+#include <mutex>
+#include "../include/MaidMorphValidation.h"
 #include <RE/S/ScriptEventSourceHolder.h>
 #include <RE/T/TESFile.h>
 #include <RE/T/TESForm.h>
@@ -652,6 +657,206 @@ namespace
                movement.movingLeft || movement.movingRight;
     }
 
+    // Optional RaceMenu bridge. No NiOverride script or plugin master is shipped.
+    // Each callback starts the next operation, so clear/set/refresh cannot race.
+    constexpr auto MaidMorphKey = "MMEExtensions.MaidLevel";
+
+    bool IsBodyMorphAvailable(RE::StaticFunctionTag*)
+    {
+        return SKSE::GetPluginInfo("skee") != nullptr;
+    }
+
+    enum class MaidMorphPhase { Clear, VerifyClear, Set, Readback, Refresh, Done };
+
+    struct MaidMorphRequest
+    {
+        RE::ActorHandle actor;
+        std::int32_t token;
+        std::uint32_t session = gMovementSlapSession.load();
+        std::vector<RE::BSFixedString> names;
+        std::vector<float> values;
+        std::size_t index = 0;
+        MaidMorphPhase phase = MaidMorphPhase::Clear;
+        std::string normalized;
+        std::string verified;
+    };
+
+    std::mutex gMaidMorphFailureMutex;
+    std::unordered_map<RE::FormID, std::pair<std::int32_t, std::string>> gMaidMorphFailures;
+
+    void SetMaidMorphFailure(RE::Actor* actor, std::int32_t token, const std::string& reason)
+    {
+        if (!actor) return;
+        std::scoped_lock lock(gMaidMorphFailureMutex);
+        gMaidMorphFailures[actor->GetFormID()] = { token, reason };
+    }
+
+    RE::BSFixedString GetMaidBodyFailureReason(RE::StaticFunctionTag*, RE::Actor* actor, std::int32_t token)
+    {
+        std::scoped_lock lock(gMaidMorphFailureMutex);
+        if (actor) {
+            auto found = gMaidMorphFailures.find(actor->GetFormID());
+            if (found != gMaidMorphFailures.end() && found->second.first == token)
+                return RE::BSFixedString(found->second.second);
+        }
+        return RE::BSFixedString("failure details unavailable for this request token");
+    }
+
+    void SendMaidMorphTrace(const std::shared_ptr<MaidMorphRequest>& request, const std::string& detail)
+    {
+        auto actor = request->actor.get();
+        if (!actor || request->session != gMovementSlapSession.load()) return;
+        if (auto source = SKSE::GetModCallbackEventSource()) {
+            SKSE::ModCallbackEvent event{
+                RE::BSFixedString("MMEExtensions_MaidBodyTrace"),
+                RE::BSFixedString("token=" + std::to_string(request->token) + " | " + detail), 0.0F, actor.get()};
+            source->SendEvent(&event); // Papyrus gates this through the master logging toggle.
+        }
+    }
+
+    void FinishMaidMorphs(const std::shared_ptr<MaidMorphRequest>& request, bool success, const std::string& reason = "")
+    {
+        auto actor = request->actor.get();
+        if (!actor || request->session != gMovementSlapSession.load()) return;
+        if (!success) SetMaidMorphFailure(actor.get(), request->token, reason);
+        else {
+            std::scoped_lock lock(gMaidMorphFailureMutex);
+            gMaidMorphFailures.erase(actor->GetFormID());
+        }
+        SKSE::ModCallbackEvent event{
+            RE::BSFixedString("MMEExtensions_MaidBodyComplete"),
+            RE::BSFixedString(std::to_string(request->token)),
+            success ? 1.0F : 0.0F, actor.get()};
+        if (auto source = SKSE::GetModCallbackEventSource()) source->SendEvent(&event);
+    }
+
+    void AdvanceMaidMorphs(const std::shared_ptr<MaidMorphRequest>& request);
+
+    class MaidMorphCallback final : public RE::BSScript::IStackCallbackFunctor
+    {
+    public:
+        explicit MaidMorphCallback(std::shared_ptr<MaidMorphRequest> request) : request_(std::move(request)) {}
+        void operator()(RE::BSScript::Variable result) override
+        {
+            // A pre-load callback must not inspect an actor from the new session.
+            if (request_->session != gMovementSlapSession.load()) return;
+            switch (request_->phase) {
+            case MaidMorphPhase::Clear:
+                request_->phase = MaidMorphPhase::VerifyClear;
+                break;
+            case MaidMorphPhase::VerifyClear:
+                if (!result.IsBool() || result.GetBool()) {
+                    FinishMaidMorphs(request_, false, "owned key remained after clear, or HasBodyMorphKey returned the wrong type");
+                    return;
+                }
+                request_->phase = request_->names.empty() ? MaidMorphPhase::Refresh : MaidMorphPhase::Set;
+                if (request_->names.empty()) request_->verified = "cleanup readback verified | owned key absent";
+                break;
+            case MaidMorphPhase::Set:
+                request_->phase = MaidMorphPhase::Readback;
+                break;
+            case MaidMorphPhase::Readback: {
+                const float expected = request_->values[request_->index];
+                if (!result.IsFloat() || !std::isfinite(result.GetFloat()) || std::fabs(result.GetFloat() - expected) > 0.0001F) {
+                    FinishMaidMorphs(request_, false, "readback mismatch | morph=" + std::string(request_->names[request_->index].c_str()) +
+                        " | expected=" + std::to_string(expected) + " | actual=" + (result.IsFloat() ? std::to_string(result.GetFloat()) : "non-float"));
+                    return;
+                }
+                request_->verified += " " + std::string(request_->names[request_->index].c_str()) + "=" + std::to_string(result.GetFloat());
+                ++request_->index;
+                request_->phase = request_->index < request_->names.size() ? MaidMorphPhase::Set : MaidMorphPhase::Refresh;
+                break;
+            }
+            case MaidMorphPhase::Refresh:
+                request_->phase = MaidMorphPhase::Done;
+                break;
+            case MaidMorphPhase::Done:
+                return;
+            }
+            AdvanceMaidMorphs(request_);
+        }
+        void SetObject(const RE::BSTSmartPointer<RE::BSScript::Object>&) override {}
+    private:
+        std::shared_ptr<MaidMorphRequest> request_;
+    };
+
+    void AdvanceMaidMorphs(const std::shared_ptr<MaidMorphRequest>& request)
+    {
+        SKSE::GetTaskInterface()->AddTask([request]() {
+            if (request->session != gMovementSlapSession.load()) return;
+            auto vm = RE::BSScript::Internal::VirtualMachine::GetSingleton();
+            auto actor = request->actor.get();
+            if (!actor) return; // invalidated references are pruned by Papyrus recovery
+            if (!IsBodyMorphAvailable(nullptr)) {
+                FinishMaidMorphs(request, false, "RaceMenu became unavailable during request");
+                return;
+            }
+            if (request->phase == MaidMorphPhase::Done) {
+                SendMaidMorphTrace(request, request->names.empty() ? request->verified : "apply readback verified |" + request->verified);
+                FinishMaidMorphs(request, true);
+                return;
+            }
+            RE::BSScript::IFunctionArguments* args = nullptr;
+            RE::BSFixedString function;
+            RE::TESObjectREFR* ref = actor.get();
+            RE::BSFixedString key(MaidMorphKey);
+            switch (request->phase) {
+            case MaidMorphPhase::Clear:
+                if (!request->normalized.empty()) SendMaidMorphTrace(request, "name normalization |" + request->normalized);
+                function = "ClearBodyMorphKeys";
+                args = RE::MakeFunctionArguments(std::move(ref), std::move(key));
+                break;
+            case MaidMorphPhase::VerifyClear:
+                function = "HasBodyMorphKey";
+                args = RE::MakeFunctionArguments(std::move(ref), std::move(key));
+                break;
+            case MaidMorphPhase::Set:
+                function = "SetBodyMorph";
+                args = RE::MakeFunctionArguments(std::move(ref), RE::BSFixedString(request->names[request->index]),
+                    std::move(key), float(request->values[request->index]));
+                break;
+            case MaidMorphPhase::Readback:
+                function = "GetBodyMorph";
+                args = RE::MakeFunctionArguments(std::move(ref), RE::BSFixedString(request->names[request->index]), std::move(key));
+                break;
+            case MaidMorphPhase::Refresh:
+                function = "UpdateModelWeight";
+                args = RE::MakeFunctionArguments(std::move(ref));
+                break;
+            case MaidMorphPhase::Done:
+                return;
+            }
+            RE::BSTSmartPointer<RE::BSScript::IStackCallbackFunctor> callback(new MaidMorphCallback(request));
+            if (!vm->DispatchStaticCall("NiOverride", function, args, callback))
+                FinishMaidMorphs(request, false, "NiOverride dispatch rejected | function=" + std::string(function.c_str()));
+        });
+    }
+
+    bool ApplyMaidBodyMorphs(RE::StaticFunctionTag*, RE::Actor* actor,
+        std::vector<RE::BSFixedString> names, std::vector<float> values, std::int32_t token)
+    {
+        auto reject = [&](const std::string& reason) {
+            SetMaidMorphFailure(actor, token, reason);
+            return false;
+        };
+        if (!actor) return reject("target actor is None");
+        if (!IsBodyMorphAvailable(nullptr)) return reject("optional RaceMenu plugin unavailable");
+        std::vector<std::string_view> incoming;
+        for (const auto& name : names) incoming.emplace_back(name.c_str());
+        auto prepared = MaidMorphValidation::Prepare(incoming, values);
+        if (!prepared.error.empty()) return reject(prepared.error);
+        auto request = std::make_shared<MaidMorphRequest>();
+        request->token = token;
+        request->actor = actor->GetHandle();
+        request->normalized = std::move(prepared.normalized);
+        // BSFixedString is case-insensitive and may retain an earlier spelling.
+        // Validate by content, never by its intern pool's spelling.
+        for (auto canonical : prepared.canonical) request->names.emplace_back(std::string(canonical));
+        request->values = std::move(values);
+        AdvanceMaidMorphs(request);
+        return true; // accepted; success follows readback through the completion event
+    }
+
     bool RegisterPapyrus(RE::BSScript::IVirtualMachine* vm)
     {
         // Keep registration names synchronized with MMEExtensionsNative.psc.
@@ -667,6 +872,9 @@ namespace
         vm->RegisterFunction("GetParentTopic", "MMEExtensionsNative", GetParentTopic);
         vm->RegisterFunction("IsPlayerMovingOnFoot", "MMEExtensionsNative", IsPlayerMovingOnFoot);
         vm->RegisterFunction("GetMovementSlapSession", "MMEExtensionsNative", GetMovementSlapSession);
+        vm->RegisterFunction("GetMaidBodyFailureReason", "MMEExtensionsNative", GetMaidBodyFailureReason);
+        vm->RegisterFunction("IsBodyMorphAvailable", "MMEExtensionsNative", IsBodyMorphAvailable);
+        vm->RegisterFunction("ApplyMaidBodyMorphs", "MMEExtensionsNative", ApplyMaidBodyMorphs);
         SKSE::log::info("Native scanner registered");
         return true;
     }
@@ -1011,6 +1219,8 @@ namespace
         if (message->type == SKSE::MessagingInterface::kPreLoadGame ||
             message->type == SKSE::MessagingInterface::kNewGame) {
             gMovementSlapSession.fetch_add(1);
+            std::scoped_lock lock(gMaidMorphFailureMutex);
+            gMaidMorphFailures.clear();
         }
         // Event sources and loaded forms are ready only after DataLoaded.
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {

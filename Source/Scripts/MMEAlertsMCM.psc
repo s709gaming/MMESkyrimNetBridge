@@ -83,6 +83,18 @@ Int debugMilkReportOption
 Int debugMilkingEventsOption
 Int milkmaidLevelBonusOption
 Int flatMilkBonusOption
+Int maidBodyScalingOption
+Int maidBodyMaxLevelOption
+Int maidBodyHipsOption
+Int maidBodyButtOption
+Int maidBodyThighsOption
+Int maidBodyCalfSizeOption
+Int maidBodyWaistOption
+Int maidBodyBellyOption
+Int maidBodyBigBellyOption
+Int maidBodyChubbyArmsOption
+Int maidBodyChubbyLegsOption
+Int maidBodyChubbyWaistOption
 Int maidWeightScalingOption
 Int maidWeightPerLevelOption
 Int customMilkSpeedDebuffOption
@@ -313,7 +325,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 157
+    Return 158
 EndFunction
 
 Function SetPageNames()
@@ -386,6 +398,24 @@ EndFunction
 
 ; Seeds new settings and runs one-time migrations without overriding later choices.
 Function EnsureDefaults()
+    ; Safe opt-in migration for both new games and existing saves.
+    If JsonUtil.GetIntValue(SettingsFile, "maidBodyScalingMigration158", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableMaidBodyScaling", 0)
+        JsonUtil.SetIntValue(SettingsFile, "maidBodyScalingMaxLevel", 100)
+        JsonUtil.SetIntValue(SettingsFile, "maidBodyScalingRevision", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphHips", 0.0)
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphButt", 0.0)
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphThighs", 0.0)
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphCalfSize", 0.0)
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphWaist", 0.0)
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphBelly", 0.0)
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphBigBelly", 0.0)
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphChubbyArms", 0.0)
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphChubbyLegs", 0.0)
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphChubbyWaist", 0.0)
+        JsonUtil.SetIntValue(SettingsFile, "maidBodyScalingMigration158", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
     ; New installations enter the first-version defaults block. Later blocks are
     ; individually guarded migrations so upgrades never overwrite user choices.
     If !JsonUtil.IsPendingSave(SettingsFile) && JsonUtil.GetIntValue(SettingsFile, "initialized", 0) == 0
@@ -1771,6 +1801,18 @@ Event OnPageReset(String page)
     debugMilkingEventsOption = -1
     milkmaidLevelBonusOption = -1
     flatMilkBonusOption = -1
+    maidBodyScalingOption = -1
+    maidBodyMaxLevelOption = -1
+    maidBodyHipsOption = -1
+    maidBodyButtOption = -1
+    maidBodyThighsOption = -1
+    maidBodyCalfSizeOption = -1
+    maidBodyWaistOption = -1
+    maidBodyBellyOption = -1
+    maidBodyBigBellyOption = -1
+    maidBodyChubbyArmsOption = -1
+    maidBodyChubbyLegsOption = -1
+    maidBodyChubbyWaistOption = -1
     maidWeightScalingOption = -1
     maidWeightPerLevelOption = -1
     customMilkSpeedDebuffOption = -1
@@ -2039,6 +2081,24 @@ Event OnPageReset(String page)
             maidWeightFlags = OPTION_FLAG_DISABLED
         EndIf
         maidWeightPerLevelOption = AddSliderOption("Weight per Maid Level", MMEMaidWeightScaling.GetWeightPerLevel(), "+{0}", maidWeightFlags)
+        AddHeaderOption("Milk Maid Body Morphs")
+        maidBodyScalingOption = AddToggleOption("Level-Based Body Scaling", JsonUtil.GetIntValue(SettingsFile, "enableMaidBodyScaling", 0) == 1)
+        Int bodyMorphFlags = OPTION_FLAG_DISABLED
+        If JsonUtil.GetIntValue(SettingsFile, "enableMaidBodyScaling", 0) == 1
+            bodyMorphFlags = OPTION_FLAG_NONE
+        EndIf
+        maidBodyMaxLevelOption = AddSliderOption("Maximum Scaling Maid Level", MMEMaidBodyScaling.GetMaxLevel(), "{0}", bodyMorphFlags)
+        maidBodyHipsOption = AddSliderOption("Hips at Maximum Level", MMEMaidBodyScaling.GetMaximum("Hips"), "{0}%", bodyMorphFlags)
+        maidBodyButtOption = AddSliderOption("Butt at Maximum Level", MMEMaidBodyScaling.GetMaximum("Butt"), "{0}%", bodyMorphFlags)
+        maidBodyThighsOption = AddSliderOption("Thighs at Maximum Level", MMEMaidBodyScaling.GetMaximum("Thighs"), "{0}%", bodyMorphFlags)
+        maidBodyCalfSizeOption = AddSliderOption("Calves at Maximum Level", MMEMaidBodyScaling.GetMaximum("CalfSize"), "{0}%", bodyMorphFlags)
+        maidBodyWaistOption = AddSliderOption("Waist at Maximum Level", MMEMaidBodyScaling.GetMaximum("Waist"), "{0}%", bodyMorphFlags)
+        maidBodyBellyOption = AddSliderOption("Belly at Maximum Level", MMEMaidBodyScaling.GetMaximum("Belly"), "{0}%", bodyMorphFlags)
+        maidBodyBigBellyOption = AddSliderOption("Big Belly at Maximum Level", MMEMaidBodyScaling.GetMaximum("BigBelly"), "{0}%", bodyMorphFlags)
+        maidBodyChubbyArmsOption = AddSliderOption("Chubby Arms at Maximum Level", MMEMaidBodyScaling.GetMaximum("ChubbyArms"), "{0}%", bodyMorphFlags)
+        maidBodyChubbyLegsOption = AddSliderOption("Chubby Legs at Maximum Level", MMEMaidBodyScaling.GetMaximum("ChubbyLegs"), "{0}%", bodyMorphFlags)
+        maidBodyChubbyWaistOption = AddSliderOption("Chubby Waist at Maximum Level", MMEMaidBodyScaling.GetMaximum("ChubbyWaist"), "{0}%", bodyMorphFlags)
+
         Return
     EndIf
     If page == "Misc"
@@ -2817,6 +2877,30 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Reduce player carry capacity by current milk times the multiplier. Default off. Disable MME's matching unmilked debuff first to prevent stacking.")
     ElseIf option == milkWeightMultiplierOption
         SetInfoText("Carry-weight penalty applied per unit of milk, from 1x to 10x.")
+    ElseIf option == maidBodyScalingOption
+        SetInfoText("Optional RaceMenu body morphs for player and NPC Milk Maids. Default off. Disable to remove only MME Extensions' morph contributions. Breasts remain controlled by MME. Requires bodies and outfits built with matching morphs.")
+    ElseIf option == maidBodyMaxLevelOption
+        SetInfoText("Maid level at which body morphs reach their selected maximum. Range 10-100, default 100. Higher Maid levels add no further scaling. This does not change MME's actual level or capacity.")
+    ElseIf option == maidBodyHipsOption
+        SetInfoText("Maximum hips morph contribution at the selected Maid level. 0% disables this morph. Intermediate levels scale proportionally. Requires the matching body/outfit morph; this is a slider percentage, not an anatomical size percentage.")
+    ElseIf option == maidBodyButtOption
+        SetInfoText("Maximum butt morph contribution at the selected Maid level. 0% disables this morph. Intermediate levels scale proportionally. Requires the matching body/outfit morph; this is a slider percentage, not an anatomical size percentage.")
+    ElseIf option == maidBodyThighsOption
+        SetInfoText("Maximum thighs morph contribution at the selected Maid level. 0% disables this morph. Intermediate levels scale proportionally. Requires the matching body/outfit morph; this is a slider percentage, not an anatomical size percentage.")
+    ElseIf option == maidBodyCalfSizeOption
+        SetInfoText("Maximum calves morph contribution at the selected Maid level. 0% disables this morph. Intermediate levels scale proportionally. Requires the matching body/outfit morph; this is a slider percentage, not an anatomical size percentage.")
+    ElseIf option == maidBodyWaistOption
+        SetInfoText("Maximum waist morph contribution at the selected Maid level. 0% disables this morph. Intermediate levels scale proportionally. Requires the matching body/outfit morph; this is a slider percentage, not an anatomical size percentage.")
+    ElseIf option == maidBodyBellyOption
+        SetInfoText("Maximum belly morph contribution at the selected Maid level. 0% disables this morph. Intermediate levels scale proportionally. Requires the matching body/outfit morph; this is a slider percentage, not an anatomical size percentage.")
+    ElseIf option == maidBodyBigBellyOption
+        SetInfoText("Maximum big belly morph contribution at the selected Maid level. 0% disables this morph. Intermediate levels scale proportionally. Requires the matching body/outfit morph; this is a slider percentage, not an anatomical size percentage.")
+    ElseIf option == maidBodyChubbyArmsOption
+        SetInfoText("Maximum chubby arms morph contribution at the selected Maid level. 0% disables this morph. Intermediate levels scale proportionally. Requires the matching body/outfit morph; this is a slider percentage, not an anatomical size percentage.")
+    ElseIf option == maidBodyChubbyLegsOption
+        SetInfoText("Maximum chubby legs morph contribution at the selected Maid level. 0% disables this morph. Intermediate levels scale proportionally. Requires the matching body/outfit morph; this is a slider percentage, not an anatomical size percentage.")
+    ElseIf option == maidBodyChubbyWaistOption
+        SetInfoText("Maximum chubby waist morph contribution at the selected Maid level. 0% disables this morph. Intermediate levels scale proportionally. Requires the matching body/outfit morph; this is a slider percentage, not an anatomical size percentage.")
     ElseIf option == maidWeightScalingOption
         SetInfoText("Increase every registered Milk Maid's actor weight as her MME Maid level rises. Turning this off restores the baseline recorded before MME Extensions changed it. Weight changes can expose neck seams on some NPC replacers.")
     ElseIf option == maidWeightPerLevelOption
@@ -3793,6 +3877,10 @@ Event OnOptionSelect(Int option)
         MMEBodyEffects.Reconcile("MCM milk weight toggle changed")
         (Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController).UpdatePolling()
         ForcePageReset()
+    ElseIf option == maidBodyScalingOption
+        JsonUtil.SetIntValue(SettingsFile, "enableMaidBodyScaling", 1 - JsonUtil.GetIntValue(SettingsFile, "enableMaidBodyScaling", 0))
+        MMEMaidBodyScaling.SettingsChanged()
+        ForcePageReset()
     ElseIf option == maidWeightScalingOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMaidLevelWeightScaling", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMaidLevelWeightScaling", value)
@@ -4576,6 +4664,61 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogDefaultValue(1.0)
         SetSliderDialogRange(1.0, 10.0)
         SetSliderDialogInterval(1.0)
+    ElseIf option == maidBodyMaxLevelOption
+        SetSliderDialogStartValue(MMEMaidBodyScaling.GetMaxLevel())
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(10.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == maidBodyHipsOption
+        SetSliderDialogStartValue(MMEMaidBodyScaling.GetMaximum("Hips"))
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == maidBodyButtOption
+        SetSliderDialogStartValue(MMEMaidBodyScaling.GetMaximum("Butt"))
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == maidBodyThighsOption
+        SetSliderDialogStartValue(MMEMaidBodyScaling.GetMaximum("Thighs"))
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == maidBodyCalfSizeOption
+        SetSliderDialogStartValue(MMEMaidBodyScaling.GetMaximum("CalfSize"))
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == maidBodyWaistOption
+        SetSliderDialogStartValue(MMEMaidBodyScaling.GetMaximum("Waist"))
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == maidBodyBellyOption
+        SetSliderDialogStartValue(MMEMaidBodyScaling.GetMaximum("Belly"))
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == maidBodyBigBellyOption
+        SetSliderDialogStartValue(MMEMaidBodyScaling.GetMaximum("BigBelly"))
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == maidBodyChubbyArmsOption
+        SetSliderDialogStartValue(MMEMaidBodyScaling.GetMaximum("ChubbyArms"))
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == maidBodyChubbyLegsOption
+        SetSliderDialogStartValue(MMEMaidBodyScaling.GetMaximum("ChubbyLegs"))
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    ElseIf option == maidBodyChubbyWaistOption
+        SetSliderDialogStartValue(MMEMaidBodyScaling.GetMaximum("ChubbyWaist"))
+        SetSliderDialogDefaultValue(0.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
     ElseIf option == maidWeightPerLevelOption
         SetSliderDialogStartValue(MMEMaidWeightScaling.GetWeightPerLevel())
         SetSliderDialogDefaultValue(1.0)
@@ -4974,6 +5117,50 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "x{0}")
         MMEBodyEffects.Reconcile("MCM milk weight multiplier changed")
+    ElseIf option == maidBodyMaxLevelOption
+        JsonUtil.SetIntValue(SettingsFile, "maidBodyScalingMaxLevel", value as Int)
+        SetSliderOptionValue(option, value, "{0}")
+        MMEMaidBodyScaling.SettingsChanged()
+    ElseIf option == maidBodyHipsOption
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphHips", value)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEMaidBodyScaling.SettingsChanged()
+    ElseIf option == maidBodyButtOption
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphButt", value)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEMaidBodyScaling.SettingsChanged()
+    ElseIf option == maidBodyThighsOption
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphThighs", value)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEMaidBodyScaling.SettingsChanged()
+    ElseIf option == maidBodyCalfSizeOption
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphCalfSize", value)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEMaidBodyScaling.SettingsChanged()
+    ElseIf option == maidBodyWaistOption
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphWaist", value)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEMaidBodyScaling.SettingsChanged()
+    ElseIf option == maidBodyBellyOption
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphBelly", value)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEMaidBodyScaling.SettingsChanged()
+    ElseIf option == maidBodyBigBellyOption
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphBigBelly", value)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEMaidBodyScaling.SettingsChanged()
+    ElseIf option == maidBodyChubbyArmsOption
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphChubbyArms", value)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEMaidBodyScaling.SettingsChanged()
+    ElseIf option == maidBodyChubbyLegsOption
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphChubbyLegs", value)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEMaidBodyScaling.SettingsChanged()
+    ElseIf option == maidBodyChubbyWaistOption
+        JsonUtil.SetFloatValue(SettingsFile, "maidBodyMorphChubbyWaist", value)
+        SetSliderOptionValue(option, value, "{0}%")
+        MMEMaidBodyScaling.SettingsChanged()
     ElseIf option == maidWeightPerLevelOption
         JsonUtil.SetFloatValue(SettingsFile, "maidWeightPerLevel", value)
         JsonUtil.Save(SettingsFile, False)

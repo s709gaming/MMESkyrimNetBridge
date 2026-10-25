@@ -3,7 +3,7 @@
 - Do not modify `README.md`.
 - Treat `README.md` as read-only unless the user explicitly requests changes to it.
 - Preserve unrelated user changes in the worktree.
-- Do not commit, publish, deploy to Skyrim, or modify the Vortex installation unless the user explicitly requests it.
+- Do not commit, publish, deploy to Skyrim, or modify installed MO2 mods, profiles, game-root files, or the retained Vortex installation unless the user explicitly requests it.
 - Keep temporary diagnostics, test artifacts, and failed builds out of release packages.
 
 ## Papyrus diagnostics
@@ -48,8 +48,8 @@
 - Prefer isolated extension scripts and facade APIs when they can preserve behavior without duplicating a framework.
 - Preserve save compatibility and existing MCM property names unless a migration is intentionally implemented.
 - New MCM settings need safe defaults plus initialization and upgrade handling for existing saves.
-- Rebuild the distributable after implementation and inspect the final Vortex archive structure and contents.
-- Generated packages and deployed Vortex files are outputs, not the source of truth. Make source changes in the repository.
+- Rebuild the distributable after implementation and inspect the final mod-manager archive structure and contents for MO2 and retained Vortex compatibility.
+- Generated packages, installed MO2 files, and retained Vortex files are outputs, not the source of truth. Make source changes in the repository.
 
 ## Regression testing
 
@@ -68,10 +68,15 @@ For each gameplay change, check all applicable cases:
 
 ## Environment
 
-- The user manages Skyrim through Vortex, not Mod Organizer 2.
-- Do not assume MO2 deployment paths, profiles, overwrite folders, or mod priorities merely because a tool's documentation mentions MO2.
-- Resolve the actual Vortex staging and deployed paths before inspecting or changing installed files.
-- Repository source, generated packages, the Vortex staging copy, and deployed game files are distinct layers. State clearly which layer was inspected or changed.
+- The user now manages Skyrim through Mod Organizer 2 (MO2), migrated from Vortex using Mod Manager Migrator. Vortex staging is retained for rollback; do not redeploy or modify it without explicit authorization.
+- Last verified MO2 executable: `E:\Mod Organizer 2\ModOrganizer.exe`.
+- Last verified active instance: `C:\Users\Donald\AppData\Local\ModOrganizer\VortexToMO2`, profile `Default`. Read `ModOrganizer.ini` to confirm the current instance, profile, mods, profiles, and overwrite paths before relying on them. Preserve the separate older `Skyrim Special Edition` MO2 instance.
+- Last verified game root: `E:\Steam\steamapps\common\Skyrim Special Edition`. Retained Vortex staging: `E:\Vortex Mods\skyrimse`.
+- Launch SKSE and modding tools through the correct MO2 instance so they see its virtual filesystem. Absence from the physical game Data folder does not prove a mod file is missing.
+- Verify both left-pane mod activation/file priorities and right-pane plugin activation/load order. A DLL can load from an enabled mod even when its required ESP is disabled. Script-only mods have no right-pane plugin.
+- Do not edit MO2 profile/configuration files externally while MO2 is open; it can overwrite those changes. Use the UI or close MO2 before authorized file edits, back up the affected files, and verify persistence after reopening.
+- Root-level SKSE files are separate from MO2's virtual Data files. Keep the runtime DLL, loader, and Papyrus scripts matched; do not assume a migration or Vortex purge preserves them. Do not regenerate FNIS/Nemesis outputs or sort plugins merely to complete a migration.
+- Repository source, generated packages, installed MO2 mod folders, the effective MO2 virtual filesystem, overwrite outputs, retained Vortex staging, and physical game-root/Data files are distinct layers. State clearly which layer was inspected or changed; inspect overwrite and unmanaged files when diagnosing conflicting assets.
 
 ## Available Skyrim MCP tools
 
@@ -87,7 +92,7 @@ Use houseCARL primarily for static Skyrim data-layer work:
 - Inspect SKSE plugins and deployed asset winners.
 - Verify exact forms, properties, and record relationships instead of guessing.
 
-The user uses Vortex. Do not modify an MO2 profile or treat an MO2 view as the deployed source of truth unless the user explicitly places that profile in scope.
+Use the verified active MO2 instance/profile for static winner inspection. Confirm houseCARL points to `VortexToMO2` before trusting its results; a configured older instance is not evidence of what the current game loads. Read-only inspection does not authorize patch creation, profile changes, or installation. Live runtime queries remain the authority for what the running game actually loaded.
 
 ### Skyrim.Net MCP
 

@@ -23,6 +23,7 @@ $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
 $scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEBreastBounceEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEArousalEffects", "MMEArousalAnimations", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMEArmorRemoval", "MMETrapArmorDialogue", "MMEFollowerArmorRescue", "TIF_MMEExtFollowerArmorRescue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMESexLabBreastfeedingBackend", "MMEElsieBreastfeeding", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $scriptNames += "MMEBodyEffects"
+$scriptNames += "MMEMaidBodyScaling"
 $mmeCompatibilityOverrideSource = Join-Path $projectRoot "Source\MMECompatibilityOverrides"
 $mmeCompatibilityOverrideNames = @("MilkQUEST")
 $diagnosticSdk = Join-Path $projectRoot "tools\mme-diagnostic-sdk"
@@ -152,6 +153,8 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 
 New-Item -ItemType Directory -Force -Path $compiledDir | Out-Null
 $imports = "$sourceDir;$skyUiSdkSource;$mmeSdkSource;$ostimSdkSource;$omaniaSdkSource;$arousalSdkSource;$skyrimNetSdkSource;$skseSource;$vanillaSource"
+# Optional build-only imports for dependencies managed by MO2 rather than physical Data.
+if ($env:MME_PAPYRUS_EXTRA_IMPORTS) { $imports += ";$env:MME_PAPYRUS_EXTRA_IMPORTS" }
 foreach ($scriptName in $scriptNames) {
     Write-Host "Compiling $scriptName.psc..." -ForegroundColor Cyan
     & $compiler "$scriptName.psc" "-f=$flags" "-i=$imports" "-o=$compiledDir"
@@ -176,6 +179,7 @@ Push-Location $sexLabPPlusChoiceSource
 try {
     Write-Host "Compiling SexLab P+ breastfeeding backend..." -ForegroundColor Cyan
     $pplusImports = "$sexLabPPlusChoiceSource;$sexLabPPlusSdkSource;$sourceDir;$skseSource;$vanillaSource"
+    if ($env:MME_PAPYRUS_EXTRA_IMPORTS) { $pplusImports += ";$env:MME_PAPYRUS_EXTRA_IMPORTS" }
     & $compiler "MMESexLabBreastfeedingBackend.psc" "-f=$flags" "-i=$pplusImports" "-o=$sexLabPPlusChoiceOutput"
     if ($LASTEXITCODE -ne 0) {
         throw "Compilation failed for SexLab P+ breastfeeding backend"
@@ -204,6 +208,7 @@ finally {
 # declarations. This avoids compiling or packaging Elsie's original sources.
 New-Item -ItemType Directory -Force -Path $elsieFixOutputDir | Out-Null
 $elsieImports = "$elsieFixSourceDir;$sourceDir;$elsieSdkSource;$mmeSdkSource;$skseSource;$vanillaSource"
+if ($env:MME_PAPYRUS_EXTRA_IMPORTS) { $elsieImports += ";$env:MME_PAPYRUS_EXTRA_IMPORTS" }
 foreach ($elsieScript in @("ELV_DiaGreets_PlayerAliasScript", "ELVPlayerAliasscript", "ELV_MMNPC_Scene_milk", "ELV_MMNPC_Scene_milkingTime")) {
     Write-Host "Compiling Elsie compatibility override $elsieScript.psc..." -ForegroundColor Cyan
     & $compiler "$elsieScript.psc" "-f=$flags" "-i=$elsieImports" "-o=$elsieFixOutputDir"
@@ -226,6 +231,7 @@ if (!(Test-Path -LiteralPath $elsieFixPlugin)) {
 # The FOMOD installs these only when Jugs.esp is active.
 New-Item -ItemType Directory -Force -Path $jugsPatchOutputDir | Out-Null
 $jugsImports = "$jugsPatchSourceDir;$jugsSdkSource;$sourceDir;$skseSource;$vanillaSource"
+if ($env:MME_PAPYRUS_EXTRA_IMPORTS) { $jugsImports += ";$env:MME_PAPYRUS_EXTRA_IMPORTS" }
 $jugsPatchScripts = @(Get-ChildItem -LiteralPath $jugsPatchSourceDir -Filter "*.psc" | Sort-Object Name)
 foreach ($jugsScript in $jugsPatchScripts) {
     Write-Host "Compiling JUGS compatibility override $($jugsScript.Name)..." -ForegroundColor Cyan
@@ -249,6 +255,10 @@ try {
 finally {
     Pop-Location
 }
+
+# Build and validate the isolated no-SexLab FOMOD variant before staging.
+& (Join-Path $projectRoot "tools\Build-OStimOnly.ps1")
+& (Join-Path $projectRoot "tools\Test-OStimOnly.ps1")
 
 # Recreate a clean staging directory with Skyrim/Vortex-compatible paths.
 if (Test-Path -LiteralPath $stageDir) {
@@ -274,6 +284,7 @@ $packageDocs = Join-Path $stageDir "docs"
 New-Item -ItemType Directory -Force -Path $packageDocs | Out-Null
 Copy-Item -LiteralPath $elsieFixChangelog -Destination $packageDocs
 Copy-Item -LiteralPath $jugsChangelog -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot "docs\OStim-Only-Compatibility.md") -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MOVEMENT-SLAP-FLAT-MILK-STRIPPING.md") -Destination $packageDocs
 
 # Copy the active compiled scripts and matching sources.
@@ -541,7 +552,7 @@ if (Test-Path -LiteralPath $pluginPath) {
         throw "MMEAlert.esp New Milk Maid INFOs do not contain a safe GetIsSex(Female) dialogue condition."
     }
     $dialogueRepairProject = Join-Path $PSScriptRoot "build\mutagen-dialogue-repair\mutagen-dialogue-repair.csproj"
-    & dotnet run --project $dialogueRepairProject -- --check-female $pluginPath
+    & dotnet run --project (Join-Path $PSScriptRoot 'tools\ostim-only-builder') -- --check-dialogue $pluginPath (Join-Path $env:LOCALAPPDATA 'ModOrganizer\VortexToMO2\mods\Milk-Mod-Economy-Scripts-20220522.7z\MilkModNEW.esp')
     if ($LASTEXITCODE -ne 0) {
         throw "MMEAlert.esp failed typed New Milk Maid CTDA validation."
     }

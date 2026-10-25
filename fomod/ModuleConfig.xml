@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='UTF-8'?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
   <moduleName>MME Extensions</moduleName>
-
   <requiredInstallFiles>
     <folder source="Scripts" destination="Scripts" priority="0" />
     <folder source="Source" destination="Source" priority="0" />
@@ -14,13 +13,11 @@
     <file source="MMEAlert_DISTR.ini" destination="MMEAlert_DISTR.ini" priority="0" />
     <file source="README.md" destination="README.md" priority="0" />
   </requiredInstallFiles>
-
   <installSteps order="Explicit">
     <installStep name="Installation Options">
       <optionalFileGroups order="Explicit">
         <group name="MAKE SURE MME EXTENSIONS LOADS AFTER THE ORIGINAL MILK MOD ECONOMY&#10;Choose a startup profile" type="SelectExactlyOne">
           <plugins order="Explicit">
-
             <plugin name="(Quick Start) Convenience MCM Defaults + Free milk on start">
               <description>Applies the Convenience MCM defaults once, then leaves your MME settings alone. Grants starter milk and armor, plus an open-bust heavy straitjacket when Devious Devices Expansion is installed.</description>
               <files>
@@ -32,7 +29,6 @@
                 <type name="Recommended" />
               </typeDescriptor>
             </plugin>
-
             <plugin name="(Convenience) MCM Defaults + No milk on start">
               <description>Applies the Convenience MCM defaults once, then leaves your MME settings alone. Does not grant starter milk items.</description>
               <files>
@@ -42,7 +38,6 @@
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
-
             <plugin name="(Vanilla) Do Not Change MME Settings + No milk on start">
               <description>Does not change MME settings and does not grant starter milk items.</description>
               <files>
@@ -54,12 +49,20 @@
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
-
           </plugins>
         </group>
-        <group name="Optional mod compatibility" type="SelectAny">
+        <group name="Animation backend" type="SelectExactlyOne">
           <plugins order="Explicit">
-
+            <plugin name="Standard SexLab">
+              <description>Keep the original MME SexLab dependency. Select the matching installed framework; do not combine backend files from different installations.</description>
+              <files />
+              <conditionFlags>
+                <flag name="mmeNoSexLab">false</flag>
+              </conditionFlags>
+              <typeDescriptor>
+                <type name="Recommended" />
+              </typeDescriptor>
+            </plugin>
             <plugin name="All-in-One SexLab P+ Compatibility — READ INSTRUCTIONS CAREFULLY">
               <description>READ THE SEXLAB P+ INSTRUCTIONS CAREFULLY. Complete SexLab P+ support for MME Extensions and MME breastfeeding. Includes the approved MME script fixes, converted 3jiou breastfeeding animations, SLSB registry, and MME Extensions P+ backend. SexLab P+ itself is still required; the separate MME SLP+ Edit is not. IMPORTANT: rerun FNIS or your compatible behavior generator after installation.</description>
               <files>
@@ -73,11 +76,70 @@
                 <file source="fomod\choices\sexlab-pplus\Source\Scripts\MMESexLabBreastfeedingBackend.psc" destination="Source\Scripts\MMESexLabBreastfeedingBackend.psc" priority="30" />
                 <file source="docs\SEXLAB-PPLUS-COMPATIBILITY.md" destination="Docs\MME Extensions - SexLab P+ Compatibility.md" priority="30" />
               </files>
+              <conditionFlags>
+                <flag name="mmeNoSexLab">false</flag>
+              </conditionFlags>
               <typeDescriptor>
                 <type name="Optional" />
               </typeDescriptor>
             </plugin>
-
+            <plugin name="OStim-only MME (experimental; new game; no SexLab)">
+              <description>Experimental MME-only replacement for a separate NEW GAME profile. In-game validation is pending. Requires active OStim. Preserves MME FormIDs and milk calculations. Replaces MilkModNEW.esp and isolated scripts; SexLab is not required. Disable SexLab, original Devious Devices, Elsie, JUGS, their patches, SLAnimLoader, and any other plugins that require SexLab before testing. The original DD adapter is disabled in this branch; ZaZ keyword checks are retained but its full SexLab module is not ported. Do not switch an existing SexLab save. Reinstall using Replace to remove stale backend files. Optional SexLab voices/expressions are skipped. Uses OStim no-strip policy and existing MME SOS handling. See Docs/MME OStim-only.md.</description>
+              <files>
+                <folder source="fomod\choices\ostim-only\Scripts" destination="Scripts" priority="40" />
+                <folder source="fomod\choices\ostim-only\Source\Scripts" destination="Source\Scripts" priority="40" />
+                <file source="fomod\choices\ostim-only\MilkModNEW.esp" destination="MilkModNEW.esp" priority="40" />
+                <file source="docs\OStim-Only-Compatibility.md" destination="Docs\MME OStim-only.md" priority="40" />
+              </files>
+              <conditionFlags>
+                <flag name="mmeNoSexLab">true</flag>
+              </conditionFlags>
+              <typeDescriptor>
+                <dependencyType>
+                  <defaultType name="NotUsable" />
+                  <patterns>
+                    <pattern>
+                      <dependencies operator="And">
+                        <fileDependency file="OStim.esp" state="Active" />
+                          <dependencies operator="Or">
+                            <fileDependency file="SexLab.esm" state="Missing" />
+                            <fileDependency file="SexLab.esm" state="Inactive" />
+                          </dependencies>
+                          <dependencies operator="Or">
+                            <fileDependency file="Devious Devices - Assets.esm" state="Missing" />
+                            <fileDependency file="Devious Devices - Assets.esm" state="Inactive" />
+                          </dependencies>
+                          <dependencies operator="Or">
+                            <fileDependency file="Devious Devices - Integration.esm" state="Missing" />
+                            <fileDependency file="Devious Devices - Integration.esm" state="Inactive" />
+                          </dependencies>
+                        <dependencies operator="Or">
+                          <fileDependency file="CP_Elsie.esp" state="Missing" />
+                          <fileDependency file="CP_Elsie.esp" state="Inactive" />
+                        </dependencies>
+                        <dependencies operator="Or">
+                          <fileDependency file="Jugs.esp" state="Missing" />
+                          <fileDependency file="Jugs.esp" state="Inactive" />
+                        </dependencies>
+                        <dependencies operator="Or">
+                          <fileDependency file="SLAnimLoader.esp" state="Missing" />
+                          <fileDependency file="SLAnimLoader.esp" state="Inactive" />
+                        </dependencies>
+                        <dependencies operator="Or">
+                          <fileDependency file="MME Extensions - Elsie LaVache Fix.esp" state="Missing" />
+                          <fileDependency file="MME Extensions - Elsie LaVache Fix.esp" state="Inactive" />
+                        </dependencies>
+                      </dependencies>
+                      <type name="Optional" />
+                    </pattern>
+                  </patterns>
+                </dependencyType>
+              </typeDescriptor>
+            </plugin>
+          </plugins>
+        </group>
+        <group name="Optional mod compatibility" type="SelectAny">
+          <plugins order="Explicit">
             <plugin name="Install OMania compatibility">
               <description>Detects every implanted OMania pregnancy through OMania's authoritative API and uses MME Extensions' forced animated API to create Milk Maids. Automatically recommended when OMania.esp is active. The Troubleshoot page provides a manual Dragon Egg potion test.</description>
               <files>
@@ -97,7 +159,6 @@
                 </dependencyType>
               </typeDescriptor>
             </plugin>
-
             <plugin name="Elsie LaVache 3.4 — Recommended Compatibility Patch">
               <description>Elsie LaVache is a large erotic Milk Maid mod featuring new quests, characters, dialogue, and breastfeeding mechanics. This recommended patch fixes silent dialogue and broken script behavior, improves stability, and lets Elsie breastfeeding animations provide MME Extensions milk-drinking effects. Requires an active CP_Elsie.esp and is automatically selected when detected.</description>
               <files>
@@ -120,6 +181,7 @@
                     <pattern>
                       <dependencies operator="And">
                         <fileDependency file="CP_Elsie.esp" state="Active" />
+                        <flagDependency flag="mmeNoSexLab" value="false" />
                       </dependencies>
                       <type name="Required" />
                     </pattern>
@@ -127,7 +189,6 @@
                 </dependencyType>
               </typeDescriptor>
             </plugin>
-
             <plugin name="JUGS — Stability and MME Compatibility Patch">
               <description>Recommended when JUGS is installed. Adds guarded SexLab scene startup, repairs participant and Soulgem Oven queue handling, and routes JUGS Milk Maid conversion through MME Extensions' supported API. Automatically selected when Jugs.esp is active.</description>
               <files>
@@ -142,6 +203,7 @@
                     <pattern>
                       <dependencies operator="And">
                         <fileDependency file="Jugs.esp" state="Active" />
+                        <flagDependency flag="mmeNoSexLab" value="false" />
                       </dependencies>
                       <type name="Required" />
                     </pattern>
@@ -149,7 +211,6 @@
                 </dependencyType>
               </typeDescriptor>
             </plugin>
-
             <plugin name="Trap Treasure Chest with Tentacle Armor">
               <description>Requires C5Kev's Tentacled Terrors Of Tamriel 3BA and its active plugin, C5Kev's Tentacled Terrors Of Tamriel 3BA.esp. Download: https://www.nexusmods.com/skyrimspecialedition/mods/62644?tab=files. For treasure chests with a more... hands-on surprise. Tentacles included. Personal space not included.</description>
               <files>
@@ -169,7 +230,6 @@
                 </dependencyType>
               </typeDescriptor>
             </plugin>
-
             <plugin name="Trap Treasure Chest with Devious Dwemer Armor">
               <description>Requires Dwarven Devious Cuirass - 3BA SE/AE and its active base plugin, DwarvenDeviousCuirass.esp. Download: https://www.loverslab.com/files/file/23018-dwarven-devious-cuirass-3ba-seae/. The separate Devious Devices add-on ESP is not required. For treasure chests with an ancient Dwemer surprise. Questionable machinery included.</description>
               <files>
@@ -189,7 +249,6 @@
                 </dependencyType>
               </typeDescriptor>
             </plugin>
-
           </plugins>
         </group>
       </optionalFileGroups>

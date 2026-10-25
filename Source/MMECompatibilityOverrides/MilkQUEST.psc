@@ -934,7 +934,7 @@ Function MilkCycle(Actor akActor, int t)
 				endif
 			endif
 		elseif akActor == PlayerREF && !ArmorStrippingDisabled && Sexlab.IsStrippable(maidArmor)
-			if !(maidArmor == TITS4	|| maidArmor == TITS6 || maidArmor == TITS8 || DDi.IsMilkingBlocked_Suit(akActor))
+			if !(maidArmor == TITS4	|| maidArmor == TITS6 || maidArmor == TITS8 || MMEExtDDCheck(akActor, "IsMilkingBlocked_Suit"))
 				;heavy armor	
 				if MilkCnt > 4 && maidArmor.HasKeyword(Game.GetFormFromFile(0x6BBD2, "Skyrim.esm") as keyword)
 					Debug.Notification("Your breasts are too big to fit into your heavy armor")
@@ -1313,14 +1313,16 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 		CuirassName = cuirass.getname()
 	endif
 	;Devious Devices management
-	Bool DDArmbinder = DDi.IsMilkingBlocked_Armbinder(akActor)
-	Bool DDYoke = DDi.IsMilkingBlocked_Yoke(akActor)
-	Bool DDSuit = DDi.IsMilkingBlocked_Suit(akActor)
-	Bool DDBelt = DDi.IsWearingBelt(akActor)
-	Bool DDBeltOpen = DDi.IsWearingBelt_Open(akActor)
-	Bool DDGag = DDi.IsWearingGag(akActor)
-	Bool DDGagOpen = DDi.IsWearingGag_Open(akActor)
-	Bool DDBra = DDi.IsMilkingBlocked_Bra(akActor)
+	MMELog.MasterDiagnostic("[MME Extensions DD] milking checks entry | actor=" + akActor + " | mode=" + Mode)
+	Bool DDArmbinder = MMEExtDDCheck(akActor, "IsMilkingBlocked_Armbinder")
+	Bool DDYoke = MMEExtDDCheck(akActor, "IsMilkingBlocked_Yoke")
+	Bool DDSuit = MMEExtDDCheck(akActor, "IsMilkingBlocked_Suit")
+	Bool DDBelt = MMEExtDDCheck(akActor, "IsWearingBelt")
+	Bool DDBeltOpen = MMEExtDDCheck(akActor, "IsWearingBelt_Open")
+	Bool DDGag = MMEExtDDCheck(akActor, "IsWearingGag")
+	Bool DDGagOpen = MMEExtDDCheck(akActor, "IsWearingGag_Open")
+	Bool DDBra = MMEExtDDCheck(akActor, "IsMilkingBlocked_Bra")
+	MMELog.MasterDiagnostic("[MME Extensions DD] milking checks complete | actor=" + akActor + " | bridgeState=" + MMEExtDDLastState + " | suit=" + DDSuit + " | bra=" + DDBra + " | belt=" + DDBelt + " | gag=" + DDGag)
 	Bool SLSDBra = SLSD.IsMilkingBlocked_Bra_SLSD(akActor)
 	Bool hasInventoryMilkCuirass = false
 	Bool hasInventoryMilkCuirassFuta = false
@@ -1369,7 +1371,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 	
 	;check if bra prevents non milkump milking
 	if Plugin_DDI && IsMilkingBlocked == false
-		if DDi.IsWearingDDMilker(akActor) == false
+		if MMEExtDDCheck(akActor, "IsWearingDDMilker") == false
 			if DDBra == true && SLSDBra == false
 				Debug.Notification("Chastity Bra prevents milking")
 				if mode > 0 && SLSDBra == false
@@ -1543,7 +1545,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 			|| StringUtil.Find(CuirassName, "Cow" ) >= 0 \
 			|| MilkingEquipment.find(CuirassName) >= 0 \
 			|| SLSDBra == true \
-			|| DDi.IsWearingDDMilker(akActor) == true
+			|| MMEExtDDCheck(akActor, "IsWearingDDMilker") == true
 				Mode = 2
 			ElseIf StringUtil.Find(CuirassName, "Spriggan" ) >= 0 \
 				|| StringUtil.Find(CuirassName, "Living Arm" ) >= 0 \
@@ -1578,7 +1580,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				EndIf
 			EndIf
 		ElseIf SLSDBra == true\
-			|| DDi.IsWearingDDMilker(akActor) == true
+			|| MMEExtDDCheck(akActor, "IsWearingDDMilker") == true
 				Mode = 2
 		ElseIf !(cuirass == TITS4 || cuirass == TITS6 || cuirass == TITS8)
 			If (DDArmbinder == false && DDYoke == false)
@@ -3236,7 +3238,7 @@ Function AddMilkFx(Actor akActor, int i)
 EndFunction
 
 Function AddLeak(Actor akActor)
-	if MilkLeakToggle == true && DDi.IsMilkingBlocked_Bra(akActor) == false && PiercingCheck(akActor) != 2
+	if MilkLeakToggle == true && MMEExtDDCheck(akActor, "IsMilkingBlocked_Bra") == false && PiercingCheck(akActor) != 2
 		If (akActor.GetWornForm(Armor.GetMaskForSlot(32)) == None || MilkLeakWearArm == true)
 			MilkLeak.cast(akActor)
 		ElseIf MME_Storage.getBreastRows(akActor) != 1
@@ -3756,7 +3758,7 @@ EndFunction
 int Function PiercingCheck(Actor akActor)
 
 	int t = 0
-	if DDi.IsMilkingBlocked_PiercingsNipple(akActor) == true
+	if MMEExtDDCheck(akActor, "IsMilkingBlocked_PiercingsNipple") == true
 		t = 1
 	endif
 	Form maidArmor = akActor.GetWornForm(Armor.GetMaskForSlot(56))
@@ -3858,4 +3860,66 @@ int Function Pain(Actor akActor, int pain)
 	MME_Storage.setPainCurrent(akActor, PainCnt)
 
 	return pain
+EndFunction
+
+; Keep the full original MME bridge optional even when an old installer selected it.
+; No zadLibs type is referenced here: the bridge owns the DD implementation.
+Int MMEExtDDLastState = -1
+Bool MMEExtDDInvalidActorReported = False
+Bool MMEExtDDBridgeFailureReported = False
+
+Bool Function MMEExtDDCheck(Actor target, String operation)
+    If target == None
+        If !MMEExtDDInvalidActorReported
+            MMEExtDDInvalidActorReported = True
+            MMELog.Alarm("[MME Extensions DD] SMOKE ALARM | operation=" + operation + " | actor=None | invalid actor; DD check skipped")
+        EndIf
+        Return False
+    EndIf
+    MMEExtDDInvalidActorReported = False
+    Bool available = Game.GetModByName("Devious Devices - Assets.esm") != 255 && Game.GetModByName("Devious Devices - Integration.esm") != 255 && Quest.GetQuest("zadQuest") != None
+    Int currentState = 0
+    If available && DDi != None
+        currentState = 1
+        MMEExtDDBridgeFailureReported = False
+    ElseIf available
+        currentState = 2
+        If !MMEExtDDBridgeFailureReported
+            MMEExtDDBridgeFailureReported = True
+            MMELog.Alarm("[MME Extensions DD] SMOKE ALARM | operation=" + operation + " | actor=" + target + " | DD loaded but MME DDi bridge is None; check skipped")
+        EndIf
+    EndIf
+    If currentState != MMEExtDDLastState
+        MMEExtDDLastState = currentState
+        If currentState == 1
+            MMELog.MasterDiagnostic("[MME Extensions DD] bridge ready | operation=" + operation + " | actor=" + target)
+        ElseIf currentState == 0
+            MMELog.MasterDiagnostic("[MME Extensions DD] checks skipped | operation=" + operation + " | actor=" + target + " | optional DD plugins or zadQuest unavailable")
+        EndIf
+    EndIf
+    If currentState != 1
+        Return False
+    EndIf
+    If operation == "IsMilkingBlocked_Armbinder"
+        Return DDi.IsMilkingBlocked_Armbinder(target)
+    ElseIf operation == "IsMilkingBlocked_Bra"
+        Return DDi.IsMilkingBlocked_Bra(target)
+    ElseIf operation == "IsMilkingBlocked_PiercingsNipple"
+        Return DDi.IsMilkingBlocked_PiercingsNipple(target)
+    ElseIf operation == "IsMilkingBlocked_Suit"
+        Return DDi.IsMilkingBlocked_Suit(target)
+    ElseIf operation == "IsMilkingBlocked_Yoke"
+        Return DDi.IsMilkingBlocked_Yoke(target)
+    ElseIf operation == "IsWearingBelt"
+        Return DDi.IsWearingBelt(target)
+    ElseIf operation == "IsWearingBelt_Open"
+        Return DDi.IsWearingBelt_Open(target)
+    ElseIf operation == "IsWearingDDMilker"
+        Return DDi.IsWearingDDMilker(target)
+    ElseIf operation == "IsWearingGag"
+        Return DDi.IsWearingGag(target)
+    ElseIf operation == "IsWearingGag_Open"
+        Return DDi.IsWearingGag_Open(target)
+    EndIf
+    Return False
 EndFunction

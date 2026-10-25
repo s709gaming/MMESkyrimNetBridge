@@ -33,7 +33,8 @@ def validate_info(payload):
             conditions.append(value)
         pos = end
 
-    require(len(conditions) == 2, f"{editor_id} expected backend gate plus female gate")
+    expected = 6 if editor_id == b"MMEExt_NewMilkMaid" else 2
+    require(len(conditions) == expected, f"{editor_id} expected {expected} eligibility conditions")
     function_ids = [struct.unpack_from("<H", value, 8)[0] for value in conditions]
     require(SAME_RACE not in function_ids,
             f"{editor_id} contains dangerous SameRace CTDA (43), not GetIsSex")

@@ -32,7 +32,7 @@ EndFunction
 
 ; Shared source-side gameplay contract used before either animation backend.
 Bool Function ValidateMilkSource(Actor milkSource, MilkQUEST milkController, Bool diagnostic = False) Global
-    If milkController == None
+    If milkSource == None || milkController == None
         Report(diagnostic, "MME backend unavailable")
         Return False
     EndIf

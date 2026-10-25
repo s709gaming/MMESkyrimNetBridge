@@ -107,6 +107,11 @@ EndEvent
 ; Internal MCM refreshes remain silent; true launch/load entry points request
 ; one compact engine-on status after initialization is complete.
 Function InitializeController(Bool reportStatus = False)
+    UnregisterForModEvent("MMEExtensions_MaidBodyTrace")
+    RegisterForModEvent("MMEExtensions_MaidBodyTrace", "OnMaidBodyTrace")
+    UnregisterForModEvent("MMEExtensions_MaidBodyComplete")
+    RegisterForModEvent("MMEExtensions_MaidBodyComplete", "OnMaidBodyComplete")
+    MMEMaidBodyScaling.ReconcileAll("controller initialized", True)
     StopMovementSlap("controller initialization")
     MovementSlapPlayer = Game.GetPlayer()
     MovementSlapMilkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
@@ -404,6 +409,7 @@ EndFunction
 
 ; Stops scheduled work and event subscriptions without removing saved state.
 Function DisableController()
+    MMEMaidBodyScaling.ReconcileAll("Extensions disabled")
     StopMovementSlap("Extensions disabled")
     NextMovementSlapUpdate = 0.0
     UnregisterForModEvent("MMEExtensions_MovementSlapPause")
@@ -501,6 +507,7 @@ EndEvent
 Event OnMenuClose(String menuName)
     If menuName == "Journal Menu" && IsExtensionsEnabled()
         MMEMaidWeightScaling.ReconcileAll("Journal Menu closed")
+        MMEMaidBodyScaling.ReconcileAll("Journal Menu closed")
         MMEBodyEffects.Reconcile("Journal Menu closed")
         MMEMilkingEquipmentRefit.Reconcile("Journal Menu closed")
     EndIf
@@ -1166,13 +1173,15 @@ Bool Function IsMMESexLabBreastfeedingAvailable()
     Return MMEDebug.IsOriginalMMESexLabBreastfeedingAvailable(milkController)
 EndFunction
 
-; This gate belongs only to the separate SexLab New Milk Maid INFO. The working
-; OStim New Milk Maid INFO continues to use the original OStim gate (00085A).
-; The two choices therefore remain mutually exclusive in the same choice list.
+Bool OStimConversionGateAlarm = False
+
+; Refresh both backend-specific conversion gates at existing dialogue/lifecycle
+; boundaries. The general OStim gate still permits the reverse drinking route.
 Function RefreshNewMilkMaidDialogueAvailability(Bool sexLabAvailable)
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     Actor playerActor = Game.GetPlayer()
     Bool playerEligible = MMEOStimBreastfeeding.ValidateMilkSource(playerActor, milkController, False) && MME_Storage.getMilkCurrent(playerActor) >= 1.0
+    RefreshOStimConversionGate(playerEligible, "conversion availability")
     Bool available = IsExtensionsEnabled() && !MMEOStimBreastfeeding.IsBreastfeedingEnabled() && sexLabAvailable && playerEligible
     GlobalVariable dialogueGate = GetNewMilkMaidDialogueAvailabilityGlobal()
     If dialogueGate != None
@@ -1186,6 +1195,35 @@ Function RefreshNewMilkMaidDialogueAvailability(Bool sexLabAvailable)
         EndIf
     Else
         MMELog.Alarm("[MME Extensions Dialogue] SexLab New Milk Maid availability GlobalVariable is missing")
+    EndIf
+EndFunction
+
+Function RefreshOStimConversionGate(Bool playerEligible, String reason)
+    GlobalVariable gate = Game.GetFormFromFile(0x0008D0, "MMEAlert.esp") as GlobalVariable
+    Actor sourceActor = Game.GetPlayer()
+    If gate == None
+        If !OStimConversionGateAlarm
+            MMELog.Alarm("[MME Extensions Dialogue Gate] operation=refresh | actor=" + sourceActor + " | required conversion global missing")
+            OStimConversionGateAlarm = True
+        EndIf
+        Return
+    EndIf
+    Float desired = 0.0
+    If IsExtensionsEnabled() && MMEOStimBreastfeeding.IsDialogueEnabled() && playerEligible
+        desired = 1.0
+    EndIf
+    Float previous = gate.GetValue()
+    gate.SetValue(desired)
+    If gate.GetValue() != desired
+        If !OStimConversionGateAlarm
+            MMELog.Alarm("[MME Extensions Dialogue Gate] operation=write/readback | actor=" + sourceActor + " | expected=" + desired + " | failed global update")
+            OStimConversionGateAlarm = True
+        EndIf
+    Else
+        OStimConversionGateAlarm = False
+    EndIf
+    If previous != desired
+        MMELog.MasterDiagnostic("[MME Extensions Dialogue Gate] actor=" + sourceActor + " | backend=OStim | source eligible with milk=" + playerEligible + " | gate=" + previous + " -> " + desired + " | reason=" + reason)
     EndIf
 EndFunction
 
@@ -1451,6 +1489,9 @@ EndEvent
 
 ; Waits for MME, validates a real false-to-true transition, and publishes it once.
 Function CheckMilkmaidCreation(Actor candidate, String source, Bool ownsPendingMarker = True, Bool narrateCreation = True)
+    If candidate != None && candidate == Game.GetPlayer()
+        RefreshNewMilkMaidDialogueAvailability(IsMMESexLabBreastfeedingAvailable())
+    EndIf
     ; This routine reconciles several creation signals that may arrive in either
     ; order. MilkQUEST membership is authoritative; effect/pending markers only
     ; explain whether conversion is still underway and who may clear the state.
@@ -1509,14 +1550,32 @@ Function CheckMilkmaidCreation(Actor candidate, String source, Bool ownsPendingM
     ; Cosmetic weight work is deliberately last. A compatibility failure here
     ; must never suppress conversion feedback, narration, or the public event.
     MMEMaidWeightScaling.ReconcileActor(candidate, "Milk Maid created")
+    MMEMaidBodyScaling.ReconcileActor(candidate, "Milk Maid created")
     If candidate == Game.GetPlayer()
         MMEMilkingEquipmentRefit.Reconcile("Milk Maid created")
     EndIf
 EndFunction
 
+; Routine native footprints share the existing master Papyrus trace gate.
+Event OnMaidBodyTrace(String eventName, String detail, Float numArg, Form sender)
+    MMELog.MasterDiagnostic("[MME Extensions Maid Body] actor=" + sender + " | " + detail)
+EndEvent
+
+; Completion remains registered while disabled so pending cleanup can finish.
+Event OnMaidBodyComplete(String eventName, String token, Float success, Form sender)
+    MMEMaidBodyScaling.CompleteActor(sender as Actor, token as Int, success == 1.0)
+EndEvent
+
 ; Receives low-cost lifecycle signals from the optional CommonLibSSE-NG DLL.
 Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form sender)
     If reason == "load"
+        ; Existing saves need new listeners even without an MCM version update
+        ; or an ActiveMagicEffect OnPlayerLoadGame callback.
+        UnregisterForModEvent("MMEExtensions_MaidBodyTrace")
+        RegisterForModEvent("MMEExtensions_MaidBodyTrace", "OnMaidBodyTrace")
+        UnregisterForModEvent("MMEExtensions_MaidBodyComplete")
+        RegisterForModEvent("MMEExtensions_MaidBodyComplete", "OnMaidBodyComplete")
+        MMEMaidBodyScaling.ReconcileAll("save loaded", True)
         ResetMovementSlapAfterLoad()
         MMEArmorIntroduction.RestorePlayerMovementIfNeeded(Game.GetPlayer(), "native load event")
         MMEReactionAnimation.RestorePlayerMovementIfNeeded(Game.GetPlayer(), "native load event")
@@ -1541,6 +1600,7 @@ Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form send
         EndIf
     EndIf
     RefreshMMESexLabAnimationGate("lifecycle " + reason)
+    MMEMaidBodyScaling.ReconcileAll("lifecycle " + reason)
     RefreshCapacity(reason)
     If JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0) == 1
         Debug.Notification("MME Extensions: detected " + reason)
@@ -1672,6 +1732,7 @@ Event OnMMEMilkingDone(Form actorForm, Int bottles, Int boobgasmCount, Int cumCo
     Actor milkMaid = actorForm as Actor
     FinishMilking(milkMaid)
     MMEMaidWeightScaling.ReconcileActor(milkMaid, "MME milking completed")
+    MMEMaidBodyScaling.ReconcileActor(milkMaid, "MME milking completed")
     If milkMaid == Game.GetPlayer()
         MMEBodyEffects.Reconcile("MME milking completed")
         MMEMilkingEquipmentRefit.Reconcile("MME milking completed")
@@ -1688,6 +1749,7 @@ Event OnMMEMilkCycleComplete(String eventName, String strArg, Float numArg, Form
         Return
     EndIf
     MMEMaidWeightScaling.ReconcileAll("MME milk cycle completed")
+    MMEMaidBodyScaling.ReconcileAll("MME milk cycle completed")
     MMEBodyEffects.Reconcile("MME milk cycle completed")
     MMEMilkingEquipmentRefit.Reconcile("MME milk cycle completed")
     MMEDwemerArmor.ProcessNearbyDwemerArmor()
@@ -1699,6 +1761,9 @@ Function FinishMilking(Actor milkMaid)
         Return
     EndIf
     StorageUtil.UnsetIntValue(milkMaid, MilkingStateKey)
+    If milkMaid == Game.GetPlayer()
+        RefreshNewMilkMaidDialogueAvailability(IsMMESexLabBreastfeedingAvailable())
+    EndIf
     If IsNearbyMilkMaid(milkMaid)
         If JsonUtil.GetIntValue(SettingsFile, "enableMilkingEventDebug", 1) == 1
             Debug.Notification("MME Alerts - MILKING END: " + GetActorName(milkMaid))

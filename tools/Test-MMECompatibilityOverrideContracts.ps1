@@ -38,3 +38,27 @@ if (Test-Path -LiteralPath (Join-Path $projectRoot "Source\MMECompatibilityOverr
 }
 
 Write-Host "PASS: minimal MME override fixes NPC assignment loops, preserves the cycle hook, safely handles missing SexLab expressions, and suppresses modal gag spam"
+
+# DD absent must never enter the full bridge, including non-milking callers.
+$ddHelperStart = $source.IndexOf('Bool Function MMEExtDDCheck(')
+if ($ddHelperStart -lt 0) { throw "Missing optional-DD guard" }
+$beforeDDHelper = $source.Substring(0, $ddHelperStart)
+$ddHelper = $source.Substring($ddHelperStart)
+if ($beforeDDHelper -match 'DDi\.\w+\(') { throw "A caller bypasses the optional-DD guard" }
+if ($ddHelper -notmatch 'target == None' -or
+    $ddHelper -notmatch 'Devious Devices - Assets.esm' -or
+    $ddHelper -notmatch 'Devious Devices - Integration.esm' -or
+    $ddHelper -notmatch 'Quest.GetQuest\("zadQuest"\)' -or
+    $ddHelper -notmatch 'available && DDi != None') { throw "DD prerequisites are incomplete" }
+$earlyReturn = $ddHelper.IndexOf('If currentState != 1')
+$firstBridgeCall = $ddHelper.IndexOf('Return DDi.')
+if ($earlyReturn -lt 0 -or $earlyReturn -gt $firstBridgeCall) { throw "DD bridge dispatch precedes the absent-dependency return" }
+$requests = [regex]::Matches($beforeDDHelper, 'MMEExtDDCheck\(akActor, "([^"\r\n]+)"\)')
+if ($requests.Count -ne 14) { throw "Expected all 14 original DD call sites to be guarded" }
+foreach ($request in $requests) {
+    $method = $request.Groups[1].Value
+    if (!$ddHelper.Contains('Return DDi.' + $method + '(target)')) { throw "Missing original DD dispatch: $method" }
+}
+if ($ddHelper -match 'Debug\.(Trace|Notification|MessageBox)\(' -or
+    $ddHelper -notmatch 'currentState != MMEExtDDLastState') { throw "DD diagnostics must use gated/deduplicated logging" }
+Write-Host "PASS: all DD callers use prerequisite guards and original bridge methods; absent DD returns before dispatch"
