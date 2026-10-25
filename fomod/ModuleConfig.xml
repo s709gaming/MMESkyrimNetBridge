@@ -138,6 +138,11 @@
             </plugin>
           </plugins>
         </group>
+
+      </optionalFileGroups>
+    </installStep>
+    <installStep name="Optional Mod Compatibility">
+      <optionalFileGroups order="Explicit">
         <group name="Optional mod compatibility" type="SelectAny">
           <plugins order="Explicit">
             <plugin name="Install OMania compatibility">
@@ -183,14 +188,14 @@
                         <fileDependency file="CP_Elsie.esp" state="Active" />
                         <flagDependency flag="mmeNoSexLab" value="false" />
                       </dependencies>
-                      <type name="Required" />
+                      <type name="Recommended" />
                     </pattern>
                   </patterns>
                 </dependencyType>
               </typeDescriptor>
             </plugin>
             <plugin name="JUGS — Stability and MME Compatibility Patch">
-              <description>Recommended when JUGS is installed. Adds guarded SexLab scene startup, repairs participant and Soulgem Oven queue handling, and routes JUGS Milk Maid conversion through MME Extensions' supported API. Automatically selected when Jugs.esp is active.</description>
+              <description>Recommended when JUGS is installed. Adds guarded SexLab scene startup, repairs participant and Soulgem Oven queue handling, and routes JUGS Milk Maid conversion through MME Extensions' supported API. Preselected when Jugs.esp is active; you can untick this optional patch.</description>
               <files>
                 <folder source="fomod\choices\jugs-compatibility\Scripts" destination="Scripts" priority="20" />
                 <folder source="fomod\choices\jugs-compatibility\Source\Scripts" destination="Source\Scripts" priority="20" />
@@ -205,7 +210,7 @@
                         <fileDependency file="Jugs.esp" state="Active" />
                         <flagDependency flag="mmeNoSexLab" value="false" />
                       </dependencies>
-                      <type name="Required" />
+                      <type name="Recommended" />
                     </pattern>
                   </patterns>
                 </dependencyType>
@@ -224,7 +229,7 @@
                       <dependencies operator="And">
                         <fileDependency file="C5Kev's Tentacled Terrors Of Tamriel 3BA.esp" state="Active" />
                       </dependencies>
-                      <type name="Required" />
+                      <type name="Recommended" />
                     </pattern>
                   </patterns>
                 </dependencyType>
@@ -243,7 +248,7 @@
                       <dependencies operator="And">
                         <fileDependency file="DwarvenDeviousCuirass.esp" state="Active" />
                       </dependencies>
-                      <type name="Required" />
+                      <type name="Recommended" />
                     </pattern>
                   </patterns>
                 </dependencyType>

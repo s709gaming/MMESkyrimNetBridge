@@ -2,6 +2,8 @@ param([string]$Assembler = 'E:\Steam\steamapps\common\Skyrim Special Edition\Pap
     [string]$OriginalMME = "$env:LOCALAPPDATA\ModOrganizer\VortexToMO2\mods\Milk-Mod-Economy-Scripts-20220522.7z")
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
+& python (Join-Path $PSScriptRoot 'test_fomod_backend_gates.py')
+if ($LASTEXITCODE) { throw 'FOMOD backend page gating regression' }
 $choice = Join-Path $root 'fomod\choices\ostim-only'
 [xml]$xml = Get-Content (Join-Path $root 'fomod\ModuleConfig.xml') -Raw
 $backend = @($xml.SelectNodes('//group') | Where-Object { $_.name -eq 'Animation backend' })

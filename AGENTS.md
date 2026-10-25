@@ -5,6 +5,7 @@
 - Preserve unrelated user changes in the worktree.
 - Do not commit, publish, deploy to Skyrim, or modify installed MO2 mods, profiles, game-root files, or the retained Vortex installation unless the user explicitly requests it.
 - Keep temporary diagnostics, test artifacts, and failed builds out of release packages.
+- Name generated archives `MME Extensions.zip`. Leave release version numbers and versioned filenames to the user unless explicitly requested.
 
 ## Papyrus diagnostics
 
