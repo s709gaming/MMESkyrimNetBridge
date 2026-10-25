@@ -10,7 +10,7 @@ function Assert-Contract([bool]$condition, [string]$message) {
     if (!$condition) { throw "Body effects contract failed: $message" }
 }
 
-Assert-Contract ($mcm -match 'Pages = new String\[12\]' -and $mcm -match 'Pages\[4\] = "Body"') "Body MCM page is registered"
+Assert-Contract ($mcm -match 'Pages = new String\[12\]' -and $mcm -match 'Pages\[4\] = "B" \+ "ody "') "Body MCM page is registered"
 Assert-Contract ($mcm -match 'enableCustomMilkSpeedDebuff", 0' -and $mcm -match 'enableCustomMilkWeight", 0') "replacement features default off"
 Assert-Contract ($mcm -match 'milkSpeedMediumThreshold", 50\.0' -and $mcm -match 'milkSpeedHighThreshold", 100\.0') "threshold defaults are preserved"
 Assert-Contract ($mcm -match 'milkSpeedMediumPenalty", 3\.0' -and $mcm -match 'milkSpeedHighPenalty", 10\.0') "penalty defaults are preserved"

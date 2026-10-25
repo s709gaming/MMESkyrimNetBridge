@@ -1,7 +1,7 @@
 Scriptname MMESexLabBreastfeedingBackend Hidden
 
-; SexLab P+ implementation selected by the FOMOD when the converted 3jiou
-; breastfeeding SLSB registry is present. P+-only types stay in this facade.
+; SexLab P+ implementation selected manually through the FOMOD compatibility
+; option. P+-only types stay in this facade.
 
 String Function GetBackendName() Global
     Return "SexLab P+"

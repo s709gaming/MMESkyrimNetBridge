@@ -47,6 +47,17 @@ Float NearbyRange = 2000.0
 Float NextCapacityUpdate = 0.0
 Float NextArousalEffectUpdate = 0.0
 Float NextBodyEffectsUpdate = 0.0
+Float NextMovementSlapUpdate = 0.0
+Int MovementSlapInstance = -1
+Int MovementSlapGeneration = 0
+Int MovementSlapSession = -1
+Bool MovementSlapUpdating = False
+Bool MovementSlapAlarmActive = False
+Bool MovementSlapNotificationAlarmActive = False
+String MovementSlapLastBlockReason = "<not checked>"
+Actor MovementSlapPlayer = None
+MilkQUEST MovementSlapMilkController = None
+Sound MovementSlapSound = None
 Float NextSkyrimNetUpdate = 0.0
 Float NextDebugUpdate = 0.0
 Float NextThoughtDebugUpdate = 0.0
@@ -96,10 +107,17 @@ EndEvent
 ; Internal MCM refreshes remain silent; true launch/load entry points request
 ; one compact engine-on status after initialization is complete.
 Function InitializeController(Bool reportStatus = False)
+    StopMovementSlap("controller initialization")
+    MovementSlapPlayer = Game.GetPlayer()
+    MovementSlapMilkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    MovementSlapSound = Game.GetFormFromFile(0x0008C5, "MMEAlert.esp") as Sound
+    UnregisterForModEvent("MMEExtensions_MovementSlapPause")
+    RegisterForModEvent("MMEExtensions_MovementSlapPause", "OnMovementSlapPause")
     ; Phase 1: refresh conditional forms and recover legacy animation state
     ; before honoring the master toggle. The OStim Global must also be correct
     ; while disabled so Skyrim cannot retain a stale dialogue choice.
     RefreshOStimDialogueAvailability()
+    MMELog.MasterDiagnostic("[MME Extensions DD] bridge availability | available=" + IsDeviousDevicesAvailable() + " | source=controller initialization")
     MMEArmorScript.RestorePlayerMovementIfNeeded(Game.GetPlayer(), MMEArmorScript.GetArmorDiagnostic())
     MMEArmorIntroduction.RestorePlayerMovementIfNeeded(Game.GetPlayer(), "controller initialization")
     MMEReactionAnimation.RestorePlayerMovementIfNeeded(Game.GetPlayer(), "controller initialization")
@@ -386,6 +404,9 @@ EndFunction
 
 ; Stops scheduled work and event subscriptions without removing saved state.
 Function DisableController()
+    StopMovementSlap("Extensions disabled")
+    NextMovementSlapUpdate = 0.0
+    UnregisterForModEvent("MMEExtensions_MovementSlapPause")
     ; Symmetric teardown for every registration and deadline owned by this quest.
     ; Saved gameplay data is preserved; only active observation/scheduling stops.
     OStimDialogueAvailable = False
@@ -1241,15 +1262,21 @@ Bool Function HasMilkmaidCreationEffect(Actor candidate) Global
     Return (makeMaidEffect != None && candidate.HasMagicEffect(makeMaidEffect)) || (lactacidEffect != None && candidate.HasMagicEffect(lactacidEffect))
 EndFunction
 
-; True when MME/DD reports the actor's arms restrained (armbinder/yoke), which
-; makes free-arm breast animations look wrong. The DD-disabled MME bridge
-; returns False for every check, so this is optional automatically.
+; MME's DDi quest can exist even when DD is absent, including the full bridge
+; selected by an older installer. Never use bridge existence as proof that
+; its zadLibs dependency is loaded. No compile-time DD script dependency.
+Bool Function IsDeviousDevicesAvailable() Global
+    Return Game.GetModByName("Devious Devices - Assets.esm") != 255 && Quest.GetQuest("zadQuest") != None
+EndFunction
+
+; True when MME/DD reports armbinder/yoke restraint. Missing DD is expected
+; and returns False before any bridge method dereferences zadLibs.
 Bool Function IsFreeArmAnimationBlocked(Actor candidate) Global
     If candidate == None
         Return False
     EndIf
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    If milkController == None || milkController.DDi == None
+    If milkController == None || milkController.DDi == None || !IsDeviousDevicesAvailable()
         Return False
     EndIf
     Return milkController.DDi.IsMilkingBlocked_Armbinder(candidate) || milkController.DDi.IsMilkingBlocked_Yoke(candidate)
@@ -1490,6 +1517,7 @@ EndFunction
 ; Receives low-cost lifecycle signals from the optional CommonLibSSE-NG DLL.
 Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form sender)
     If reason == "load"
+        ResetMovementSlapAfterLoad()
         MMEArmorIntroduction.RestorePlayerMovementIfNeeded(Game.GetPlayer(), "native load event")
         MMEReactionAnimation.RestorePlayerMovementIfNeeded(Game.GetPlayer(), "native load event")
     EndIf
@@ -1721,6 +1749,9 @@ EndFunction
 
 ; Synchronizes optional capacity polling with its persisted MCM toggle.
 Function UpdatePolling()
+    MovementSlapLastBlockReason = "<not checked>"
+    StopMovementSlap("scheduler settings changed")
+    NextMovementSlapUpdate = 0.0
     ; Rebuild absolute deadlines from MCM settings. This function owns the only
     ; recurring capacity/Skyrim.Net/debug schedules; armor checks remain
     ; event-driven one-shots inserted into the same deadline set.
@@ -1738,6 +1769,9 @@ Function UpdatePolling()
         Return
     EndIf
     Float now = Utility.GetCurrentRealTime()
+    If IsMovementSlapEnabled()
+        NextMovementSlapUpdate = now + 0.5
+    EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableCapacityPolling", 1) == 1
         NextCapacityUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 15.0)
     Else
@@ -1919,6 +1953,15 @@ Function ScheduleNextUpdate()
             delay = candidate
         EndIf
     EndIf
+    If NextMovementSlapUpdate > 0.0
+        candidate = NextMovementSlapUpdate - now
+        If candidate <= 0.0
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
+    EndIf
     If NextBreastBouncePresentation > 0.0
         candidate = NextBreastBouncePresentation - now
         If candidate <= 0.0
@@ -1932,6 +1975,9 @@ Function ScheduleNextUpdate()
         ; The dialogue-menu armor reminder needs a short retry. All other work
         ; is intentionally throttled to one second to avoid tight Papyrus loops.
         Float minimumDelay = 1.0
+        If NextMovementSlapUpdate > 0.0
+            minimumDelay = 0.5
+        EndIf
         If NextArmorReminder > 0.0
             minimumDelay = 0.25
         EndIf
@@ -1944,6 +1990,10 @@ EndFunction
 
 ; Services independent local-capacity and SkyrimNet status schedules.
 Event OnUpdate()
+    If !IsExtensionsEnabled()
+        StopMovementSlap("Extensions disabled")
+        NextMovementSlapUpdate = 0.0
+    EndIf
     MMEMilkingDiagnostics.CheckWatchdogs()
     ; Snapshot due flags before executing work so each deadline is serviced at
     ; most once per callback. Capacity and Skyrim.Net share the same actor scan.
@@ -1969,6 +2019,14 @@ Event OnUpdate()
     Bool capacityDue = NextCapacityUpdate > 0.0 && now >= NextCapacityUpdate
     Bool arousalEffectDue = NextArousalEffectUpdate > 0.0 && now >= NextArousalEffectUpdate
     Bool bodyEffectsDue = NextBodyEffectsUpdate > 0.0 && now >= NextBodyEffectsUpdate
+    If NextMovementSlapUpdate > 0.0 && now >= NextMovementSlapUpdate
+        UpdateMovementSlap()
+        If IsMovementSlapEnabled()
+            NextMovementSlapUpdate = Utility.GetCurrentRealTime() + 0.5
+        Else
+            NextMovementSlapUpdate = 0.0
+        EndIf
+    EndIf
     Bool skyrimNetDue = NextSkyrimNetUpdate > 0.0 && now >= NextSkyrimNetUpdate
     Bool debugDue = NextDebugUpdate > 0.0 && now >= NextDebugUpdate
     Bool thoughtDebugDue = NextThoughtDebugUpdate > 0.0 && now >= NextThoughtDebugUpdate
@@ -2376,4 +2434,207 @@ Function PlayCapacityReaction(Actor sourceActor, Int crossing)
     Else
         MMELog.Diagnostic("[MMEAlert] capacity Sound.Play returned " + instance)
     EndIf
+EndFunction
+
+; One player-only sound instance; no actor scans or additional update registration.
+Bool Function IsMovementSlapEnabled()
+    Return IsExtensionsEnabled() && JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1) == 1 && JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1) == 1
+EndFunction
+
+String Function GetMovementSlapBlockReason()
+    If !IsMovementSlapEnabled()
+        Return "sound setting disabled"
+    EndIf
+    If JsonUtil.GetFloatValue(SettingsFile, "movementSlapVolume", 100.0) <= 0.0 || JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0) <= 0.0
+        Return "muted"
+    EndIf
+    If Utility.IsInMenuMode() || !Game.IsMovementControlsEnabled() || !MMEExtensionsNative.IsPlayerMovingOnFoot()
+        Return "player not moving on foot or controls/menu blocked"
+    EndIf
+    If MovementSlapPlayer == None || MovementSlapMilkController == None
+        Return "player or MME unavailable"
+    EndIf
+    If !MMEArmorScript.IsValidMilkMaid(MovementSlapPlayer, MovementSlapMilkController)
+        Return "player is not a valid Milk Maid"
+    EndIf
+    ; Verified against original MME_Storage: these are its authoritative keys.
+    ; Read directly on this hot path because the original getters emit an
+    ; unconditional trace. Preserve its one-time maximum upgrade initializer.
+    If !StorageUtil.HasFloatValue(MovementSlapPlayer, "MME.MilkMaid.MilkMaximum")
+        MME_Storage.getMilkMaximum(MovementSlapPlayer)
+    EndIf
+    Float maximum = StorageUtil.GetFloatValue(MovementSlapPlayer, "MME.MilkMaid.MilkMaximum", 0.0)
+    Float current = StorageUtil.GetFloatValue(MovementSlapPlayer, "MME.MilkMaid.MilkCount", 0.0)
+    If maximum <= 0.0 || current <= maximum * 0.5
+        Return "fullness is not above 50 percent"
+    EndIf
+    If IsDhlpSuspended() || MMEAnimationSafety.GetOwner(MovementSlapPlayer) != "" || MMEAnimationSafety.IsMMEMilking(MovementSlapPlayer, MovementSlapMilkController)
+        Return "player animation or milking owns actor"
+    EndIf
+    If MovementSlapMilkController.SexLab != None && MovementSlapMilkController.SexLab.IsActorActive(MovementSlapPlayer)
+        Return "SexLab scene active"
+    EndIf
+    If MMEOStimIntegration.IsActorInScene(MovementSlapPlayer)
+        Return "OStim scene active"
+    EndIf
+    Return ""
+EndFunction
+
+Function UpdateMovementSlap()
+    If MovementSlapUpdating
+        Return
+    EndIf
+    MovementSlapUpdating = True
+    String reason = GetMovementSlapBlockReason()
+    If reason != MovementSlapLastBlockReason
+        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] eligibility changed | actor=PLAYER | eligible=" + (reason == "") + " | reason=" + reason)
+        MovementSlapLastBlockReason = reason
+    EndIf
+    If reason != ""
+        StopMovementSlap(reason)
+        MovementSlapUpdating = False
+        Return
+    EndIf
+    If MovementSlapSound == None
+        If !MovementSlapAlarmActive
+            MMELog.Alarm("[MME Extensions Movement Slap] cannot start player loop: MMEAlert SOUN 0008C5 unavailable")
+            MovementSlapAlarmActive = True
+        EndIf
+        MovementSlapUpdating = False
+        Return
+    EndIf
+    Bool notifyOnStart = False
+    Int notificationGeneration = MovementSlapGeneration
+    If MovementSlapInstance < 0
+        MovementSlapSession = MMEExtensionsNative.GetMovementSlapSession()
+        Int generation = MovementSlapGeneration
+        Int instance = MovementSlapSound.Play(MovementSlapPlayer)
+        If instance < 0
+            If !MovementSlapAlarmActive
+                MMELog.Alarm("[MME Extensions Movement Slap] cannot start player loop: Sound.Play failed")
+                MovementSlapAlarmActive = True
+            EndIf
+            MovementSlapUpdating = False
+            Return
+        EndIf
+        If generation != MovementSlapGeneration || GetMovementSlapBlockReason() != ""
+            If MovementSlapSession == MMEExtensionsNative.GetMovementSlapSession()
+                Sound.StopInstance(instance)
+            EndIf
+            MovementSlapUpdating = False
+            Return
+        EndIf
+        MovementSlapInstance = instance
+        ; Publish ownership before the final generation check so an interleaved
+        ; menu/load callback either sees the handle or invalidates this start.
+        If generation != MovementSlapGeneration
+            StopMovementSlap("start interrupted")
+            MovementSlapUpdating = False
+            Return
+        EndIf
+        MovementSlapAlarmActive = False
+        notifyOnStart = True
+        notificationGeneration = MovementSlapGeneration
+        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] start | actor=PLAYER | fullness above 50 percent | instance=" + instance)
+    EndIf
+    ; The movement-only WAV has exactly 2x gain. 0.5 restores the original;
+    ; 1.0 gives 200%, without asking Papyrus to exceed its 0..1 clamp.
+    Float volume = JsonUtil.GetFloatValue(SettingsFile, "movementSlapVolume", 100.0) / 200.0
+    If volume < 0.0
+        volume = 0.0
+    ElseIf volume > 1.0
+        volume = 1.0
+    EndIf
+    volume *= JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0) / 100.0
+    Sound.SetInstanceVolume(MovementSlapInstance, volume)
+    If notifyOnStart && notificationGeneration == MovementSlapGeneration && MovementSlapInstance >= 0
+        TryMovementSlapNotification()
+    EndIf
+    MovementSlapUpdating = False
+EndFunction
+
+Function StopMovementSlap(String reason)
+    MovementSlapGeneration += 1
+    Int instance = MovementSlapInstance
+    MovementSlapInstance = -1
+    If instance >= 0 && MovementSlapSession == MMEExtensionsNative.GetMovementSlapSession()
+        Sound.StopInstance(instance)
+        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] stop | actor=PLAYER | reason=" + reason)
+    EndIf
+EndFunction
+
+Event OnMovementSlapPause(String eventName, String menuName, Float unusedValue, Form sender)
+    StopMovementSlap("menu opened: " + menuName)
+EndEvent
+
+Function ResetMovementSlapAfterLoad()
+    ; Audio handles are session-local. Skyrim clears audio on load; never stop
+    ; a saved numeric handle that may now belong to an unrelated sound.
+    StopMovementSlap("load callback")
+    MovementSlapSession = MMEExtensionsNative.GetMovementSlapSession()
+    MovementSlapUpdating = False
+    MovementSlapAlarmActive = False
+    MovementSlapNotificationAlarmActive = False
+    MovementSlapLastBlockReason = "<not checked>"
+    MovementSlapPlayer = Game.GetPlayer()
+    MovementSlapMilkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    MovementSlapSound = Game.GetFormFromFile(0x0008C5, "MMEAlert.esp") as Sound
+    MMELog.MasterDiagnostic("[MME Extensions Movement Slap] reset session handles after load | actor=PLAYER")
+EndFunction
+
+; Called only after a new eligible loop starts, never on each movement tick.
+; The player-scoped StorageUtil timestamp survives loads. Cooldown and toggle
+; affect HUD flavor only and never stop, delay or gate the sound loop.
+Function TryMovementSlapNotification()
+    Int generation = MovementSlapGeneration
+    Int instance = MovementSlapInstance
+    MMELog.MasterDiagnostic("[MME Extensions Movement Slap] notification entry | actor=PLAYER | instance=" + instance)
+    If JsonUtil.GetIntValue(SettingsFile, "enableMovementSlapNotifications", 1) != 1
+        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] notification skipped | actor=PLAYER | reason=notification toggle disabled")
+        Return
+    EndIf
+    If MovementSlapPlayer == None || instance < 0
+        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] notification skipped | actor=PLAYER | reason=no owned playback")
+        Return
+    EndIf
+    Float hours = JsonUtil.GetFloatValue(SettingsFile, "movementSlapNotificationCooldownHours", 8.0)
+    If hours < 0.0
+        hours = 0.0
+    ElseIf hours > 48.0
+        hours = 48.0
+    EndIf
+    Float now = Utility.GetCurrentGameTime()
+    String cooldownKey = "MMEExtensions.MovementSlap.LastNotificationGameTime"
+    Float last = StorageUtil.GetFloatValue(MovementSlapPlayer, cooldownKey, -1.0)
+    Float remaining = hours - ((now - last) * 24.0)
+    If hours > 0.0 && last >= 0.0 && now >= last && remaining > 0.0
+        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] notification skipped | actor=PLAYER | reason=cooldown active | remaining game hours=" + remaining)
+        Return
+    EndIf
+    String configFile = "/MMEAlerts/BreastBounceNotifications"
+    String notificationText = ""
+    If JsonUtil.JsonExists(configFile) && JsonUtil.IsGood(configFile)
+        String[] entries = JsonUtil.PathStringElements(configFile, ".movement")
+        If entries.Length > 0
+            notificationText = entries[Utility.RandomInt(0, entries.Length - 1)]
+        EndIf
+    EndIf
+    If notificationText == ""
+        If !MovementSlapNotificationAlarmActive
+            MMELog.Alarm("[MME Extensions Movement Slap] notification failed | actor=PLAYER | reason=BreastBounceNotifications.json movement pool missing, malformed or empty")
+            MovementSlapNotificationAlarmActive = True
+        EndIf
+        Return
+    EndIf
+    String blockReason = GetMovementSlapBlockReason()
+    If generation != MovementSlapGeneration || instance != MovementSlapInstance || blockReason != ""
+        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] notification skipped | actor=PLAYER | reason=playback interrupted | eligibility=" + blockReason)
+        Return
+    EndIf
+    ; Reserve this presentation before submitting the notification. Menu/load
+    ; callbacks cannot cause another playback start to spend the same window.
+    StorageUtil.SetFloatValue(MovementSlapPlayer, cooldownKey, now)
+    Debug.Notification(notificationText)
+    MovementSlapNotificationAlarmActive = False
+    MMELog.MasterDiagnostic("[MME Extensions Movement Slap] notification shown | actor=PLAYER | eligible=True | cooldown game hours=" + hours + " | game day=" + now)
 EndFunction

@@ -30,9 +30,12 @@ Assert-Contract (!$controller.Contains('Bool straightFound = milkController.SexL
 Assert-Contract ($debug.Contains('MMESexLabBreastfeedingBackend.StartBreastfeeding') -and $debug.Contains('MMESexLabBreastfeedingBackend.IsBreastfeedingThread')) 'SexLab starts and completions share the backend facade'
 Assert-Contract (!$debug.Contains('String animationName = "zjBreastFeeding"')) 'common transaction no longer selects legacy animations directly'
 Assert-Contract ($fomod.Contains('All-in-One SexLab P+ Compatibility — READ INSTRUCTIONS CAREFULLY') -and $fomod.Contains('READ THE SEXLAB P+ INSTRUCTIONS CAREFULLY.')) 'FOMOD identifies the unified P+ compatibility option and keeps its warning visible'
-Assert-Contract ($fomod.Contains('Scripts\SexLabThread.pex') -and $fomod.Contains('Scripts\SexlabRegistry.pex')) 'FOMOD detects P+ from two framework-owned scripts'
-Assert-Contract ($fomod.Contains('SKSE\CustomConsole\SexLabPPlus.yaml')) 'FOMOD has a P+-unique best-effort detection marker'
-Assert-Contract ($fomod.Contains('<defaultType name="Optional" />')) 'P+ option remains manually selectable when Vortex cannot classify loose files as active'
+[xml]$fomodXml = $fomod
+$pplusChoices = @($fomodXml.SelectNodes("//plugin") | Where-Object { $_.GetAttribute("name").StartsWith("All-in-One SexLab P+") })
+$pplusChoice = $pplusChoices[0]
+Assert-Contract ($pplusChoices.Count -eq 1 -and $pplusChoice.SelectSingleNode("typeDescriptor/type").GetAttribute("name") -eq "Optional") 'P+ compatibility is an explicit optional user choice'
+Assert-Contract ($null -eq $pplusChoice.typeDescriptor.dependencyType) 'P+ compatibility never becomes automatically required from unreliable file detection'
+Assert-Contract (!$pplusChoice.description.Contains("detect")) 'P+ description makes no automatic-detection claim'
 Assert-Contract (!$fomod.Contains('fileDependency file="SKSE\SexLab\Registry\3jiouBreastFeeding.slr"')) 'FOMOD does not detect P+ from the registry it installs itself'
 Assert-Contract ($fomod.Contains('fomod\choices\sexlab-pplus\Scripts\MMESexLabBreastfeedingBackend.pex')) 'FOMOD installs the P+ breastfeeding backend only through the P+ option'
 Assert-Contract ($fomod.Contains('fomod\choices\sexlab-pplus\Scripts\MME_Dialogues.pex') -and $fomod.Contains('fomod\choices\sexlab-pplus\Scripts\MilkPlayerLoadGame.pex')) 'P+ option installs both approved MME compatibility overrides'

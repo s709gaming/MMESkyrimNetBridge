@@ -1,5 +1,11 @@
 Scriptname MMEExtensionsNative Hidden
 
+; Read-only player movement state; keyboard, controller and auto-move aware.
+Bool Function IsPlayerMovingOnFoot() Global Native
+
+; Session token for rejecting audio instance IDs restored from another load.
+Int Function GetMovementSlapSession() Global Native
+
 ; Papyrus declarations for the SKSE/CommonLib native bridge. Keep every name and
 ; signature synchronized with RegisterPapyrus in src/Plugin.cpp; compiled callers
 ; depend on this ABI. Functions observe engine state only and never edit records.

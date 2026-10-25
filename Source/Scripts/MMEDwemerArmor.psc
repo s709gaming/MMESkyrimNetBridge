@@ -270,7 +270,7 @@ String Function GetAnimationBlockReason(Actor candidate, MilkQUEST milkControlle
         Return "sitting"
     ElseIf StorageUtil.GetIntValue(candidate, "IsBoundStrict", 0) != 0
         Return "strictly bound"
-    ElseIf milkController.DDi != None && (milkController.DDi.IsMilkingBlocked_Armbinder(candidate) || milkController.DDi.IsMilkingBlocked_Yoke(candidate))
+    ElseIf MMEAlertsController.IsDeviousDevicesAvailable() && milkController.DDi != None && (milkController.DDi.IsMilkingBlocked_Armbinder(candidate) || milkController.DDi.IsMilkingBlocked_Yoke(candidate))
         Return "arms restrained"
     EndIf
     Return ""

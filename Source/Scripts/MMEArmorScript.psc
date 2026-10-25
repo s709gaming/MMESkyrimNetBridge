@@ -130,6 +130,9 @@ EndFunction
 ; Reusable configurable strip path shared by the delayed post-drink check and
 ; the capacity polling loop. Observes milk only; never writes MME milk state.
 Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, String sourceLabel) Global
+    If target != Game.GetPlayer() || !MMEAlertsController.IsExtensionsEnabled() || !IsConfigurableArmorStrippingEnabled()
+        Return False
+    EndIf
     Bool diagnostic = GetDiagnostic()
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None
@@ -185,7 +188,7 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
         EndIf
         Return False
     EndIf
-    If milkController.DDi != None && milkController.DDi.IsMilkingBlocked_Suit(target)
+    If MMEAlertsController.IsDeviousDevicesAvailable() && milkController.DDi != None && milkController.DDi.IsMilkingBlocked_Suit(target)
         ReportArmorStrip(diagnostic, sourceLabel + " decision=BLOCKED | protection=DD/special armor")
         Return False
     EndIf
@@ -204,9 +207,16 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
         Return False
     EndIf
     Float fullnessPct = (effectiveMilk / maximum) * 100.0
-    If fullnessPct < threshold
+    Float flatThreshold = GetFlatMilkThresholdForCategory(armorCategory)
+    Bool fullnessPassed = fullnessPct >= threshold
+    Bool flatPassed = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableFlatMilkStripping", 0) == 1 && effectiveMilk > flatThreshold
+    ReportArmorStrip(diagnostic, sourceLabel + " actor=PLAYER | category=" + armorKind + " | milk=" + effectiveMilk + " | flatThreshold=" + flatThreshold + " | flatPassed=" + flatPassed + " | fullnessPassed=" + fullnessPassed)
+    If !fullnessPassed && !flatPassed
         ReportArmorStrip(diagnostic, sourceLabel + " type=" + armorKind + " | fullness=" + fullnessPct + "% | threshold=" + threshold + "% | decision=KEEP")
         Return False
+    EndIf
+    If flatPassed && !fullnessPassed
+        sourceLabel += " (flat milk > " + flatThreshold + ")"
     EndIf
 
     ; Strip, then verify Skyrim actually changed slot 32. A successful Papyrus
@@ -217,7 +227,7 @@ Bool Function EvaluateArmorStrippingForActor(Actor target, Float effectiveMilk, 
         ReportArmorStrip(diagnostic, sourceLabel + " result=BLOCKED | engine retained " + armorKind)
         Return False
     EndIf
-    ReportArmorStrip(diagnostic, sourceLabel + " result=STRIPPED | " + armorKind + " | fullness=" + fullnessPct + "% >= " + threshold + "%")
+    ReportArmorStrip(diagnostic, sourceLabel + " result=STRIPPED | " + armorKind + " | fullness=" + fullnessPct + "% | percentThreshold=" + threshold + "% | flatPassed=" + flatPassed)
     ; Only a verified removal may trigger the optional post-strip reactions.
     HandleSuccessfulArmorStrip(target, slotArmor, fullnessPct, threshold, sourceLabel, refitProtectionBypassed)
     Return True
@@ -1250,4 +1260,23 @@ Function NotifyArmorDebug(Bool diagnostic, String reportText) Global
     EndIf
     MMELog.Diagnostic("[MME Extensions Armor] " + reportText)
     Debug.Notification("Armor Debug: " + reportText)
+EndFunction
+
+Float Function GetFlatMilkThresholdForCategory(Int armorCategory) Global
+    String settingKey = "armorStripClothingMilk"
+    Float defaultMilk = 12.0
+    If armorCategory == 3
+        settingKey = "armorStripHeavyMilk"
+        defaultMilk = 4.0
+    ElseIf armorCategory == 2
+        settingKey = "armorStripLightMilk"
+        defaultMilk = 8.0
+    EndIf
+    Float threshold = JsonUtil.GetFloatValue("/MMEAlerts/Settings", settingKey, defaultMilk)
+    If threshold < 0.0
+        Return 0.0
+    ElseIf threshold > 100.0
+        Return 100.0
+    EndIf
+    Return threshold
 EndFunction

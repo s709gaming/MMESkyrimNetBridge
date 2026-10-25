@@ -32,6 +32,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 
 #include <chrono>
+#include <atomic>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -53,6 +54,15 @@ namespace
     constexpr auto kDungeonRegularChestEvent = "MMEExtensions_DungeonRegularChestActivated";
     constexpr auto kInnPalaceEnteredEvent = "MMEExtensions_InnPalaceEntered";
     constexpr auto kInnPalaceExitedEvent = "MMEExtensions_InnPalaceExited";
+    // Audio IDs are session-local and must never be trusted after loading a
+    // save. Seed per process, then advance before every load/new game.
+    std::atomic<std::uint32_t> gMovementSlapSession{
+        static_cast<std::uint32_t>(std::chrono::steady_clock::now().time_since_epoch().count()) & 0x7FFFFFFFU };
+
+    std::int32_t GetMovementSlapSession(RE::StaticFunctionTag*)
+    {
+        return static_cast<std::int32_t>(gMovementSlapSession.load() & 0x7FFFFFFFU);
+    }
 
     enum class SocialVenueKind : std::uint32_t
     {
@@ -619,6 +629,29 @@ namespace
         return info ? info->parentTopic : nullptr;
     }
 
+    bool IsPlayerMovingOnFoot(RE::StaticFunctionTag*)
+    {
+        auto* player = RE::PlayerCharacter::GetSingleton();
+        auto* ui = RE::UI::GetSingleton();
+        if (!player || !ui || ui->GameIsPaused() ||
+            ui->IsMenuOpen("Dialogue Menu") || player->IsDead() || player->IsDisabled() ||
+            !player->Is3DLoaded() || player->IsOnMount() || player->IsInMidair()) {
+            return false;
+        }
+        // Use the versioned base accessor: ActorState moves across SE/AE/VR.
+        // Direction flags cover walking, running, sneaking, analog sticks and
+        // auto-move without depending on physical keyboard mappings.
+        const auto* state = player->AsActorState();
+        if (!state || state->IsSwimming() || state->IsUnconscious() ||
+            state->GetKnockState() != RE::KNOCK_STATE_ENUM::kNormal ||
+            state->GetSitSleepState() != RE::SIT_SLEEP_STATE::kNormal) {
+            return false;
+        }
+        const auto& movement = state->actorState1;
+        return movement.movingForward || movement.movingBack ||
+               movement.movingLeft || movement.movingRight;
+    }
+
     bool RegisterPapyrus(RE::BSScript::IVirtualMachine* vm)
     {
         // Keep registration names synchronized with MMEExtensionsNative.psc.
@@ -632,6 +665,8 @@ namespace
         vm->RegisterFunction("DescribeTopicInfoConditions", "MMEExtensionsNative", DescribeTopicInfoConditions);
         vm->RegisterFunction("GetFormSourceFiles", "MMEExtensionsNative", GetFormSourceFiles);
         vm->RegisterFunction("GetParentTopic", "MMEExtensionsNative", GetParentTopic);
+        vm->RegisterFunction("IsPlayerMovingOnFoot", "MMEExtensionsNative", IsPlayerMovingOnFoot);
+        vm->RegisterFunction("GetMovementSlapSession", "MMEExtensionsNative", GetMovementSlapSession);
         SKSE::log::info("Native scanner registered");
         return true;
     }
@@ -934,6 +969,15 @@ namespace
             const RE::MenuOpenCloseEvent* event,
             RE::BSTEventSource<RE::MenuOpenCloseEvent>*) override
         {
+            // Papyrus OnUpdate pauses with the game. Publish menu entry so the
+            // owned movement loop is stopped even while its watchdog is paused.
+            if (event && event->opening) {
+                if (auto* source = SKSE::GetModCallbackEventSource()) {
+                    const SKSE::ModCallbackEvent pauseEvent{
+                        "MMEExtensions_MovementSlapPause", event->menuName, 0.0F, nullptr };
+                    source->SendEvent(&pauseEvent);
+                }
+            }
             if (!event || !event->opening || event->menuName != RE::ContainerMenu::MENU_NAME) {
                 return RE::BSEventNotifyControl::kContinue;
             }
@@ -964,6 +1008,10 @@ namespace
 
     void OnSKSEMessage(SKSE::MessagingInterface::Message* message)
     {
+        if (message->type == SKSE::MessagingInterface::kPreLoadGame ||
+            message->type == SKSE::MessagingInterface::kNewGame) {
+            gMovementSlapSession.fetch_add(1);
+        }
         // Event sources and loaded forms are ready only after DataLoaded.
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
             InitializeSocialVenueForms();

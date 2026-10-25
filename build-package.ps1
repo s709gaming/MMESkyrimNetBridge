@@ -175,7 +175,7 @@ New-Item -ItemType Directory -Force -Path $sexLabPPlusChoiceOutput | Out-Null
 Push-Location $sexLabPPlusChoiceSource
 try {
     Write-Host "Compiling SexLab P+ breastfeeding backend..." -ForegroundColor Cyan
-    $pplusImports = "$sexLabPPlusChoiceSource;$sexLabPPlusSdkSource;$skseSource;$vanillaSource"
+    $pplusImports = "$sexLabPPlusChoiceSource;$sexLabPPlusSdkSource;$sourceDir;$skseSource;$vanillaSource"
     & $compiler "MMESexLabBreastfeedingBackend.psc" "-f=$flags" "-i=$pplusImports" "-o=$sexLabPPlusChoiceOutput"
     if ($LASTEXITCODE -ne 0) {
         throw "Compilation failed for SexLab P+ breastfeeding backend"
@@ -274,6 +274,7 @@ $packageDocs = Join-Path $stageDir "docs"
 New-Item -ItemType Directory -Force -Path $packageDocs | Out-Null
 Copy-Item -LiteralPath $elsieFixChangelog -Destination $packageDocs
 Copy-Item -LiteralPath $jugsChangelog -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MOVEMENT-SLAP-FLAT-MILK-STRIPPING.md") -Destination $packageDocs
 
 # Copy the active compiled scripts and matching sources.
 foreach ($scriptName in $scriptNames) {

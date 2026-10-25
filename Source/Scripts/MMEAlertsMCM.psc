@@ -60,6 +60,14 @@ Int forcedMilkMaidNotificationOption
 Int forcedMilkMaidLactacidStoryOption
 Int forcedMilkMaidNarrationOption
 Int forcedMilkMaidDiagnosticOption
+Int movementSlapOption
+Int movementSlapVolumeOption
+Int movementSlapNotificationsOption
+Int movementSlapNotificationCooldownOption
+Int flatMilkStrippingOption
+Int flatMilkHeavyOption
+Int flatMilkLightOption
+Int flatMilkClothingOption
 Int soundsOption
 Int volumeOption
 Int capacityOption
@@ -305,7 +313,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 155
+    Return 157
 EndFunction
 
 Function SetPageNames()
@@ -313,12 +321,12 @@ Function SetPageNames()
     Pages[0] = "General"
     Pages[1] = "Milk Drinking"
     ; Build these page names at runtime so Papyrus's case-insensitive string
-    ; table cannot reuse the lowercase "arousal"/"animations" tokens interned
+    ; table cannot reuse the lowercase "arousal"/"animations" or uppercase Body tokens interned
     ; by integration scripts. The trailing spaces keep the built names distinct
     ; while rendering invisibly in the sidebar.
     Pages[2] = "A" + "nimations "
     Pages[3] = "A" + "rousal "
-    Pages[4] = "Body"
+    Pages[4] = "B" + "ody "
     Pages[5] = "Armor"
     Pages[6] = "Skyrim.Net"
     Pages[7] = "Milk Armor Thoughts"
@@ -1615,6 +1623,23 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "bodyEffectsMigration155", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    ; Additive settings only: preserve every existing sound and strip choice.
+    If JsonUtil.GetIntValue(SettingsFile, "movementSlapFlatStripMigration156", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableMovementSlap", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "movementSlapVolume", 100.0)
+        JsonUtil.SetIntValue(SettingsFile, "enableFlatMilkStripping", 0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripHeavyMilk", 4.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripLightMilk", 8.0)
+        JsonUtil.SetFloatValue(SettingsFile, "armorStripClothingMilk", 12.0)
+        JsonUtil.SetIntValue(SettingsFile, "movementSlapFlatStripMigration156", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If JsonUtil.GetIntValue(SettingsFile, "movementSlapNotificationsMigration157", 0) == 0
+        JsonUtil.SetIntValue(SettingsFile, "enableMovementSlapNotifications", 1)
+        JsonUtil.SetFloatValue(SettingsFile, "movementSlapNotificationCooldownHours", 8.0)
+        JsonUtil.SetIntValue(SettingsFile, "movementSlapNotificationsMigration157", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
 EndFunction
 
 Function SetDwemerEffectDefaults()
@@ -1728,6 +1753,14 @@ Event OnPageReset(String page)
     ; never be persisted. Runtime values are always reread from JsonUtil.
     EnsureDefaults()
     NormalizeArousalThresholdSettings()
+    movementSlapOption = -1
+    movementSlapVolumeOption = -1
+    movementSlapNotificationsOption = -1
+    movementSlapNotificationCooldownOption = -1
+    flatMilkStrippingOption = -1
+    flatMilkHeavyOption = -1
+    flatMilkLightOption = -1
+    flatMilkClothingOption = -1
     soundsOption = -1
     volumeOption = -1
     capacityOption = -1
@@ -1966,7 +1999,7 @@ Event OnPageReset(String page)
     diagnosticMageBusStopOption = -1
     diagnosticMageBusFailureOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
-    If page == "Body"
+    If page == Pages[4] || page == "Body"
         AddHeaderOption("Movement Speed")
         customMilkSpeedDebuffOption = AddToggleOption("Custom Milk Speed Debuff", JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkSpeedDebuff", 0) == 1)
         Int speedFlags = OPTION_FLAG_DISABLED
@@ -1985,6 +2018,19 @@ Event OnPageReset(String page)
             milkWeightFlags = OPTION_FLAG_NONE
         EndIf
         milkWeightMultiplierOption = AddSliderOption("Milk Weight Multiplier", JsonUtil.GetFloatValue(SettingsFile, "milkWeightMultiplier", 1.0), "x{0}", milkWeightFlags)
+        AddHeaderOption("Movement Slap")
+        movementSlapOption = AddToggleOption("Movement Slap Sounds", JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1) == 1)
+        Int movementSoundFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1) != 1 || JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1) != 1
+            movementSoundFlags = OPTION_FLAG_DISABLED
+        EndIf
+        movementSlapVolumeOption = AddSliderOption("Movement Slap Volume", JsonUtil.GetFloatValue(SettingsFile, "movementSlapVolume", 100.0), "{0}%", movementSoundFlags)
+        movementSlapNotificationsOption = AddToggleOption("Movement Slap Notifications", JsonUtil.GetIntValue(SettingsFile, "enableMovementSlapNotifications", 1) == 1)
+        Int movementNotificationFlags = movementSoundFlags
+        If JsonUtil.GetIntValue(SettingsFile, "enableMovementSlapNotifications", 1) != 1
+            movementNotificationFlags = OPTION_FLAG_DISABLED
+        EndIf
+        movementSlapNotificationCooldownOption = AddSliderOption("Notification Cooldown", JsonUtil.GetFloatValue(SettingsFile, "movementSlapNotificationCooldownHours", 8.0), "{0} game hours", movementNotificationFlags)
         SetCursorPosition(1)
         AddHeaderOption("Milk Maid Appearance")
         maidWeightScalingOption = AddToggleOption("Scale Weight with Maid Level", MMEMaidWeightScaling.IsEnabled())
@@ -2251,6 +2297,18 @@ Event OnPageReset(String page)
             clothingStripFlags = OPTION_FLAG_DISABLED
         EndIf
         armorStripClothingThresholdOption = AddSliderOption("Clothing Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0), "{0}%", clothingStripFlags)
+        flatMilkStrippingOption = AddToggleOption("Flat Milk Stripping", JsonUtil.GetIntValue(SettingsFile, "enableFlatMilkStripping", 0) == 1, stripFlags)
+        Int flatHeavyFlags = heavyStripFlags
+        Int flatLightFlags = lightStripFlags
+        Int flatClothingFlags = clothingStripFlags
+        If JsonUtil.GetIntValue(SettingsFile, "enableFlatMilkStripping", 0) != 1
+            flatHeavyFlags = OPTION_FLAG_DISABLED
+            flatLightFlags = OPTION_FLAG_DISABLED
+            flatClothingFlags = OPTION_FLAG_DISABLED
+        EndIf
+        flatMilkHeavyOption = AddSliderOption("Heavy Armor Milk Amount", JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyMilk", 4.0), "{0} milk", flatHeavyFlags)
+        flatMilkLightOption = AddSliderOption("Light Armor Milk Amount", JsonUtil.GetFloatValue(SettingsFile, "armorStripLightMilk", 8.0), "{0} milk", flatLightFlags)
+        flatMilkClothingOption = AddSliderOption("Clothing Milk Amount", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingMilk", 12.0), "{0} milk", flatClothingFlags)
         AddHeaderOption("Armor Strip Reactions")
         armorStripNotificationOption = AddToggleOption("Strip Notification", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNotification", 1) == 1, stripFlags)
         armorStripMoanOption = AddToggleOption("Strip Moan", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripMoan", 1) == 1, stripFlags)
@@ -2522,6 +2580,25 @@ EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
+    If option == movementSlapNotificationsOption
+        SetInfoText("Show one of five player-only messages when an eligible movement slap loop starts. Notifications have a shared cooldown; turning them off does not affect the sound.")
+        Return
+    ElseIf option == movementSlapNotificationCooldownOption
+        SetInfoText("Minimum in-game hours between movement slap notifications. Default 8, range 0-48. Zero removes the cooldown; messages still occur only on eligible playback starts. Saved across reloads.")
+        Return
+    ElseIf option == movementSlapOption
+        SetInfoText("Loop the slap sound while the player moves on foot above 50% milk fullness. Stops in menus, on mounts, swimming, or during incompatible scenes. Uses the sound master and volume.")
+        Return
+    ElseIf option == movementSlapVolumeOption
+        SetInfoText("Movement slap only. 0% mutes, 100% is the original level, 200% doubles amplitude (+6 dB). Default 100%. Also scaled by Moaning Sound Volume.")
+        Return
+    ElseIf option == flatMilkStrippingOption
+        SetInfoText("Player only. Also strip when milk amount exceeds the category's flat threshold, OR when its existing fullness threshold is reached. Requires Override MME Armor Stripping and respects category toggles and protections. Default off.")
+        Return
+    ElseIf option == flatMilkHeavyOption || option == flatMilkLightOption || option == flatMilkClothingOption
+        SetInfoText("Strip when the player's milk amount is strictly greater than this value. Range 0-100 milk units. Original MME defaults: heavy 4, light 8, clothing 12. Zero triggers with any positive milk; category toggles disable stripping.")
+        Return
+    EndIf
     If option == timedArmorDurationOption
         SetInfoText("How many game days supported chest armor remains locked after equip. Zero releases immediately; default 3 days, range 0-30. This standalone system does not require Devious Devices.")
         Return
@@ -3163,6 +3240,28 @@ EndEvent
 
 ; Persists toggle changes and refreshes only controllers affected by that option.
 Event OnOptionSelect(Int option)
+    If option == movementSlapNotificationsOption
+        Int enabled = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMovementSlapNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMovementSlapNotifications", enabled)
+        JsonUtil.Save(SettingsFile, False)
+        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] notification setting changed | enabled=" + enabled)
+        ForcePageReset()
+        Return
+    EndIf
+    If option == movementSlapOption
+        Int enabled = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMovementSlap", enabled)
+        JsonUtil.Save(SettingsFile, False)
+        RefreshMovementSlapSettings()
+        ForcePageReset()
+        Return
+    ElseIf option == flatMilkStrippingOption
+        Int enabled = 1 - JsonUtil.GetIntValue(SettingsFile, "enableFlatMilkStripping", 0)
+        JsonUtil.SetIntValue(SettingsFile, "enableFlatMilkStripping", enabled)
+        JsonUtil.Save(SettingsFile, False)
+        ForcePageReset()
+        Return
+    EndIf
     If option == timedArmorReleaseOption
         MMETimedArmorLock.Release(Game.GetPlayer(), "MCM Debug")
         ForcePageReset()
@@ -3364,18 +3463,7 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMMEExtensions", value)
         SetToggleOptionValue(option, value == 1)
-    ElseIf option == breastBounceNotificationOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBreastBounceNotifications", 1)
-        JsonUtil.SetIntValue(SettingsFile, "enableBreastBounceNotifications", value)
         JsonUtil.Save(SettingsFile, False)
-        SetToggleOptionValue(option, value == 1)
-        RefreshBreastBounceSchedule()
-    ElseIf option == breastBounceSoundOption
-        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBreastBounceSounds", 1)
-        JsonUtil.SetIntValue(SettingsFile, "enableBreastBounceSounds", value)
-        JsonUtil.Save(SettingsFile, False)
-        SetToggleOptionValue(option, value == 1)
-        RefreshBreastBounceSchedule()
         MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
         If controller != None
             If value == 1
@@ -3388,10 +3476,25 @@ Event OnOptionSelect(Int option)
                 EndIf
             EndIf
         EndIf
+    ElseIf option == breastBounceNotificationOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBreastBounceNotifications", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBreastBounceNotifications", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
+        RefreshBreastBounceSchedule()
+    ElseIf option == breastBounceSoundOption
+        Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableBreastBounceSounds", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableBreastBounceSounds", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, value == 1)
+        RefreshBreastBounceSchedule()
     ElseIf option == soundsOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableReactionSounds", value)
+        JsonUtil.Save(SettingsFile, False)
         SetToggleOptionValue(option, value == 1)
+        RefreshMovementSlapSettings()
+        ForcePageReset()
     ElseIf option == drinkMoansOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDrinkMoans", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableDrinkMoans", value)
@@ -4124,6 +4227,35 @@ EndFunction
 
 ; Configures the shared sound-volume and capacity-interval slider dialogs.
 Event OnOptionSliderOpen(Int option)
+    If option == movementSlapNotificationCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "movementSlapNotificationCooldownHours", 8.0))
+        SetSliderDialogDefaultValue(8.0)
+        SetSliderDialogRange(0.0, 48.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    EndIf
+    If option == movementSlapVolumeOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "movementSlapVolume", 100.0))
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(0.0, 200.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    ElseIf option == flatMilkHeavyOption || option == flatMilkLightOption || option == flatMilkClothingOption
+        String settingKey = "armorStripClothingMilk"
+        Float defaultMilk = 12.0
+        If option == flatMilkHeavyOption
+            settingKey = "armorStripHeavyMilk"
+            defaultMilk = 4.0
+        ElseIf option == flatMilkLightOption
+            settingKey = "armorStripLightMilk"
+            defaultMilk = 8.0
+        EndIf
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, settingKey, defaultMilk))
+        SetSliderDialogDefaultValue(defaultMilk)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    EndIf
     If option == breastBounceIntervalOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "breastBounceIntervalHours", 24.0))
         SetSliderDialogDefaultValue(24.0)
@@ -4559,6 +4691,36 @@ EndEvent
 
 ; Saves accepted slider values and reschedules polling when its interval changes.
 Event OnOptionSliderAccept(Int option, Float value)
+    If option == movementSlapNotificationCooldownOption
+        If value < 0.0
+            value = 0.0
+        ElseIf value > 48.0
+            value = 48.0
+        EndIf
+        JsonUtil.SetFloatValue(SettingsFile, "movementSlapNotificationCooldownHours", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} game hours")
+        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] notification cooldown setting changed | game hours=" + value)
+        Return
+    EndIf
+    If option == movementSlapVolumeOption
+        JsonUtil.SetFloatValue(SettingsFile, "movementSlapVolume", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        RefreshMovementSlapSettings()
+        Return
+    ElseIf option == flatMilkHeavyOption || option == flatMilkLightOption || option == flatMilkClothingOption
+        String settingKey = "armorStripClothingMilk"
+        If option == flatMilkHeavyOption
+            settingKey = "armorStripHeavyMilk"
+        ElseIf option == flatMilkLightOption
+            settingKey = "armorStripLightMilk"
+        EndIf
+        JsonUtil.SetFloatValue(SettingsFile, settingKey, value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} milk")
+        Return
+    EndIf
     If option == breastBounceIntervalOption
         JsonUtil.SetFloatValue(SettingsFile, "breastBounceIntervalHours", value)
         JsonUtil.Save(SettingsFile, False)
@@ -4692,6 +4854,7 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.SetFloatValue(SettingsFile, "reactionSoundVolume", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0}%")
+        RefreshMovementSlapSettings()
     ElseIf option == pollingIntervalOption
         JsonUtil.SetFloatValue(SettingsFile, "pollingInterval", value)
         JsonUtil.Save(SettingsFile, False)
@@ -4937,3 +5100,10 @@ Event OnOptionSliderAccept(Int option, Float value)
         SetSliderOptionValue(option, value, "{0} minutes")
     EndIf
 EndEvent
+
+Function RefreshMovementSlapSettings()
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller != None
+        controller.UpdatePolling()
+    EndIf
+EndFunction
