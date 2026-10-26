@@ -281,6 +281,10 @@ $packageSounds = Join-Path $stageDir "Sound\fx\MMESkyrimNetBridge"
 $packageSKSEPlugins = Join-Path $stageDir "SKSE\Plugins"
 New-Item -ItemType Directory -Force -Path $packageScripts, $packageSources, $packageSounds, $packageSKSEPlugins | Out-Null
 
+& (Join-Path $projectRoot "tools\Build-MaidRosterUI.ps1")
+& python -B (Join-Path $projectRoot "tools\test_maid_roster_ui.py")
+if ($LASTEXITCODE) { throw "Maid Roster UI contracts failed" }
+
 # Include the FOMOD startup-profile choices and their Recommended QuickStart override.
 $fomodSource = Join-Path $projectRoot "fomod"
 If (Test-Path -LiteralPath $fomodSource) {

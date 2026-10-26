@@ -8,6 +8,9 @@ Scriptname MMEAlertsMCM extends SKI_ConfigBase
 ; gameplay. EnsureDefaults is append-only migration history for existing saves.
 
 String SettingsFile = "/MMEAlerts/Settings"
+Int rosterOpenOption = -1
+Int rosterEnabledOption = -1
+Int rosterKeyOption = -1
 Int narrationReloadOption
 Int narrationImportOption
 Int reverseDurationOption
@@ -327,7 +330,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 159
+    Return 160
 EndFunction
 
 Function SetPageNames()
@@ -400,6 +403,17 @@ EndFunction
 
 ; Seeds new settings and runs one-time migrations without overriding later choices.
 Function EnsureDefaults()
+    If JsonUtil.GetIntValue(SettingsFile, "maidRosterMigration160", 0) == 0
+        If !JsonUtil.HasIntValue(SettingsFile, "maidRosterUiEnabled")
+            JsonUtil.SetIntValue(SettingsFile, "maidRosterUiEnabled", 1)
+        EndIf
+        If !JsonUtil.HasIntValue(SettingsFile, "maidRosterHotkey")
+            JsonUtil.SetIntValue(SettingsFile, "maidRosterHotkey", -1)
+        EndIf
+        JsonUtil.SetIntValue(SettingsFile, "maidRosterMigration160", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+
     ; Safe opt-in migration for both new games and existing saves.
     If JsonUtil.GetIntValue(SettingsFile, "maidBodyScalingMigration158", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableMaidBodyScaling", 0)
@@ -1729,6 +1743,9 @@ EndFunction
 
 ; Renders the selected SkyUI page from persisted JContainers settings.
 Event OnPageReset(String page)
+    rosterOpenOption = -1
+    rosterEnabledOption = -1
+    rosterKeyOption = -1
     reverseDurationOption = -1
     reversePlayerLevelOption = -1
     reverseApplyOption = -1
@@ -2623,6 +2640,14 @@ Event OnPageReset(String page)
         traceMilkMaidThoughtsLogicOption = AddToggleOption("Trace Thoughts Logic", JsonUtil.GetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0) == 1)
         Return
     EndIf
+    AddHeaderOption("Milk Maid Roster")
+    rosterEnabledOption = AddToggleOption("Enable Milk Maid Roster", JsonUtil.GetIntValue(SettingsFile, "maidRosterUiEnabled", 1) == 1)
+    Int rosterFlags = OPTION_FLAG_NONE
+    If !RosterUiAvailable() || JsonUtil.GetIntValue(SettingsFile, "maidRosterUiEnabled", 1) != 1 || JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1) != 1
+        rosterFlags = OPTION_FLAG_DISABLED
+    EndIf
+    rosterOpenOption = AddTextOption("Open Milk Maid Roster", "OPEN", rosterFlags)
+    rosterKeyOption = AddKeyMapOption("Milk Maid Roster Hotkey", JsonUtil.GetIntValue(SettingsFile, "maidRosterHotkey", -1))
     AddHeaderOption("Sounds")
     soundsOption = AddToggleOption("Enable Moaning Sounds", JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1) == 1)
     drinkMoansOption = AddToggleOption("Drink Milk Moans", JsonUtil.GetIntValue(SettingsFile, "enableDrinkMoans", 1) == 1)
@@ -2645,6 +2670,10 @@ EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
+    If option == rosterOpenOption || option == rosterEnabledOption || option == rosterKeyOption
+        SetInfoText("Optional Milk Maid roster: requires the Maid Roster add-on plugin and Magelight UI 1.5.0 or newer. Open, then close MCM to show it. Assign an optional keyboard hotkey; PageUp is reserved by Magelight. Displays stored milk amounts and fullness. Milk Self is not active yet.")
+        Return
+    EndIf
     If option == narrationReloadOption || option == narrationImportOption
         SetInfoText("Edit SKSE/Plugins/StorageUtilData/MMEAlerts/Narration JSON in a text editor. Reload reads your edits without saving over them. Import copies recognized legacy text only into unchanged defaults; customized entries are kept. Back up presets before updating the mod.")
         Return
@@ -3333,6 +3362,21 @@ EndEvent
 
 ; Persists toggle changes and refreshes only controllers affected by that option.
 Event OnOptionSelect(Int option)
+    If option == rosterOpenOption
+        If RosterUiAvailable() && JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1) == 1 && JsonUtil.GetIntValue(SettingsFile, "maidRosterUiEnabled", 1) == 1
+            SendModEvent("MMEExtensions_RosterOpen")
+            SetTextOptionValue(option, "Close MCM to open")
+            MMELog.MasterDiagnostic("[MME Maid Roster UI] open queued | source=MCM")
+        EndIf
+        Return
+    ElseIf option == rosterEnabledOption
+        Int rosterEnabled = 1 - JsonUtil.GetIntValue(SettingsFile, "maidRosterUiEnabled", 1)
+        JsonUtil.SetIntValue(SettingsFile, "maidRosterUiEnabled", rosterEnabled)
+        JsonUtil.Save(SettingsFile, False)
+        SendModEvent("MMEExtensions_RosterSettings")
+        ForcePageReset()
+        Return
+    EndIf
     If option == narrationReloadOption
         Int narrationLoaded = MMENarrationText.ReloadAll()
         SetTextOptionValue(option, (narrationLoaded as String) + " complete files")
@@ -3565,6 +3609,7 @@ Event OnOptionSelect(Int option)
         JsonUtil.SetIntValue(SettingsFile, "enableMMEExtensions", value)
         SetToggleOptionValue(option, value == 1)
         JsonUtil.Save(SettingsFile, False)
+        SendModEvent("MMEExtensions_RosterSettings")
         MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
         If controller != None
             If value == 1
@@ -5311,3 +5356,28 @@ Function RefreshMovementSlapSettings()
         controller.UpdatePolling()
     EndIf
 EndFunction
+
+; Common core uses only string/plugin checks and events; no optional UI script types.
+Bool Function RosterUiAvailable()
+    Return Game.GetModByName("MME Extensions - Maid Roster.esp") < 255 && SKSE.GetPluginVersion("Magelight") >= 0
+EndFunction
+
+Event OnOptionKeyMapChange(Int option, Int keyCode, String conflictControl, String conflictName)
+    If option != rosterKeyOption
+        Return
+    EndIf
+    If keyCode != -1 && (keyCode <= 0 || keyCode >= 256 || keyCode == 201)
+        ShowMessage("Choose a keyboard key other than PageUp, or clear the mapping.", False)
+        Return
+    EndIf
+    If conflictControl != "" || conflictName != ""
+        If !ShowMessage("This key is already assigned. Use it for the roster too?")
+            Return
+        EndIf
+    EndIf
+    JsonUtil.SetIntValue(SettingsFile, "maidRosterHotkey", keyCode)
+    JsonUtil.Save(SettingsFile, False)
+    SetKeyMapOptionValue(option, keyCode)
+    SendModEvent("MMEExtensions_RosterSettings")
+    MMELog.MasterDiagnostic("[MME Maid Roster UI] hotkey changed | key=" + keyCode)
+EndEvent

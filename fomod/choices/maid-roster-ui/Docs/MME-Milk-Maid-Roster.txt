@@ -1,0 +1,34 @@
+﻿MILK MAID ROSTER - OPTIONAL MAGELIGHT UI
+
+Install Magelight UI 1.5.0 or newer separately and restart Skyrim through MO2/SKSE.
+During MME Extensions installation, select Milk Maid Roster under Optional Milk
+Maid UI. Enable MME Extensions - Maid Roster.esp after MMEAlert.esp. It is flagged
+ESL. The Magelight runtime itself is not bundled.
+
+Open MCM > MME Extensions > General. Select Open Milk Maid Roster, then close MCM.
+The window opens after MCM closes. You may also assign an optional keyboard hotkey
+on that page. No key is assigned by default. PageUp belongs to Magelight and cannot
+be chosen here. Close the roster with Close, Escape, or its assigned hotkey.
+
+The table lists MME's registered Milk Maids and their stored milk / capacity and
+fullness. Refresh reads the current stored values. Unloaded maids show their last
+stored values. N/A means a valid capacity is not available; this UI does not create
+one or alter the actor. Amounts are MME units, not bottles or liters. Percentages
+above 100 remain visible while their bars stop at 100%.
+
+Milk Self is intentionally disabled in this first version. The UI cannot start
+animations, convert maids, or edit milk values. Narration JSON editing is also not
+part of this version; the window leaves room for it later.
+
+Enable Milk Maid Roster and the MME Extensions master must be on. If the Open
+button is disabled, check the optional roster plugin and Magelight are enabled,
+then restart Skyrim. Without the host/add-on, core MME Extensions still works.
+If another Magelight view owns input, close it before opening this roster.
+
+Routine Papyrus footprints use the master Papyrus logging toggle and prefix
+[MME Maid Roster UI]. Genuine UI failures are deduplicated smoke alarms. A missing
+optional host or an empty roster is an expected skip. No background polling runs.
+
+This build has passed compilation, plugin round-trip, browser page behavior and
+installer checks. In-game Magelight input/focus, MCM handoff and save/load behavior
+still need live acceptance testing after host installation.

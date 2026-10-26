@@ -100,18 +100,18 @@
                     <pattern>
                       <dependencies operator="And">
                         <fileDependency file="OStim.esp" state="Active" />
-                          <dependencies operator="Or">
-                            <fileDependency file="SexLab.esm" state="Missing" />
-                            <fileDependency file="SexLab.esm" state="Inactive" />
-                          </dependencies>
-                          <dependencies operator="Or">
-                            <fileDependency file="Devious Devices - Assets.esm" state="Missing" />
-                            <fileDependency file="Devious Devices - Assets.esm" state="Inactive" />
-                          </dependencies>
-                          <dependencies operator="Or">
-                            <fileDependency file="Devious Devices - Integration.esm" state="Missing" />
-                            <fileDependency file="Devious Devices - Integration.esm" state="Inactive" />
-                          </dependencies>
+                        <dependencies operator="Or">
+                          <fileDependency file="SexLab.esm" state="Missing" />
+                          <fileDependency file="SexLab.esm" state="Inactive" />
+                        </dependencies>
+                        <dependencies operator="Or">
+                          <fileDependency file="Devious Devices - Assets.esm" state="Missing" />
+                          <fileDependency file="Devious Devices - Assets.esm" state="Inactive" />
+                        </dependencies>
+                        <dependencies operator="Or">
+                          <fileDependency file="Devious Devices - Integration.esm" state="Missing" />
+                          <fileDependency file="Devious Devices - Integration.esm" state="Inactive" />
+                        </dependencies>
                         <dependencies operator="Or">
                           <fileDependency file="CP_Elsie.esp" state="Missing" />
                           <fileDependency file="CP_Elsie.esp" state="Inactive" />
@@ -137,7 +137,19 @@
             </plugin>
           </plugins>
         </group>
-
+        <group name="Optional Milk Maid UI" type="SelectAny">
+          <plugins order="Explicit">
+            <plugin name="Milk Maid Roster ? Magelight UI">
+              <description>Optional roster window with milk amounts and fullness percentages. Requires separately installed Magelight UI 1.5.0 or newer; it can be installed later. Open from the General MCM page or assign a keyboard hotkey. Milk Self is disabled in this first version. Enable the included ESL-flagged Maid Roster plugin after MMEAlert.esp.</description>
+              <files>
+                <folder source="fomod/choices/maid-roster-ui" destination="" priority="1" />
+              </files>
+              <typeDescriptor>
+                <type name="Optional" />
+              </typeDescriptor>
+            </plugin>
+          </plugins>
+        </group>
       </optionalFileGroups>
     </installStep>
     <installStep name="Optional Mod Compatibility">

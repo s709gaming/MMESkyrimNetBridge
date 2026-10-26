@@ -1,4 +1,9 @@
-﻿# Sever Actions UI / Milk Maid dashboard audit
+# Sever Actions UI / Milk Maid dashboard audit
+
+> Update: the separately added Magelight UI 1.5.0 reference includes the actual
+> Papyrus SDK. See `Magelight-Milk-Maid-UI-Preflight.md` for the revised roster-only
+> scope, confirmed API defaults, optional bootstrap and future JSON-editor plan.
+> The older SDK-availability uncertainty below is superseded by that audit.
 
 Audit date: 2026-10-25. Scope: local reference package and repository/MME sources;
 static feasibility only. No gameplay, installed mods, profiles, or packages changed.
