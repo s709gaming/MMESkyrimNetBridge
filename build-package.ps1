@@ -2,6 +2,7 @@ $ErrorActionPreference = "Stop"
 
 # Resolve every path from this script so it works when launched by double-click.
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+& (Join-Path $projectRoot "tools\Test-FomodXmlEncoding.ps1")
 $gameRoot = "E:\Steam\steamapps\common\Skyrim Special Edition"
 $compiler = Join-Path $gameRoot "Papyrus Compiler\PapyrusCompiler.exe"
 $flags = Join-Path $gameRoot "Data\Source\Scripts\TESV_Papyrus_Flags.flg"
@@ -663,6 +664,7 @@ if (Test-Path -LiteralPath $zipPath) {
     Remove-Item -LiteralPath $zipPath -Force
 }
 Compress-Archive -Path (Join-Path $stageDir "*") -DestinationPath $zipPath -CompressionLevel Optimal
+& (Join-Path $projectRoot "tools\Test-FomodXmlEncoding.ps1") -ArchivePath $zipPath
 
 Write-Host ""
 Write-Host "Package created successfully:" -ForegroundColor Green
