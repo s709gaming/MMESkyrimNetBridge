@@ -1,0 +1,606 @@
+{
+  "extracted": [
+    {
+      "file": "TentacleArmor",
+      "key": "narrate_tentacle_effect_1",
+      "sha256": "60fa3343db32451342117452ef5f6f2b6d53221c33d5941cab2d7bbe1ccf4bfc",
+      "args": []
+    },
+    {
+      "file": "TentacleArmor",
+      "key": "build_tentacle_effect_narration_1",
+      "sha256": "9cd85af484553b5913c603af4b5921264bcf39b02842a99a18d216817f3ee6a9",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ],
+        [
+          "content",
+          "content"
+        ]
+      ]
+    },
+    {
+      "file": "DwemerArmor",
+      "key": "narrate_dwemer_effect_1",
+      "sha256": "4fa8d5d6440c594d3489463cb1914e9f68a7ecebb7a5887b3c9a95c58c45691b",
+      "args": []
+    },
+    {
+      "file": "DwemerArmor",
+      "key": "build_dwemer_suit_prompt_1",
+      "sha256": "71357167c447556d6a6ba916de6314745736431799c59e931119143ad4e50bbf",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ],
+        [
+          "profile",
+          "profile"
+        ],
+        [
+          "core",
+          "core"
+        ],
+        [
+          "event",
+          "eventPrompt"
+        ]
+      ]
+    },
+    {
+      "file": "DwemerArmor",
+      "key": "get_dwemer_profile_fallback_1",
+      "sha256": "c2ff0ce6ed152feddbb606eca12a6af73ff1631b5837b569a4cd23bda534357d",
+      "args": []
+    },
+    {
+      "file": "DwemerArmor",
+      "key": "get_dwemer_profile_fallback_2",
+      "sha256": "9905b402821f9d69caa3d70736d7b53b67d53f08e290477059e1acd93987a497",
+      "args": []
+    },
+    {
+      "file": "DwemerArmor",
+      "key": "get_dwemer_event_fallback_1",
+      "sha256": "e7f556080b76e034a0dcf3a42f876089fa2b89986afb52930f8f37919768b96b",
+      "args": []
+    },
+    {
+      "file": "DwemerArmor",
+      "key": "get_dwemer_event_fallback_2",
+      "sha256": "dfd96c7b5504a211fe63027f2ae051c36bb618c9f3c1917670e2f3393c4c7f7d",
+      "args": []
+    },
+    {
+      "file": "DwemerArmor",
+      "key": "get_dwemer_event_fallback_3",
+      "sha256": "3e3f13df9fd3029fd2ee9fd5a9e23d08d780a68704c69f3d0413a16d7986d047",
+      "args": []
+    },
+    {
+      "file": "DwemerArmor",
+      "key": "get_dwemer_event_fallback_4",
+      "sha256": "635692df61486e9b47082fdbe65db33d705f674bfe1c2f806c1db76dea18e538",
+      "args": []
+    },
+    {
+      "file": "DwemerArmor",
+      "key": "get_dwemer_event_fallback_5",
+      "sha256": "44e3648afb8ae5d655c4a3a70b823e55ec43d51a0d5a1c70ae64db33b7347b6e",
+      "args": []
+    },
+    {
+      "file": "DwemerArmor",
+      "key": "build_dwemer_effect_narration_1",
+      "sha256": "a460d18b2e6afe76d0afd3951d6c1d766a81a851e13b1a4be30fdc016d65efd5",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ],
+        [
+          "content",
+          "content"
+        ]
+      ]
+    },
+    {
+      "file": "Armor",
+      "key": "narrate_armor_equip_1",
+      "sha256": "d9e3a6af23688f21d36af597832646b56fc98706aafac0b2ad4fe80d61c4d46c",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Armor",
+      "key": "narrate_armor_equip_2",
+      "sha256": "0c72520fc35cde8d6809c1a2b45a7578a1ebb7a36054b4190e2f641aadb7b5c1",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Armor",
+      "key": "narrate_armor_equip_3",
+      "sha256": "648a021bbafd7002ddb6a3cf780af6345f5166d52c0c5965aab73ee47409d038",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Armor",
+      "key": "narrate_armor_equip_4",
+      "sha256": "edb46d1b914b0505b0843596dfbe4da9b6df98f300a77085097d24ef0f2c3544",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Armor",
+      "key": "narrate_armor_strip_1",
+      "sha256": "3ef238ca6427a384738876e1e759d9f02d184a43debcc4459ff4a133b8502db3",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ],
+        [
+          "armorName",
+          "armorName"
+        ]
+      ]
+    },
+    {
+      "file": "Fullness",
+      "key": "send_capacity_milestone_1",
+      "sha256": "8bf01e5c55959d3ed86002e0b35cd72da8cb20400bd63640bd29bf125c187d88",
+      "args": [
+        [
+          "tag",
+          "tag"
+        ],
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Fullness",
+      "key": "send_capacity_milestone_2",
+      "sha256": "c1e2131ae116a81023a90e644a6e63c0eab8e62cdf53ccd38bdfeeb3d13e098b",
+      "args": [
+        [
+          "tag",
+          "tag"
+        ],
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Fullness",
+      "key": "narrate_milk_full_1",
+      "sha256": "982c65b1d0a2b413410733ffcd08b84f956c9de2dd45f303a5b653c672f0bb42",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Fullness",
+      "key": "narrate_milk_half_full_1",
+      "sha256": "def5c8cadfb9caa2e2bf4a04834645abe0fed2e941b347bb76a3bf4457337122",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "MilkDrinking",
+      "key": "narrate_chest_milk_drink_1",
+      "sha256": "27230fe4d0b59c0e5297ba8b6d3c6f4e104b6de18a9bd20fb099d8703f7dd6bf",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ],
+        [
+          "milkName",
+          "milkName"
+        ],
+        [
+          "chestKind",
+          "chestKind"
+        ]
+      ]
+    },
+    {
+      "file": "MilkDrinking",
+      "key": "narrate_chest_milk_drink_2",
+      "sha256": "a6b6be95339a77cb3c8983a9380388aa2c5798aa7e30ecf09049aba7602f6a07",
+      "args": [
+        [
+          "situation",
+          "situation"
+        ],
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "MilkCravings",
+      "key": "narrate_milk_craving_1",
+      "sha256": "b6f9560a4195ff1962a02100f9abfbb03c82326bd36a355db89a7aa62f16c6b1",
+      "args": [
+        [
+          "craving",
+          "renderedCraving"
+        ],
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "MilkDrinking",
+      "key": "narrate_n_p_c_milk_drink_1",
+      "sha256": "f97052508d32611567b41e41d7b1624f106d698d3e7102e4aaa3677784b1776b",
+      "args": [
+        [
+          "reaction",
+          "renderedReaction"
+        ],
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "MilkDrinking",
+      "key": "narrate_n_p_c_milk_drink_2",
+      "sha256": "b68ad6150f5e1790d8c07d9bfc72d802bb065ba96f83ec5d50a19fc972ba6a2c",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "MilkDrinking",
+      "key": "narrate_n_p_c_milk_drink_3",
+      "sha256": "a1608797958774794be16af555c5e5b02be699a293a1a55db5e9f98f271bdf7f",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "MilkDrinking",
+      "key": "narrate_n_p_c_milk_drink_4",
+      "sha256": "64357805b65ad11df65dfd0ee93d369fae985471f86caeb41475ebdaec0aecea",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "MilkDrinking",
+      "key": "narrate_player_milk_drink_1",
+      "sha256": "539df343cd454aca6a1a8e18bf412ae98d03ad1d5107a28656d20623fd9c65ff",
+      "args": [
+        [
+          "milkName",
+          "drinkName"
+        ]
+      ]
+    },
+    {
+      "file": "MilkDrinking",
+      "key": "narrate_player_milk_drink_2",
+      "sha256": "513ac659d57224bb29e48ca7fea7764948ed683b83e952946d57dbef63935a81",
+      "args": [
+        [
+          "reaction",
+          "renderedReaction"
+        ]
+      ]
+    },
+    {
+      "file": "MilkDrinking",
+      "key": "narrate_player_milk_drink_3",
+      "sha256": "ef7090b056158bc18dc5d84fa569a0a8b6f1f5e32ff44e2b5192135a4fb3f387",
+      "args": []
+    },
+    {
+      "file": "MilkMaidCreation",
+      "key": "narrate_milkmaid_created_1",
+      "sha256": "6b0f8c327d296ecd5c418af3aab2c74a608a78fb40ccbd7a75c8a4e2852b2d12",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "MilkMaidCreation",
+      "key": "narrate_forced_milk_maid_conversion_1",
+      "sha256": "bbfb683f53721bf98bd841285d41bcc9557f1df97638ec3229825d247be42618",
+      "args": [
+        [
+          "conversion",
+          "conversionMessage"
+        ],
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Armor",
+      "key": "build_nearby_armor_status_1",
+      "sha256": "7739c3f707200f1bc8d9d9267c43558c752b694a48fd76f366c5de17e05a9208",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Armor",
+      "key": "build_nearby_armor_status_2",
+      "sha256": "d56c5652568668eba5ff68a0e39d6be2f23ca823b713511e0fd529655ff039dc",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Armor",
+      "key": "build_nearby_armor_status_3",
+      "sha256": "d51265f4d42291ea3363a6bb66949fff51debe31223879cabf36bc869d09cbd8",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Thoughts",
+      "key": "narrate_milk_maid_thought_1",
+      "sha256": "ba27f07d7bcc60c2cfb3d8ce59ec34f22109c88494a9cb6b1d24bf365f76f5bd",
+      "args": [
+        [
+          "thought",
+          "renderedThought"
+        ],
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Thoughts",
+      "key": "narrate_bound_milk_maid_thought_1",
+      "sha256": "b4fb194307de0bae94e98a29f3c56f0ae2641a8ea040e134cb5fd1a6502d2dfd",
+      "args": [
+        [
+          "thought",
+          "renderedThought"
+        ],
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Fullness",
+      "key": "build_restrained_capacity_content_1",
+      "sha256": "88665f0de2afba62afbfa9364ff101993b6a861ce4449e757e91fd20d360e998",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Fullness",
+      "key": "build_restrained_capacity_content_2",
+      "sha256": "9feded8c8b1e1c2deadb621971de6c4741f9e398e8a3852654127aff6483ec67",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Fullness",
+      "key": "build_milk_status_1",
+      "sha256": "359f1c26c5f28c4e63c8a4ceb0c825a51e3892c81b0394c8c1e5aee5a9d75df5",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Fullness",
+      "key": "build_milk_status_2",
+      "sha256": "e89787b8ab0641886f066f2e17559de035bc6aa5ae63a5a5c09b4f2d4dafd0b6",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Fullness",
+      "key": "build_milk_status_3",
+      "sha256": "43afa485967816649fac46d6ec8a95cd1445a9b43d909333bb5ec5f242866557",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Fullness",
+      "key": "build_milk_status_4",
+      "sha256": "8fd3da763d486df04ea0972c2b9e7232bbe497f0a6bc9be6e5ba6dd619e9fc29",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Fullness",
+      "key": "build_milk_status_5",
+      "sha256": "4b0e049c03eb5eeb0331d6f5ae23cd37ababd4f0e3bca9c1b0ea1b5af9726eb2",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "Fullness",
+      "key": "build_milk_status_6",
+      "sha256": "eee664f30a121fddf43a3a60cd48fc3842f9ef0ea1007be275b558fa8dbf9de6",
+      "args": [
+        [
+          "actor",
+          "actorName"
+        ]
+      ]
+    },
+    {
+      "file": "MilkDrinking",
+      "key": "build_restrained_player_drink_content_1",
+      "sha256": "1dbe281e9a959743d170b1a8bf4c28cdd2e46506d97766e31ae30238f63657bf",
+      "args": [
+        [
+          "milkName",
+          "drinkName"
+        ]
+      ]
+    }
+  ],
+  "nativeCalls": {
+    "DirectNarration": [
+      "SkyrimNetApi.DirectNarration(content, wearer, Game.GetPlayer())",
+      "SkyrimNetApi.DirectNarration(content, wearer, Game.GetPlayer())",
+      "SkyrimNetApi.DirectNarration(prompt, wearer, Game.GetPlayer())",
+      "SkyrimNetApi.DirectNarration(content, None, wearer)",
+      "SkyrimNetApi.DirectNarration(content, None, wearer)",
+      "SkyrimNetApi.DirectNarration(content, None, None)",
+      "SkyrimNetApi.DirectNarration(content, None, None)",
+      "SkyrimNetApi.DirectNarration(content, None, drinker)",
+      "SkyrimNetApi.DirectNarration(content, cravingActor, listener)",
+      "SkyrimNetApi.DirectNarration(content, None, drinker)",
+      "SkyrimNetApi.DirectNarration(content, None, None)",
+      "SkyrimNetApi.DirectNarration(content, milkMaid, listener)",
+      "SkyrimNetApi.DirectNarration(prompt, milkMaid, listener)",
+      "SkyrimNetApi.DirectNarration(content, None, milkMaid)",
+      "SkyrimNetApi.DirectNarration(content, None, milkMaid)"
+    ],
+    "SendCustomPromptToLLM": [
+      "SkyrimNetApi.SendCustomPromptToLLM(\"mme_wearer_self_comment\", \"dialogue\", contextJson, bridge, \"MMEAlertsController\", \"OnTentaclePlayerLine\")",
+      "SkyrimNetApi.SendCustomPromptToLLM(\"mme_wearer_self_comment\", \"dialogue\", contextJson, bridge, \"MMEAlertsController\", \"OnDwemerEffectPlayerLine\")",
+      "SkyrimNetApi.SendCustomPromptToLLM(\"mme_wearer_self_comment\", \"dialogue\", contextJson, bridge, \"MMEAlertsController\", \"OnDwemerSuitPlayerLine\")",
+      "SkyrimNetApi.SendCustomPromptToLLM(\"mme_wearer_self_comment\", \"dialogue\", contextJson, bridge, \"MMEAlertsController\", \"OnMilkCravingPlayerLine\")",
+      "SkyrimNetApi.SendCustomPromptToLLM(\"mme_wearer_self_comment\", \"dialogue\", contextJson, bridge, \"MMEAlertsController\", \"OnNewMilkMaidPlayerLine\")",
+      "SkyrimNetApi.SendCustomPromptToLLM(\"mme_wearer_self_comment\", \"dialogue\", contextJson, bridge, \"MMEAlertsController\", \"OnForcedMilkMaidPlayerLine\")"
+    ],
+    "TriggerPlayerTTS": [
+      "SkyrimNetApi.TriggerPlayerTTS(response)",
+      "SkyrimNetApi.TriggerPlayerTTS(response)",
+      "SkyrimNetApi.TriggerPlayerTTS(response)",
+      "SkyrimNetApi.TriggerPlayerTTS(response)",
+      "SkyrimNetApi.TriggerPlayerTTS(response)"
+    ],
+    "RegisterEvent": [
+      "SkyrimNetApi.RegisterEvent(\"milkmaid_created\", eventData, milkMaid, None)"
+    ],
+    "RegisterShortLivedEvent": [
+      "SkyrimNetApi.RegisterShortLivedEvent(eventId, eventType, content, \"{}\", ttlMs, milkMaid, None)",
+      "SkyrimNetApi.RegisterShortLivedEvent(\"nearby_milk_armor_status_player\", \"nearby_milk_armor_status\", statuses, \"{}\", 45000, playerActor, None)",
+      "SkyrimNetApi.RegisterShortLivedEvent(\"milk_statuses_player\", \"milk_statuses\", content, \"{}\", ttlMs, playerActor, None)",
+      "SkyrimNetApi.RegisterShortLivedEvent(\"milk_drink_player\", \"milk_drink\", content, \"{}\", ttlMs, drinker, None)",
+      "SkyrimNetApi.RegisterShortLivedEvent(eventId, eventType, content, \"{}\", ttlMs, milkMaid, None)"
+    ]
+  },
+  "promptAndSummary": [
+    {
+      "file": "Common",
+      "key": "player_instructions",
+      "sha256": "114280c2b1480d42d2af695f4fdcd6d193a7b2313a133b4ae613f91336ff67e7"
+    },
+    {
+      "file": "Lore",
+      "key": "milk_lore",
+      "sha256": "71c27dee4059b6fd3e988696222ba24882afebdf4dfc6ae8115b63d63625e99d"
+    },
+    {
+      "file": "Lore",
+      "key": "milkmaid_lore",
+      "sha256": "fd9ac94b1d1bd788f6b983cf76086546dfd3fb47e005b9fd31c961f0ada4b37d"
+    },
+    {
+      "file": "Breastfeeding",
+      "key": "guidance",
+      "sha256": "625addb926817146c2c3f6bf3621e8e5d07b906193cacf95f80c2454d15cf33b"
+    },
+    {
+      "file": "Fullness",
+      "key": "nearby_status_summary",
+      "sha256": "170685818a96adc2f5a784721183a3ef191c6601ee9cde1e2debdf418b9063c3"
+    }
+  ]
+}

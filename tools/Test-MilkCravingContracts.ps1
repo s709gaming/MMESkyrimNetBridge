@@ -39,6 +39,6 @@ Assert-Contract ($mcm -match '"milkCravingIntervalVariation", 24\.0') "craving v
 Assert-Contract ($mcm -match 'SetSliderDialogInterval\(5\.0\)') "MCM exposes five-percent slider steps"
 Assert-Contract ($skyrimNet -match 'DirectNarration\(content, cravingActor, listener\)') "NPC craving narration selects the affected actor as speaker"
 Assert-Contract ($skyrimNet -match 'OnMilkCravingPlayerLine' -and $skyrimNet -match 'TriggerPlayerTTS\(response\)') "player craving narration has a player-only TTS callback"
-Assert-Contract ($skyrimNet -match 'RenderToken\(rendered, "\{ActorName\}"') "message renderer supports the supplied ActorName token"
+Assert-Contract ((Get-Content (Join-Path $projectRoot 'Source\Scripts\MMENarrationText.psc') -Raw) -match 'token == "ActorName"' -and $skyrimNet -match 'Return MMENarrationText.Render\(template, "actor", actorName\)') "message renderer supports the supplied ActorName token"
 Assert-Contract ($build -match '"MMEMilkCravings"') "build compiles and packages the craving script"
 Assert-Contract ($build -match '"MilkCravings\.json"') "build packages the craving JSON"

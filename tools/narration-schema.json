@@ -1,0 +1,362 @@
+{
+  "Armor": {
+    "narrate_armor_equip_1": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "narrate_armor_equip_2": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "narrate_armor_equip_3": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "narrate_armor_equip_4": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "narrate_armor_strip_1": {
+      "tokens": [
+        "actor",
+        "armorName"
+      ]
+    },
+    "build_nearby_armor_status_1": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "build_nearby_armor_status_2": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "build_nearby_armor_status_3": {
+      "tokens": [
+        "actor"
+      ]
+    }
+  },
+  "Breastfeeding": {
+    "guidance": {
+      "tokens": [
+        "actor",
+        "role"
+      ]
+    }
+  },
+  "Common": {
+    "player_instructions": {
+      "tokens": [
+        "actor"
+      ]
+    }
+  },
+  "DwemerArmor": {
+    "narrate_dwemer_effect_1": {
+      "tokens": []
+    },
+    "build_dwemer_suit_prompt_1": {
+      "tokens": [
+        "actor",
+        "core",
+        "event",
+        "profile"
+      ]
+    },
+    "get_dwemer_profile_fallback_1": {
+      "tokens": []
+    },
+    "get_dwemer_profile_fallback_2": {
+      "tokens": []
+    },
+    "get_dwemer_event_fallback_1": {
+      "tokens": []
+    },
+    "get_dwemer_event_fallback_2": {
+      "tokens": []
+    },
+    "get_dwemer_event_fallback_3": {
+      "tokens": []
+    },
+    "get_dwemer_event_fallback_4": {
+      "tokens": []
+    },
+    "get_dwemer_event_fallback_5": {
+      "tokens": []
+    },
+    "build_dwemer_effect_narration_1": {
+      "tokens": [
+        "actor",
+        "content"
+      ]
+    },
+    "effects_arousal": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "effects_milk": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "effects_milkAndArousal": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "suit_core": {
+      "tokens": []
+    },
+    "suit_firstEquip": {
+      "tokens": []
+    },
+    "suit_reequip": {
+      "tokens": []
+    },
+    "suit_milkingStart": {
+      "tokens": []
+    },
+    "suit_milkingEnd": {
+      "tokens": []
+    },
+    "attachment_core": {
+      "tokens": []
+    },
+    "attachment_firstEquip": {
+      "tokens": []
+    },
+    "attachment_reequip": {
+      "tokens": []
+    },
+    "attachment_milkingStart": {
+      "tokens": []
+    },
+    "attachment_milkingEnd": {
+      "tokens": []
+    }
+  },
+  "Fullness": {
+    "send_capacity_milestone_1": {
+      "tokens": [
+        "actor",
+        "tag"
+      ]
+    },
+    "send_capacity_milestone_2": {
+      "tokens": [
+        "actor",
+        "tag"
+      ]
+    },
+    "narrate_milk_full_1": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "narrate_milk_half_full_1": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "build_restrained_capacity_content_1": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "build_restrained_capacity_content_2": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "build_milk_status_1": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "build_milk_status_2": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "build_milk_status_3": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "build_milk_status_4": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "build_milk_status_5": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "build_milk_status_6": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "nearby_status_summary": {
+      "tokens": [
+        "statuses"
+      ]
+    }
+  },
+  "Lore": {
+    "milk_lore": {
+      "tokens": []
+    },
+    "milkmaid_lore": {
+      "tokens": [
+        "actor"
+      ]
+    }
+  },
+  "MilkCravings": {
+    "narrate_milk_craving_1": {
+      "tokens": [
+        "actor",
+        "craving"
+      ]
+    }
+  },
+  "MilkDrinking": {
+    "narrate_chest_milk_drink_1": {
+      "tokens": [
+        "actor",
+        "chestKind",
+        "milkName"
+      ]
+    },
+    "narrate_chest_milk_drink_2": {
+      "tokens": [
+        "actor",
+        "situation"
+      ]
+    },
+    "narrate_n_p_c_milk_drink_1": {
+      "tokens": [
+        "actor",
+        "reaction"
+      ]
+    },
+    "narrate_n_p_c_milk_drink_2": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "narrate_n_p_c_milk_drink_3": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "narrate_n_p_c_milk_drink_4": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "narrate_player_milk_drink_1": {
+      "tokens": [
+        "milkName"
+      ]
+    },
+    "narrate_player_milk_drink_2": {
+      "tokens": [
+        "reaction"
+      ]
+    },
+    "narrate_player_milk_drink_3": {
+      "tokens": []
+    },
+    "build_restrained_player_drink_content_1": {
+      "tokens": [
+        "milkName"
+      ]
+    },
+    "drinkMessage": {
+      "tokens": [
+        "actor",
+        "item"
+      ]
+    }
+  },
+  "Milking": {
+    "startMessage": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "endMessage": {
+      "tokens": [
+        "actor"
+      ]
+    }
+  },
+  "MilkMaidCreation": {
+    "narrate_milkmaid_created_1": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "narrate_forced_milk_maid_conversion_1": {
+      "tokens": [
+        "actor",
+        "conversion"
+      ]
+    },
+    "milkmaidCreatedMessage": {
+      "tokens": [
+        "actor"
+      ]
+    }
+  },
+  "TentacleArmor": {
+    "narrate_tentacle_effect_1": {
+      "tokens": []
+    },
+    "build_tentacle_effect_narration_1": {
+      "tokens": [
+        "actor",
+        "content"
+      ]
+    },
+    "effects_arousal": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "effects_milk": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "effects_milkAndArousal": {
+      "tokens": [
+        "actor"
+      ]
+    }
+  },
+  "Thoughts": {
+    "narrate_milk_maid_thought_1": {
+      "tokens": [
+        "actor",
+        "thought"
+      ]
+    },
+    "narrate_bound_milk_maid_thought_1": {
+      "tokens": [
+        "actor",
+        "thought"
+      ]
+    }
+  }
+}

@@ -1,8 +1,5 @@
 [ system ]
-Write a brief, non-graphic spoken self-comment for {{ speaker }}.
-The speaker is the person experiencing the supplied situation, not an observer.
-Return only one plain-text first-person line. No speaker labels, stage directions,
-dialogue partners, markup, or replies from other people. Do not invent effects.
+{{ playerInstructions }}
 [ end system ]
 [ user ]
 Situation: {{ situation }}

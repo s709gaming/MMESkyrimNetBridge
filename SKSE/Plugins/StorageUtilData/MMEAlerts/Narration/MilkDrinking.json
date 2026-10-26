@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "narrate_chest_milk_drink_1": {
+      "template": "{actor} is magically forced to drink {milkName} from the {chestKind}."
+    },
+    "narrate_chest_milk_drink_2": {
+      "template": "Immediate situation: {situation} Prioritize {actor} as the speaker and have them react immediately, enthusiastically, and with delightful overstatement. The trapped chest may surprise them, but milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as their first milk drink or as surprise merely because milk has its normal effects. Generate one short, silly, suggestive reaction filled with mischievous milk innuendo and clever adult humor, like an animated comedy slipping a joke past the younger audience. Make the magical chest feel comically brazen. Stay focused on the magical forced drink; do not become graphically explicit or invent a different milk source, additional effects, fear, pain, or genuine distress."
+    },
+    "narrate_n_p_c_milk_drink_1": {
+      "template": "Immediate situation: {reaction} Prioritize {actor} as the speaker and let them react to what is happening to their own body. Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as their first milk drink or express surprise merely because milk has its normal effects. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted, mischievous, and character-appropriate, like an animated comedy slipping a joke past the younger audience. Stay focused on {actor} and only the effects actually described. Create a fresh joke or reaction; do not merely repeat the situation, become graphically explicit, change subjects, or invent additional effects."
+    },
+    "narrate_n_p_c_milk_drink_2": {
+      "template": " {actor} also has restrained arms. Treat this as comically inconvenient and fertile ground for cheeky innuendo. Exaggerate the awkwardness without inventing new restraints, danger, pain, or additional effects."
+    },
+    "narrate_n_p_c_milk_drink_3": {
+      "template": " Factual boundary: {actor} is not a Milk Maid, and this drink did not add breast milk, breast fullness, breast weight, swelling, growth, leaking, or lactation. Do not imply or invent any of those effects."
+    },
+    "narrate_n_p_c_milk_drink_4": {
+      "template": " {actor} is an established Milk Maid. You may joke about confirmed milk, breast-fullness, sensitivity, or arousal effects described in the immediate situation, but do not add effects that were not reported."
+    },
+    "narrate_player_milk_drink_1": {
+      "template": "Immediate situation: The player just drank {milkName}. Their breasts are becoming heavier and more sensitive. Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as the player's first milk drink or express surprise merely because milk has its normal effects. Prefer one appropriate nearby character reacting to the player; do not make two characters speak simultaneously. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted and mischievous, like an animated comedy slipping a joke past the younger audience. Do not merely repeat the situation, become graphically explicit, change subjects, or invent additional effects."
+    },
+    "narrate_player_milk_drink_2": {
+      "template": "Immediate situation: {reaction} Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as the player's first milk drink or express surprise merely because milk has its normal effects. Prefer one appropriate nearby character reacting to the player; do not make two characters speak simultaneously. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted and mischievous, like an animated comedy slipping a joke past the younger audience. Stay focused on the player and only the effects actually described. Create a fresh joke or reaction; do not merely repeat the situation, become graphically explicit, change subjects, or invent additional effects."
+    },
+    "narrate_player_milk_drink_3": {
+      "template": " The player also has restrained arms. Treat this as comically inconvenient and fertile ground for cheeky innuendo. Exaggerate the awkwardness without inventing new restraints, danger, pain, or additional effects."
+    },
+    "build_restrained_player_drink_content_1": {
+      "template": "Immediate situation: The player just drank {milkName} despite having their arms restrained. Their breasts are becoming heavier and more sensitive. Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as the player's first milk drink or express surprise merely because milk has its normal effects. Prefer one appropriate nearby character reacting to the player; do not make two characters speak simultaneously. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted and mischievous, like an animated comedy slipping a joke past the younger audience. Treat the restrained arms as comically inconvenient and fertile ground for cheeky innuendo, but do not invent new restraints, danger, pain, or additional effects. Do not merely repeat the situation or become graphically explicit."
+    },
+    "drinkMessage": {
+      "template": "{actor} just drank {item}."
+    }
+  }
+}

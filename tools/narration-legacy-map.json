@@ -1,0 +1,142 @@
+[
+  {
+    "file": "TentacleArmor",
+    "key": "effects_arousal",
+    "legacyFile": "TentacleEffectNarration",
+    "legacyPath": ".arousal",
+    "legacyKey": "arousal"
+  },
+  {
+    "file": "TentacleArmor",
+    "key": "effects_milk",
+    "legacyFile": "TentacleEffectNarration",
+    "legacyPath": ".milk",
+    "legacyKey": "milk"
+  },
+  {
+    "file": "TentacleArmor",
+    "key": "effects_milkAndArousal",
+    "legacyFile": "TentacleEffectNarration",
+    "legacyPath": ".milkAndArousal",
+    "legacyKey": "milkAndArousal"
+  },
+  {
+    "file": "DwemerArmor",
+    "key": "effects_arousal",
+    "legacyFile": "DwemerEffectNarration",
+    "legacyPath": ".arousal",
+    "legacyKey": "arousal"
+  },
+  {
+    "file": "DwemerArmor",
+    "key": "effects_milk",
+    "legacyFile": "DwemerEffectNarration",
+    "legacyPath": ".milk",
+    "legacyKey": "milk"
+  },
+  {
+    "file": "DwemerArmor",
+    "key": "effects_milkAndArousal",
+    "legacyFile": "DwemerEffectNarration",
+    "legacyPath": ".milkAndArousal",
+    "legacyKey": "milkAndArousal"
+  },
+  {
+    "file": "DwemerArmor",
+    "key": "suit_core",
+    "legacyFile": "DwemerSuitNarration",
+    "legacyPath": ".core",
+    "legacyKey": "core"
+  },
+  {
+    "file": "DwemerArmor",
+    "key": "suit_firstEquip",
+    "legacyFile": "DwemerSuitNarration",
+    "legacyPath": ".firstEquip",
+    "legacyKey": "firstEquip"
+  },
+  {
+    "file": "DwemerArmor",
+    "key": "suit_reequip",
+    "legacyFile": "DwemerSuitNarration",
+    "legacyPath": ".reequip",
+    "legacyKey": "reequip"
+  },
+  {
+    "file": "DwemerArmor",
+    "key": "suit_milkingStart",
+    "legacyFile": "DwemerSuitNarration",
+    "legacyPath": ".milkingStart",
+    "legacyKey": "milkingStart"
+  },
+  {
+    "file": "DwemerArmor",
+    "key": "suit_milkingEnd",
+    "legacyFile": "DwemerSuitNarration",
+    "legacyPath": ".milkingEnd",
+    "legacyKey": "milkingEnd"
+  },
+  {
+    "file": "DwemerArmor",
+    "key": "attachment_core",
+    "legacyFile": "DwemerAttachmentNarration",
+    "legacyPath": ".core",
+    "legacyKey": "core"
+  },
+  {
+    "file": "DwemerArmor",
+    "key": "attachment_firstEquip",
+    "legacyFile": "DwemerAttachmentNarration",
+    "legacyPath": ".firstEquip",
+    "legacyKey": "firstEquip"
+  },
+  {
+    "file": "DwemerArmor",
+    "key": "attachment_reequip",
+    "legacyFile": "DwemerAttachmentNarration",
+    "legacyPath": ".reequip",
+    "legacyKey": "reequip"
+  },
+  {
+    "file": "DwemerArmor",
+    "key": "attachment_milkingStart",
+    "legacyFile": "DwemerAttachmentNarration",
+    "legacyPath": ".milkingStart",
+    "legacyKey": "milkingStart"
+  },
+  {
+    "file": "DwemerArmor",
+    "key": "attachment_milkingEnd",
+    "legacyFile": "DwemerAttachmentNarration",
+    "legacyPath": ".milkingEnd",
+    "legacyKey": "milkingEnd"
+  },
+  {
+    "file": "Milking",
+    "key": "startMessage",
+    "legacyFile": "SkyrimNet",
+    "legacyPath": ".startMessage",
+    "legacyKey": "startMessage"
+  },
+  {
+    "file": "Milking",
+    "key": "endMessage",
+    "legacyFile": "SkyrimNet",
+    "legacyPath": ".endMessage",
+    "legacyKey": "endMessage"
+  },
+  {
+    "file": "MilkDrinking",
+    "key": "drinkMessage",
+    "legacyFile": "SkyrimNet",
+    "legacyPath": ".drinkMessage",
+    "legacyKey": "drinkMessage"
+  },
+  {
+    "file": "MilkMaidCreation",
+    "key": "milkmaidCreatedMessage",
+    "legacyFile": "SkyrimNet",
+    "legacyPath": ".milkmaidCreatedMessage",
+    "legacyKey": "milkmaidCreatedMessage"
+  }
+]

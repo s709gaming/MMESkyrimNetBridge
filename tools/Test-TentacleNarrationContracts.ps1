@@ -3,7 +3,8 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $bridge = Get-Content (Join-Path $projectRoot 'Source\Scripts\MMEAlertsSkyrimNet.psc') -Raw
 $effects = Get-Content (Join-Path $projectRoot 'Source\Scripts\MMETentacleEffects.psc') -Raw
 $mcm = Get-Content (Join-Path $projectRoot 'Source\Scripts\MMEAlertsMCM.psc') -Raw
-$config = Get-Content (Join-Path $projectRoot 'SKSE\Plugins\StorageUtilData\MMEAlerts\TentacleEffectNarration.json') -Raw | ConvertFrom-Json
+$config = Get-Content (Join-Path $projectRoot 'SKSE\Plugins\StorageUtilData\MMEAlerts\Narration\TentacleArmor.json') -Raw | ConvertFrom-Json
+$textReader = Get-Content (Join-Path $projectRoot 'Source\Scripts\MMENarrationText.psc') -Raw
 
 function Assert-Contract([bool]$Condition, [string]$Message) {
     if (!$Condition) { throw "Tentacle narration contract: $Message" }
@@ -36,14 +37,14 @@ Assert-Contract ($effects.IndexOf('MMEAlertsSkyrimNet.NarrateTentacleEffect(') -
 Assert-Contract ($effects.Contains('Bool selectForNarration = focusActor == None || candidate == playerActor') -and !$effects.Contains('allowPlayerNarration')) 'narration follows HUD wearer without toggle-dependent NPC substitution'
 Assert-Contract ($effects.Contains('narrationMilkAdded = milkAdded') -and $effects.Contains('narrationArousalBefore = arousalBefore') -and $effects.Contains('narrationArousalSent = arousalSent')) 'narration wearer retains its own results'
 Assert-Contract ($effects.Contains('MMEMilkBoost.ApplyMilkDrinkBonusForActor(candidate, 1, False, False)') -and $effects.Contains('MMEArousalBridge.ApplyConfiguredMilkArousalForActor(candidate, "armor injection", False)')) 'existing effect calls remain unchanged'
-Assert-Contract ($builder.Contains('If milkIncreased && arousalIncreased') -and $builder.Contains('".milkAndArousal"')) 'both-results branch selects its full template'
-Assert-Contract ($builder.Contains('ElseIf milkIncreased') -and $builder.Contains('".milk"')) 'milk-only branch selects its full template'
-Assert-Contract ($builder.Contains('ElseIf arousalIncreased') -and $builder.Contains('".arousal"')) 'arousal-only branch selects its full template'
+Assert-Contract ($builder.Contains('If milkIncreased && arousalIncreased') -and $builder.Contains('"effects_milkAndArousal"')) 'both-results branch selects its full template'
+Assert-Contract ($builder.Contains('ElseIf milkIncreased') -and $builder.Contains('"effects_milk"')) 'milk-only branch selects its full template'
+Assert-Contract ($builder.Contains('ElseIf arousalIncreased') -and $builder.Contains('"effects_arousal"')) 'arousal-only branch selects its full template'
 Assert-Contract ($builder.Contains('narration skipped: neither milk nor arousal increase was confirmed')) 'neither-result branch skips narration'
-Assert-Contract ($builder.Contains('Immediate situation involving ') -and $builder.Contains('do not change subjects')) 'prompt mirrors Armor Thoughts grounding'
+Assert-Contract ($builder.Contains('MMENarrationText.Text("TentacleArmor", "build_tentacle_effect_narration_1"') -and $config.routes.build_tentacle_effect_narration_1.template.Contains('Immediate situation involving ') -and $config.routes.build_tentacle_effect_narration_1.template.Contains('do not change subjects')) 'prompt mirrors Armor Thoughts grounding'
 Assert-Contract ($builder -notmatch 'JsonUtil\.GetStringValue') 'ordinary JSON uses path API, like Thoughts'
 foreach ($key in @('milk', 'arousal', 'milkAndArousal')) {
-    $values = @($config.$key)
+    $values = @($config.routes.("effects_" + $key).template)
     Assert-Contract ($values.Count -gt 0) "JSON $key has at least one template"
     foreach ($value in $values) {
         Assert-Contract ($value -is [string] -and $value.Trim().Length -gt 0) "JSON $key entry is a nonempty string"
@@ -51,10 +52,10 @@ foreach ($key in @('milk', 'arousal', 'milkAndArousal')) {
     }
 }
 $selector = [regex]::Match($bridge, '(?s)String Function SelectTentacleNarrationTemplate\(.*?EndFunction').Value
-Assert-Contract ([regex]::Matches($builder, 'SelectTentacleNarrationTemplate\(').Count -eq 3) 'all three outcome branches use pool selection'
+Assert-Contract ([regex]::Matches($builder, 'MMENarrationText\.GetRaw\(').Count -eq 3) 'all three outcome branches use pool selection'
 Assert-Contract ($selector.Contains('JsonUtil.PathStringElements(configFile, path)') -and $selector -match '(?s)If entries.Length > 0.*?entries\[Utility.RandomInt\(0, entries.Length - 1\)\]') 'random pool index is guarded and covers every entry'
 Assert-Contract ($selector.Contains('JsonUtil.GetPathStringValue(configFile, path, fallback)')) 'legacy single-string templates remain supported'
-Assert-Contract ($bridge.Contains('String Function RenderTentacleNarrationActorToken') -and $bridge.Contains('"{ACTOR}"')) 'renderer accepts existing uppercase actor token'
+Assert-Contract ($bridge.Contains('Return MMENarrationText.Render(promptTemplate, "actor", actorName)') -and $textReader.Contains('token == "ACTOR"')) 'renderer accepts existing uppercase actor token'
 $mcmVersionMatch = [regex]::Match($mcm, '(?s)Int Function GetVersion\(\)\s+Return (\d+)')
 Assert-Contract ($mcmVersionMatch.Success -and [int]$mcmVersionMatch.Groups[1].Value -ge 108 -and $mcm.Contains('armorInjectionPlayerNarrationMigration107') -and $mcm.Contains('armorInjectionSoundsMigration108')) 'MCM upgrades existing saves'
 Assert-Contract ($mcm.Contains('AddHeaderOption("Skyrim.Net Narration")')) 'section stays on Tentacle Effects page'

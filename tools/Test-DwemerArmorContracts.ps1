@@ -12,6 +12,12 @@ $build = Get-Content -LiteralPath (Join-Path $projectRoot "build-package.ps1") -
 $stories = Get-Content -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\DwemerArmorStories.json") -Raw | ConvertFrom-Json
 $suitNarration = Get-Content -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\DwemerSuitNarration.json") -Raw | ConvertFrom-Json
 $attachmentNarration = Get-Content -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\DwemerAttachmentNarration.json") -Raw | ConvertFrom-Json
+$narrationData = Get-Content (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\Narration\DwemerArmor.json") -Raw | ConvertFrom-Json
+$suitNarration = @{}; $attachmentNarration = @{}
+foreach ($eventKey in @('core', 'firstEquip', 'reequip', 'milkingStart', 'milkingEnd')) {
+    $suitNarration[$eventKey] = $narrationData.routes.("suit_" + $eventKey).template
+    $attachmentNarration[$eventKey] = $narrationData.routes.("attachment_" + $eventKey).template
+}
 $selfMilking = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMESelfMilking.psc") -Raw
 $introduction = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArmorIntroduction.psc") -Raw
 

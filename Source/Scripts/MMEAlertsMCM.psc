@@ -8,6 +8,8 @@ Scriptname MMEAlertsMCM extends SKI_ConfigBase
 ; gameplay. EnsureDefaults is append-only migration history for existing saves.
 
 String SettingsFile = "/MMEAlerts/Settings"
+Int narrationReloadOption
+Int narrationImportOption
 Int reverseDurationOption
 Int reversePlayerLevelOption
 Int reverseApplyOption
@@ -325,7 +327,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 158
+    Return 159
 EndFunction
 
 Function SetPageNames()
@@ -2519,6 +2521,9 @@ Event OnPageReset(String page)
         Return
     EndIf
     If page == "Troubleshoot"
+        AddHeaderOption("Narration JSON")
+        narrationReloadOption = AddTextOption("Reload Narration JSON", "RELOAD")
+        narrationImportOption = AddTextOption("Import Legacy Narration", "IMPORT")
         AddHeaderOption("Output")
         diagnosticNotificationsOption = AddToggleOption("In-Game Audit Notifications", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticNotifications", 1) == 1)
         AddHeaderOption("Actions")
@@ -2640,6 +2645,10 @@ EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
+    If option == narrationReloadOption || option == narrationImportOption
+        SetInfoText("Edit SKSE/Plugins/StorageUtilData/MMEAlerts/Narration JSON in a text editor. Reload reads your edits without saving over them. Import copies recognized legacy text only into unchanged defaults; customized entries are kept. Back up presets before updating the mod.")
+        Return
+    EndIf
     If option == movementSlapNotificationsOption
         SetInfoText("Show one of five player-only messages when an eligible movement slap loop starts. Notifications have a shared cooldown; turning them off does not affect the sound.")
         Return
@@ -3324,6 +3333,14 @@ EndEvent
 
 ; Persists toggle changes and refreshes only controllers affected by that option.
 Event OnOptionSelect(Int option)
+    If option == narrationReloadOption
+        Int narrationLoaded = MMENarrationText.ReloadAll()
+        SetTextOptionValue(option, (narrationLoaded as String) + " complete files")
+        Return
+    ElseIf option == narrationImportOption
+        Debug.MessageBox(MMENarrationText.ImportLegacy())
+        Return
+    EndIf
     If option == movementSlapNotificationsOption
         Int enabled = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMovementSlapNotifications", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMovementSlapNotifications", enabled)

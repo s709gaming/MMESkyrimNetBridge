@@ -1,0 +1,1556 @@
+{
+  "job": "JUGS OStim-only cost and dependency audit",
+  "scope": {
+    "plugins": [
+      "Jugs.esp"
+    ],
+    "defined_in": true,
+    "winner_fields": false
+  },
+  "total": 66,
+  "complete": true,
+  "notes": [
+    "Original installed plugin inspected without modification.",
+    "63 DIAL container aggregates excluded from 129 initial link matches.",
+    "Script declaration/call counts were checked against bytecode; this is not a compiled OStim prototype or gameplay validation."
+  ],
+  "records": [
+    {
+      "formid": "000D6A:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "000D7F:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "000D85:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "000D8D:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "001306:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "001317:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "001319:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "001338:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00134C:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "020ED6:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "020ED5:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "001358:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00540A:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00540E:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "005978:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00597E:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "005EEB:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "005EEF:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "005EFD:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "0069C3:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "0069C9:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "007F6C:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "007F70:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "007F72:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "007F74:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "007F76:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "008A44:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "008A46:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00DB2B:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00DB2D:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00DB2F:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00DB31:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00DB39:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00DB4B:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00DB4D:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00DB4F:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00DB51:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00DB59:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00F0EF:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00F0F1:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00F0F3:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "00F0F5:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "010121:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "010125:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "010127:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "010BF1:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "010BF5:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "010BF8:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "010BFA:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "010BFF:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "010C03:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "010C07:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "015CE1:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "015CED:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "015CF1:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "015CF3:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "015CF7:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "016260:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "016264:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "01626E:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "016272:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "016274:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "016276:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "01ADED:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "027A82:Jugs.esp",
+      "type": "DialogResponses",
+      "editorid": null,
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "000D62:SexLab.esm"
+        ]
+      }
+    },
+    {
+      "formid": "000D62:Jugs.esp",
+      "type": "Quest",
+      "editorid": "Jugs",
+      "name": null,
+      "winner": null,
+      "fields": {
+        "SexLabLinks": [
+          "00E50F:SexLab.esm",
+          "000D62:SexLab.esm"
+        ]
+      }
+    }
+  ],
+  "plugin_sha256": "0fae2e73d9f74b5a3bc4564109e09593335fdf0b27f13d8a2725349b53796a36",
+  "routes": [
+    {
+      "script": "Jugs_FPCMM17.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "00DB59:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "Jugs_FPCMON_5a.psc",
+      "category": "general",
+      "bound_records": [
+        "00F0EF:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "Jugs_FPCMON_5b.psc",
+      "category": "general",
+      "bound_records": [
+        "00F0F1:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "Jugs_FPCMON_5c.psc",
+      "category": "general",
+      "bound_records": [
+        "00F0F3:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "Jugs_FPCMON_5d.psc",
+      "category": "general",
+      "bound_records": [
+        "00F0F5:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_FPC_MF_1b1gScript.psc",
+      "category": "general",
+      "bound_records": [
+        "015CE1:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_FPC_MF_2a6Script.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "015CED:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_FPC_MF_3a5Script.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "015CF7:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_FPC_MF_5bScript.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "016260:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "akSpeaker",
+        "Alias_Follower.GetActorReference()"
+      ]
+    },
+    {
+      "script": "JUGs_FPC_MF_6bScript.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "016264:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "akSpeaker",
+        "Game.GetPlayer()"
+      ]
+    },
+    {
+      "script": "JUGs_FPC_MF_8cScript.psc",
+      "category": "general",
+      "bound_records": [
+        "01626E:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Alias_Follower.GetActorReference()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_FPC_MF_9aScript.psc",
+      "category": "general",
+      "bound_records": [
+        "016272:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_FPC_MF_9bScript.psc",
+      "category": "general",
+      "bound_records": [
+        "016274:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_FPC_MF_9cScript.psc",
+      "category": "general",
+      "bound_records": [
+        "016276:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_FPC_NPCMilksFollower0127.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "010127:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "akSpeaker",
+        "Alias_Follower.GetActorReference()"
+      ]
+    },
+    {
+      "script": "JUGs_MPCcunnilingus7F6C.psc",
+      "category": "general",
+      "bound_records": [
+        "007F6C:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGS_MPCFFNJ_5EFD.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "005EFD:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_MPCleitoCG7F74.psc",
+      "category": "general",
+      "bound_records": [
+        "007F74:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_MPCleitoDoggy7F76.psc",
+      "category": "general",
+      "bound_records": [
+        "007F76:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_MPCleitoMissVar7F70.psc",
+      "category": "general",
+      "bound_records": [
+        "007F70:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_MPCleitoStand7F72.psc",
+      "category": "general",
+      "bound_records": [
+        "007F72:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "Jugs_MPCMM18.psc",
+      "category": "general",
+      "bound_records": [
+        "00DB39:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_MPCS3jAnal8A46.psc",
+      "category": "general",
+      "bound_records": [
+        "008A46:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_MPCS_ApBJ8A44.psc",
+      "category": "general",
+      "bound_records": [
+        "008A44:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_MPC_FMT_03010BFA.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "010BFA:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Alias_Follower.GetActorReference()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "Jugs_MPC_MNPCMT_Milking.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "010C07:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "akSpeaker",
+        "Alias_Follower.GetActorReference()"
+      ]
+    },
+    {
+      "script": "JUGs_SGO__0301ADED.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "01ADED:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "akSpeaker",
+        "Game.GetPlayer()"
+      ]
+    },
+    {
+      "script": "JUGs_TIF__03015CF7.psc",
+      "category": "breastfeeding",
+      "bound_records": [],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_TIF__03020ED5.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "020ED5:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGs_TIF__03020ED6.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "020ED6:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGS__03000D6A.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "000D6A:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGS__03000D7F.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "000D7F:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGS__03000D85.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "000D85:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGS__03001306.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "001306:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGS__03001317.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "001317:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGS__03001319.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "001319:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGS__03001338.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "001338:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGS__0300134C.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "00134C:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    },
+    {
+      "script": "JUGS__03001358.psc",
+      "category": "breastfeeding",
+      "bound_records": [
+        "001358:Jugs.esp"
+      ],
+      "actor_assignments": [
+        "Game.GetPlayer()",
+        "akSpeaker"
+      ]
+    }
+  ],
+  "source_inventory": [
+    {
+      "script": "Scripts\\Source\\JUGS__03000D6A.psc",
+      "sha256": "e2cf5c6a5e895c8a69b484633a88cbbe390c99505681b6854d84953eed04831c"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__03000D7B.psc",
+      "sha256": "3623266055ae05fdd96e3b0a1d97a9c507a6e4156b50f87cb95b04db6655b639"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__03000D7F.psc",
+      "sha256": "140fa38bfbd742b89d8de8a13cfb643750787fcc2ac248782a615a0251ac6983"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__03000D85.psc",
+      "sha256": "ef47a2c10bf113e0ffeb0168b401095457eeb3aee521828c36302ec787ec8cc1"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__03000D8D.psc",
+      "sha256": "2e6b6e80df0c284ff37b0eaedc064dbd591f8bae8eb63a25f40201961e743151"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__030012FC.psc",
+      "sha256": "d6eb2baee0b6948b6964714c9f0bba5237513144b1c746ee9f774b1308783b2a"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__03001304.psc",
+      "sha256": "55c4c78310e63c492f7d60b0222652f53cd8882419de3dc70fffde0ebbbcbc14"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__03001306.psc",
+      "sha256": "8ccd6519b7570b61ad186c035ab528586940419608c6b41a3a9294cae2be3d82"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__03001309.psc",
+      "sha256": "1a1d4a48c8e0a54d12f6186f0637043b0e531f55e4ee9b6c8ce04355822e0aca"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__03001317.psc",
+      "sha256": "5156a24f0df569106fd4434d634cd3b7573fd5e2c7ad1c398d4a9760b635c014"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__03001319.psc",
+      "sha256": "08316d5409962d882081928e158d4b5a5192674dc5f112e5ff02c9bd6c82aee4"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__03001338.psc",
+      "sha256": "ed0e2294854f2dff032ffdc2bbc49c874169ed8a3e7b448f277450ecc52e16f3"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__03001340.psc",
+      "sha256": "4d5b3ac230d1233b1b2323db7f430a8aee72e47656a0be781e7628b9035b3d8d"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__0300134C.psc",
+      "sha256": "705110607f886ec6ae3e11b6f627e5174cf6f25b498705b36dbb036c6999397a"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS__03001358.psc",
+      "sha256": "94a9b3f77268ed531fd83299bcaeb48be7978075953cc72e33d9dec62f1f6cbc"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FIX_ref_on_player.psc",
+      "sha256": "b5d5514ae766795d0babc7d47e682aa16acda12a97e12adc0e820a0399f52d75"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FollAgreesToBeMilked_0121.psc",
+      "sha256": "ed58a882b29234557580f8082d3b2fb7d0ff03c1b6bd57d2d1c7104eb800c53e"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FPC_MF_1b1gScript.psc",
+      "sha256": "dfd847c1201e97b26c730a92ac05573b00d072194fbb1f170c1919d30b6e1f12"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FPC_MF_2a6Script.psc",
+      "sha256": "e4b3cb6e3cd1e109db2c474abc666b3286596277e961592f75aeef60fce5a91f"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FPC_MF_3a2Script.psc",
+      "sha256": "20181c4226626681f530865964020a9e72bdc8e48d65b8318a914863e6a6f00d"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FPC_MF_3a3Script.psc",
+      "sha256": "542fd3a8d031f2f8f95b94af8fda453d92e67339b8f1f439a336d2e85fbf743b"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FPC_MF_3a5Script.psc",
+      "sha256": "fd03135a7fd45b59673f8c06e6f62fe71bd50e7a7c5e44fa9311bf422d21a801"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FPC_MF_5bScript.psc",
+      "sha256": "0efc39466177f15edaf28b721841446f349e105d86f131d9fc96e11cc2d48413"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FPC_MF_6bScript.psc",
+      "sha256": "b79860227603d07ebb6234d3f66670df3a612fd32258f416bcbdaf34abf86527"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FPC_MF_8cScript.psc",
+      "sha256": "7bc30c75e4429499b9754c52e21b8a01c6ad0d343f4e99a03804b95ff75e4f58"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FPC_MF_9aScript.psc",
+      "sha256": "30f4b632b8fac0206cbc442a7637ce522d49e831cb22c68666b214eb3cd89874"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FPC_MF_9bScript.psc",
+      "sha256": "cb46815aaebf76cee20d1d12fb9ae7106893d255d298fc289bda22c0a24e55a1"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FPC_MF_9cScript.psc",
+      "sha256": "ded8309725d964be66a301c49287a46dc33b0126cddae092ad5a671661f43423"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_FPC_NPCMilksFollower0127.psc",
+      "sha256": "4472bc8303f382b312e47c61014c9645bc4079460a491e289106a785e3b4cf29"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_FPCMM10.psc",
+      "sha256": "9b9c5efebc56421df38fe6f46f8164541a37ce84b1532204164c21d82877b7a9"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_FPCMM11.psc",
+      "sha256": "c6489b7a88e44f7b2439a8bfb2236b15eb22b055454e52db839a4d595e7303e8"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_FPCMM12.psc",
+      "sha256": "928fc21587f072e54296200d72cd58706df586a5541796134b52910b96b15b77"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_FPCMM13.psc",
+      "sha256": "2ba247c31fb051a4fd185432f86a42be4fa4a31b5dae3a0edf4ad9730a9e514d"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_FPCMM17.psc",
+      "sha256": "7ea154e4f0966bfc896d64d9b3fc7c1888fb5cfff997ba6cdd3a5ef6b79e703e"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_FPCMON_5a.psc",
+      "sha256": "51a7e8d614b6281f49d802f6b2b99f1ccc58c5ce50bb2bb98514a505ad32ac61"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_FPCMON_5b.psc",
+      "sha256": "3aa44c5ef8bcb5e97bb77292bcc09a7f7cbf9ff808b91b2e9bbaea32e2bb1f1d"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_FPCMON_5c.psc",
+      "sha256": "c4c4ab102da604c3ee15d16b5bd895b1491ac3536fa8d1bb1f8fef90cfcab534"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_FPCMON_5d.psc",
+      "sha256": "7f0c48952ad0a35ff922d0e1f3a246017299880ac8fac2822b5fd2d616907715"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MakeAMaid1C024.psc",
+      "sha256": "b4d21aee9e08a572789c0d9c633f19b2f141be0e0de4492464807895dce3264a"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPC_FMT_03010BF1.psc",
+      "sha256": "da309db06fa0113e7a8f1b433f8bc00ebb85935f18a213425822acdf96aa080a"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPC_FMT_03010BF5.psc",
+      "sha256": "f2d1f3b1455d5effe2b2c08a2f019ece04b093e05bc31358c2954055030c0766"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPC_FMT_03010BFA.psc",
+      "sha256": "0c50ecc58faea0c50baeda8bc2024008449f1ff2a283534c671038408b004f83"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPC_FMT__03010BF8.psc",
+      "sha256": "12122b80f06b73108ae72234cae6e11a4caacc0f929a7124bb4bee72d4db5f57"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPC_MNPCMT__03010C03.psc",
+      "sha256": "ca227dace50f48702485692d23d0e6943afa15e3101bef990cf00ef2f6db60e2"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPC_MNPCMT_main.psc",
+      "sha256": "7760b2eeda8434dd5abed455f31268b196cb414a9e453cf2e1fa4da8a02741fd"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_MPC_MNPCMT_Milking.psc",
+      "sha256": "0ddbeb0c29e4ada5e04600514abd18cb992b14d6ee6043c53ff8351b62259d64"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPCcunnilingus7F6C.psc",
+      "sha256": "450b981542256784a4eb22c5e328096e1a0fbb9a0163c0eb8b13358bd7b39c06"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS_MPCFFNJ_5EFD.psc",
+      "sha256": "0c1bd38fee955f6fe25799b49b1d57dbea7ea57a0d9af8afaf2fe5168c1c9aff"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS_MPCJ1_69C3.psc",
+      "sha256": "545f6482305fd1628d3090e01a125788c06d89062d6073447b8837b515683a26"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS_MPCJ1c3_69C9.psc",
+      "sha256": "f5a0bac12f7a08cca54d804ac5c334590aacfaeadba7e06a9c31f9f2519e0532"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPCleitoCG7F74.psc",
+      "sha256": "489ae45894f21e373644f05ff22d54f45fe9903b61f07ef3e2b8fcfe5b55b942"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPCleitoDoggy7F76.psc",
+      "sha256": "5c8dcbfcc5f9c94b37e9dec44f58c53a65f6dfccf106ec0970dbb0c73e92cc8e"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPCleitoMissVar7F70.psc",
+      "sha256": "a1d6f49fe81ba026576aff85ee41db9658ac56e1bfdb31ebfc1b5f6dcc9c1c04"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPCleitoStand7F72.psc",
+      "sha256": "76e5d988a95e9e3a48c508e04860c10962c0c21a9023fad1c22c672705b84d27"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_MPCMM11.psc",
+      "sha256": "6c5df923d8cc227e0686c0003f4f23b36aa76ad4b923fbaaa2e2e829ad251eb9"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_MPCMM12.psc",
+      "sha256": "2462838079866e0ffbf977f9d9998b831c9c15c71a881a9d11da2692a440b832"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_MPCMM13.psc",
+      "sha256": "00ccf402a23804dddca8e8b7806f39236e16f983084cbbe5ebea091a24d027ed"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_MPCMM14.psc",
+      "sha256": "59a1c8a59505af4d73d4752f50df2f2a4a6f6c05159af040b53115249197936a"
+    },
+    {
+      "script": "Scripts\\Source\\Jugs_MPCMM18.psc",
+      "sha256": "6d5cb96e4d5ea6610d4dc90595d381cf763b371db8eb3affbb48e9dddfc6c5d2"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPCMManim1.psc",
+      "sha256": "e0898329e36ea50c27a735d6757428d12adb78757260f28ea2a0481588ab6e99"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPCS3jAnal8A46.psc",
+      "sha256": "23421c5c3656262f17e0f5c45635b9565b11f3dbf6a801757e094460dd1a362a"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_MPCS_ApBJ8A44.psc",
+      "sha256": "c312d7ee3f0d1b2463ba33caa8e793259532a10803dd0dd90d996315693b409d"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_NPCmilkFolMain.psc",
+      "sha256": "01b16b43e8fe47ac09d1e91be79fe2c80a2b48113d3c48875641a7c404d30909"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_SGO__0301ADED.psc",
+      "sha256": "85c7ef7c4d169d8f0a6472fc01391828d5d9af162bb8abdd0171266c1bc10430"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_SGO_Milker.psc",
+      "sha256": "748658af150b1d0dadd86baf6ba27ba65ff66d72bb18422286230fd65ad4dfc3"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_StripNPC_5978.psc",
+      "sha256": "3c8fb1c4f58710ac5782b59a3fd55c605f894a66bbcf76d3ba223cc613f07a6c"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS_StripNPC_5EEB.psc",
+      "sha256": "e7dc2838f6f92ba7e9bc3c77cacf19a185f12ed2ee467271d4a43045fcd25736"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_TIF__03015CF7.psc",
+      "sha256": "d0f4d8d35807fced51dd55a9227f29ce161637b1b3ba1e09bc3d4dea3d86ff70"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_TIF__03020ED5.psc",
+      "sha256": "92635e356efdf0fbb28a386b7be3f71c58c0e7353bc7300a929a15d2fdd86747"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_TIF__03020ED6.psc",
+      "sha256": "7b2afd9450ee3d70a963152f22d094a33aef89c13ff901f48240465833a241d2"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_TIF__03027A82.psc",
+      "sha256": "97fd8fca25d001246369c06407dd5a2a1ec898a59137520cf8273adaaff06d9f"
+    },
+    {
+      "script": "Scripts\\Source\\JUGs_UNstripNPC_597E.psc",
+      "sha256": "7a7a64a5c7e02d4e4ba4b4b234fb205479826e166f3372f25ac452061f3d364c"
+    },
+    {
+      "script": "Scripts\\Source\\JUGS_unStripNPC_5EEF.psc",
+      "sha256": "36b157b33794ecf8fd488ffa79d1e9c1400304427595d742df7202eec54e8bf7"
+    },
+    {
+      "script": "Scripts\\Source\\JugsMain.psc",
+      "sha256": "c089739a6217e796eb7397245875134b5350f958cee31a1e667367173275f5d4"
+    },
+    {
+      "script": "Scripts\\Source\\JUGsMPCFF_addTOfac_5EFB.psc",
+      "sha256": "1966fe1e546a623a6bfe150c8f22615ee8ef7a9b381b6f4b13290226c63a0e12"
+    },
+    {
+      "script": "Scripts\\Source\\JugsPlayerAlias.psc",
+      "sha256": "4aec3158801b1eeb876af38cd03ff3f86f3e2d7e86390858ab5099485ab10903"
+    },
+    {
+      "script": "Scripts\\Source\\JUGSstripPC__540A.psc",
+      "sha256": "5220500782d4ef2e5e16e7fd55a3104aa9ac96d33e7a069b63378cc54fda5449"
+    },
+    {
+      "script": "Scripts\\Source\\JugsUnstripPC__540E.psc",
+      "sha256": "00cca863890af191d1c635c8b0a64a9cbb17dd662b76734eed624b0e5ac46bf0"
+    }
+  ]
+}

@@ -107,6 +107,7 @@ EndEvent
 ; Internal MCM refreshes remain silent; true launch/load entry points request
 ; one compact engine-on status after initialization is complete.
 Function InitializeController(Bool reportStatus = False)
+    MMENarrationText.ReloadAll()
     UnregisterForModEvent("MMEExtensions_MaidBodyTrace")
     RegisterForModEvent("MMEExtensions_MaidBodyTrace", "OnMaidBodyTrace")
     UnregisterForModEvent("MMEExtensions_MaidBodyComplete")

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "narrate_armor_equip_1": {
+      "template": "{actor} has just equipped Milking Armor, sealing its suction cups over her breasts ready to milk them. Generate a short, humorous, suggestive, and playful reaction specifically about this equip event. Stay focused on her breasts, milk, suction, and the newly attached cups. Create a fresh reaction; do not merely repeat this description or change subjects."
+    },
+    "narrate_armor_equip_2": {
+      "template": "{actor} has just equipped Living Armor. Its living tendrils tease and stimulate her breasts and nipples while pleasurably drawing out her milk. Treat the armor's behavior as kinky and fun, not frightening. Generate a short, humorous, suggestive, and playful reaction specifically about this equip event. Create a fresh reaction; do not merely repeat this description or change subjects."
+    },
+    "narrate_armor_equip_3": {
+      "template": "{actor} has just equipped Living Parasite armor. Its parasitic tentacles tease and stimulate her breasts while pleasurably drawing out her milk. Treat the parasite's behavior as kinky and fun, not frightening. Generate a short, humorous, suggestive, and playful reaction specifically about this equip event. Create a fresh reaction; do not merely repeat this description or change subjects."
+    },
+    "narrate_armor_equip_4": {
+      "template": " This armor sprang from a magically trapped treasure chest and unexpectedly wrapped itself around {actor}. Acknowledge the chest's mischievous surprise and treat the ambush as exaggerated, playful, suggestive, pleasurable, and funny rather than frightening."
+    },
+    "narrate_armor_strip_1": {
+      "template": "{actor}'s {armorName} has flown right off her body because her milk-swollen breasts have gotten far too big for it. React creatively with exaggerated, playful, suggestive humor. Don't simply restate the event."
+    },
+    "build_nearby_armor_status_1": {
+      "template": "[Milking Armor] {actor} is wearing Milking Armor. Suction cups are attached to her nipples for milking."
+    },
+    "build_nearby_armor_status_2": {
+      "template": "[Living Armor] {actor} is wearing Living Armor. Living tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk."
+    },
+    "build_nearby_armor_status_3": {
+      "template": "[Living Parasite] {actor} is wearing Living Parasite armor. Parasitic tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk."
+    }
+  }
+}

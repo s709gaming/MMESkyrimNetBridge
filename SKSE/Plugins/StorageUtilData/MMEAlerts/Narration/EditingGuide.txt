@@ -1,0 +1,65 @@
+MME EXTENSIONS - EDITABLE NARRATION
+
+This folder is installed under Data/SKSE/Plugins/StorageUtilData/MMEAlerts/Narration.
+In MO2, open the installed mod in Explorer to find it. Back up your edits or keep
+customized JSON files in a separate higher-priority mod so reinstalls preserve them.
+
+1. Open the feature JSON in a text editor (UTF-8). No coding tools are needed.
+2. Edit only the text in "template". A template may be a string or an array of
+   alternative strings; one alternative is selected per event.
+3. Keep the route names, schemaVersion, and every documented {placeholder}.
+   RouteReference.txt lists the required placeholders for each route.
+4. Use normal JSON: double quotes, no comments or trailing commas. Inside text,
+   write \" for a quote, \\ for a backslash, and \n for a line break.
+5. In MCM > Troubleshoot > Narration JSON, select Reload narration JSON.
+   Restarting/reloading the game also refreshes files at controller initialization.
+
+Common.json: shared private player voice instructions.
+Armor.json: equip, strip, and nearby armor context.
+TentacleArmor.json and DwemerArmor.json: actual-effect pools and reaction guidance.
+MilkDrinking.json, Breastfeeding.json, MilkMaidCreation.json: their named events.
+Milking.json and Fullness.json: milking and capacity context.
+MilkCravings.json and Thoughts.json: narration guidance around existing thought text.
+Lore.json: milk lore injected into eligible actors' Skyrim.Net prompts.
+
+Placeholder text is inserted once: actor names or other inserted text cannot create
+new placeholders. {ACTOR} and {ActorName} are accepted aliases for {actor}.
+Jinja, YAML, arbitrary code, literal braces, and new placeholder names are unsupported.
+Do not remove required identity/fact placeholders. Change feature enable switches,
+chance, or timing in MCM rather than making a template empty.
+
+Missing files/entries use compiled defaults. Malformed JSON, unsupported schema,
+wrong types, empty pools, or invalid placeholders also use defaults and generate a
+deduplicated Papyrus smoke alarm. Routine fallback/reload traces follow the master
+Papyrus logging toggle. Ordinary narration never saves or rewrites these JSON files.
+The reload count reports files with all expected routes valid.
+
+Legacy customization: use Import legacy narration in the same MCM section once.
+It copies supported older narration fields into untouched default routes only,
+preserves old files, and skips customized or invalid destinations. Back up both
+folders first. The import summary reports copied, preserved, and skipped routes.
+Old narration-only files remain shipped for compatibility/import; active narration
+now reads this folder. Shared HUD/story/thought pools and runtime switches stay in
+their original MMEAlerts files. Their text may be passed into narration as a fact
+placeholder; the surrounding narration instructions are edited here.
+
+Skyrim.Net action YAML and structural .prompt adapters stay separate. JSON changes
+wording, not targeting, gameplay, permissions, callbacks, or available actions.
+Runtime JSON edits need no Papyrus compiler. Source developers must regenerate
+MMENarrationDefaults.psc and rebuild after changing shipped defaults.
+
+Example (inside an existing route; keep its actual name):
+  "template": "{actor} feels the milk getting heavier. React with gentle humor."
+Or use alternatives:
+  "template": ["{actor} feels pleasantly full.", "{actor} notices the extra weight."]
+Only use this example for a route whose required token list is {actor} alone.
+
+Restore defaults: back up your preset, then copy the affected JSON file from the
+original release archive into the winning mod and select Reload. Temporarily
+removing a file also uses compiled defaults without recreating the file.
+Native runtime parsing may accept duplicate JSON keys; avoid them. Shipped files
+are checked for duplicates during the build.
+
+Import caveat: Skyrim/Papyrus interns strings case-insensitively. A preset changed
+only in letter case may compare equal to defaults. Back up such presets and import
+before customizing them; normal narration and Reload never overwrite any preset.

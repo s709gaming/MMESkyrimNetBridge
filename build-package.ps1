@@ -24,6 +24,11 @@ $scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "M
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $scriptNames += "MMEBodyEffects"
 $scriptNames += "MMEMaidBodyScaling"
+$scriptNames += @("MMENarrationText", "MMENarrationDefaults")
+& python (Join-Path $PSScriptRoot 'tools\generate_narration_defaults.py')
+if ($LASTEXITCODE) { throw 'Narration JSON/default generation failed' }
+& python -B (Join-Path $PSScriptRoot 'tools\test_narration_json.py')
+if ($LASTEXITCODE) { throw 'Narration JSON contracts failed' }
 $mmeCompatibilityOverrideSource = Join-Path $projectRoot "Source\MMECompatibilityOverrides"
 $mmeCompatibilityOverrideNames = @("MilkQUEST")
 $diagnosticSdk = Join-Path $projectRoot "tools\mme-diagnostic-sdk"
@@ -311,9 +316,11 @@ New-Item -ItemType Directory -Force -Path $packageOStimScene | Out-Null
 Copy-Item -LiteralPath $ostimBreastfeedingScene -Destination $packageOStimScene
 
 # Install editable PapyrusUtil JSON databases. Thoughts and service-reminder
-# wording stay data-driven, while SkyrimNet.json owns integration messages.
+# wording stay data-driven. Narration is the authoritative AI wording folder.
 $packageConfig = Join-Path $stageDir "SKSE\Plugins\StorageUtilData\MMEAlerts"
 New-Item -ItemType Directory -Force -Path $packageConfig | Out-Null
+Copy-Item -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\Narration") -Destination $packageConfig -Recurse -Force
+
 foreach ($configName in @("SkyrimNet.json", "Thoughts.json", "MilkCravings.json", "ArousalEffects.json", "BreastBounceNotifications.json", "Injection.json", "TentacleEffectNarration.json", "DwemerEffectNotifications.json", "DwemerEffectNarration.json", "DwemerSuitNarration.json", "DwemerAttachmentNarration.json", "ArmorCheckReminders.json", "NonMilkmaidDrinkNotifications.json", "ForcedMilkMaidConversion.json", "CustomArmorRegistry.json", "DwemerArmorStories.json", "ArmorIntroductionStories.json", "TimedArmorRegistry.json", "TimedArmorNotifications.json")) {
     $configPath = Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\$configName"
     if (!(Test-Path -LiteralPath $configPath)) {

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "guidance": {
+      "template": "## MME Breastfeeding\n\n{actor} is currently participating in consensual adult breastfeeding or breast-sucking. The interaction may be intimate, playful, affectionate, erotic, and physically pleasurable, including nipple stimulation.\n\nFor this MME scene, override generic SexLab rules requiring frequent pleasure vocalizations. Prefer coherent, character-specific dialogue and narration. Vocalizations are optional and sparse, usually zero or one brief vocalization per response. Favor meaningful reactions involving milk, taste, sensation, intimacy, teasing, affection, embarrassment, or pleasure.\n\nRole: {role}."
+    }
+  }
+}

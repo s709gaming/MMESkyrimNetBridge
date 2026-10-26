@@ -83,12 +83,12 @@ Function NarrateTentacleEffect(Actor wearer, Float milkAdded, Int arousalBefore,
             MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: player callback script unavailable; no fallback")
             Return
         EndIf
-        String contextJson = "{\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnTentaclePlayerLine")
         MMETentacleEffects.TraceDiagnostic(diagnostic, "player-only generation queue result=" + queued + " (1=queued); no bystander fallback")
         Return
     EndIf
-    content += " React from your own perspective as the affected armor wearer."
+    content += MMENarrationText.Text("TentacleArmor", "narrate_tentacle_effect_1")
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Tentacle Effects DirectNarration | speaker=" + actorName)
     Int result = SkyrimNetApi.DirectNarration(content, wearer, Game.GetPlayer())
     If result == 0
@@ -126,17 +126,13 @@ EndFunction
 ; Configurable non-graphic wording. Like the armor Thought pools, each actual
 ; outcome selects one complete template instead of assembling prompt fragments.
 String Function BuildTentacleEffectNarration(String actorName, Bool milkIncreased, Bool arousalIncreased, Bool diagnostic = False) Global
-    String configFile = "/MMEAlerts/TentacleEffectNarration"
-    If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
-        MMETentacleEffects.TraceDiagnostic(diagnostic, "narration JSON missing or malformed: using non-graphic defaults")
-    EndIf
     String promptTemplate = ""
     If milkIncreased && arousalIncreased
-        promptTemplate = SelectTentacleNarrationTemplate(configFile, ".milkAndArousal", "{actor}'s living armor shifts beneath her clothes. Her milk reserves and arousal both increase.")
+        promptTemplate = MMENarrationText.GetRaw("TentacleArmor", "effects_milkAndArousal")
     ElseIf milkIncreased
-        promptTemplate = SelectTentacleNarrationTemplate(configFile, ".milk", "{actor}'s living armor shifts beneath her clothes and stimulates increased milk production.")
+        promptTemplate = MMENarrationText.GetRaw("TentacleArmor", "effects_milk")
     ElseIf arousalIncreased
-        promptTemplate = SelectTentacleNarrationTemplate(configFile, ".arousal", "{actor}'s living armor shifts beneath her clothes and leaves her more aroused.")
+        promptTemplate = MMENarrationText.GetRaw("TentacleArmor", "effects_arousal")
     Else
         MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: neither milk nor arousal increase was confirmed")
         Return ""
@@ -147,7 +143,7 @@ String Function BuildTentacleEffectNarration(String actorName, Bool milkIncrease
     EndIf
     ; Mirror the proven Armor Thoughts grounding: name the immediate situation,
     ; bind it to the selected actor, and explicitly forbid a subject change.
-    Return "Immediate situation involving " + actorName + ": " + content + " Your next response must be specifically about this event. Treat the living or parasite armor's teasing as pleasurable, silly, playful, positive, and suggestive, never frightening or threatening. Respond in character with one short fresh reaction. Stay focused on the armor and the effects stated here; do not change subjects, merely repeat the situation, or invent additional effects."
+    Return MMENarrationText.Text("TentacleArmor", "build_tentacle_effect_narration_1", "actor", actorName, "content", content)
 EndFunction
 
 ; Choose uniformly within the matching outcome only. Consecutive repeats are
@@ -167,20 +163,7 @@ EndFunction
 ; MMEThoughts uses {actor}; older/user-authored narration JSON may use {ACTOR}.
 ; Accept both while still requiring exactly one recognizable actor placeholder.
 String Function RenderTentacleNarrationActorToken(String promptTemplate, String actorName) Global
-    String rendered = MMEThoughts.RenderActorToken(promptTemplate, actorName)
-    If rendered != ""
-        Return rendered
-    EndIf
-    Int tokenIndex = StringUtil.Find(promptTemplate, "{ACTOR}")
-    If tokenIndex < 0
-        Return ""
-    EndIf
-    String beforeToken = ""
-    If tokenIndex > 0
-        beforeToken = StringUtil.Substring(promptTemplate, 0, tokenIndex)
-    EndIf
-    String afterToken = StringUtil.Substring(promptTemplate, tokenIndex + StringUtil.GetLength("{ACTOR}"))
-    Return beforeToken + actorName + afterToken
+    Return MMENarrationText.Render(promptTemplate, "actor", actorName)
 EndFunction
 
 ; Class-4 parallel to Tentacle Effects. Gameplay remains in MMEDwemerEffects;
@@ -230,12 +213,12 @@ Function NarrateDwemerEffect(Actor wearer, Float milkAdded, Int arousalBefore, B
             MMELog.Alarm("[MME Extensions Dwemer Effects] player narration callback unavailable")
             Return
         EndIf
-        String contextJson = "{\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnDwemerEffectPlayerLine")
         MMEDwemerEffects.TraceDiagnostic(False, "player-only generation queue result=" + queued + " (1=queued); no bystander fallback")
         Return
     EndIf
-    content += " React from your own perspective as the affected Dwemer armor wearer."
+    content += MMENarrationText.Text("DwemerArmor", "narrate_dwemer_effect_1")
     Int result = SkyrimNetApi.DirectNarration(content, wearer, Game.GetPlayer())
     MMEDwemerEffects.TraceDiagnostic(False, "NPC DirectNarration result=" + result + " | wearer=" + actorName)
 EndFunction
@@ -299,7 +282,7 @@ Function NarrateDwemerSuitEvent(Actor wearer, Armor equippedArmor, String eventK
             MMELog.Alarm("[MME Extensions Dwemer Suit Narration] player callback unavailable | event=" + eventKey)
             Return
         EndIf
-        String contextJson = "{\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(prompt) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(prompt) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnDwemerSuitPlayerLine")
         MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] player queue result=" + queued + " | profile=" + profile + " | event=" + eventKey + " | actor=" + actorName)
         Return
@@ -339,59 +322,43 @@ Bool Function IsValidDwemerSuitSpeaker(Actor wearer) Global
 EndFunction
 
 String Function BuildDwemerSuitPrompt(String actorName, String profile, String eventKey) Global
-    String configFile = "/MMEAlerts/DwemerSuitNarration"
-    If profile != "deviousSuit"
-        configFile = "/MMEAlerts/DwemerAttachmentNarration"
+    String prefix = "attachment_"
+    If profile == "deviousSuit"
+        prefix = "suit_"
     EndIf
-    If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
-        MMELog.Alarm("[MME Extensions Dwemer Suit Narration] JSON missing or malformed")
-        Return ""
-    EndIf
-    String core = JsonUtil.GetStringValue(configFile, "core", "")
-    String eventPrompt = JsonUtil.GetStringValue(configFile, eventKey, "")
-    If core == ""
-        MMELog.Alarm("[MME Extensions Dwemer Suit Narration] missing core prompt | profile=" + profile + " | event=" + eventKey + " | using fallback")
-        core = GetDwemerProfileFallback(profile)
-    EndIf
-    If eventPrompt == ""
-        MMELog.Alarm("[MME Extensions Dwemer Suit Narration] missing event prompt | profile=" + profile + " | event=" + eventKey + " | using fallback")
-        eventPrompt = GetDwemerEventFallback(profile, eventKey)
-    EndIf
-    Return "Affected wearer: " + actorName + ". Presentation profile: " + profile + ". " + core + " Immediate event: " + eventPrompt + " Write one fresh, short, coherent first-person reaction spoken by " + actorName + ". Make it natural, speakable adult dialogue. Let alarm or anticipation surge rapidly into overwhelming pleasure and manic happiness. Add one light touch of playful absurdity or innuendo that may earn a chuckle, but keep the emotion stronger than the joke. Convey gasping, laughter, and failing composure through the words, not written sound effects. Do not use stuttering, repeated syllables, spelled-out laughter, or excessive punctuation. Do not quote a stock example, narrate in third person, or repeat these instructions."
+    String core = MMENarrationText.GetRaw("DwemerArmor", prefix + "core")
+    String eventPrompt = MMENarrationText.GetRaw("DwemerArmor", prefix + eventKey)
+    Return MMENarrationText.Text("DwemerArmor", "build_dwemer_suit_prompt_1", "actor", actorName, "profile", profile, "core", core, "event", eventPrompt)
 EndFunction
 
 String Function GetDwemerProfileFallback(String profile) Global
     If profile == "deviousSuit"
-        Return "A Dwemer suit restrains an adult woman and floods her with aphrodisiacs, stimulation, and mechanical milking. Her reaction rockets from 0 to 10: shock becomes ecstatic overload, breathless laughter, failing thoughts, and manic glee. She knows the situation is absurd and humiliating but feels far too wonderful to care."
+        Return MMENarrationText.Text("DwemerArmor", "get_dwemer_profile_fallback_1")
     EndIf
-    Return "Hidden Dwemer machinery inside an adult woman's ordinary armor delivers aphrodisiacs, teasing, and milking without restraining her. Her reaction races from 0 to 10 into breathless pleasure, lost composure, manic glee, and embarrassed anticipation."
+    Return MMENarrationText.Text("DwemerArmor", "get_dwemer_profile_fallback_2")
 EndFunction
 
 String Function GetDwemerEventFallback(String profile, String eventKey) Global
     If eventKey == "firstEquip"
-        Return "The device activates for the first time. Escalate instantly from startled protest to overwhelmed, laughing ecstasy."
+        Return MMENarrationText.Text("DwemerArmor", "get_dwemer_event_fallback_1")
     ElseIf eventKey == "reequip"
-        Return "She recognizes the familiar mechanism and becomes embarrassingly eager before it fully activates."
+        Return MMENarrationText.Text("DwemerArmor", "get_dwemer_event_fallback_2")
     ElseIf eventKey == "milkingStart"
-        Return "The milking cycle begins and sends her from intense anticipation into incoherent, manic delight."
+        Return MMENarrationText.Text("DwemerArmor", "get_dwemer_event_fallback_3")
     ElseIf eventKey == "milkingEnd"
-        Return "The cycle ends with her dazed, satisfied, grinning, and already craving the next one."
+        Return MMENarrationText.Text("DwemerArmor", "get_dwemer_event_fallback_4")
     EndIf
-    Return "The Dwemer mechanism activates and drives her rapidly into overwhelming, breathless, manic glee."
+    Return MMENarrationText.Text("DwemerArmor", "get_dwemer_event_fallback_5")
 EndFunction
 
 String Function BuildDwemerEffectNarration(String actorName, Bool milkIncreased, Bool arousalIncreased, Bool diagnostic = False) Global
-    String configFile = "/MMEAlerts/DwemerEffectNarration"
-    If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
-        MMELog.Alarm("[MME Extensions Dwemer Effects] narration JSON missing or malformed; using fallback")
-    EndIf
     String promptTemplate = ""
     If milkIncreased && arousalIncreased
-        promptTemplate = SelectTentacleNarrationTemplate(configFile, ".milkAndArousal", "{actor} shivers as Dwemer armor stimulates her breasts and leaves her more aroused.")
+        promptTemplate = MMENarrationText.GetRaw("DwemerArmor", "effects_milkAndArousal")
     ElseIf milkIncreased
-        promptTemplate = SelectTentacleNarrationTemplate(configFile, ".milk", "{actor}'s breasts ache with milk as the Dwemer device teases her.")
+        promptTemplate = MMENarrationText.GetRaw("DwemerArmor", "effects_milk")
     ElseIf arousalIncreased
-        promptTemplate = SelectTentacleNarrationTemplate(configFile, ".arousal", "{actor} moans as Dwemer armor teases her nipples.")
+        promptTemplate = MMENarrationText.GetRaw("DwemerArmor", "effects_arousal")
     Else
         MMEDwemerEffects.TraceDiagnostic(diagnostic, "narration skipped: neither milk nor arousal increase was confirmed")
         Return ""
@@ -401,7 +368,7 @@ String Function BuildDwemerEffectNarration(String actorName, Bool milkIncreased,
         MMELog.Alarm("[MME Extensions Dwemer Effects] narration template is missing a supported actor token")
         Return ""
     EndIf
-    Return "Immediate situation involving " + actorName + ": " + content + " Your next response must be specifically about this event. Treat the Dwemer machinery's mechanical teasing as pleasurable, silly, playful, positive, and suggestive, never frightening, painful, or threatening. Respond in character with one short fresh reaction. Stay focused on the Dwemer armor, its gears and mechanisms, and the effects stated here; do not change subjects, merely repeat the situation, or invent additional effects."
+    Return MMENarrationText.Text("DwemerArmor", "build_dwemer_effect_narration_1", "actor", actorName, "content", content)
 EndFunction
 
 ; Registers callbacks used by actor-specific MME prompt modules.
@@ -428,6 +395,10 @@ Function RegisterPromptDecorator() Global
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Breastfeeding prompt decorator registration result " + breastfeedingResult)
     Int recentDrinkerResult = SkyrimNetApi.RegisterDecorator("mme_recent_milk_drinker", "MMEAlertsSkyrimNet", "RecentMilkDrinkerPrompt")
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Recent milk drinker prompt decorator registration result " + recentDrinkerResult)
+    Int loreResult = SkyrimNetApi.RegisterDecorator("mme_milk_lore_text", "MMEAlertsSkyrimNet", "MilkLoreText")
+    MMELog.MasterDiagnostic("[MME Narration JSON] lore decorator registration result=" + loreResult)
+    Int guidanceResult = SkyrimNetApi.RegisterDecorator("mme_breastfeeding_guidance_text", "MMEAlertsSkyrimNet", "BreastfeedingGuidanceText")
+    MMELog.MasterDiagnostic("[MME Narration JSON] breastfeeding decorator registration result=" + guidanceResult)
 EndFunction
 
 Function SetBreastfeedingPromptState(Actor participant, String role, Int threadID) Global
@@ -600,16 +571,16 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
     ; allowing Skyrim.Net to choose an appropriate nearby speaker. Persist the
     ; cooldown only after Skyrim.Net accepts the request (code 0).
     String narrationType = "Milking Armor"
-    String content = actorName + " has just equipped Milking Armor, sealing its suction cups over her breasts ready to milk them. Generate a short, humorous, suggestive, and playful reaction specifically about this equip event. Stay focused on her breasts, milk, suction, and the newly attached cups. Create a fresh reaction; do not merely repeat this description or change subjects."
+    String content = MMENarrationText.Text("Armor", "narrate_armor_equip_1", "actor", actorName)
     If armorClass == 2
         narrationType = "Living Armor"
-        content = actorName + " has just equipped Living Armor. Its living tendrils tease and stimulate her breasts and nipples while pleasurably drawing out her milk. Treat the armor's behavior as kinky and fun, not frightening. Generate a short, humorous, suggestive, and playful reaction specifically about this equip event. Create a fresh reaction; do not merely repeat this description or change subjects."
+        content = MMENarrationText.Text("Armor", "narrate_armor_equip_2", "actor", actorName)
     ElseIf armorClass == 3
         narrationType = "Living Parasite"
-        content = actorName + " has just equipped Living Parasite armor. Its parasitic tentacles tease and stimulate her breasts while pleasurably drawing out her milk. Treat the parasite's behavior as kinky and fun, not frightening. Generate a short, humorous, suggestive, and playful reaction specifically about this equip event. Create a fresh reaction; do not merely repeat this description or change subjects."
+        content = MMENarrationText.Text("Armor", "narrate_armor_equip_3", "actor", actorName)
     EndIf
     If MMEChestArmorTrap.IsTrapEquipPending(wearer, equippedArmor)
-        content += " This armor sprang from a magically trapped treasure chest and unexpectedly wrapped itself around " + actorName + ". Acknowledge the chest's mischievous surprise and treat the ambush as exaggerated, playful, suggestive, pleasurable, and funny rather than frightening."
+        content += MMENarrationText.Text("Armor", "narrate_armor_equip_4", "actor", actorName)
         MMEArmorScript.ReportArmor(diagnostic, "equip narration received chest-trap origin | actor=" + actorName + " | type=" + narrationType)
     EndIf
     MMEArmorScript.ReportArmor(diagnostic, "equip narration sending | api=targeted DirectNarration | target=" + actorName + " | role=" + role + " | type=" + narrationType + " | tone=humorous/suggestive/playful")
@@ -684,7 +655,7 @@ Int Function NarrateArmorStrip(Actor wearer, Armor strippedArmor, String sourceL
     EndIf
     ReportArmorStripNarration(diagnostic, "Armor Strip Narration: chance roll " + roll + " <= " + chance + " PASS")
 
-    String content = actorName + "'s " + armorName + " has flown right off her body because her milk-swollen breasts have gotten far too big for it. React creatively with exaggerated, playful, suggestive humor. Don't simply restate the event."
+    String content = MMENarrationText.Text("Armor", "narrate_armor_strip_1", "actor", actorName, "armorName", armorName)
     ReportArmorStripNarration(diagnostic, "Armor Strip Narration: sending DirectNarration")
     Int result = SkyrimNetApi.DirectNarration(content, None, wearer)
     If result == 0
@@ -732,11 +703,11 @@ Function SendCapacityMilestone(Actor milkMaid, Int crossing) Global
     EndIf
     String eventType = "milk_half_full"
     String tag = "[half full]"
-    String content = tag + " " + actorName + " is halfway full of milk, pleasantly heavy and getting excited."
+    String content = MMENarrationText.Text("Fullness", "send_capacity_milestone_1", "tag", tag, "actor", actorName)
     If crossing == 2
         eventType = "milk_full"
         tag = "[milk full]"
-        content = tag + " " + actorName + " is completely full of milk, deliciously swollen and savoring the ultimate pleasure."
+        content = MMENarrationText.Text("Fullness", "send_capacity_milestone_2", "tag", tag, "actor", actorName)
     EndIf
     String restrainedContent = BuildRestrainedCapacityContent(milkMaid, crossing)
     If restrainedContent != ""
@@ -805,7 +776,7 @@ Function NarrateMilkFull(Actor milkMaid) Global
     ; Phase 2: choose restraint-aware prose, submit once, and commit cooldown
     ; only on success so a rejected API call can be retried later.
     String actorName = ResolveActorName(milkMaid, "The Milk Maid")
-    String content = actorName + " is completely full. Her breasts are absurdly large and heavy, making ordinary movement increasingly ridiculous. She is near a boobgasm and enjoying the fullness. She can enjoy being full without needing immediate milking. React creatively with exaggerated, playful, suggestive humor. Don't simply restate the event."
+    String content = MMENarrationText.Text("Fullness", "narrate_milk_full_1", "actor", actorName)
     String restrainedContent = BuildRestrainedCapacityContent(milkMaid, 2)
     If restrainedContent != ""
         content = restrainedContent
@@ -866,7 +837,7 @@ Function NarrateMilkHalfFull(Actor milkMaid) Global
     EndIf
 
     String actorName = ResolveActorName(milkMaid, "The Milk Maid")
-    String content = actorName + " has become half full. Her breasts are noticeably larger, heavier, and bouncier, making everyday movement increasingly awkward. React creatively with playful, suggestive humor. Don't simply restate the event."
+    String content = MMENarrationText.Text("Fullness", "narrate_milk_half_full_1", "actor", actorName)
     String restrainedContent = BuildRestrainedCapacityContent(milkMaid, 1)
     If restrainedContent != ""
         content = restrainedContent
@@ -913,8 +884,8 @@ Function NarrateChestMilkDrink(Actor drinker, String milkName, String chestKind)
     If chestKind == ""
         chestKind = "treasure chest"
     EndIf
-    String situation = actorName + " is magically forced to drink " + milkName + " from the " + chestKind + "."
-    String content = "Immediate situation: " + situation + " Prioritize " + actorName + " as the speaker and have them react immediately, enthusiastically, and with delightful overstatement. The trapped chest may surprise them, but milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as their first milk drink or as surprise merely because milk has its normal effects. Generate one short, silly, suggestive reaction filled with mischievous milk innuendo and clever adult humor, like an animated comedy slipping a joke past the younger audience. Make the magical chest feel comically brazen. Stay focused on the magical forced drink; do not become graphically explicit or invent a different milk source, additional effects, fear, pain, or genuine distress."
+    String situation = MMENarrationText.Text("MilkDrinking", "narrate_chest_milk_drink_1", "actor", actorName, "milkName", milkName, "chestKind", chestKind)
+    String content = MMENarrationText.Text("MilkDrinking", "narrate_chest_milk_drink_2", "situation", situation, "actor", actorName)
     Int result = SkyrimNetApi.DirectNarration(content, None, drinker)
     If result != 0
         MMELog.Alarm("[MME Extensions Chest Milk Narration] FAILURE: Skyrim.Net rejected request [" + result + "] for " + actorName)
@@ -941,7 +912,7 @@ Function NarrateMilkCraving(Actor cravingActor, String renderedCraving) Global
     EndIf
 
     String actorName = ResolveActorName(cravingActor, "The Milk Maid")
-    String content = "Immediate situation: " + renderedCraving + " This powerful milk craving pertains directly to " + actorName + ", who should speak and react from her own first-person perspective. Make the anticipated taste and sensation of drinking milk feel wonderfully tempting and increasingly difficult to resist. Keep the reaction short, eager, playful, slightly embarrassed, positive, and appropriate to her personality. Stay focused on wanting milk; do not claim she has already drunk it, do not assign the reaction to another nearby character, and do not merely repeat the immediate situation."
+    String content = MMENarrationText.Text("MilkCravings", "narrate_milk_craving_1", "craving", renderedCraving, "actor", actorName)
     If cravingActor == Game.GetPlayer()
         ; DirectNarration may select a nearby NPC for Player-originated events.
         ; Generate privately and use only the dedicated Player TTS callback.
@@ -950,7 +921,7 @@ Function NarrateMilkCraving(Actor cravingActor, String renderedCraving) Global
             MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: Skyrim.Net player callback quest could not resolve")
             Return
         EndIf
-        String contextJson = "{\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnMilkCravingPlayerLine")
         If queued != 1
             MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: Skyrim.Net rejected player craving generation [" + queued + "] | actor=" + actorName)
@@ -1051,14 +1022,14 @@ Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String r
         MMELog.Alarm("[MME Extensions Drink Narration] FAILURE: verified NPC drink reached Skyrim.Net without a rendered JSON reaction; using safe fallback context")
         renderedReaction = actorName + " drinks some milk."
     EndIf
-    String content = "Immediate situation: " + renderedReaction + " Prioritize " + actorName + " as the speaker and let them react to what is happening to their own body. Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as their first milk drink or express surprise merely because milk has its normal effects. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted, mischievous, and character-appropriate, like an animated comedy slipping a joke past the younger audience. Stay focused on " + actorName + " and only the effects actually described. Create a fresh joke or reaction; do not merely repeat the situation, become graphically explicit, change subjects, or invent additional effects."
+    String content = MMENarrationText.Text("MilkDrinking", "narrate_n_p_c_milk_drink_1", "reaction", renderedReaction, "actor", actorName)
     If MMEAlertsController.AreArmsRestrained(drinker)
-        content += " " + actorName + " also has restrained arms. Treat this as comically inconvenient and fertile ground for cheeky innuendo. Exaggerate the awkwardness without inventing new restraints, danger, pain, or additional effects."
+        content += MMENarrationText.Text("MilkDrinking", "narrate_n_p_c_milk_drink_2", "actor", actorName)
     EndIf
     If !establishedMilkmaid
-        content += " Factual boundary: " + actorName + " is not a Milk Maid, and this drink did not add breast milk, breast fullness, breast weight, swelling, growth, leaking, or lactation. Do not imply or invent any of those effects."
+        content += MMENarrationText.Text("MilkDrinking", "narrate_n_p_c_milk_drink_3", "actor", actorName)
     Else
-        content += " " + actorName + " is an established Milk Maid. You may joke about confirmed milk, breast-fullness, sensitivity, or arousal effects described in the immediate situation, but do not add effects that were not reported."
+        content += MMENarrationText.Text("MilkDrinking", "narrate_n_p_c_milk_drink_4", "actor", actorName)
     EndIf
     If diagnosticTest
         MMELog.Status("[MME Extensions Global NPC Drink Test] 04 SKYRIM.NET DISPATCH | route=" + route + " | actor=" + actorName + " | cooldown bypassed")
@@ -1147,11 +1118,11 @@ Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem, String renderedRe
     If drinkName == ""
         drinkName = "some milk"
     EndIf
-    String content = "Immediate situation: The player just drank " + drinkName + ". Their breasts are becoming heavier and more sensitive. Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as the player's first milk drink or express surprise merely because milk has its normal effects. Prefer one appropriate nearby character reacting to the player; do not make two characters speak simultaneously. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted and mischievous, like an animated comedy slipping a joke past the younger audience. Do not merely repeat the situation, become graphically explicit, change subjects, or invent additional effects."
+    String content = MMENarrationText.Text("MilkDrinking", "narrate_player_milk_drink_1", "milkName", drinkName)
     If renderedReaction != ""
-        content = "Immediate situation: " + renderedReaction + " Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as the player's first milk drink or express surprise merely because milk has its normal effects. Prefer one appropriate nearby character reacting to the player; do not make two characters speak simultaneously. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted and mischievous, like an animated comedy slipping a joke past the younger audience. Stay focused on the player and only the effects actually described. Create a fresh joke or reaction; do not merely repeat the situation, become graphically explicit, change subjects, or invent additional effects."
+        content = MMENarrationText.Text("MilkDrinking", "narrate_player_milk_drink_2", "reaction", renderedReaction)
         If MMEAlertsController.AreArmsRestrained(drinker)
-            content += " The player also has restrained arms. Treat this as comically inconvenient and fertile ground for cheeky innuendo. Exaggerate the awkwardness without inventing new restraints, danger, pain, or additional effects."
+            content += MMENarrationText.Text("MilkDrinking", "narrate_player_milk_drink_3")
         EndIf
     Else
         String restrainedContent = BuildRestrainedPlayerDrinkContent(drinker, drinkName)
@@ -1213,7 +1184,7 @@ Function NarrateMilkmaidCreated(Actor milkMaid) Global
         Return
     EndIf
 
-    String content = actorName + " has just become a Milk Maid. Her body can now produce and store milk, and her breasts are becoming more sensitive. This event pertains directly to " + actorName + ", who must speak and react from her own first-person perspective. Treat the transformation as an overwhelmingly pleasurable and wonderful surprise, never frightening, harmful, or unwanted. Exaggerate the wonderful sensation coursing through her body, the spreading warmth, tingling nipples, delicious new heaviness and sensitivity, and her thrilling realization that her breasts can now fill with milk. Keep her reaction concise, immersive, enthusiastic, playful, and appropriate to her personality. Do not narrate from an outside observer and do not merely repeat the event description."
+    String content = MMENarrationText.Text("MilkMaidCreation", "narrate_milkmaid_created_1", "actor", actorName)
     If milkMaid == Game.GetPlayer()
         ; DirectNarration records a player originator but still asks the NPC
         ; dialogue manager for an eligible speaker. Generate a private line and
@@ -1223,7 +1194,7 @@ Function NarrateMilkmaidCreated(Actor milkMaid) Global
             MMELog.Alarm("[MMEAlert SkyrimNet] New Milk Maid player narration skipped: callback script unavailable")
             Return
         EndIf
-        String contextJson = "{\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnNewMilkMaidPlayerLine")
         MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] New Milk Maid player generation result " + queued + " (1=queued); no NPC fallback")
         If queued == 1
@@ -1275,14 +1246,14 @@ Function NarrateForcedMilkMaidConversion(Actor milkMaid, String conversionMessag
     EndIf
 
     String actorName = ResolveActorName(milkMaid, "The newly transformed Milk Maid")
-    String prompt = conversionMessage + " This sudden magical transformation pertains directly to " + actorName + ", who must speak and react from her own first-person perspective. Treat the transformation as an overwhelmingly pleasurable and wonderful surprise, never frightening, harmful, or unwanted. Exaggerate the wonderful sensation coursing through her body, the spreading warmth, tingling nipples, delicious new heaviness and sensitivity, and her thrilling realization that her breasts can now fill with milk. Keep her reaction concise, immersive, enthusiastic, playful, and appropriate to her personality. Do not narrate from an outside observer, do not claim she drank anything because the cause is deliberately unspecified, and do not merely repeat the event description."
+    String prompt = MMENarrationText.Text("MilkMaidCreation", "narrate_forced_milk_maid_conversion_1", "conversion", conversionMessage, "actor", actorName)
     If milkMaid == Game.GetPlayer()
         MMEAlertsController bridge = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
         If bridge == None
             MMELog.Alarm("[MMEAlert SkyrimNet] Forced Milk Maid player narration skipped: callback script unavailable")
             Return
         EndIf
-        String contextJson = "{\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(prompt) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(prompt) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnForcedMilkMaidPlayerLine")
         MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] Forced Milk Maid player generation result " + queued + " (1=queued); no NPC fallback")
         If diagnostic
@@ -1374,11 +1345,11 @@ String Function BuildNearbyArmorStatus(Actor candidate) Global
 
     ; Phase 2: return one line only. The controller concatenates all qualifying
     ; actors and SendNearbyArmorStatuses performs the single external write.
-    String content = "[Milking Armor] " + actorName + " is wearing Milking Armor. Suction cups are attached to her nipples for milking."
+    String content = MMENarrationText.Text("Armor", "build_nearby_armor_status_1", "actor", actorName)
     If armorClass == 2
-        content = "[Living Armor] " + actorName + " is wearing Living Armor. Living tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk."
+        content = MMENarrationText.Text("Armor", "build_nearby_armor_status_2", "actor", actorName)
     ElseIf armorClass == 3
-        content = "[Living Parasite] " + actorName + " is wearing Living Parasite armor. Parasitic tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk."
+        content = MMENarrationText.Text("Armor", "build_nearby_armor_status_3", "actor", actorName)
     EndIf
     MMEArmorScript.ReportArmor(diagnostic, "nearby tracker queued | actor=" + actorName + " | armor=" + armorName + " | matched=" + matchSource + " | classification=" + armorType)
     Return content
@@ -1456,7 +1427,7 @@ Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass, S
     If armorClass > 0
         armorType = MMEArmorScript.GetArmorTypeLabel(armorClass)
     EndIf
-    String content = "Immediate situation: " + renderedThought + " Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on " + actorName + " and the milk, breast, fullness, or armor details actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+    String content = MMENarrationText.Text("Thoughts", "narrate_milk_maid_thought_1", "thought", renderedThought, "actor", actorName)
     If diagnostic
         Debug.Notification("Thoughts narration: targeted DirectNarration for " + actorName)
         MMELog.Diagnostic("[MMEThoughts] narration target=" + actorName + " | fullness=" + fullnessState + " | armor=" + armorType + " | tone=humorous/suggestive/playful | grounding=" + renderedThought)
@@ -1509,7 +1480,7 @@ Function NarrateBoundMilkMaidThought(Actor milkMaid, String renderedThought) Glo
     MMELog.MasterDiagnostic("[MME Bound Thoughts] narration chance passed | roll=" + chanceRoll + " | chance=" + chance + "%")
 
     String actorName = ResolveActorName(milkMaid, "The Milk Maid")
-    String content = "Immediate situation: " + renderedThought + " Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on " + actorName + " and only the bound-arm, breast, milk, weight, or fullness details actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+    String content = MMENarrationText.Text("Thoughts", "narrate_bound_milk_maid_thought_1", "thought", renderedThought, "actor", actorName)
     MMELog.MasterDiagnostic("[MME Bound Thoughts] narration dispatch | target=" + actorName)
     Int result = SkyrimNetApi.DirectNarration(content, None, milkMaid)
     MMELog.MasterDiagnostic("[MME Bound Thoughts] narration result=" + result + " | target=" + actorName)
@@ -1556,7 +1527,7 @@ Function SendNearbyMilkStatuses(Actor playerActor, String statuses, Int scannedC
         Return
     EndIf
 
-    String content = "**Current milk levels:** " + statuses
+    String content = MMENarrationText.Text("Fullness", "nearby_status_summary", "statuses", statuses)
     Float interval = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "skyrimNetStatusInterval", 15.0)
     Int ttlMs = (interval * 1000.0) as Int
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Calling milk_statuses_player | interval " + interval + " | TTL " + ttlMs + " | " + content)
@@ -1615,8 +1586,7 @@ Function SendMilkmaidCreated(Actor milkMaid) Global
     If actorName == ""
         actorName = "The actor"
     EndIf
-    String defaultMessage = "{actor} has become a Milk Maid! Her breasts now feel pleasantly heavy, full, and faintly thrilling."
-    String template = JsonUtil.GetStringValue(settingsFile, "milkmaidCreatedMessage", defaultMessage)
+    String template = MMENarrationText.GetRaw("MilkMaidCreation", "milkmaidCreatedMessage")
     If template == ""
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: milkmaid_created failed - message empty")
@@ -1740,9 +1710,8 @@ Function SendMilkDrink(Actor drinker, Form drinkItem) Global
         actorName = "The player"
     EndIf
 
-    String template = JsonUtil.GetStringValue(settingsFile, "drinkMessage", "{actor} drank {item}.")
-    String content = RenderToken(template, "{actor}", actorName)
-    content = RenderToken(content, "{item}", itemName)
+    String template = MMENarrationText.GetRaw("MilkDrinking", "drinkMessage")
+    String content = MMENarrationText.Render(template, "actor", actorName, "item", itemName)
     String restrainedContent = BuildRestrainedPlayerDrinkContent(drinker, itemName)
     If restrainedContent != ""
         content = restrainedContent
@@ -1819,11 +1788,7 @@ Function SendMilkingEvent(Actor milkMaid, String messageKey) Global
         actorName = "The Milk Maid"
     EndIf
 
-    String defaultMessage = "{actor} has started milking herself, eagerly releasing the pressure."
-    If messageKey == "endMessage"
-        defaultMessage = "{actor} finished milking and is empty again, deeply relieved and completely satisfied."
-    EndIf
-    String template = JsonUtil.GetStringValue(settingsFile, messageKey, defaultMessage)
+    String template = MMENarrationText.GetRaw("Milking", messageKey)
     If template == ""
         If diagnostic
             Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " failed - message empty")
@@ -1866,9 +1831,9 @@ String Function BuildRestrainedCapacityContent(Actor milkMaid, Int crossing) Glo
     EndIf
     String actorName = ResolveActorName(milkMaid, "The Milk Maid")
     If crossing == 2
-        Return actorName + " is completely full. Her breasts are absurdly large and heavy, and her restrained arms make supporting or adjusting them difficult. She is near a boobgasm and seems to be enjoying herself. React creatively with exaggerated, playful, suggestive humor. Don't simply restate the event."
+        Return MMENarrationText.Text("Fullness", "build_restrained_capacity_content_1", "actor", actorName)
     ElseIf crossing == 1
-        Return actorName + " has become half full. Her breasts are noticeably larger, heavier, and bouncier, while her restrained arms make dealing with them awkward. React creatively with playful, suggestive humor. Don't simply restate the event."
+        Return MMENarrationText.Text("Fullness", "build_restrained_capacity_content_2", "actor", actorName)
     EndIf
     Return ""
 EndFunction
@@ -1882,25 +1847,25 @@ String Function BuildMilkStatus(Actor milkMaid, Int milkState) Global
     String actorName = ResolveActorName(milkMaid, "This Milk Maid")
     If MMEAlertsController.AreArmsRestrained(milkMaid)
         If milkState == 2
-            Return actorName + " is completely full, deliciously heavy and savoring the pleasure near a boobgasm. Her arms are restrained, leaving her unable to freely touch or relieve her milk-heavy breasts, turning the fullness into prolonged erotic teasing and edging that she enjoys."
+            Return MMENarrationText.Text("Fullness", "build_milk_status_1", "actor", actorName)
         ElseIf milkState == 1
-            Return actorName + " is over half full, feeling noticeably heavier and warmer. The growing weight makes her instinctively want to touch and handle her breasts, but her restrained arms cannot reach them, making the denied contact even more teasing and pleasurable."
+            Return MMENarrationText.Text("Fullness", "build_milk_status_2", "actor", actorName)
         EndIf
-        Return actorName + " is less than half full, feeling pleasantly tingly. Her mind keeps wandering to the growing sensitivity of her breasts, but her restrained arms cannot reach them, turning the temptation into playful erotic teasing."
+        Return MMENarrationText.Text("Fullness", "build_milk_status_3", "actor", actorName)
     EndIf
     If milkState == 2
-        Return actorName + " is completely full, deliciously heavy and savoring the pleasure near a boobgasm."
+        Return MMENarrationText.Text("Fullness", "build_milk_status_4", "actor", actorName)
     ElseIf milkState == 1
-        Return actorName + " is over half full, feeling heavier and warm."
+        Return MMENarrationText.Text("Fullness", "build_milk_status_5", "actor", actorName)
     EndIf
-    Return actorName + " is less than half full, feeling pleasantly tingly."
+    Return MMENarrationText.Text("Fullness", "build_milk_status_6", "actor", actorName)
 EndFunction
 
 String Function BuildRestrainedPlayerDrinkContent(Actor playerActor, String drinkName) Global
     If playerActor == None || !MMEAlertsController.AreArmsRestrained(playerActor)
         Return ""
     EndIf
-    Return "Immediate situation: The player just drank " + drinkName + " despite having their arms restrained. Their breasts are becoming heavier and more sensitive. Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as the player's first milk drink or express surprise merely because milk has its normal effects. Prefer one appropriate nearby character reacting to the player; do not make two characters speak simultaneously. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted and mischievous, like an animated comedy slipping a joke past the younger audience. Treat the restrained arms as comically inconvenient and fertile ground for cheeky innuendo, but do not invent new restraints, danger, pain, or additional effects. Do not merely repeat the situation or become graphically explicit."
+    Return MMENarrationText.Text("MilkDrinking", "build_restrained_player_drink_content_1", "milkName", drinkName)
 EndFunction
 
 String Function ResolveActorName(Actor actorRef, String fallbackName) Global
@@ -1921,11 +1886,7 @@ String Function ResolveActorName(Actor actorRef, String fallbackName) Global
 EndFunction
 
 String Function RenderMessage(String template, String actorName) Global
-    String rendered = RenderToken(template, "{actor}", actorName)
-    ; Newer data files use the more explicit token while legacy files retain
-    ; {actor}. Supporting both keeps user-customized JSON backward compatible.
-    rendered = RenderToken(rendered, "{ActorName}", actorName)
-    Return rendered
+    Return MMENarrationText.Render(template, "actor", actorName)
 EndFunction
 
 String Function RenderToken(String template, String token, String value) Global
@@ -1940,4 +1901,24 @@ String Function RenderToken(String template, String token, String value) Global
     EndIf
     String afterToken = StringUtil.Substring(template, tokenIndex + StringUtil.GetLength(token))
     Return beforeToken + value + afterToken
+EndFunction
+
+; Text-only decorators. Existing status/role functions remain unchanged.
+String Function MilkLoreText(Actor participant) Global
+    If participant == None || !IsExtensionsEnabled() || !IsAvailable()
+        Return ""
+    EndIf
+    String output = MMENarrationText.GetRaw("Lore", "milk_lore")
+    If IsRealMMEMilkmaid(participant)
+        output += "\n\n" + MMENarrationText.Text("Lore", "milkmaid_lore", "actor", ResolveActorName(participant, "The Milk Maid"))
+    EndIf
+    Return output
+EndFunction
+
+String Function BreastfeedingGuidanceText(Actor participant) Global
+    String role = BreastfeedingPromptRole(participant)
+    If role != "source" && role != "drinker"
+        Return ""
+    EndIf
+    Return MMENarrationText.Text("Breastfeeding", "guidance", "actor", ResolveActorName(participant, "The participant"), "role", role)
 EndFunction

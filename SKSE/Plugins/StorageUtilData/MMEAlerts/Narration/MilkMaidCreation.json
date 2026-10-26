@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "narrate_milkmaid_created_1": {
+      "template": "{actor} has just become a Milk Maid. Her body can now produce and store milk, and her breasts are becoming more sensitive. This event pertains directly to {actor}, who must speak and react from her own first-person perspective. Treat the transformation as an overwhelmingly pleasurable and wonderful surprise, never frightening, harmful, or unwanted. Exaggerate the wonderful sensation coursing through her body, the spreading warmth, tingling nipples, delicious new heaviness and sensitivity, and her thrilling realization that her breasts can now fill with milk. Keep her reaction concise, immersive, enthusiastic, playful, and appropriate to her personality. Do not narrate from an outside observer and do not merely repeat the event description."
+    },
+    "narrate_forced_milk_maid_conversion_1": {
+      "template": "{conversion} This sudden magical transformation pertains directly to {actor}, who must speak and react from her own first-person perspective. Treat the transformation as an overwhelmingly pleasurable and wonderful surprise, never frightening, harmful, or unwanted. Exaggerate the wonderful sensation coursing through her body, the spreading warmth, tingling nipples, delicious new heaviness and sensitivity, and her thrilling realization that her breasts can now fill with milk. Keep her reaction concise, immersive, enthusiastic, playful, and appropriate to her personality. Do not narrate from an outside observer, do not claim she drank anything because the cause is deliberately unspecified, and do not merely repeat the event description."
+    },
+    "milkmaidCreatedMessage": {
+      "template": "{actor} has become a Milk Maid! Her breasts now feel pleasantly heavy, full, and faintly thrilling."
+    }
+  }
+}

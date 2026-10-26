@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "player_instructions": {
+      "template": "Write a brief, non-graphic spoken self-comment for {actor}.\nThe speaker is the person experiencing the supplied situation, not an observer.\nReturn only one plain-text first-person line. No speaker labels, stage directions,\ndialogue partners, markup, or replies from other people. Do not invent effects."
+    }
+  }
+}

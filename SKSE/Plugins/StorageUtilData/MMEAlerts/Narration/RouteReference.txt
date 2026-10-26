@@ -1,0 +1,98 @@
+NARRATION ROUTES AND PLACEHOLDERS
+
+Armor.json
+  narrate_armor_equip_1: {actor}
+  narrate_armor_equip_2: {actor}
+  narrate_armor_equip_3: {actor}
+  narrate_armor_equip_4: {actor}
+  narrate_armor_strip_1: {actor}, {armorName}
+  build_nearby_armor_status_1: {actor}
+  build_nearby_armor_status_2: {actor}
+  build_nearby_armor_status_3: {actor}
+
+Breastfeeding.json
+  guidance: {actor}, {role}
+
+Common.json
+  player_instructions: {actor}
+
+DwemerArmor.json
+  narrate_dwemer_effect_1: (no placeholders)
+  build_dwemer_suit_prompt_1: {actor}, {core}, {event}, {profile}
+  get_dwemer_profile_fallback_1: (no placeholders)
+  get_dwemer_profile_fallback_2: (no placeholders)
+  get_dwemer_event_fallback_1: (no placeholders)
+  get_dwemer_event_fallback_2: (no placeholders)
+  get_dwemer_event_fallback_3: (no placeholders)
+  get_dwemer_event_fallback_4: (no placeholders)
+  get_dwemer_event_fallback_5: (no placeholders)
+  build_dwemer_effect_narration_1: {actor}, {content}
+  effects_arousal: {actor}
+  effects_milk: {actor}
+  effects_milkAndArousal: {actor}
+  suit_core: (no placeholders)
+  suit_firstEquip: (no placeholders)
+  suit_reequip: (no placeholders)
+  suit_milkingStart: (no placeholders)
+  suit_milkingEnd: (no placeholders)
+  attachment_core: (no placeholders)
+  attachment_firstEquip: (no placeholders)
+  attachment_reequip: (no placeholders)
+  attachment_milkingStart: (no placeholders)
+  attachment_milkingEnd: (no placeholders)
+
+Fullness.json
+  send_capacity_milestone_1: {actor}, {tag}
+  send_capacity_milestone_2: {actor}, {tag}
+  narrate_milk_full_1: {actor}
+  narrate_milk_half_full_1: {actor}
+  build_restrained_capacity_content_1: {actor}
+  build_restrained_capacity_content_2: {actor}
+  build_milk_status_1: {actor}
+  build_milk_status_2: {actor}
+  build_milk_status_3: {actor}
+  build_milk_status_4: {actor}
+  build_milk_status_5: {actor}
+  build_milk_status_6: {actor}
+  nearby_status_summary: {statuses}
+
+Lore.json
+  milk_lore: (no placeholders)
+  milkmaid_lore: {actor}
+
+MilkCravings.json
+  narrate_milk_craving_1: {actor}, {craving}
+
+MilkDrinking.json
+  narrate_chest_milk_drink_1: {actor}, {chestKind}, {milkName}
+  narrate_chest_milk_drink_2: {actor}, {situation}
+  narrate_n_p_c_milk_drink_1: {actor}, {reaction}
+  narrate_n_p_c_milk_drink_2: {actor}
+  narrate_n_p_c_milk_drink_3: {actor}
+  narrate_n_p_c_milk_drink_4: {actor}
+  narrate_player_milk_drink_1: {milkName}
+  narrate_player_milk_drink_2: {reaction}
+  narrate_player_milk_drink_3: (no placeholders)
+  build_restrained_player_drink_content_1: {milkName}
+  drinkMessage: {actor}, {item}
+
+Milking.json
+  startMessage: {actor}
+  endMessage: {actor}
+
+MilkMaidCreation.json
+  narrate_milkmaid_created_1: {actor}
+  narrate_forced_milk_maid_conversion_1: {actor}, {conversion}
+  milkmaidCreatedMessage: {actor}
+
+TentacleArmor.json
+  narrate_tentacle_effect_1: (no placeholders)
+  build_tentacle_effect_narration_1: {actor}, {content}
+  effects_arousal: {actor}
+  effects_milk: {actor}
+  effects_milkAndArousal: {actor}
+
+Thoughts.json
+  narrate_milk_maid_thought_1: {actor}, {thought}
+  narrate_bound_milk_maid_thought_1: {actor}, {thought}
+

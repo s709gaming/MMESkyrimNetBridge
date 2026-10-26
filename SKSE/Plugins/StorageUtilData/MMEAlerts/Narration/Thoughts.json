@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "narrate_milk_maid_thought_1": {
+      "template": "Immediate situation: {thought} Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on {actor} and the milk, breast, fullness, or armor details actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+    },
+    "narrate_bound_milk_maid_thought_1": {
+      "template": "Immediate situation: {thought} Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on {actor} and only the bound-arm, breast, milk, weight, or fullness details actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+    }
+  }
+}

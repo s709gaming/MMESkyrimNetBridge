@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "narrate_milk_craving_1": {
+      "template": "Immediate situation: {craving} This powerful milk craving pertains directly to {actor}, who should speak and react from her own first-person perspective. Make the anticipated taste and sensation of drinking milk feel wonderfully tempting and increasingly difficult to resist. Keep the reaction short, eager, playful, slightly embarrassed, positive, and appropriate to her personality. Stay focused on wanting milk; do not claim she has already drunk it, do not assign the reaction to another nearby character, and do not merely repeat the immediate situation."
+    }
+  }
+}

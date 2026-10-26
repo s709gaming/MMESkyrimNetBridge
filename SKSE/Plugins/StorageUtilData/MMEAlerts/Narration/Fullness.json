@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "send_capacity_milestone_1": {
+      "template": "{tag} {actor} is halfway full of milk, pleasantly heavy and getting excited."
+    },
+    "send_capacity_milestone_2": {
+      "template": "{tag} {actor} is completely full of milk, deliciously swollen and savoring the ultimate pleasure."
+    },
+    "narrate_milk_full_1": {
+      "template": "{actor} is completely full. Her breasts are absurdly large and heavy, making ordinary movement increasingly ridiculous. She is near a boobgasm and enjoying the fullness. She can enjoy being full without needing immediate milking. React creatively with exaggerated, playful, suggestive humor. Don't simply restate the event."
+    },
+    "narrate_milk_half_full_1": {
+      "template": "{actor} has become half full. Her breasts are noticeably larger, heavier, and bouncier, making everyday movement increasingly awkward. React creatively with playful, suggestive humor. Don't simply restate the event."
+    },
+    "build_restrained_capacity_content_1": {
+      "template": "{actor} is completely full. Her breasts are absurdly large and heavy, and her restrained arms make supporting or adjusting them difficult. She is near a boobgasm and seems to be enjoying herself. React creatively with exaggerated, playful, suggestive humor. Don't simply restate the event."
+    },
+    "build_restrained_capacity_content_2": {
+      "template": "{actor} has become half full. Her breasts are noticeably larger, heavier, and bouncier, while her restrained arms make dealing with them awkward. React creatively with playful, suggestive humor. Don't simply restate the event."
+    },
+    "build_milk_status_1": {
+      "template": "{actor} is completely full, deliciously heavy and savoring the pleasure near a boobgasm. Her arms are restrained, leaving her unable to freely touch or relieve her milk-heavy breasts, turning the fullness into prolonged erotic teasing and edging that she enjoys."
+    },
+    "build_milk_status_2": {
+      "template": "{actor} is over half full, feeling noticeably heavier and warmer. The growing weight makes her instinctively want to touch and handle her breasts, but her restrained arms cannot reach them, making the denied contact even more teasing and pleasurable."
+    },
+    "build_milk_status_3": {
+      "template": "{actor} is less than half full, feeling pleasantly tingly. Her mind keeps wandering to the growing sensitivity of her breasts, but her restrained arms cannot reach them, turning the temptation into playful erotic teasing."
+    },
+    "build_milk_status_4": {
+      "template": "{actor} is completely full, deliciously heavy and savoring the pleasure near a boobgasm."
+    },
+    "build_milk_status_5": {
+      "template": "{actor} is over half full, feeling heavier and warm."
+    },
+    "build_milk_status_6": {
+      "template": "{actor} is less than half full, feeling pleasantly tingly."
+    },
+    "nearby_status_summary": {
+      "template": "**Current milk levels:** {statuses}"
+    }
+  }
+}

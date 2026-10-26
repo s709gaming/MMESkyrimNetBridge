@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "startMessage": {
+      "template": "{actor} has started milking herself, eagerly releasing the pressure."
+    },
+    "endMessage": {
+      "template": "{actor} finished milking and is empty again, deeply relieved and completely satisfied."
+    }
+  }
+}

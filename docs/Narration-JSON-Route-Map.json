@@ -1,0 +1,475 @@
+{
+  "scope": "player-editable narration/content; no action execution or settings migration",
+  "installed_folder": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration",
+  "files": {
+    "Common.json": [],
+    "MilkDrinking.json": [
+      "NarrateNPCMilkDrink",
+      "NarratePlayerMilkDrink",
+      "NarrateChestMilkDrink",
+      "SendMilkDrink"
+    ],
+    "Breastfeeding.json": [],
+    "MilkMaidCreation.json": [
+      "NarrateMilkmaidCreated",
+      "NarrateForcedMilkMaidConversion",
+      "SendMilkmaidCreated"
+    ],
+    "Milking.json": [
+      "SendMilkingEvent"
+    ],
+    "Fullness.json": [
+      "NarrateMilkFull",
+      "NarrateMilkHalfFull",
+      "SendCapacityMilestone",
+      "SendNearbyMilkStatuses"
+    ],
+    "MilkCravings.json": [
+      "NarrateMilkCraving"
+    ],
+    "TentacleArmor.json": [
+      "NarrateTentacleEffect"
+    ],
+    "DwemerArmor.json": [
+      "NarrateDwemerEffect",
+      "NarrateDwemerSuitEvent"
+    ],
+    "Armor.json": [
+      "NarrateArmorEquip",
+      "NarrateArmorStrip",
+      "SendNearbyArmorStatuses"
+    ],
+    "Thoughts.json": [
+      "NarrateMilkMaidThought",
+      "NarrateBoundMilkMaidThought"
+    ],
+    "Lore.json": []
+  },
+  "routes": [
+    {
+      "function": "NarrateTentacleEffect",
+      "line": 21,
+      "api_calls": [
+        "SendCustomPromptToLLM",
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "armorInjectionNarrationChance",
+        "enableArmorInjectionNarration",
+        "enableArmorInjectionPlayerNarration",
+        "enabled"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [
+        "OnTentaclePlayerLine"
+      ],
+      "proposed_file": "TentacleArmor.json"
+    },
+    {
+      "function": "NarrateDwemerEffect",
+      "line": 188,
+      "api_calls": [
+        "SendCustomPromptToLLM",
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "dwemerEffectNarrationChance",
+        "enableDwemerEffectNarration",
+        "enableDwemerEffectPlayerNarration",
+        "enabled"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [
+        "OnDwemerEffectPlayerLine"
+      ],
+      "proposed_file": "DwemerArmor.json"
+    },
+    {
+      "function": "NarrateDwemerSuitEvent",
+      "line": 262,
+      "api_calls": [
+        "SendCustomPromptToLLM",
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "enableDwemerEffectNarration",
+        "enableDwemerEffectPlayerNarration",
+        "enableNPCMilkArmorEquipNarration",
+        "enablePlayerMilkArmorEquipNarration",
+        "enabled"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [
+        "OnDwemerSuitPlayerLine"
+      ],
+      "proposed_file": "DwemerArmor.json"
+    },
+    {
+      "function": "NarrateArmorEquip",
+      "line": 537,
+      "api_calls": [
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "enableNPCMilkArmorEquipNarration",
+        "enablePlayerMilkArmorEquipNarration",
+        "enabled",
+        "lastNPCMilkingArmorNarrationRealTime",
+        "lastPlayerMilkingArmorNarrationRealTime",
+        "npcMilkingArmorNarrationCooldown",
+        "playerMilkingArmorNarrationCooldown"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [],
+      "proposed_file": "Armor.json"
+    },
+    {
+      "function": "NarrateArmorStrip",
+      "line": 631,
+      "api_calls": [
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "armorStripNarrationChance",
+        "armorStripNarrationCooldown",
+        "enableArmorStripNarration",
+        "enableArmorStripNarrationDiagnostic",
+        "enabled",
+        "lastArmorStripNarrationRealTime"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [],
+      "proposed_file": "Armor.json"
+    },
+    {
+      "function": "SendCapacityMilestone",
+      "line": 711,
+      "api_calls": [
+        "GetEntityUUID",
+        "RegisterShortLivedEvent"
+      ],
+      "settings_keys": [
+        "capacityMilestoneTtlMs",
+        "enableSkyrimNetMilkStatuses",
+        "enableSkyrimNetStatusDiagnostic",
+        "enabled"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [],
+      "proposed_file": "Fullness.json"
+    },
+    {
+      "function": "NarrateMilkFull",
+      "line": 766,
+      "api_calls": [
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "enableMilkFullNarration",
+        "enableMilkFullNarrationDiagnostic",
+        "lastMilkFullNarrationRealTime",
+        "milkFullNarrationCooldown"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings"
+      ],
+      "callback_names": [],
+      "proposed_file": "Fullness.json"
+    },
+    {
+      "function": "NarrateMilkHalfFull",
+      "line": 832,
+      "api_calls": [
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "enableMilkHalfFullNarration",
+        "enableMilkHalfFullNarrationDiagnostic",
+        "lastMilkHalfFullNarrationRealTime",
+        "milkHalfFullNarrationCooldown"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings"
+      ],
+      "callback_names": [],
+      "proposed_file": "Fullness.json"
+    },
+    {
+      "function": "NarrateChestMilkDrink",
+      "line": 896,
+      "api_calls": [
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "enableChestMilkTrapNarration"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings"
+      ],
+      "callback_names": [],
+      "proposed_file": "MilkDrinking.json"
+    },
+    {
+      "function": "NarrateMilkCraving",
+      "line": 928,
+      "api_calls": [
+        "SendCustomPromptToLLM",
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "enableMilkCravingNarration",
+        "enabled"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [
+        "OnMilkCravingPlayerLine"
+      ],
+      "proposed_file": "MilkCravings.json"
+    },
+    {
+      "function": "NarrateNPCMilkDrink",
+      "line": 993,
+      "api_calls": [
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "enableNPCDrinkNarration",
+        "enableNPCDrinkNarrationDiagnostic",
+        "lastNPCDrinkNarrationRealTime",
+        "npcDrinkNarrationCooldown"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings"
+      ],
+      "callback_names": [],
+      "proposed_file": "MilkDrinking.json"
+    },
+    {
+      "function": "NarratePlayerMilkDrink",
+      "line": 1093,
+      "api_calls": [
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "enablePlayerDrinkNarration",
+        "enablePlayerDrinkNarrationDiagnostic",
+        "lastPlayerDrinkNarrationRealTime",
+        "playerDrinkNarrationChance",
+        "playerDrinkNarrationCooldown"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings"
+      ],
+      "callback_names": [],
+      "proposed_file": "MilkDrinking.json"
+    },
+    {
+      "function": "NarrateMilkmaidCreated",
+      "line": 1176,
+      "api_calls": [
+        "SendCustomPromptToLLM",
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "enableMilkmaidCreatedNarration",
+        "enableMilkmaidCreatedNarrationDiagnostic",
+        "lastMilkmaidCreatedNarrationRealTime",
+        "milkmaidCreatedNarrationCooldown"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings"
+      ],
+      "callback_names": [
+        "OnNewMilkMaidPlayerLine"
+      ],
+      "proposed_file": "MilkMaidCreation.json"
+    },
+    {
+      "function": "NarrateForcedMilkMaidConversion",
+      "line": 1261,
+      "api_calls": [
+        "SendCustomPromptToLLM",
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "enableForcedMilkMaidDiagnostic",
+        "enableForcedMilkMaidNarration",
+        "enabled"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [
+        "OnForcedMilkMaidPlayerLine"
+      ],
+      "proposed_file": "MilkMaidCreation.json"
+    },
+    {
+      "function": "SendNearbyArmorStatuses",
+      "line": 1389,
+      "api_calls": [
+        "RegisterShortLivedEvent"
+      ],
+      "settings_keys": [
+        "enableNearbyMilkArmorStatus",
+        "enabled"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [],
+      "proposed_file": "Armor.json"
+    },
+    {
+      "function": "NarrateMilkMaidThought",
+      "line": 1414,
+      "api_calls": [
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "enableMilkMaidThoughtNarration",
+        "enabled",
+        "lastMilkMaidThoughtNarrationRealTime",
+        "thoughtNarrationCooldownSeconds"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [],
+      "proposed_file": "Thoughts.json"
+    },
+    {
+      "function": "NarrateBoundMilkMaidThought",
+      "line": 1480,
+      "api_calls": [
+        "DirectNarration"
+      ],
+      "settings_keys": [
+        "boundMilkMaidThoughtNarrationChance",
+        "enableBoundMilkMaidThoughtNarration",
+        "enabled"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [],
+      "proposed_file": "Thoughts.json"
+    },
+    {
+      "function": "SendNearbyMilkStatuses",
+      "line": 1520,
+      "api_calls": [
+        "RegisterShortLivedEvent"
+      ],
+      "settings_keys": [
+        "enableSkyrimNetMilkStatuses",
+        "enableSkyrimNetStatusDiagnostic",
+        "enabled"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [],
+      "proposed_file": "Fullness.json"
+    },
+    {
+      "function": "SendMilkmaidCreated",
+      "line": 1578,
+      "api_calls": [
+        "GetEntityUUID",
+        "RegisterEvent"
+      ],
+      "settings_keys": [
+        "enableSkyrimNetCreationDiagnostic",
+        "enableSkyrimNetMilkmaidCreated",
+        "enabled"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [],
+      "proposed_file": "MilkMaidCreation.json"
+    },
+    {
+      "function": "SendMilkDrink",
+      "line": 1703,
+      "api_calls": [
+        "GetBuildVersion",
+        "GetBuildType",
+        "GetEntityUUID",
+        "RegisterShortLivedEvent"
+      ],
+      "settings_keys": [
+        "drinkTtlMs",
+        "enableSkyrimNetDrinkDiagnostic",
+        "enableSkyrimNetMilkDrinks",
+        "enabled"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [],
+      "proposed_file": "MilkDrinking.json"
+    },
+    {
+      "function": "SendMilkingEvent",
+      "line": 1774,
+      "api_calls": [
+        "GetEntityUUID",
+        "RegisterShortLivedEvent"
+      ],
+      "settings_keys": [
+        "enableSkyrimNetMilkingDiagnostic",
+        "enableSkyrimNetMilkingEvents",
+        "enabled",
+        "milkingTtlMs"
+      ],
+      "json_files": [
+        "/MMEAlerts/Settings",
+        "/MMEAlerts/SkyrimNet"
+      ],
+      "callback_names": [],
+      "proposed_file": "Milking.json"
+    }
+  ],
+  "source_sha256": "7b21f0821725388811b720c2735bb2d8fa264d80a0f133937071a0a5ca5babf4",
+  "additional_surfaces": {
+    "Common.json": [
+      "mme_wearer_self_comment.prompt player-generation system instructions"
+    ],
+    "Breastfeeding.json": [
+      "0950_mme_extensions_breastfeeding.prompt editable guidance"
+    ],
+    "Lore.json": [
+      "0260_mme_extensions_milkmaid.prompt editable lore"
+    ]
+  }
+}
