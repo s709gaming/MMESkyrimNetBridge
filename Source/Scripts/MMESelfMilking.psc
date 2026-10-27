@@ -114,3 +114,49 @@ Bool Function StartCompatible(Actor candidate, Bool allowPlayer = True, Bool req
     EndIf
     Return StartExisting(candidate, allowPlayer, requireFull, requireNearby)
 EndFunction
+
+; Manual request: safe dispatch only, never a claim that MME started its scene.
+String Function GetManualBlockReason(Actor candidate) Global
+    If !MMEAlertsController.IsExtensionsEnabled()
+        Return "Extensions disabled"
+    EndIf
+    String blocked = GetInvalidReason(candidate, True, False, True)
+    If blocked != ""
+        Return blocked
+    EndIf
+    If candidate.IsChild() || candidate.IsDeleted()
+        Return "actor unavailable"
+    EndIf
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    blocked = MMEAnimationSafety.GetStartBlockReason(candidate, milkController, True)
+    If blocked != ""
+        Return blocked
+    EndIf
+    If MME_Storage.getMilkCurrent(candidate) <= 0.0
+        Return "no milk available"
+    EndIf
+    Armor wornArmor = candidate.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
+    Int armorClass = MMEArmorScript.ClassifyArmor(milkController, wornArmor, "manual self-milking", candidate)
+    If armorClass == 2 || armorClass == 3 || armorClass == 4
+        Return "special armor owns milking"
+    EndIf
+    Return ""
+EndFunction
+
+Bool Function TryManual(Actor candidate) Global
+    String blocked = GetManualBlockReason(candidate)
+    MMELog.MasterDiagnostic("[MME Extensions Self-Milking API] request | actor=" + candidate + " | reason=" + blocked)
+    If blocked != ""
+        Return False
+    EndIf
+    Float now = Utility.GetCurrentRealTime()
+    Float previous = StorageUtil.GetFloatValue(candidate, "MMEExtensions.ManualMilk.DispatchTime", -10.0)
+    If now >= previous && now - previous < 5.0
+        MMELog.MasterDiagnostic("[MME Extensions Self-Milking API] skip | actor=" + candidate + " | recent dispatch pending")
+        Return False
+    EndIf
+    StorageUtil.SetFloatValue(candidate, "MMEExtensions.ManualMilk.DispatchTime", now)
+    Bool dispatched = StartExisting(candidate, True, False, True)
+    MMELog.MasterDiagnostic("[MME Extensions Self-Milking API] dispatch only | actor=" + candidate + " | accepted=" + dispatched)
+    Return dispatched
+EndFunction

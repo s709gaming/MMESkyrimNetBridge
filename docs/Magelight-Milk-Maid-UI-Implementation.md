@@ -1,4 +1,4 @@
-﻿# Milk Maid Roster implementation
+# Milk Maid Roster implementation
 
 The optional FOMOD choice installs `MME Extensions - Maid Roster.esp` (ESL-flagged),
 its two matching Papyrus source/PEX pairs, and one local page under
@@ -22,9 +22,13 @@ HasFloatValue check would still race its lazy initialization if MME removed the
 field between Papyrus calls. This direct read duplicates no formula and guarantees
 that refresh never invokes that write branch. Unknown capacity displays N/A.
 Unloaded maids retain last stored values; over-capacity numbers remain visible.
-No milk conversion, animation or inventory operation is implemented.
+Refresh remains observational. Actions now delegate to the public API (internal revision 18).
 
-Milk Self is visibly disabled. JSON editing is future scope; no save/write listener
+NPC Give Milk and player Drink honor the Free Jug cheat and prefer owned Lactacid
+only for confirmed Milk Maids. Self Milk dispatches the guarded native MME route;
+MME start/end events confirm actual progress separately. Per-snapshot actor tokens
+prevent stale row targeting. Actions release focus and execute on a single update;
+busy requests and old sessions are rejected. JSON editing is future scope; no save/write listener
 is exposed. The page has Refresh, Close and Escape and assigns names through DOM
 textContent. Rendering validates shape and finite display values, and clamps only
 the visual progress bar. Page rejection reports a deduplicated backend smoke alarm.
@@ -62,9 +66,8 @@ ignored `build/diagnostics/magelight-preflight/`. Mock UI previews and compiler
 probes are not shipped. The distributable remains `dist/MME Extensions.zip`; older
 versioned hotfix ZIPs are not modified.
 
-Not yet tested: an actual Magelight-hosted page, game input/focus, deferred MCM
-handoff, hotkey behavior, game save/load, or host-absent runtime behavior. The host
-was absent from the active MO2 profile and remains uninstalled by this work. Install
-Magelight UI 1.5.0+ separately, select the roster FOMOD component, enable its plugin
-after MMEAlert.esp, restart Skyrim, and run the preflight's live acceptance matrix.
-README, installed mods, MO2 profiles and retained Vortex files are untouched.
+The user installed the baseline roster and supplied an in-game screenshot showing
+Prisoner with 0.0 / 4.0 milk and 0.0% fullness. The new action routes still require
+live player/NPC, inventory, focus, event, host-absent and save/load acceptance tests.
+This work changes repository/package outputs only. README, installed mods, MO2
+profiles and retained Vortex files are untouched.

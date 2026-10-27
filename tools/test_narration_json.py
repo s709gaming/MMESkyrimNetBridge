@@ -26,8 +26,9 @@ class NarrationContracts(unittest.TestCase):
         for row in fixture['promptAndSummary']:
             text=self.data[row['file']]['routes'][row['key']]['template']
             self.assertEqual(hashlib.sha256(text.encode()).hexdigest(),row['sha256'],row['key'])
+        baseline_source=re.sub(r'(?s)Function NarrateMilkMaidCurse\(.*?\nEndFunction','',self.source)
         for name,calls in fixture['nativeCalls'].items():
-            self.assertEqual(re.findall(r'SkyrimNetApi\.'+name+r'\([^\n]*',self.source),calls,name)
+            self.assertEqual(re.findall(r'SkyrimNetApi\.'+name+r'\([^\n]*',baseline_source),calls,name)
     def test_legacy_mappings_and_defaults(self):
         for row in json.loads((ROOT/'tools/narration-legacy-map.json').read_text(encoding='utf-8-sig')):
             old=json.loads((DATA.parent/(row['legacyFile']+'.json')).read_text(encoding='utf-8-sig'))

@@ -1262,6 +1262,49 @@ Function NarrateForcedMilkMaidConversion(Actor milkMaid, String conversionMessag
     EndIf
 EndFunction
 
+Function NarrateMilkMaidCurse(Actor milkMaid, String conversionMessage) Global
+    String settingsFile = "/MMEAlerts/Settings"
+    Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableForcedMilkMaidDiagnostic", 0) == 1
+    If !IsExtensionsEnabled() || milkMaid == None || conversionMessage == ""
+        Return
+    EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enableForcedMilkMaidNarration", 1) != 1
+        Return
+    EndIf
+    If !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
+        If diagnostic
+            MMELog.Diagnostic("[MMEAlert SkyrimNet] forced Milk Maid narration skipped; Skyrim.Net unavailable or disabled")
+        EndIf
+        Return
+    EndIf
+
+    String actorName = ResolveActorName(milkMaid, "The affected Milk Maid")
+    String prompt = MMENarrationText.Text("MilkMaidCreation", "narrate_milk_maid_curse_1", "conversion", conversionMessage, "actor", actorName)
+    If milkMaid == Game.GetPlayer()
+        MMEAlertsController bridge = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+        If bridge == None
+            MMELog.Alarm("[MMEAlert SkyrimNet] Forced Milk Maid player narration skipped: callback script unavailable")
+            Return
+        EndIf
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(prompt) + "\"}"
+        Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnForcedMilkMaidPlayerLine")
+        MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] Forced Milk Maid player generation result " + queued + " (1=queued); no NPC fallback")
+        If diagnostic
+            Debug.Notification("Forced Milk Maid Narration: player generation result [" + queued + "]")
+        EndIf
+        Return
+    EndIf
+    Actor listener = Game.GetPlayer()
+    ; Forced conversion owns this one narration and explicitly selects the
+    ; affected actor as speaker. No automatic-speaker fallback is allowed.
+    Int result = SkyrimNetApi.DirectNarration(prompt, milkMaid, listener)
+    MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] Forced Milk Maid DirectNarration result " + result + " | speaker=" + actorName + " | listener=" + ResolveActorName(listener, "everyone nearby"))
+    If diagnostic
+        Debug.Notification("Forced Milk Maid Narration: result [" + result + "]")
+        MMELog.Diagnostic("[MMEAlert SkyrimNet] Forced Milk Maid narration payload | " + prompt)
+    EndIf
+EndFunction
+
 ; Separate callbacks preserve the setting that authorized each asynchronous
 ; request. Both feed the same player-only playback boundary and never fall back
 ; to DirectNarration, which would select a nearby NPC instead of the player.

@@ -1,7 +1,7 @@
 # MME Extensions Modding API
 
 This document describes the stable Papyrus entry points and ModEvents intended
-for other Skyrim mods. The current API version is **16**.
+for other Skyrim mods. The current API version is **19**.
 
 Use `MMEExtensionsAPI.psc`. Do not call `MMEDebug`, `MMENewMilkMaid`,
 `MMEOStimBreastfeeding`, or the Skyrim.Net bridge scripts directly. Those are
@@ -428,13 +428,16 @@ version 4. The giver and drinker may be the player or eligible adult NPCs, but
 must be two different loaded actors outside combat. The function selects one
 item the giver actually owns using the established Give Milk priority:
 
-1. normal milk (HearthFires Jug or MME basic milk);
-2. racial milk;
-3. supernatural milk.
+1. owned Lactacid, only for a confirmed MME Milk Maid recipient (API 18);
+2. normal milk (HearthFires Jug or MME basic milk);
+3. racial milk;
+4. supernatural milk.
 
 This is category priority, not a dynamic comparison of gold value or magic
 effect strength. Within an MME FormList, the first owned entry wins. Lactacid
-is deliberately excluded.
+is never automatically selected for a non-Milk Maid or supplied free. Membership
+is checked again before Lactacid consumption. Busy scenes and unsafe animation
+states reject the transaction before it changes inventory.
 
 If the giver owns no eligible milk, the existing **Free Jug for Give Milk** MCM
 setting controls fallback behavior. When enabled, the transaction supplies and
@@ -443,6 +446,37 @@ without changing inventory. Transfer and failed-consumption paths roll back the
 selected item. A successful latent call includes the established give/drink
 animations where safe, ordinary drink effects and feedback, and publishes
 `MMEExtensions_AvailableMilkGiven`.
+
+### DrinkAvailableMilk (API 18)
+
+```papyrus
+Bool consumed = MMEExtensionsAPI.DrinkAvailableMilk(Game.GetPlayer())
+```
+
+Player-only, own-inventory consumption with the same recipient-aware priority
+and Free Jug cheat fallback as GiveAvailableMilk. It consumes one item without
+transferring it to the same actor. The existing player alias owns effects,
+narration, and drink events; this API does not apply them twice. Returns after
+consumption verification; it does not wait for every asynchronous potion effect.
+A failed consumption removes only a newly supplied fallback item.
+
+### TrySelfMilk / GetSelfMilkBlockReason (API 18)
+
+```papyrus
+String reason = MMEExtensionsAPI.GetSelfMilkBlockReason(targetActor)
+Bool dispatched = MMEExtensionsAPI.TrySelfMilk(targetActor)
+```
+
+Manual player/NPC self-milking through MME's original spell. Requires enabled
+Extensions, a nearby loaded adult Milk Maid with milk, and safe animation/scene
+state. Protected Living/Parasite/Dwemer armor is rejected. The reason is empty
+when currently eligible. Execution repeats validation. True means spell dispatch,
+not confirmed start or completed milking. MME's existing actor-bearing start/end
+events remain authoritative; the roster logs confirmation separately. The API
+does not implement milking, change progression, or convert actors.
+
+Sparse transaction footprints use the master Papyrus logging toggle even when
+verbose logging is off. They identify actor, selection, outcome, and cleanup.
 
 ### TryMilkArmorThought
 
@@ -716,3 +750,36 @@ StartOStimBreastfeeding returns false
   version when existing contracts remain compatible.
 - Breaking changes require a new API version and new event names.
 - Public calls still obey the user's MCM settings and normal safety checks.
+
+
+### PlayMilkMaidReaction / TryApplyMilkMaidCurse (API 19)
+
+`PlayMilkMaidReaction(Actor target) -> Bool` performs the familiar ten-second
+kneeling New Milk Maid presentation without assigning a slot, adding milk or
+Lactacid, choosing stories, or publishing conversion events. It holds player/NPC
+movement through the shared owner-tracked presentation service and preserves
+external scene ownership during cleanup. True means the dispatch/hold completed;
+the graph does not provide an animation-playback acknowledgement.
+
+`TryApplyMilkMaidCurse(Actor target, Float percentage = 50.0) -> Bool` requires
+an existing Milk Maid. It adds maximum capacity times percentage / 100 using
+MME's uncapped storage API, then presents one configured curse story (player only),
+the reaction, and configured notification/narration. The percentage range is
+0?100; zero skips. It never registers the actor or changes Lactacid. True means
+the milk operation committed; later presentation interruption does not make it
+safe to retry the gameplay. Native MME cycles may subsequently clamp/leak overflow.
+
+Chest callers retain armor-first and conversion-first selection, then use this
+surge for existing maids when no eligible non-maid remains. The chest MCM slider
+uses five-percent steps and defaults to 50%. Existing Free Jug/drink settings do
+not affect this curse. The standard conversion API retains its signature and
+opening/closing stories for non-chest sources. Chest conversions select one of
+`ForcedMilkMaidConversion.json`'s five `chestCurseStories` instead of stacking the
+generic stories. Notifications retain `conversionMessages`.
+
+Routine `[MME Extensions Milk Maid Curse]` traces need only the master Papyrus
+logging toggle. They distinguish conversion/surge, requested/actual milk delta,
+story index, animation dispatch and cleanup. Movement has existing controller
+load recovery. A chest commit is written before mutation to prevent replay after
+interruption; this is an at-most-once safeguard, not a transactional rollback of
+all framework effects. An interrupted operation may omit its story/reaction.

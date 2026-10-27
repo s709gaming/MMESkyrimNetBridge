@@ -582,7 +582,7 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(patch_give_milk_previous_dialog(data), data)
         self.assertEqual(patch_separate_give_milk_topic(data), data)
 
-    def test_give_milk_excludes_lactacid_and_has_default_on_easy_mode(self):
+    def test_give_milk_retains_ordinary_selector_and_has_default_on_easy_mode(self):
         dialogue = (ROOT / 'Source/Scripts/MMENPCDialog.psc').read_text()
         mcm = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
         selector = dialogue.split('Form Function FindFirstSupportedMilk(', 1)[1].split('EndFunction', 1)[0]
@@ -590,7 +590,8 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('enableGiveMilkEasyMode", 1', dialogue)
         self.assertIn('Game.GetFormFromFile(0x003534, "HearthFires.esm")', dialogue)
         self.assertIn('Easy Mode temporary Jug', dialogue)
-        self.assertIn('Return 125', mcm)
+        import re
+        self.assertGreaterEqual(int(re.search(r'Int Function GetVersion\(\)\s+Return (\d+)', mcm, re.I).group(1)), 125)
         self.assertIn('AddHeaderOption("Easy Mode")', mcm)
         self.assertIn('AddToggleOption("Free Jug for Give Milk"', mcm)
         self.assertIn('JsonUtil.SetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1)', mcm)
@@ -809,10 +810,10 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('MMEExtensions_DungeonBossChestActivated', native + controller)
         self.assertIn('MMEExtensions.DungeonChest.Resolved.', chest)
         self.assertIn('Utility.RandomInt(1, 100)', chest)
-        self.assertIn('TryCreateMilkMaidForcedAnimated(targetActor)', chest)
+        self.assertIn('TryCreateMilkMaidWithContext(conversionTarget, True, resolvedKey)', chest)
         self.assertIn('milkController.AssignSlotMaid(candidate)', conversion)
-        self.assertIn('Debug.SendAnimationEvent(candidate, "ZaZAPCHorFd")', conversion)
-        self.assertIn('Utility.Wait(10.0)', conversion)
+        self.assertIn('Debug.SendAnimationEvent(target, "ZaZAPCHorFd")', (ROOT / 'Source/Scripts/MMEMilkCurse.psc').read_text())
+        self.assertIn('Utility.Wait(10.0)', (ROOT / 'Source/Scripts/MMEMilkCurse.psc').read_text())
         self.assertIn('enableDungeonChestMilkMaid", 1', mcm)
         self.assertIn('dungeonChestMilkMaidChance", 100', mcm)
 
@@ -833,7 +834,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('Debug.MessageBox(openingStory)', new_maid)
         self.assertIn('Debug.MessageBox(closingStory)', new_maid)
         self.assertNotIn('PickVoice(candidate).Moan', new_maid)
-        self.assertIn('MMEReactionSounds.PlayNewMilkMaidMoan(candidate)', new_maid)
+        self.assertIn('MMEReactionSounds.PlayNewMilkMaidMoan(target)', (ROOT / 'Source/Scripts/MMEMilkCurse.psc').read_text())
         self.assertIn('MMEReactionSounds.PlayNewMilkMaidMoan(candidate)', controller)
         self.assertIn('enableNewMilkMaidMoans", 1', mcm)
         self.assertIn('New Milk Maid Moans', mcm)
@@ -846,12 +847,14 @@ class ServiceTests(unittest.TestCase):
         self.assertIn('NarrateForcedMilkMaidConversion(candidate, content)', new_maid)
         normal_narration = skyrimnet.split('Function NarrateMilkmaidCreated(', 1)[1].split('EndFunction', 1)[0]
         forced_narration = skyrimnet.split('Function NarrateForcedMilkMaidConversion(', 1)[1].split('EndFunction', 1)[0]
-        for narration in (normal_narration, forced_narration):
+        narration_routes = json.loads((ROOT / "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkMaidCreation.json").read_text())["routes"]
+        for narration, route_key in ((normal_narration, "narrate_milkmaid_created_1"), (forced_narration, "narrate_forced_milk_maid_conversion_1")):
+            wording = narration_routes[route_key]["template"]
             self.assertIn('listener = Game.GetPlayer()', narration)
             self.assertIn('milkMaid == Game.GetPlayer()', narration)
-            self.assertIn('own first-person perspective', narration)
-            self.assertIn('overwhelmingly pleasurable and wonderful surprise', narration)
-            self.assertIn('wonderful sensation coursing through her body', narration)
+            self.assertIn('own first-person perspective', wording)
+            self.assertIn('overwhelmingly pleasurable and wonderful surprise', wording)
+            self.assertIn('wonderful sensation coursing through her body', wording)
             self.assertIn('SkyrimNetApi.DirectNarration(', narration)
             self.assertIn('milkMaid, listener)', narration)
             self.assertIn('SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment"', narration)
@@ -865,7 +868,7 @@ class ServiceTests(unittest.TestCase):
         player_playback = skyrimnet.split('Function PlayMilkMaidPlayerLine(', 1)[1].split('EndFunction', 1)[0]
         self.assertIn('SkyrimNetApi.TriggerPlayerTTS(response)', player_playback)
         self.assertNotIn('DirectNarration', player_playback)
-        self.assertIn('do not claim she drank anything', forced_narration)
+        self.assertIn('do not claim she drank anything', narration_routes['narrate_forced_milk_maid_conversion_1']['template'])
         self.assertEqual(len(messages['conversionMessages']), 5)
         self.assertTrue(messages['openingStory'].startswith('A change courses through your body.'))
         self.assertNotIn('drank', messages['openingStory'].lower())

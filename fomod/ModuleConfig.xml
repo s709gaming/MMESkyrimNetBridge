@@ -140,7 +140,7 @@
         <group name="Optional Milk Maid UI" type="SelectAny">
           <plugins order="Explicit">
             <plugin name="Milk Maid Roster ? Magelight UI">
-              <description>Optional roster window with milk amounts and fullness percentages. Requires separately installed Magelight UI 1.5.0 or newer; it can be installed later. Open from the General MCM page or assign a keyboard hotkey. Milk Self is disabled in this first version. Enable the included ESL-flagged Maid Roster plugin after MMEAlert.esp.</description>
+              <description>Optional roster window with milk amounts and fullness percentages. Requires separately installed Magelight UI 1.5.0 or newer; it can be installed later. Open from the General MCM page or assign a keyboard hotkey. Give Milk/Drink uses player inventory and the Free Jug setting. Self Milk starts eligible nearby maids. Enable the included ESL-flagged Maid Roster plugin after MMEAlert.esp.</description>
               <files>
                 <folder source="fomod/choices/maid-roster-ui" destination="" priority="1" />
               </files>

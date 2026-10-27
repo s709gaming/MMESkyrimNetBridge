@@ -33,6 +33,7 @@ Int chestArmorTrapChanceOption
 Int chestArmorTrapCooldownOption
 Int dungeonChestMilkMaidOption
 Int milkMaidTrapNearbyAlliesOption
+Int milkMaidCurseSurgeOption
 Int dungeonChestMilkMaidChanceOption
 Int regularChestMilkMaidOption
 Int regularChestMilkMaidChanceOption
@@ -330,7 +331,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 160
+    Return 161
 EndFunction
 
 Function SetPageNames()
@@ -403,6 +404,10 @@ EndFunction
 
 ; Seeds new settings and runs one-time migrations without overriding later choices.
 Function EnsureDefaults()
+    If !JsonUtil.HasIntValue(SettingsFile, "milkMaidCurseSurgePercent")
+        JsonUtil.SetIntValue(SettingsFile, "milkMaidCurseSurgePercent", 50)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
     If JsonUtil.GetIntValue(SettingsFile, "maidRosterMigration160", 0) == 0
         If !JsonUtil.HasIntValue(SettingsFile, "maidRosterUiEnabled")
             JsonUtil.SetIntValue(SettingsFile, "maidRosterUiEnabled", 1)
@@ -1766,6 +1771,7 @@ Event OnPageReset(String page)
     chestArmorTrapCooldownOption = -1
     dungeonChestMilkMaidOption = -1
     milkMaidTrapNearbyAlliesOption = -1
+    milkMaidCurseSurgeOption = -1
     dungeonChestMilkMaidChanceOption = -1
     regularChestMilkMaidOption = -1
     regularChestMilkMaidChanceOption = -1
@@ -2147,6 +2153,7 @@ Event OnPageReset(String page)
         If JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1) != 1
             dungeonChestChanceFlags = OPTION_FLAG_DISABLED
         EndIf
+        milkMaidCurseSurgeOption = AddSliderOption("Existing Maid Curse: Added Milk", JsonUtil.GetIntValue(SettingsFile, "milkMaidCurseSurgePercent", 50), "{0}% of capacity")
         dungeonChestMilkMaidChanceOption = AddSliderOption("Boss Chest Chance", JsonUtil.GetIntValue(SettingsFile, "dungeonChestMilkMaidChance", 100), "{0}%", dungeonChestChanceFlags)
         regularChestMilkMaidOption = AddToggleOption("Regular Chests", JsonUtil.GetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1) == 1)
         Int regularChestChanceFlags = OPTION_FLAG_NONE
@@ -2671,7 +2678,7 @@ EndEvent
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
     If option == rosterOpenOption || option == rosterEnabledOption || option == rosterKeyOption
-        SetInfoText("Optional Milk Maid roster: requires the Maid Roster add-on plugin and Magelight UI 1.5.0 or newer. Open, then close MCM to show it. Assign an optional keyboard hotkey; PageUp is reserved by Magelight. Displays stored milk amounts and fullness. Milk Self is not active yet.")
+        SetInfoText("Optional Milk Maid roster: requires the Maid Roster add-on plugin and Magelight UI 1.5.0 or newer. Open, then close MCM to show it. Assign an optional keyboard hotkey; PageUp is reserved by Magelight. Displays stored milk amounts and fullness. Give Milk/Drink uses player inventory and the Free Jug setting; Self Milk starts eligible maids.")
         Return
     EndIf
     If option == narrationReloadOption || option == narrationImportOption
@@ -2808,13 +2815,15 @@ Event OnOptionHighlight(Int option)
         Return
     EndIf
     If option == dungeonChestMilkMaidOption
-        SetInfoText("Curated vanilla and DLC dungeon boss chests forcibly convert their eligible activator into a Milk Maid. Each placed chest rolls once after success or a missed chance. Default on.")
+        SetInfoText("Curated boss chests curse an eligible nearby allied female: convert a non-maid first, otherwise surge an existing maid. Each chest resolves once after a committed curse or missed roll. Default on.")
         Return
     ElseIf option == milkMaidTrapNearbyAlliesOption
         SetInfoText("Allow treasure-chest Milk Maid curses to select eligible nearby allied female NPCs as well as the player. Turn off for player-only targeting. Default on.")
         Return
+    ElseIf option == milkMaidCurseSurgeOption
+        SetInfoText("When no eligible non-Milk Maid remains, the chest curse adds this percentage of an existing maid's maximum milk, allowing overflow. Default 50%; zero disables the surge. Later MME cycles retain normal leak/limit behavior.")
     ElseIf option == dungeonChestMilkMaidChanceOption
-        SetInfoText("Chance that an eligible dungeon boss chest activation attempts forced Milk Maid conversion. Default 100%, range 0-100 in 5% steps.")
+        SetInfoText("Chance that an eligible dungeon boss chest activation attempts Milk Maid conversion or a milk surge. Default 100%, range 0-100 in 5% steps.")
         Return
     ElseIf option == regularChestMilkMaidOption
         SetInfoText("Curated ordinary vanilla and DLC treasure chests can forcibly convert their eligible activator. Merchant, evidence, player-storage, EMPTY and boss containers are excluded. Default on.")
@@ -4448,6 +4457,12 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(0.0, 24.0)
         SetSliderDialogInterval(1.0)
         Return
+    ElseIf option == milkMaidCurseSurgeOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "milkMaidCurseSurgePercent", 50))
+        SetSliderDialogDefaultValue(50.0)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+        Return
     ElseIf option == dungeonChestMilkMaidChanceOption
         SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "dungeonChestMilkMaidChance", 100))
         SetSliderDialogDefaultValue(100.0)
@@ -4963,6 +4978,11 @@ Event OnOptionSliderAccept(Int option, Float value)
         JsonUtil.SetFloatValue(SettingsFile, "chestArmorTrapCooldownHours", value)
         JsonUtil.Save(SettingsFile, False)
         SetSliderOptionValue(option, value, "{0} game hours")
+        Return
+    ElseIf option == milkMaidCurseSurgeOption
+        JsonUtil.SetIntValue(SettingsFile, "milkMaidCurseSurgePercent", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}% of capacity")
         Return
     ElseIf option == dungeonChestMilkMaidChanceOption
         JsonUtil.SetIntValue(SettingsFile, "dungeonChestMilkMaidChance", value as Int)

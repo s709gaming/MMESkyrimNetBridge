@@ -1,6 +1,7 @@
 """Roster isolation, packaging, data-read and callback contracts; runtime UI is separate."""
 from pathlib import Path
 import hashlib,json,re,subprocess,unittest,xml.etree.ElementTree as ET
+import shutil,tempfile
 ROOT=Path(__file__).resolve().parents[1]
 CHOICE=ROOT/'fomod/choices/maid-roster-ui'
 class RosterContracts(unittest.TestCase):
@@ -8,10 +9,13 @@ class RosterContracts(unittest.TestCase):
   root=ET.parse(ROOT/'fomod/ModuleConfig.xml').getroot();group=next(g for g in root.findall('.//group') if g.get('name')=='Optional Milk Maid UI')
   self.assertEqual(group.get('type'),'SelectAny');plugin=group.find('plugins/plugin');self.assertEqual(plugin.find('typeDescriptor/type').get('name'),'Optional');self.assertEqual(plugin.find('files/folder').get('source'),'fomod/choices/maid-roster-ui')
   mcm=(ROOT/'Source/Scripts/MMEAlertsMCM.psc').read_text(encoding='utf-8-sig');self.assertFalse(re.search(r'\bMagelight\.|\bMMEMaidRosterUI\b',re.sub(r'"(?:\\.|[^"\\])*"|;[^\n]*','',mcm)), 'Core MCM must not call optional UI types');self.assertIn('MMEExtensions_RosterOpen',mcm);self.assertIn('maidRosterMigration160',mcm);self.assertIn('AddKeyMapOption',mcm)
- def test_read_only_and_safe_identity(self):
+ def test_safe_actions_and_identity(self):
   source=(CHOICE/'Source/Scripts/MMEMaidRosterUI.psc').read_text(encoding='utf-8-sig')
-  self.assertNotRegex(source,r'\.Cast\(|\.Milking\(|setMilk|updateMilk|calculateMilk|RegisterFor(?:Single)?Update|Utility\.Wait|JsonUtil\.(?:Save|Set)')
-  self.assertIn('Actor[] maids = milkController.MilkMaid',source);self.assertIn('seen.Find(candidate) < 0',source);self.assertIn('scanIndex < maids.Length',source);self.assertNotIn('MME_Storage.getMilkMaximum(candidate)',source);self.assertIn('StorageUtil.GetFloatValue(candidate, "MME.MilkMaid.MilkMaximum", 0.0)',source);self.assertIn('maids != None && maids.Length > 0',source)
+  self.assertNotRegex(source,r'\.Cast\(|\.Milking\(|setMilk|updateMilk|calculateMilk|Utility\.Wait|JsonUtil\.(?:Save|Set)')
+  self.assertIn('String playerJson = "0"',source);self.assertIn('String availableJson = "0"',source);self.assertNotRegex(source,r'(?:playerJson|availableJson) = "(?:true|false)"')
+  self.assertIn('Magelight.BindHotkey(ViewId, BoundKey, 1)',source);self.assertIn('Magelight.BindHotkey(ViewId, BoundKey, 0)',source);self.assertIn('now - LastCloseTime < 0.35',source)
+  self.assertIn('SnapshotActors[rowIndex] as Actor',source);self.assertIn('rowToken[0] != (SnapshotRevision as String)',source);self.assertIn('RegisterForSingleUpdate(0.1)',source)
+  self.assertIn('Actor[] maids = milkController.MilkMaid',source);self.assertIn('seen.Find(candidate) < 0',source);self.assertIn('scanIndex < maids.Length',source);self.assertNotIn('MME_Storage.getMilkMaximum(candidate)',source);self.assertIn('StorageUtil.GetFloatValue(candidate, "MME.MilkMaid.MilkMaximum", 0.0)',source);self.assertIn('maids.Length > 0',source);self.assertNotIn('maids != None',source);self.assertNotIn('SnapshotActors == None',source)
   self.assertIn('requestGeneration == Generation && requestView == ViewId',source);self.assertIn('RegisterForMenu("Journal Menu")',source);self.assertIn('SKSE.GetPluginVersion("Magelight") < 0',source);self.assertIn('MMELog.MasterDiagnostic',source);self.assertIn('MMELog.Alarm',source)
   for script in ['MMEMaidRosterUI','MMEMaidRosterPlayerAlias']:
    pex=(CHOICE/f'Scripts/{script}.pex').read_bytes().lower()
@@ -26,4 +30,16 @@ class RosterContracts(unittest.TestCase):
   self.assertFalse(list((CHOICE/'Scripts').glob('Magelight.*')))
  def test_real_frontend(self):
   subprocess.run(['node',str(ROOT/'tools/test_maid_roster_page.cjs'),str(CHOICE/'Magelight/mmeextensions/views/roster/index.html')],check=True)
+ def test_compiled_array_guards(self):
+  assembler=Path('E:/Steam/steamapps/common/Skyrim Special Edition/Papyrus Compiler/PapyrusAssembler.exe')
+  with tempfile.TemporaryDirectory(prefix='MME-Roster-Array-') as folder:
+   shutil.copy2(CHOICE/'Scripts/MMEMaidRosterUI.pex',folder)
+   subprocess.run([str(assembler),'MMEMaidRosterUI','-D','-Q'],cwd=folder,check=True,capture_output=True)
+   arrays=set()
+   for line in (Path(folder)/'MMEMaidRosterUI.disassemble.pas').read_text(encoding='utf-8-sig').splitlines():
+    if re.match(r'\s*\.function\s',line):arrays=set()
+    match=re.match(r'\s*\.(?:local|param)\s+(\S+)\s+\S+\[\]',line)
+    if match:arrays.add(match[1])
+    match=re.match(r'\s*Cast\s+(\S+)\s+None(?:\s|$)',line)
+    if match:self.assertNotIn(match[1],arrays,line)
 if __name__=='__main__':unittest.main()

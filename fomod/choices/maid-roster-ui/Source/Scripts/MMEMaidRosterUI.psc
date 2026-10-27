@@ -3,6 +3,15 @@ Scriptname MMEMaidRosterUI extends Quest
 Quest Property ExtensionsController Auto
 Int ViewId = 0
 Int Generation = 0
+Form[] SnapshotActors
+Int SnapshotRevision = 0
+Bool ActionBusy = False
+Actor PendingActor
+String PendingAction = ""
+Actor RunningActor
+Actor ConfirmActor
+Float ConfirmDeadline = 0.0
+Float LastCloseTime = -10.0
 Int BoundKey = -1
 Bool Ready = False
 Bool PendingOpen = False
@@ -55,6 +64,15 @@ Function Initialize()
         Return
     EndIf
     Initializing = True
+    ActionBusy = False
+    PendingActor = None
+    PendingAction = ""
+    ConfirmActor = None
+    RunningActor = None
+    ConfirmDeadline = 0.0
+    SnapshotActors = Utility.CreateFormArray(0)
+    SnapshotRevision += 1
+    UnregisterForUpdate()
     Generation += 1
     StorageUtil.StringListClear(Self, "MMEMaidRoster.Alarms")
     PendingOpen = False
@@ -63,6 +81,7 @@ Function Initialize()
     ViewId = 0
     UnregisterForAllKeys()
     BoundKey = -1
+    LastCloseTime = -10.0
     RegisterForModEvent("MMEExtensions_RosterOpen", "OnOpenRequest")
     RegisterForModEvent("MMEExtensions_RosterSettings", "OnSettingsChanged")
     RegisterForModEvent("Magelight_ViewDomReady", "OnDomReady")
@@ -73,6 +92,10 @@ Function Initialize()
     RegisterForModEvent("Magelight_JS_mmeRosterRefresh", "OnRefreshClick")
     RegisterForModEvent("Magelight_JS_mmeRosterClose", "OnCloseClick")
     RegisterForModEvent("Magelight_JS_mmeRosterError", "OnPageError")
+    RegisterForModEvent("Magelight_JS_mmeRosterAction", "OnActionClick")
+    RegisterForModEvent("MilkQuest.StartMilkingMachine", "OnManualMilkingStart")
+    RegisterForModEvent("MilkQuest.StopMilkingMachine", "OnManualMilkingStop")
+    RegisterForModEvent("MME_MilkingDone", "OnManualMilkingDone")
     RegisterForMenu("Journal Menu")
     If HostReady()
         ; Resolve by owned name; never trust a view id serialized in a save.
@@ -90,6 +113,7 @@ Function Initialize()
 EndFunction
 
 Function RebindKey()
+    UnbindViewHotkey()
     UnregisterForAllKeys()
     BoundKey = -1
     If !Enabled() || !HostReady()
@@ -100,6 +124,9 @@ Function RebindKey()
     If requestedKey > 0 && requestedKey < 256 && requestedKey != 201
         BoundKey = requestedKey
         RegisterForKey(BoundKey)
+    EndIf
+    If ViewId > 0 && Magelight.IsVisible(ViewId)
+        BindViewHotkey()
     EndIf
     Trace("key binding refreshed | key=" + BoundKey)
 EndFunction
@@ -130,6 +157,11 @@ Event OnKeyDown(Int keyCode)
     If ViewId > 0 && HostReady() && Magelight.IsVisible(ViewId)
         CloseRoster("hotkey")
     ElseIf !Utility.IsInMenuMode()
+        Float now = Utility.GetCurrentRealTime()
+        If now >= LastCloseTime && now - LastCloseTime < 0.35
+            Trace("hotkey skipped | duplicate close key event")
+            Return
+        EndIf
         PendingOpen = True
         OpenRoster()
     Else
@@ -168,8 +200,9 @@ Function OpenRoster()
         EndIf
         Bool refreshListener = Magelight.RegisterListener(ViewId, "mmeRosterRefresh")
         Bool closeListener = Magelight.RegisterListener(ViewId, "mmeRosterClose")
+        Bool actionListener = Magelight.RegisterListener(ViewId, "mmeRosterAction")
         Bool errorListener = Magelight.RegisterListener(ViewId, "mmeRosterError")
-        If !refreshListener || !closeListener || !errorListener
+        If !refreshListener || !closeListener || !errorListener || !actionListener
             Alarm("button listener registration failed | view=" + ViewId)
             CloseRoster("listener failure")
             Int rejectedView = ViewId
@@ -199,6 +232,7 @@ Function ShowReadyView()
         Return
     EndIf
     PendingOpen = False
+    BindViewHotkey()
     Trace("focus acquired | view=" + ViewId)
     RefreshRoster()
 EndFunction
@@ -261,12 +295,16 @@ EndEvent
 
 Event OnPageError(String eventName, String strArg, Float numArg, Form sender)
     If ViewId > 0 && (numArg as Int) == ViewId
-        Alarm("page rejected roster payload | view=" + ViewId)
+        Alarm("page rejected roster payload | view=" + ViewId + " | reason=" + StringUtil.Substring(strArg, 0, 600))
     EndIf
 EndEvent
 
 Function CloseRoster(String reason)
+    LastCloseTime = Utility.GetCurrentRealTime()
+    UnbindViewHotkey()
     PendingOpen = False
+    SnapshotActors = Utility.CreateFormArray(0)
+    SnapshotRevision += 1
     If ViewId > 0 && SKSE.GetPluginVersion("Magelight") >= 0
         If Magelight.GetUIModeView() == ViewId
             Magelight.ReleaseUIMode("mmeextensions")
@@ -328,6 +366,8 @@ Function RefreshRoster()
     Int requestGeneration = Generation
     Int requestView = ViewId
     String rows = ""
+    Int nextRevision = SnapshotRevision + 1
+    Form[] nextActors
     Int rowCount = 0
     Int skipped = 0
     String statusMessage = ""
@@ -337,13 +377,15 @@ Function RefreshRoster()
         Alarm("refresh roster | MME controller unavailable")
     Else
         Actor[] maids = milkController.MilkMaid
-        If maids != None && maids.Length > 0
+        If maids.Length > 0
+            nextActors = Utility.CreateFormArray(maids.Length)
             Form[] seen = Utility.CreateFormArray(maids.Length)
             Int scanIndex = 0
             While scanIndex < maids.Length
                 Actor candidate = maids[scanIndex]
                 If candidate != None && !candidate.IsDeleted() && !candidate.IsChild() && seen.Find(candidate) < 0
                     seen[rowCount] = candidate
+                    nextActors[rowCount] = candidate
                     String actorName = candidate.GetDisplayName()
                     If actorName == ""
                         actorName = "Unnamed Milk Maid"
@@ -369,7 +411,17 @@ Function RefreshRoster()
                     ElseIf candidate.IsDead() || candidate.IsDisabled()
                         actorStatus = "Unavailable"
                     EndIf
-                    rows += "{\"name\":\"" + Escape(actorName) + "\",\"milk\":" + (currentMilk as String) + ",\"capacity\":" + capacityJson + ",\"percent\":" + percentJson + ",\"status\":\"" + actorStatus + "\"}"
+                    ; Numeric flags avoid Papyrus case-insensitive string interning of true/false.
+                    String playerJson = "0"
+                    If candidate == Game.GetPlayer()
+                        playerJson = "1"
+                    EndIf
+                    String availableJson = "0"
+                    If candidate.Is3DLoaded() && !candidate.IsDead() && !candidate.IsDisabled() && !candidate.IsInCombat() && Game.GetPlayer().GetDistance(candidate) <= 2000.0
+                        availableJson = "1"
+                    EndIf
+                    String selfReason = MMEExtensionsAPI.GetSelfMilkBlockReason(candidate)
+                    rows += "{\"token\":\"" + (nextRevision as String) + ":" + (rowCount as String) + "\",\"player\":" + playerJson + ",\"available\":" + availableJson + ",\"selfReason\":\"" + Escape(selfReason) + "\",\"name\":\"" + Escape(actorName) + "\",\"milk\":" + (currentMilk as String) + ",\"capacity\":" + capacityJson + ",\"percent\":" + percentJson + ",\"status\":\"" + actorStatus + "\"}"
                     rowCount += 1
                 Else
                     skipped += 1
@@ -379,6 +431,8 @@ Function RefreshRoster()
         EndIf
     EndIf
     If requestGeneration == Generation && requestView == ViewId && Enabled() && Magelight.IsVisible(ViewId)
+        SnapshotActors = nextActors
+        SnapshotRevision = nextRevision
         String payload = "{\"session\":\"" + (Generation as String) + "\",\"message\":\"" + Escape(statusMessage) + "\",\"rows\":[" + rows + "]}"
         Magelight.Call(ViewId, "setRoster", payload)
         Trace("refresh complete | rows=" + rowCount + " | skipped=" + skipped + " | view=" + ViewId)
@@ -387,5 +441,119 @@ Function RefreshRoster()
     EndIf
     If RefreshGeneration == requestGeneration
         Refreshing = False
+    EndIf
+EndFunction
+
+; Only tokens from the current published snapshot may resolve an actor.
+Event OnActionClick(String eventName, String strArg, Float numArg, Form sender)
+    If !Enabled() || ViewId <= 0 || (numArg as Int) != ViewId || !Magelight.IsVisible(ViewId) || ActionBusy || PendingActor != None || ConfirmActor != None
+        Trace("action skipped | inactive view or request pending")
+        Return
+    EndIf
+    String[] parts = StringUtil.Split(strArg, "|")
+    If parts.Length != 3 || parts[0] != (Generation as String) || SnapshotActors.Length == 0
+        Trace("action skipped | stale session")
+        Return
+    EndIf
+    String[] rowToken = StringUtil.Split(parts[1], ":")
+    If rowToken.Length != 2 || rowToken[0] != (SnapshotRevision as String)
+        Trace("action skipped | stale snapshot")
+        Return
+    EndIf
+    Int rowIndex = rowToken[1] as Int
+    If rowIndex < 0 || rowIndex >= SnapshotActors.Length || (rowIndex as String) != rowToken[1]
+        Return
+    EndIf
+    If parts[2] != "drink" && parts[2] != "self"
+        Return
+    EndIf
+    If SnapshotActors[rowIndex] == None
+        Return
+    EndIf
+    ActionBusy = True
+    PendingActor = SnapshotActors[rowIndex] as Actor
+    PendingAction = parts[2]
+    Trace("action entry | actor=" + PendingActor + " | action=" + PendingAction + " | token=" + parts[1])
+    CloseRoster("action dispatch")
+    RegisterForSingleUpdate(0.1)
+EndEvent
+
+Event OnUpdate()
+    If PendingActor != None
+        Actor target = PendingActor
+        String requestedAction = PendingAction
+        PendingActor = None
+        PendingAction = ""
+        MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+        If !Enabled() || Utility.IsInMenuMode() || Magelight.IsUIModeActive() || milkController == None || target.IsDeleted() || target.IsChild() || !target.Is3DLoaded() || target.IsDead() || target.IsDisabled() || target.IsInCombat() || Game.GetPlayer().GetDistance(target) > 2000.0 || milkController.MilkMaid.Length == 0 || milkController.MilkMaid.Find(target) < 0
+            ActionBusy = False
+            Trace("action skipped | actor=" + target + " | eligibility changed or menu owns focus")
+            Return
+        EndIf
+        Bool accepted = False
+        If requestedAction == "self"
+            ConfirmActor = target
+            ConfirmDeadline = Utility.GetCurrentRealTime() + 12.0
+            accepted = MMEExtensionsAPI.TrySelfMilk(target)
+            If accepted && ConfirmActor != None
+                RegisterForSingleUpdate(12.0)
+            ElseIf !accepted
+                ConfirmActor = None
+            EndIf
+            Trace("self dispatch only | actor=" + target + " | accepted=" + accepted)
+        ElseIf target == Game.GetPlayer()
+            accepted = MMEExtensionsAPI.DrinkAvailableMilk(target)
+            Trace("drink result | actor=" + target + " | success=" + accepted)
+        Else
+            accepted = MMEExtensionsAPI.GiveAvailableMilk(Game.GetPlayer(), target)
+            Trace("give result | actor=" + target + " | success=" + accepted)
+        EndIf
+        ActionBusy = False
+        Trace("action cleanup | actor=" + target)
+    ElseIf ConfirmActor != None && Utility.GetCurrentRealTime() >= ConfirmDeadline
+        Trace("self start not confirmed within request window | actor=" + ConfirmActor)
+        ConfirmActor = None
+        ConfirmDeadline = 0.0
+    EndIf
+EndEvent
+
+Event OnManualMilkingStart(Form actorForm, Int animationSpeed, Int milkingType)
+    If ConfirmActor != None && actorForm == ConfirmActor
+        Trace("self start confirmed by MME | actor=" + ConfirmActor + " | type=" + milkingType)
+        RunningActor = ConfirmActor
+        ConfirmActor = None
+        ConfirmDeadline = 0.0
+    EndIf
+EndEvent
+
+Event OnManualMilkingStop(Form actorForm, Int animationSpeed, Int milkingType)
+    If RunningActor != None && actorForm == RunningActor
+        Trace("self end confirmed by MME | actor=" + RunningActor)
+        RunningActor = None
+    EndIf
+EndEvent
+
+Event OnManualMilkingDone(Form actorForm, Int bottles, Int boobgasmCount, Int cumCount)
+    If RunningActor != None && actorForm == RunningActor
+        Trace("self completion confirmed by MME | actor=" + RunningActor + " | bottles=" + bottles)
+        RunningActor = None
+    EndIf
+EndEvent
+
+; While the page owns keyboard input, Magelight must receive the close key.
+; Bind only while visible; hidden views cannot bypass Papyrus opening guards.
+Function BindViewHotkey()
+    If ViewId > 0 && BoundKey > 0 && HostReady()
+        If !Magelight.BindHotkey(ViewId, BoundKey, 1)
+            Alarm("bind roster toggle failed | key=" + BoundKey + " | reason=" + Magelight.GetLastError("mmeextensions"))
+        Else
+            Trace("focused toggle bound | key=" + BoundKey)
+        EndIf
+    EndIf
+EndFunction
+
+Function UnbindViewHotkey()
+    If ViewId > 0 && BoundKey > 0 && SKSE.GetPluginVersion("Magelight") >= 0
+        Magelight.BindHotkey(ViewId, BoundKey, 0)
     EndIf
 EndFunction

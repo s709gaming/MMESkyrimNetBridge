@@ -28,16 +28,27 @@ Int Function HandleActivation(Actor targetActor, String chestIdentity, Bool boss
 
     String resolvedKey = "MMEExtensions.DungeonChest.Resolved." + chestIdentity
     String pendingKey = "MMEExtensions.DungeonChest.Pending." + chestIdentity
-    If StorageUtil.GetIntValue(None, resolvedKey, 0) == 1 || StorageUtil.GetIntValue(None, pendingKey, 0) == 1
+    If StorageUtil.GetIntValue(None, resolvedKey, 0) == 1
         Return 0
+    EndIf
+    Float now = Utility.GetCurrentRealTime()
+    Float pendingAt = StorageUtil.GetFloatValue(None, pendingKey + ".Time", -1.0)
+    If StorageUtil.GetIntValue(None, pendingKey, 0) == 1 && pendingAt >= 0.0 && now >= pendingAt && now - pendingAt < 60.0
+        Report("skip pending curse | chest=" + chestIdentity)
+        Return 1
     EndIf
 
     ; Eligibility is established before rolling. Existing Milk Maids are
     ; excluded individually, allowing the curse to leap to another nearby
     ; allied woman without consuming this chest's one-shot conversion roll.
     Actor conversionTarget = MMEChestTrapTargets.SelectTarget(targetActor, 2, 1500.0)
+    Bool surge = False
+    If conversionTarget == None && JsonUtil.GetIntValue(settingsFile, "milkMaidCurseSurgePercent", 50) > 0
+        conversionTarget = MMEChestTrapTargets.SelectTarget(targetActor, 4, 1500.0)
+        surge = conversionTarget != None
+    EndIf
     If conversionTarget == None
-        Report("conversion skipped; no eligible nearby allied non-Milk-Maid | kind=" + chestKind + " | chest=" + chestIdentity)
+        Report("curse skipped; no eligible allied conversion or surge target | kind=" + chestKind + " | chest=" + chestIdentity)
         Return 0
     EndIf
 
@@ -56,17 +67,25 @@ Int Function HandleActivation(Actor targetActor, String chestIdentity, Bool boss
     EndIf
 
     StorageUtil.SetIntValue(None, pendingKey, 1)
-    Report("conversion requested | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(conversionTarget) + " | chance=" + chance)
-    Bool created = MMEExtensionsAPI.TryCreateMilkMaidForcedAnimated(conversionTarget)
+    StorageUtil.SetFloatValue(None, pendingKey + ".Time", now)
+    Report("curse requested | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(conversionTarget) + " | chance=" + chance)
+    Bool created = False
+    Report("selected outcome | surge=" + surge + " | actor=" + conversionTarget)
+    If surge
+        created = MMEMilkCurse.ApplySurge(conversionTarget, JsonUtil.GetIntValue(settingsFile, "milkMaidCurseSurgePercent", 50), resolvedKey)
+    Else
+        created = MMENewMilkMaid.TryCreateMilkMaidWithContext(conversionTarget, True, resolvedKey)
+    EndIf
     StorageUtil.UnsetIntValue(None, pendingKey)
-    If created
+    StorageUtil.UnsetFloatValue(None, pendingKey + ".Time")
+    If created || StorageUtil.GetIntValue(None, resolvedKey, 0) == 1
         StorageUtil.SetIntValue(None, resolvedKey, 1)
-        Report("conversion complete | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(conversionTarget))
+        Report("curse complete | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(conversionTarget))
         Return 1
     Else
         ; Capacity and temporary actor-state failures do not consume the chest.
         ; It may be tried again after the underlying condition is corrected.
-        Report("conversion rejected | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(conversionTarget))
+        Report("curse rejected | kind=" + chestKind + " | chest=" + chestIdentity + " | target=" + GetActorName(conversionTarget))
     EndIf
     Return 0
 EndFunction

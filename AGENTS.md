@@ -81,6 +81,18 @@ For each gameplay change, check all applicable cases:
 
 ## Available Skyrim MCP tools
 
+### MO2 Agent Control (CLI / optional MCP)
+
+- MO2 Agent Control 1.0.0 is installed as an MO2 application plugin at `E:\Mod Organizer 2\plugins\ApocryphaAgentControl`. It is separate from game mods and houseCARL.
+- Prefer its supported commands over asking the user to click through MO2 or externally editing live profile files. Check availability each session with the harmless `info` command and confirm the returned instance/profile before relying on it.
+- Last verified standalone client: `C:\Users\Donald\Downloads\MO2 Agent Control 196723 1.0.0 2026-10-25T04-58Z Ae46W7Qjo\mo2_ctl.py`. If moved, locate the client again. Run it with Python and `--instance "C:\Users\Donald\AppData\Local\ModOrganizer\VortexToMO2"`; this argument identifies the active instance data folder, not the MO2 executable folder.
+- The session channel lives at `<instance>\plugins\data\ApocryphaAgentControl\channel.json`. The client reads its per-session credentials automatically. Do not print or expose the token.
+- Read-only commands include `info`, `profiles`, `mods`, `plugins`, `executables`, `overwrite`, and `backups`. Use these proactively for MO2 state inspection. houseCARL remains the tool for records, scripts, assets, and conflict winners; runtime MCP remains the authority for the running game.
+- Supported changes include `set_mods`, `set_plugins`, `select_profile`, `refresh`, and `run`. Use them when the user's task authorizes the specific change or launch. Availability does not grant blanket permission to alter the modlist. Preserve the repository's installation/deployment restrictions.
+- The plugin refuses changes while MO2 is actively in use unless a confirmation note is supplied. Respect that protection; never invent approval or disable the protection. Existing explicit user authorization may support an accurate confirmation note for the authorized action.
+- This version does not directly install mod archives, select FOMOD options, sort plugins, or rearrange priorities through its base commands. `call` / `mm` require a separately registered extension; the last verified `info` reported no extensions. Check current capabilities before promising additional operations.
+- Its MCP server is optional and may not be loaded in the current chat. The verified CLI can be used without configuring MCP or restarting the chat. Do not imply MCP tools are present unless discovered.
+
 This project may use three complementary MCP servers. Confirm that a server's tools are present in the current Codex session before relying on it. A configured server is not necessarily loaded into an already-running chat.
 
 ### houseCARL

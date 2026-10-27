@@ -1,7 +1,7 @@
 Scriptname MMEExtensionsAPI Hidden
 
 ; =============================================================================
-; MME Extensions public Papyrus API (version 17)
+; MME Extensions public Papyrus API (version 19)
 ; =============================================================================
 ; This is the stable entry point for other mods. Call these wrappers instead
 ; of MMEDebug, MMENewMilkMaid, MMEOStimBreastfeeding, or other internal scripts.
@@ -15,7 +15,7 @@ Scriptname MMEExtensionsAPI Hidden
 ; transaction finishes. Listen for the documented ModEvents to observe results.
 
 Int Function GetAPIVersion() Global
-    Return 17
+    Return 19
 EndFunction
 
 ; Version 17: commits the gameplay effects for one externally owned,
@@ -272,7 +272,7 @@ Bool Function DrinkNormalMilk(Actor drinker) Global
 EndFunction
 
 ; Inventory-backed actor-to-actor transaction. Uses the established Give Milk
-; priority (normal, racial, supernatural), excludes Lactacid, and honors the
+; priority (owned Lactacid for Milk Maids, then normal/racial/supernatural), and honors the
 ; existing Free Jug for Give Milk fallback when the giver owns no eligible milk.
 Bool Function GiveAvailableMilk(Actor giver, Actor drinker) Global
     Return MMEAvailableMilkTransaction.GiveAvailableMilk(giver, drinker)
@@ -386,4 +386,30 @@ Bool Function PublishAvailableMilkGiven(Actor giver, Actor drinker, Form milkIte
         ModEvent.PushInt(handle, 0)
     EndIf
     Return ModEvent.Send(handle)
+EndFunction
+
+; API 18: player own-inventory drink; honors Free Jug fallback, never free Lactacid.
+Bool Function DrinkAvailableMilk(Actor drinker) Global
+    Return MMEAvailableMilkTransaction.DrinkAvailableMilk(drinker)
+EndFunction
+
+; API 18: returns rejection reason or empty string for manual self-milking.
+String Function GetSelfMilkBlockReason(Actor target) Global
+    Return MMESelfMilking.GetManualBlockReason(target)
+EndFunction
+
+; True confirms dispatch only. MME start/end events remain authoritative.
+Bool Function TrySelfMilk(Actor target) Global
+    Return MMESelfMilking.TryManual(target)
+EndFunction
+
+; API 19: presentation only; no conversion, milk, Lactacid or story selection.
+Bool Function PlayMilkMaidReaction(Actor target) Global
+    Return MMEMilkCurse.PlayReaction(target)
+EndFunction
+
+; API 19: established-maid curse, max-based uncapped milk plus presentation.
+; True means the milk operation committed; presentation may later be interrupted.
+Bool Function TryApplyMilkMaidCurse(Actor target, Float percentage = 50.0) Global
+    Return MMEMilkCurse.ApplySurge(target, percentage, "")
 EndFunction

@@ -10,6 +10,9 @@
     },
     "milkmaidCreatedMessage": {
       "template": "{actor} has become a Milk Maid! Her breasts now feel pleasantly heavy, full, and faintly thrilling."
+    },
+    "narrate_milk_maid_curse_1": {
+      "template": "{conversion} This event affects {actor}, who is already a Milk Maid. A magical curse has added milk to her existing reserves, possibly beyond her normal capacity. She has not just become a Milk Maid. React briefly in her own first-person voice with playful surprise at the sudden warmth, ripeness and abundant milk. Do not invent a second conversion or a drink."
     }
   }
 }

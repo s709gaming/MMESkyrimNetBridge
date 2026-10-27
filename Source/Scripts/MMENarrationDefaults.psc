@@ -74,7 +74,7 @@ Int Function RouteCount(String fileKey) Global
         Return 2
     EndIf
     If fileKey == "MilkMaidCreation"
-        Return 3
+        Return 4
     EndIf
     If fileKey == "TentacleArmor"
         Return 5
@@ -280,6 +280,9 @@ String Function RouteKey(String fileKey, Int index) Global
     EndIf
     If fileKey == "MilkMaidCreation" && index == 2
         Return "milkmaidCreatedMessage"
+    EndIf
+    If fileKey == "MilkMaidCreation" && index == 3
+        Return "narrate_milk_maid_curse_1"
     EndIf
     If fileKey == "TentacleArmor" && index == 0
         Return "narrate_tentacle_effect_1"
@@ -521,6 +524,9 @@ String Function Template(String fileKey, String routeKey, Int index = 0) Global
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "milkmaidCreatedMessage"
         Return "{actor} has become a Milk Maid! Her breasts now feel pleasantly heavy, full, and faintly thrilling."
+    EndIf
+    If fileKey == "MilkMaidCreation" && routeKey == "narrate_milk_maid_curse_1"
+        Return "{conversion} This event affects {actor}, who is already a Milk Maid. A magical curse has added milk to her existing reserves, possibly beyond her normal capacity. She has not just become a Milk Maid. React briefly in her own first-person voice with playful surprise at the sudden warmth, ripeness and abundant milk. Do not invent a second conversion or a drink."
     EndIf
     If fileKey == "TentacleArmor" && routeKey == "narrate_tentacle_effect_1"
         Return " React from your own perspective as the affected armor wearer."
@@ -805,6 +811,9 @@ String Function Tokens(String fileKey, String routeKey) Global
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "milkmaidCreatedMessage"
         Return "|actor|"
+    EndIf
+    If fileKey == "MilkMaidCreation" && routeKey == "narrate_milk_maid_curse_1"
+        Return "|actor|conversion|"
     EndIf
     If fileKey == "TentacleArmor" && routeKey == "narrate_tentacle_effect_1"
         Return "||"

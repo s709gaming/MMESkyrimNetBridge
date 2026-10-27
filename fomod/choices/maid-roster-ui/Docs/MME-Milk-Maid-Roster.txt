@@ -1,4 +1,4 @@
-﻿MILK MAID ROSTER - OPTIONAL MAGELIGHT UI
+MILK MAID ROSTER - OPTIONAL MAGELIGHT UI
 
 Install Magelight UI 1.5.0 or newer separately and restart Skyrim through MO2/SKSE.
 During MME Extensions installation, select Milk Maid Roster under Optional Milk
@@ -8,17 +8,23 @@ ESL. The Magelight runtime itself is not bundled.
 Open MCM > MME Extensions > General. Select Open Milk Maid Roster, then close MCM.
 The window opens after MCM closes. You may also assign an optional keyboard hotkey
 on that page. No key is assigned by default. PageUp belongs to Magelight and cannot
-be chosen here. Close the roster with Close, Escape, or its assigned hotkey.
+be chosen here. The assigned hotkey toggles the roster on/off, including while
+the page has focus. Close and Escape also close it.
 
 The table lists MME's registered Milk Maids and their stored milk / capacity and
 fullness. Refresh reads the current stored values. Unloaded maids show their last
 stored values. N/A means a valid capacity is not available; this UI does not create
-one or alter the actor. Amounts are MME units, not bottles or liters. Percentages
+one. Amounts are MME units, not bottles or liters. Percentages
 above 100 remain visible while their bars stop at 100%.
 
-Milk Self is intentionally disabled in this first version. The UI cannot start
-animations, convert maids, or edit milk values. Narration JSON editing is also not
-part of this version; the window leaves room for it later.
+NPC rows offer Give Milk from the player inventory; the player row offers Drink.
+Confirmed Milk Maids prefer owned Lactacid, then normal/racial/supernatural milk.
+When no eligible item is owned, the existing Free Jug cheat supplies ordinary milk
+only. Lactacid is never supplied free or automatically chosen for a non-Milk Maid.
+Self Milk dispatches MME's native route for eligible nearby loaded maids with milk.
+Busy/restrained actors and protected special armor are rejected. Actions close
+the panel and release input before execution. Reopen/Refresh for updated values.
+Narration JSON editing is not included.
 
 Enable Milk Maid Roster and the MME Extensions master must be on. If the Open
 button is disabled, check the optional roster plugin and Magelight are enabled,

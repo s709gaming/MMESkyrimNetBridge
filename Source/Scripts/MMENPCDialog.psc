@@ -93,7 +93,7 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
         Return False
     EndIf
 
-    Form lactacid = milkController.MME_Util_Potions.GetAt(0)
+    Form lactacid = GetLactacid(milkController)
     Form hearthfireMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
     ; Full category counts walk every MME milk FormList and are useful only for
     ; an explicit diagnostic request. The normal dialogue path selects its one
@@ -107,10 +107,8 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
         ReportNormalMilkInventory(giver, hearthfireMilk, milkController.MME_Milk_Basic, True)
     EndIf
 
-    ; Phase 2: Give Milk deliberately excludes Lactacid. Prefer ordinary milk,
-    ; then racial and supernatural milk. Easy Mode supplies one base Jug only
-    ; when the player owns none of those eligible forms.
-    Form selectedItem = FindFirstSupportedMilk(giver, milkController)
+    ; Confirmed Milk Maids prefer owned Lactacid; other actors receive milk only.
+    Form selectedItem = FindFirstMilkForRecipient(giver, target, milkController)
     Bool easyModeSupply = False
     If selectedItem == None && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableGiveMilkEasyMode", 1) == 1
         If hearthfireMilk == None
@@ -136,9 +134,28 @@ Bool Function TestInventorySelection(Actor giver, Actor target, MilkQUEST milkCo
     If itemName == ""
         itemName = "<unnamed milk>"
     EndIf
+    MMELog.MasterDiagnostic("[MME Extensions Available Milk API] selection | actor=" + target + " | category=" + selectedType + " | item=" + selectedItem)
     Report(diagnostic, "selected " + selectedType + ": " + itemName + " [form " + selectedItem.GetFormID() + "]")
     TraceDialogueTiming("04 milk selected", target)
     Return ProcessNativeConsumption(giver, target, selectedItem, selectedType, milkController, diagnostic, dialogueRequest, easyModeSupply, establishedMilkmaid, actionRequest)
+EndFunction
+
+; Recipient-aware selection; no synthetic Lactacid and no implicit conversion.
+Form Function GetLactacid(MilkQUEST milkController) Global
+    If milkController != None && milkController.MME_Util_Potions != None && milkController.MME_Util_Potions.GetSize() > 0
+        Return milkController.MME_Util_Potions.GetAt(0)
+    EndIf
+    Return None
+EndFunction
+
+Form Function FindFirstMilkForRecipient(Actor owner, Actor recipient, MilkQUEST milkController) Global
+    Form lactacid = GetLactacid(milkController)
+    If owner != None && recipient != None && lactacid != None && MMEArmorScript.IsMMEMilkMaid(recipient, milkController)
+        If owner.GetItemCount(lactacid) > 0
+            Return lactacid
+        EndIf
+    EndIf
+    Return FindFirstSupportedMilk(owner, milkController)
 EndFunction
 
 ; Selects one owned item from the exact milk sources supported by Give Milk.
@@ -165,7 +182,7 @@ String Function GetSupportedMilkType(Form milkItem, MilkQUEST milkController) Gl
     If milkItem == None || milkController == None
         Return ""
     EndIf
-    If milkController.MME_Util_Potions != None && milkItem == milkController.MME_Util_Potions.GetAt(0)
+    If milkItem == GetLactacid(milkController)
         Return "Lactacid"
     EndIf
     Form hearthfireMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
@@ -353,6 +370,11 @@ Bool Function ProcessNativeConsumption(Actor giver, Actor target, Form selectedI
     ; tested dialogue pipeline remains the sole owner of these extension effects.
     StorageUtil.SetFloatValue(target, "MMEExtensions.NPCDrink.SuppressTime", Utility.GetCurrentRealTime())
     StorageUtil.SetIntValue(target, "MMEExtensions.NPCDrink.SuppressForm", selectedItem.GetFormID())
+    If selectedType == "Lactacid" && !MMEArmorScript.IsMMEMilkMaid(target, milkController)
+        target.RemoveItem(selectedItem, 1, True, giver)
+        MMELog.MasterDiagnostic("[MME Extensions Available Milk API] skip Lactacid: membership changed | actor=" + target)
+        Return False
+    EndIf
     target.EquipItem(selectedItem, False, True)
     TraceDialogueTiming("05 EquipItem requested", target)
     Utility.Wait(0.5)

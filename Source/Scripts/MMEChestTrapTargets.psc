@@ -50,7 +50,7 @@ Bool Function AreNearbyAlliesEnabled(Int mode) Global
     String settings = "/MMEAlerts/Settings"
     If mode == 1
         Return JsonUtil.GetIntValue(settings, "enableArmorTrapNearbyAllies", 1) == 1
-    ElseIf mode == 2
+    ElseIf mode == 2 || mode == 4
         Return JsonUtil.GetIntValue(settings, "enableMilkMaidTrapNearbyAllies", 1) == 1
     ElseIf mode == 3
         Return JsonUtil.GetIntValue(settings, "enableMilkDrinkTrapNearbyAllies", 1) == 1
@@ -79,6 +79,8 @@ Bool Function IsEligible(Actor candidate, Actor center, Int mode, Float radius) 
         Return !MMETimedArmorLock.IsLocked(candidate)
     ElseIf mode == 2
         Return !MMEExtensionsAPI.IsMilkMaid(candidate)
+    ElseIf mode == 4
+        Return MMEExtensionsAPI.IsMilkMaid(candidate)
     EndIf
     Return True
 EndFunction

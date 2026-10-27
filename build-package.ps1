@@ -34,6 +34,7 @@ $mmeCompatibilityOverrideSource = Join-Path $projectRoot "Source\MMECompatibilit
 $mmeCompatibilityOverrideNames = @("MilkQUEST")
 $diagnosticSdk = Join-Path $projectRoot "tools\mme-diagnostic-sdk"
 $scriptNames += "MMEMilkingDiagnostics"
+$scriptNames += "MMEMilkCurse"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
 $standardDefaultsOutputDir = Join-Path $projectRoot "fomod\choices\standard\Scripts"
@@ -282,6 +283,10 @@ $packageSKSEPlugins = Join-Path $stageDir "SKSE\Plugins"
 New-Item -ItemType Directory -Force -Path $packageScripts, $packageSources, $packageSounds, $packageSKSEPlugins | Out-Null
 
 & (Join-Path $projectRoot "tools\Build-MaidRosterUI.ps1")
+& python -B (Join-Path $projectRoot "tools\test_milk_curse.py")
+if ($LASTEXITCODE) { throw "Milk Maid curse contracts failed" }
+& python -B (Join-Path $projectRoot "tools\test_roster_actions.py")
+if ($LASTEXITCODE) { throw "Roster action API contracts failed" }
 & python -B (Join-Path $projectRoot "tools\test_maid_roster_ui.py")
 if ($LASTEXITCODE) { throw "Maid Roster UI contracts failed" }
 
