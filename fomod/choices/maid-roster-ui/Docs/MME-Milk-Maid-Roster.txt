@@ -17,6 +17,14 @@ stored values. N/A means a valid capacity is not available; this UI does not cre
 one. Amounts are MME units, not bottles or liters. Percentages
 above 100 remain visible while their bars stop at 100%.
 
+Milk Capacity has a milk-glass icon and cream-white bar. When a supported
+SLA/OSL-compatible arousal reader is available, a heart-marked Arousal column
+shows a pink 0-100% bar. The whole arousal column is hidden without a supported
+reader. N/A means that actor's arousal is unavailable, not zero. Arousal uses the
+existing framework's stored value, including for unloaded maids, and updates on
+open/Refresh with milk. This display does not change arousal or require SexLab
+itself. Arousal gameplay/animation toggles do not control this read-only column.
+
 NPC rows offer Give Milk from the player inventory; the player row offers Drink.
 Confirmed Milk Maids prefer owned Lactacid, then normal/racial/supernatural milk.
 When no eligible item is owned, the existing Free Jug cheat supplies ordinary milk
@@ -34,6 +42,7 @@ If another Magelight view owns input, close it before opening this roster.
 Routine Papyrus footprints use the master Papyrus logging toggle and prefix
 [MME Maid Roster UI]. Genuine UI failures are deduplicated smoke alarms. A missing
 optional host or an empty roster is an expected skip. No background polling runs.
+Refresh summaries include arousal-reader availability and readable/unknown counts.
 
 This build has passed compilation, plugin round-trip, browser page behavior and
 installer checks. In-game Magelight input/focus, MCM handoff and save/load behavior

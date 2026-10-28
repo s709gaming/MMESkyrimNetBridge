@@ -349,6 +349,16 @@ String Function Escape(String value)
     Return value
 EndFunction
 
+; Resolve optional read support per snapshot, without loading any SLA/OSL types here.
+Bool Function ArousalReaderAvailable()
+    If !MMEArousalBridge.IsAvailable()
+        Return False
+    EndIf
+    Quest readerQuest = Game.GetFormFromFile(0x04290F, "SexLabAroused.esm") as Quest
+    Faction readerFaction = Game.GetFormFromFile(0x03FC36, "SexLabAroused.esm") as Faction
+    Return readerQuest != None || readerFaction != None
+EndFunction
+
 Function RefreshRoster()
     If Refreshing && RefreshGeneration == Generation
         Trace("refresh coalesced | request already running")
@@ -370,6 +380,13 @@ Function RefreshRoster()
     Form[] nextActors
     Int rowCount = 0
     Int skipped = 0
+    Bool arousalReadable = ArousalReaderAvailable()
+    String arousalAvailableJson = "0"
+    If arousalReadable
+        arousalAvailableJson = "1"
+    EndIf
+    Int arousalKnown = 0
+    Int arousalUnknown = 0
     String statusMessage = ""
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None
@@ -421,7 +438,21 @@ Function RefreshRoster()
                         availableJson = "1"
                     EndIf
                     String selfReason = MMEExtensionsAPI.GetSelfMilkBlockReason(candidate)
-                    rows += "{\"token\":\"" + (nextRevision as String) + ":" + (rowCount as String) + "\",\"player\":" + playerJson + ",\"available\":" + availableJson + ",\"selfReason\":\"" + Escape(selfReason) + "\",\"name\":\"" + Escape(actorName) + "\",\"milk\":" + (currentMilk as String) + ",\"capacity\":" + capacityJson + ",\"percent\":" + percentJson + ",\"status\":\"" + actorStatus + "\"}"
+                    String arousalJson = "null"
+                    If arousalReadable
+                        ; A read-only snapshot; never apply exposure, reactions or animations.
+                        Int arousalValue = -1
+                        If !candidate.IsDead() && !candidate.IsDisabled()
+                            arousalValue = MMEArousalBridge.GetCurrentArousal(candidate)
+                        EndIf
+                        If arousalValue >= 0 && arousalValue <= 100
+                            arousalJson = arousalValue as String
+                            arousalKnown += 1
+                        Else
+                            arousalUnknown += 1
+                        EndIf
+                    EndIf
+                    rows += "{\"token\":\"" + (nextRevision as String) + ":" + (rowCount as String) + "\",\"player\":" + playerJson + ",\"available\":" + availableJson + ",\"selfReason\":\"" + Escape(selfReason) + "\",\"name\":\"" + Escape(actorName) + "\",\"milk\":" + (currentMilk as String) + ",\"capacity\":" + capacityJson + ",\"percent\":" + percentJson + ",\"arousal\":" + arousalJson + ",\"status\":\"" + actorStatus + "\"}"
                     rowCount += 1
                 Else
                     skipped += 1
@@ -433,9 +464,9 @@ Function RefreshRoster()
     If requestGeneration == Generation && requestView == ViewId && Enabled() && Magelight.IsVisible(ViewId)
         SnapshotActors = nextActors
         SnapshotRevision = nextRevision
-        String payload = "{\"session\":\"" + (Generation as String) + "\",\"message\":\"" + Escape(statusMessage) + "\",\"rows\":[" + rows + "]}"
+        String payload = "{\"session\":\"" + (Generation as String) + "\",\"message\":\"" + Escape(statusMessage) + "\",\"arousalAvailable\":" + arousalAvailableJson + ",\"rows\":[" + rows + "]}"
         Magelight.Call(ViewId, "setRoster", payload)
-        Trace("refresh complete | rows=" + rowCount + " | skipped=" + skipped + " | view=" + ViewId)
+        Trace("refresh complete | rows=" + rowCount + " | skipped=" + skipped + " | view=" + ViewId + " | arousal reader=" + arousalAvailableJson + " | arousal known=" + arousalKnown + " | arousal unknown=" + arousalUnknown)
     Else
         Trace("refresh discarded | closed or session changed")
     EndIf

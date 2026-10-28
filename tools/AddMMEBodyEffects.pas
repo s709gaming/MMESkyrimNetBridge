@@ -155,7 +155,7 @@ begin
     Exit;
   end;
   SetNativeValue(ElementByName(effectData, 'Archtype'), 1);
-  SetNativeValue(ElementByName(effectData, 'Flags'), $00000E04);
+  SetNativeValue(ElementByName(effectData, 'Flags'), $00000A04);
   SetNativeValue(ElementByName(effectData, 'Base Cost'), 0);
   SetNativeValue(ElementByName(effectData, 'Magic Skill'), -1);
   SetNativeValue(ElementByName(effectData, 'Resist Value'), -1);
@@ -172,7 +172,7 @@ begin
   SetEditorID(bodyAbility, BodyAbilityEditorID);
   AssignLocalFormID(bodyAbility, BodyAbilityLocalID, BodyAbilityEditorID);
   SetElementEditValues(bodyAbility, 'FULL', 'Milk Burden');
-  SetElementEditValues(bodyAbility, 'DESC', 'Movement speed reduced by <mag>%.');
+  if Assigned(ElementBySignature(bodyAbility, 'DESC')) then Remove(ElementBySignature(bodyAbility, 'DESC'));
   spellData := ElementBySignature(bodyAbility, 'SPIT');
   SetElementNativeValues(spellData, 'Type', 4);
   SetElementNativeValues(spellData, 'Cast Type', 0);
@@ -201,7 +201,7 @@ begin
     Exit;
   end;
   SetNativeValue(ElementByName(effectData, 'Archtype'), 1);
-  SetNativeValue(ElementByName(effectData, 'Flags'), $00000E04);
+  SetNativeValue(ElementByName(effectData, 'Flags'), $00000A04);
   SetNativeValue(ElementByName(effectData, 'Base Cost'), 0);
   SetNativeValue(ElementByName(effectData, 'Magic Skill'), -1);
   SetNativeValue(ElementByName(effectData, 'Resist Value'), -1);
@@ -218,7 +218,7 @@ begin
   SetEditorID(milkWeightAbility, MilkWeightAbilityEditorID);
   AssignLocalFormID(milkWeightAbility, MilkWeightAbilityLocalID, MilkWeightAbilityEditorID);
   SetElementEditValues(milkWeightAbility, 'FULL', 'Milk Weight');
-  SetElementEditValues(milkWeightAbility, 'DESC', 'Carried milk reduces carry capacity by <mag> points.');
+  if Assigned(ElementBySignature(milkWeightAbility, 'DESC')) then Remove(ElementBySignature(milkWeightAbility, 'DESC'));
   spellData := ElementBySignature(milkWeightAbility, 'SPIT');
   SetElementNativeValues(spellData, 'Type', 4);
   SetElementNativeValues(spellData, 'Cast Type', 0);

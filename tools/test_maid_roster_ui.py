@@ -10,6 +10,9 @@ class RosterContracts(unittest.TestCase):
   self.assertEqual(group.get('type'),'SelectAny');plugin=group.find('plugins/plugin');self.assertEqual(plugin.find('typeDescriptor/type').get('name'),'Optional');self.assertEqual(plugin.find('files/folder').get('source'),'fomod/choices/maid-roster-ui')
   mcm=(ROOT/'Source/Scripts/MMEAlertsMCM.psc').read_text(encoding='utf-8-sig');self.assertFalse(re.search(r'\bMagelight\.|\bMMEMaidRosterUI\b',re.sub(r'"(?:\\.|[^"\\])*"|;[^\n]*','',mcm)), 'Core MCM must not call optional UI types');self.assertIn('MMEExtensions_RosterOpen',mcm);self.assertIn('maidRosterMigration160',mcm);self.assertIn('AddKeyMapOption',mcm)
  def test_safe_actions_and_identity(self):
+  mcm=(ROOT/'Source/Scripts/MMEAlertsMCM.psc').read_text(encoding='utf-8-sig')
+  availability=mcm.split('Bool Function RosterUiAvailable()',1)[1].split('EndFunction',1)[0]
+  self.assertIn('Game.GetModByName("MME Extensions - Maid Roster.esp") != 255',availability)
   source=(CHOICE/'Source/Scripts/MMEMaidRosterUI.psc').read_text(encoding='utf-8-sig')
   self.assertNotRegex(source,r'\.Cast\(|\.Milking\(|setMilk|updateMilk|calculateMilk|Utility\.Wait|JsonUtil\.(?:Save|Set)')
   self.assertIn('String playerJson = "0"',source);self.assertIn('String availableJson = "0"',source);self.assertNotRegex(source,r'(?:playerJson|availableJson) = "(?:true|false)"')
@@ -28,6 +31,22 @@ class RosterContracts(unittest.TestCase):
   self.assertEqual(hashlib.sha256((CHOICE/'MME Extensions - Maid Roster.esp').read_bytes()).hexdigest().lower(),data['pluginSHA256'].lower())
   self.assertEqual(hashlib.sha256((CHOICE/'Magelight/mmeextensions/views/roster/index.html').read_bytes()).hexdigest().lower(),data['pageSHA256'].lower())
   self.assertFalse(list((CHOICE/'Scripts').glob('Magelight.*')))
+ def test_optional_arousal_read_boundary(self):
+  source=(CHOICE/'Source/Scripts/MMEMaidRosterUI.psc').read_text(encoding='utf-8-sig')
+  support=source.split('Bool Function ArousalReaderAvailable()',1)[1].split('EndFunction',1)[0]
+  self.assertIn('If !MMEArousalBridge.IsAvailable()',support)
+  self.assertIn('readerQuest != None || readerFaction != None',support)
+  scan=source.split('String arousalJson = "null"',1)[1].split('rows +=',1)[0]
+  self.assertIn('If arousalReadable',scan);self.assertIn('!candidate.IsDead() && !candidate.IsDisabled()',scan)
+  self.assertEqual(source.count('MMEArousalBridge.GetCurrentArousal(candidate)'),1)
+  self.assertIn('arousalKnown += 1',scan);self.assertIn('arousalUnknown += 1',scan)
+  self.assertNotRegex(source,r'UpdateActorExposure|ApplyArousal|slaFrameworkScr|OSLArousedNative')
+  pex=(CHOICE/'Scripts/MMEMaidRosterUI.pex').read_bytes().lower()
+  self.assertIn(b'mmearousalbridge',pex)
+  for dependency in [b'slaframeworkscr',b'oslarousednative',b'sexlabframework']:
+   self.assertNotIn(dependency,pex)
+  self.assertFalse((CHOICE/'Source/Scripts/MMEArousalBridge.psc').exists())
+  self.assertFalse((CHOICE/'Scripts/MMEArousalBridge.pex').exists())
  def test_real_frontend(self):
   subprocess.run(['node',str(ROOT/'tools/test_maid_roster_page.cjs'),str(CHOICE/'Magelight/mmeextensions/views/roster/index.html')],check=True)
  def test_compiled_array_guards(self):

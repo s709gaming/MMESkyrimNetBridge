@@ -5421,7 +5421,8 @@ EndFunction
 
 ; Common core uses only string/plugin checks and events; no optional UI script types.
 Bool Function RosterUiAvailable()
-    Return Game.GetModByName("MME Extensions - Maid Roster.esp") < 255 && SKSE.GetPluginVersion("Magelight") >= 0
+    ; SKSE returns 256+ for ESL plugins; only 255 means absent.
+    Return Game.GetModByName("MME Extensions - Maid Roster.esp") != 255 && SKSE.GetPluginVersion("Magelight") >= 0
 EndFunction
 
 Event OnOptionKeyMapChange(Int option, Int keyCode, String conflictControl, String conflictName)

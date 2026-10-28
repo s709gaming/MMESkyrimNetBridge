@@ -25,7 +25,11 @@ Assert-Contract ($body -match 'RefreshDisplayEffects\(player, speedPenalty, carr
 Assert-Contract ($body -match 'previousMagnitude < \(magnitude - 0\.001\)' -and $body -match 'display updated') "display refresh and footprints occur only when state changes"
 Assert-Contract ($mcm -match 'AddToggleOption\("Milk Has Weight"' -and $mcm -notmatch 'AddToggleOption\("Milk Has Custom Weight"') "MCM uses the approved label without renaming its saved key"
 Assert-Contract ($xedit -match 'MilkWeightEffectLocalID = \$0008C2' -and $xedit -match 'MilkWeightAbilityLocalID = \$0008C3') "xEdit reserves fixed collision-checked weight display records"
-Assert-Contract ($xedit -match "SetElementEditValues\(bodyAbility, 'DESC', 'Movement speed reduced by <mag>%\.'\)" -and $xedit -match "SetElementEditValues\(milkWeightAbility, 'DESC', 'Carried milk reduces carry capacity by <mag> points\.'\)") "both displayed ability descriptions expose their final magnitude token"
+Assert-Contract ($xedit -match "Remove\(ElementBySignature\(bodyAbility, 'DESC'\)\)" -and $xedit -match "Remove\(ElementBySignature\(milkWeightAbility, 'DESC'\)\)") "spell descriptions inherit magic effect text"
+Assert-Contract ($xedit -match "SetElementEditValues\(bodyEffect, 'DNAM', 'Movement speed reduced by <mag>%\.'\)" -and $xedit -match "SetElementEditValues\(milkWeightEffect, 'DNAM', 'Carried milk reduces carry capacity by <mag> points\.'\)") "magnitude tokens belong to magic effect descriptions"
+Assert-Contract (($xedit | Select-String -Pattern '\$00000A04' -AllMatches).Matches.Count -eq 2 -and $xedit -notmatch '\$00000E04') "display effects allow magnitude, preserving other flags"
+& python -B (Join-Path $projectRoot 'tools\test_body_display_records.py')
+if ($LASTEXITCODE) { throw 'Body display binary record checks failed' }
 Assert-Contract ($controller -match 'NextBodyEffectsUpdate' -and $controller -match 'MMEBodyEffects\.Reconcile') "body reconciliation uses the shared scheduler"
 Assert-Contract ($build -match '\$scriptNames \+= "MMEBodyEffects"' -and $build -match 'Test-BodyEffectsContracts') "release build compiles and tests the feature"
 
