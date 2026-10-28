@@ -35,6 +35,8 @@ $mmeCompatibilityOverrideNames = @("MilkQUEST")
 $diagnosticSdk = Join-Path $projectRoot "tools\mme-diagnostic-sdk"
 $scriptNames += "MMEMilkingDiagnostics"
 $scriptNames += "MMEMilkCurse"
+$scriptNames += "MMEChestCurseNarration"
+$scriptNames += "MMETextPool"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
 $standardDefaultsOutputDir = Join-Path $projectRoot "fomod\choices\standard\Scripts"
@@ -283,6 +285,10 @@ $packageSKSEPlugins = Join-Path $stageDir "SKSE\Plugins"
 New-Item -ItemType Directory -Force -Path $packageScripts, $packageSources, $packageSounds, $packageSKSEPlugins | Out-Null
 
 & (Join-Path $projectRoot "tools\Build-MaidRosterUI.ps1")
+& python -B (Join-Path $projectRoot "tools\test_chest_curse_narration.py")
+if ($LASTEXITCODE) { throw "Chest curse narration contracts failed" }
+& python -B (Join-Path $projectRoot "tools\test_text_pool.py")
+if ($LASTEXITCODE) { throw "Text pool reader contracts failed" }
 & python -B (Join-Path $projectRoot "tools\test_milk_curse.py")
 if ($LASTEXITCODE) { throw "Milk Maid curse contracts failed" }
 & python -B (Join-Path $projectRoot "tools\test_roster_actions.py")

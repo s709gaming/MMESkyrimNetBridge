@@ -323,6 +323,14 @@
         "actor",
         "conversion"
       ]
+    },
+    "narrate_chest_milk_maid_curse_1": {
+      "tokens": [
+        "actor",
+        "outcome",
+        "chest_kind",
+        "milk_added"
+      ]
     }
   },
   "TentacleArmor": {

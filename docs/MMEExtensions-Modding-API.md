@@ -372,7 +372,7 @@ supports the player or an eligible adult female NPC. It bypasses MME's NPC
 Yes/No confirmation while retaining MME's localized assignment message,
 authoritative slot and progression-capacity checks, initial Lactacid state,
 and original ten-second `ZaZAPCHorFd` reaction sequence. Player calls can also
-show MME's original game-pausing Lactacid story boxes. After a successful call,
+show one game-pausing story selected from the shared five-story pool. After a successful call,
 MME Extensions selects one editable line from
 `ForcedMilkMaidConversion.json`, uses it for the local notification, and sends
 the same context to the dedicated Skyrim.Net forced narration route. Each
@@ -772,10 +772,14 @@ safe to retry the gameplay. Native MME cycles may subsequently clamp/leak overfl
 Chest callers retain armor-first and conversion-first selection, then use this
 surge for existing maids when no eligible non-maid remains. The chest MCM slider
 uses five-percent steps and defaults to 50%. Existing Free Jug/drink settings do
-not affect this curse. The standard conversion API retains its signature and
-opening/closing stories for non-chest sources. Chest conversions select one of
-`ForcedMilkMaidConversion.json`'s five `chestCurseStories` instead of stacking the
-generic stories. Notifications retain `conversionMessages`.
+not affect this curse. The standard conversion API retains its signature. All Extensions-owned forced
+conversions and curse surges select one of `ForcedMilkMaidConversion.json`'s five
+`chestCurseStories` instead of the legacy opening/closing pair. The historical
+pool key is preserved for customized files. Notifications retain `conversionMessages`.
+Native MME Lactacid stories remain separate; the animation-only API never shows
+a story automatically. The Misc page's Enable Milk Maid Curse Trap master controls
+only chest conversion/surge, preserving child settings and leaving armor traps,
+exotic milk traps, non-chest conversion and public APIs independent.
 
 Routine `[MME Extensions Milk Maid Curse]` traces need only the master Papyrus
 logging toggle. They distinguish conversion/surge, requested/actual milk delta,
@@ -783,3 +787,40 @@ story index, animation dispatch and cleanup. Movement has existing controller
 load recovery. A chest commit is written before mutation to prevent replay after
 interruption; this is an at-most-once safeguard, not a transactional rollback of
 all framework effects. An interrupted operation may omit its story/reaction.
+
+
+Milk Maid story/notification pool reads use the ordinary top-level JSON arrays
+through the shared read-only MMETextPool adapter. Legacy typed stringList pools
+are supported when the canonical member is absent. A canonical empty or invalid
+member uses a safe fallback rather than silently selecting legacy content.
+Non-string/blank canonical entries are skipped. No text is rewritten or saved.
+Master-gated [MME Text Pool] footprints report format, entry/usable counts,
+selected index, actor/source, and a concrete fallback reason. Bad configuration
+alarms are rate-limited. After installing/restarting, the supplied five-entry
+pools should report count=5, valid=5, and index=0 through 4. This reader correction
+does not change curse gameplay or address unrelated shutdown crashes.
+
+
+Chest-specific curse narration uses the editable `narrate_chest_milk_maid_curse_1`
+route in Narration/MilkMaidCreation.json. It receives actor, readable chest kind,
+conversion/surge outcome and the immediate measured surge delta. The wording asks
+for short, positive storybook banter that playfully suspects an enchantment from
+the chest. Conversion is not described as a second conversion or an invented
+milk-reserve increase. Chest FormIDs are diagnostic context, not spoken wording.
+
+Misc adds Enable Chest Curse Narration (default on), subordinate to the shared
+Enable Skyrim.Net Narration switch and the chest curse master. Existing saved
+master settings are preserved. Skyrim.Net's ESP/DLL and enabled setting are
+checked before publication; absent/disabled dependencies are normal skips.
+Chest effects retain notifications/stories but replace their generic narration
+with this route, including when chest narration is off (no generic voice fallback).
+Non-chest public API behavior is unchanged.
+
+Player generation returns to OnChestCursePlayerLine on the existing controller;
+playback rechecks authorization and targets player TTS only. NPC requests select
+the affected actor explicitly. No mutable last-chest context is used. NPC playback
+already accepted by Skyrim.Net remains under its own asynchronous control.
+[MME Chest Curse Narration] footprints use the master Papyrus toggle and report
+actor/chest/outcome/delta, skips, route, queue results and player playback results.
+Fullness narration and gameplay are unchanged; potential follow-up dialogue is a
+separate task. Live generation wording and timing still need player/NPC testing.

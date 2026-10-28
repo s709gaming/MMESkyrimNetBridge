@@ -13,6 +13,9 @@
     },
     "narrate_milk_maid_curse_1": {
       "template": "{conversion} This event affects {actor}, who is already a Milk Maid. A magical curse has added milk to her existing reserves, possibly beyond her normal capacity. She has not just become a Milk Maid. React briefly in her own first-person voice with playful surprise at the sudden warmth, ripeness and abundant milk. Do not invent a second conversion or a drink."
+    },
+    "narrate_chest_milk_maid_curse_1": {
+      "template": "A magical Milk Maid curse has emerged from a {chest_kind} and affected {actor}. {outcome} Speak as {actor} in first person. React in one or two short sentences of cheerful, lightly sensual storybook banter. Express surprise at the sudden change, then playfully suspect a cheeky enchantment or magical treasure inside that chest. Keep the chest connection identifiable, but do not mechanically explain the spell or repeat these instructions. Favor natural rhetorical questions and playful innuendo about ripeness, fullness, unexpected bounty or wobbling back to town. Treat the effect as a delightful surprise, with personality-appropriate humor. Vary the wording and punchline; not every line needs a wobbling joke. Do not claim she drank anything, invent physical loot, or say she became a Milk Maid again if she was already one. Milk added by this event: {milk_added}; use this only as factual context, not a demand to recite numbers."
     }
   }
 }

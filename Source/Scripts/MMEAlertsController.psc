@@ -22,6 +22,10 @@ Function OnForcedMilkMaidPlayerLine(String response, Int success)
     MMEAlertsSkyrimNet.PlayForcedMilkMaidPlayerLine(response, success)
 EndFunction
 
+Function OnChestCursePlayerLine(String response, Int success)
+    MMEChestCurseNarration.PlayPlayerLine(response, success)
+EndFunction
+
 Function OnMilkCravingPlayerLine(String response, Int success)
     MMEAlertsSkyrimNet.PlayMilkCravingPlayerLine(response, success)
 EndFunction

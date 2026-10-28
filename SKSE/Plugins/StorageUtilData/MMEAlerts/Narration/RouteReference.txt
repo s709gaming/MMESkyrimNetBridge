@@ -85,6 +85,7 @@ MilkMaidCreation.json
   narrate_forced_milk_maid_conversion_1: {actor}, {conversion}
   milkmaidCreatedMessage: {actor}
   narrate_milk_maid_curse_1: {actor}, {conversion}
+  narrate_chest_milk_maid_curse_1: {actor}, {outcome}, {chest_kind}, {milk_added}
 
 TentacleArmor.json
   narrate_tentacle_effect_1: (no placeholders)

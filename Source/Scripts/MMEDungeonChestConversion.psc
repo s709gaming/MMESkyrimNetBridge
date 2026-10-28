@@ -8,6 +8,10 @@ Int Function HandleActivation(Actor targetActor, String chestIdentity, Bool boss
     If !MMEAlertsController.IsExtensionsEnabled()
         Return 0
     EndIf
+    If JsonUtil.GetIntValue(settingsFile, "enableMilkMaidCurseTrap", 1) != 1
+        Report("curse skipped | chest master disabled")
+        Return 0
+    EndIf
     String chestKind = "regular"
     String enabledKey = "enableRegularChestMilkMaid"
     String chanceKey = "regularChestMilkMaidChance"
@@ -72,9 +76,9 @@ Int Function HandleActivation(Actor targetActor, String chestIdentity, Bool boss
     Bool created = False
     Report("selected outcome | surge=" + surge + " | actor=" + conversionTarget)
     If surge
-        created = MMEMilkCurse.ApplySurge(conversionTarget, JsonUtil.GetIntValue(settingsFile, "milkMaidCurseSurgePercent", 50), resolvedKey)
+        created = MMEMilkCurse.ApplySurgeWithChestContext(conversionTarget, JsonUtil.GetIntValue(settingsFile, "milkMaidCurseSurgePercent", 50), resolvedKey, chestKind, chestIdentity)
     Else
-        created = MMENewMilkMaid.TryCreateMilkMaidWithContext(conversionTarget, True, resolvedKey)
+        created = MMENewMilkMaid.TryCreateMilkMaidWithChestContext(conversionTarget, True, resolvedKey, chestKind, chestIdentity)
     EndIf
     StorageUtil.UnsetIntValue(None, pendingKey)
     StorageUtil.UnsetFloatValue(None, pendingKey + ".Time")

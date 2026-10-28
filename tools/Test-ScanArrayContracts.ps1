@@ -11,7 +11,7 @@ $testDirectory = Join-Path ([IO.Path]::GetTempPath()) ('MME-ScanArrayTests-' + [
 New-Item -ItemType Directory -Path $testDirectory | Out-Null
 Push-Location $testDirectory
 try {
-    foreach ($scriptName in @('MMEAlertsController', 'MMETentacleEffects', 'MMEThoughts', 'MMEOStimIntegration', 'MMEOManiaCompatibility', 'MMEElsieBreastfeeding', 'MMEDebug')) {
+    foreach ($scriptName in @('MMEAlertsController', 'MMETentacleEffects', 'MMEThoughts', 'MMEOStimIntegration', 'MMEOManiaCompatibility', 'MMEElsieBreastfeeding', 'MMEDebug', 'MMETextPool')) {
         Copy-Item -LiteralPath (Join-Path $CompiledDirectory "$scriptName.pex") -Destination $testDirectory
         & $Assembler $scriptName -D -Q
         if ($LASTEXITCODE -ne 0) { throw "Disassembly failed: $scriptName" }

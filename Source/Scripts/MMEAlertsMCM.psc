@@ -33,6 +33,8 @@ Int chestArmorTrapChanceOption
 Int chestArmorTrapCooldownOption
 Int dungeonChestMilkMaidOption
 Int milkMaidTrapNearbyAlliesOption
+Int chestCurseNarrationOption
+Int milkMaidCurseMasterOption
 Int milkMaidCurseSurgeOption
 Int dungeonChestMilkMaidChanceOption
 Int regularChestMilkMaidOption
@@ -331,7 +333,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 161
+    Return 163
 EndFunction
 
 Function SetPageNames()
@@ -404,6 +406,14 @@ EndFunction
 
 ; Seeds new settings and runs one-time migrations without overriding later choices.
 Function EnsureDefaults()
+    If !JsonUtil.HasIntValue(SettingsFile, "enableChestCurseNarration")
+        JsonUtil.SetIntValue(SettingsFile, "enableChestCurseNarration", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If !JsonUtil.HasIntValue(SettingsFile, "enableMilkMaidCurseTrap")
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidCurseTrap", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
     If !JsonUtil.HasIntValue(SettingsFile, "milkMaidCurseSurgePercent")
         JsonUtil.SetIntValue(SettingsFile, "milkMaidCurseSurgePercent", 50)
         JsonUtil.Save(SettingsFile, False)
@@ -1771,6 +1781,8 @@ Event OnPageReset(String page)
     chestArmorTrapCooldownOption = -1
     dungeonChestMilkMaidOption = -1
     milkMaidTrapNearbyAlliesOption = -1
+    chestCurseNarrationOption = -1
+    milkMaidCurseMasterOption = -1
     milkMaidCurseSurgeOption = -1
     dungeonChestMilkMaidChanceOption = -1
     regularChestMilkMaidOption = -1
@@ -2128,7 +2140,7 @@ Event OnPageReset(String page)
     EndIf
     If page == "Misc"
         AddHeaderOption("Trapped Armor Chests")
-        chestArmorTrapOption = AddToggleOption("Master Trap Chest Toggle", JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap", 1) == 1)
+        chestArmorTrapOption = AddToggleOption("Enable Trap Armor Chest", JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap", 1) == 1)
         Int armorTrapFlags = OPTION_FLAG_NONE
         If JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap", 1) != 1
             armorTrapFlags = OPTION_FLAG_DISABLED
@@ -2146,26 +2158,35 @@ Event OnPageReset(String page)
         dwemerRuinArmorTrapChanceOption = AddSliderOption("Dwemer Ruin Chance", JsonUtil.GetIntValue(SettingsFile, "dwemerRuinArmorTrapChance", 25), "{0}%", dwemerTrapFlags)
         chestArmorTrapChanceOption = AddSliderOption("General Trap Chance", JsonUtil.GetIntValue(SettingsFile, "chestArmorTrapChance", 5), "{0}%", armorTrapFlags)
         chestArmorTrapCooldownOption = AddSliderOption("Armor Trap Cooldown", JsonUtil.GetFloatValue(SettingsFile, "chestArmorTrapCooldownHours", 4.0), "{0} game hours", armorTrapFlags)
-        AddHeaderOption("Milk Maid Chest Traps")
-        milkMaidTrapNearbyAlliesOption = AddToggleOption("Milk Maid Curse Targets Nearby Allies", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidTrapNearbyAllies", 1) == 1)
-        dungeonChestMilkMaidOption = AddToggleOption("Boss Chests", JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1) == 1)
-        Int dungeonChestChanceFlags = OPTION_FLAG_NONE
+        AddHeaderOption("Milk Maid Curse Traps")
+        milkMaidCurseMasterOption = AddToggleOption("Enable Milk Maid Curse Trap", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidCurseTrap", 1) == 1)
+        Int curseFlags = OPTION_FLAG_NONE
+        If JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidCurseTrap", 1) != 1
+            curseFlags = OPTION_FLAG_DISABLED
+        EndIf
+        milkMaidTrapNearbyAlliesOption = AddToggleOption("Milk Maid Curse Targets Nearby Allies", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidTrapNearbyAllies", 1) == 1, curseFlags)
+        dungeonChestMilkMaidOption = AddToggleOption("Boss Chests", JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1) == 1, curseFlags)
+        Int dungeonChestChanceFlags = curseFlags
         If JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1) != 1
             dungeonChestChanceFlags = OPTION_FLAG_DISABLED
         EndIf
-        milkMaidCurseSurgeOption = AddSliderOption("Existing Maid Curse: Added Milk", JsonUtil.GetIntValue(SettingsFile, "milkMaidCurseSurgePercent", 50), "{0}% of capacity")
+        milkMaidCurseSurgeOption = AddSliderOption("Existing Maid Curse: Added Milk", JsonUtil.GetIntValue(SettingsFile, "milkMaidCurseSurgePercent", 50), "{0}% of capacity", curseFlags)
         dungeonChestMilkMaidChanceOption = AddSliderOption("Boss Chest Chance", JsonUtil.GetIntValue(SettingsFile, "dungeonChestMilkMaidChance", 100), "{0}%", dungeonChestChanceFlags)
-        regularChestMilkMaidOption = AddToggleOption("Regular Chests", JsonUtil.GetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1) == 1)
-        Int regularChestChanceFlags = OPTION_FLAG_NONE
+        regularChestMilkMaidOption = AddToggleOption("Regular Chests", JsonUtil.GetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1) == 1, curseFlags)
+        Int regularChestChanceFlags = curseFlags
         If JsonUtil.GetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1) != 1
             regularChestChanceFlags = OPTION_FLAG_DISABLED
         EndIf
         regularChestMilkMaidChanceOption = AddSliderOption("Regular Chest Chance", JsonUtil.GetIntValue(SettingsFile, "regularChestMilkMaidChance", 10), "{0}%", regularChestChanceFlags)
-        AddHeaderOption("Forced Conversion Feedback")
-        forcedMilkMaidNotificationOption = AddToggleOption("Conversion Notification", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNotification", 1) == 1)
-        forcedMilkMaidLactacidStoryOption = AddToggleOption("Conversion Story", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidStory", 1) == 1)
-        forcedMilkMaidNarrationOption = AddToggleOption("Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNarration", 1) == 1)
-        forcedMilkMaidDiagnosticOption = AddToggleOption("Conversion Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidDiagnostic", 0) == 1)
+        forcedMilkMaidNotificationOption = AddToggleOption("Enable Milk Maid Notifications", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNotification", 1) == 1)
+        forcedMilkMaidLactacidStoryOption = AddToggleOption("Enable Milk Maid Stories", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidStory", 1) == 1)
+        forcedMilkMaidNarrationOption = AddToggleOption("Enable Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNarration", 1) == 1)
+        Int chestNarrationFlags = curseFlags
+        If JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNarration", 1) != 1
+            chestNarrationFlags = OPTION_FLAG_DISABLED
+        EndIf
+        chestCurseNarrationOption = AddToggleOption("Enable Chest Curse Narration", JsonUtil.GetIntValue(SettingsFile, "enableChestCurseNarration", 1) == 1, chestNarrationFlags)
+        forcedMilkMaidDiagnosticOption = AddToggleOption("Enable Milk Maid Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidDiagnostic", 0) == 1)
         AddHeaderOption("Reverse Milk Maid Leveling")
         reverseDurationOption = AddSliderOption("Reverse Leveling Duration", MMEReverseLevel.GetDuration(), "{0} game hours")
         reversePlayerLevelOption = AddSliderOption("Minimum Milk Maid Level", MMEReverseLevel.GetRequiredLevel(), "{0}")
@@ -2814,7 +2835,10 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Shared cooldown started only after armor is successfully equipped and locked. Default 4 game hours, range 0-24.")
         Return
     EndIf
-    If option == dungeonChestMilkMaidOption
+    If option == milkMaidCurseMasterOption
+        SetInfoText("Enable chest-triggered Milk Maid conversion and existing-maid milk surges. Boss/regular chest settings are preserved while off. Armor traps, exotic milk traps, and non-chest conversion sources remain independent.")
+        Return
+    ElseIf option == dungeonChestMilkMaidOption
         SetInfoText("Curated boss chests curse an eligible nearby allied female: convert a non-maid first, otherwise surge an existing maid. Each chest resolves once after a committed curse or missed roll. Default on.")
         Return
     ElseIf option == milkMaidTrapNearbyAlliesOption
@@ -2853,16 +2877,19 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Send one immediate Skyrim.Net event with the selected drinker prioritized as speaker. The gameplay trap already owns chance and cooldown. Default on.")
         Return
     ElseIf option == forcedMilkMaidNotificationOption
-        SetInfoText("Show one editable JSON conversion line as a regular notification after every successful forced animated API conversion. Default on.")
+        SetInfoText("Show brief Milk Maid notifications for Extensions forced-conversion and curse routes, including non-chest sources. Native MME notifications have their own controls.")
         Return
     ElseIf option == forcedMilkMaidLactacidStoryOption
-        SetInfoText("For forced player conversions, show trigger-neutral game-pausing transformation messages before and after the animation. Text is editable in the forced-conversion JSON. Default on.")
+        SetInfoText("Show one randomly selected Milk Maid story for player forced conversions and curse surges. Uses the shared editable five-story pool. NPCs do not open story popups; native MME Lactacid stories remain separate.")
         Return
     ElseIf option == forcedMilkMaidNarrationOption
-        SetInfoText("After every successful forced animated API conversion, send the same selected JSON line to Skyrim.Net for immediate narration without a cooldown or extra chance roll. Default on.")
+        SetInfoText("Enable Skyrim.Net reactions for Extensions forced-conversion and curse routes, including non-chest sources. Skyrim.Net remains optional.")
+        Return
+    ElseIf option == chestCurseNarrationOption
+        SetInfoText("One playful Skyrim.Net reaction after a chest's magical Milk Maid conversion or milk surge. Default on; requires Enable Skyrim.Net Narration. Notifications and stories remain separate. Skyrim.Net is optional.")
         Return
     ElseIf option == forcedMilkMaidDiagnosticOption
-        SetInfoText("Write detailed forced-conversion, JSON feedback and Skyrim.Net results when the master Papyrus logging switches are enabled. Default off.")
+        SetInfoText("Enable detailed diagnostics for Extensions forced-conversion and curse routes. Routine Papyrus footprints still use the master Papyrus logging toggle.")
         Return
     EndIf
     If option == reverseTraceOption
@@ -3468,6 +3495,13 @@ Event OnOptionSelect(Int option)
         JsonUtil.Save(SettingsFile, False)
         SetToggleOptionValue(option, outsideValue == 1)
         Return
+    ElseIf option == milkMaidCurseMasterOption
+        Int curseValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidCurseTrap", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkMaidCurseTrap", curseValue)
+        JsonUtil.Save(SettingsFile, False)
+        MMELog.MasterDiagnostic("[MME Extensions Milk Maid Curse] chest master changed | enabled=" + curseValue)
+        ForcePageReset()
+        Return
     ElseIf option == dungeonChestMilkMaidOption
         Int dungeonChestValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableDungeonChestMilkMaid", dungeonChestValue)
@@ -3585,6 +3619,14 @@ Event OnOptionSelect(Int option)
         JsonUtil.SetIntValue(SettingsFile, "enableForcedMilkMaidNarration", narrationValue)
         JsonUtil.Save(SettingsFile, False)
         SetToggleOptionValue(option, narrationValue == 1)
+        ForcePageReset()
+        Return
+    ElseIf option == chestCurseNarrationOption
+        Int chestNarrationValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableChestCurseNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableChestCurseNarration", chestNarrationValue)
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValue(option, chestNarrationValue == 1)
+        MMELog.MasterDiagnostic("[MME Chest Curse Narration] setting changed | enabled=" + chestNarrationValue)
         Return
     ElseIf option == forcedMilkMaidDiagnosticOption
         Int diagnosticValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidDiagnostic", 0)

@@ -99,6 +99,10 @@ EndFunction
 ; commitKey belongs to the chest service, never a public client-supplied key.
 ; Mark before mutation: an interrupted save cannot repeat committed gameplay.
 Bool Function ApplySurge(Actor target, Float percentage, String commitKey) Global
+    Return ApplySurgeWithChestContext(target, percentage, commitKey, "", "")
+EndFunction
+
+Bool Function ApplySurgeWithChestContext(Actor target, Float percentage, String commitKey, String chestKind, String chestIdentity) Global
     String reason = GetBlockReason(target)
     Trace("surge entry | actor=" + target + " | percent=" + percentage + " | reason=" + reason)
     If reason != "" || percentage <= 0.0
@@ -141,6 +145,11 @@ Bool Function ApplySurge(Actor target, Float percentage, String commitKey) Globa
         AlarmOnce(target, "invalid milk/capacity before surge commit")
         Return False
     EndIf
+    If commitKey != "" && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMilkMaidCurseTrap", 1) != 1
+        MMEAnimationSafety.Release(target, owner)
+        Trace("surge skipped before commit | chest master disabled | actor=" + target)
+        Return False
+    EndIf
     Float addition = maximum * percentage / 100.0
     If commitKey != ""
         StorageUtil.SetIntValue(None, commitKey, 1)
@@ -162,7 +171,7 @@ Bool Function ApplySurge(Actor target, Float percentage, String commitKey) Globa
     If !target.IsDead() && !target.IsDisabled() && target.Is3DLoaded()
         MMEArmorScript.EvaluateArmorStrippingForActor(target, MME_Storage.getMilkCurrent(target), "curse surge")
     EndIf
-    Feedback(target, False)
+    FeedbackWithChestContext(target, False, chestKind, chestIdentity, afterMilk - beforeMilk)
     Trace("surge cleanup complete | actor=" + target)
     Return True
 EndFunction
@@ -171,39 +180,33 @@ Function ShowStory(Actor target) Global
     If target != Game.GetPlayer() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableForcedMilkMaidStory", 1) != 1
         Return
     EndIf
+    ; Historical JSON key retained so customized story pools keep working.
     String config = "/MMEAlerts/ForcedMilkMaidConversion"
-    Int count = JsonUtil.StringListCount(config, "chestCurseStories")
-    Int selected = -1
-    String story = "A mysterious enchantment washes over {actor}. Her breasts tingle with warmth and the promise of a wonderfully abundant harvest!"
-    If count > 0
-        selected = Utility.RandomInt(0, count - 1)
-        String configured = JsonUtil.StringListGet(config, "chestCurseStories", selected)
-        If configured != ""
-            story = configured
-        EndIf
-    EndIf
-    Trace("story selected | actor=" + target + " | index=" + selected)
+    String fallbackStory = "A mysterious enchantment washes over {actor}. Her breasts tingle with warmth and the promise of a wonderfully abundant harvest!"
+    String story = MMETextPool.Pick(config, "chestCurseStories", fallbackStory, target, "Milk Maid story")
     Debug.MessageBox(MMEAlertsSkyrimNet.RenderMessage(story, MMENewMilkMaid.GetActorName(target)))
 EndFunction
 
 Function Feedback(Actor target, Bool converted) Global
+    FeedbackWithChestContext(target, converted, "", "", 0.0)
+EndFunction
+
+Function FeedbackWithChestContext(Actor target, Bool converted, String chestKind, String chestIdentity, Float milkAdded) Global
     If target == None || !MMEAlertsController.IsExtensionsEnabled()
         Return
     EndIf
-    String config = "/MMEAlerts/ForcedMilkMaidConversion"
-    String text = "{actor} feels strange magic coursing through their breasts!"
-    Int count = JsonUtil.StringListCount(config, "conversionMessages")
-    If count > 0
-        String configured = JsonUtil.StringListGet(config, "conversionMessages", Utility.RandomInt(0, count - 1))
-        If configured != ""
-            text = configured
-        EndIf
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableForcedMilkMaidNotification", 1) != 1 && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableForcedMilkMaidNarration", 1) != 1
+        Return
     EndIf
+    String config = "/MMEAlerts/ForcedMilkMaidConversion"
+    String text = MMETextPool.Pick(config, "conversionMessages", "{actor} feels strange magic coursing through their breasts!", target, "Milk Maid curse feedback")
     text = MMEAlertsSkyrimNet.RenderMessage(text, MMENewMilkMaid.GetActorName(target))
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableForcedMilkMaidNotification", 1) == 1
         Debug.Notification(text)
     EndIf
-    If converted
+    If chestKind != "" || chestIdentity != ""
+        MMEChestCurseNarration.Publish(target, converted, chestKind, chestIdentity, milkAdded)
+    ElseIf converted
         MMEAlertsSkyrimNet.NarrateForcedMilkMaidConversion(target, text)
     Else
         MMEAlertsSkyrimNet.NarrateMilkMaidCurse(target, text)

@@ -5,7 +5,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def read(name):return (ROOT/'Source/Scripts'/f'{name}.psc').read_text(encoding='utf-8-sig')
 class CurseContracts(unittest.TestCase):
  def test_surge_is_additive_uncapped_and_not_conversion(self):
-  body=read('MMEMilkCurse').split('Bool Function ApplySurge(',1)[1].split('EndFunction',1)[0]
+  body=read('MMEMilkCurse').split('Bool Function ApplySurgeWithChestContext(',1)[1].split('EndFunction',1)[0]
   self.assertIn('maximum * percentage / 100.0',body)
   self.assertIn('changeMilkCurrent(target, addition, False)',body)
   self.assertLess(body.index('SetIntValue(None, commitKey, 1)'),body.index('changeMilkCurrent('))
@@ -33,8 +33,9 @@ class CurseContracts(unittest.TestCase):
   for text in data['chestCurseStories']:self.assertEqual(set(re.findall(r'\{(.*?)\}',text)),{'actor'})
   self.assertIn('openingStory',data);self.assertIn('closingStory',data)
   s=read('MMENewMilkMaid');self.assertIn('TryCreateMilkMaidWithContext(candidate, False, "")',s)
-  self.assertIn('!chestCurse && isPlayer',s)
-  self.assertIn('If chestCurse\n        MMEMilkCurse.ShowStory(candidate)',s)
+  self.assertEqual(s.count('MMEMilkCurse.ShowStory(candidate)'),1)
+  self.assertNotIn('Debug.MessageBox(openingStory)',s)
+  self.assertNotIn('Debug.MessageBox(closingStory)',s)
   self.assertIn('target != Game.GetPlayer()',read('MMEMilkCurse'))
  def test_setting_migration_and_master_footprints(self):
   s=read('MMEAlertsMCM');self.assertIn('!JsonUtil.HasIntValue(SettingsFile, "milkMaidCurseSurgePercent")',s)
@@ -47,4 +48,18 @@ class CurseContracts(unittest.TestCase):
   self.assertIn('Bool Function TryApplyMilkMaidCurse(Actor target, Float percentage = 50.0) Global',api)
   data=json.loads((ROOT/'SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkMaidCreation.json').read_text(encoding='utf-8'))
   self.assertIn('already a Milk Maid',data['routes']['narrate_milk_maid_curse_1']['template'])
+ def test_chest_master_is_separate_and_saved_settings_are_preserved(self):
+  s=read('MMEAlertsMCM')
+  self.assertIn('!JsonUtil.HasIntValue(SettingsFile, "enableMilkMaidCurseTrap")',s)
+  self.assertIn('AddToggleOption("Enable Trap Armor Chest", JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap"',s)
+  self.assertIn('AddToggleOption("Enable Milk Maid Curse Trap"',s)
+  self.assertNotIn('AddHeaderOption("Forced Conversion Feedback")',s)
+  self.assertIn('Int dungeonChestChanceFlags = curseFlags',s)
+  self.assertIn('Int regularChestChanceFlags = curseFlags',s)
+  block=s.split('forcedMilkMaidNotificationOption = AddToggleOption',1)[1].split('AddHeaderOption',1)[0]
+  for line in block.splitlines():
+   if 'AddToggleOption' in line and 'chestCurseNarrationOption' not in line:
+    self.assertNotIn('curseFlags',line);self.assertNotIn('chestNarrationFlags',line)
+  for script in ('MMEDungeonChestConversion','MMENewMilkMaid','MMEMilkCurse'):
+   self.assertIn('"enableMilkMaidCurseTrap", 1',read(script))
 if __name__=='__main__':unittest.main()

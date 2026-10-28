@@ -74,7 +74,7 @@ Int Function RouteCount(String fileKey) Global
         Return 2
     EndIf
     If fileKey == "MilkMaidCreation"
-        Return 4
+        Return 5
     EndIf
     If fileKey == "TentacleArmor"
         Return 5
@@ -283,6 +283,9 @@ String Function RouteKey(String fileKey, Int index) Global
     EndIf
     If fileKey == "MilkMaidCreation" && index == 3
         Return "narrate_milk_maid_curse_1"
+    EndIf
+    If fileKey == "MilkMaidCreation" && index == 4
+        Return "narrate_chest_milk_maid_curse_1"
     EndIf
     If fileKey == "TentacleArmor" && index == 0
         Return "narrate_tentacle_effect_1"
@@ -527,6 +530,9 @@ String Function Template(String fileKey, String routeKey, Int index = 0) Global
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "narrate_milk_maid_curse_1"
         Return "{conversion} This event affects {actor}, who is already a Milk Maid. A magical curse has added milk to her existing reserves, possibly beyond her normal capacity. She has not just become a Milk Maid. React briefly in her own first-person voice with playful surprise at the sudden warmth, ripeness and abundant milk. Do not invent a second conversion or a drink."
+    EndIf
+    If fileKey == "MilkMaidCreation" && routeKey == "narrate_chest_milk_maid_curse_1"
+        Return "A magical Milk Maid curse has emerged from a {chest_kind} and affected {actor}. {outcome} Speak as {actor} in first person. React in one or two short sentences of cheerful, lightly sensual storybook banter. Express surprise at the sudden change, then playfully suspect a cheeky enchantment or magical treasure inside that chest. Keep the chest connection identifiable, but do not mechanically explain the spell or repeat these instructions. Favor natural rhetorical questions and playful innuendo about ripeness, fullness, unexpected bounty or wobbling back to town. Treat the effect as a delightful surprise, with personality-appropriate humor. Vary the wording and punchline; not every line needs a wobbling joke. Do not claim she drank anything, invent physical loot, or say she became a Milk Maid again if she was already one. Milk added by this event: {milk_added}; use this only as factual context, not a demand to recite numbers."
     EndIf
     If fileKey == "TentacleArmor" && routeKey == "narrate_tentacle_effect_1"
         Return " React from your own perspective as the affected armor wearer."
@@ -814,6 +820,9 @@ String Function Tokens(String fileKey, String routeKey) Global
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "narrate_milk_maid_curse_1"
         Return "|actor|conversion|"
+    EndIf
+    If fileKey == "MilkMaidCreation" && routeKey == "narrate_chest_milk_maid_curse_1"
+        Return "|actor|outcome|chest_kind|milk_added|"
     EndIf
     If fileKey == "TentacleArmor" && routeKey == "narrate_tentacle_effect_1"
         Return "||"
