@@ -93,6 +93,8 @@ Function Initialize()
     RegisterForModEvent("Magelight_JS_mmeRosterClose", "OnCloseClick")
     RegisterForModEvent("Magelight_JS_mmeRosterError", "OnPageError")
     RegisterForModEvent("Magelight_JS_mmeRosterAction", "OnActionClick")
+    RegisterForModEvent("Magelight_JS_mmeLoreRequest", "OnLoreRequest")
+    RegisterForModEvent("MMEExtensions_NarrationEditorResult", "OnLoreResult")
     RegisterForModEvent("MilkQuest.StartMilkingMachine", "OnManualMilkingStart")
     RegisterForModEvent("MilkQuest.StopMilkingMachine", "OnManualMilkingStop")
     RegisterForModEvent("MME_MilkingDone", "OnManualMilkingDone")
@@ -202,7 +204,8 @@ Function OpenRoster()
         Bool closeListener = Magelight.RegisterListener(ViewId, "mmeRosterClose")
         Bool actionListener = Magelight.RegisterListener(ViewId, "mmeRosterAction")
         Bool errorListener = Magelight.RegisterListener(ViewId, "mmeRosterError")
-        If !refreshListener || !closeListener || !errorListener || !actionListener
+        Bool loreListener = Magelight.RegisterListener(ViewId, "mmeLoreRequest")
+        If !refreshListener || !closeListener || !errorListener || !actionListener || !loreListener
             Alarm("button listener registration failed | view=" + ViewId)
             CloseRoster("listener failure")
             Int rejectedView = ViewId
@@ -298,6 +301,63 @@ Event OnPageError(String eventName, String strArg, Float numArg, Form sender)
         Alarm("page rejected roster payload | view=" + ViewId + " | reason=" + StringUtil.Substring(strArg, 0, 600))
     EndIf
 EndEvent
+
+Event OnLoreRequest(String eventName, String strArg, Float numArg, Form sender)
+    If ViewId <= 0 || (numArg as Int) != ViewId || !Enabled() || !Ready
+        Return
+    EndIf
+    Int separator = StringUtil.Find(strArg, "|")
+    If separator <= 0 || StringUtil.Substring(strArg, 0, separator) != (Generation as String)
+        MMELog.MasterDiagnostic("[MME Narration Editor] operation=request | skip=stale session")
+        Return
+    EndIf
+    If SKSE.GetPluginVersion("MMEExtensions") < 0
+        EditorAlarm("operation=request | actor=N/A | native MMEExtensions host absent", "native host absent")
+        Return
+    EndIf
+    If !HostReady() || !Magelight.IsVisible(ViewId) || Magelight.GetUIModeView() != ViewId
+        MMELog.MasterDiagnostic("[MME Narration Editor] operation=request | skip=view does not own focus")
+        Return
+    EndIf
+    ; Chunk acknowledgements are deliberately silent; the completed operation is traced below.
+    If !MMEExtensionsNative.QueueNarrationEditorRequest(StringUtil.Substring(strArg, separator + 1), Generation, ViewId)
+        MMELog.MasterDiagnostic("[MME Narration Editor] operation=request | skip=native queue busy/unavailable")
+        Magelight.Call(ViewId, "loreEditorUnavailable", "Save queue is busy. Reopen or reload to check committed lore.")
+    EndIf
+EndEvent
+
+Event OnLoreResult(String eventName, String strArg, Float numArg, Form sender)
+    Int separator = StringUtil.Find(strArg, "|")
+    If separator <= 0 || ViewId <= 0 || (numArg as Int) != ViewId || !Ready || !Enabled()
+        MMELog.MasterDiagnostic("[MME Narration Editor] operation=response | cleanup=closed/disabled view")
+        Return
+    EndIf
+    If StringUtil.Substring(strArg, 0, separator) != (Generation as String)
+        MMELog.MasterDiagnostic("[MME Narration Editor] operation=response | cleanup=stale session")
+        Return
+    EndIf
+    String reply = StringUtil.Substring(strArg, separator + 1)
+    String summary = MMEExtensionsNative.DescribeNarrationEditorReply(reply)
+    If summary != "transport"
+        MMELog.MasterDiagnostic("[MME Narration Editor] " + summary)
+    EndIf
+    Int failure = StringUtil.Find(summary, "result=failure")
+    If failure >= 0
+        EditorAlarm(summary, StringUtil.Substring(summary, failure))
+    EndIf
+    Magelight.Call(ViewId, "setLoreEditor", reply)
+    If summary != "transport"
+        MMELog.MasterDiagnostic("[MME Narration Editor] operation=request | response delivered | generation=" + Generation)
+    EndIf
+EndEvent
+
+Function EditorAlarm(String detail, String reason)
+    String alarmKey = "NarrationEditor." + reason
+    If !StorageUtil.StringListHas(Self, "MMEMaidRoster.Alarms", alarmKey)
+        StorageUtil.StringListAdd(Self, "MMEMaidRoster.Alarms", alarmKey)
+        MMELog.Alarm("[MME Narration Editor] " + detail)
+    EndIf
+EndFunction
 
 Function CloseRoster(String reason)
     LastCloseTime = Utility.GetCurrentRealTime()

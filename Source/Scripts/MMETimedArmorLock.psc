@@ -314,7 +314,10 @@ Function ShowUnequipResistedNotification(Actor target) Global
     String configFile = GetNotificationFile()
     String poolName = "unequip_resisted"
     String selected = "The armor gives you a teasing squeeze and refuses to let go."
-    If JsonUtil.JsonExists(configFile) && JsonUtil.IsGood(configFile)
+    String[] personal = MMENarrationOverrides.PersonalPool(configFile, poolName, target)
+    If personal.Length > 0
+        selected = personal[Utility.RandomInt(0, personal.Length - 1)]
+    ElseIf JsonUtil.JsonExists(configFile) && JsonUtil.IsGood(configFile)
         Int count = JsonUtil.StringListCount(configFile, poolName)
         If count > 0
             selected = JsonUtil.StringListGet(configFile, poolName, Utility.RandomInt(0, count - 1))

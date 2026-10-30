@@ -34,6 +34,10 @@ Bool Function ShowRandomStoryPopup(Actor subject, String configFile, String pool
         Return False
     EndIf
 
+    String[] personal = MMENarrationOverrides.PersonalPool(configFile, poolName, subject)
+    If personal.Length > 0
+        Return ShowStoryPopup(subject, personal[Utility.RandomInt(0, personal.Length - 1)], sourceLabel)
+    EndIf
     If !JsonUtil.JsonExists(configFile)
         MMELog.Alarm("[MME Extensions Story Popup] story JSON is missing | source=" + sourceLabel + " | file=" + configFile + " | pool=" + poolName)
         Return ShowFallback(subject, fallbackText, sourceLabel, poolName)

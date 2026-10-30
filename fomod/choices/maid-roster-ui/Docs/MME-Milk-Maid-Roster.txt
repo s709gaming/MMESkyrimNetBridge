@@ -32,7 +32,41 @@ only. Lactacid is never supplied free or automatically chosen for a non-Milk Mai
 Self Milk dispatches MME's native route for eligible nearby loaded maids with milk.
 Busy/restrained actors and protected special armor are rejected. Actions close
 the panel and release input before execution. Reopen/Refresh for updated values.
-Narration JSON editing is not included.
+NARRATION & LORE DASHBOARD
+
+The second tab edits 131 entries: 74 Skyrim.Net templates and 57 story, thought,
+craving and notification pools. Use search/category/Modified Only, then expand
+an entry. The main list has a draggable scrollbar and up/down buttons. Each text
+box scrolls independently and can be resized taller. Required placeholders are
+shown on the card. Keep them to preserve actor identity and confirmed outcomes.
+
+Save Changes commits all changed entries together. Reset Entry and Reset All
+stage removal of personal text until Save. Variants can be added, removed or
+moved up/down; duplicates intentionally remain possible for random weighting.
+The limit is 8192 UTF-8 bytes per template, 64 variants per pool and 256 KiB per
+personal document. Invalid or stale transactions preserve your drafts and do not
+partially overwrite saved text. Reload Saved asks before discarding drafts.
+
+Personal text is stored outside installed mods beneath the runtime SKSE user
+folder: MMEExtensions/Narration/profiles/default/overrides.json. The exact path
+appears in the editor. Subsequent saves retain overrides.previous.json. Updates
+do not install these files. This profile is shared across characters/MO2 profiles
+using that user folder. Loading an older Skyrim save does not undo personal text.
+Changes affect subsequent requests; existing AI conversation context may retain
+older wording. The editor does not alter gameplay settings or actor selection.
+
+Presets & existing customizations offers Export Saved Preset, Preview Import,
+Capture Edited Base Files and Import Legacy Text. Exports go to the sibling
+Narration/presets folder; use a new safe filename. Merge keeps existing personal
+entries. Replace replaces the entire personal override set after backup, including
+unknown entries. Capture/import-legacy stages recognized changes for review and
+Save; it preserves the original source files. Localhost editing is a later feature.
+
+Tabs and filters preserve drafts while the page stays alive. Save before forced
+hotkey closure, hibernation, page reload or quitting: unsaved draft recovery across
+page destruction is not provided. Close/Escape uses an in-page confirmation.
+Large text is transferred in bounded chunks; a timeout requires reloading saved
+state before retrying. See docs/Narration-Dashboard-Implementation.md for details.
 
 Enable Milk Maid Roster and the MME Extensions master must be on. If the Open
 button is disabled, check the optional roster plugin and Magelight are enabled,
@@ -40,7 +74,8 @@ then restart Skyrim. Without the host/add-on, core MME Extensions still works.
 If another Magelight view owns input, close it before opening this roster.
 
 Routine Papyrus footprints use the master Papyrus logging toggle and prefix
-[MME Maid Roster UI]. Genuine UI failures are deduplicated smoke alarms. A missing
+[MME Maid Roster UI] and [MME Narration Editor]. Genuine UI/save failures are
+deduplicated smoke alarms. A missing
 optional host or an empty roster is an expected skip. No background polling runs.
 Refresh summaries include arousal-reader availability and readable/unknown counts.
 

@@ -36,7 +36,7 @@ Bool Function TryShow(Actor speaker) Global
     EndIf
 
     String configFile = GetConfigFile()
-    If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
+    If !MMENarrationOverrides.FileAvailable(configFile)
         ReportStop("ArmorCheckReminders.json missing or invalid", speaker, serviceRole)
         Return False
     EndIf
@@ -75,8 +75,8 @@ Bool Function TryShow(Actor speaker) Global
         EndIf
     EndIf
 
-    String[] observations = JsonUtil.PathStringElements(configFile, "." + poolName)
-    String[] reactions = JsonUtil.PathStringElements(configFile, ".notice_reaction")
+    String[] observations = MMENarrationOverrides.Pool(configFile, "." + poolName, playerActor)
+    String[] reactions = MMENarrationOverrides.Pool(configFile, ".notice_reaction", playerActor)
     If observations.Length == 0 || reactions.Length == 0
         ReportStop("wording pool missing or empty: " + poolName, speaker, serviceRole)
         Return False

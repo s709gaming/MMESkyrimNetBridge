@@ -224,8 +224,8 @@ EndFunction
 
 String Function GetRandomFlavorLine() Global
     String configFile = "/MMEAlerts/Injection"
-    If JsonUtil.JsonExists(configFile) && JsonUtil.IsGood(configFile)
-        String[] entries = JsonUtil.PathStringElements(configFile, ".lines")
+    If MMENarrationOverrides.FileAvailable(configFile)
+        String[] entries = MMENarrationOverrides.Pool(configFile, ".lines")
         If entries.Length > 0
             Return entries[Utility.RandomInt(0, entries.Length - 1)]
         EndIf

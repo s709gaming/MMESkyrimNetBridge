@@ -156,19 +156,32 @@ Bool Function ValidateRoute(String fileKey, String routeKey) Global
 EndFunction
 
 String Function GetRaw(String fileKey, String routeKey) Global
+    String entryId = fileKey + "." + routeKey
+    String[] personal = MMENarrationOverrides.Values(entryId)
+    If personal.Length > 1
+        Int selected = 1
+        If personal[0] == "pool"
+            selected = 1 + Utility.RandomInt(0, personal.Length - 2)
+        EndIf
+        MMENarrationOverrides.TraceSource(entryId, "personal", personal.Length - 1)
+        Return personal[selected]
+    EndIf
     If MMENarrationDefaults.Tokens(fileKey, routeKey) == ""
         Report(fileKey, routeKey, "unknown required route", True)
         Return ""
     EndIf
     If LoadFile(fileKey) != 1 || !ValidateRoute(fileKey, routeKey)
+        MMENarrationOverrides.TraceSource(entryId, "compiled fallback", MMENarrationDefaults.PoolCount(fileKey, routeKey))
         Return DefaultText(fileKey, routeKey)
     EndIf
     String path = FilePath(fileKey)
     String keyPath = ".routes." + routeKey + ".template"
     If JsonUtil.IsPathArray(path, keyPath)
         String[] entries = JsonUtil.PathStringElements(path, keyPath)
+        MMENarrationOverrides.TraceSource(entryId, "base", entries.Length)
         Return entries[Utility.RandomInt(0, entries.Length - 1)]
     EndIf
+    MMENarrationOverrides.TraceSource(entryId, "base", 1)
     Return JsonUtil.GetPathStringValue(path, keyPath)
 EndFunction
 
@@ -219,6 +232,10 @@ String Function Text(String fileKey, String routeKey, String k1 = "", String v1 
 EndFunction
 
 Int Function ReloadAll() Global
+    If SKSE.GetPluginVersion("MMEExtensions") >= 0
+        MMEExtensionsNative.ReloadNarrationEditor()
+        MMELog.MasterDiagnostic("[MME Narration Editor] operation=reload | personal override refresh queued")
+    EndIf
     Int index = 0
     Int valid = 0
     While index < MMENarrationDefaults.FileCount()
@@ -273,6 +290,10 @@ EndFunction
 
 ; Explicit user action only. Never overwrite an already customized destination.
 String Function ImportLegacy() Global
+    If SKSE.GetPluginVersion("MMEExtensions") >= 0 && Game.GetModByName("MME Extensions - Maid Roster.esp") != 255 && SKSE.GetPluginVersion("Magelight") >= 0
+        MMELog.MasterDiagnostic("[MME Narration Editor] operation=legacy import | use=dashboard preview | base files preserved")
+        Return "Use Narration & Lore > Import legacy text to preview and save personal overrides."
+    EndIf
     Int index = 0
     Int imported = 0
     Int conflicts = 0

@@ -30,6 +30,8 @@ $scriptNames += @("MMENarrationText", "MMENarrationDefaults")
 if ($LASTEXITCODE) { throw 'Narration JSON/default generation failed' }
 & python -B (Join-Path $PSScriptRoot 'tools\test_narration_json.py')
 if ($LASTEXITCODE) { throw 'Narration JSON contracts failed' }
+& python -B (Join-Path $projectRoot 'tools\test_narration_dashboard_contracts.py')
+if ($LASTEXITCODE) { throw 'Narration dashboard integration contracts failed' }
 $mmeCompatibilityOverrideSource = Join-Path $projectRoot "Source\MMECompatibilityOverrides"
 $mmeCompatibilityOverrideNames = @("MilkQUEST")
 $diagnosticSdk = Join-Path $projectRoot "tools\mme-diagnostic-sdk"
@@ -37,6 +39,7 @@ $scriptNames += "MMEMilkingDiagnostics"
 $scriptNames += "MMEMilkCurse"
 $scriptNames += "MMEChestCurseNarration"
 $scriptNames += "MMETextPool"
+$scriptNames += "MMENarrationOverrides"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
 $standardDefaultsOutputDir = Join-Path $projectRoot "fomod\choices\standard\Scripts"
@@ -242,13 +245,18 @@ New-Item -ItemType Directory -Force -Path $jugsPatchOutputDir | Out-Null
 $jugsImports = "$jugsPatchSourceDir;$jugsSdkSource;$sourceDir;$skseSource;$vanillaSource"
 if ($env:MME_PAPYRUS_EXTRA_IMPORTS) { $jugsImports += ";$env:MME_PAPYRUS_EXTRA_IMPORTS" }
 $jugsPatchScripts = @(Get-ChildItem -LiteralPath $jugsPatchSourceDir -Filter "*.psc" | Sort-Object Name)
+# Compile into fresh diagnostics output; avoid transient assembler locks on previously built PEX files.
+$jugsCompileDir = Join-Path $projectRoot ("build\diagnostics\jugs-compile-" + [guid]::NewGuid().ToString("N"))
+New-Item -ItemType Directory -Force -Path $jugsCompileDir | Out-Null
 foreach ($jugsScript in $jugsPatchScripts) {
     Write-Host "Compiling JUGS compatibility override $($jugsScript.Name)..." -ForegroundColor Cyan
-    & $compiler $jugsScript.Name "-f=$flags" "-i=$jugsImports" "-o=$jugsPatchOutputDir"
+    & $compiler $jugsScript.Name "-f=$flags" "-i=$jugsImports" "-o=$jugsCompileDir"
     if ($LASTEXITCODE -ne 0) {
         throw "Compilation failed for JUGS compatibility override $($jugsScript.BaseName)"
     }
 }
+
+Get-ChildItem -LiteralPath $jugsCompileDir -Filter "*.pex" | Copy-Item -Destination $jugsPatchOutputDir -Force
 
 # The Vanilla profile replaces the real defaults quest script with an inert
 # compatible implementation, so it can never change MME settings.
@@ -295,6 +303,7 @@ if ($LASTEXITCODE) { throw "Milk Maid curse contracts failed" }
 if ($LASTEXITCODE) { throw "Roster action API contracts failed" }
 & python -B (Join-Path $projectRoot "tools\test_maid_roster_ui.py")
 if ($LASTEXITCODE) { throw "Maid Roster UI contracts failed" }
+& (Join-Path $projectRoot 'tools\Test-NarrationEditor.ps1')
 
 # Include the FOMOD startup-profile choices and their Recommended QuickStart override.
 $fomodSource = Join-Path $projectRoot "fomod"
@@ -305,6 +314,11 @@ $packageDocs = Join-Path $stageDir "docs"
 New-Item -ItemType Directory -Force -Path $packageDocs | Out-Null
 Copy-Item -LiteralPath $elsieFixChangelog -Destination $packageDocs
 Copy-Item -LiteralPath $jugsChangelog -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MME-Compatibility-Override.md") -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Editor-Proof.md') -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Dashboard-Implementation.md') -Destination $packageDocs
+New-Item -ItemType Directory -Force (Join-Path $packageDocs 'licenses') | Out-Null
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\licenses\nlohmann-json.txt') -Destination (Join-Path $packageDocs 'licenses')
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\OStim-Only-Compatibility.md") -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MOVEMENT-SLAP-FLAT-MILK-STRIPPING.md") -Destination $packageDocs
 

@@ -7,6 +7,12 @@ text. Action YAML stays separate. Existing shared HUD/story/thought pools and
 runtime settings retain their original locations; narration can embed their rendered
 text through documented placeholders.
 
+The general `Lore.milk_lore` entry additionally supports the optional in-game
+[editor proof](Narration-Editor-Proof.md). Its personal override is stored outside
+installed mods and takes precedence over this base JSON. Other routes retain the
+loader described below. The final runtime uses cached native text, refreshed by
+a worker; drafts never enter JsonUtil's game-save writeback path.
+
 `MMENarrationText` owns read-only loading, schema checks, complete-pool validation,
 single-pass placeholder rendering, reload, and the explicit legacy import action.
 `MMENarrationDefaults` is generated from the shipped JSON by

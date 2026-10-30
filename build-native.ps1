@@ -8,6 +8,10 @@ $ErrorActionPreference = "Stop"
 
 # Use the Visual Studio installation that provides MSVC, CMake, and Ninja.
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+& python (Join-Path $projectRoot 'tools/generate_lore_editor_defaults.py')
+if ($LASTEXITCODE) { throw 'Native lore fallback generation failed' }
+& python (Join-Path $projectRoot 'tools/generate_narration_catalog.py')
+if ($LASTEXITCODE) { throw 'Narration catalog generation failed' }
 $vsRoot = "E:\Visual Studio"
 $devShell = Join-Path $vsRoot "Common7\Tools\VsDevCmd.bat"
 $cmake = Join-Path $vsRoot "Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe"

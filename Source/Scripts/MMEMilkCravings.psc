@@ -203,11 +203,11 @@ EndFunction
 String Function SelectMessage(String poolName, Actor cravingActor) Global
     String fallback = GetFallbackMessage(poolName, cravingActor)
     String configFile = GetConfigFile()
-    If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
+    If !MMENarrationOverrides.FileAvailable(configFile)
         MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: MilkCravings.json is missing or malformed; using fallback text")
         Return fallback
     EndIf
-    String[] entries = JsonUtil.PathStringElements(configFile, "." + poolName)
+    String[] entries = MMENarrationOverrides.Pool(configFile, "." + poolName, cravingActor)
     If entries.Length == 0
         MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: JSON pool is missing or empty: " + poolName + "; using fallback text")
         Return fallback

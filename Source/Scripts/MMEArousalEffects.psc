@@ -335,11 +335,11 @@ String Function BuildNotification(Actor target, Int tier) Global
     String poolName = GetPoolName(tier, female)
     String fallback = GetFallbackLine(tier, female)
     String configFile = "/MMEAlerts/ArousalEffects"
-    If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
+    If !MMENarrationOverrides.FileAvailable(configFile)
         AlarmOnce("MMEExtensions.ArousalEffects.Alarm.JSON", "[MME Extensions Arousal Effects] FAILURE: ArousalEffects.json is missing or malformed; using fallback text")
         Return MMEThoughts.RenderActorToken(fallback, GetActorName(target))
     EndIf
-    String[] entries = JsonUtil.PathStringElements(configFile, "." + poolName)
+    String[] entries = MMENarrationOverrides.Pool(configFile, "." + poolName, target)
     If entries.Length <= 0
         AlarmOnce("MMEExtensions.ArousalEffects.Alarm.JSON." + poolName, "[MME Extensions Arousal Effects] FAILURE: JSON pool is missing or empty: " + poolName + "; using fallback text")
         Return MMEThoughts.RenderActorToken(fallback, GetActorName(target))

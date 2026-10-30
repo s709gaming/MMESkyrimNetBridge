@@ -29,6 +29,7 @@ FetchContent_Declare(
     GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(CommonLibSSE)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 # A source add_subdirectory does not currently expose the plugin helper.
 if(NOT COMMAND add_commonlibsse_plugin)
@@ -43,10 +44,11 @@ add_commonlibsse_plugin(
     AUTHOR "MMEAlert contributors"
     VERSION ${PROJECT_VERSION}
     USE_ADDRESS_LIBRARY
-    SOURCES src/Plugin.cpp
+    SOURCES src/Plugin.cpp src/NarrationStore.cpp
 )
 
 target_compile_features(MMEExtensions PRIVATE cxx_std_23)
+target_link_libraries(MMEExtensions PRIVATE nlohmann_json::nlohmann_json bcrypt)
 target_precompile_headers(MMEExtensions PRIVATE include/PCH.h)
 
 if(MSVC)

@@ -16,6 +16,7 @@
 #include <RE/I/IStackCallbackFunctor.h>
 #include <cmath>
 #include <mutex>
+#include "NarrationEditor.h"
 #include "../include/MaidMorphValidation.h"
 #include <RE/S/ScriptEventSourceHolder.h>
 #include <RE/T/TESFile.h>
@@ -859,6 +860,14 @@ namespace
 
     bool RegisterPapyrus(RE::BSScript::IVirtualMachine* vm)
     {
+        vm->RegisterFunction("QueueNarrationEditorRequest", "MMEExtensionsNative", MME::NarrationEditor::Queue);
+        vm->RegisterFunction("GetGeneralLoreOverride", "MMEExtensionsNative", MME::NarrationEditor::GeneralLore);
+        vm->RegisterFunction("GetNarrationOverrideValues", "MMEExtensionsNative", MME::NarrationEditor::Values);
+        vm->RegisterFunction("HasNarrationPoolOverrides", "MMEExtensionsNative", MME::NarrationEditor::HasPools);
+        vm->RegisterFunction("GetNarrationRevision", "MMEExtensionsNative", MME::NarrationEditor::Revision);
+        vm->RegisterFunction("GetNarrationEditorFailure", "MMEExtensionsNative", MME::NarrationEditor::Failure);
+        vm->RegisterFunction("ReloadNarrationEditor", "MMEExtensionsNative", MME::NarrationEditor::Reload);
+        vm->RegisterFunction("DescribeNarrationEditorReply", "MMEExtensionsNative", MME::NarrationEditor::Describe);
         // Keep registration names synchronized with MMEExtensionsNative.psc.
         // Renaming either side is an API break for existing compiled scripts.
         vm->RegisterFunction("GetNearbyActors", "MMEExtensionsNative", GetNearbyActors);
@@ -1219,11 +1228,13 @@ namespace
         if (message->type == SKSE::MessagingInterface::kPreLoadGame ||
             message->type == SKSE::MessagingInterface::kNewGame) {
             gMovementSlapSession.fetch_add(1);
+            MME::NarrationEditor::ResetSession();
             std::scoped_lock lock(gMaidMorphFailureMutex);
             gMaidMorphFailures.clear();
         }
         // Event sources and loaded forms are ready only after DataLoaded.
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
+            MME::NarrationEditor::Invalidate();
             InitializeSocialVenueForms();
             LifecycleEventSink::GetSingleton()->Register();
         }

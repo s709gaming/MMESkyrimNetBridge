@@ -109,11 +109,11 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowNarration)
         ReportFailure("nearby scan returned no actors")
         Return False
     EndIf
-    If !JsonUtil.JsonExists("/MMEAlerts/Thoughts")
+    If !MMENarrationOverrides.HasFileOverrides("/MMEAlerts/Thoughts") && !JsonUtil.JsonExists("/MMEAlerts/Thoughts")
         ReportFailure("Thoughts.json is missing (/MMEAlerts/Thoughts)")
         Return False
     EndIf
-    If !JsonUtil.IsGood("/MMEAlerts/Thoughts")
+    If !MMENarrationOverrides.HasFileOverrides("/MMEAlerts/Thoughts") && !JsonUtil.IsGood("/MMEAlerts/Thoughts")
         ReportFailure("Thoughts.json failed to parse (/MMEAlerts/Thoughts)")
         Return False
     EndIf
@@ -160,7 +160,7 @@ Bool Function GenerateAndShowThought(Actor[] scannedActors, Bool allowNarration)
 
     ; Thoughts.json is ordinary JSON, not a PapyrusUtil StringList database.
     ; PathStringElements resolves the hand-written array at .<poolName>.
-    String[] entries = JsonUtil.PathStringElements("/MMEAlerts/Thoughts", "." + poolName)
+    String[] entries = MMENarrationOverrides.Pool("/MMEAlerts/Thoughts", "." + poolName, selectedActor)
     If entries.Length == 0
         ReportFailure("Thoughts.json pool is missing or empty: " + poolName)
         Return False
@@ -205,7 +205,7 @@ Bool Function GenerateAndShowBoundThought(Actor[] scannedActors, Bool applySched
         ReportFailure("bound thought skipped: nearby scan returned no actors")
         Return False
     EndIf
-    If !JsonUtil.JsonExists("/MMEAlerts/Thoughts") || !JsonUtil.IsGood("/MMEAlerts/Thoughts")
+    If !MMENarrationOverrides.FileAvailable("/MMEAlerts/Thoughts")
         ReportFailure("bound thought skipped: Thoughts.json is missing or invalid")
         Return False
     EndIf
@@ -250,11 +250,11 @@ Bool Function GenerateAndShowBoundThought(Actor[] scannedActors, Bool applySched
     TraceBound("selected actor=" + ResolveActorName(selectedActor))
 
     String poolName = "armsBound"
-    String[] entries = JsonUtil.PathStringElements("/MMEAlerts/Thoughts", "." + poolName)
+    String[] entries = MMENarrationOverrides.Pool("/MMEAlerts/Thoughts", "." + poolName, selectedActor)
     ; Preserve customized pre-change JSON files during upgrades.
     If entries.Length == 0
         poolName = "halfPlus_armsBound"
-        entries = JsonUtil.PathStringElements("/MMEAlerts/Thoughts", "." + poolName)
+        entries = MMENarrationOverrides.Pool("/MMEAlerts/Thoughts", "." + poolName, selectedActor)
     EndIf
     If entries.Length == 0
         TraceBound("skipped | armsBound pool is missing or empty")

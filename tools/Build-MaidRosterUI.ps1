@@ -15,4 +15,4 @@ foreach ($name in @('MMEMaidRosterUI','MMEMaidRosterPlayerAlias')) {
 $pairs = @(Get-ChildItem (Join-Path $choice 'Source\Scripts') -Filter '*.psc' | ForEach-Object {
     [ordered]@{ script=$_.BaseName; sourceSHA256=(Get-FileHash $_.FullName).Hash; compiledSHA256=(Get-FileHash (Join-Path $choice "Scripts\$($_.BaseName).pex")).Hash }
 })
-[ordered]@{ runtimeValidated=$false; requiredHost='Magelight UI 1.5.0+'; pairs=$pairs; pluginSHA256=(Get-FileHash (Join-Path $choice 'MME Extensions - Maid Roster.esp')).Hash; pageSHA256=(Get-FileHash (Join-Path $choice 'Magelight\mmeextensions\views\roster\index.html')).Hash } | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $choice 'BuildManifest.json')
+[ordered]@{ runtimeValidated=$false; requiredHost='Magelight UI 1.5.0+'; pairs=$pairs; pluginSHA256=(Get-FileHash (Join-Path $choice 'MME Extensions - Maid Roster.esp')).Hash; dashboardSHA256=(Get-FileHash (Join-Path $choice 'Magelight\mmeextensions\views\roster\dashboard.js')).Hash; pageSHA256=(Get-FileHash (Join-Path $choice 'Magelight\mmeextensions\views\roster\index.html')).Hash } | ConvertTo-Json -Depth 5 | Set-Content (Join-Path $choice 'BuildManifest.json')

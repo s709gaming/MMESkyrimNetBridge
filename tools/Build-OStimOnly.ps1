@@ -46,14 +46,24 @@ ConvertTo-Json -InputObject @($folders) | Set-Content -LiteralPath $folderManife
 if ($LASTEXITCODE) { throw 'Isolated import preparation failed' }
 }
 Copy-Item -Path (Join-Path $projectRoot 'tools\ostim-sdk\*.psc') -Destination $library -Force
+# These common facades must match this repository's DLL, not an older installed
+# copy picked up from physical Data while preparing the isolated dependency set.
+foreach ($commonFacade in @('MMEExtensionsNative')) {
+    Copy-Item -LiteralPath (Join-Path $projectRoot "Source\Scripts\$commonFacade.psc") -Destination $library -Force
+}
+Copy-Item -LiteralPath (Join-Path $projectRoot 'Source\Scripts\MMENarrationOverrides.psc') -Destination $library -Force
 $imports = "$variantSource;$library;$(Join-Path $projectRoot 'Source\Scripts')"
+# Compile into a fresh folder so the assembler never reopens a previously built PEX.
+$variantCompile = Join-Path $projectRoot ('build\diagnostics\ostim-compiled-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Force $variantCompile | Out-Null
 foreach ($file in (Get-ChildItem -LiteralPath $variantSource -Filter '*.psc' | Sort-Object Name)) {
     Write-Host "OStim-only compile: $($file.Name)"
     $ErrorActionPreference = "Continue"
-    & $compiler $file.FullName "-f=$flags" "-i=$imports" "-o=$variantOutput" 2>&1 | ForEach-Object { Write-Host "$_" }
+    & $compiler $file.FullName "-f=$flags" "-i=$imports" "-o=$variantCompile" 2>&1 | ForEach-Object { Write-Host "$_" }
     $ErrorActionPreference = "Stop"
     if ($LASTEXITCODE) { throw "OStim-only compilation failed: $($file.Name)" }
 }
+Get-ChildItem -LiteralPath $variantCompile -Filter "*.pex" | Copy-Item -Destination $variantOutput -Force
 $pairs = @(Get-ChildItem -LiteralPath $variantSource -Filter '*.psc' | ForEach-Object {
     [ordered]@{ script = $_.BaseName; sourceSHA256 = (Get-FileHash $_.FullName).Hash; compiledSHA256 = (Get-FileHash (Join-Path $variantOutput ($_.BaseName + '.pex'))).Hash }
 })

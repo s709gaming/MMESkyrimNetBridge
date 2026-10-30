@@ -46,14 +46,20 @@ EndFunction
 
 Function ValidateConfiguration() Global
     String configFile = GetConfigFile()
+    String[] personalStart = MMENarrationOverrides.PersonalPool(configFile, "dwemerarmorstart")
+    String[] personalEnd = MMENarrationOverrides.PersonalPool(configFile, "dwemerarmorend")
+    If personalStart.Length > 0 && personalEnd.Length > 0
+        Report("configuration validated | personal story pools active")
+        Return
+    EndIf
     If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
         MMELog.Alarm("[MME Extensions Dwemer Armor] story JSON is missing or malformed")
         Return
     EndIf
-    If JsonUtil.StringListCount(configFile, "dwemerarmorstart") <= 0
+    If personalStart.Length == 0 && JsonUtil.StringListCount(configFile, "dwemerarmorstart") <= 0
         MMELog.Alarm("[MME Extensions Dwemer Armor] start story pool is missing or empty")
     EndIf
-    If JsonUtil.StringListCount(configFile, "dwemerarmorend") <= 0
+    If personalEnd.Length == 0 && JsonUtil.StringListCount(configFile, "dwemerarmorend") <= 0
         MMELog.Alarm("[MME Extensions Dwemer Armor] end story pool is missing or empty")
     EndIf
     Report("configuration validated | story pools checked | event-driven 90% threshold ready")

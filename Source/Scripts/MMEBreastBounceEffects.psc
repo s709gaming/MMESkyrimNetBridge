@@ -137,11 +137,11 @@ EndFunction
 
 String Function GetNotification(Actor candidate, String tier) Global
     String configFile = "/MMEAlerts/BreastBounceNotifications"
-    If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
+    If !MMENarrationOverrides.FileAvailable(configFile)
         MMELog.Alarm("[MME Extensions Breast Bounce] FAILURE: BreastBounceNotifications.json is missing or malformed")
         Return ""
     EndIf
-    String[] entries = JsonUtil.PathStringElements(configFile, "." + tier)
+    String[] entries = MMENarrationOverrides.Pool(configFile, "." + tier, candidate)
     If entries.Length == 0
         MMELog.Alarm("[MME Extensions Breast Bounce] FAILURE: notification pool is empty | tier=" + tier)
         Return ""

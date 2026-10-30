@@ -1,0 +1,2359 @@
+{
+  "status": "preflight source inventory; proposed pool IDs, not an implemented runtime catalog",
+  "date": "2026-10-30",
+  "canonicalEntries": 74,
+  "additionalPools": 57,
+  "totalEditorEntries": 131,
+  "additionalPoolVariants": 269,
+  "entries": [
+    {
+      "id": "Armor.narrate_armor_equip_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Armor.json",
+      "path": [
+        "routes",
+        "narrate_armor_equip_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 356,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Armor.narrate_armor_equip_2",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Armor.json",
+      "path": [
+        "routes",
+        "narrate_armor_equip_2",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 386,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Armor.narrate_armor_equip_3",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Armor.json",
+      "path": [
+        "routes",
+        "narrate_armor_equip_3",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 390,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Armor.narrate_armor_equip_4",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Armor.json",
+      "path": [
+        "routes",
+        "narrate_armor_equip_4",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 257,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Armor.narrate_armor_strip_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Armor.json",
+      "path": [
+        "routes",
+        "narrate_armor_strip_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "armorName"
+      ],
+      "largestVariantBytes": 209,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Armor.build_nearby_armor_status_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Armor.json",
+      "path": [
+        "routes",
+        "build_nearby_armor_status_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 103,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Armor.build_nearby_armor_status_2",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Armor.json",
+      "path": [
+        "routes",
+        "build_nearby_armor_status_2",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 144,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Armor.build_nearby_armor_status_3",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Armor.json",
+      "path": [
+        "routes",
+        "build_nearby_armor_status_3",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 159,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Breastfeeding.guidance",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Breastfeeding.json",
+      "path": [
+        "routes",
+        "guidance",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "role"
+      ],
+      "largestVariantBytes": 611,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Common.player_instructions",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Common.json",
+      "path": [
+        "routes",
+        "player_instructions",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 302,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.narrate_dwemer_effect_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "narrate_dwemer_effect_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 69,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.build_dwemer_suit_prompt_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "build_dwemer_suit_prompt_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "core",
+        "event",
+        "profile"
+      ],
+      "largestVariantBytes": 688,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_profile_fallback_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "get_dwemer_profile_fallback_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 319,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_profile_fallback_2",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "get_dwemer_profile_fallback_2",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 247,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_event_fallback_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "get_dwemer_event_fallback_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 115,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_event_fallback_2",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "get_dwemer_event_fallback_2",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 97,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_event_fallback_3",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "get_dwemer_event_fallback_3",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 96,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_event_fallback_4",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "get_dwemer_event_fallback_4",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 85,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_event_fallback_5",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "get_dwemer_event_fallback_5",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 96,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.build_dwemer_effect_narration_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "build_dwemer_effect_narration_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "content"
+      ],
+      "largestVariantBytes": 480,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.effects_arousal",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "effects_arousal",
+        "template"
+      ],
+      "kind": "pool",
+      "variants": 3,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 58,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.effects_milk",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "effects_milk",
+        "template"
+      ],
+      "kind": "pool",
+      "variants": 2,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 61,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.effects_milkAndArousal",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "effects_milkAndArousal",
+        "template"
+      ],
+      "kind": "pool",
+      "variants": 3,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 61,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.suit_core",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "suit_core",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 537,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.suit_firstEquip",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "suit_firstEquip",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 323,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.suit_reequip",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "suit_reequip",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 350,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.suit_milkingStart",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "suit_milkingStart",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 355,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.suit_milkingEnd",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "suit_milkingEnd",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 358,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.attachment_core",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "attachment_core",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 544,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.attachment_firstEquip",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "attachment_firstEquip",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 376,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.attachment_reequip",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "attachment_reequip",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 290,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.attachment_milkingStart",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "attachment_milkingStart",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 330,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "DwemerArmor.attachment_milkingEnd",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/DwemerArmor.json",
+      "path": [
+        "routes",
+        "attachment_milkingEnd",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 282,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Fullness.send_capacity_milestone_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Fullness.json",
+      "path": [
+        "routes",
+        "send_capacity_milestone_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "tag"
+      ],
+      "largestVariantBytes": 76,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Fullness.send_capacity_milestone_2",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Fullness.json",
+      "path": [
+        "routes",
+        "send_capacity_milestone_2",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "tag"
+      ],
+      "largestVariantBytes": 97,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Fullness.narrate_milk_full_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Fullness.json",
+      "path": [
+        "routes",
+        "narrate_milk_full_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 323,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Fullness.narrate_milk_half_full_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Fullness.json",
+      "path": [
+        "routes",
+        "narrate_milk_half_full_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 215,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Fullness.build_restrained_capacity_content_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Fullness.json",
+      "path": [
+        "routes",
+        "build_restrained_capacity_content_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 289,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Fullness.build_restrained_capacity_content_2",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Fullness.json",
+      "path": [
+        "routes",
+        "build_restrained_capacity_content_2",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 226,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Fullness.build_milk_status_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Fullness.json",
+      "path": [
+        "routes",
+        "build_milk_status_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 262,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Fullness.build_milk_status_2",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Fullness.json",
+      "path": [
+        "routes",
+        "build_milk_status_2",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 250,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Fullness.build_milk_status_3",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Fullness.json",
+      "path": [
+        "routes",
+        "build_milk_status_3",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 221,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Fullness.build_milk_status_4",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Fullness.json",
+      "path": [
+        "routes",
+        "build_milk_status_4",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 88,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Fullness.build_milk_status_5",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Fullness.json",
+      "path": [
+        "routes",
+        "build_milk_status_5",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 52,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Fullness.build_milk_status_6",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Fullness.json",
+      "path": [
+        "routes",
+        "build_milk_status_6",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 58,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Fullness.nearby_status_summary",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Fullness.json",
+      "path": [
+        "routes",
+        "nearby_status_summary",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "statuses"
+      ],
+      "largestVariantBytes": 35,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Lore.milk_lore",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Lore.json",
+      "path": [
+        "routes",
+        "milk_lore",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 343,
+      "currentProofEntry": true,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Lore.milkmaid_lore",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Lore.json",
+      "path": [
+        "routes",
+        "milkmaid_lore",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 407,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkCravings.narrate_milk_craving_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkCravings.json",
+      "path": [
+        "routes",
+        "narrate_milk_craving_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "craving"
+      ],
+      "largestVariantBytes": 559,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkDrinking.narrate_chest_milk_drink_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkDrinking.json",
+      "path": [
+        "routes",
+        "narrate_chest_milk_drink_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "chestKind",
+        "milkName"
+      ],
+      "largestVariantBytes": 69,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkDrinking.narrate_chest_milk_drink_2",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkDrinking.json",
+      "path": [
+        "routes",
+        "narrate_chest_milk_drink_2",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "situation"
+      ],
+      "largestVariantBytes": 766,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkDrinking.narrate_n_p_c_milk_drink_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkDrinking.json",
+      "path": [
+        "routes",
+        "narrate_n_p_c_milk_drink_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "reaction"
+      ],
+      "largestVariantBytes": 850,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkDrinking.narrate_n_p_c_milk_drink_2",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkDrinking.json",
+      "path": [
+        "routes",
+        "narrate_n_p_c_milk_drink_2",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 209,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkDrinking.narrate_n_p_c_milk_drink_3",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkDrinking.json",
+      "path": [
+        "routes",
+        "narrate_n_p_c_milk_drink_3",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 204,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkDrinking.narrate_n_p_c_milk_drink_4",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkDrinking.json",
+      "path": [
+        "routes",
+        "narrate_n_p_c_milk_drink_4",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 206,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkDrinking.narrate_player_milk_drink_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkDrinking.json",
+      "path": [
+        "routes",
+        "narrate_player_milk_drink_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "milkName"
+      ],
+      "largestVariantBytes": 833,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkDrinking.narrate_player_milk_drink_2",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkDrinking.json",
+      "path": [
+        "routes",
+        "narrate_player_milk_drink_2",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "reaction"
+      ],
+      "largestVariantBytes": 856,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkDrinking.narrate_player_milk_drink_3",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkDrinking.json",
+      "path": [
+        "routes",
+        "narrate_player_milk_drink_3",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 212,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkDrinking.build_restrained_player_drink_content_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkDrinking.json",
+      "path": [
+        "routes",
+        "build_restrained_player_drink_content_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "milkName"
+      ],
+      "largestVariantBytes": 988,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkDrinking.drinkMessage",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkDrinking.json",
+      "path": [
+        "routes",
+        "drinkMessage",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "item"
+      ],
+      "largestVariantBytes": 26,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Milking.startMessage",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Milking.json",
+      "path": [
+        "routes",
+        "startMessage",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 68,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Milking.endMessage",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Milking.json",
+      "path": [
+        "routes",
+        "endMessage",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 86,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkMaidCreation.narrate_milkmaid_created_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkMaidCreation.json",
+      "path": [
+        "routes",
+        "narrate_milkmaid_created_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 749,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkMaidCreation.narrate_forced_milk_maid_conversion_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkMaidCreation.json",
+      "path": [
+        "routes",
+        "narrate_forced_milk_maid_conversion_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "conversion"
+      ],
+      "largestVariantBytes": 743,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkMaidCreation.milkmaidCreatedMessage",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkMaidCreation.json",
+      "path": [
+        "routes",
+        "milkmaidCreatedMessage",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 99,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkMaidCreation.narrate_milk_maid_curse_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkMaidCreation.json",
+      "path": [
+        "routes",
+        "narrate_milk_maid_curse_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "conversion"
+      ],
+      "largestVariantBytes": 361,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "MilkMaidCreation.narrate_chest_milk_maid_curse_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkMaidCreation.json",
+      "path": [
+        "routes",
+        "narrate_chest_milk_maid_curse_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "outcome",
+        "chest_kind",
+        "milk_added"
+      ],
+      "largestVariantBytes": 936,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "TentacleArmor.narrate_tentacle_effect_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/TentacleArmor.json",
+      "path": [
+        "routes",
+        "narrate_tentacle_effect_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [],
+      "largestVariantBytes": 62,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "TentacleArmor.build_tentacle_effect_narration_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/TentacleArmor.json",
+      "path": [
+        "routes",
+        "build_tentacle_effect_narration_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "content"
+      ],
+      "largestVariantBytes": 433,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "TentacleArmor.effects_arousal",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/TentacleArmor.json",
+      "path": [
+        "routes",
+        "effects_arousal",
+        "template"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 175,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "TentacleArmor.effects_milk",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/TentacleArmor.json",
+      "path": [
+        "routes",
+        "effects_milk",
+        "template"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 187,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "TentacleArmor.effects_milkAndArousal",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/TentacleArmor.json",
+      "path": [
+        "routes",
+        "effects_milkAndArousal",
+        "template"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "requiredTokens": [
+        "actor"
+      ],
+      "largestVariantBytes": 217,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Thoughts.narrate_milk_maid_thought_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Thoughts.json",
+      "path": [
+        "routes",
+        "narrate_milk_maid_thought_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "thought"
+      ],
+      "largestVariantBytes": 309,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Thoughts.narrate_bound_milk_maid_thought_1",
+      "family": "skyrimnet",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Thoughts.json",
+      "path": [
+        "routes",
+        "narrate_bound_milk_maid_thought_1",
+        "template"
+      ],
+      "kind": "string",
+      "variants": 1,
+      "requiredTokens": [
+        "actor",
+        "thought"
+      ],
+      "largestVariantBytes": 326,
+      "currentProofEntry": false,
+      "reader": "MMENarrationText.psc"
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_none",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorCheckReminders.json",
+      "path": [
+        "notice_none"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [],
+      "largestVariantBytes": 29,
+      "readers": [
+        "MMEServiceArmorReminder.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_regular",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorCheckReminders.json",
+      "path": [
+        "notice_regular"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [],
+      "largestVariantBytes": 46,
+      "readers": [
+        "MMEServiceArmorReminder.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_milking",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorCheckReminders.json",
+      "path": [
+        "notice_milking"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [],
+      "largestVariantBytes": 34,
+      "readers": [
+        "MMEServiceArmorReminder.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_living",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorCheckReminders.json",
+      "path": [
+        "notice_living"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [],
+      "largestVariantBytes": 32,
+      "readers": [
+        "MMEServiceArmorReminder.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_parasite",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorCheckReminders.json",
+      "path": [
+        "notice_parasite"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [],
+      "largestVariantBytes": 36,
+      "readers": [
+        "MMEServiceArmorReminder.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_dwemer",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorCheckReminders.json",
+      "path": [
+        "notice_dwemer"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [],
+      "largestVariantBytes": 54,
+      "readers": [
+        "MMEServiceArmorReminder.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_reaction",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorCheckReminders.json",
+      "path": [
+        "notice_reaction"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [],
+      "largestVariantBytes": 25,
+      "readers": [
+        "MMEServiceArmorReminder.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.milking_first_equip",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorIntroductionStories.json",
+      "path": [
+        "stringList",
+        "milking_first_equip"
+      ],
+      "kind": "pool",
+      "variants": 3,
+      "tokensObserved": [
+        "ActorName"
+      ],
+      "largestVariantBytes": 317,
+      "readers": [
+        "MMEArmorIntroduction.psc",
+        "MMEStoryPopup.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.living_first_equip",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorIntroductionStories.json",
+      "path": [
+        "stringList",
+        "living_first_equip"
+      ],
+      "kind": "pool",
+      "variants": 1,
+      "tokensObserved": [],
+      "largestVariantBytes": 370,
+      "readers": [
+        "MMEArmorIntroduction.psc",
+        "MMEStoryPopup.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.parasite_first_equip",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorIntroductionStories.json",
+      "path": [
+        "stringList",
+        "parasite_first_equip"
+      ],
+      "kind": "pool",
+      "variants": 1,
+      "tokensObserved": [],
+      "largestVariantBytes": 344,
+      "readers": [
+        "MMEArmorIntroduction.psc",
+        "MMEStoryPopup.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.dwemer_first_equip",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorIntroductionStories.json",
+      "path": [
+        "stringList",
+        "dwemer_first_equip"
+      ],
+      "kind": "pool",
+      "variants": 1,
+      "tokensObserved": [],
+      "largestVariantBytes": 332,
+      "readers": [
+        "MMEArmorIntroduction.psc",
+        "MMEStoryPopup.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.living_trap_equip",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorIntroductionStories.json",
+      "path": [
+        "stringList",
+        "living_trap_equip"
+      ],
+      "kind": "pool",
+      "variants": 3,
+      "tokensObserved": [
+        "ActorName"
+      ],
+      "largestVariantBytes": 375,
+      "readers": [
+        "MMEArmorIntroduction.psc",
+        "MMEStoryPopup.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.parasite_trap_equip",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorIntroductionStories.json",
+      "path": [
+        "stringList",
+        "parasite_trap_equip"
+      ],
+      "kind": "pool",
+      "variants": 3,
+      "tokensObserved": [
+        "ActorName"
+      ],
+      "largestVariantBytes": 409,
+      "readers": [
+        "MMEArmorIntroduction.psc",
+        "MMEStoryPopup.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.dwemer_trap_equip",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorIntroductionStories.json",
+      "path": [
+        "stringList",
+        "dwemer_trap_equip"
+      ],
+      "kind": "pool",
+      "variants": 3,
+      "tokensObserved": [
+        "ActorName"
+      ],
+      "largestVariantBytes": 397,
+      "readers": [
+        "MMEArmorIntroduction.psc",
+        "MMEStoryPopup.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.milking_repeat_equip",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorIntroductionStories.json",
+      "path": [
+        "stringList",
+        "milking_repeat_equip"
+      ],
+      "kind": "pool",
+      "variants": 3,
+      "tokensObserved": [
+        "ActorName"
+      ],
+      "largestVariantBytes": 317,
+      "readers": [
+        "MMEArmorIntroduction.psc",
+        "MMEStoryPopup.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.living_repeat_equip",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorIntroductionStories.json",
+      "path": [
+        "stringList",
+        "living_repeat_equip"
+      ],
+      "kind": "pool",
+      "variants": 3,
+      "tokensObserved": [
+        "ActorName"
+      ],
+      "largestVariantBytes": 375,
+      "readers": [
+        "MMEArmorIntroduction.psc",
+        "MMEStoryPopup.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.parasite_repeat_equip",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorIntroductionStories.json",
+      "path": [
+        "stringList",
+        "parasite_repeat_equip"
+      ],
+      "kind": "pool",
+      "variants": 3,
+      "tokensObserved": [
+        "ActorName"
+      ],
+      "largestVariantBytes": 409,
+      "readers": [
+        "MMEArmorIntroduction.psc",
+        "MMEStoryPopup.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.dwemer_repeat_equip",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorIntroductionStories.json",
+      "path": [
+        "stringList",
+        "dwemer_repeat_equip"
+      ],
+      "kind": "pool",
+      "variants": 3,
+      "tokensObserved": [
+        "ActorName"
+      ],
+      "largestVariantBytes": 397,
+      "readers": [
+        "MMEArmorIntroduction.psc",
+        "MMEStoryPopup.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArousalEffects.low_female",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArousalEffects.json",
+      "path": [
+        "low_female"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 72,
+      "readers": [
+        "MMEArousalEffects.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArousalEffects.low_male",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArousalEffects.json",
+      "path": [
+        "low_male"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 69,
+      "readers": [
+        "MMEArousalEffects.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArousalEffects.medium_female",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArousalEffects.json",
+      "path": [
+        "medium_female"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 86,
+      "readers": [
+        "MMEArousalEffects.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArousalEffects.medium_male",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArousalEffects.json",
+      "path": [
+        "medium_male"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 74,
+      "readers": [
+        "MMEArousalEffects.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArousalEffects.high_female",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArousalEffects.json",
+      "path": [
+        "high_female"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 73,
+      "readers": [
+        "MMEArousalEffects.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ArousalEffects.high_male",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ArousalEffects.json",
+      "path": [
+        "high_male"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 63,
+      "readers": [
+        "MMEArousalEffects.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.BreastBounceNotifications.low",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/BreastBounceNotifications.json",
+      "path": [
+        "low"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 76,
+      "readers": [
+        "MMEBreastBounceEffects.psc",
+        "MMEAlertsController.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.BreastBounceNotifications.high",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/BreastBounceNotifications.json",
+      "path": [
+        "high"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 73,
+      "readers": [
+        "MMEBreastBounceEffects.psc",
+        "MMEAlertsController.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.BreastBounceNotifications.movement",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/BreastBounceNotifications.json",
+      "path": [
+        "movement"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [],
+      "largestVariantBytes": 69,
+      "readers": [
+        "MMEBreastBounceEffects.psc",
+        "MMEAlertsController.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.DwemerArmorStories.dwemerarmorstart",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/DwemerArmorStories.json",
+      "path": [
+        "stringList",
+        "dwemerarmorstart"
+      ],
+      "kind": "pool",
+      "variants": 1,
+      "tokensObserved": [],
+      "largestVariantBytes": 304,
+      "readers": [
+        "MMEDwemerArmor.psc",
+        "MMEStoryPopup.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.DwemerArmorStories.dwemerarmorend",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/DwemerArmorStories.json",
+      "path": [
+        "stringList",
+        "dwemerarmorend"
+      ],
+      "kind": "pool",
+      "variants": 1,
+      "tokensObserved": [],
+      "largestVariantBytes": 209,
+      "readers": [
+        "MMEDwemerArmor.psc",
+        "MMEStoryPopup.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.DwemerEffectNotifications.lines",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/DwemerEffectNotifications.json",
+      "path": [
+        "lines"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 61,
+      "readers": [
+        "MMEDwemerEffects.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ForcedMilkMaidConversion.conversionMessages",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ForcedMilkMaidConversion.json",
+      "path": [
+        "conversionMessages"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 70,
+      "readers": [
+        "MMENewMilkMaid.psc",
+        "MMEMilkCurse.psc",
+        "MMETextPool.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.ForcedMilkMaidConversion.chestCurseStories",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/ForcedMilkMaidConversion.json",
+      "path": [
+        "chestCurseStories"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 455,
+      "readers": [
+        "MMENewMilkMaid.psc",
+        "MMEMilkCurse.psc",
+        "MMETextPool.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.Injection.lines",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Injection.json",
+      "path": [
+        "lines"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 79,
+      "readers": [
+        "MMETentacleEffects.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.MilkCravings.craving",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/MilkCravings.json",
+      "path": [
+        "craving"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "ActorName"
+      ],
+      "largestVariantBytes": 63,
+      "readers": [
+        "MMEMilkCravings.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.MilkCravings.give_in",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/MilkCravings.json",
+      "path": [
+        "give_in"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "ActorName"
+      ],
+      "largestVariantBytes": 56,
+      "readers": [
+        "MMEMilkCravings.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.male_generic",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json",
+      "path": [
+        "male_generic"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor",
+        "milk"
+      ],
+      "largestVariantBytes": 61,
+      "readers": [
+        "MMENPCDrinkDialogue.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.female_generic",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json",
+      "path": [
+        "female_generic"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor",
+        "milk"
+      ],
+      "largestVariantBytes": 62,
+      "readers": [
+        "MMENPCDrinkDialogue.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.male_aroused",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json",
+      "path": [
+        "male_aroused"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor",
+        "milk"
+      ],
+      "largestVariantBytes": 64,
+      "readers": [
+        "MMENPCDrinkDialogue.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.female_aroused",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json",
+      "path": [
+        "female_aroused"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor",
+        "milk"
+      ],
+      "largestVariantBytes": 59,
+      "readers": [
+        "MMENPCDrinkDialogue.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.female_milk",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json",
+      "path": [
+        "female_milk"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor",
+        "milk"
+      ],
+      "largestVariantBytes": 60,
+      "readers": [
+        "MMENPCDrinkDialogue.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.female_milk_arousal",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json",
+      "path": [
+        "female_milk_arousal"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor",
+        "milk"
+      ],
+      "largestVariantBytes": 62,
+      "readers": [
+        "MMENPCDrinkDialogue.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.breastfeeding_male_generic",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json",
+      "path": [
+        "breastfeeding_male_generic"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [],
+      "largestVariantBytes": 47,
+      "readers": [
+        "MMENPCDrinkDialogue.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.breastfeeding_male_aroused",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json",
+      "path": [
+        "breastfeeding_male_aroused"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [],
+      "largestVariantBytes": 49,
+      "readers": [
+        "MMENPCDrinkDialogue.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_generic",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json",
+      "path": [
+        "breastfeeding_female_generic"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [],
+      "largestVariantBytes": 48,
+      "readers": [
+        "MMENPCDrinkDialogue.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_aroused",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json",
+      "path": [
+        "breastfeeding_female_aroused"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [],
+      "largestVariantBytes": 47,
+      "readers": [
+        "MMENPCDrinkDialogue.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_milk",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json",
+      "path": [
+        "breastfeeding_female_milk"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [],
+      "largestVariantBytes": 50,
+      "readers": [
+        "MMENPCDrinkDialogue.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_milk_arousal",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/NonMilkmaidDrinkNotifications.json",
+      "path": [
+        "breastfeeding_female_milk_arousal"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [],
+      "largestVariantBytes": 42,
+      "readers": [
+        "MMENPCDrinkDialogue.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.Thoughts.belowHalf_noArmor",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Thoughts.json",
+      "path": [
+        "belowHalf_noArmor"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 60,
+      "readers": [
+        "MMEThoughts.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.Thoughts.belowHalf_milkingArmor",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Thoughts.json",
+      "path": [
+        "belowHalf_milkingArmor"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 68,
+      "readers": [
+        "MMEThoughts.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.Thoughts.belowHalf_parasiteArmor",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Thoughts.json",
+      "path": [
+        "belowHalf_parasiteArmor"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 71,
+      "readers": [
+        "MMEThoughts.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.Thoughts.belowHalf_livingArmor",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Thoughts.json",
+      "path": [
+        "belowHalf_livingArmor"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 70,
+      "readers": [
+        "MMEThoughts.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.Thoughts.halfPlus_noArmor",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Thoughts.json",
+      "path": [
+        "halfPlus_noArmor"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 63,
+      "readers": [
+        "MMEThoughts.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.Thoughts.armsBound",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Thoughts.json",
+      "path": [
+        "armsBound"
+      ],
+      "kind": "pool",
+      "variants": 5,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 69,
+      "readers": [
+        "MMEThoughts.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.Thoughts.halfPlus_milkingArmor",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Thoughts.json",
+      "path": [
+        "halfPlus_milkingArmor"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 66,
+      "readers": [
+        "MMEThoughts.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.Thoughts.halfPlus_parasiteArmor",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Thoughts.json",
+      "path": [
+        "halfPlus_parasiteArmor"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 73,
+      "readers": [
+        "MMEThoughts.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.Thoughts.halfPlus_livingArmor",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/Thoughts.json",
+      "path": [
+        "halfPlus_livingArmor"
+      ],
+      "kind": "pool",
+      "variants": 6,
+      "tokensObserved": [
+        "actor"
+      ],
+      "largestVariantBytes": 74,
+      "readers": [
+        "MMEThoughts.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    },
+    {
+      "id": "Pools.TimedArmorNotifications.unequip_resisted",
+      "family": "story-thought-notification",
+      "file": "SKSE/Plugins/StorageUtilData/MMEAlerts/TimedArmorNotifications.json",
+      "path": [
+        "stringList",
+        "unequip_resisted"
+      ],
+      "kind": "pool",
+      "variants": 4,
+      "tokensObserved": [],
+      "largestVariantBytes": 70,
+      "readers": [
+        "MMETimedArmorLock.psc"
+      ],
+      "validationStatus": "consumer-specific contract must be recorded before integration"
+    }
+  ],
+  "excludedLegacyOnly": [
+    "TentacleEffectNarration.json",
+    "DwemerEffectNarration.json",
+    "DwemerSuitNarration.json",
+    "DwemerAttachmentNarration.json",
+    "SkyrimNet.json legacy text keys"
+  ],
+  "inactiveTextCandidates": [
+    "ForcedMilkMaidConversion.openingStory",
+    "ForcedMilkMaidConversion.closingStory"
+  ]
+}

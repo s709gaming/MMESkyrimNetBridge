@@ -134,11 +134,11 @@ String Function BuildBreastfeedingReaction(Actor milkSource, Actor drinker, Bool
     EndIf
 
     String configFile = "/MMEAlerts/NonMilkmaidDrinkNotifications"
-    If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
+    If !MMENarrationOverrides.FileAvailable(configFile)
         MMELog.Alarm("[MME Extensions BF Drink] FAILURE: breastfeeding flavor JSON is missing or malformed; using factual anchor")
         Return anchor
     EndIf
-    String[] entries = JsonUtil.PathStringElements(configFile, pool)
+    String[] entries = MMENarrationOverrides.Pool(configFile, pool, drinker)
     If entries.Length == 0
         MMELog.Alarm("[MME Extensions BF Drink] FAILURE: breastfeeding flavor JSON pool is empty: " + pool + "; using factual anchor")
         Return anchor
@@ -196,12 +196,12 @@ String Function SelectNotificationTemplate(Actor target, Int sex, Bool establish
     EndIf
 
     MMENPCDialog.TraceDialogueTiming("11E0A notification JSON validation", target)
-    If !JsonUtil.JsonExists(configFile) || !JsonUtil.IsGood(configFile)
+    If !MMENarrationOverrides.FileAvailable(configFile)
         MMELog.Alarm("[MME Extensions Universal Drink] FAILURE: notification JSON is missing or malformed; using fallback text")
         Return "{actor} drinks {milk}. It tastes fabulous."
     EndIf
     MMENPCDialog.TraceDialogueTiming("11E0B notification JSON pool read", target)
-    String[] entries = JsonUtil.PathStringElements(configFile, pool)
+    String[] entries = MMENarrationOverrides.Pool(configFile, pool, target)
     If entries.Length == 0
         MMELog.Alarm("[MME Extensions Universal Drink] FAILURE: notification JSON pool is empty: " + pool)
         Return "{actor} drinks {milk}. It tastes fabulous."

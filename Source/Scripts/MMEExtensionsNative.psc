@@ -1,5 +1,17 @@
 Scriptname MMEExtensionsNative Hidden
 
+; Versioned editor transport: lowercase hex UTF-8 JSON preserves case across VM interning.
+; Queues bounded native worker I/O; completion is a generation/view-scoped ModEvent.
+Bool Function QueueNarrationEditorRequest(String payload, Int generation, Int view) Global Native
+String Function GetGeneralLoreOverride() Global Native
+; One atomic snapshot: element 0 is string/pool, remaining elements are templates (max 64).
+String[] Function GetNarrationOverrideValues(String entryId) Global Native
+Bool Function HasNarrationPoolOverrides(String fileKey) Global Native
+String Function GetNarrationRevision() Global Native
+String Function GetNarrationEditorFailure() Global Native
+Function ReloadNarrationEditor() Global Native
+String Function DescribeNarrationEditorReply(String payload) Global Native
+
 ; Read-only player movement state; keyboard, controller and auto-move aware.
 Bool Function IsPlayerMovingOnFoot() Global Native
 

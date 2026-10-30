@@ -28,8 +28,11 @@ NPC Give Milk and player Drink honor the Free Jug cheat and prefer owned Lactaci
 only for confirmed Milk Maids. Self Milk dispatches the guarded native MME route;
 MME start/end events confirm actual progress separately. Per-snapshot actor tokens
 prevent stale row targeting. Actions release focus and execute on a single update;
-busy requests and old sessions are rejected. JSON editing is future scope; no save/write listener
-is exposed. The page has Refresh, Close and Escape and assigns names through DOM
+busy requests and old sessions are rejected. A second Narration & Lore tab now
+offers a single-field general-lore editor with native-worker Save/Reload/Reset,
+external personal JSON, backups, and revision checks. See
+[the proof implementation](Narration-Editor-Proof.md) for scope and remaining runtime
+acceptance. The page has Refresh, Close and Escape and assigns names through DOM
 textContent. Rendering validates shape and finite display values, and clamps only
 the visual progress bar. Page rejection reports a deduplicated backend smoke alarm.
 Close/Refresh work before the first data payload; generation/view checks reject

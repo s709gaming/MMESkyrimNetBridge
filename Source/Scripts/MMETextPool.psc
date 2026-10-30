@@ -43,6 +43,10 @@ Bool Function HasCanonicalMember(String fileName, String pool) Global
 EndFunction
 
 String Function Pick(String fileName, String pool, String fallbackText, Actor subject, String sourceLabel) Global
+    String[] personal = MMENarrationOverrides.PersonalPool(fileName, pool, subject)
+    If personal.Length > 0
+        Return personal[Utility.RandomInt(0, personal.Length - 1)]
+    EndIf
     String reason = ""
     String poolPath = "." + pool
     Bool ordinary = False

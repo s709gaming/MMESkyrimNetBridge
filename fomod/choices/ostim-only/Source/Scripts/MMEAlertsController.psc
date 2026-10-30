@@ -2646,8 +2646,8 @@ Function TryMovementSlapNotification()
     EndIf
     String configFile = "/MMEAlerts/BreastBounceNotifications"
     String notificationText = ""
-    If JsonUtil.JsonExists(configFile) && JsonUtil.IsGood(configFile)
-        String[] entries = JsonUtil.PathStringElements(configFile, ".movement")
+    If MMENarrationOverrides.FileAvailable(configFile)
+        String[] entries = MMENarrationOverrides.Pool(configFile, ".movement", MovementSlapPlayer)
         If entries.Length > 0
             notificationText = entries[Utility.RandomInt(0, entries.Length - 1)]
         EndIf
