@@ -2546,43 +2546,58 @@ Event OnPageReset(String page)
         Return
     EndIf
     If page == "Armor Effects"
-        AddHeaderOption("Living and Parasite Armor")
-        armorInjectionOption = AddToggleOption("Enable Tentacle Effects", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjections", 1) == 1)
+        AddHeaderOption("Living / Parasite Armor")
+        armorInjectionOption = AddToggleOption("Enable Effects", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjections", 1) == 1)
         armorInjectionIntervalOption = AddSliderOption("Base Effect Interval", JsonUtil.GetFloatValue(SettingsFile, "armorInjectionInterval", 12.0), "{0} game hours")
         armorInjectionVariationOption = AddSliderOption("Interval Variation (+/-)", JsonUtil.GetFloatValue(SettingsFile, "armorInjectionVariation", 4.0), "{0} game hours")
-        armorInjectionChanceOption = AddSliderOption("Injection Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionChance", 100), "{0}%")
-        AddHeaderOption("Effect Intensity")
-        Int tierIndex = 0
-        While tierIndex < 4
-            String tierLabel = MMETentacleTiers.Name(tierIndex + 1)
-            tentacleChanceOptions[tierIndex] = AddSliderOption(tierLabel + " Intensity Chance", JsonUtil.GetIntValue(SettingsFile, MMETentacleTiers.ChanceKey(tierIndex + 1), MMETentacleTiers.DefaultChance(tierIndex + 1)), "{0}%")
-            tentacleDurationOptions[tierIndex] = AddSliderOption(tierLabel + " Animation Duration", MMETentacleTiers.Duration(tierIndex + 1), "{1} seconds")
-            tierIndex += 1
-        EndWhile
+        armorInjectionChanceOption = AddSliderOption("Effect Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionChance", 100), "{0}%")
+        AddHeaderOption("Notifications")
         armorInjectionNotificationOption = AddToggleOption("Show Effect Notifications", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNotifications", 1) == 1)
         armorInjectionSoundOption = AddToggleOption("Notification Sound", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionSounds", 1) == 1)
         AddHeaderOption("Skyrim.Net Narration")
-        armorInjectionNarrationOption = AddToggleOption("Enable Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNarration", 1) == 1)
+        armorInjectionNarrationOption = AddToggleOption("Enable Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNarration", 1) == 1)
         armorInjectionPlayerNarrationOption = AddToggleOption("Enable Player Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionPlayerNarration", 1) == 1)
         armorInjectionNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationChance", 100), "{0}%")
-        AddHeaderOption("Debug")
-        armorInjectionDiagnosticOption = AddToggleOption("Enable Effect Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", 0) == 1)
-        runArmorInjectionCheckOption = AddTextOption("Run Effect Check Now", "RUN")
         SetCursorPosition(1)
-        AddHeaderOption("Dwemer Armor Effects")
-        dwemerEffectOption = AddToggleOption("Enable Dwemer Effects", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffects", 1) == 1)
+        AddHeaderOption("Dwemer Armor")
+        dwemerEffectOption = AddToggleOption("Enable Effects", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffects", 1) == 1)
         dwemerEffectIntervalOption = AddSliderOption("Base Effect Interval", JsonUtil.GetFloatValue(SettingsFile, "dwemerEffectInterval", 12.0), "{0} game hours")
         dwemerEffectVariationOption = AddSliderOption("Interval Variation (+/-)", JsonUtil.GetFloatValue(SettingsFile, "dwemerEffectVariation", 4.0), "{0} game hours")
         dwemerEffectChanceOption = AddSliderOption("Effect Chance", JsonUtil.GetIntValue(SettingsFile, "dwemerEffectChance", 100), "{0}%")
+        AddHeaderOption("Notifications")
         dwemerEffectNotificationOption = AddToggleOption("Show Effect Notifications", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectNotifications", 1) == 1)
         dwemerEffectSoundOption = AddToggleOption("Notification Sound", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectSounds", 1) == 1)
-        AddHeaderOption("Dwemer Skyrim.Net Narration")
-        dwemerEffectNarrationOption = AddToggleOption("Enable Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectNarration", 1) == 1)
+        AddHeaderOption("Skyrim.Net Narration")
+        dwemerEffectNarrationOption = AddToggleOption("Enable Narration", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectNarration", 1) == 1)
         dwemerEffectPlayerNarrationOption = AddToggleOption("Enable Player Narration", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectPlayerNarration", 1) == 1)
         dwemerEffectNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "dwemerEffectNarrationChance", 100), "{0}%")
-        AddHeaderOption("Dwemer Debug")
+        ; Shared settings occupy twelve rows in each column. Tier settings
+        ; belong only to Living/Parasite and share rows by intensity.
+        SetCursorPosition(24)
+        AddHeaderOption("Living / Parasite Chances")
+        SetCursorPosition(25)
+        AddHeaderOption("Living / Parasite Durations")
+        String[] tierLabels = new String[4]
+        tierLabels[0] = "Low"
+        tierLabels[1] = "Medium"
+        tierLabels[2] = "High"
+        tierLabels[3] = "Extreme"
+        Int tierIndex = 0
+        While tierIndex < 4
+            SetCursorPosition(26 + tierIndex * 2)
+            tentacleChanceOptions[tierIndex] = AddSliderOption(tierLabels[tierIndex] + " Chance", JsonUtil.GetIntValue(SettingsFile, MMETentacleTiers.ChanceKey(tierIndex + 1), MMETentacleTiers.DefaultChance(tierIndex + 1)), "{0}%")
+            SetCursorPosition(27 + tierIndex * 2)
+            tentacleDurationOptions[tierIndex] = AddSliderOption(tierLabels[tierIndex] + " Duration", MMETentacleTiers.Duration(tierIndex + 1), "{1} seconds")
+            tierIndex += 1
+        EndWhile
+        SetCursorPosition(34)
+        AddHeaderOption("Living / Parasite Diagnostics")
+        armorInjectionDiagnosticOption = AddToggleOption("Enable Effect Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", 0) == 1)
+        runArmorInjectionCheckOption = AddTextOption("Run Effect Check Now", "RUN")
+        SetCursorPosition(35)
+        AddHeaderOption("Dwemer Diagnostics")
         dwemerEffectDiagnosticOption = AddToggleOption("Enable Effect Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectDiagnostics", 0) == 1)
-        runDwemerEffectCheckOption = AddTextOption("Run Dwemer Check Now", "RUN")
+        runDwemerEffectCheckOption = AddTextOption("Run Effect Check Now", "RUN")
         Return
     EndIf
     If page == "Troubleshoot"
