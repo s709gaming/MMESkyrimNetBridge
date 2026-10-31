@@ -51,7 +51,32 @@ EndFunction
 ; Runs scheduled, manual, and public-API checks. Manual checks bypass only the
 ; timer. Public API calls may also bypass the scheduler's random chance while
 ; retaining the live enable gate, actor validation, and armor classification.
-Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = False, Bool applyScheduledChance = True) Global
+Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = False, Bool applyScheduledChance = True, Bool dueOnly = False) Global
+    MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If controller == None
+        MMETentacleTiers.Alarm("controller unavailable; effect not started")
+        Return False
+    EndIf
+    Int generation = StorageUtil.GetIntValue(None, "MMEExtensions.Tentacle.Generation", 0)
+    If StorageUtil.AdjustIntValue(None, "MMEExtensions.Tentacle.Busy", 1) != 1
+        StorageUtil.AdjustIntValue(None, "MMEExtensions.Tentacle.Busy", -1)
+        Return False
+    EndIf
+    MMETentacleTiers.Configure()
+    Bool result = ProcessInjectionCheck(scannedActors, manualDiagnostic, applyScheduledChance, dueOnly)
+    If generation == StorageUtil.GetIntValue(None, "MMEExtensions.Tentacle.Generation", 0)
+        StorageUtil.AdjustIntValue(None, "MMEExtensions.Tentacle.Busy", -1)
+    EndIf
+    If controller != None
+        controller.ScheduleNextUpdate()
+    Else
+        MMETentacleTiers.Complete(True)
+        MMETentacleTiers.Alarm("controller unavailable; animation holds canceled")
+    EndIf
+    Return result
+EndFunction
+
+Bool Function ProcessInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic, Bool applyScheduledChance, Bool dueOnly) Global
     Bool diagnostic = manualDiagnostic || IsDiagnosticEnabled()
     If !IsEnabled()
         Report(diagnostic, "check skipped: Tentacle Effects are disabled")
@@ -66,6 +91,7 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
 
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milkController == None
+        MMETentacleTiers.Alarm("MME_MilkQUEST unavailable")
         Report(diagnostic, "check skipped: MME_MilkQUEST is unavailable")
         Return False
     EndIf
@@ -83,6 +109,7 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
     Actor playerActor = Game.GetPlayer()
     Actor focusActor = None
     Int focusArmorClass = 0
+    Int focusTier = 0
     Actor narrationActor = None
     Float narrationMilkAdded = 0.0
     Int narrationArousalBefore = -1
@@ -101,13 +128,24 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
             Int armorClass = MMEArmorScript.ClassifyArmor(milkController, wornArmor, "injection", candidate)
             String actorName = MMEThoughts.ResolveActorName(candidate)
             Report(diagnostic, "candidate=" + actorName + " | armor=" + MMEArmorScript.GetArmorName(wornArmor) + " | class=" + armorClass + " " + MMEArmorScript.GetArmorTypeLabel(armorClass))
-            If armorClass == 2 || armorClass == 3
+            Bool opportunity = True
+            If dueOnly
+                opportunity = MMETentacleTiers.ConsumeDue(candidate, Utility.GetCurrentGameTime())
+            EndIf
+            If (armorClass == 2 || armorClass == 3) && opportunity
                 eligibleCount += 1
                 Int roll = 1
                 If applyScheduledChance
                     roll = Utility.RandomInt(1, 100)
                 EndIf
+                Int intensity = 0
+                Bool animationStarted = False
                 If roll <= chance
+                    intensity = MMETentacleTiers.Roll(candidate)
+                    animationStarted = MMETentacleTiers.Start(candidate, intensity)
+                EndIf
+                MMETentacleTiers.Trace("operation=roll | actor=" + candidate + " | injection=" + roll + "/" + chance + " | tier=" + intensity + " | animation=" + animationStarted)
+                If roll <= chance && animationStarted
                     Float milkBefore = 0.0
                     Int arousalBefore = -1
                     If diagnostic
@@ -124,15 +162,14 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
                     ; formula without Lactacid math or player post-drink state.
                     Float milkAdded = MMEMilkBoost.ApplyMilkDrinkBonusForActor(candidate, 1, False, False)
                     Bool arousalSent = MMEArousalBridge.ApplyConfiguredMilkArousalForActor(candidate, "armor injection", False)
-                    If diagnostic && arousalSent
-                        ; SLA consumes ModEvents asynchronously. This diagnostic-
-                        ; only wait makes the optional after-value meaningful.
-                        Utility.Wait(0.25)
-                    EndIf
+                    ; SLA consumes ModEvents asynchronously. Do not hold the shared
+                    ; scanner for diagnostics; unconfirmed arousal remains pending.
+                    MMETentacleTiers.Trace("operation=effects | actor=" + candidate + " | tier=" + intensity + " | milkDelta=" + milkAdded + " | arousalSent=" + arousalSent)
                     injectedCount += 1
                     If focusActor == None || candidate == playerActor
                         focusActor = candidate
                         focusArmorClass = armorClass
+                        focusTier = intensity
                     EndIf
                     ; Keep the exact HUD wearer and its results. Disabling player
                     ; speech must not substitute an NPC for the selected player.
@@ -147,8 +184,10 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
                         Int arousalAfter = MMEArousalBridge.GetCurrentArousal(candidate)
                         Report(True, "injected=" + actorName + " | roll=" + roll + "/" + chance + " | milk=" + milkBefore + " -> " + milkAfter + " (delta=" + milkAdded + ") | arousal=" + arousalBefore + " -> " + arousalAfter + " | arousal event=" + arousalSent)
                     EndIf
-                Else
+                ElseIf roll > chance
                     Report(diagnostic, "missed=" + actorName + " | roll=" + roll + " > " + chance)
+                Else
+                    Report(diagnostic, "skipped=" + actorName + " | reason=animation prerequisites or ownership blocked")
                 EndIf
             EndIf
         EndIf
@@ -164,7 +203,7 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
     String focusName = MMEThoughts.ResolveActorName(focusActor)
     Report(diagnostic, "notification focus=" + focusName + " | armor=" + MMEArmorScript.GetArmorTypeLabel(focusArmorClass) + " | others=" + (injectedCount - 1))
     If JsonUtil.GetIntValue(GetSettingsFile(), "enableArmorInjectionNotifications", 1) == 1
-        String notificationText = BuildNotification(focusName, injectedCount)
+        String notificationText = BuildNotification(focusName, injectedCount, focusTier)
         If notificationText != ""
             Debug.Notification(notificationText)
             PlayNotificationSound(focusActor)
@@ -178,7 +217,7 @@ Bool Function RunInjectionCheck(Actor[] scannedActors, Bool manualDiagnostic = F
     Else
         Report(diagnostic, "narration skipped: no affected narration candidate")
     EndIf
-    MMEAlertsSkyrimNet.NarrateTentacleEffect(narrationActor, narrationMilkAdded, narrationArousalBefore, narrationArousalSent, diagnostic)
+    MMEAlertsSkyrimNet.NarrateTentacleEffect(narrationActor, narrationMilkAdded, narrationArousalBefore, narrationArousalSent, diagnostic, focusTier)
     Return True
 EndFunction
 
@@ -206,8 +245,14 @@ Bool Function IsValidCandidate(Actor candidate, MilkQUEST milkController) Global
     Return candidate != None && candidate.Is3DLoaded() && MMEArmorScript.IsValidMilkMaid(candidate, milkController)
 EndFunction
 
-String Function BuildNotification(String actorName, Int injectedCount) Global
-    String template = GetRandomFlavorLine()
+String Function BuildNotification(String actorName, Int injectedCount, Int tier = 0) Global
+    String template = ""
+    If tier > 0
+        template = MMETentacleTiers.Text(tier, "lines", None)
+    EndIf
+    If template == ""
+        template = GetRandomFlavorLine()
+    EndIf
     If template == ""
         Return ""
     EndIf
@@ -217,7 +262,7 @@ String Function BuildNotification(String actorName, Int injectedCount) Global
         Return ""
     EndIf
     If injectedCount > 1
-        result = result + "..and others."
+        result = result + " Other nearby wearers were also affected."
     EndIf
     Return result
 EndFunction
@@ -240,11 +285,5 @@ Function TraceDiagnostic(Bool showNotification, String reportText) Global
 EndFunction
 
 Function Report(Bool showNotification, String reportText) Global
-    If !showNotification && !IsDiagnosticEnabled()
-        Return
-    EndIf
-    MMELog.Diagnostic("[MME Extensions Armor Injection] " + reportText)
-    If showNotification
-        Debug.Notification("Tentacle Effects: " + reportText)
-    EndIf
+    MMETentacleTiers.Trace(reportText)
 EndFunction

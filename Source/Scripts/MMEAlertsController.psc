@@ -79,6 +79,7 @@ Bool OpeningDialogueAlarmActive = False
 Float NextThoughtGameTime = 0.0
 Float NextBoundThoughtGameTime = 0.0
 Float NextInjectionGameTime = 0.0
+Float NextTentacleDiscovery = 0.0
 Float NextDwemerEffectGameTime = 0.0
 Float NextBreastBounceGameTime = 0.0
 Float NextMilkCravingGameTime = 0.0
@@ -112,6 +113,7 @@ EndEvent
 ; one compact engine-on status after initialization is complete.
 Function InitializeController(Bool reportStatus = False)
     MMENarrationText.ReloadAll()
+    MMETentacleTiers.Recover()
     UnregisterForModEvent("MMEExtensions_MaidBodyTrace")
     RegisterForModEvent("MMEExtensions_MaidBodyTrace", "OnMaidBodyTrace")
     UnregisterForModEvent("MMEExtensions_MaidBodyComplete")
@@ -649,7 +651,8 @@ Function RefreshBoundThoughtScheduling()
     ArmNextGameTimeUpdate(now)
 EndFunction
 
-Function RefreshInjectionScheduling()
+Function RefreshInjectionScheduling(Bool reseed = True)
+    MMETentacleTiers.Recover(reseed)
     Float now = Utility.GetCurrentGameTime()
     ScheduleNextInjection(now)
     ArmNextGameTimeUpdate(now)
@@ -727,16 +730,15 @@ Function ScheduleNextBoundThought(Float now)
 EndFunction
 
 Function ScheduleNextInjection(Float now)
-    If !MMETentacleEffects.IsEnabled()
-        NextInjectionGameTime = 0.0
-        MMETentacleEffects.TraceDiagnostic(False, "schedule disabled")
-        Return
+    NextInjectionGameTime = 0.0
+    If MMETentacleEffects.IsEnabled()
+        NextInjectionGameTime = MMETentacleTiers.NextDue(now)
+        NextTentacleDiscovery = Utility.GetCurrentRealTime() + 15.0
+    Else
+        NextTentacleDiscovery = 0.0
+        MMETentacleTiers.Complete(True)
     EndIf
-    Float baseInterval = JsonUtil.GetFloatValue(SettingsFile, "armorInjectionInterval", 12.0)
-    Float variation = JsonUtil.GetFloatValue(SettingsFile, "armorInjectionVariation", 4.0)
-    Float nextInterval = MMETentacleEffects.CalculateNextInterval(baseInterval, variation)
-    NextInjectionGameTime = now + (nextInterval / 24.0)
-    MMETentacleEffects.TraceDiagnostic(False, "schedule armed | next=" + nextInterval + " game hours")
+    ScheduleNextUpdate()
 EndFunction
 
 Function ScheduleNextDwemerEffect(Float now)
@@ -1038,6 +1040,8 @@ Function StopGameTimeScheduling()
     NextThoughtGameTime = 0.0
     NextBoundThoughtGameTime = 0.0
     NextInjectionGameTime = 0.0
+    NextTentacleDiscovery = 0.0
+    MMETentacleTiers.Complete(True)
     NextDwemerEffectGameTime = 0.0
     NextBreastBounceGameTime = 0.0
     PendingBreastBounceActor = None
@@ -1090,7 +1094,8 @@ Event OnUpdateGameTime()
         ScheduleNextBoundThought(now)
     EndIf
     If injectionDue
-        MMETentacleEffects.RunInjectionCheck(nearbyActors, False)
+        MMETentacleTiers.Observe(nearbyActors)
+        MMETentacleEffects.RunInjectionCheck(nearbyActors, False, True, True)
         ScheduleNextInjection(now)
     EndIf
     If dwemerEffectDue
@@ -1909,13 +1914,31 @@ Function ScheduleNextUpdate()
     Float now = Utility.GetCurrentRealTime()
     Float delay = 0.0
     Float candidate = 0.0
+    Float tentacleDeadline = MMETentacleTiers.NextCompletion()
+    If MMETentacleEffects.IsEnabled() && NextTentacleDiscovery <= 0.0
+        NextTentacleDiscovery = now + 15.0
+    EndIf
+    If NextTentacleDiscovery > 0.0
+        delay = NextTentacleDiscovery - now
+        If delay < 0.01
+            delay = 0.01
+        EndIf
+    EndIf
+    If tentacleDeadline > 0.0 && (delay <= 0.0 || tentacleDeadline - now < delay)
+        delay = tentacleDeadline - now
+        If delay < 0.01
+            delay = 0.01
+        EndIf
+    EndIf
     Float armorRemovalDeadline = MMEArmorRemoval.GetNextVerificationDeadline()
     If armorRemovalDeadline > 0.0
         candidate = armorRemovalDeadline - now
         If candidate <= 0.0
             candidate = 0.01
         EndIf
-        delay = candidate
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
     EndIf
     If NextCapacityUpdate > 0.0
         candidate = NextCapacityUpdate - now
@@ -2086,6 +2109,8 @@ Event OnUpdate()
     Float now = Utility.GetCurrentRealTime()
     Float armorRemovalDeadline = MMEArmorRemoval.GetNextVerificationDeadline()
     Bool armorRemovalDue = armorRemovalDeadline > 0.0 && now >= armorRemovalDeadline
+    MMETentacleTiers.Complete()
+    Bool tentacleDiscoveryDue = NextTentacleDiscovery > 0.0 && now >= NextTentacleDiscovery
     Bool capacityDue = NextCapacityUpdate > 0.0 && now >= NextCapacityUpdate
     Bool arousalEffectDue = NextArousalEffectUpdate > 0.0 && now >= NextArousalEffectUpdate
     Bool bodyEffectsDue = NextBodyEffectsUpdate > 0.0 && now >= NextBodyEffectsUpdate
@@ -2109,8 +2134,13 @@ Event OnUpdate()
     If armorRemovalDue
         MMEArmorRemoval.ResolveDueVerifications(now)
     EndIf
-    If capacityDue || skyrimNetDue || thoughtDebugDue || arousalEffectDue
+    If capacityDue || skyrimNetDue || thoughtDebugDue || arousalEffectDue || tentacleDiscoveryDue
         ScanNearbyMilkMaids(skyrimNetDue, capacityDue, thoughtDebugDue, arousalEffectDue)
+    EndIf
+    If tentacleDiscoveryDue
+        NextTentacleDiscovery = 0.0
+        ScheduleNextInjection(Utility.GetCurrentGameTime())
+        ArmNextGameTimeUpdate(Utility.GetCurrentGameTime())
     EndIf
     If bodyEffectsDue
         MMEBodyEffects.Reconcile("shared scheduler")
@@ -2365,6 +2395,7 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     Actor[] reactionActors = new Actor[128]
     Int[] reactionKinds = new Int[128]
     Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
+    MMETentacleTiers.Observe(nearbyActors)
     If processArousalEffects
         MMEArousalEffects.ProcessNearbyActors(nearbyActors)
     EndIf
@@ -2380,7 +2411,7 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     EndIf
     ; Thought-only deadlines exit after the shared pipeline consumes the native
     ; result; capacity/status enumeration remains reserved for its own deadlines.
-    If (runRapidThought || processArousalEffects) && !publishSkyrimNet && !processReactions
+    If !publishSkyrimNet && !processReactions
         Return
     EndIf
 

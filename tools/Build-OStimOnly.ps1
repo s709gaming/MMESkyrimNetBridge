@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$InstancePath = "$env:LOCALAPPDATA\ModOrganizer\VortexToMO2",
     [string]$GamePath = 'E:\Steam\steamapps\common\Skyrim Special Edition',
     [switch]$ReuseImports
@@ -48,11 +48,14 @@ if ($LASTEXITCODE) { throw 'Isolated import preparation failed' }
 Copy-Item -Path (Join-Path $projectRoot 'tools\ostim-sdk\*.psc') -Destination $library -Force
 # These common facades must match this repository's DLL, not an older installed
 # copy picked up from physical Data while preparing the isolated dependency set.
-foreach ($commonFacade in @('MMEExtensionsNative')) {
+foreach ($commonFacade in @('MMEExtensionsNative', 'MMEEstrusUnified')) {
     Copy-Item -LiteralPath (Join-Path $projectRoot "Source\Scripts\$commonFacade.psc") -Destination $library -Force
 }
 Copy-Item -LiteralPath (Join-Path $projectRoot 'Source\Scripts\MMENarrationOverrides.psc') -Destination $library -Force
-$imports = "$variantSource;$library;$(Join-Path $projectRoot 'Source\Scripts')"
+# Generated backend variants win, followed by current common repository sources.
+# The isolated SDK library may contain older installed copies of common scripts;
+# those must never hide a changed facade signature from the compiler.
+$imports = "$variantSource;$(Join-Path $projectRoot 'Source\Scripts');$library"
 # Compile into a fresh folder so the assembler never reopens a previously built PEX.
 $variantCompile = Join-Path $projectRoot ('build\diagnostics\ostim-compiled-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force $variantCompile | Out-Null

@@ -1,0 +1,38 @@
+# Four-tier Tentacle Effects
+
+Implemented October 30, 2026. This is a repository build, not an installed or runtime-accepted update.
+
+The Tentacle Effects MCM adds exactly eight controls: Low/Medium/High/Extreme intensity chances and one animation duration per tier. Defaults are 50/30/15/5 percent and 3/3/3/4 seconds. Chances use 5% steps and automatically redistribute the other weights proportionally with deterministic largest-remainder rounding, always totaling 100%. Durations range from 1 to 10 seconds in 0.5-second steps. Existing injection chance, interval/variation, presentation settings and public effect calculations remain in use.
+
+Each nearby, loaded MME Milk Maid wearing supported Living or Parasite armor receives its own randomized game-time deadline, using the existing 12 +/-4 game-hour default. Deadlines belong to actors, not MME array positions. The existing controller owns discovery, the earliest game-time wake and real-time animation completion; there are no actor update registrations or new timer quests. Discovery shares scan results with other consumers and remains available at an internal 15-real-second cadence when other scan consumers are disabled. Only-discovery scans return before the capacity/flavor loop.
+
+Future deadlines survive loading. Overdue saved deadlines and actors returning after a stale observation are rearmed from the current game time. Missed intervals do not accumulate. Due opportunities advance before chance/playback; a failed chance or blocked animation does not queue retries. Unsupported, distant, unloaded or unregistered actors leave the active schedule. Interval changes reseed schedules; chance/duration edits do not, and the feature toggle preserves valid future deadlines. The active registry and pending holds are bounded to 128 actors.
+
+Low, Medium and High reuse the existing sex-aware arousal behavior events. Female mappings are `MMEExt_Arousal_F_L1/L2/L3`; male mappings use `MMEExt_Arousal_M_L1` and the existing shared `MMEExt_Arousal_M_L2` for Medium/High. Extreme uses `ZaZAPCHorFd`, verified in original MME's Milk Maid creation script. It does not invoke conversion, Lactacid, unconscious state or orgasm gameplay. Existing FNIS/Nemesis behavior prerequisites still apply; this work does not regenerate installed behaviors.
+
+The reaction executor owns animation/movement safety and cleanup. Each hold captures its duration and owner token. Combat, scenes, milking, mounts, sitting, restraints, unavailable actors and competing owners prevent a new reaction. A blocked reaction skips that injection opportunity. Cleanup avoids resetting another system's animation, releases only the matching movement ownership, and recovers interrupted holds on initialization. No duration wait runs inside the injection actor loop. Arousal threshold observations quietly baseline an injection's crossing so it does not produce a competing delayed reaction.
+
+Every successful actor independently rolls intensity and receives its selected animation/effects. As before, each processing pass selects at most one HUD/narration wearer, preferring the player, to avoid a burst of speech. The selected wearer's own tier and confirmed outcome determine its text. Player narration remains private player TTS; NPC narration retains the affected wearer as speaker. Milk/arousal formulas are unchanged. Animation start is a dispatched behavior event, not an engine acknowledgement of visible playback.
+
+## JSON and editor
+
+No new flavor text has been authored. The existing JSON files retain their prose and gain empty tier containers. Optional paths are:
+
+- `Injection.json`: `tiers.<low|medium|high|extreme>.lines` (notification variant array).
+- `TentacleEffectNarration.json`: `tiers.<tier>.milk`, `.arousal`, `.milkAndArousal` (narration variant arrays).
+
+The same sixteen entries appear in Magelight under Tentacle Low/Medium/High/Extreme categories. The total editor catalog is now 147 entries. Fields show inherited text until a tier is customized; keep the documented actor token. Use Save Changes to publish edits. Reset this entry removes only that personal tier override and resumes inheritance. Existing validation, variants, atomic multi-entry transactions, previews, reload, presets and personal-file storage are reused.
+
+Precedence is tier personal override, authored tier pool, existing untiered personal entry, existing untiered base/canonical entry, then compiled fallback. Narration inherits from `TentacleArmor.effects_milk`, `effects_arousal`, or `effects_milkAndArousal`. Existing top-level legacy narration fields remain supported through the prior explicit legacy-import workflow. Invalid/missing optional tier paths inherit; no empty placeholder pool is written into a personal file. Runtime and editor share the native effective-value resolver. Inherited values are not automatically materialized as overrides. Later supplied stories can populate the optional paths without a save migration.
+
+The editor also reconciles a new view session while its tab is already visible, resolving the observed disabled-Save-after-reopen issue while retaining drafts and revision conflict protection.
+
+## Diagnostics and validation
+
+New routine traces use `[MME Extensions Tentacle Effects]` through `MMELog.MasterDiagnostic`, requiring only the existing master Papyrus logging toggle. They cover configuration repairs, schedule changes, rolls, actor/tier, animation dispatch/block, effect results and cleanup. No per-scan idle trace or routine diagnostic HUD popup is added. Genuine failures use deduplicated alarms. The existing editor prefix continues to identify text resolution. The tier resolver reports an effective tier/personal/inherited source; it does not claim every effective value was personally edited.
+
+Automated coverage includes execution of the actual Papyrus probability/scheduling functions in a bounded test harness, all valid 5% distributions and slider edits, independent deadlines, load restoration, overdue/re-entry behavior, range/unload/unregistration, the actual logger master/verbose matrix, native tier inheritance/precedence/reset and malformed-pool fallback, and actual dashboard JavaScript including visible-session reconciliation. Source-contract checks and compilation complement those tests; they do not establish engine playback.
+
+Universal and VR native builds, standard and isolated OStim-only compilation, existing regressions, source/PEX checks and final archive inspection are required for the distributable. OStim-only imports now prefer generated backend variants, then current common repository sources, then isolated SDKs, preventing an old installed common script from hiding a new signature.
+
+Still requires separately authorized deployment and runtime acceptance: visually verify all tier animations/durations for player and NPC; interrupt/recover movement; save/load mid-hold; test multiple nearby wearers and long absences; confirm all tier/outcome prompts, optional-dependency absence and the live logging matrix. Do not treat prior dashboard smoke tests as acceptance of this upgrade.

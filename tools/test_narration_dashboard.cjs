@@ -11,9 +11,9 @@ const html=fs.readFileSync(path.join(folder,'index.html'),'utf8'),elements={};
 for(const match of html.matchAll(/id="([^"]+)"/g))elements[match[1]]=new Element('div');
 elements['lore-panel'].hidden=true;elements['lore-confirm'].hidden=true;elements['editor-import-mode'].value='merge';
 const handlers={},document={activeElement:null,getElementById:id=>elements[id],createElement:tag=>new Element(tag),addEventListener:(name,fn)=>handlers[name]=fn};
-const inventory=JSON.parse(fs.readFileSync(path.join(root,'docs/Narration-Dashboard-Inventory.json'),'utf8'));
-const meta=inventory.entries.map(row=>({id:row.id,label:row.id,group:row.id.startsWith('Pools.')?row.id.split('.')[1]:row.id.split('.')[0],family:row.family==='skyrimnet'?'AI narration':'Stories, thoughts & notifications',required:row.requiredTokens||row.tokensObserved,allowed:row.requiredTokens||row.tokensObserved,poolOnly:row.family!=='skyrimnet',customized:false}));
-const bases={};for(const row of inventory.entries){let value=JSON.parse(fs.readFileSync(path.join(root,row.file),'utf8'));for(const key of row.path)value=value[key];bases[row.id]=value;}
+const catalog=JSON.parse([...fs.readFileSync(path.join(root,'include/NarrationCatalog.h'),'utf8').matchAll(/R"MMECATALOG\((.*?)\)MMECATALOG"/gs)].map(m=>m[1]).join('')).entries;
+const meta=Object.entries(catalog).map(([id,row])=>Object.assign({id,customized:false},row));
+const bases={};for(const row of meta)bases[row.id]=row.default;
 let revision='r1',commits=0,uploadChunks=0,downloadChunks=0,failNextSave=false;const uploads=new Map(),downloads=new Map(),saved={},requests=[];
 const enc=o=>Buffer.from(JSON.stringify(o),'utf8').toString('hex'),dec=h=>JSON.parse(Buffer.from(h,'hex').toString('utf8'));
 function response(reply,id){const bytes=enc(Object.assign({requestId:id,ok:true},reply));if(bytes.length>8192){downloads.set(id,bytes);return {ok:true,requestId:id,transport:'download',total:Math.ceil(bytes.length/4096)};}return dec(bytes);}
@@ -46,7 +46,7 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  window.requestEditorClose();assert(window.closed,'close works before first roster payload');window.closed=false;
  let escapePrevented=false;handlers.keydown({key:'Escape',preventDefault:()=>escapePrevented=true});assert(escapePrevented&&window.closed);window.closed=false;
  window.editorSessionChanged('4');elements['lore-tab'].listeners.click();await settle();
- assert.equal(elements['editor-list'].children.length,131);assert(downloadChunks>1,'catalog downloads in chunks');assert(elements['roster-panel'].hidden);
+ assert.equal(elements['editor-list'].children.length,147);assert(downloadChunks>1,'catalog downloads in chunks');assert(elements['roster-panel'].hidden);
  let card=await open('Lore.milk_lore'),field=descendants(card,'textarea')[0];
  const long='MiLk 雪\n'+'x'.repeat(6000);field.value=long;field.listeners.input();assert(!elements['editor-save'].disabled);
  elements['editor-search'].value='Milking.startMessage';elements['editor-search'].listeners.input();
@@ -58,12 +58,12 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  window.requestEditorClose();assert(!elements['lore-confirm'].hidden);assert(!window.closed);elements['confirm-cancel'].listeners.click();
  failNextSave=true;elements['editor-save'].listeners.click();await settle();assert.equal(commits,1);assert(elements['editor-changes'].textContent.includes('1 unsaved'));assert(elements['editor-status'].textContent.includes('Changed elsewhere'));
  window.editorSessionChanged('5');assert(elements['editor-save'].disabled);assert(elements['editor-changes'].textContent.includes('1 unsaved'));
- elements['lore-tab'].listeners.click();await settle();assert(!elements['editor-save'].disabled,'reopening with an unchanged revision preserves editable drafts');
+ await settle();assert(!elements['editor-save'].disabled,'visible editor reconciles session without requiring a tab click and preserves drafts');
  const v=window.mmeDashboard.validation;
  assert.equal(v({family:'AI narration',poolOnly:false,required:['actor'],allowed:['actor']},'{ActorName} speaks.'),'');
  assert(v({family:'AI narration',poolOnly:false,required:['actor'],allowed:['actor']},'{actor} {unknown}').includes('Unsupported'));
  assert(v({family:'AI narration',poolOnly:false,required:[],allowed:[]},'x'.repeat(8193)).includes('8192'));
  assert(v({family:'AI narration',poolOnly:false,required:[],allowed:[]},['']).includes('nonblank'));
  assert(html.includes('overflow-y:scroll')&&html.includes('resize:vertical')&&html.includes('::-webkit-scrollbar-thumb'));
- console.log('PASS: actual dashboard JS: 131 entries, lazy fields, independent scrolling, long Unicode/chunked save, atomic multi-entry client transaction, validation, modal close, conflict and session-safe drafts.');
+ console.log('PASS: actual dashboard JS: 147 entries, lazy fields, independent scrolling, long Unicode/chunked save, atomic multi-entry client transaction, validation, modal close, conflict and session-safe drafts.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

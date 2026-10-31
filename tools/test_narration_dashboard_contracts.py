@@ -6,11 +6,14 @@ class DashboardContracts(unittest.TestCase):
     def test_catalog_covers_authored_sources(self):
         header=(ROOT/'include/NarrationCatalog.h').read_text(encoding='utf-8')
         catalog=json.loads(''.join(re.findall(r'R"MMECATALOG\((.*?)\)MMECATALOG"',header,re.S)))['entries']
-        self.assertEqual(len(catalog),131)
-        self.assertEqual(sum(k.startswith('Pools.') for k in catalog),57)
+        self.assertEqual(len(catalog),147)
+        self.assertEqual(sum(k.startswith('Pools.') for k in catalog),73)
         schema=json.loads((ROOT/'tools/narration-schema.json').read_text())
         self.assertEqual({k for k in catalog if not k.startswith('Pools.')},{f'{f}.{k}' for f,rs in schema.items() for k in rs})
         for key,meta in catalog.items():
+            if meta.get('optionalTier'):
+                self.assertIn(meta['fallbackEntry'],catalog)
+                continue
             value=json.loads((ROOT/'SKSE/Plugins/StorageUtilData/MMEAlerts'/meta['file']).read_text(encoding='utf-8-sig'))
             for component in meta['path']:value=value[component]
             self.assertEqual(value,meta['default'],key)

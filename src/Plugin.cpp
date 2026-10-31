@@ -16,6 +16,7 @@
 #include <RE/I/IStackCallbackFunctor.h>
 #include <cmath>
 #include <mutex>
+#include "EstrusUnified.h"
 #include "NarrationEditor.h"
 #include "../include/MaidMorphValidation.h"
 #include <RE/S/ScriptEventSourceHolder.h>
@@ -870,6 +871,8 @@ namespace
         vm->RegisterFunction("DescribeNarrationEditorReply", "MMEExtensionsNative", MME::NarrationEditor::Describe);
         // Keep registration names synchronized with MMEExtensionsNative.psc.
         // Renaming either side is an API break for existing compiled scripts.
+        vm->BindNativeMethod(new MME::Estrus::QueryFunction());
+        vm->RegisterFunction("ObserveEstrusUnifiedResult", "MMEExtensionsNative", MME::Estrus::Observe);
         vm->RegisterFunction("GetNearbyActors", "MMEExtensionsNative", GetNearbyActors);
         vm->RegisterFunction("GetFormByEditorID", "MMEExtensionsNative", GetFormByEditorID);
         vm->RegisterFunction("GetTopicInfos", "MMEExtensionsNative", GetTopicInfos);
@@ -1228,6 +1231,7 @@ namespace
         if (message->type == SKSE::MessagingInterface::kPreLoadGame ||
             message->type == SKSE::MessagingInterface::kNewGame) {
             gMovementSlapSession.fetch_add(1);
+            MME::Estrus::Reset();
             MME::NarrationEditor::ResetSession();
             std::scoped_lock lock(gMaidMorphFailureMutex);
             gMaidMorphFailures.clear();

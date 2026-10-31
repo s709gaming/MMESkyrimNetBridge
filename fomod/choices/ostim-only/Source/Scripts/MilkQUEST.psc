@@ -3636,6 +3636,13 @@ bool Function isSuccubus(Actor akActor)
 EndFunction
 
 bool Function isPregnant(Actor akActor)
+	if !akActor
+		MMEEstrusUnified.IsPregnant(akActor) ; Deduplicated invalid-actor smoke alarm.
+		return false
+	endif
+	if MMEEstrusUnified.IsPregnant(akActor)
+		return true
+	endif
 	String akActorName = akActor.GetLeveledActorBase().GetName()
 	;SL Procreation
 	if SLP.IsPregnant(akActor) == true

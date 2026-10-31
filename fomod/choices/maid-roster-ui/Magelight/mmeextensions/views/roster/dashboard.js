@@ -67,6 +67,9 @@ window.editorSessionChanged=function(session){
  if(state.pending){clearTimeout(state.pending.timer);state.pending.reject(Error('Game/UI session changed; reload before saving.'));state.pending=null;}
  for(const job of state.queue)job.reject(Error('Session changed.'));state.queue=[];
  state.session=session;state.uncertain=!!state.revision;updateFooter();
+ if(!el('lore-panel').hidden && state.uncertain){
+  rpc('catalog').then(reply=>{if(reply.revision===state.revision){state.uncertain=false;updateFooter();status('Saved revision unchanged. Drafts retained.');}else status('Saved text changed. Copy drafts before Reload Saved.');}).catch(error=>status(error.message));
+ }
  if(!el('lore-panel').hidden&&!state.catalog.length)loadCatalog(false);
 };
 function validation(meta,value){
@@ -114,7 +117,7 @@ function showEditor(meta,container){
   const current=state.drafts.has(meta.id)?state.drafts.get(meta.id):saved.value;
   let value=clone(current===null?saved.baseValue:current);
   const hint=node('p','Required: '+(meta.required.length?meta.required.map(t=>'{'+t+'}').join(' '):'none')+' · 8192 UTF-8 bytes per variant · 64 variants maximum','editor-hint');container.appendChild(hint);
-  const badge=node('span',state.drafts.has(meta.id)?(current===null?'Reset staged':'Unsaved'):(saved.customized?'Personal':'Base / fallback'),'badge');container.appendChild(badge);
+  const badge=node('span',state.drafts.has(meta.id)?(current===null?'Reset staged':'Unsaved'):(saved.customized?'Personal':saved.inherited?'Inherited':'Base / fallback'),'badge');container.appendChild(badge);
   const error=node('p','','error');error.setAttribute('role','status');
   const fields=node('div');container.appendChild(fields);
   function draw(){

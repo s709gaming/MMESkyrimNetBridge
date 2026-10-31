@@ -116,6 +116,13 @@ Bool Function ProcessNearbyActors(Actor[] scannedActors) Global
         Actor candidate = scannedActors[index]
         If IsValidCandidate(candidate)
             Int arousal = MMEArousalBridge.GetCurrentArousal(candidate)
+            If arousal >= 0 && StorageUtil.GetIntValue(candidate, "MMEExtensions.Tentacle.SuppressCrossing", 0) == 1
+                StorageUtil.SetIntValue(candidate, "MMEExtensions.ArousalEffects.Tier", DetermineTier(arousal, thresholds))
+                ClearPendingReaction(candidate)
+                If StorageUtil.GetStringValue(candidate, "MMEExtensions.Tentacle.Owner", "") == ""
+                    StorageUtil.UnsetIntValue(candidate, "MMEExtensions.Tentacle.SuppressCrossing")
+                EndIf
+            EndIf
             If arousal >= 0
                 readableCount += 1
                 Int currentTier = DetermineTier(arousal, thresholds)
@@ -290,6 +297,10 @@ Int[] Function GetNormalizedThresholds() Global
 EndFunction
 
 Bool Function DispatchReaction(Actor target, Int tier, Int arousal) Global
+    If StorageUtil.GetIntValue(target, "MMEExtensions.Tentacle.SuppressCrossing", 0) == 1
+        ClearPendingReaction(target)
+        Return False
+    EndIf
     Bool presented = False
     String settingsFile = GetSettingsFile()
     Bool animationStarted = False
@@ -299,6 +310,9 @@ Bool Function DispatchReaction(Actor target, Int tier, Int arousal) Global
         If !animationStarted
             MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] animation busy; delaying complete reaction package for one five-second retry | actor=" + GetActorName(target) + " | tier=" + tier)
             Utility.Wait(5.0)
+            If StorageUtil.GetIntValue(target, "MMEExtensions.Tentacle.SuppressCrossing", 0) == 1
+                Return False
+            EndIf
             animationStarted = MMEArousalAnimations.TryStart(target, tier, animationSource + " retry")
             If animationStarted
                 MMELog.MasterDiagnostic("[MME Extensions Arousal Effects] delayed animation retry started | actor=" + GetActorName(target) + " | tier=" + tier)

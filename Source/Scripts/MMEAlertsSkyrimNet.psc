@@ -18,7 +18,7 @@ EndFunction
 
 ; One post-gameplay request for the HUD's focused wearer. No gameplay writes,
 ; drink events, extra scan, or timer registration belong in this helper.
-Function NarrateTentacleEffect(Actor wearer, Float milkAdded, Int arousalBefore, Bool arousalSent, Bool diagnostic = False) Global
+Function NarrateTentacleEffect(Actor wearer, Float milkAdded, Int arousalBefore, Bool arousalSent, Bool diagnostic = False, Int tier = 0) Global
     String settingsFile = "/MMEAlerts/Settings"
     Bool enabled = JsonUtil.GetIntValue(settingsFile, "enableArmorInjectionNarration", 1) == 1
     Int chance = JsonUtil.GetIntValue(settingsFile, "armorInjectionNarrationChance", 100)
@@ -69,7 +69,7 @@ Function NarrateTentacleEffect(Actor wearer, Float milkAdded, Int arousalBefore,
     If !arousalIncreased
         MMETentacleEffects.TraceDiagnostic(diagnostic, "narration: arousal omitted (not sent, capped, pending, or unconfirmed)")
     EndIf
-    String content = BuildTentacleEffectNarration(actorName, milkAdded > 0.0, arousalIncreased, diagnostic)
+    String content = BuildTentacleEffectNarration(actorName, milkAdded > 0.0, arousalIncreased, diagnostic, tier)
     If content == ""
         MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: invalid JSON actor template")
         Return
@@ -125,14 +125,29 @@ EndFunction
 
 ; Configurable non-graphic wording. Like the armor Thought pools, each actual
 ; outcome selects one complete template instead of assembling prompt fragments.
-String Function BuildTentacleEffectNarration(String actorName, Bool milkIncreased, Bool arousalIncreased, Bool diagnostic = False) Global
+String Function BuildTentacleEffectNarration(String actorName, Bool milkIncreased, Bool arousalIncreased, Bool diagnostic = False, Int tier = 0) Global
     String promptTemplate = ""
     If milkIncreased && arousalIncreased
-        promptTemplate = MMENarrationText.GetRaw("TentacleArmor", "effects_milkAndArousal")
+        If tier > 0
+            promptTemplate = MMETentacleTiers.Text(tier, "milkAndArousal", None)
+        EndIf
+        If promptTemplate == ""
+            promptTemplate = MMENarrationText.GetRaw("TentacleArmor", "effects_milkAndArousal")
+        EndIf
     ElseIf milkIncreased
-        promptTemplate = MMENarrationText.GetRaw("TentacleArmor", "effects_milk")
+        If tier > 0
+            promptTemplate = MMETentacleTiers.Text(tier, "milk", None)
+        EndIf
+        If promptTemplate == ""
+            promptTemplate = MMENarrationText.GetRaw("TentacleArmor", "effects_milk")
+        EndIf
     ElseIf arousalIncreased
-        promptTemplate = MMENarrationText.GetRaw("TentacleArmor", "effects_arousal")
+        If tier > 0
+            promptTemplate = MMETentacleTiers.Text(tier, "arousal", None)
+        EndIf
+        If promptTemplate == ""
+            promptTemplate = MMENarrationText.GetRaw("TentacleArmor", "effects_arousal")
+        EndIf
     Else
         MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: neither milk nor arousal increase was confirmed")
         Return ""

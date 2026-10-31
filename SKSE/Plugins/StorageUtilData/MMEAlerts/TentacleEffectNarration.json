@@ -1,4 +1,5 @@
 {
+  "tiers": { "low": {}, "medium": {}, "high": {}, "extreme": {} },
   "arousal": [
     "{ACTOR} gasps at a pleasant sting from the tentacles and enjoys the rush of excitement that follows. React positively and playfully in character. Reply in one short sentence.",
     "{ACTOR} feels a teasing prick from the tendrils and finds herself pleasantly excited by it. React positively and playfully in character. Reply in one short sentence.",

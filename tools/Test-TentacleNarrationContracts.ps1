@@ -28,7 +28,7 @@ Assert-Contract ($callback.Contains('enableArmorInjectionPlayerNarration') -and 
 Assert-Contract ($sender.Contains('wearer.IsChild()') -and $callback.Contains('Game.GetPlayer().IsChild()')) 'child speakers rejected before generation and playback'
 Assert-Contract ($sender.Contains('If isPlayer && JsonUtil.GetIntValue(settingsFile, "enableArmorInjectionPlayerNarration", 1) != 1')) 'bridge respects player narration toggle'
 Assert-Contract ($sender.Contains('arousalSent && arousalBefore >= 0 && arousalAfter > arousalBefore')) 'arousal needs sent event plus observed positive change'
-Assert-Contract ($sender.Contains('BuildTentacleEffectNarration(actorName, milkAdded > 0.0, arousalIncreased, diagnostic)')) 'builder receives actual effect results'
+Assert-Contract ($sender.Contains('BuildTentacleEffectNarration(actorName, milkAdded > 0.0, arousalIncreased, diagnostic, tier)')) 'builder receives actual effect results'
 Assert-Contract ($sender -notmatch 'Utility\.Wait|RegisterFor|ApplyMilk|ApplyConfigured|GetNearbyActors') 'narration adds no wait, timer, scan, or gameplay writes'
 Assert-Contract ($sender.IndexOf('If !enabled') -lt $sender.IndexOf('Utility.RandomInt')) 'disabled narration does not roll'
 Assert-Contract ($sender.Contains('Utility.RandomInt(1, 100)') -and $sender.Contains('If roll > chance')) 'chance supports both 0% and 100% endpoints'

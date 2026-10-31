@@ -108,7 +108,7 @@ int main(int argc, char** argv)
         auto legacy = Call(store,{{"operation","legacy"}});
         Check(legacy["changes"].contains("TentacleArmor.effects_arousal"), "explicit legacy capture preview");
         auto catalog = Call(store,{{"operation","catalog"}});
-        Check(catalog["entries"].size() == 131, "complete catalog via bounded downloads");
+        Check(catalog["entries"].size() == 147, "complete catalog via bounded downloads");
         Json changes = Json::object();
         for (const auto& meta : catalog["entries"]) {
             const auto entry = Call(store,{{"operation","entry"},{"entryId",meta["id"]}});
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
             changes[meta["id"].get<std::string>()] = entry["value"];
         }
         auto all = Upload(store,{{"operation","saveBatch"},{"revision",catalog["revision"]},{"changes",changes}});
-        Check(all["ok"] == true, "all 131 defaults pass validators and one transaction");
+        Check(all["ok"] == true, "all 147 defaults pass validators and one transaction");
         Check(store.HasPools("Thoughts"), "pool overlay published");
         auto beforeInvalid = Read(root / "profile/overrides.json");
         auto invalidBatch = Call(store,{{"operation","saveBatch"},{"revision",all["revision"]},
@@ -132,7 +132,7 @@ int main(int argc, char** argv)
         auto exported = Call(store,{{"operation","export"},{"revision",longSave["revision"]},{"name",presetName}});
         Check(exported["ok"] == true, "export committed preset");
         auto preview = Call(store,{{"operation","importPreview"},{"name",presetName}});
-        Check(preview["ok"] == true && preview["entries"].get<std::size_t>() >= 131, "preview import including unknown retained entry");
+        Check(preview["ok"] == true && preview["entries"].get<std::size_t>() >= 147, "preview import including unknown retained entry");
         auto replaced = Call(store,{{"operation","importApply"},{"name",presetName},{"mode","replace"},{"revision",longSave["revision"]},{"presetRevision",preview["presetRevision"]}});
         Check(replaced["ok"] == true && store.Override().size() == 8000, "verified preset replacement");
         auto modified = Call(store,{{"operation","save"},{"entryId","Lore.milk_lore"},{"revision",replaced["revision"]},{"text","Existing personal text"}});
@@ -147,6 +147,31 @@ int main(int argc, char** argv)
         lockFrame["index"] = 1; lockFrame["data"] = "7d";
         auto crossed = Json::parse(MME::Narration::Decode(store.Request(MME::Narration::Encode(lockFrame.dump()),"session-B")));
         Check(crossed["ok"] == false && store.Override().size() == 8000, "chunk state isolated by game/view/session");
+        // Exercise actual optional-tier inheritance, not a mock resolver.
+        const auto tierDefaults = root / "tiers/MMEAlerts/Narration/Lore.json";
+        std::filesystem::create_directories(tierDefaults.parent_path());
+        Write(tierDefaults, R"({"schemaVersion":1,"routes":{"milk_lore":{"template":"Lore"}}})");
+        Store tiers(root / "tiers/profile", tierDefaults, "Lore");
+        auto tierState = Call(tiers, {{"operation","load"}});
+        const std::string tierId = "Pools.TentacleEffectNarration.tiers.high.milk";
+        auto inherited = Call(tiers, {{"operation","entry"},{"entryId",tierId}});
+        Check(inherited["ok"] == true && inherited["value"].is_array(), "missing tier has editable inherited variants");
+        Check(tiers.Values(tierId).size() > 1, "runtime receives same inherited pool");
+        auto legacyTier = Call(tiers, {{"operation","saveBatch"},{"revision",tierState["revision"]},
+            {"changes",Json{{"TentacleArmor.effects_milk", "{actor} legacy personal"}}}});
+        Check(legacyTier["ok"] == true && tiers.Values(tierId)[1] == "{actor} legacy personal", "untiered personal value inherited immediately");
+        Write(root / "tiers/MMEAlerts/TentacleEffectNarration.json", R"({"tiers":{"high":{"milk":["{actor} authored tier"]}}})");
+        auto authoredTier = Call(tiers, {{"operation","entry"},{"entryId",tierId}});
+        Check(authoredTier["value"][0] == "{actor} authored tier" && tiers.Values(tierId)[1] == "{actor} authored tier", "authored tier precedes untiered personal in preview and runtime");
+        auto tierSave = Call(tiers, {{"operation","saveBatch"},{"revision",authoredTier["revision"]},
+            {"changes",Json{{tierId,Json::array({"{actor} exact tier"})}}}});
+        Check(tierSave["ok"] == true && tiers.Values(tierId)[1] == "{actor} exact tier", "tier personal wins");
+        auto tierReset = Call(tiers, {{"operation","saveBatch"},{"revision",tierSave["revision"]},{"changes",Json{{tierId,nullptr}}}});
+        Check(tierReset["ok"] == true && tiers.Values(tierId)[1] == "{actor} authored tier", "tier reset restores inheritance without removing legacy personal");
+        Write(root / "tiers/MMEAlerts/TentacleEffectNarration.json", R"({"tiers":{"high":{"milk":[]}}})");
+        auto invalidTier = Call(tiers, {{"operation","entry"},{"entryId",tierId}});
+        Check(invalidTier["value"][0] == "{actor} legacy personal" && tiers.Values(tierId)[1] == "{actor} legacy personal", "invalid authored pool inherits safely");
+        Check(!Read(root / "tiers/profile/overrides.json")["overrides"].contains(tierId), "inheritance never materialized in personal file");
         Write(root / "profile/overrides.json", R"({"schemaVersion":1,"schemaVersion":1,"profileId":"default","overrides":{}})");
         Check(Call(store, { { "operation", "load" } })["ok"] == false, "duplicate key rejected");
         Check(!store.Failure().empty(), "corrupt disk reports failure");

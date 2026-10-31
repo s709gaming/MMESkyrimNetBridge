@@ -2,6 +2,8 @@ $ErrorActionPreference = "Stop"
 
 # Resolve every path from this script so it works when launched by double-click.
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+& python -B (Join-Path $projectRoot 'tools/test_tentacle_tiers.py')
+if ($LASTEXITCODE) { throw 'Four-tier Tentacle Effects regressions failed' }
 & (Join-Path $projectRoot "tools\Test-FomodXmlEncoding.ps1")
 $gameRoot = "E:\Steam\steamapps\common\Skyrim Special Edition"
 $compiler = Join-Path $gameRoot "Papyrus Compiler\PapyrusCompiler.exe"
@@ -37,9 +39,11 @@ $mmeCompatibilityOverrideNames = @("MilkQUEST")
 $diagnosticSdk = Join-Path $projectRoot "tools\mme-diagnostic-sdk"
 $scriptNames += "MMEMilkingDiagnostics"
 $scriptNames += "MMEMilkCurse"
+$scriptNames += "MMEEstrusUnified"
 $scriptNames += "MMEChestCurseNarration"
 $scriptNames += "MMETextPool"
 $scriptNames += "MMENarrationOverrides"
+$scriptNames += "MMETentacleTiers"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
 $standardDefaultsSourceDir = Join-Path $projectRoot "fomod\choices\standard\Source\Scripts"
 $standardDefaultsOutputDir = Join-Path $projectRoot "fomod\choices\standard\Scripts"
@@ -276,6 +280,7 @@ finally {
 # Build and validate the isolated no-SexLab FOMOD variant before staging.
 & (Join-Path $projectRoot "tools\Build-OStimOnly.ps1")
 & (Join-Path $projectRoot "tools\Test-OStimOnly.ps1")
+& (Join-Path $projectRoot "tools\Test-EstrusUnifiedContracts.ps1")
 
 # Recreate a clean staging directory with Skyrim/Vortex-compatible paths.
 if (Test-Path -LiteralPath $stageDir) {
@@ -309,6 +314,10 @@ if ($LASTEXITCODE) { throw "Maid Roster UI contracts failed" }
 $fomodSource = Join-Path $projectRoot "fomod"
 If (Test-Path -LiteralPath $fomodSource) {
     Copy-Item -LiteralPath $fomodSource -Destination $stageDir -Recurse
+    # Preserve source-tree diagnostics, but never distribute assembler/build leftovers.
+    Get-ChildItem -LiteralPath (Join-Path $stageDir 'fomod') -Recurse -File |
+        Where-Object { $_.Extension -in @('.pas', '.log', '.tmp', '.bak', '.pyc', '.pdb', '.obj') } |
+        ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
 }
 $packageDocs = Join-Path $stageDir "docs"
 New-Item -ItemType Directory -Force -Path $packageDocs | Out-Null
@@ -317,6 +326,7 @@ Copy-Item -LiteralPath $jugsChangelog -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MME-Compatibility-Override.md") -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Editor-Proof.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Dashboard-Implementation.md') -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Tentacle-Four-Tier-Implementation.md') -Destination $packageDocs
 New-Item -ItemType Directory -Force (Join-Path $packageDocs 'licenses') | Out-Null
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\licenses\nlohmann-json.txt') -Destination (Join-Path $packageDocs 'licenses')
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\OStim-Only-Compatibility.md") -Destination $packageDocs

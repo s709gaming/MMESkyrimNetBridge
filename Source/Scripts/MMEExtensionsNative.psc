@@ -12,6 +12,12 @@ String Function GetNarrationEditorFailure() Global Native
 Function ReloadNarrationEditor() Global Native
 String Function DescribeNarrationEditorReply(String payload) Global Native
 
+; Optional Unified query: 0 none, 1 Chaurus, 2 Spider, 3 Dwemer.
+; Negative values identify absent/unready dependencies or a failed query.
+Int Function GetEstrusUnifiedPregnancyType(Actor target) Global Native
+; Diagnostic flags only: 1 routine state change, 2 first failure, 3 both.
+Int Function ObserveEstrusUnifiedResult(Actor target, Int result, Bool logging) Global Native
+
 ; Read-only player movement state; keyboard, controller and auto-move aware.
 Bool Function IsPlayerMovingOnFoot() Global Native
 

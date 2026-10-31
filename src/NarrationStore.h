@@ -35,7 +35,8 @@ namespace MME::Narration
         nlohmann::json Snapshot(const nlohmann::json& document, const nlohmann::json& bases);
         std::string Reply(nlohmann::json reply, const std::string& client);
         void Commit(const nlohmann::json& document);
-        void Publish(const nlohmann::json& document, std::string revision);
+        nlohmann::json Effective(const nlohmann::json& document, const nlohmann::json& bases, const std::string& id, bool ignoreOwn);
+        void Publish(const nlohmann::json& document, const nlohmann::json& bases, std::string revision);
         std::filesystem::path root_, defaults_;
         std::string fallback_, failure_;
         std::string runtimeFailure_;

@@ -274,6 +274,9 @@ Int boundMilkDrinkReactionOption
 Int boundMilkDrinkReactionChanceOption
 Int milkMaidThoughtsDebugOption
 Int traceMilkMaidThoughtsLogicOption
+Int[] tentacleChanceOptions
+Int[] tentacleDurationOptions
+
 Int armorInjectionOption
 Int armorInjectionIntervalOption
 Int armorInjectionVariationOption
@@ -333,7 +336,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 163
+    Return 164
 EndFunction
 
 Function SetPageNames()
@@ -406,6 +409,7 @@ EndFunction
 
 ; Seeds new settings and runs one-time migrations without overriding later choices.
 Function EnsureDefaults()
+    MMETentacleTiers.Configure()
     If !JsonUtil.HasIntValue(SettingsFile, "enableChestCurseNarration")
         JsonUtil.SetIntValue(SettingsFile, "enableChestCurseNarration", 1)
         JsonUtil.Save(SettingsFile, False)
@@ -2021,6 +2025,14 @@ Event OnPageReset(String page)
     boundMilkDrinkReactionChanceOption = -1
     milkMaidThoughtsDebugOption = -1
     traceMilkMaidThoughtsLogicOption = -1
+    tentacleChanceOptions = new Int[4]
+    tentacleDurationOptions = new Int[4]
+    Int tentacleIndex = 0
+    While tentacleIndex < 4
+        tentacleChanceOptions[tentacleIndex] = -1
+        tentacleDurationOptions[tentacleIndex] = -1
+        tentacleIndex += 1
+    EndWhile
     armorInjectionOption = -1
     armorInjectionIntervalOption = -1
     armorInjectionVariationOption = -1
@@ -2539,6 +2551,14 @@ Event OnPageReset(String page)
         armorInjectionIntervalOption = AddSliderOption("Base Effect Interval", JsonUtil.GetFloatValue(SettingsFile, "armorInjectionInterval", 12.0), "{0} game hours")
         armorInjectionVariationOption = AddSliderOption("Interval Variation (+/-)", JsonUtil.GetFloatValue(SettingsFile, "armorInjectionVariation", 4.0), "{0} game hours")
         armorInjectionChanceOption = AddSliderOption("Injection Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionChance", 100), "{0}%")
+        AddHeaderOption("Effect Intensity")
+        Int tierIndex = 0
+        While tierIndex < 4
+            String tierLabel = MMETentacleTiers.Name(tierIndex + 1)
+            tentacleChanceOptions[tierIndex] = AddSliderOption(tierLabel + " Intensity Chance", JsonUtil.GetIntValue(SettingsFile, MMETentacleTiers.ChanceKey(tierIndex + 1), MMETentacleTiers.DefaultChance(tierIndex + 1)), "{0}%")
+            tentacleDurationOptions[tierIndex] = AddSliderOption(tierLabel + " Animation Duration", MMETentacleTiers.Duration(tierIndex + 1), "{1} seconds")
+            tierIndex += 1
+        EndWhile
         armorInjectionNotificationOption = AddToggleOption("Show Effect Notifications", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNotifications", 1) == 1)
         armorInjectionSoundOption = AddToggleOption("Notification Sound", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionSounds", 1) == 1)
         AddHeaderOption("Skyrim.Net Narration")
@@ -3767,7 +3787,7 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorInjections", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorInjections", value)
         SetToggleOptionValue(option, value == 1)
-        RefreshArmorInjectionSchedule()
+        RefreshArmorInjectionSchedule(False)
     ElseIf option == armorInjectionSoundOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionSounds", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableArmorInjectionSounds", value)
@@ -4377,10 +4397,10 @@ Function RefreshBoundThoughtSchedule()
     EndIf
 EndFunction
 
-Function RefreshArmorInjectionSchedule()
+Function RefreshArmorInjectionSchedule(Bool reseed = True)
     MMEAlertsController controller = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
     If controller != None
-        controller.RefreshInjectionScheduling()
+        controller.RefreshInjectionScheduling(reseed)
     EndIf
 EndFunction
 
@@ -4428,6 +4448,26 @@ EndFunction
 
 ; Configures the shared sound-volume and capacity-interval slider dialogs.
 Event OnOptionSliderOpen(Int option)
+    Int tierIndex = TentacleOptionIndex(option, False)
+    If tierIndex >= 0
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, MMETentacleTiers.ChanceKey(tierIndex + 1), MMETentacleTiers.DefaultChance(tierIndex + 1)))
+        SetSliderDialogDefaultValue(MMETentacleTiers.DefaultChance(tierIndex + 1))
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(5.0)
+        Return
+    EndIf
+    tierIndex = TentacleOptionIndex(option, True)
+    If tierIndex >= 0
+        SetSliderDialogStartValue(MMETentacleTiers.Duration(tierIndex + 1))
+        Float defaultDuration = 3.0
+        If tierIndex == 3
+            defaultDuration = 4.0
+        EndIf
+        SetSliderDialogDefaultValue(defaultDuration)
+        SetSliderDialogRange(1.0, 10.0)
+        SetSliderDialogInterval(0.5)
+        Return
+    EndIf
     If option == movementSlapNotificationCooldownOption
         SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "movementSlapNotificationCooldownHours", 8.0))
         SetSliderDialogDefaultValue(8.0)
@@ -4953,6 +4993,19 @@ EndEvent
 
 ; Saves accepted slider values and reschedules polling when its interval changes.
 Event OnOptionSliderAccept(Int option, Float value)
+    Int tierIndex = TentacleOptionIndex(option, False)
+    If tierIndex >= 0
+        MMETentacleTiers.Configure(tierIndex, value as Int)
+        ForcePageReset()
+        Return
+    EndIf
+    tierIndex = TentacleOptionIndex(option, True)
+    If tierIndex >= 0
+        JsonUtil.SetFloatValue(SettingsFile, MMETentacleTiers.DurationKey(tierIndex + 1), value)
+        MMETentacleTiers.Configure()
+        SetSliderOptionValue(option, MMETentacleTiers.Duration(tierIndex + 1), "{1} seconds")
+        Return
+    EndIf
     If option == movementSlapNotificationCooldownOption
         If value < 0.0
             value = 0.0
@@ -5444,3 +5497,18 @@ Event OnOptionKeyMapChange(Int option, Int keyCode, String conflictControl, Stri
     SendModEvent("MMEExtensions_RosterSettings")
     MMELog.MasterDiagnostic("[MME Maid Roster UI] hotkey changed | key=" + keyCode)
 EndEvent
+
+Int Function TentacleOptionIndex(Int option, Bool duration)
+    Int[] options = tentacleChanceOptions
+    If duration
+        options = tentacleDurationOptions
+    EndIf
+    Int index = 0
+    While index < options.Length
+        If option >= 0 && options[index] == option
+            Return index
+        EndIf
+        index += 1
+    EndWhile
+    Return -1
+EndFunction

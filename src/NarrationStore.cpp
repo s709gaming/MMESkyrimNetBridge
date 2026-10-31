@@ -176,7 +176,7 @@ namespace MME::Narration
         Json values = Json::object();
         std::map<std::filesystem::path, Json> files;
         for (const auto& [id, meta] : Catalog().items()) {
-            Json value = id == kEntry ? Json(fallback_) : meta["default"];
+            Json value = meta.value("optionalTier", false) ? Json(nullptr) : (id == kEntry ? Json(fallback_) : meta["default"]);
             const auto path = id == kEntry ? defaults_ : defaults_.parent_path().parent_path() / meta["file"].get<std::string>();
             try {
                 if (!files.contains(path)) files[path] = Parse(Read(path));
@@ -201,9 +201,22 @@ namespace MME::Narration
             { "documentBytes", document.dump(2).size() + 1 },
             { "maxDocumentBytes", kMaxDocumentBytes } };
     }
-    void Store::Publish(const Json& document, std::string revision)
+    Json Store::Effective(const Json& document, const Json& bases, const std::string& id, bool ignoreOwn)
+    {
+        const auto& meta = Catalog().at(id);
+        Json result;
+        if (!ignoreOwn && document["overrides"].contains(id)) result = document["overrides"][id]["template"];
+        else if (!bases[id].is_null()) result = bases[id];
+        else if (meta.contains("fallbackEntry")) result = Effective(document,bases,meta["fallbackEntry"].get<std::string>(),false);
+        else result = meta["default"];
+        if (meta.value("poolOnly",false) && result.is_string()) result = Json::array({result});
+        return result;
+    }
+    void Store::Publish(const Json& document, const Json& bases, std::string revision)
     {
         auto snapshot = document["overrides"];
+        for (const auto& [id,meta] : Catalog().items())
+            if (meta.value("optionalTier",false)) snapshot[id]["template"] = Effective(document,bases,id,false);
         std::scoped_lock snapshotLock(snapshotMutex_);
         published_ = std::move(snapshot); revision_ = std::move(revision);
         failure_.clear(); runtimeFailure_.clear();
@@ -378,7 +391,7 @@ namespace MME::Narration
                     snapshot["presetRevision"] = presetRevision; snapshot["entries"] = imported["overrides"].size(); snapshot["conflicts"] = conflicts;
                 }
             }
-            Publish(document, snapshot["revision"].get<std::string>());
+            Publish(document, bases, snapshot["revision"].get<std::string>());
             if (operation == "refresh") { snapshot.erase("text"); snapshot.erase("baseText"); }
             if (operation == "catalog") {
                 snapshot.erase("text"); snapshot.erase("baseText"); snapshot["entries"] = Json::array();
@@ -390,9 +403,10 @@ namespace MME::Narration
             } else if (operation == "entry") {
                 const auto id = request.at("entryId").get<std::string>();
                 if (!Catalog().contains(id)) throw ValidationError("Unknown editor entry.");
-                snapshot["entryId"] = id; snapshot["baseValue"] = bases[id];
+                snapshot["entryId"] = id; snapshot["baseValue"] = Effective(document,bases,id,true);
                 snapshot["customized"] = document["overrides"].contains(id);
-                snapshot["value"] = document["overrides"].contains(id) ? document["overrides"][id]["template"] : bases[id];
+                snapshot["inherited"] = Catalog()[id].value("optionalTier",false) && bases[id].is_null() && !document["overrides"].contains(id);
+                snapshot["value"] = Effective(document,bases,id,false);
                 snapshot.erase("text"); snapshot.erase("baseText");
             } else if (operation == "presets") {
                 snapshot["presets"] = Json::array();
@@ -404,7 +418,7 @@ namespace MME::Narration
             } else if (operation == "capture") {
                 snapshot["changes"] = Json::object();
                 for (const auto& [id,meta] : Catalog().items())
-                    if (!document["overrides"].contains(id) && bases[id] != meta["default"]) snapshot["changes"][id] = bases[id];
+                    if (!meta.value("optionalTier",false) && !document["overrides"].contains(id) && bases[id] != meta["default"]) snapshot["changes"][id] = bases[id];
             } else if (operation == "legacy") {
                 snapshot["changes"] = Json::object();
                 std::size_t skipped = 0;

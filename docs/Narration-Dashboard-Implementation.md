@@ -1,7 +1,8 @@
 # Narration dashboard implementation
 
-The optional roster's Narration & Lore tab now exposes 131 entries: 74 canonical
-Skyrim.Net templates and 57 story/thought/notification pools. The general-lore
+The optional roster's Narration & Lore tab now exposes 147 entries: 74 canonical
+Skyrim.Net templates, 57 existing story/thought/notification pools, and 16 inherited
+four-tier Tentacle Effects pools. The general-lore
 proof file remains compatible. No installed mod, game file, MO2 profile or retained
 Vortex installation is modified by the repository build.
 
