@@ -74,6 +74,11 @@ class Memory:
     def FormListRemove(self,actor,key,value,all):
         self.lists[actor,key]=[x for x in self.lists.get((actor,key),[]) if x!=value]
 
+class ActorSnapshot(list):
+    def Find(self,actor):
+        try: return self.index(actor)
+        except ValueError: return -1
+
 class Wearer:
     def __init__(self,armor=2): self.armor=armor;self.distance=100;self.loaded=True;self.dead=False
     def Is3DLoaded(self): return self.loaded
@@ -94,6 +99,8 @@ class SchedulerTests(unittest.TestCase):
                  'Configure':lambda:None,'Complete':lambda _:None}
         for name,args in [('Seed','subject, now, reason'),('Observe','actors'),('NextDue','now'),('ConsumeDue','subject, now'),('Recover','reseed=False')]:
             exec(translate(name,args),self.ns)
+        observe=self.ns['Observe']
+        self.ns['Observe']=lambda actors:observe(ActorSnapshot(actors))
     def due(self,a): return self.memory.GetFloatValue(a,'T.Due')
     def test_independent_deadlines_and_no_catchup(self):
         a,b=Wearer(),Wearer();self.ns['Observe']([a,b])
@@ -103,8 +110,51 @@ class SchedulerTests(unittest.TestCase):
         self.assertFalse(self.ns['ConsumeDue'](a,first))
         self.assertGreater(self.due(a),first)
         self.now=150.;self.ns['Observe']([a,b])
+        self.assertTrue(self.ns['ConsumeDue'](a,self.now))
+        self.assertFalse(self.ns['ConsumeDue'](a,self.now))
         self.assertGreater(self.due(a),self.now)
-        self.assertGreater(self.due(b),self.now)
+        self.assertTrue(self.ns['ConsumeDue'](b,self.now))
+        self.assertFalse(self.ns['ConsumeDue'](b,self.now))
+    def test_one_hour_due_survives_observation_gap(self):
+        # Exact logged failure: still loaded/in range/in armor, >1 game hour
+        # between observations, then Observe runs before the due effect check.
+        self.intervals=iter([1/24]*20)
+        for actor in (Wearer(2),Wearer(3)):
+            self.ns['Observe']([actor]);original_due=self.due(actor)
+            self.now=original_due+0.05/24
+            self.ns['Observe']([actor])
+            self.assertEqual(self.due(actor),original_due)
+            self.assertTrue(self.ns['ConsumeDue'](actor,self.now))
+            self.assertFalse(self.ns['ConsumeDue'](actor,self.now))
+    def test_next_deadline_does_not_prune_a_present_overdue_actor(self):
+        actor=Wearer();self.intervals=iter([1/24]*20)
+        self.ns['Observe']([actor]);original_due=self.due(actor)
+        self.now=original_due+0.05/24
+        self.assertEqual(self.ns['NextDue'](self.now),original_due)
+        self.assertEqual(self.due(actor),original_due)
+    def test_repeated_one_hour_cycles_and_large_time_jump(self):
+        self.intervals=iter([1/24]*20);actor=Wearer()
+        self.ns['Observe']([actor])
+        for elapsed_hours in (1.05,1.05,24,1.05):
+            self.now+=elapsed_hours/24
+            self.ns['Observe']([actor])
+            self.assertTrue(self.ns['ConsumeDue'](actor,self.now))
+            self.assertFalse(self.ns['ConsumeDue'](actor,self.now))
+            self.assertAlmostEqual(self.due(actor),self.now+1/24)
+    def test_actual_absence_gets_fresh_deadline_and_no_backlog(self):
+        actor,other=Wearer(),Wearer()
+        self.ns['Observe']([actor,other])
+        self.ns['Observe']([other])
+        self.assertEqual(self.due(actor),0)
+        self.now+=10
+        self.ns['Observe']([actor,other])
+        self.assertGreater(self.due(actor),self.now)
+        self.assertFalse(self.ns['ConsumeDue'](actor,self.now))
+    def test_empty_scan_is_not_evidence_of_absence(self):
+        actor=Wearer();self.ns['Observe']([actor]);original_due=self.due(actor)
+        self.now+=2
+        self.ns['Observe']([])
+        self.assertEqual(self.due(actor),original_due)
     def test_load_preserves_future_and_rearms_overdue(self):
         a,b=Wearer(),Wearer();self.ns['Observe']([a,b]);future=self.due(b)
         self.now=100.5;self.ns['Recover']()

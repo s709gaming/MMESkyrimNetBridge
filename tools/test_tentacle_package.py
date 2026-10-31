@@ -30,6 +30,7 @@ def verify():
             current=json.loads(archive.read(path))
             assert set(current.pop('tiers'))=={'low','medium','high','extreme'}
             original=json.loads(subprocess.check_output(['git','show','HEAD:'+path],cwd=ROOT))
+            original.pop('tiers',None)
             assert current==original,'Flavor text changed: '+name
         for manifestPath in ('fomod/choices/maid-roster-ui/BuildManifest.json','fomod/choices/ostim-only/BuildManifest.json'):
             manifest=json.loads(archive.read(manifestPath).decode('utf-8-sig'))

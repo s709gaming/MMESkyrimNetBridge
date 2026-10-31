@@ -194,8 +194,31 @@ Function Observe(Actor[] actors) Global
     If !MMETentacleEffects.IsEnabled()
         Return
     EndIf
+    ; An empty scanner result is not proof that every tracked actor departed.
+    ; Keep deadlines until a usable snapshot or an actual lifecycle/range check.
+    If actors.Length == 0
+        Return
+    EndIf
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     Float now = Utility.GetCurrentGameTime()
+    ; Detect absence from the shared nearby snapshot, never from game-time age.
+    ; Waiting/sleeping or a high timescale can advance hours between callbacks
+    ; without the actor ever leaving. Retire only actors actually missing here.
+    Int trackedIndex = StorageUtil.FormListCount(None, Root() + "Actors") - 1
+    While trackedIndex >= 0
+        Actor tracked = StorageUtil.FormListGet(None, Root() + "Actors", trackedIndex) as Actor
+        If tracked == None || actors.Find(tracked) < 0
+            ; Remove by actor identity: another shared callback may have changed
+            ; registry indices since this snapshot was taken.
+            StorageUtil.FormListRemove(None, Root() + "Actors", tracked, True)
+            If tracked != None
+                StorageUtil.UnsetFloatValue(tracked, Root() + "Due")
+                StorageUtil.UnsetFloatValue(tracked, Root() + "Seen")
+                Trace("operation=schedule retired | actor=" + tracked + " | reason=absent from nearby snapshot")
+            EndIf
+        EndIf
+        trackedIndex -= 1
+    EndWhile
     Int i = 0
     While i < actors.Length
         Actor subject = actors[i]
@@ -203,8 +226,7 @@ Function Observe(Actor[] actors) Global
             Int armorClass = MMEArmorScript.ClassifyArmor(milkController, subject.GetWornForm(Armor.GetMaskForSlot(32)) as Armor, "injection", subject)
             If armorClass == 2 || armorClass == 3
                 Float due = StorageUtil.GetFloatValue(subject, Root() + "Due", 0.0)
-                Float seen = StorageUtil.GetFloatValue(subject, Root() + "Seen", -1.0)
-                If due <= 0.0 || (due <= now && (seen < 0.0 || now - seen > 1.0 / 24.0))
+                If due <= 0.0
                     Seed(subject, now, "discovery/re-entry")
                 EndIf
                 If StorageUtil.FormListCount(None, Root() + "Actors") < 128 || StorageUtil.FormListHas(None, Root() + "Actors", subject)
@@ -226,11 +248,11 @@ Float Function NextDue(Float now) Global
     Int i = StorageUtil.FormListCount(None, Root() + "Actors") - 1
     While i >= 0
         Actor subject = StorageUtil.FormListGet(None, Root() + "Actors", i) as Actor
-        Float seen = StorageUtil.GetFloatValue(subject, Root() + "Seen", -1.0)
-        If !MMETentacleEffects.IsValidCandidate(subject, milkController) || Game.GetPlayer().GetDistance(subject) > 2000.0 || now - seen > 1.0 / 24.0
-            StorageUtil.FormListRemoveAt(None, Root() + "Actors", i)
+        If !MMETentacleEffects.IsValidCandidate(subject, milkController) || Game.GetPlayer().GetDistance(subject) > 2000.0
+            StorageUtil.FormListRemove(None, Root() + "Actors", subject, True)
             If subject != None
                 StorageUtil.UnsetFloatValue(subject, Root() + "Due")
+                Trace("operation=schedule retired | actor=" + subject + " | reason=actor unavailable, ineligible or out of range")
             EndIf
         Else
             Float due = StorageUtil.GetFloatValue(subject, Root() + "Due", 0.0)
@@ -248,6 +270,7 @@ Bool Function ConsumeDue(Actor subject, Float now) Global
     If due <= 0.0 || now < due
         Return False
     EndIf
+    Trace("operation=due | actor=" + subject + " | dueGameDays=" + due + " | nowGameDays=" + now + " | overdueHours=" + ((now - due) * 24.0))
     Seed(subject, now, "opportunity consumed")
     Return True
 EndFunction
