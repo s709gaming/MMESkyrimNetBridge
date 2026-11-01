@@ -205,3 +205,12 @@ migration. Standard/P+ share the guarded voice; OStim-only retains its existing
 presentation-skipped backend. No new timer or script. Merge with other mods
 replacing MilkLactacidScr deliberately. Live player/NPC conversion and repeated
 already-maid dosing remain acceptance tests after installation.
+
+## Milking source metadata
+
+The existing MilkQUEST override records the final mode/equipment immediately
+before StartMilkingMachine and finalizes actor-local metadata after original
+cleanup immediately before MME_MilkingDone. The original broadcast omits mode,
+so these two hooks are necessary for reliable source attribution. No original
+mode selection, gameplay, event signature or actor-array behavior is replaced.
+See Milking-Source-API.md. Generated OStim/Estrus variants inherit both hooks.

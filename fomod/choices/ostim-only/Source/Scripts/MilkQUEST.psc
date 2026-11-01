@@ -1702,6 +1702,8 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 		anivar += "_01"
 	endif
 	
+	; Extensions metadata only: capture final mode after MME selection/early exits.
+	Int mmeSourceSession = MMEMilkingSource.Begin(akActor, Mode, akActor.GetWornForm(Armor.GetMaskForSlot(32)) as Armor)
 	sendVibrationEvent("StartMilkingMachine", akActor, mpas, MilkingType)
 
 ;-----------------------Feeding/Milking/Fuck machine
@@ -2292,6 +2294,8 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 
 	Endif
 	
+	; Complete after original cleanup, before broadcasting authoritative completion.
+	MMEMilkingSource.Complete(akActor, mmeSourceSession, bottles, boobgasmcount, cumcount)
 	int handle = ModEvent.Create("MME_MilkingDone")
 	if (handle)
 		ModEvent.PushForm(handle, akActor)

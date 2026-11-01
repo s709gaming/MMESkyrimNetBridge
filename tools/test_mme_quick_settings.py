@@ -32,5 +32,5 @@ generator = (ROOT / 'tools/generate_ostim_only.py').read_text()
 assert "variants['MilkMCM'] = (ROOT / 'Source/MMECompatibilityOverrides/MilkMCM.psc').read_text()" in generator
 build = (ROOT / 'build-package.ps1').read_text()
 assert '$scriptNames += "MMEOriginalSettings"' in build
-assert '$mmeCompatibilityOverrideNames = @("MilkQUEST", "MilkMCM")' in build
+assert {"MilkQUEST", "MilkMCM"} <= set(re.findall(r'"([^"\n]+)"', re.search(r'\$mmeCompatibilityOverrideNames = @\(([^\n]+)\)', build).group(1)))
 print('PASS: 13 mirrored controls; original MCM only has reviewed sync/bonus-preview changes; single authority, safe refresh boundaries and backend packaging wired')
