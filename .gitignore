@@ -13,3 +13,9 @@
 /tools/elsie-fix-builder/bin/
 /tools/elsie-fix-builder/obj/
 /fomod/choices/**/Scripts/*.pas
+
+# Regenerable Python caches and root-level build logs
+__pycache__/
+*.pyc
+*.pyo
+/build-*.log
