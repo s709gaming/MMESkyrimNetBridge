@@ -3,11 +3,14 @@ Scriptname MMEAlertsMCM extends SKI_ConfigBase
 ; ---------------------------------------------------------------------------
 ; MCM settings schema and migrations
 ; ---------------------------------------------------------------------------
-; JsonUtil is the persistent authority read by runtime scripts. This menu writes
+; JsonUtil is the persistent authority for Extensions settings. Original MME
+; shortcuts use MMEOriginalSettings and keep MME itself authoritative.
+; JsonUtil is read by runtime scripts. This menu writes
 ; settings asks only affected controllers to refresh; it must not implement
 ; gameplay. EnsureDefaults is append-only migration history for existing saves.
 
 String SettingsFile = "/MMEAlerts/Settings"
+Int installedBackendOption = -1
 Int rosterOpenOption = -1
 Int rosterEnabledOption = -1
 Int rosterKeyOption = -1
@@ -336,27 +339,23 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 164
+    Return 166
 EndFunction
 
 Function SetPageNames()
-    Pages = new String[12]
+    Pages = new String[11]
     Pages[0] = "General"
     Pages[1] = "Milk Drinking"
-    ; Build these page names at runtime so Papyrus's case-insensitive string
-    ; table cannot reuse the lowercase "arousal"/"animations" or uppercase Body tokens interned
-    ; by integration scripts. The trailing spaces keep the built names distinct
-    ; while rendering invisibly in the sidebar.
-    Pages[2] = "A" + "nimations "
+    ; Runtime spelling preserves SkyUI capitalization despite Papyrus interning.
+    Pages[2] = "B" + "ody "
     Pages[3] = "A" + "rousal "
-    Pages[4] = "B" + "ody "
-    Pages[5] = "Armor"
-    Pages[6] = "Skyrim.Net"
-    Pages[7] = "Milk Armor Thoughts"
-    Pages[8] = "Armor Effects"
-    Pages[9] = "Misc"
-    Pages[10] = "Debug"
-    Pages[11] = "Troubleshoot"
+    Pages[4] = "Armor & Stripping"
+    Pages[5] = "Armor Effects"
+    Pages[6] = "Armor Reactions"
+    Pages[7] = "Traps & Curses"
+    Pages[8] = "Skyrim.Net"
+    Pages[9] = "Debug"
+    Pages[10] = "Troubleshoot"
 EndFunction
 
 ; Creates the MCM pages and initializes controllers on first registration.
@@ -1762,6 +1761,7 @@ EndFunction
 
 ; Renders the selected SkyUI page from persisted JContainers settings.
 Event OnPageReset(String page)
+    installedBackendOption = -1
     rosterOpenOption = -1
     rosterEnabledOption = -1
     rosterKeyOption = -1
@@ -2090,649 +2090,37 @@ Event OnPageReset(String page)
     diagnosticMageBusStopOption = -1
     diagnosticMageBusFailureOption = -1
     SetCursorFillMode(TOP_TO_BOTTOM)
-    If page == Pages[4] || page == "Body"
-        AddHeaderOption("Movement Speed")
-        customMilkSpeedDebuffOption = AddToggleOption("Custom Milk Speed Debuff", JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkSpeedDebuff", 0) == 1)
-        Int speedFlags = OPTION_FLAG_DISABLED
-        If JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkSpeedDebuff", 0) == 1
-            speedFlags = OPTION_FLAG_NONE
-        EndIf
-        milkSpeedMediumThresholdOption = AddSliderOption("Medium Milk Threshold", JsonUtil.GetFloatValue(SettingsFile, "milkSpeedMediumThreshold", 50.0), "{0}%", speedFlags)
-        milkSpeedMediumPenaltyOption = AddSliderOption("Medium Speed Debuff", JsonUtil.GetFloatValue(SettingsFile, "milkSpeedMediumPenalty", 3.0), "{0}%", speedFlags)
-        milkSpeedHighThresholdOption = AddSliderOption("High Milk Threshold", JsonUtil.GetFloatValue(SettingsFile, "milkSpeedHighThreshold", 100.0), "{0}%", speedFlags)
-        milkSpeedHighPenaltyOption = AddSliderOption("High Speed Debuff", JsonUtil.GetFloatValue(SettingsFile, "milkSpeedHighPenalty", 10.0), "{0}%", speedFlags)
-        maidLevelSpeedScalingOption = AddToggleOption("Milk Maid Level Speed Scaling", JsonUtil.GetIntValue(SettingsFile, "enableMaidLevelSpeedScaling", 0) == 1, speedFlags)
-        AddHeaderOption("Milk Weight")
-        customMilkWeightOption = AddToggleOption("Milk Has Weight", JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkWeight", 0) == 1)
-        Int milkWeightFlags = OPTION_FLAG_DISABLED
-        If JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkWeight", 0) == 1
-            milkWeightFlags = OPTION_FLAG_NONE
-        EndIf
-        milkWeightMultiplierOption = AddSliderOption("Milk Weight Multiplier", JsonUtil.GetFloatValue(SettingsFile, "milkWeightMultiplier", 1.0), "x{0}", milkWeightFlags)
-        AddHeaderOption("Movement Slap")
-        movementSlapOption = AddToggleOption("Movement Slap Sounds", JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1) == 1)
-        Int movementSoundFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1) != 1 || JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1) != 1
-            movementSoundFlags = OPTION_FLAG_DISABLED
-        EndIf
-        movementSlapVolumeOption = AddSliderOption("Movement Slap Volume", JsonUtil.GetFloatValue(SettingsFile, "movementSlapVolume", 100.0), "{0}%", movementSoundFlags)
-        movementSlapNotificationsOption = AddToggleOption("Movement Slap Notifications", JsonUtil.GetIntValue(SettingsFile, "enableMovementSlapNotifications", 1) == 1)
-        Int movementNotificationFlags = movementSoundFlags
-        If JsonUtil.GetIntValue(SettingsFile, "enableMovementSlapNotifications", 1) != 1
-            movementNotificationFlags = OPTION_FLAG_DISABLED
-        EndIf
-        movementSlapNotificationCooldownOption = AddSliderOption("Notification Cooldown", JsonUtil.GetFloatValue(SettingsFile, "movementSlapNotificationCooldownHours", 8.0), "{0} game hours", movementNotificationFlags)
-        SetCursorPosition(1)
-        AddHeaderOption("Milk Maid Appearance")
-        maidWeightScalingOption = AddToggleOption("Scale Weight with Maid Level", MMEMaidWeightScaling.IsEnabled())
-        Int maidWeightFlags = OPTION_FLAG_NONE
-        If !MMEMaidWeightScaling.IsEnabled()
-            maidWeightFlags = OPTION_FLAG_DISABLED
-        EndIf
-        maidWeightPerLevelOption = AddSliderOption("Weight per Maid Level", MMEMaidWeightScaling.GetWeightPerLevel(), "+{0}", maidWeightFlags)
-        AddHeaderOption("Milk Maid Body Morphs")
-        maidBodyScalingOption = AddToggleOption("Level-Based Body Scaling", JsonUtil.GetIntValue(SettingsFile, "enableMaidBodyScaling", 0) == 1)
-        Int bodyMorphFlags = OPTION_FLAG_DISABLED
-        If JsonUtil.GetIntValue(SettingsFile, "enableMaidBodyScaling", 0) == 1
-            bodyMorphFlags = OPTION_FLAG_NONE
-        EndIf
-        maidBodyMaxLevelOption = AddSliderOption("Maximum Scaling Maid Level", MMEMaidBodyScaling.GetMaxLevel(), "{0}", bodyMorphFlags)
-        maidBodyHipsOption = AddSliderOption("Hips at Maximum Level", MMEMaidBodyScaling.GetMaximum("Hips"), "{0}%", bodyMorphFlags)
-        maidBodyButtOption = AddSliderOption("Butt at Maximum Level", MMEMaidBodyScaling.GetMaximum("Butt"), "{0}%", bodyMorphFlags)
-        maidBodyThighsOption = AddSliderOption("Thighs at Maximum Level", MMEMaidBodyScaling.GetMaximum("Thighs"), "{0}%", bodyMorphFlags)
-        maidBodyCalfSizeOption = AddSliderOption("Calves at Maximum Level", MMEMaidBodyScaling.GetMaximum("CalfSize"), "{0}%", bodyMorphFlags)
-        maidBodyWaistOption = AddSliderOption("Waist at Maximum Level", MMEMaidBodyScaling.GetMaximum("Waist"), "{0}%", bodyMorphFlags)
-        maidBodyBellyOption = AddSliderOption("Belly at Maximum Level", MMEMaidBodyScaling.GetMaximum("Belly"), "{0}%", bodyMorphFlags)
-        maidBodyBigBellyOption = AddSliderOption("Big Belly at Maximum Level", MMEMaidBodyScaling.GetMaximum("BigBelly"), "{0}%", bodyMorphFlags)
-        maidBodyChubbyArmsOption = AddSliderOption("Chubby Arms at Maximum Level", MMEMaidBodyScaling.GetMaximum("ChubbyArms"), "{0}%", bodyMorphFlags)
-        maidBodyChubbyLegsOption = AddSliderOption("Chubby Legs at Maximum Level", MMEMaidBodyScaling.GetMaximum("ChubbyLegs"), "{0}%", bodyMorphFlags)
-        maidBodyChubbyWaistOption = AddSliderOption("Chubby Waist at Maximum Level", MMEMaidBodyScaling.GetMaximum("ChubbyWaist"), "{0}%", bodyMorphFlags)
-
-        Return
+    If page == Pages[2] || page == "Body"
+        DrawBodyPage()
+    ElseIf page == "Traps & Curses" || page == "Misc"
+        DrawTrapsPage()
+    ElseIf page == "Milk Drinking"
+        DrawMilkDrinkingPage()
+    ElseIf page == Pages[3] || page == "Arousal"
+        DrawArousalPage()
+    ElseIf page == "Armor & Stripping" || page == "Armor"
+        DrawArmorPage()
+    ElseIf page == "Skyrim.Net"
+        DrawSkyrimNetPage()
+    ElseIf page == "Armor Reactions" || page == "Milk Armor Thoughts"
+        DrawArmorThoughtsPage()
+    ElseIf page == "Armor Effects"
+        DrawArmorEffectsPage()
+    ElseIf page == "Troubleshoot"
+        DrawTroubleshootPage()
+    ElseIf page == "Debug"
+        DrawDebugPage()
+    Else
+        DrawGeneralPage()
     EndIf
-    If page == "Misc"
-        AddHeaderOption("Trapped Armor Chests")
-        chestArmorTrapOption = AddToggleOption("Enable Trap Armor Chest", JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap", 1) == 1)
-        Int armorTrapFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap", 1) != 1
-            armorTrapFlags = OPTION_FLAG_DISABLED
-        EndIf
-        armorTrapNearbyAlliesOption = AddToggleOption("Armor Traps Target Nearby Allies", JsonUtil.GetIntValue(SettingsFile, "enableArmorTrapNearbyAllies", 1) == 1, armorTrapFlags)
-        repeatTrapArmorStoriesOption = AddToggleOption("Repeat Trap Armor Stories", JsonUtil.GetIntValue(SettingsFile, "enableRepeatTrapArmorStories", 1) == 1, armorTrapFlags)
-        livingArmorChestTrapOption = AddToggleOption("Living Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableLivingArmorChestTrap", 1) == 1, armorTrapFlags)
-        parasiteArmorChestTrapOption = AddToggleOption("Parasite Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableParasiteArmorChestTrap", 1) == 1, armorTrapFlags)
-        dwemerArmorChestTrapOption = AddToggleOption("Dwemer Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableDwemerArmorChestTrap", 1) == 1, armorTrapFlags)
-        Int dwemerTrapFlags = armorTrapFlags
-        If JsonUtil.GetIntValue(SettingsFile, "enableDwemerArmorChestTrap", 1) != 1
-            dwemerTrapFlags = OPTION_FLAG_DISABLED
-        EndIf
-        dwemerArmorOutsideRuinsOption = AddToggleOption("Dwemer Armor Outside Ruins", JsonUtil.GetIntValue(SettingsFile, "enableDwemerArmorOutsideRuins", 0) == 1, dwemerTrapFlags)
-        dwemerRuinArmorTrapChanceOption = AddSliderOption("Dwemer Ruin Chance", JsonUtil.GetIntValue(SettingsFile, "dwemerRuinArmorTrapChance", 25), "{0}%", dwemerTrapFlags)
-        chestArmorTrapChanceOption = AddSliderOption("General Trap Chance", JsonUtil.GetIntValue(SettingsFile, "chestArmorTrapChance", 5), "{0}%", armorTrapFlags)
-        chestArmorTrapCooldownOption = AddSliderOption("Armor Trap Cooldown", JsonUtil.GetFloatValue(SettingsFile, "chestArmorTrapCooldownHours", 4.0), "{0} game hours", armorTrapFlags)
-        AddHeaderOption("Milk Maid Curse Traps")
-        milkMaidCurseMasterOption = AddToggleOption("Enable Milk Maid Curse Trap", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidCurseTrap", 1) == 1)
-        Int curseFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidCurseTrap", 1) != 1
-            curseFlags = OPTION_FLAG_DISABLED
-        EndIf
-        milkMaidTrapNearbyAlliesOption = AddToggleOption("Milk Maid Curse Targets Nearby Allies", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidTrapNearbyAllies", 1) == 1, curseFlags)
-        dungeonChestMilkMaidOption = AddToggleOption("Boss Chests", JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1) == 1, curseFlags)
-        Int dungeonChestChanceFlags = curseFlags
-        If JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1) != 1
-            dungeonChestChanceFlags = OPTION_FLAG_DISABLED
-        EndIf
-        milkMaidCurseSurgeOption = AddSliderOption("Existing Maid Curse: Added Milk", JsonUtil.GetIntValue(SettingsFile, "milkMaidCurseSurgePercent", 50), "{0}% of capacity", curseFlags)
-        dungeonChestMilkMaidChanceOption = AddSliderOption("Boss Chest Chance", JsonUtil.GetIntValue(SettingsFile, "dungeonChestMilkMaidChance", 100), "{0}%", dungeonChestChanceFlags)
-        regularChestMilkMaidOption = AddToggleOption("Regular Chests", JsonUtil.GetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1) == 1, curseFlags)
-        Int regularChestChanceFlags = curseFlags
-        If JsonUtil.GetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1) != 1
-            regularChestChanceFlags = OPTION_FLAG_DISABLED
-        EndIf
-        regularChestMilkMaidChanceOption = AddSliderOption("Regular Chest Chance", JsonUtil.GetIntValue(SettingsFile, "regularChestMilkMaidChance", 10), "{0}%", regularChestChanceFlags)
-        forcedMilkMaidNotificationOption = AddToggleOption("Enable Milk Maid Notifications", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNotification", 1) == 1)
-        forcedMilkMaidLactacidStoryOption = AddToggleOption("Enable Milk Maid Stories", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidStory", 1) == 1)
-        forcedMilkMaidNarrationOption = AddToggleOption("Enable Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNarration", 1) == 1)
-        Int chestNarrationFlags = curseFlags
-        If JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNarration", 1) != 1
-            chestNarrationFlags = OPTION_FLAG_DISABLED
-        EndIf
-        chestCurseNarrationOption = AddToggleOption("Enable Chest Curse Narration", JsonUtil.GetIntValue(SettingsFile, "enableChestCurseNarration", 1) == 1, chestNarrationFlags)
-        forcedMilkMaidDiagnosticOption = AddToggleOption("Enable Milk Maid Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidDiagnostic", 0) == 1)
-        AddHeaderOption("Reverse Milk Maid Leveling")
-        reverseDurationOption = AddSliderOption("Reverse Leveling Duration", MMEReverseLevel.GetDuration(), "{0} game hours")
-        reversePlayerLevelOption = AddSliderOption("Minimum Milk Maid Level", MMEReverseLevel.GetRequiredLevel(), "{0}")
-        SetCursorPosition(1)
-        AddHeaderOption("Exotic Milk Chest Trap")
-        chestMilkTrapOption = AddToggleOption("Enable Exotic Milk Trap", JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrap", 1) == 1)
-        Int chestMilkTrapFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrap", 1) != 1
-            chestMilkTrapFlags = OPTION_FLAG_DISABLED
-        EndIf
-        milkDrinkTrapNearbyAlliesOption = AddToggleOption("Milk Drink Curse Targets Nearby Allies", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkTrapNearbyAllies", 1) == 1, chestMilkTrapFlags)
-        chestMilkTrapChanceOption = AddSliderOption("Chest Trap Chance", JsonUtil.GetIntValue(SettingsFile, "chestMilkTrapChance", 33), "{0}%", chestMilkTrapFlags)
-        chestMilkTrapCooldownOption = AddSliderOption("Base Cooldown", JsonUtil.GetFloatValue(SettingsFile, "chestMilkTrapCooldownHours", 1.0), "{0} game hours", chestMilkTrapFlags)
-        chestMilkTrapVariationOption = AddSliderOption("Random Variation", JsonUtil.GetFloatValue(SettingsFile, "chestMilkTrapCooldownVariation", 0.0), "+/- {0} game hours", chestMilkTrapFlags)
-        chestMilkTrapNotificationOption = AddToggleOption("Chest Drink Notification", JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrapNotification", 1) == 1, chestMilkTrapFlags)
-        chestMilkTrapNarrationOption = AddToggleOption("Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrapNarration", 1) == 1, chestMilkTrapFlags)
-        AddHeaderOption("Timed Armor Bond")
-        timedArmorDurationOption = AddSliderOption("Lock Duration", JsonUtil.GetFloatValue(SettingsFile, "timedArmorLockDays", 3.0), "{0} game days")
-        Int timedArmorReleaseFlags = OPTION_FLAG_DISABLED
-        If MMETimedArmorLock.IsLocked(Game.GetPlayer())
-            timedArmorReleaseFlags = OPTION_FLAG_NONE
-        EndIf
-        timedArmorReleaseOption = AddTextOption("Release Player Armor", "RELEASE", timedArmorReleaseFlags)
-        timedNPCArmorReleaseOption = AddTextOption("Release Nearby NPC Armor", "RELEASE")
-        AddHeaderOption("Debug")
-        reverseApplyOption = AddTextOption("Apply Reverse Leveling", "APPLY")
-        reverseRemoveOption = AddTextOption("Remove Reverse Leveling", "REMOVE")
-        reverseTraceOption = AddToggleOption("Reverse Leveling Trace", JsonUtil.GetIntValue(SettingsFile, "enableReverseLevelTrace", 0) == 1)
-        Return
-    EndIf
-    If page == "Milk Drinking"
-        AddHeaderOption("Inn and Palace Drinking")
-        innPalaceMilkDrinkingOption = AddToggleOption("Enable Inn and Palace Drinking", JsonUtil.GetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1) == 1)
-        Int innPalaceFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1) != 1
-            innPalaceFlags = OPTION_FLAG_DISABLED
-        EndIf
-        guildTavernMilkDrinkingOption = AddToggleOption("Guild and Tavern Locations", JsonUtil.GetIntValue(SettingsFile, "enableGuildTavernMilkDrinking", 1) == 1, innPalaceFlags)
-        jarlResidenceMilkDrinkingOption = AddToggleOption("Jarl Residences", JsonUtil.GetIntValue(SettingsFile, "enableJarlResidenceMilkDrinking", 1) == 1, innPalaceFlags)
-        townMilkDrinkOption = AddToggleOption("Town Milk Drink", JsonUtil.GetIntValue(SettingsFile, "enableTownMilkDrink", 1) == 1)
-        Int townDrinkFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableTownMilkDrink", 1) != 1
-            townDrinkFlags = OPTION_FLAG_DISABLED
-        EndIf
-        townMilkDrinkChanceOption = AddSliderOption("Town Drink Chance", JsonUtil.GetIntValue(SettingsFile, "townMilkDrinkChance", 25), "{0}%", townDrinkFlags)
-        townUniqueNPCPreferenceOption = AddToggleOption("Favor Unique Town NPCs", JsonUtil.GetIntValue(SettingsFile, "enableTownUniqueNPCPreference", 1) == 1, townDrinkFlags)
-        Int uniquePreferenceFlags = townDrinkFlags
-        If JsonUtil.GetIntValue(SettingsFile, "enableTownUniqueNPCPreference", 1) != 1
-            uniquePreferenceFlags = OPTION_FLAG_DISABLED
-        EndIf
-        townUniqueNPCPreferenceChanceOption = AddSliderOption("Unique NPC Preference", JsonUtil.GetIntValue(SettingsFile, "townUniqueNPCPreferenceChance", 75), "{0}%", uniquePreferenceFlags)
-        Int sharedVenueFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1) != 1 && JsonUtil.GetIntValue(SettingsFile, "enableTownMilkDrink", 1) != 1
-            sharedVenueFlags = OPTION_FLAG_DISABLED
-        EndIf
-        innPalaceDrinkDelayOption = AddSliderOption("Drink Delay", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelaySeconds", 11.0), "{0} seconds", sharedVenueFlags)
-        innPalaceDrinkVariationOption = AddSliderOption("Delay Randomization", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", 10.0), "+/-{0} seconds", sharedVenueFlags)
-        innPalaceDrinkCooldownOption = AddSliderOption("Shared Cooldown", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkCooldownHours", 4.0), "{0} game hours", sharedVenueFlags)
-        AddHeaderOption("Milk Cravings")
-        milkCravingsOption = AddToggleOption("Enable Milk Cravings", JsonUtil.GetIntValue(SettingsFile, "enableMilkCravings", 1) == 1)
-        Int milkCravingFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableMilkCravings", 1) != 1
-            milkCravingFlags = OPTION_FLAG_DISABLED
-        EndIf
-        Int milkCravingNarrationFlags = milkCravingFlags
-        If !MMEAlertsSkyrimNet.IsAvailable()
-            milkCravingNarrationFlags = OPTION_FLAG_DISABLED
-        EndIf
-        milkCravingNarrationOption = AddToggleOption("Skyrim.Net Craving Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkCravingNarration", 1) == 1, milkCravingNarrationFlags)
-        milkCravingIntervalOption = AddSliderOption("Craving Interval", JsonUtil.GetFloatValue(SettingsFile, "milkCravingIntervalHours", 48.0), "{0} game hours", milkCravingFlags)
-        milkCravingVariationOption = AddSliderOption("Interval Randomization", JsonUtil.GetFloatValue(SettingsFile, "milkCravingIntervalVariation", 24.0), "+/-{0} game hours", milkCravingFlags)
-        milkCravingChanceOption = AddSliderOption("Trigger Chance", JsonUtil.GetIntValue(SettingsFile, "milkCravingTriggerChance", 100), "{0}%", milkCravingFlags)
-        milkCravingGiveInDelayOption = AddSliderOption("Maximum Give-In Delay", JsonUtil.GetFloatValue(SettingsFile, "milkCravingGiveInDelayHours", 4.0), "{0} game hours", milkCravingFlags)
-        AddHeaderOption("Auto Self-Milking")
-        autoSelfMilkingOption = AddToggleOption("Enable Auto Self-Milking", JsonUtil.GetIntValue(SettingsFile, "enableAutoSelfMilking", 1) == 1)
-        Int autoSelfMilkingFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableAutoSelfMilking", 1) != 1
-            autoSelfMilkingFlags = OPTION_FLAG_DISABLED
-        EndIf
-        autoSelfMilkingDelayOption = AddSliderOption("Self-Milking Delay", JsonUtil.GetFloatValue(SettingsFile, "autoSelfMilkingDelayHours", 1.0), "{0} game hours", autoSelfMilkingFlags)
-        AddHeaderOption("Milk Gain Per Drink")
-        milkmaidLevelBonusOption = AddToggleOption("MME Level Bonus", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1) == 1)
-        flatMilkBonusOption = AddSliderOption("Flat Milk Bonus", JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 1.0), "+{1} milk")
-        lactacidMultiplierOption = AddSliderOption("Lactacid Multiplier", JsonUtil.GetFloatValue(SettingsFile, "lactacidFlatMultiplier", 2.0), "x{1}")
-        AddHeaderOption("Breastfeeding")
-        breastfeedingMilkEffectsOption = AddToggleOption("Breastfeeding Gives Milk", JsonUtil.GetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", 1) == 1)
-        Bool elsieDetected = MMEElsieBreastfeeding.IsDetected()
-        elsieDetectedOption = AddToggleOption("Elsie LaVache Detected", elsieDetected, OPTION_FLAG_DISABLED)
-        Int elsieMilkFlags = OPTION_FLAG_NONE
-        If !MMEElsieBreastfeeding.IsAvailable()
-            elsieMilkFlags = OPTION_FLAG_DISABLED
-        EndIf
-        elsieBreastfeedingMilkEffectsOption = AddToggleOption("Elsie Breastfeeding Gives Milk", JsonUtil.GetIntValue(SettingsFile, "enableElsieBreastfeedingMilkEffects", 1) == 1, elsieMilkFlags)
-        elsieBreastfeedingTestOption = AddTextOption("Test Elsie Auto Breastfeeding", "RUN", elsieMilkFlags)
-        AddHeaderOption("NPC Milk Drinking")
-        npcMilkEffectsOption = AddToggleOption("NPC Milk Effects", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1) == 1)
-        npcDrinkNotificationsOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1) == 1)
-        AddHeaderOption("Player Milk Drinking")
-        playerDrinkNotificationsOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1) == 1)
-        playerMilkMaidConversionOption = AddToggleOption("Milk Can Create Player Milk Maid", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkMaidConversion", 1) == 1)
-        Int conversionChanceFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkMaidConversion", 1) != 1
-            conversionChanceFlags = OPTION_FLAG_DISABLED
-        EndIf
-        playerMilkMaidConversionChanceOption = AddSliderOption("Milk Maid Conversion Chance", JsonUtil.GetIntValue(SettingsFile, "playerMilkMaidConversionChance", 100), "{0}%", conversionChanceFlags)
-        AddHeaderOption("Non-Milkmaid Drinking")
-        nonMilkmaidFemaleDrinkingOption = AddToggleOption("Allow Adult Women", JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidFemaleDrinking", 1) == 1)
-        nonMilkmaidFemaleArousalOption = AddSliderOption("Women Arousal Per Drink", JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 20.0), "+{0}")
-        nonMilkmaidMaleDrinkingOption = AddToggleOption("Allow Adult Men", JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidMaleDrinking", 1) == 1)
-        nonMilkmaidMaleArousalOption = AddSliderOption("Men Arousal Per Drink", JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", 20.0), "+{0}")
-        nonMilkmaidDrinkNotificationsOption = AddToggleOption("Flavor Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidDrinkNotifications", 1) == 1)
-        AddHeaderOption("Easy Mode")
-        giveMilkEasyModeOption = AddToggleOption("Free Jug for Give Milk", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1) == 1)
-        Return
-    EndIf
-    If page == "A" + "nimations "
-        AddHeaderOption("Player Milk Drinking")
-        playerDrinkAnimationOption = AddToggleOption("Player Milk-Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkAnimation", 0) == 1)
-        playerDrinkAnimationDurationOption = AddSliderOption("Player Milk-Drink Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "playerDrinkAnimationDuration", 3.0), "{0} seconds")
-        AddHeaderOption("NPC Milk Drinking")
-        npcDrinkAnimationOption = AddToggleOption("NPC Milk-Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0) == 1)
-        npcDrinkAnimationDurationOption = AddSliderOption("NPC Milk-Drink Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "npcDrinkAnimationDuration", 3.0), "{0} seconds")
-        AddHeaderOption("Player Fullness")
-        playerHalfFullSelfMilkAnimationOption = AddToggleOption("Player Half-Full Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerHalfFullSelfMilkAnimation", 0) == 1)
-        playerFullSelfMilkAnimationOption = AddToggleOption("Player Full Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerFullSelfMilkAnimation", 0) == 1)
-        playerFullnessSelfMilkAnimationDurationOption = AddSliderOption("Player Fullness Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "playerFullnessSelfMilkAnimationDuration", 3.0), "{0} seconds")
-        AddHeaderOption("NPC Fullness")
-        npcHalfFullSelfMilkAnimationOption = AddToggleOption("NPC Half-Full Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCHalfFullSelfMilkAnimation", 1) == 1)
-        npcFullSelfMilkAnimationOption = AddToggleOption("NPC Full Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCFullSelfMilkAnimation", 1) == 1)
-        npcFullnessSelfMilkAnimationDurationOption = AddSliderOption("NPC Fullness Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "npcFullnessSelfMilkAnimationDuration", 3.0), "{0} seconds")
-        Bool ostimAvailable = MMEOStimBreastfeeding.IsOStimDetected()
-        Int ostimFlags = OPTION_FLAG_DISABLED
-        If ostimAvailable
-            ostimFlags = OPTION_FLAG_NONE
-        EndIf
-        AddHeaderOption("OStim")
-        ostimStatusOption = AddToggleOption("OStim Detected", ostimAvailable, OPTION_FLAG_DISABLED)
-        ostimBreastfeedingOption = AddToggleOption("Use OStim Breastfeeding", JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0) == 1, ostimFlags)
-        ostimBreastfeedingDurationOption = AddSliderOption("OStim Breastfeeding Scene Duration", JsonUtil.GetFloatValue(SettingsFile, "ostimBreastfeedingDuration", 20.0), "{0} seconds", ostimFlags)
-        Return
-    EndIf
-    If page == "A" + "rousal "
-        Bool arousalAvailable = MMEArousalBridge.IsAvailable()
-        Int arousalFlags = OPTION_FLAG_DISABLED
-        If arousalAvailable
-            arousalFlags = OPTION_FLAG_NONE
-        EndIf
-        AddHeaderOption("Integration Status")
-        arousalStatusOption = AddToggleOption("SexLab Arousal Detected", arousalAvailable, OPTION_FLAG_DISABLED)
-        AddHeaderOption("Milk Drinking")
-        milkDrinkArousalOption = AddToggleOption("Milk Raises Arousal", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkArousal", 1) == 1, arousalFlags)
-        If JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkArousal", 1) != 1
-            arousalFlags = OPTION_FLAG_DISABLED
-        EndIf
-        milkDrinkArousalAmountOption = AddSliderOption("Arousal Per Milk", JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 10.0), "+{0}", arousalFlags)
-        AddHeaderOption("Arousal Reactions")
-        Int arousalEffectMasterFlags = OPTION_FLAG_DISABLED
-        If arousalAvailable
-            arousalEffectMasterFlags = OPTION_FLAG_NONE
-        EndIf
-        arousalEffectsOption = AddToggleOption("Enable Arousal Reactions", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffects", 1) == 1, arousalEffectMasterFlags)
-        Int arousalEffectFlags = arousalEffectMasterFlags
-        If JsonUtil.GetIntValue(SettingsFile, "enableArousalEffects", 1) != 1
-            arousalEffectFlags = OPTION_FLAG_DISABLED
-        EndIf
-        arousalEffectNotificationsOption = AddToggleOption("Show Arousal Notifications", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectNotifications", 1) == 1, arousalEffectFlags)
-        arousalEffectSoundsOption = AddToggleOption("Play Arousal Sounds", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectSounds", 1) == 1, arousalEffectFlags)
-        arousalEffectAnimationsOption = AddToggleOption("Play Arousal Animations", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectAnimations", 1) == 1, arousalEffectFlags)
-        arousalMilkMaidRouteOption = AddToggleOption("Always React for Milk Maids", JsonUtil.GetIntValue(SettingsFile, "enableArousalMilkMaidRoute", 1) == 1, arousalEffectFlags)
-        arousalMilkDrinkRouteOption = AddToggleOption("React After Milk Drinking", JsonUtil.GetIntValue(SettingsFile, "enableArousalMilkDrinkRoute", 1) == 1, arousalEffectFlags)
-        arousalEveryoneRouteOption = AddToggleOption("Include Everyone Else", JsonUtil.GetIntValue(SettingsFile, "enableArousalEveryoneRoute", 0) == 1, arousalEffectFlags)
-        arousalEffectDelayOption = AddSliderOption("Reaction Delay", JsonUtil.GetFloatValue(SettingsFile, "arousalEffectDelay", 5.0), "{0} seconds", arousalEffectFlags)
-        arousalEffectCooldownOption = AddSliderOption("Reaction Cooldown", JsonUtil.GetFloatValue(SettingsFile, "arousalEffectCooldown", 5.0), "{0} seconds", arousalEffectFlags)
-        arousalEffectCooldownVariationOption = AddSliderOption("Cooldown Randomization", JsonUtil.GetFloatValue(SettingsFile, "arousalEffectCooldownVariation", 0.0), "+/- {0} seconds", arousalEffectFlags)
-        arousalLowThresholdOption = AddSliderOption("Low Threshold", JsonUtil.GetIntValue(SettingsFile, "arousalLowThreshold", 20), "{0}", arousalEffectFlags)
-        arousalMediumThresholdOption = AddSliderOption("Medium Threshold", JsonUtil.GetIntValue(SettingsFile, "arousalMediumThreshold", 50), "{0}", arousalEffectFlags)
-        arousalHighThresholdOption = AddSliderOption("High Threshold", JsonUtil.GetIntValue(SettingsFile, "arousalHighThreshold", 80), "{0}", arousalEffectFlags)
-        Return
-    EndIf
-    If page == "Armor"
-        AddHeaderOption("Service Armor Checks")
-        armorCheckReminderOption = AddToggleOption("Armor Check Reminder", JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) == 1)
-        Int reminderFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) != 1
-            reminderFlags = OPTION_FLAG_DISABLED
-        EndIf
-        armorCheckReminderCooldownOption = AddSliderOption("Reminder Cooldown", JsonUtil.GetFloatValue(SettingsFile, "armorCheckReminderCooldown", 60.0), "{0} seconds", reminderFlags)
-        AddHeaderOption("Armor Stripping")
-        extensionsArmorStrippingOption = AddToggleOption("Override MME Armor Stripping", JsonUtil.GetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1) == 1)
-        Int stripFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1) != 1
-            stripFlags = OPTION_FLAG_DISABLED
-        EndIf
-        milkingEquipmentRefitOption = AddToggleOption("Require Milking Equipment Refits", JsonUtil.GetIntValue(SettingsFile, "enableMilkingEquipmentRefits", 1) == 1, stripFlags)
-        stripAllArmorOverrideOption = AddToggleOption("Strip All Armor / Ignore Protection", JsonUtil.GetIntValue(SettingsFile, "enableStripAllArmor", 0) == 1, stripFlags)
-        Int narrationFlags = stripFlags
-        If narrationFlags == OPTION_FLAG_NONE && JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarration", 1) != 1
-            narrationFlags = OPTION_FLAG_DISABLED
-        EndIf
-        armorStripHeavyEnabledOption = AddToggleOption("Enable Heavy Armor Stripping", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripHeavy", 1) == 1, stripFlags)
-        Int heavyStripFlags = stripFlags
-        If heavyStripFlags == OPTION_FLAG_NONE && JsonUtil.GetIntValue(SettingsFile, "enableArmorStripHeavy", 1) != 1
-            heavyStripFlags = OPTION_FLAG_DISABLED
-        EndIf
-        armorStripHeavyThresholdOption = AddSliderOption("Heavy Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyPercent", 70.0), "{0}%", heavyStripFlags)
-        armorStripLightEnabledOption = AddToggleOption("Enable Light Armor Stripping", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripLight", 1) == 1, stripFlags)
-        Int lightStripFlags = stripFlags
-        If lightStripFlags == OPTION_FLAG_NONE && JsonUtil.GetIntValue(SettingsFile, "enableArmorStripLight", 1) != 1
-            lightStripFlags = OPTION_FLAG_DISABLED
-        EndIf
-        armorStripLightThresholdOption = AddSliderOption("Light Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripLightPercent", 85.0), "{0}%", lightStripFlags)
-        armorStripClothingEnabledOption = AddToggleOption("Enable Clothing Stripping", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripClothing", 1) == 1, stripFlags)
-        Int clothingStripFlags = stripFlags
-        If clothingStripFlags == OPTION_FLAG_NONE && JsonUtil.GetIntValue(SettingsFile, "enableArmorStripClothing", 1) != 1
-            clothingStripFlags = OPTION_FLAG_DISABLED
-        EndIf
-        armorStripClothingThresholdOption = AddSliderOption("Clothing Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0), "{0}%", clothingStripFlags)
-        flatMilkStrippingOption = AddToggleOption("Flat Milk Stripping", JsonUtil.GetIntValue(SettingsFile, "enableFlatMilkStripping", 0) == 1, stripFlags)
-        Int flatHeavyFlags = heavyStripFlags
-        Int flatLightFlags = lightStripFlags
-        Int flatClothingFlags = clothingStripFlags
-        If JsonUtil.GetIntValue(SettingsFile, "enableFlatMilkStripping", 0) != 1
-            flatHeavyFlags = OPTION_FLAG_DISABLED
-            flatLightFlags = OPTION_FLAG_DISABLED
-            flatClothingFlags = OPTION_FLAG_DISABLED
-        EndIf
-        flatMilkHeavyOption = AddSliderOption("Heavy Armor Milk Amount", JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyMilk", 4.0), "{0} milk", flatHeavyFlags)
-        flatMilkLightOption = AddSliderOption("Light Armor Milk Amount", JsonUtil.GetFloatValue(SettingsFile, "armorStripLightMilk", 8.0), "{0} milk", flatLightFlags)
-        flatMilkClothingOption = AddSliderOption("Clothing Milk Amount", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingMilk", 12.0), "{0} milk", flatClothingFlags)
-        AddHeaderOption("Armor Strip Reactions")
-        armorStripNotificationOption = AddToggleOption("Strip Notification", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNotification", 1) == 1, stripFlags)
-        armorStripMoanOption = AddToggleOption("Strip Moan", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripMoan", 1) == 1, stripFlags)
-        armorStripNarrationOption = AddToggleOption("Skyrim.Net Strip Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarration", 1) == 1, stripFlags)
-        armorStripNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "armorStripNarrationChance", 100), "{0}%", narrationFlags)
-        armorStripNarrationCooldownOption = AddSliderOption("Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "armorStripNarrationCooldown", 300.0) / 60.0, "{0} minutes", narrationFlags)
-        AddHeaderOption("Armor Story Reactions")
-        repeatOrdinaryArmorStoriesOption = AddToggleOption("Repeat Equipped Armor Stories", JsonUtil.GetIntValue(SettingsFile, "enableRepeatOrdinaryArmorStories", 1) == 1)
-        AddHeaderOption("Milking Armor")
-        playerMilkingArmorEquipMoanOption = AddToggleOption("Player Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipMoan", 1) == 1)
-        playerMilkingArmorEquipAnimationOption = AddToggleOption("Player Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipAnimation", 0) == 1)
-        npcMilkingArmorEquipMoanOption = AddToggleOption("NPC Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorEquipMoan", 1) == 1)
-        npcMilkingArmorEquipAnimationOption = AddToggleOption("NPC Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorEquipAnimation", 1) == 1)
-        AddHeaderOption("AM Living Armor")
-        playerLivingArmorEquipMoanOption = AddToggleOption("Player Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enablePlayerLivingArmorEquipMoan", 1) == 1)
-        playerLivingArmorEquipAnimationOption = AddToggleOption("Player Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerLivingArmorEquipAnimation", 0) == 1)
-        npcLivingArmorEquipMoanOption = AddToggleOption("NPC Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enableNPCLivingArmorEquipMoan", 1) == 1)
-        npcLivingArmorEquipAnimationOption = AddToggleOption("NPC Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCLivingArmorEquipAnimation", 1) == 1)
-        AddHeaderOption("AM Living Parasite")
-        playerLivingParasiteEquipMoanOption = AddToggleOption("Player Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enablePlayerLivingParasiteEquipMoan", 1) == 1)
-        playerLivingParasiteEquipAnimationOption = AddToggleOption("Player Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerLivingParasiteEquipAnimation", 0) == 1)
-        npcLivingParasiteEquipMoanOption = AddToggleOption("NPC Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enableNPCLivingParasiteEquipMoan", 1) == 1)
-        npcLivingParasiteEquipAnimationOption = AddToggleOption("NPC Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCLivingParasiteEquipAnimation", 1) == 1)
-        Return
-    EndIf
-    If page == "Skyrim.Net"
-        AddHeaderOption("Integration Status")
-        skyrimNetStatusOption = AddToggleOption("Skyrim.Net Detected", MMEAlertsSkyrimNet.IsAvailable(), OPTION_FLAG_DISABLED)
-        AddHeaderOption("Event Tracking")
-        skyrimNetMilkDrinksOption = AddToggleOption("Track Milk Drinks", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkDrinks", 1) == 1)
-        skyrimNetMilkingEventsOption = AddToggleOption("Track Milking Start/End", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", 1) == 1)
-        skyrimNetMilkmaidCreatedOption = AddToggleOption("Track New Milkmaids", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1) == 1)
-        skyrimNetMilkStatusesOption = AddToggleOption("Track Nearby Milk Statuses", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1)
-        skyrimNetStatusIntervalOption = AddSliderOption("Milk Status Interval", JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0), "{0} seconds")
-        AddHeaderOption("Milk Armor")
-        nearbyMilkArmorStatusOption = AddToggleOption("Track Nearby Milk Armor Status", JsonUtil.GetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", 1) == 1)
-        playerMilkArmorEquipNarrationOption = AddToggleOption("Player Milk Armor Equip Narration", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", 1) == 1)
-        npcMilkArmorEquipNarrationOption = AddToggleOption("NPC Milk Armor Equip Narration", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkArmorEquipNarration", 1) == 1)
-        Int playerArmorNarrationFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", 1) != 1
-            playerArmorNarrationFlags = OPTION_FLAG_DISABLED
-        EndIf
-        Int npcArmorNarrationFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkArmorEquipNarration", 1) != 1
-            npcArmorNarrationFlags = OPTION_FLAG_DISABLED
-        EndIf
-        playerMilkingArmorNarrationCooldownOption = AddSliderOption("Player Armor Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "playerMilkingArmorNarrationCooldown", 120.0), "{0} seconds", playerArmorNarrationFlags)
-        npcMilkingArmorNarrationCooldownOption = AddSliderOption("NPC Armor Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "npcMilkingArmorNarrationCooldown", 300.0), "{0} seconds", npcArmorNarrationFlags)
-        AddHeaderOption("Actions")
-        selfMilkingActionOption = AddToggleOption("Allow Self-Milking Action", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingAction", 1) == 1)
-        pairedMilkingActionOption = AddToggleOption("Allow Paired Milking Action", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) == 1)
-        giveMilkActionOption = AddToggleOption("Allow Give-and-Drink Actions", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkAction", 1) == 1)
-        createMilkMaidActionOption = AddToggleOption("Allow Create Milk Maid Action", JsonUtil.GetIntValue(SettingsFile, "enableCreateMilkMaidAction", 1) == 1)
-        actorDrinkMilkRemovalOption = AddToggleOption("Milkmaid Giver Spends Milk", JsonUtil.GetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", 1) == 1)
-        Int breastfeedingCooldownFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) != 1
-            breastfeedingCooldownFlags = OPTION_FLAG_DISABLED
-        EndIf
-        breastfeedingActionCooldownOption = AddSliderOption("Breastfeeding Action Cooldown", JsonUtil.GetFloatValue(SettingsFile, "breastfeedingActionCooldown", 45.0), "{0} seconds", breastfeedingCooldownFlags)
-        Int giveMilkCooldownFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkAction", 1) != 1
-            giveMilkCooldownFlags = OPTION_FLAG_DISABLED
-        EndIf
-        giveMilkActionCooldownOption = AddSliderOption("Give Milk Action Cooldown", JsonUtil.GetFloatValue(SettingsFile, "giveMilkActionCooldown", 0.0), "{0} seconds", giveMilkCooldownFlags)
-        AddHeaderOption("AI Reactions")
-        milkFullNarrationOption = AddToggleOption("Narrate Milk Full", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarration", 1) == 1)
-        Int narrationFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarration", 1) != 1
-            narrationFlags = OPTION_FLAG_DISABLED
-        EndIf
-        milkFullNarrationCooldownOption = AddSliderOption("Milk Full Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "milkFullNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
-        milkHalfFullNarrationOption = AddToggleOption("Half-Full Milk Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarration", 1) == 1)
-        narrationFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarration", 1) != 1
-            narrationFlags = OPTION_FLAG_DISABLED
-        EndIf
-        milkHalfFullNarrationCooldownOption = AddSliderOption("Half-Full Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "milkHalfFullNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
-        playerDrinkNarrationOption = AddToggleOption("Player Drink Narration", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0) == 1)
-        narrationFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0) != 1
-            narrationFlags = OPTION_FLAG_DISABLED
-        EndIf
-        playerDrinkNarrationCooldownOption = AddSliderOption("Player Drink Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
-        playerDrinkNarrationChanceOption = AddSliderOption("Player Drink Narration Chance", JsonUtil.GetIntValue(SettingsFile, "playerDrinkNarrationChance", 25), "{0}%", narrationFlags)
-        milkmaidCreatedNarrationOption = AddToggleOption("New Milk Maid Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarration", 1) == 1)
-        narrationFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarration", 1) != 1
-            narrationFlags = OPTION_FLAG_DISABLED
-        EndIf
-        milkmaidCreatedNarrationCooldownOption = AddSliderOption("New Milk Maid Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "milkmaidCreatedNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
-        npcDrinkNarrationOption = AddToggleOption("NPC Drink Narration", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarration", 1) == 1)
-        narrationFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarration", 1) != 1
-            narrationFlags = OPTION_FLAG_DISABLED
-        EndIf
-        npcDrinkNarrationCooldownOption = AddSliderOption("NPC Drink Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "npcDrinkNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
-        Return
-    EndIf
-    If page == "Milk Armor Thoughts"
-        AddHeaderOption("Milk Armor Thoughts")
-        milkMaidThoughtsOption = AddToggleOption("Enable Milk Armor Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughts", 1) == 1)
-        milkMaidThoughtsIntervalOption = AddSliderOption("Poll Interval", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0), "{0} game hours")
-        milkMaidThoughtsRandomnessOption = AddSliderOption("Randomness (+/-)", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0), "{0} game hours")
-        milkMaidThoughtNarrationOption = AddToggleOption("Skyrim.Net Thought Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtNarration", 1) == 1)
-        armorThoughtSoundsOption = AddToggleOption("Armor Thought Sounds", JsonUtil.GetIntValue(SettingsFile, "enableArmorThoughtSounds", 1) == 1)
-        AddHeaderOption("Devious Heavy Bondage")
-        boundMilkMaidThoughtsOption = AddToggleOption("Bound Milk Maid Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughts", 1) == 1)
-        boundMilkMaidThoughtsIntervalOption = AddSliderOption("Bound Thought Interval", JsonUtil.GetFloatValue(SettingsFile, "boundMilkMaidThoughtsInterval", 24.0), "{0} game hours")
-        boundMilkMaidThoughtsRandomnessOption = AddSliderOption("Bound Randomness (+/-)", JsonUtil.GetFloatValue(SettingsFile, "boundMilkMaidThoughtsRandomness", 12.0), "{0} game hours")
-        boundMilkMaidThoughtsChanceOption = AddSliderOption("Bound Thought Chance", JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtsChance", 100), "{0}%")
-        boundMilkMaidThoughtNarrationOption = AddToggleOption("Skyrim.Net Bound Narration", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughtNarration", 1) == 1)
-        boundMilkMaidThoughtNarrationChanceOption = AddSliderOption("Bound Narration Chance", JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationChance", 100), "{0}%")
-        boundMilkMaidThoughtSoundsOption = AddToggleOption("Devious Restraint Moans", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughtSounds", 1) == 1)
-        boundMilkDrinkReactionOption = AddToggleOption("Milk Drink Restraint Reaction", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkDrinkReaction", 1) == 1)
-        boundMilkDrinkReactionChanceOption = AddSliderOption("Milk Drink Reaction Chance", JsonUtil.GetIntValue(SettingsFile, "boundMilkDrinkReactionChance", 50), "{0}%")
-        Return
-    EndIf
-    If page == "Armor Effects"
-        AddHeaderOption("Living / Parasite Armor")
-        armorInjectionOption = AddToggleOption("Enable Effects", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjections", 1) == 1)
-        armorInjectionIntervalOption = AddSliderOption("Base Effect Interval", JsonUtil.GetFloatValue(SettingsFile, "armorInjectionInterval", 12.0), "{0} game hours")
-        armorInjectionVariationOption = AddSliderOption("Interval Variation (+/-)", JsonUtil.GetFloatValue(SettingsFile, "armorInjectionVariation", 4.0), "{0} game hours")
-        armorInjectionChanceOption = AddSliderOption("Effect Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionChance", 100), "{0}%")
-        AddHeaderOption("Notifications")
-        armorInjectionNotificationOption = AddToggleOption("Show Effect Notifications", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNotifications", 1) == 1)
-        armorInjectionSoundOption = AddToggleOption("Notification Sound", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionSounds", 1) == 1)
-        AddHeaderOption("Skyrim.Net Narration")
-        armorInjectionNarrationOption = AddToggleOption("Enable Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNarration", 1) == 1)
-        armorInjectionPlayerNarrationOption = AddToggleOption("Enable Player Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionPlayerNarration", 1) == 1)
-        armorInjectionNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationChance", 100), "{0}%")
-        SetCursorPosition(1)
-        AddHeaderOption("Dwemer Armor")
-        dwemerEffectOption = AddToggleOption("Enable Effects", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffects", 1) == 1)
-        dwemerEffectIntervalOption = AddSliderOption("Base Effect Interval", JsonUtil.GetFloatValue(SettingsFile, "dwemerEffectInterval", 12.0), "{0} game hours")
-        dwemerEffectVariationOption = AddSliderOption("Interval Variation (+/-)", JsonUtil.GetFloatValue(SettingsFile, "dwemerEffectVariation", 4.0), "{0} game hours")
-        dwemerEffectChanceOption = AddSliderOption("Effect Chance", JsonUtil.GetIntValue(SettingsFile, "dwemerEffectChance", 100), "{0}%")
-        AddHeaderOption("Notifications")
-        dwemerEffectNotificationOption = AddToggleOption("Show Effect Notifications", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectNotifications", 1) == 1)
-        dwemerEffectSoundOption = AddToggleOption("Notification Sound", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectSounds", 1) == 1)
-        AddHeaderOption("Skyrim.Net Narration")
-        dwemerEffectNarrationOption = AddToggleOption("Enable Narration", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectNarration", 1) == 1)
-        dwemerEffectPlayerNarrationOption = AddToggleOption("Enable Player Narration", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectPlayerNarration", 1) == 1)
-        dwemerEffectNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "dwemerEffectNarrationChance", 100), "{0}%")
-        ; Shared settings occupy twelve rows in each column. Tier settings
-        ; belong only to Living/Parasite and share rows by intensity.
-        SetCursorPosition(24)
-        AddHeaderOption("Living / Parasite Tease Intensity")
-        SetCursorPosition(25)
-        AddHeaderOption("Living / Parasite Animation Durations")
-        String[] tierLabels = new String[4]
-        tierLabels[0] = "Low"
-        tierLabels[1] = "Medium"
-        tierLabels[2] = "High"
-        tierLabels[3] = "Extreme"
-        Int tierIndex = 0
-        While tierIndex < 4
-            SetCursorPosition(26 + tierIndex * 2)
-            tentacleChanceOptions[tierIndex] = AddSliderOption(tierLabels[tierIndex] + " Tease Chance", JsonUtil.GetIntValue(SettingsFile, MMETentacleTiers.ChanceKey(tierIndex + 1), MMETentacleTiers.DefaultChance(tierIndex + 1)), "{0}%")
-            SetCursorPosition(27 + tierIndex * 2)
-            tentacleDurationOptions[tierIndex] = AddSliderOption(tierLabels[tierIndex] + " Animation Duration", MMETentacleTiers.Duration(tierIndex + 1), "{1} seconds")
-            tierIndex += 1
-        EndWhile
-        SetCursorPosition(34)
-        AddHeaderOption("Living / Parasite Diagnostics")
-        armorInjectionDiagnosticOption = AddToggleOption("Enable Effect Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", 0) == 1)
-        runArmorInjectionCheckOption = AddTextOption("Run Effect Check Now", "RUN")
-        SetCursorPosition(35)
-        AddHeaderOption("Dwemer Diagnostics")
-        dwemerEffectDiagnosticOption = AddToggleOption("Enable Effect Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectDiagnostics", 0) == 1)
-        runDwemerEffectCheckOption = AddTextOption("Run Effect Check Now", "RUN")
-        Return
-    EndIf
-    If page == "Troubleshoot"
-        AddHeaderOption("Narration JSON")
-        narrationReloadOption = AddTextOption("Reload Narration JSON", "RELOAD")
-        narrationImportOption = AddTextOption("Import Legacy Narration", "IMPORT")
-        AddHeaderOption("Output")
-        diagnosticNotificationsOption = AddToggleOption("In-Game Audit Notifications", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticNotifications", 1) == 1)
-        AddHeaderOption("Actions")
-        diagnosticRefreshGateOption = AddTextOption("Refresh OStim Dialogue Gate", "RUN")
-        diagnosticInstallAuditOption = AddTextOption("Run Install Audit", "RUN")
-        diagnosticMilkDrinkAuditOption = AddTextOption("Run Milk Drink Audit", "RUN")
-        diagnosticSpawnOManiaPotionOption = AddTextOption("Spawn OMania Dragon Egg Potion", "SPAWN")
-        diagnosticGlobalNPCDrinkTestOption = AddTextOption("Test Global NPC Milk Drink", "RUN")
-        diagnosticDialogueAuditOption = AddTextOption("Run Crosshair Dialogue Audit", "RUN")
-        diagnosticNewMilkmaidSexLabBusOption = AddTextOption("Run New Milk Maid Bus Test", "RUN")
-        diagnosticRefreshSexLabBusOption = AddTextOption("Refresh SexLab Bus Listeners", "RUN")
-        diagnosticShowSexLabBusOption = AddTextOption("Show Last SexLab Bus Report", "RUN")
-        diagnosticBlacksmithBusOption = AddTextOption("Run Blacksmith Dialogue Bus Test", "RUN")
-        diagnosticShowBlacksmithBusOption = AddTextOption("Show Last Blacksmith Bus Report", "RUN")
-        diagnosticAlchemistBusOption = AddTextOption("Run Alchemist Dialogue Bus Test", "RUN")
-        diagnosticShowAlchemistBusOption = AddTextOption("Show Last Alchemist Bus Report", "RUN")
-        diagnosticMageBusOption = AddTextOption("Run Mage Dialogue Bus Test", "RUN")
-        diagnosticShowMageBusOption = AddTextOption("Show Last Mage Bus Report", "RUN")
-        AddHeaderOption("Live Status")
-        diagnosticInstallStatusOption = AddTextOption("MME Extensions Records", MMEDiagnostics.GetInstallStatus(), OPTION_FLAG_DISABLED)
-        diagnosticOStimStatusOption = AddTextOption("OStim Integration", MMEDiagnostics.GetOStimStatus(), OPTION_FLAG_DISABLED)
-        diagnosticSexLabStatusOption = AddTextOption("SexLab Framework", MMEDiagnostics.GetSexLabStatus(), OPTION_FLAG_DISABLED)
-        diagnosticGateStatusOption = AddTextOption("OStim Dialogue Gate", MMEDiagnostics.GetGateStatus(), OPTION_FLAG_DISABLED)
-        diagnosticSexLabBusStateOption = AddTextOption("New Milk Maid SexLab Bus", MMEDiagnostics.GetNewMilkMaidSexLabBusState(), OPTION_FLAG_DISABLED)
-        diagnosticSexLabBusStopOption = AddTextOption("Last SexLab Bus Stop", MMEDiagnostics.GetNewMilkMaidSexLabBusStop(), OPTION_FLAG_DISABLED)
-        diagnosticSexLabBusFailureOption = AddTextOption("Last SexLab Bus Failure", MMEDiagnostics.GetNewMilkMaidSexLabBusFailure(), OPTION_FLAG_DISABLED)
-        diagnosticBlacksmithBusStateOption = AddTextOption("Blacksmith Dialogue Bus", MMEDiagnostics.GetBlacksmithDialogueBusState(), OPTION_FLAG_DISABLED)
-        diagnosticBlacksmithBusStopOption = AddTextOption("Last Blacksmith Bus Stop", MMEDiagnostics.GetBlacksmithDialogueBusStop(), OPTION_FLAG_DISABLED)
-        diagnosticBlacksmithBusFailureOption = AddTextOption("Last Blacksmith Bus Failure", MMEDiagnostics.GetBlacksmithDialogueBusFailure(), OPTION_FLAG_DISABLED)
-        diagnosticAlchemistBusStateOption = AddTextOption("Alchemist Dialogue Bus", MMEDiagnostics.GetAlchemistDialogueBusState(), OPTION_FLAG_DISABLED)
-        diagnosticAlchemistBusStopOption = AddTextOption("Last Alchemist Bus Stop", MMEDiagnostics.GetAlchemistDialogueBusStop(), OPTION_FLAG_DISABLED)
-        diagnosticAlchemistBusFailureOption = AddTextOption("Last Alchemist Bus Failure", MMEDiagnostics.GetAlchemistDialogueBusFailure(), OPTION_FLAG_DISABLED)
-        diagnosticMageBusStateOption = AddTextOption("Mage Dialogue Bus", MMEDiagnostics.GetMageDialogueBusState(), OPTION_FLAG_DISABLED)
-        diagnosticMageBusStopOption = AddTextOption("Last Mage Bus Stop", MMEDiagnostics.GetMageDialogueBusStop(), OPTION_FLAG_DISABLED)
-        diagnosticMageBusFailureOption = AddTextOption("Last Mage Bus Failure", MMEDiagnostics.GetMageDialogueBusFailure(), OPTION_FLAG_DISABLED)
-        SetCursorPosition(1)
-        AddHeaderOption("Papyrus Logging")
-        papyrusTraceOption = AddToggleOption("Papyrus Logging", JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) == 1)
-        Int verboseTraceFlags = OPTION_FLAG_NONE
-        If JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) != 1
-            verboseTraceFlags = OPTION_FLAG_DISABLED
-        EndIf
-        verbosePapyrusTraceOption = AddToggleOption("Verbose Papyrus Logging", JsonUtil.GetIntValue(SettingsFile, "enableVerbosePapyrusLogging", 0) == 1, verboseTraceFlags)
-        Return
-    EndIf
-    If page == "Debug"
-        AddHeaderOption("MME Extensions")
-        masterEnableOption = AddToggleOption("Enable MME Extensions", JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1) == 1)
-        AddHeaderOption("Core / Development")
-        lifecycleDiagnosticOption = AddToggleOption("Location Wait Load", JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0) == 1)
-        milkmaidCreationDiagnosticOption = AddToggleOption("Milkmaid Creation Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 1) == 1)
-        nativeScanDiagnosticOption = AddToggleOption("Native Actor Scan Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0) == 1)
-        debugMilkingEventsOption = AddToggleOption("Report Milking Start/End", JsonUtil.GetIntValue(SettingsFile, "enableMilkingEventDebug", 1) == 1)
-        debugMilkReportOption = AddToggleOption("Milk Status Every 5 Seconds", JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0) == 1)
-        AddHeaderOption("Milk Drinking")
-        addMilkDebugOption = AddToggleOption("Milk Drinking Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1)
-        breastfeedingMilkEffectsDebugOption = AddToggleOption("Breastfeeding Milk Effects", JsonUtil.GetIntValue(SettingsFile, "enableBreastfeedingMilkEffectsDebug", 0) == 1)
-        npcMilkConsumptionDiagnosticOption = AddToggleOption("NPC Milk Consumption", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0) == 1)
-        npcDrinkNotificationsDiagnosticOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1)
-        AddHeaderOption("Armor Debug")
-        armorStrippingCheckDiagnosticOption = AddToggleOption("Armor Stripping Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0) == 1)
-        armorStripNotificationDiagnosticOption = AddToggleOption("Strip Notification Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNotificationDiagnostic", 0) == 1)
-        armorStripMoanDiagnosticOption = AddToggleOption("Strip Moan Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripMoanDiagnostic", 0) == 1)
-        armorStripNarrationDiagnosticOption = AddToggleOption("Strip Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarrationDiagnostic", 0) == 1)
-        armorDebugOption = AddToggleOption("Equip Reaction Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0) == 1)
-        armorLookupForensicsOption = AddToggleOption("Armor Lookup Forensics", JsonUtil.GetIntValue(SettingsFile, "enableArmorLookupForensics", 0) == 1)
-        AddHeaderOption("A" + "nimations ")
-        milkDrinkAnimationDiagnosticOption = AddToggleOption("Milk Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1)
-        fullnessSelfMilkAnimationDiagnosticOption = AddToggleOption("Fullness Animation", JsonUtil.GetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0) == 1)
-        selfMilkingActionDiagnosticOption = AddToggleOption("Self-Milking Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0) == 1)
-        pairedMilkingActionDiagnosticOption = AddToggleOption("Paired Milking Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0) == 1)
-        giveMilkActionDiagnosticOption = AddToggleOption("Give Milk Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkActionDiagnostic", 0) == 1)
-        SetCursorPosition(1)
-        AddHeaderOption("Skyrim.Net")
-        skyrimNetDrinkDiagnosticOption = AddToggleOption("Milk Drink Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0) == 1)
-        skyrimNetMilkingDiagnosticOption = AddToggleOption("Milking Start/End Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingDiagnostic", 0) == 1)
-        skyrimNetCreationDiagnosticOption = AddToggleOption("New Milkmaid Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetCreationDiagnostic", 0) == 1)
-        skyrimNetStatusDiagnosticOption = AddToggleOption("Nearby Milk Status Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", 0) == 1)
-        skyrimNetPromptDiagnosticOption = AddToggleOption("Milkmaid Bio Prompt", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 0) == 1)
-        skyrimNetOStimTraceOption = AddToggleOption("Skyrim.Net OStim Trace", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetOStimTrace", 0) == 1)
-        skyrimNetSexLabTraceOption = AddToggleOption("Skyrim.Net SexLab Trace", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetSexLabTrace", 0) == 1)
-        milkFullNarrationDiagnosticOption = AddToggleOption("Milk Full Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarrationDiagnostic", 0) == 1)
-        milkHalfFullNarrationDiagnosticOption = AddToggleOption("Half-Full Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarrationDiagnostic", 0) == 1)
-        playerDrinkNarrationDiagnosticOption = AddToggleOption("Player Drink Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", 0) == 1)
-        npcDrinkNarrationDiagnosticOption = AddToggleOption("NPC Drink Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarrationDiagnostic", 0) == 1)
-        milkmaidCreatedNarrationDiagnosticOption = AddToggleOption("New Milk Maid Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarrationDiagnostic", 0) == 1)
-        AddHeaderOption("Dialogue")
-        sexLabBreastfeedingDebugOption = AddToggleOption("SexLab Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1)
-        ostimDebugOption = AddToggleOption("OStim Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1)
-        newMilkmaidDialogueTraceOption = AddToggleOption("New Milkmaid Dialogue Trace", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0) == 1)
-        newMilkmaidSexLabTraceOption = AddToggleOption("New Milk Maid SexLab Trace", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidSexLabTrace", 0) == 1)
-        blacksmithDialogueTraceOption = AddToggleOption("Blacksmith Dialogue Live Trace", JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDialogueTrace", 0) == 1)
-        alchemistDialogueTraceOption = AddToggleOption("Alchemist Dialogue Live Trace", JsonUtil.GetIntValue(SettingsFile, "enableAlchemistDialogueTrace", 0) == 1)
-        mageDialogueTraceOption = AddToggleOption("Mage Dialogue Live Trace", JsonUtil.GetIntValue(SettingsFile, "enableMageDialogueTrace", 0) == 1)
-        AddHeaderOption("Milk Armor Thoughts")
-        milkMaidThoughtsDebugOption = AddToggleOption("15 Second Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1)
-        traceMilkMaidThoughtsLogicOption = AddToggleOption("Trace Thoughts Logic", JsonUtil.GetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0) == 1)
-        Return
-    EndIf
-    AddHeaderOption("Milk Maid Roster")
-    rosterEnabledOption = AddToggleOption("Enable Milk Maid Roster", JsonUtil.GetIntValue(SettingsFile, "maidRosterUiEnabled", 1) == 1)
-    Int rosterFlags = OPTION_FLAG_NONE
-    If !RosterUiAvailable() || JsonUtil.GetIntValue(SettingsFile, "maidRosterUiEnabled", 1) != 1 || JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1) != 1
-        rosterFlags = OPTION_FLAG_DISABLED
-    EndIf
-    rosterOpenOption = AddTextOption("Open Milk Maid Roster", "OPEN", rosterFlags)
-    rosterKeyOption = AddKeyMapOption("Milk Maid Roster Hotkey", JsonUtil.GetIntValue(SettingsFile, "maidRosterHotkey", -1))
-    AddHeaderOption("Sounds")
-    soundsOption = AddToggleOption("Enable Moaning Sounds", JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1) == 1)
-    drinkMoansOption = AddToggleOption("Drink Milk Moans", JsonUtil.GetIntValue(SettingsFile, "enableDrinkMoans", 1) == 1)
-    fullnessMoansOption = AddToggleOption("Milk Fullness Moans", JsonUtil.GetIntValue(SettingsFile, "enableFullnessMoans", 1) == 1)
-    milkingMoansOption = AddToggleOption("Milking Start/End Moans", JsonUtil.GetIntValue(SettingsFile, "enableMilkingMoans", 1) == 1)
-    newMilkMaidMoansOption = AddToggleOption("New Milk Maid Moans", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkMaidMoans", 1) == 1)
-    volumeOption = AddSliderOption("Moaning Sound Volume", JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0), "{0}%")
-    AddHeaderOption("Capacity Tracker")
-    capacityOption = AddToggleOption("Enable 50% Capacity Reactions", JsonUtil.GetIntValue(SettingsFile, "enableCapacityReactions", 1) == 1)
-    pollingOption = AddToggleOption("Enable Capacity Polling", JsonUtil.GetIntValue(SettingsFile, "enableCapacityPolling", 1) == 1)
-    pollingIntervalOption = AddSliderOption("Capacity Polling Interval", JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 15.0), "{0} seconds")
-    notificationOption = AddToggleOption("Enable Capacity Notifications", JsonUtil.GetIntValue(SettingsFile, "enableCapacityNotifications", 1) == 1)
-    AddHeaderOption("Breast Bounce Reactions")
-    breastBounceNotificationOption = AddToggleOption("Breast Bounce Notifications", JsonUtil.GetIntValue(SettingsFile, "enableBreastBounceNotifications", 1) == 1)
-    breastBounceSoundOption = AddToggleOption("Breast Bounce Sounds", JsonUtil.GetIntValue(SettingsFile, "enableBreastBounceSounds", 1) == 1)
-    breastBounceIntervalOption = AddSliderOption("Reaction Interval", JsonUtil.GetFloatValue(SettingsFile, "breastBounceIntervalHours", 24.0), "{0} game hours")
-    breastBounceVariationOption = AddSliderOption("Interval Variation", JsonUtil.GetFloatValue(SettingsFile, "breastBounceVariationHours", 4.0), "+/- {0} game hours")
-    breastBounceDelayOption = AddSliderOption("Maximum Reaction Delay", JsonUtil.GetFloatValue(SettingsFile, "breastBounceMaximumDelaySeconds", 30.0), "{0} seconds")
 EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
+    If option == installedBackendOption
+        SetInfoText("Read-only installed backend selected by the FOMOD: Standard SexLab, SexLab P+, or OStim-only. Change the installed backend by reinstalling the matching FOMOD choice. The OStim breastfeeding toggle only controls breastfeeding routes.")
+        Return
+    EndIf
     Int teaseTierIndex = TentacleOptionIndex(option, False)
     If teaseTierIndex >= 0
         If teaseTierIndex == 0
@@ -3063,11 +2451,11 @@ Event OnOptionHighlight(Int option)
     ElseIf option == npcFullnessSelfMilkAnimationDurationOption
         SetInfoText("Set how long NPC fullness self-milk animations play before the actor returns to idle.")
     ElseIf option == ostimBreastfeedingOption
-        SetInfoText("Add optional OStim nipple-sucking choices beside MME's original SexLab breastfeeding dialogue.")
+        SetInfoText("Enable OStim breastfeeding dialogue and scenes when OStim is available. This controls breastfeeding only; it does not switch the installed Standard SexLab, P+, or OStim-only backend. For OStim-only installs, keep this enabled to use breastfeeding.")
     ElseIf option == ostimBreastfeedingDurationOption
         SetInfoText("Set how long the dedicated fixed OStim breastfeeding scene runs. This is independent of MME milking completion.")
     ElseIf option == ostimStatusOption
-        SetInfoText("Read-only. Enabled when OStim.esp is active in the load order.")
+        SetInfoText("Read-only. Shows whether OStim.esp is active. The installed backend is shown separately; plugin detection alone does not verify scene readiness.")
     ElseIf option == ostimDebugOption
         SetInfoText("Show in-game reasons when OStim breastfeeding is unavailable, blocked, or fails to start.")
     ElseIf option == newMilkmaidDialogueTraceOption
@@ -5552,4 +4940,825 @@ Int Function TentacleOptionIndex(Int option, Bool duration)
         index += 1
     EndWhile
     Return -1
+EndFunction
+
+; Original MME shortcut; no duplicate saved setting.
+State OGMilkSelf
+    Event OnSelectST()
+        MMEOriginalSettings.Toggle(Self, "MilkSelf")
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Adds or removes the original MME self-milking spell from the player. This is the same spell toggle as the original MME menu.")
+    EndEvent
+EndState
+
+; Original MME shortcut; no duplicate saved setting.
+State OGMilkFriend
+    Event OnSelectST()
+        MMEOriginalSettings.Toggle(Self, "MilkFriend")
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Adds or removes the original MME target-milking spell from the player. Cast it on a friend to use MME's normal milking route.")
+    EndEvent
+EndState
+
+; Original MME shortcut; no duplicate saved setting.
+State OGMastery
+    Event OnSliderOpenST()
+        MMEOriginalSettings.OpenSlider(Self, "Mastery")
+    EndEvent
+    Event OnSliderAcceptST(Float value)
+        MMEOriginalSettings.SetSlider(Self, "Mastery", value)
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Directly sets global MME Milk Mastery (0-40). Higher mastery unlocks more Milk Maid slots, allowing you to have more Milk Maids within MME's limits. This is global progression, separate from each maid's individual level.")
+    EndEvent
+EndState
+
+; Original MME shortcut; no duplicate saved setting.
+State OGLeveling
+    Event OnMenuOpenST()
+        MMEOriginalSettings.OpenDifficulty(Self)
+    EndEvent
+    Event OnMenuAcceptST(Int index)
+        MMEOriginalSettings.SetDifficulty(Self, index)
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Controls how much milking is required to progress. Faster presets require less milking. This original MME Difficulty setting also affects the economy and refreshes its market properties.")
+    EndEvent
+EndState
+
+; Original MME shortcut; no duplicate saved setting.
+State OGSpeed
+    Event OnSliderOpenST()
+        MMEOriginalSettings.OpenSlider(Self, "Speed")
+    EndEvent
+    Event OnSliderAcceptST(Float value)
+        MMEOriginalSettings.SetSlider(Self, "Speed", value)
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Percentage of remaining milk extracted each cycle, with at least one unit extracted when milk is available. Higher values empty milk faster. Total time depends on milk amount and Milking Cycle Duration. Original name: Milking Gush Effect.")
+    EndEvent
+EndState
+
+; Original MME shortcut; no duplicate saved setting.
+State OGDuration
+    Event OnSliderOpenST()
+        MMEOriginalSettings.OpenSlider(Self, "Duration")
+    EndEvent
+    Event OnSliderAcceptST(Float value)
+        MMEOriginalSettings.SetSlider(Self, "Duration", value)
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Seconds per milking cycle, not total session length. Total milking time depends on the amount of milk and Milking Speed.")
+    EndEvent
+EndState
+
+; Original MME shortcut; no duplicate saved setting.
+State OGProduction
+    Event OnSliderOpenST()
+        MMEOriginalSettings.OpenSlider(Self, "Production")
+    EndEvent
+    Event OnSliderAcceptST(Float value)
+        MMEOriginalSettings.SetSlider(Self, "Production", value)
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Scales original MME milk production: 100% is normal, 0% stops production, 200% doubles it. Shared with original MME.")
+    EndEvent
+EndState
+
+; Original MME shortcut; no duplicate saved setting.
+State OGFixed
+    Event OnSelectST()
+        MMEOriginalSettings.Toggle(Self, "Fixed")
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Uses MME's fixed production formula for all Milk Maids instead of its lactacid-dependent dynamic formula. The formula still respects MME modifiers and Milk Production Rate.")
+    EndEvent
+EndState
+
+; Original MME shortcut; no duplicate saved setting.
+State OGPrices
+    Event OnSliderOpenST()
+        MMEOriginalSettings.OpenSlider(Self, "Prices")
+    EndEvent
+    Event OnSliderAcceptST(Float value)
+        MMEOriginalSettings.SetSlider(Self, "Prices", value)
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Multiplies original MME economy milk prices by this amount. Shared with the original Modify milk prices by setting.")
+    EndEvent
+EndState
+
+; Original MME shortcut; no duplicate saved setting.
+State OGDebuffs
+    Event OnSelectST()
+        MMEOriginalSettings.Toggle(Self, "Debuffs")
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Controls original MME buffs AND debuffs. Original penalties can stack with Extensions penalties when both are enabled. Does not toggle Extensions effects.")
+    EndEvent
+EndState
+
+; Original MME shortcut; no duplicate saved setting.
+State OGPerMilk
+    Event OnSliderOpenST()
+        MMEOriginalSettings.OpenSlider(Self, "PerMilk")
+    EndEvent
+    Event OnSliderAcceptST(Float value)
+        MMEOriginalSettings.SetSlider(Self, "PerMilk", value)
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Original MME global breast-growth increase per unit of milk. Existing individual-maid overrides remain in effect. Range and units follow MME's breast-volume scaling mode.")
+    EndEvent
+EndState
+
+; Original MME shortcut; no duplicate saved setting.
+State OGPerLevel
+    Event OnSliderOpenST()
+        MMEOriginalSettings.OpenSlider(Self, "PerLevel")
+    EndEvent
+    Event OnSliderAcceptST(Float value)
+        MMEOriginalSettings.SetSlider(Self, "PerLevel", value)
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Original MME global breast-growth increase per Milk Maid level. Existing individual-maid overrides remain in effect. Range and units follow MME's breast-volume scaling mode.")
+    EndEvent
+EndState
+
+; Original MME shortcut; no duplicate saved setting.
+State OGMaxSize
+    Event OnSliderOpenST()
+        MMEOriginalSettings.OpenSlider(Self, "MaxSize")
+    EndEvent
+    Event OnSliderAcceptST(Float value)
+        MMEOriginalSettings.SetSlider(Self, "MaxSize", value)
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Original MME visual breast-size limit. Zero means unlimited. Refreshes current Milk Maids using MME's normal size calculation; breast scaling must be enabled in MME to see growth.")
+    EndEvent
+EndState
+
+; Page builders own layout only. Existing setting keys and callbacks are retained.
+
+Function DrawBodyPage()
+    MMEOriginalSettings.DrawBody(Self)
+    AddHeaderOption("Milk Fullness Reactions")
+    capacityOption = AddToggleOption("Enable 50% Capacity Reactions", JsonUtil.GetIntValue(SettingsFile, "enableCapacityReactions", 1) == 1)
+    notificationOption = AddToggleOption("Enable Capacity Notifications", JsonUtil.GetIntValue(SettingsFile, "enableCapacityNotifications", 1) == 1)
+    fullnessMoansOption = AddToggleOption("Milk Fullness Moans", JsonUtil.GetIntValue(SettingsFile, "enableFullnessMoans", 1) == 1)
+    AddHeaderOption("Player Fullness")
+    playerHalfFullSelfMilkAnimationOption = AddToggleOption("Player Half-Full Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerHalfFullSelfMilkAnimation", 0) == 1)
+    playerFullSelfMilkAnimationOption = AddToggleOption("Player Full Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerFullSelfMilkAnimation", 0) == 1)
+    playerFullnessSelfMilkAnimationDurationOption = AddSliderOption("Player Fullness Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "playerFullnessSelfMilkAnimationDuration", 3.0), "{0} seconds")
+    AddHeaderOption("NPC Fullness")
+    npcHalfFullSelfMilkAnimationOption = AddToggleOption("NPC Half-Full Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCHalfFullSelfMilkAnimation", 1) == 1)
+    npcFullSelfMilkAnimationOption = AddToggleOption("NPC Full Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCFullSelfMilkAnimation", 1) == 1)
+    npcFullnessSelfMilkAnimationDurationOption = AddSliderOption("NPC Fullness Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "npcFullnessSelfMilkAnimationDuration", 3.0), "{0} seconds")
+    AddHeaderOption("Breast Bounce Reactions")
+    breastBounceNotificationOption = AddToggleOption("Breast Bounce Notifications", JsonUtil.GetIntValue(SettingsFile, "enableBreastBounceNotifications", 1) == 1)
+    breastBounceSoundOption = AddToggleOption("Breast Bounce Sounds", JsonUtil.GetIntValue(SettingsFile, "enableBreastBounceSounds", 1) == 1)
+    breastBounceIntervalOption = AddSliderOption("Reaction Interval", JsonUtil.GetFloatValue(SettingsFile, "breastBounceIntervalHours", 24.0), "{0} game hours")
+    breastBounceVariationOption = AddSliderOption("Interval Variation", JsonUtil.GetFloatValue(SettingsFile, "breastBounceVariationHours", 4.0), "+/- {0} game hours")
+    breastBounceDelayOption = AddSliderOption("Maximum Reaction Delay", JsonUtil.GetFloatValue(SettingsFile, "breastBounceMaximumDelaySeconds", 30.0), "{0} seconds")
+    AddHeaderOption("Movement Slap")
+    movementSlapOption = AddToggleOption("Movement Slap Sounds", JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1) == 1)
+    Int movementSoundFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1) != 1 || JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1) != 1
+        movementSoundFlags = OPTION_FLAG_DISABLED
+    EndIf
+    movementSlapVolumeOption = AddSliderOption("Movement Slap Volume", JsonUtil.GetFloatValue(SettingsFile, "movementSlapVolume", 100.0), "{0}%", movementSoundFlags)
+    movementSlapNotificationsOption = AddToggleOption("Movement Slap Notifications", JsonUtil.GetIntValue(SettingsFile, "enableMovementSlapNotifications", 1) == 1)
+    Int movementNotificationFlags = movementSoundFlags
+    If JsonUtil.GetIntValue(SettingsFile, "enableMovementSlapNotifications", 1) != 1
+        movementNotificationFlags = OPTION_FLAG_DISABLED
+    EndIf
+    movementSlapNotificationCooldownOption = AddSliderOption("Notification Cooldown", JsonUtil.GetFloatValue(SettingsFile, "movementSlapNotificationCooldownHours", 8.0), "{0} game hours", movementNotificationFlags)
+    AddHeaderOption("Advanced Fullness Monitoring")
+    pollingOption = AddToggleOption("Enable Capacity Polling", JsonUtil.GetIntValue(SettingsFile, "enableCapacityPolling", 1) == 1)
+    pollingIntervalOption = AddSliderOption("Capacity Polling Interval", JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 15.0), "{0} seconds")
+    SetCursorPosition(1)
+    AddHeaderOption("Milk Maid Appearance")
+    maidWeightScalingOption = AddToggleOption("Scale Weight with Maid Level", MMEMaidWeightScaling.IsEnabled())
+    Int maidWeightFlags = OPTION_FLAG_NONE
+    If !MMEMaidWeightScaling.IsEnabled()
+        maidWeightFlags = OPTION_FLAG_DISABLED
+    EndIf
+    maidWeightPerLevelOption = AddSliderOption("Weight per Maid Level", MMEMaidWeightScaling.GetWeightPerLevel(), "+{0}", maidWeightFlags)
+    AddHeaderOption("Milk Maid Body Morphs")
+    maidBodyScalingOption = AddToggleOption("Level-Based Body Scaling", JsonUtil.GetIntValue(SettingsFile, "enableMaidBodyScaling", 0) == 1)
+    Int bodyMorphFlags = OPTION_FLAG_DISABLED
+    If JsonUtil.GetIntValue(SettingsFile, "enableMaidBodyScaling", 0) == 1
+        bodyMorphFlags = OPTION_FLAG_NONE
+    EndIf
+    maidBodyMaxLevelOption = AddSliderOption("Maximum Scaling Maid Level", MMEMaidBodyScaling.GetMaxLevel(), "{0}", bodyMorphFlags)
+    maidBodyHipsOption = AddSliderOption("Hips at Maximum Level", MMEMaidBodyScaling.GetMaximum("Hips"), "{0}%", bodyMorphFlags)
+    maidBodyButtOption = AddSliderOption("Butt at Maximum Level", MMEMaidBodyScaling.GetMaximum("Butt"), "{0}%", bodyMorphFlags)
+    maidBodyThighsOption = AddSliderOption("Thighs at Maximum Level", MMEMaidBodyScaling.GetMaximum("Thighs"), "{0}%", bodyMorphFlags)
+    maidBodyCalfSizeOption = AddSliderOption("Calves at Maximum Level", MMEMaidBodyScaling.GetMaximum("CalfSize"), "{0}%", bodyMorphFlags)
+    maidBodyWaistOption = AddSliderOption("Waist at Maximum Level", MMEMaidBodyScaling.GetMaximum("Waist"), "{0}%", bodyMorphFlags)
+    maidBodyBellyOption = AddSliderOption("Belly at Maximum Level", MMEMaidBodyScaling.GetMaximum("Belly"), "{0}%", bodyMorphFlags)
+    maidBodyBigBellyOption = AddSliderOption("Big Belly at Maximum Level", MMEMaidBodyScaling.GetMaximum("BigBelly"), "{0}%", bodyMorphFlags)
+    maidBodyChubbyArmsOption = AddSliderOption("Chubby Arms at Maximum Level", MMEMaidBodyScaling.GetMaximum("ChubbyArms"), "{0}%", bodyMorphFlags)
+    maidBodyChubbyLegsOption = AddSliderOption("Chubby Legs at Maximum Level", MMEMaidBodyScaling.GetMaximum("ChubbyLegs"), "{0}%", bodyMorphFlags)
+    maidBodyChubbyWaistOption = AddSliderOption("Chubby Waist at Maximum Level", MMEMaidBodyScaling.GetMaximum("ChubbyWaist"), "{0}%", bodyMorphFlags)
+
+    AddHeaderOption("Milk Weight")
+    customMilkWeightOption = AddToggleOption("Milk Has Weight", JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkWeight", 0) == 1)
+    Int milkWeightFlags = OPTION_FLAG_DISABLED
+    If JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkWeight", 0) == 1
+        milkWeightFlags = OPTION_FLAG_NONE
+    EndIf
+    milkWeightMultiplierOption = AddSliderOption("Milk Weight Multiplier", JsonUtil.GetFloatValue(SettingsFile, "milkWeightMultiplier", 1.0), "x{0}", milkWeightFlags)
+    AddHeaderOption("Movement Speed")
+    customMilkSpeedDebuffOption = AddToggleOption("Custom Milk Speed Debuff", JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkSpeedDebuff", 0) == 1)
+    Int speedFlags = OPTION_FLAG_DISABLED
+    If JsonUtil.GetIntValue(SettingsFile, "enableCustomMilkSpeedDebuff", 0) == 1
+        speedFlags = OPTION_FLAG_NONE
+    EndIf
+    milkSpeedMediumThresholdOption = AddSliderOption("Medium Milk Threshold", JsonUtil.GetFloatValue(SettingsFile, "milkSpeedMediumThreshold", 50.0), "{0}%", speedFlags)
+    milkSpeedMediumPenaltyOption = AddSliderOption("Medium Speed Debuff", JsonUtil.GetFloatValue(SettingsFile, "milkSpeedMediumPenalty", 3.0), "{0}%", speedFlags)
+    milkSpeedHighThresholdOption = AddSliderOption("High Milk Threshold", JsonUtil.GetFloatValue(SettingsFile, "milkSpeedHighThreshold", 100.0), "{0}%", speedFlags)
+    milkSpeedHighPenaltyOption = AddSliderOption("High Speed Debuff", JsonUtil.GetFloatValue(SettingsFile, "milkSpeedHighPenalty", 10.0), "{0}%", speedFlags)
+    maidLevelSpeedScalingOption = AddToggleOption("Milk Maid Level Speed Scaling", JsonUtil.GetIntValue(SettingsFile, "enableMaidLevelSpeedScaling", 0) == 1, speedFlags)
+EndFunction
+
+Function DrawTrapsPage()
+    AddHeaderOption("Trapped Armor Chests")
+    chestArmorTrapOption = AddToggleOption("Enable Trap Armor Chest", JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap", 1) == 1)
+    Int armorTrapFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableChestArmorTrap", 1) != 1
+        armorTrapFlags = OPTION_FLAG_DISABLED
+    EndIf
+    armorTrapNearbyAlliesOption = AddToggleOption("Armor Traps Target Nearby Allies", JsonUtil.GetIntValue(SettingsFile, "enableArmorTrapNearbyAllies", 1) == 1, armorTrapFlags)
+    repeatTrapArmorStoriesOption = AddToggleOption("Repeat Trap Armor Stories", JsonUtil.GetIntValue(SettingsFile, "enableRepeatTrapArmorStories", 1) == 1, armorTrapFlags)
+    livingArmorChestTrapOption = AddToggleOption("Living Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableLivingArmorChestTrap", 1) == 1, armorTrapFlags)
+    parasiteArmorChestTrapOption = AddToggleOption("Parasite Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableParasiteArmorChestTrap", 1) == 1, armorTrapFlags)
+    dwemerArmorChestTrapOption = AddToggleOption("Dwemer Armor Traps", JsonUtil.GetIntValue(SettingsFile, "enableDwemerArmorChestTrap", 1) == 1, armorTrapFlags)
+    Int dwemerTrapFlags = armorTrapFlags
+    If JsonUtil.GetIntValue(SettingsFile, "enableDwemerArmorChestTrap", 1) != 1
+        dwemerTrapFlags = OPTION_FLAG_DISABLED
+    EndIf
+    dwemerArmorOutsideRuinsOption = AddToggleOption("Dwemer Armor Outside Ruins", JsonUtil.GetIntValue(SettingsFile, "enableDwemerArmorOutsideRuins", 0) == 1, dwemerTrapFlags)
+    dwemerRuinArmorTrapChanceOption = AddSliderOption("Dwemer Ruin Chance", JsonUtil.GetIntValue(SettingsFile, "dwemerRuinArmorTrapChance", 25), "{0}%", dwemerTrapFlags)
+    chestArmorTrapChanceOption = AddSliderOption("General Trap Chance", JsonUtil.GetIntValue(SettingsFile, "chestArmorTrapChance", 5), "{0}%", armorTrapFlags)
+    chestArmorTrapCooldownOption = AddSliderOption("Armor Trap Cooldown", JsonUtil.GetFloatValue(SettingsFile, "chestArmorTrapCooldownHours", 4.0), "{0} game hours", armorTrapFlags)
+    AddHeaderOption("Exotic Milk Chest Trap")
+    chestMilkTrapOption = AddToggleOption("Enable Exotic Milk Trap", JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrap", 1) == 1)
+    Int chestMilkTrapFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrap", 1) != 1
+        chestMilkTrapFlags = OPTION_FLAG_DISABLED
+    EndIf
+    milkDrinkTrapNearbyAlliesOption = AddToggleOption("Milk Drink Curse Targets Nearby Allies", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkTrapNearbyAllies", 1) == 1, chestMilkTrapFlags)
+    chestMilkTrapChanceOption = AddSliderOption("Chest Trap Chance", JsonUtil.GetIntValue(SettingsFile, "chestMilkTrapChance", 33), "{0}%", chestMilkTrapFlags)
+    chestMilkTrapCooldownOption = AddSliderOption("Base Cooldown", JsonUtil.GetFloatValue(SettingsFile, "chestMilkTrapCooldownHours", 1.0), "{0} game hours", chestMilkTrapFlags)
+    chestMilkTrapVariationOption = AddSliderOption("Random Variation", JsonUtil.GetFloatValue(SettingsFile, "chestMilkTrapCooldownVariation", 0.0), "+/- {0} game hours", chestMilkTrapFlags)
+    chestMilkTrapNotificationOption = AddToggleOption("Chest Drink Notification", JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrapNotification", 1) == 1, chestMilkTrapFlags)
+    chestMilkTrapNarrationOption = AddToggleOption("Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableChestMilkTrapNarration", 1) == 1, chestMilkTrapFlags)
+    SetCursorPosition(1)
+    AddHeaderOption("Milk Maid Curse Traps")
+    milkMaidCurseMasterOption = AddToggleOption("Enable Milk Maid Curse Trap", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidCurseTrap", 1) == 1)
+    Int curseFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidCurseTrap", 1) != 1
+        curseFlags = OPTION_FLAG_DISABLED
+    EndIf
+    milkMaidTrapNearbyAlliesOption = AddToggleOption("Milk Maid Curse Targets Nearby Allies", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidTrapNearbyAllies", 1) == 1, curseFlags)
+    dungeonChestMilkMaidOption = AddToggleOption("Boss Chests", JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1) == 1, curseFlags)
+    Int dungeonChestChanceFlags = curseFlags
+    If JsonUtil.GetIntValue(SettingsFile, "enableDungeonChestMilkMaid", 1) != 1
+        dungeonChestChanceFlags = OPTION_FLAG_DISABLED
+    EndIf
+    milkMaidCurseSurgeOption = AddSliderOption("Existing Maid Curse: Added Milk", JsonUtil.GetIntValue(SettingsFile, "milkMaidCurseSurgePercent", 50), "{0}% of capacity", curseFlags)
+    dungeonChestMilkMaidChanceOption = AddSliderOption("Boss Chest Chance", JsonUtil.GetIntValue(SettingsFile, "dungeonChestMilkMaidChance", 100), "{0}%", dungeonChestChanceFlags)
+    regularChestMilkMaidOption = AddToggleOption("Regular Chests", JsonUtil.GetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1) == 1, curseFlags)
+    Int regularChestChanceFlags = curseFlags
+    If JsonUtil.GetIntValue(SettingsFile, "enableRegularChestMilkMaid", 1) != 1
+        regularChestChanceFlags = OPTION_FLAG_DISABLED
+    EndIf
+    regularChestMilkMaidChanceOption = AddSliderOption("Regular Chest Chance", JsonUtil.GetIntValue(SettingsFile, "regularChestMilkMaidChance", 10), "{0}%", regularChestChanceFlags)
+    forcedMilkMaidNotificationOption = AddToggleOption("Enable Milk Maid Notifications", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNotification", 1) == 1)
+    forcedMilkMaidLactacidStoryOption = AddToggleOption("Enable Milk Maid Stories", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidStory", 1) == 1)
+    forcedMilkMaidNarrationOption = AddToggleOption("Enable Skyrim.Net Narration", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNarration", 1) == 1)
+    Int chestNarrationFlags = curseFlags
+    If JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidNarration", 1) != 1
+        chestNarrationFlags = OPTION_FLAG_DISABLED
+    EndIf
+    chestCurseNarrationOption = AddToggleOption("Enable Chest Curse Narration", JsonUtil.GetIntValue(SettingsFile, "enableChestCurseNarration", 1) == 1, chestNarrationFlags)
+    forcedMilkMaidDiagnosticOption = AddToggleOption("Enable Milk Maid Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableForcedMilkMaidDiagnostic", 0) == 1)
+    AddHeaderOption("Reverse Milk Maid Leveling")
+    reverseDurationOption = AddSliderOption("Reverse Leveling Duration", MMEReverseLevel.GetDuration(), "{0} game hours")
+    reversePlayerLevelOption = AddSliderOption("Minimum Milk Maid Level", MMEReverseLevel.GetRequiredLevel(), "{0}")
+EndFunction
+
+Function DrawMilkDrinkingPage()
+    AddHeaderOption("Inn and Palace Drinking")
+    innPalaceMilkDrinkingOption = AddToggleOption("Enable Inn and Palace Drinking", JsonUtil.GetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1) == 1)
+    Int innPalaceFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1) != 1
+        innPalaceFlags = OPTION_FLAG_DISABLED
+    EndIf
+    guildTavernMilkDrinkingOption = AddToggleOption("Guild and Tavern Locations", JsonUtil.GetIntValue(SettingsFile, "enableGuildTavernMilkDrinking", 1) == 1, innPalaceFlags)
+    jarlResidenceMilkDrinkingOption = AddToggleOption("Jarl Residences", JsonUtil.GetIntValue(SettingsFile, "enableJarlResidenceMilkDrinking", 1) == 1, innPalaceFlags)
+    townMilkDrinkOption = AddToggleOption("Town Milk Drink", JsonUtil.GetIntValue(SettingsFile, "enableTownMilkDrink", 1) == 1)
+    Int townDrinkFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableTownMilkDrink", 1) != 1
+        townDrinkFlags = OPTION_FLAG_DISABLED
+    EndIf
+    townMilkDrinkChanceOption = AddSliderOption("Town Drink Chance", JsonUtil.GetIntValue(SettingsFile, "townMilkDrinkChance", 25), "{0}%", townDrinkFlags)
+    townUniqueNPCPreferenceOption = AddToggleOption("Favor Unique Town NPCs", JsonUtil.GetIntValue(SettingsFile, "enableTownUniqueNPCPreference", 1) == 1, townDrinkFlags)
+    Int uniquePreferenceFlags = townDrinkFlags
+    If JsonUtil.GetIntValue(SettingsFile, "enableTownUniqueNPCPreference", 1) != 1
+        uniquePreferenceFlags = OPTION_FLAG_DISABLED
+    EndIf
+    townUniqueNPCPreferenceChanceOption = AddSliderOption("Unique NPC Preference", JsonUtil.GetIntValue(SettingsFile, "townUniqueNPCPreferenceChance", 75), "{0}%", uniquePreferenceFlags)
+    Int sharedVenueFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableInnPalaceMilkDrinking", 1) != 1 && JsonUtil.GetIntValue(SettingsFile, "enableTownMilkDrink", 1) != 1
+        sharedVenueFlags = OPTION_FLAG_DISABLED
+    EndIf
+    innPalaceDrinkDelayOption = AddSliderOption("Drink Delay", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelaySeconds", 11.0), "{0} seconds", sharedVenueFlags)
+    innPalaceDrinkVariationOption = AddSliderOption("Delay Randomization", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkDelayVariation", 10.0), "+/-{0} seconds", sharedVenueFlags)
+    innPalaceDrinkCooldownOption = AddSliderOption("Shared Cooldown", JsonUtil.GetFloatValue(SettingsFile, "innPalaceDrinkCooldownHours", 4.0), "{0} game hours", sharedVenueFlags)
+    AddHeaderOption("Milk Cravings")
+    milkCravingsOption = AddToggleOption("Enable Milk Cravings", JsonUtil.GetIntValue(SettingsFile, "enableMilkCravings", 1) == 1)
+    Int milkCravingFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableMilkCravings", 1) != 1
+        milkCravingFlags = OPTION_FLAG_DISABLED
+    EndIf
+    Int milkCravingNarrationFlags = milkCravingFlags
+    If !MMEAlertsSkyrimNet.IsAvailable()
+        milkCravingNarrationFlags = OPTION_FLAG_DISABLED
+    EndIf
+    milkCravingNarrationOption = AddToggleOption("Skyrim.Net Craving Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkCravingNarration", 1) == 1, milkCravingNarrationFlags)
+    milkCravingIntervalOption = AddSliderOption("Craving Interval", JsonUtil.GetFloatValue(SettingsFile, "milkCravingIntervalHours", 48.0), "{0} game hours", milkCravingFlags)
+    milkCravingVariationOption = AddSliderOption("Interval Randomization", JsonUtil.GetFloatValue(SettingsFile, "milkCravingIntervalVariation", 24.0), "+/-{0} game hours", milkCravingFlags)
+    milkCravingChanceOption = AddSliderOption("Trigger Chance", JsonUtil.GetIntValue(SettingsFile, "milkCravingTriggerChance", 100), "{0}%", milkCravingFlags)
+    milkCravingGiveInDelayOption = AddSliderOption("Maximum Give-In Delay", JsonUtil.GetFloatValue(SettingsFile, "milkCravingGiveInDelayHours", 4.0), "{0} game hours", milkCravingFlags)
+    AddHeaderOption("Auto Self-Milking")
+    autoSelfMilkingOption = AddToggleOption("Enable Auto Self-Milking", JsonUtil.GetIntValue(SettingsFile, "enableAutoSelfMilking", 1) == 1)
+    Int autoSelfMilkingFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableAutoSelfMilking", 1) != 1
+        autoSelfMilkingFlags = OPTION_FLAG_DISABLED
+    EndIf
+    autoSelfMilkingDelayOption = AddSliderOption("Self-Milking Delay", JsonUtil.GetFloatValue(SettingsFile, "autoSelfMilkingDelayHours", 1.0), "{0} game hours", autoSelfMilkingFlags)
+    milkingMoansOption = AddToggleOption("Milking Start/End Moans", JsonUtil.GetIntValue(SettingsFile, "enableMilkingMoans", 1) == 1)
+    AddHeaderOption("Milk Gain Per Drink")
+    milkmaidLevelBonusOption = AddToggleOption("MME Level Bonus", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidLevelBonus", 1) == 1)
+    flatMilkBonusOption = AddSliderOption("Flat Milk Bonus", JsonUtil.GetFloatValue(SettingsFile, "flatMilkBonus", 1.0), "+{1} milk")
+    lactacidMultiplierOption = AddSliderOption("Lactacid Multiplier", JsonUtil.GetFloatValue(SettingsFile, "lactacidFlatMultiplier", 2.0), "x{1}")
+    AddHeaderOption("Drinking Feedback")
+    drinkMoansOption = AddToggleOption("Drink Milk Moans", JsonUtil.GetIntValue(SettingsFile, "enableDrinkMoans", 1) == 1)
+    SetCursorPosition(1)
+    AddHeaderOption("Breastfeeding")
+    breastfeedingMilkEffectsOption = AddToggleOption("Breastfeeding Gives Milk", JsonUtil.GetIntValue(SettingsFile, "enableBreastfeedingMilkEffects", 1) == 1)
+    Bool elsieDetected = MMEElsieBreastfeeding.IsDetected()
+    elsieDetectedOption = AddToggleOption("Elsie LaVache Detected", elsieDetected, OPTION_FLAG_DISABLED)
+    Int elsieMilkFlags = OPTION_FLAG_NONE
+    If !MMEElsieBreastfeeding.IsAvailable()
+        elsieMilkFlags = OPTION_FLAG_DISABLED
+    EndIf
+    elsieBreastfeedingMilkEffectsOption = AddToggleOption("Elsie Breastfeeding Gives Milk", JsonUtil.GetIntValue(SettingsFile, "enableElsieBreastfeedingMilkEffects", 1) == 1, elsieMilkFlags)
+    Int ostimFlags = OPTION_FLAG_DISABLED
+    If MMEOStimBreastfeeding.IsOStimDetected()
+        ostimFlags = OPTION_FLAG_NONE
+    EndIf
+    ostimBreastfeedingDurationOption = AddSliderOption("OStim Breastfeeding Scene Duration", JsonUtil.GetFloatValue(SettingsFile, "ostimBreastfeedingDuration", 20.0), "{0} seconds", ostimFlags)
+    AddHeaderOption("Easy Mode")
+    giveMilkEasyModeOption = AddToggleOption("Free Jug for Give Milk", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkEasyMode", 1) == 1)
+    AddHeaderOption("Player Milk Drinking")
+    playerDrinkNotificationsOption = AddToggleOption("Player Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNotifications", 1) == 1)
+    playerMilkMaidConversionOption = AddToggleOption("Milk Can Create Player Milk Maid", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkMaidConversion", 1) == 1)
+    Int conversionChanceFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkMaidConversion", 1) != 1
+        conversionChanceFlags = OPTION_FLAG_DISABLED
+    EndIf
+    playerMilkMaidConversionChanceOption = AddSliderOption("Milk Maid Conversion Chance", JsonUtil.GetIntValue(SettingsFile, "playerMilkMaidConversionChance", 100), "{0}%", conversionChanceFlags)
+    playerDrinkAnimationOption = AddToggleOption("Player Milk-Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkAnimation", 0) == 1)
+    playerDrinkAnimationDurationOption = AddSliderOption("Player Milk-Drink Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "playerDrinkAnimationDuration", 3.0), "{0} seconds")
+    AddHeaderOption("NPC Milk Drinking")
+    npcMilkEffectsOption = AddToggleOption("NPC Milk Effects", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1) == 1)
+    npcDrinkNotificationsOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotifications", 1) == 1)
+    npcDrinkAnimationOption = AddToggleOption("NPC Milk-Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkAnimation", 0) == 1)
+    npcDrinkAnimationDurationOption = AddSliderOption("NPC Milk-Drink Animation Duration", JsonUtil.GetFloatValue(SettingsFile, "npcDrinkAnimationDuration", 3.0), "{0} seconds")
+    AddHeaderOption("Non-Milkmaid Drinking")
+    nonMilkmaidFemaleDrinkingOption = AddToggleOption("Allow Adult Women", JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidFemaleDrinking", 1) == 1)
+    nonMilkmaidFemaleArousalOption = AddSliderOption("Women Arousal Per Drink", JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidFemaleArousal", 20.0), "+{0}")
+    nonMilkmaidMaleDrinkingOption = AddToggleOption("Allow Adult Men", JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidMaleDrinking", 1) == 1)
+    nonMilkmaidMaleArousalOption = AddSliderOption("Men Arousal Per Drink", JsonUtil.GetFloatValue(SettingsFile, "nonMilkmaidMaleArousal", 20.0), "+{0}")
+    nonMilkmaidDrinkNotificationsOption = AddToggleOption("Flavor Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNonMilkmaidDrinkNotifications", 1) == 1)
+EndFunction
+
+Function DrawArousalPage()
+    Bool arousalAvailable = MMEArousalBridge.IsAvailable()
+    Int arousalFlags = OPTION_FLAG_DISABLED
+    If arousalAvailable
+        arousalFlags = OPTION_FLAG_NONE
+    EndIf
+    AddHeaderOption("Integration Status")
+    arousalStatusOption = AddToggleOption("SexLab Arousal Detected", arousalAvailable, OPTION_FLAG_DISABLED)
+    AddHeaderOption("Milk Drinking")
+    milkDrinkArousalOption = AddToggleOption("Milk Raises Arousal", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkArousal", 1) == 1, arousalFlags)
+    If JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkArousal", 1) != 1
+        arousalFlags = OPTION_FLAG_DISABLED
+    EndIf
+    milkDrinkArousalAmountOption = AddSliderOption("Arousal Per Milk", JsonUtil.GetFloatValue(SettingsFile, "milkDrinkArousal", 10.0), "+{0}", arousalFlags)
+    AddHeaderOption("Arousal Reactions")
+    Int arousalEffectMasterFlags = OPTION_FLAG_DISABLED
+    If arousalAvailable
+        arousalEffectMasterFlags = OPTION_FLAG_NONE
+    EndIf
+    arousalEffectsOption = AddToggleOption("Enable Arousal Reactions", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffects", 1) == 1, arousalEffectMasterFlags)
+    Int arousalEffectFlags = arousalEffectMasterFlags
+    If JsonUtil.GetIntValue(SettingsFile, "enableArousalEffects", 1) != 1
+        arousalEffectFlags = OPTION_FLAG_DISABLED
+    EndIf
+    arousalEffectNotificationsOption = AddToggleOption("Show Arousal Notifications", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectNotifications", 1) == 1, arousalEffectFlags)
+    arousalEffectSoundsOption = AddToggleOption("Play Arousal Sounds", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectSounds", 1) == 1, arousalEffectFlags)
+    arousalEffectAnimationsOption = AddToggleOption("Play Arousal Animations", JsonUtil.GetIntValue(SettingsFile, "enableArousalEffectAnimations", 1) == 1, arousalEffectFlags)
+    arousalMilkMaidRouteOption = AddToggleOption("Always React for Milk Maids", JsonUtil.GetIntValue(SettingsFile, "enableArousalMilkMaidRoute", 1) == 1, arousalEffectFlags)
+    arousalMilkDrinkRouteOption = AddToggleOption("React After Milk Drinking", JsonUtil.GetIntValue(SettingsFile, "enableArousalMilkDrinkRoute", 1) == 1, arousalEffectFlags)
+    arousalEveryoneRouteOption = AddToggleOption("Include Everyone Else", JsonUtil.GetIntValue(SettingsFile, "enableArousalEveryoneRoute", 0) == 1, arousalEffectFlags)
+    arousalEffectDelayOption = AddSliderOption("Reaction Delay", JsonUtil.GetFloatValue(SettingsFile, "arousalEffectDelay", 5.0), "{0} seconds", arousalEffectFlags)
+    arousalEffectCooldownOption = AddSliderOption("Reaction Cooldown", JsonUtil.GetFloatValue(SettingsFile, "arousalEffectCooldown", 5.0), "{0} seconds", arousalEffectFlags)
+    arousalEffectCooldownVariationOption = AddSliderOption("Cooldown Randomization", JsonUtil.GetFloatValue(SettingsFile, "arousalEffectCooldownVariation", 0.0), "+/- {0} seconds", arousalEffectFlags)
+    arousalLowThresholdOption = AddSliderOption("Low Threshold", JsonUtil.GetIntValue(SettingsFile, "arousalLowThreshold", 20), "{0}", arousalEffectFlags)
+    arousalMediumThresholdOption = AddSliderOption("Medium Threshold", JsonUtil.GetIntValue(SettingsFile, "arousalMediumThreshold", 50), "{0}", arousalEffectFlags)
+    arousalHighThresholdOption = AddSliderOption("High Threshold", JsonUtil.GetIntValue(SettingsFile, "arousalHighThreshold", 80), "{0}", arousalEffectFlags)
+EndFunction
+
+Function DrawArmorPage()
+    AddHeaderOption("Service Armor Checks")
+    armorCheckReminderOption = AddToggleOption("Armor Check Reminder", JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) == 1)
+    Int reminderFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableArmorCheckReminder", 1) != 1
+        reminderFlags = OPTION_FLAG_DISABLED
+    EndIf
+    armorCheckReminderCooldownOption = AddSliderOption("Reminder Cooldown", JsonUtil.GetFloatValue(SettingsFile, "armorCheckReminderCooldown", 60.0), "{0} seconds", reminderFlags)
+    AddHeaderOption("Armor Stripping")
+    extensionsArmorStrippingOption = AddToggleOption("Override MME Armor Stripping", JsonUtil.GetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1) == 1)
+    Int stripFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableExtensionsArmorStripping", 1) != 1
+        stripFlags = OPTION_FLAG_DISABLED
+    EndIf
+    milkingEquipmentRefitOption = AddToggleOption("Require Milking Equipment Refits", JsonUtil.GetIntValue(SettingsFile, "enableMilkingEquipmentRefits", 1) == 1, stripFlags)
+    stripAllArmorOverrideOption = AddToggleOption("Strip All Armor / Ignore Protection", JsonUtil.GetIntValue(SettingsFile, "enableStripAllArmor", 0) == 1, stripFlags)
+    Int narrationFlags = stripFlags
+    If narrationFlags == OPTION_FLAG_NONE && JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarration", 1) != 1
+        narrationFlags = OPTION_FLAG_DISABLED
+    EndIf
+    armorStripHeavyEnabledOption = AddToggleOption("Enable Heavy Armor Stripping", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripHeavy", 1) == 1, stripFlags)
+    Int heavyStripFlags = stripFlags
+    If heavyStripFlags == OPTION_FLAG_NONE && JsonUtil.GetIntValue(SettingsFile, "enableArmorStripHeavy", 1) != 1
+        heavyStripFlags = OPTION_FLAG_DISABLED
+    EndIf
+    armorStripHeavyThresholdOption = AddSliderOption("Heavy Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyPercent", 70.0), "{0}%", heavyStripFlags)
+    armorStripLightEnabledOption = AddToggleOption("Enable Light Armor Stripping", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripLight", 1) == 1, stripFlags)
+    Int lightStripFlags = stripFlags
+    If lightStripFlags == OPTION_FLAG_NONE && JsonUtil.GetIntValue(SettingsFile, "enableArmorStripLight", 1) != 1
+        lightStripFlags = OPTION_FLAG_DISABLED
+    EndIf
+    armorStripLightThresholdOption = AddSliderOption("Light Armor Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripLightPercent", 85.0), "{0}%", lightStripFlags)
+    armorStripClothingEnabledOption = AddToggleOption("Enable Clothing Stripping", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripClothing", 1) == 1, stripFlags)
+    Int clothingStripFlags = stripFlags
+    If clothingStripFlags == OPTION_FLAG_NONE && JsonUtil.GetIntValue(SettingsFile, "enableArmorStripClothing", 1) != 1
+        clothingStripFlags = OPTION_FLAG_DISABLED
+    EndIf
+    armorStripClothingThresholdOption = AddSliderOption("Clothing Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingPercent", 100.0), "{0}%", clothingStripFlags)
+    flatMilkStrippingOption = AddToggleOption("Flat Milk Stripping", JsonUtil.GetIntValue(SettingsFile, "enableFlatMilkStripping", 0) == 1, stripFlags)
+    Int flatHeavyFlags = heavyStripFlags
+    Int flatLightFlags = lightStripFlags
+    Int flatClothingFlags = clothingStripFlags
+    If JsonUtil.GetIntValue(SettingsFile, "enableFlatMilkStripping", 0) != 1
+        flatHeavyFlags = OPTION_FLAG_DISABLED
+        flatLightFlags = OPTION_FLAG_DISABLED
+        flatClothingFlags = OPTION_FLAG_DISABLED
+    EndIf
+    flatMilkHeavyOption = AddSliderOption("Heavy Armor Milk Amount", JsonUtil.GetFloatValue(SettingsFile, "armorStripHeavyMilk", 4.0), "{0} milk", flatHeavyFlags)
+    flatMilkLightOption = AddSliderOption("Light Armor Milk Amount", JsonUtil.GetFloatValue(SettingsFile, "armorStripLightMilk", 8.0), "{0} milk", flatLightFlags)
+    flatMilkClothingOption = AddSliderOption("Clothing Milk Amount", JsonUtil.GetFloatValue(SettingsFile, "armorStripClothingMilk", 12.0), "{0} milk", flatClothingFlags)
+    SetCursorPosition(1)
+    AddHeaderOption("Armor Strip Reactions")
+    armorStripNotificationOption = AddToggleOption("Strip Notification", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNotification", 1) == 1, stripFlags)
+    armorStripMoanOption = AddToggleOption("Strip Moan", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripMoan", 1) == 1, stripFlags)
+    armorStripNarrationOption = AddToggleOption("Skyrim.Net Strip Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarration", 1) == 1, stripFlags)
+    armorStripNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "armorStripNarrationChance", 100), "{0}%", narrationFlags)
+    armorStripNarrationCooldownOption = AddSliderOption("Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "armorStripNarrationCooldown", 300.0) / 60.0, "{0} minutes", narrationFlags)
+    AddHeaderOption("Timed Armor Bond")
+    timedArmorDurationOption = AddSliderOption("Lock Duration", JsonUtil.GetFloatValue(SettingsFile, "timedArmorLockDays", 3.0), "{0} game days")
+EndFunction
+
+Function DrawSkyrimNetPage()
+    AddHeaderOption("Integration Status")
+    skyrimNetStatusOption = AddToggleOption("Skyrim.Net Detected", MMEAlertsSkyrimNet.IsAvailable(), OPTION_FLAG_DISABLED)
+    AddHeaderOption("Event Tracking")
+    skyrimNetMilkDrinksOption = AddToggleOption("Track Milk Drinks", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkDrinks", 1) == 1)
+    skyrimNetMilkingEventsOption = AddToggleOption("Track Milking Start/End", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", 1) == 1)
+    skyrimNetMilkmaidCreatedOption = AddToggleOption("Track New Milkmaids", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1) == 1)
+    skyrimNetMilkStatusesOption = AddToggleOption("Track Nearby Milk Statuses", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1)
+    skyrimNetStatusIntervalOption = AddSliderOption("Milk Status Interval", JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0), "{0} seconds")
+    AddHeaderOption("Milk Armor")
+    nearbyMilkArmorStatusOption = AddToggleOption("Track Nearby Milk Armor Status", JsonUtil.GetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", 1) == 1)
+    playerMilkArmorEquipNarrationOption = AddToggleOption("Player Milk Armor Equip Narration", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", 1) == 1)
+    npcMilkArmorEquipNarrationOption = AddToggleOption("NPC Milk Armor Equip Narration", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkArmorEquipNarration", 1) == 1)
+    Int playerArmorNarrationFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", 1) != 1
+        playerArmorNarrationFlags = OPTION_FLAG_DISABLED
+    EndIf
+    Int npcArmorNarrationFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkArmorEquipNarration", 1) != 1
+        npcArmorNarrationFlags = OPTION_FLAG_DISABLED
+    EndIf
+    playerMilkingArmorNarrationCooldownOption = AddSliderOption("Player Armor Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "playerMilkingArmorNarrationCooldown", 120.0), "{0} seconds", playerArmorNarrationFlags)
+    npcMilkingArmorNarrationCooldownOption = AddSliderOption("NPC Armor Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "npcMilkingArmorNarrationCooldown", 300.0), "{0} seconds", npcArmorNarrationFlags)
+    AddHeaderOption("Actions")
+    selfMilkingActionOption = AddToggleOption("Allow Self-Milking Action", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingAction", 1) == 1)
+    pairedMilkingActionOption = AddToggleOption("Allow Paired Milking Action", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) == 1)
+    giveMilkActionOption = AddToggleOption("Allow Give-and-Drink Actions", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkAction", 1) == 1)
+    createMilkMaidActionOption = AddToggleOption("Allow Create Milk Maid Action", JsonUtil.GetIntValue(SettingsFile, "enableCreateMilkMaidAction", 1) == 1)
+    actorDrinkMilkRemovalOption = AddToggleOption("Milkmaid Giver Spends Milk", JsonUtil.GetIntValue(SettingsFile, "enableActorDrinkMilkRemoval", 1) == 1)
+    Int breastfeedingCooldownFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingAction", 1) != 1
+        breastfeedingCooldownFlags = OPTION_FLAG_DISABLED
+    EndIf
+    breastfeedingActionCooldownOption = AddSliderOption("Breastfeeding Action Cooldown", JsonUtil.GetFloatValue(SettingsFile, "breastfeedingActionCooldown", 45.0), "{0} seconds", breastfeedingCooldownFlags)
+    Int giveMilkCooldownFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkAction", 1) != 1
+        giveMilkCooldownFlags = OPTION_FLAG_DISABLED
+    EndIf
+    giveMilkActionCooldownOption = AddSliderOption("Give Milk Action Cooldown", JsonUtil.GetFloatValue(SettingsFile, "giveMilkActionCooldown", 0.0), "{0} seconds", giveMilkCooldownFlags)
+    AddHeaderOption("AI Reactions")
+    milkFullNarrationOption = AddToggleOption("Narrate Milk Full", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarration", 1) == 1)
+    Int narrationFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarration", 1) != 1
+        narrationFlags = OPTION_FLAG_DISABLED
+    EndIf
+    milkFullNarrationCooldownOption = AddSliderOption("Milk Full Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "milkFullNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
+    milkHalfFullNarrationOption = AddToggleOption("Half-Full Milk Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarration", 1) == 1)
+    narrationFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarration", 1) != 1
+        narrationFlags = OPTION_FLAG_DISABLED
+    EndIf
+    milkHalfFullNarrationCooldownOption = AddSliderOption("Half-Full Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "milkHalfFullNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
+    playerDrinkNarrationOption = AddToggleOption("Player Drink Narration", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0) == 1)
+    narrationFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarration", 0) != 1
+        narrationFlags = OPTION_FLAG_DISABLED
+    EndIf
+    playerDrinkNarrationCooldownOption = AddSliderOption("Player Drink Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "playerDrinkNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
+    playerDrinkNarrationChanceOption = AddSliderOption("Player Drink Narration Chance", JsonUtil.GetIntValue(SettingsFile, "playerDrinkNarrationChance", 25), "{0}%", narrationFlags)
+    milkmaidCreatedNarrationOption = AddToggleOption("New Milk Maid Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarration", 1) == 1)
+    narrationFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarration", 1) != 1
+        narrationFlags = OPTION_FLAG_DISABLED
+    EndIf
+    milkmaidCreatedNarrationCooldownOption = AddSliderOption("New Milk Maid Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "milkmaidCreatedNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
+    npcDrinkNarrationOption = AddToggleOption("NPC Drink Narration", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarration", 1) == 1)
+    narrationFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarration", 1) != 1
+        narrationFlags = OPTION_FLAG_DISABLED
+    EndIf
+    npcDrinkNarrationCooldownOption = AddSliderOption("NPC Drink Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "npcDrinkNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
+EndFunction
+
+Function DrawArmorThoughtsPage()
+    AddHeaderOption("Milk Armor Thoughts")
+    milkMaidThoughtsOption = AddToggleOption("Enable Milk Armor Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughts", 1) == 1)
+    milkMaidThoughtsIntervalOption = AddSliderOption("Poll Interval", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsInterval", 12.0), "{0} game hours")
+    milkMaidThoughtsRandomnessOption = AddSliderOption("Randomness (+/-)", JsonUtil.GetFloatValue(SettingsFile, "milkMaidThoughtsRandomness", 4.0), "{0} game hours")
+    milkMaidThoughtNarrationOption = AddToggleOption("Skyrim.Net Thought Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtNarration", 1) == 1)
+    armorThoughtSoundsOption = AddToggleOption("Armor Thought Sounds", JsonUtil.GetIntValue(SettingsFile, "enableArmorThoughtSounds", 1) == 1)
+    AddHeaderOption("Devious Heavy Bondage")
+    boundMilkMaidThoughtsOption = AddToggleOption("Bound Milk Maid Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughts", 1) == 1)
+    boundMilkMaidThoughtsIntervalOption = AddSliderOption("Bound Thought Interval", JsonUtil.GetFloatValue(SettingsFile, "boundMilkMaidThoughtsInterval", 24.0), "{0} game hours")
+    boundMilkMaidThoughtsRandomnessOption = AddSliderOption("Bound Randomness (+/-)", JsonUtil.GetFloatValue(SettingsFile, "boundMilkMaidThoughtsRandomness", 12.0), "{0} game hours")
+    boundMilkMaidThoughtsChanceOption = AddSliderOption("Bound Thought Chance", JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtsChance", 100), "{0}%")
+    boundMilkMaidThoughtNarrationOption = AddToggleOption("Skyrim.Net Bound Narration", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughtNarration", 1) == 1)
+    boundMilkMaidThoughtNarrationChanceOption = AddSliderOption("Bound Narration Chance", JsonUtil.GetIntValue(SettingsFile, "boundMilkMaidThoughtNarrationChance", 100), "{0}%")
+    boundMilkMaidThoughtSoundsOption = AddToggleOption("Devious Restraint Moans", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkMaidThoughtSounds", 1) == 1)
+    boundMilkDrinkReactionOption = AddToggleOption("Milk Drink Restraint Reaction", JsonUtil.GetIntValue(SettingsFile, "enableBoundMilkDrinkReaction", 1) == 1)
+    boundMilkDrinkReactionChanceOption = AddSliderOption("Milk Drink Reaction Chance", JsonUtil.GetIntValue(SettingsFile, "boundMilkDrinkReactionChance", 50), "{0}%")
+    SetCursorPosition(1)
+    AddHeaderOption("Armor Story Reactions")
+    repeatOrdinaryArmorStoriesOption = AddToggleOption("Repeat Equipped Armor Stories", JsonUtil.GetIntValue(SettingsFile, "enableRepeatOrdinaryArmorStories", 1) == 1)
+    AddHeaderOption("Milking Armor")
+    playerMilkingArmorEquipMoanOption = AddToggleOption("Player Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipMoan", 1) == 1)
+    playerMilkingArmorEquipAnimationOption = AddToggleOption("Player Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkingArmorEquipAnimation", 0) == 1)
+    npcMilkingArmorEquipMoanOption = AddToggleOption("NPC Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorEquipMoan", 1) == 1)
+    npcMilkingArmorEquipAnimationOption = AddToggleOption("NPC Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkingArmorEquipAnimation", 1) == 1)
+    AddHeaderOption("AM Living Armor")
+    playerLivingArmorEquipMoanOption = AddToggleOption("Player Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enablePlayerLivingArmorEquipMoan", 1) == 1)
+    playerLivingArmorEquipAnimationOption = AddToggleOption("Player Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerLivingArmorEquipAnimation", 0) == 1)
+    npcLivingArmorEquipMoanOption = AddToggleOption("NPC Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enableNPCLivingArmorEquipMoan", 1) == 1)
+    npcLivingArmorEquipAnimationOption = AddToggleOption("NPC Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCLivingArmorEquipAnimation", 1) == 1)
+    AddHeaderOption("AM Living Parasite")
+    playerLivingParasiteEquipMoanOption = AddToggleOption("Player Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enablePlayerLivingParasiteEquipMoan", 1) == 1)
+    playerLivingParasiteEquipAnimationOption = AddToggleOption("Player Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enablePlayerLivingParasiteEquipAnimation", 0) == 1)
+    npcLivingParasiteEquipMoanOption = AddToggleOption("NPC Equip Moan", JsonUtil.GetIntValue(SettingsFile, "enableNPCLivingParasiteEquipMoan", 1) == 1)
+    npcLivingParasiteEquipAnimationOption = AddToggleOption("NPC Equip Animation", JsonUtil.GetIntValue(SettingsFile, "enableNPCLivingParasiteEquipAnimation", 1) == 1)
+EndFunction
+
+Function DrawArmorEffectsPage()
+    AddHeaderOption("Living / Parasite Armor")
+    armorInjectionOption = AddToggleOption("Enable Effects", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjections", 1) == 1)
+    armorInjectionIntervalOption = AddSliderOption("Base Effect Interval", JsonUtil.GetFloatValue(SettingsFile, "armorInjectionInterval", 12.0), "{0} game hours")
+    armorInjectionVariationOption = AddSliderOption("Interval Variation (+/-)", JsonUtil.GetFloatValue(SettingsFile, "armorInjectionVariation", 4.0), "{0} game hours")
+    armorInjectionChanceOption = AddSliderOption("Effect Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionChance", 100), "{0}%")
+    AddHeaderOption("Notifications")
+    armorInjectionNotificationOption = AddToggleOption("Show Effect Notifications", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNotifications", 1) == 1)
+    armorInjectionSoundOption = AddToggleOption("Notification Sound", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionSounds", 1) == 1)
+    AddHeaderOption("Skyrim.Net Narration")
+    armorInjectionNarrationOption = AddToggleOption("Enable Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionNarration", 1) == 1)
+    armorInjectionPlayerNarrationOption = AddToggleOption("Enable Player Narration", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionPlayerNarration", 1) == 1)
+    armorInjectionNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "armorInjectionNarrationChance", 100), "{0}%")
+    SetCursorPosition(1)
+    AddHeaderOption("Dwemer Armor")
+    dwemerEffectOption = AddToggleOption("Enable Effects", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffects", 1) == 1)
+    dwemerEffectIntervalOption = AddSliderOption("Base Effect Interval", JsonUtil.GetFloatValue(SettingsFile, "dwemerEffectInterval", 12.0), "{0} game hours")
+    dwemerEffectVariationOption = AddSliderOption("Interval Variation (+/-)", JsonUtil.GetFloatValue(SettingsFile, "dwemerEffectVariation", 4.0), "{0} game hours")
+    dwemerEffectChanceOption = AddSliderOption("Effect Chance", JsonUtil.GetIntValue(SettingsFile, "dwemerEffectChance", 100), "{0}%")
+    AddHeaderOption("Notifications")
+    dwemerEffectNotificationOption = AddToggleOption("Show Effect Notifications", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectNotifications", 1) == 1)
+    dwemerEffectSoundOption = AddToggleOption("Notification Sound", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectSounds", 1) == 1)
+    AddHeaderOption("Skyrim.Net Narration")
+    dwemerEffectNarrationOption = AddToggleOption("Enable Narration", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectNarration", 1) == 1)
+    dwemerEffectPlayerNarrationOption = AddToggleOption("Enable Player Narration", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectPlayerNarration", 1) == 1)
+    dwemerEffectNarrationChanceOption = AddSliderOption("Narration Chance", JsonUtil.GetIntValue(SettingsFile, "dwemerEffectNarrationChance", 100), "{0}%")
+    ; Shared settings occupy twelve rows in each column. Tier settings
+    ; belong only to Living/Parasite and share rows by intensity.
+    SetCursorPosition(24)
+    AddHeaderOption("Living / Parasite Tease Intensity")
+    SetCursorPosition(25)
+    AddHeaderOption("Living / Parasite Animation Durations")
+    String[] tierLabels = new String[4]
+    tierLabels[0] = "Low"
+    tierLabels[1] = "Medium"
+    tierLabels[2] = "High"
+    tierLabels[3] = "Extreme"
+    Int tierIndex = 0
+    While tierIndex < 4
+        SetCursorPosition(26 + tierIndex * 2)
+        tentacleChanceOptions[tierIndex] = AddSliderOption(tierLabels[tierIndex] + " Tease Chance", JsonUtil.GetIntValue(SettingsFile, MMETentacleTiers.ChanceKey(tierIndex + 1), MMETentacleTiers.DefaultChance(tierIndex + 1)), "{0}%")
+        SetCursorPosition(27 + tierIndex * 2)
+        tentacleDurationOptions[tierIndex] = AddSliderOption(tierLabels[tierIndex] + " Animation Duration", MMETentacleTiers.Duration(tierIndex + 1), "{1} seconds")
+        tierIndex += 1
+    EndWhile
+EndFunction
+
+Function DrawTroubleshootPage()
+    AddHeaderOption("Live Status")
+    diagnosticInstallStatusOption = AddTextOption("MME Extensions Records", MMEDiagnostics.GetInstallStatus(), OPTION_FLAG_DISABLED)
+    diagnosticOStimStatusOption = AddTextOption("OStim Integration", MMEDiagnostics.GetOStimStatus(), OPTION_FLAG_DISABLED)
+    diagnosticSexLabStatusOption = AddTextOption("SexLab Framework", MMEDiagnostics.GetSexLabStatus(), OPTION_FLAG_DISABLED)
+    diagnosticGateStatusOption = AddTextOption("OStim Dialogue Gate", MMEDiagnostics.GetGateStatus(), OPTION_FLAG_DISABLED)
+    diagnosticSexLabBusStateOption = AddTextOption("New Milk Maid SexLab Bus", MMEDiagnostics.GetNewMilkMaidSexLabBusState(), OPTION_FLAG_DISABLED)
+    diagnosticSexLabBusStopOption = AddTextOption("Last SexLab Bus Stop", MMEDiagnostics.GetNewMilkMaidSexLabBusStop(), OPTION_FLAG_DISABLED)
+    diagnosticSexLabBusFailureOption = AddTextOption("Last SexLab Bus Failure", MMEDiagnostics.GetNewMilkMaidSexLabBusFailure(), OPTION_FLAG_DISABLED)
+    diagnosticBlacksmithBusStateOption = AddTextOption("Blacksmith Dialogue Bus", MMEDiagnostics.GetBlacksmithDialogueBusState(), OPTION_FLAG_DISABLED)
+    diagnosticBlacksmithBusStopOption = AddTextOption("Last Blacksmith Bus Stop", MMEDiagnostics.GetBlacksmithDialogueBusStop(), OPTION_FLAG_DISABLED)
+    diagnosticBlacksmithBusFailureOption = AddTextOption("Last Blacksmith Bus Failure", MMEDiagnostics.GetBlacksmithDialogueBusFailure(), OPTION_FLAG_DISABLED)
+    diagnosticAlchemistBusStateOption = AddTextOption("Alchemist Dialogue Bus", MMEDiagnostics.GetAlchemistDialogueBusState(), OPTION_FLAG_DISABLED)
+    diagnosticAlchemistBusStopOption = AddTextOption("Last Alchemist Bus Stop", MMEDiagnostics.GetAlchemistDialogueBusStop(), OPTION_FLAG_DISABLED)
+    diagnosticAlchemistBusFailureOption = AddTextOption("Last Alchemist Bus Failure", MMEDiagnostics.GetAlchemistDialogueBusFailure(), OPTION_FLAG_DISABLED)
+    diagnosticMageBusStateOption = AddTextOption("Mage Dialogue Bus", MMEDiagnostics.GetMageDialogueBusState(), OPTION_FLAG_DISABLED)
+    diagnosticMageBusStopOption = AddTextOption("Last Mage Bus Stop", MMEDiagnostics.GetMageDialogueBusStop(), OPTION_FLAG_DISABLED)
+    diagnosticMageBusFailureOption = AddTextOption("Last Mage Bus Failure", MMEDiagnostics.GetMageDialogueBusFailure(), OPTION_FLAG_DISABLED)
+    AddHeaderOption("Audits & Reports")
+    diagnosticInstallAuditOption = AddTextOption("Run Install Audit", "RUN")
+    diagnosticMilkDrinkAuditOption = AddTextOption("Run Milk Drink Audit", "RUN")
+    diagnosticDialogueAuditOption = AddTextOption("Run Crosshair Dialogue Audit", "RUN")
+    diagnosticShowSexLabBusOption = AddTextOption("Show Last SexLab Bus Report", "RUN")
+    diagnosticShowBlacksmithBusOption = AddTextOption("Show Last Blacksmith Bus Report", "RUN")
+    diagnosticShowAlchemistBusOption = AddTextOption("Show Last Alchemist Bus Report", "RUN")
+    diagnosticShowMageBusOption = AddTextOption("Show Last Mage Bus Report", "RUN")
+    SetCursorPosition(1)
+    AddHeaderOption("Papyrus Logging")
+    papyrusTraceOption = AddToggleOption("Papyrus Logging", JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) == 1)
+    Int verboseTraceFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0) != 1
+        verboseTraceFlags = OPTION_FLAG_DISABLED
+    EndIf
+    verbosePapyrusTraceOption = AddToggleOption("Verbose Papyrus Logging", JsonUtil.GetIntValue(SettingsFile, "enableVerbosePapyrusLogging", 0) == 1, verboseTraceFlags)
+    AddHeaderOption("Narration JSON")
+    narrationReloadOption = AddTextOption("Reload Narration JSON", "RELOAD")
+    narrationImportOption = AddTextOption("Import Legacy Narration", "IMPORT")
+    AddHeaderOption("Output")
+    diagnosticNotificationsOption = AddToggleOption("In-Game Audit Notifications", JsonUtil.GetIntValue(SettingsFile, "enableDiagnosticNotifications", 1) == 1)
+    AddHeaderOption("Recovery")
+    Int timedArmorReleaseFlags = OPTION_FLAG_DISABLED
+    If MMETimedArmorLock.IsLocked(Game.GetPlayer())
+        timedArmorReleaseFlags = OPTION_FLAG_NONE
+    EndIf
+    timedArmorReleaseOption = AddTextOption("Release Player Armor", "RELEASE", timedArmorReleaseFlags)
+    timedNPCArmorReleaseOption = AddTextOption("Release Nearby NPC Armor", "RELEASE")
+    diagnosticRefreshGateOption = AddTextOption("Refresh OStim Dialogue Gate", "RUN")
+    diagnosticRefreshSexLabBusOption = AddTextOption("Refresh SexLab Bus Listeners", "RUN")
+    AddHeaderOption("Gameplay Tests")
+    diagnosticSpawnOManiaPotionOption = AddTextOption("Spawn OMania Dragon Egg Potion", "SPAWN")
+    diagnosticGlobalNPCDrinkTestOption = AddTextOption("Test Global NPC Milk Drink", "RUN")
+    diagnosticNewMilkmaidSexLabBusOption = AddTextOption("Run New Milk Maid Bus Test", "RUN")
+    diagnosticBlacksmithBusOption = AddTextOption("Run Blacksmith Dialogue Bus Test", "RUN")
+    diagnosticAlchemistBusOption = AddTextOption("Run Alchemist Dialogue Bus Test", "RUN")
+    diagnosticMageBusOption = AddTextOption("Run Mage Dialogue Bus Test", "RUN")
+    Int elsieMilkFlags = OPTION_FLAG_NONE
+    If !MMEElsieBreastfeeding.IsAvailable()
+        elsieMilkFlags = OPTION_FLAG_DISABLED
+    EndIf
+    elsieBreastfeedingTestOption = AddTextOption("Test Elsie Auto Breastfeeding", "RUN", elsieMilkFlags)
+    AddHeaderOption("Living / Parasite Diagnostics")
+    armorInjectionDiagnosticOption = AddToggleOption("Enable Effect Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorInjectionDiagnostics", 0) == 1)
+    runArmorInjectionCheckOption = AddTextOption("Run Effect Check Now", "RUN")
+    AddHeaderOption("Dwemer Diagnostics")
+    dwemerEffectDiagnosticOption = AddToggleOption("Enable Effect Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableDwemerEffectDiagnostics", 0) == 1)
+    runDwemerEffectCheckOption = AddTextOption("Run Effect Check Now", "RUN")
+    AddHeaderOption("Reverse Leveling Tests")
+    reverseApplyOption = AddTextOption("Apply Reverse Leveling", "APPLY")
+    reverseRemoveOption = AddTextOption("Remove Reverse Leveling", "REMOVE")
+    reverseTraceOption = AddToggleOption("Reverse Leveling Trace", JsonUtil.GetIntValue(SettingsFile, "enableReverseLevelTrace", 0) == 1)
+EndFunction
+
+Function DrawDebugPage()
+    AddHeaderOption("Core / Development")
+    lifecycleDiagnosticOption = AddToggleOption("Location Wait Load", JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0) == 1)
+    milkmaidCreationDiagnosticOption = AddToggleOption("Milkmaid Creation Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 1) == 1)
+    nativeScanDiagnosticOption = AddToggleOption("Native Actor Scan Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0) == 1)
+    debugMilkingEventsOption = AddToggleOption("Report Milking Start/End", JsonUtil.GetIntValue(SettingsFile, "enableMilkingEventDebug", 1) == 1)
+    debugMilkReportOption = AddToggleOption("Milk Status Every 5 Seconds", JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0) == 1)
+    AddHeaderOption("Milk Drinking")
+    addMilkDebugOption = AddToggleOption("Milk Drinking Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableAddMilkDebug", 0) == 1)
+    breastfeedingMilkEffectsDebugOption = AddToggleOption("Breastfeeding Milk Effects", JsonUtil.GetIntValue(SettingsFile, "enableBreastfeedingMilkEffectsDebug", 0) == 1)
+    npcMilkConsumptionDiagnosticOption = AddToggleOption("NPC Milk Consumption", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkConsumptionDiagnostic", 0) == 1)
+    npcDrinkNotificationsDiagnosticOption = AddToggleOption("NPC Drink Notifications", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNotificationsDiagnostic", 0) == 1)
+    AddHeaderOption("Armor Debug")
+    armorStrippingCheckDiagnosticOption = AddToggleOption("Armor Stripping Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorOverflowDiagnostic", 0) == 1)
+    armorStripNotificationDiagnosticOption = AddToggleOption("Strip Notification Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNotificationDiagnostic", 0) == 1)
+    armorStripMoanDiagnosticOption = AddToggleOption("Strip Moan Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripMoanDiagnostic", 0) == 1)
+    armorStripNarrationDiagnosticOption = AddToggleOption("Strip Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorStripNarrationDiagnostic", 0) == 1)
+    armorDebugOption = AddToggleOption("Equip Reaction Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableArmorDebug", 0) == 1)
+    armorLookupForensicsOption = AddToggleOption("Armor Lookup Forensics", JsonUtil.GetIntValue(SettingsFile, "enableArmorLookupForensics", 0) == 1)
+    AddHeaderOption("A" + "nimations ")
+    milkDrinkAnimationDiagnosticOption = AddToggleOption("Milk Drink Animation", JsonUtil.GetIntValue(SettingsFile, "enableMilkDrinkAnimationDiagnostic", 0) == 1)
+    fullnessSelfMilkAnimationDiagnosticOption = AddToggleOption("Fullness Animation", JsonUtil.GetIntValue(SettingsFile, "enableFullnessSelfMilkAnimationDiagnostic", 0) == 1)
+    selfMilkingActionDiagnosticOption = AddToggleOption("Self-Milking Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableSelfMilkingActionDiagnostic", 0) == 1)
+    pairedMilkingActionDiagnosticOption = AddToggleOption("Paired Milking Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePairedMilkingActionDiagnostic", 0) == 1)
+    giveMilkActionDiagnosticOption = AddToggleOption("Give Milk Action Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableGiveMilkActionDiagnostic", 0) == 1)
+    SetCursorPosition(1)
+    AddHeaderOption("Skyrim.Net")
+    skyrimNetDrinkDiagnosticOption = AddToggleOption("Milk Drink Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetDrinkDiagnostic", 0) == 1)
+    skyrimNetMilkingDiagnosticOption = AddToggleOption("Milking Start/End Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingDiagnostic", 0) == 1)
+    skyrimNetCreationDiagnosticOption = AddToggleOption("New Milkmaid Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetCreationDiagnostic", 0) == 1)
+    skyrimNetStatusDiagnosticOption = AddToggleOption("Nearby Milk Status Events", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetStatusDiagnostic", 0) == 1)
+    skyrimNetPromptDiagnosticOption = AddToggleOption("Milkmaid Bio Prompt", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetPromptDiagnostic", 0) == 1)
+    skyrimNetOStimTraceOption = AddToggleOption("Skyrim.Net OStim Trace", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetOStimTrace", 0) == 1)
+    skyrimNetSexLabTraceOption = AddToggleOption("Skyrim.Net SexLab Trace", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetSexLabTrace", 0) == 1)
+    milkFullNarrationDiagnosticOption = AddToggleOption("Milk Full Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarrationDiagnostic", 0) == 1)
+    milkHalfFullNarrationDiagnosticOption = AddToggleOption("Half-Full Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarrationDiagnostic", 0) == 1)
+    playerDrinkNarrationDiagnosticOption = AddToggleOption("Player Drink Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enablePlayerDrinkNarrationDiagnostic", 0) == 1)
+    npcDrinkNarrationDiagnosticOption = AddToggleOption("NPC Drink Narration Diagnostics", JsonUtil.GetIntValue(SettingsFile, "enableNPCDrinkNarrationDiagnostic", 0) == 1)
+    milkmaidCreatedNarrationDiagnosticOption = AddToggleOption("New Milk Maid Narration Diagnostic", JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreatedNarrationDiagnostic", 0) == 1)
+    AddHeaderOption("Dialogue")
+    sexLabBreastfeedingDebugOption = AddToggleOption("SexLab Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableSexLabBreastfeedingDebug", 0) == 1)
+    ostimDebugOption = AddToggleOption("OStim Breastfeeding Debug", JsonUtil.GetIntValue(SettingsFile, "enableOStimDebug", 0) == 1)
+    newMilkmaidDialogueTraceOption = AddToggleOption("New Milkmaid Dialogue Trace", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidDialogueTrace", 0) == 1)
+    newMilkmaidSexLabTraceOption = AddToggleOption("New Milk Maid SexLab Trace", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkmaidSexLabTrace", 0) == 1)
+    blacksmithDialogueTraceOption = AddToggleOption("Blacksmith Dialogue Live Trace", JsonUtil.GetIntValue(SettingsFile, "enableBlacksmithDialogueTrace", 0) == 1)
+    alchemistDialogueTraceOption = AddToggleOption("Alchemist Dialogue Live Trace", JsonUtil.GetIntValue(SettingsFile, "enableAlchemistDialogueTrace", 0) == 1)
+    mageDialogueTraceOption = AddToggleOption("Mage Dialogue Live Trace", JsonUtil.GetIntValue(SettingsFile, "enableMageDialogueTrace", 0) == 1)
+    AddHeaderOption("Milk Armor Thoughts")
+    milkMaidThoughtsDebugOption = AddToggleOption("15 Second Thoughts", JsonUtil.GetIntValue(SettingsFile, "enableMilkMaidThoughtsDebug", 0) == 1)
+    traceMilkMaidThoughtsLogicOption = AddToggleOption("Trace Thoughts Logic", JsonUtil.GetIntValue(SettingsFile, "traceMilkMaidThoughtsLogic", 0) == 1)
+EndFunction
+
+Function DrawGeneralPage()
+    AddHeaderOption("Framework & Integration")
+    installedBackendOption = AddTextOption("Installed Backend", InstalledBackendLabel(), OPTION_FLAG_DISABLED)
+    Bool ostimAvailable = MMEOStimBreastfeeding.IsOStimDetected()
+    Int ostimFlags = OPTION_FLAG_DISABLED
+    If ostimAvailable
+        ostimFlags = OPTION_FLAG_NONE
+    EndIf
+    ostimStatusOption = AddToggleOption("OStim Detected", ostimAvailable, OPTION_FLAG_DISABLED)
+    ostimBreastfeedingOption = AddToggleOption("Use OStim Breastfeeding", JsonUtil.GetIntValue(SettingsFile, "enableOStimBreastfeeding", 0) == 1, ostimFlags)
+    SetCursorPosition(1)
+    AddHeaderOption("MME Extensions")
+    masterEnableOption = AddToggleOption("Enable MME Extensions", JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1) == 1)
+    AddHeaderOption("Global Audio")
+    soundsOption = AddToggleOption("Enable Moaning Sounds", JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1) == 1)
+    volumeOption = AddSliderOption("Moaning Sound Volume", JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0), "{0}%")
+    newMilkMaidMoansOption = AddToggleOption("New Milk Maid Moans", JsonUtil.GetIntValue(SettingsFile, "enableNewMilkMaidMoans", 1) == 1)
+    MMEOriginalSettings.DrawGeneralAt(Self, 7)
+    AddHeaderOption("Milk Maid Roster")
+    rosterEnabledOption = AddToggleOption("Enable Milk Maid Roster", JsonUtil.GetIntValue(SettingsFile, "maidRosterUiEnabled", 1) == 1)
+    Int rosterFlags = OPTION_FLAG_NONE
+    If !RosterUiAvailable() || JsonUtil.GetIntValue(SettingsFile, "maidRosterUiEnabled", 1) != 1 || JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1) != 1
+        rosterFlags = OPTION_FLAG_DISABLED
+    EndIf
+    rosterOpenOption = AddTextOption("Open Milk Maid Roster", "OPEN", rosterFlags)
+    rosterKeyOption = AddKeyMapOption("Milk Maid Roster Hotkey", JsonUtil.GetIntValue(SettingsFile, "maidRosterHotkey", -1))
+EndFunction
+
+String Function InstalledBackendLabel()
+    String backend = MMESexLabBreastfeedingBackend.GetBackendName()
+    If backend == "OStim-only (legacy route disabled)"
+        Return "OStim-only"
+    EndIf
+    Return backend
 EndFunction

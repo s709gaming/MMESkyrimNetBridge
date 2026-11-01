@@ -67,3 +67,11 @@ Function SingleMaidReset(Actor akActor)
 EndFunction
 Function Milking(Actor akActor, Int index, Int mode, Int milkingType)
 EndFunction
+
+; Original MME quick-settings surface; compile-only declarations.
+MilkECON Property MilkE Auto
+Bool Property BreastVolumeScale Auto
+Int Property Milking_Duration Auto
+Int Property MilkPriceMod Auto
+Function PostMilk(Actor akActor)
+EndFunction

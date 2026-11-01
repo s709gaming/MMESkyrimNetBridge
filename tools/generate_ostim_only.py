@@ -100,6 +100,7 @@ Bool Function MMEExtSLSDCheck(Actor target)
 EndFunction
 '''
     variants['MilkQUEST'] = common_calls(s)
+    variants['MilkMCM'] = (ROOT / 'Source/MMECompatibilityOverrides/MilkMCM.psc').read_text()
 
     # The experimental no-SexLab branch cannot support the original DD adapter:
     # zadlibs exposes SexLab-typed signatures even with its plugin disabled.

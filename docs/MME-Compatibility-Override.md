@@ -1,5 +1,54 @@
 # MME compatibility override
 
+## Original MME quick settings and Difficulty display
+
+Extensions mirrors 13 original MME controls at the top of General and Body.
+`MMEOriginalSettings.psc` reads/writes the original quest properties, global
+StorageUtil mastery value and player spell ownership. There are no mirrored
+JSON values, automatic resets, polling or new quest properties to initialize.
+Opening a page reads current MME values, including changes made in its menu.
+The shortcuts remain usable independently of the Extensions gameplay switch;
+they configure original MME, not Extensions gameplay.
+
+The additional `MilkMCM.pex` override is based on original MME 20220522.
+Its only behavioral changes are reading `TimesMilkedMult` to synchronize the
+private Difficulty selection when a page or its selector opens, displaying
+unknown multipliers as Custom, and rejecting invalid selection indices.
+Original Difficulty setters and economy refresh behavior remain intact.
+Both Standard/P+ and the generated OStim-only backend include this fix.
+Another mod replacing MilkMCM requires a deliberate merge; this is an
+intentional, small override, not a replacement MME menu.
+
+The facade preserves original slider ranges/defaults (including volume-mode
+growth ranges), the Difficulty economy initialization, PostMilk refreshes for
+the original buffs/debuffs toggle, and CurrentSize refreshes for the size cap.
+Growth sliders do not overwrite individual-maid settings. Spell changes target
+only the original MME PlayerREF. No maid conversion, slot assignment or milk
+inventory change is performed by the facade.
+
+Milking Speed is the original Gush percentage, extracting a fraction of
+remaining milk each cycle (minimum one unit); higher is faster. Cycle Duration
+is not total session duration. Leveling Speed also changes MME economy.
+The original (De)Buffs toggle includes beneficial effects, and original
+penalties can stack with Extensions penalties. Zero maximum size is unlimited.
+
+Sparse `[MME Original Settings]` entry/result and per-actor refresh traces use
+the master Papyrus logging toggle. Broken prerequisites and failed spell
+ownership changes produce deduplicated smoke alarms; recovery re-arms them.
+There are no per-tick traces or diagnostic notifications.
+
+Build validation includes compilation, a pinned normalized-source check that
+rejects unrelated original-MCM edits, 13-control wiring checks, and package
+source/PEX presence. Runtime acceptance remains required after installation:
+
+- Change every control in each menu, reopen the other, and confirm both values.
+- Check all six leveling presets, a preexisting Custom value, cancel, and save/load.
+- Check spells absent/present and repeated add/remove; confirm NPC spells unchanged.
+- Test debuffs and size-cap refresh on player and NPC maids, including empty slots.
+- Check normal/volume growth mode, per-maid overrides, zero cap, and Extensions disabled.
+- Confirm opening pages leaves existing values untouched; inspect logging off/on
+  for wrong actors, errors, stack dumps and repeated alarms.
+
 MME Extensions ships a narrow `MilkQUEST.pex` compatibility override based on
 the original MME script. It includes these intentional compatibility changes:
 
