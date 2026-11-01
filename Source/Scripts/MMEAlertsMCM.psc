@@ -120,6 +120,11 @@ Int addMilkDebugOption
 Int breastfeedingMilkEffectsOption
 Int elsieDetectedOption
 Int elsieBreastfeedingMilkEffectsOption
+Int estrusTestTypeOption
+Int estrusTestRunOption
+Int estrusTestResultOption
+Int estrusTestType = 0
+String estrusTestResult = "Not run"
 Int elsieBreastfeedingTestOption
 Int breastfeedingMilkEffectsDebugOption
 Int lactacidMultiplierOption
@@ -1868,6 +1873,9 @@ Event OnPageReset(String page)
     breastfeedingMilkEffectsOption = -1
     elsieDetectedOption = -1
     elsieBreastfeedingMilkEffectsOption = -1
+    estrusTestTypeOption = -1
+    estrusTestRunOption = -1
+    estrusTestResultOption = -1
     elsieBreastfeedingTestOption = -1
     breastfeedingMilkEffectsDebugOption = -1
     lactacidMultiplierOption = -1
@@ -2520,6 +2528,10 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Read-only detection status for Elsie LaVache 3.4. Install the recommended Elsie FOMOD compatibility patch to enable its breastfeeding integration.")
     ElseIf option == elsieBreastfeedingMilkEffectsOption
         SetInfoText("After a completed Elsie ELV_Taste breastfeeding scene, give the drinker the normal MME Extensions breastfeeding milk effects. Also requires Breastfeeding Gives Milk above. Default on.")
+    ElseIf option == estrusTestTypeOption
+        SetInfoText("Click to cycle Chaurus, Spider and Dwemer. The test affects only the player.")
+    ElseIf option == estrusTestRunOption
+        SetInfoText("Request the selected Estrus pregnancy without animation. Close MCM to run; respects Estrus settings and existing pregnancies. Requires the installed Estrus compatibility option.")
     ElseIf option == elsieBreastfeedingTestOption
         SetInfoText("Start one checked Elsie-style breastfeeding scene using a nearby Milk Maid and customer. Uses the same repaired SexLab starter and completion route as Elsie's autonomous scene.")
     ElseIf option == breastfeedingMilkEffectsDebugOption
@@ -3401,6 +3413,11 @@ Event OnOptionSelect(Int option)
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enableElsieBreastfeedingMilkEffects", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableElsieBreastfeedingMilkEffects", value)
         SetToggleOptionValue(option, value == 1)
+    ElseIf option == estrusTestTypeOption
+        estrusTestType = (estrusTestType + 1) % 3
+        SetTextOptionValue(option, MMEEstrusPregnancyTest.TypeName(estrusTestType))
+    ElseIf option == estrusTestRunOption
+        estrusTestResult = MMEEstrusPregnancyTest.RunTest(estrusTestType)
     ElseIf option == elsieBreastfeedingTestOption
         MMEElsieBreastfeeding.RunNearbyTest()
     ElseIf option == breastfeedingMilkEffectsDebugOption
@@ -5652,6 +5669,9 @@ Function DrawTroubleshootPage()
     diagnosticRefreshGateOption = AddTextOption("Refresh OStim Dialogue Gate", "RUN")
     diagnosticRefreshSexLabBusOption = AddTextOption("Refresh SexLab Bus Listeners", "RUN")
     AddHeaderOption("Gameplay Tests")
+    estrusTestTypeOption = AddTextOption("Estrus Pregnancy Type", MMEEstrusPregnancyTest.TypeName(estrusTestType))
+    estrusTestRunOption = AddTextOption("Test Player Estrus Pregnancy", "RUN")
+    estrusTestResultOption = AddTextOption("Last Estrus Test", estrusTestResult, OPTION_FLAG_DISABLED)
     diagnosticSpawnOManiaPotionOption = AddTextOption("Spawn OMania Dragon Egg Potion", "SPAWN")
     diagnosticGlobalNPCDrinkTestOption = AddTextOption("Test Global NPC Milk Drink", "RUN")
     diagnosticNewMilkmaidSexLabBusOption = AddTextOption("Run New Milk Maid Bus Test", "RUN")

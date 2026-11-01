@@ -1,7 +1,8 @@
 # Estrus Unified pregnancy support
 
-Select **Estrus Unified pregnancy support** in Optional Mod Compatibility when
-using Estrus Unified. Its ESP must be active. The installer automatically selects
+**Estrus Unified pregnancy support** is preselected in Optional Mod Compatibility
+when `EstrusUnified.esp` is active. You can untick it; when the ESP is inactive or
+missing the option is unavailable. The installer automatically selects
 the matching Standard SexLab/P+ or OStim-only MilkQUEST override at priority 60.
 Unified's own DLL and complete API script remain required and are not bundled.
 
@@ -40,8 +41,7 @@ animation backend; switching SexLab/OStim on an existing save remains unsupporte
 When replacing the experimental native integration, replace the full Extensions
 mod to remove the retired MMEEstrusUnified helper. Its native query/registration
 has been removed from this branch and preserved in a development source backup
-outside the release. Integrate concurrent JSON/MCM changes before deploying a
-full package from this worktree; this package does not contain those changes.
+outside the release. The current package includes the integrated JSON/MCM changes.
 
 ## Diagnostics and verification
 
@@ -64,3 +64,26 @@ Positive pregnancy types, birth/reset, dependency absence, broader save/load and
 logging combinations, P+ and OStim still require runtime validation. This basic
 test is not full gameplay acceptance. The game was quit without an explicit save
 and the original MO2 activation restored after the test.
+
+## Player pregnancy test
+
+Troubleshoot > Gameplay Tests includes **Estrus Pregnancy Type** (click to cycle
+Chaurus, Spider, Dwemer), **Test Player Estrus Pregnancy**, and **Last Estrus Test**.
+Close MCM after clicking RUN. The selected type is captured for that request.
+The test uses the documented EC/ES/EDStartAnimation ModEvent with pregnancy-only
+mode (-1), without starting an animation. It respects Estrus settings and existing
+pregnancy restrictions, and checks the player's public API result for up to ten
+checks after dispatch. Event dispatch alone is not reported as pregnancy success.
+The last result is visible when MCM is reopened; short notifications accompany it.
+
+Only the optional compatibility choice supplies the API-aware test facade. The
+base facade reports missing support without linking Estrus API types. An unavailable
+or disabled integration can decline the request. Exact internal rejection reasons
+are not exposed by the public interface; inspect Estrus settings/logs when unconfirmed.
+Player breeder effects retain original side effects, including SexLab purity changes.
+The test does not independently change MME milk-maid state or force milk production.
+
+Routine footprints use `[MME Extensions Estrus Test]` and require master Papyrus
+Logging; verbose logging is not required. They cover entry, actor/type, eligibility,
+skips, dispatch, verified result and cleanup. Event allocation/dispatch failures and
+invalid internal inputs are smoke alarms. No per-check polling traces are emitted.

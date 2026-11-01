@@ -4,12 +4,16 @@
                   {
                       "backend":  "standard",
                       "sourceSHA256":  "EFF2B2407C252B9C4794D2145FE0CA93EC5C1EED42CE54A5B67ADD459ECCFE8D",
-                      "compiledSHA256":  "72095B13F80D620F75E73C29EC94E1030C036A0AF98CF23DF44583D438A4A465"
+                      "compiledSHA256":  "2A6FE5713B701D9725B0FA8C061DA6F44CCE984446F9970DDBA244C02CF7CFEF"
                   },
                   {
                       "backend":  "ostim-only",
                       "sourceSHA256":  "BC85D238E06A3C90E9E844E184E7155849C2C5C444BBCC001E2C97F019172252",
-                      "compiledSHA256":  "AF7AB2144F0E191BF5B7C1727ED6A184757111269D588F794D6891559C438900"
+                      "compiledSHA256":  "A656B6F0E3D082E84859EAA6637C686FDE1084AB65491BA14C0B12802B84CDED"
                   }
-              ]
+              ],
+    "playerTestFacade":  {
+                             "sourceSHA256":  "B7227E2BEA2462A346F99B5D6C49705BEAFBC33CF09C80872C3D411B699AA56F",
+                             "compiledSHA256":  "1547A50012A3095C3E5C130814E6C891E3451899D6EE22CF74C71D03BC9309A3"
+                         }
 }

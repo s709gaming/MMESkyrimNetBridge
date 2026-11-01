@@ -157,8 +157,10 @@
         <group name="Optional mod compatibility" type="SelectAny">
           <plugins order="Explicit">
             <plugin name="Estrus Unified pregnancy support">
-              <description>Optional author-style pregnancy detection for Estrus Unified. Requires EstrusUnified.esp and its DLL/API. Recognizes Chaurus, Spider and Dwemer pregnancies without changing MME milk rules or starting scenes. Automatically uses your selected Standard/P+ or OStim backend. Do not enable legacy Estrus plugins alongside Unified. Reinstall using Replace when changing this option to remove stale compatibility scripts.</description>
+              <description>Optional author-style pregnancy detection for Estrus Unified. Preselected when EstrusUnified.esp is active; you can untick this compatibility option. Requires EstrusUnified.esp and its DLL/API. Recognizes Chaurus, Spider and Dwemer pregnancies without changing MME milk rules or starting scenes. Automatically uses your selected Standard/P+ or OStim backend. Do not enable legacy Estrus plugins alongside Unified. Reinstall using Replace when changing this option to remove stale compatibility scripts.</description>
               <files>
+                <file source="fomod/choices/estrus-unified/Scripts/MMEEstrusPregnancyTest.pex" destination="Scripts/MMEEstrusPregnancyTest.pex" priority="60" />
+                <file source="fomod/choices/estrus-unified/Source/Scripts/MMEEstrusPregnancyTest.psc" destination="Source/Scripts/MMEEstrusPregnancyTest.psc" priority="60" />
                 <file source="docs/Estrus-Unified-Compatibility.md" destination="Docs/Estrus Unified Compatibility.md" priority="60" />
               </files>
               <conditionFlags>
@@ -172,7 +174,7 @@
                       <dependencies operator="And">
                         <fileDependency file="EstrusUnified.esp" state="Active" />
                       </dependencies>
-                      <type name="Optional" />
+                      <type name="Recommended" />
                     </pattern>
                   </patterns>
                 </dependencyType>

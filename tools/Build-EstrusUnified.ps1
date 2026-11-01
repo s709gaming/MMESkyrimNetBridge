@@ -35,4 +35,27 @@ foreach ($backend in @('standard', 'ostim-only')) {
     Copy-Item -LiteralPath (Join-Path $scratch 'MilkQUEST.pex') -Destination $output -Force
     $pairs += [ordered]@{ backend = $backend; sourceSHA256 = (Get-FileHash (Join-Path $source 'MilkQUEST.psc')).Hash; compiledSHA256 = (Get-FileHash (Join-Path $output 'MilkQUEST.pex')).Hash }
 }
-[ordered]@{ runtimeValidated = $false; pairs = $pairs } | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $choice 'BuildManifest.json')
+
+
+# Optional player test facade: same interface as the dependency-free base facade.
+$testSource = Join-Path $choice 'Source\Scripts'
+$testOutput = Join-Path $choice 'Scripts'
+$testScratch = Join-Path $root ('build\diagnostics\estrus-test-compile-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Force -Path $testScratch, $testOutput | Out-Null
+# The gameplay safety facade needs the normal framework SDK surface; the narrow
+# diagnostic SDK used for MilkQUEST above intentionally omits those functions.
+$testImports = @($testSource) + @($baseImports | Where-Object { $_ -ne (Join-Path $root 'tools\mme-diagnostic-sdk') })
+& $compiler (Join-Path $testSource 'MMEEstrusPregnancyTest.psc') "-f=$flags" "-i=$($testImports -join ';')" "-o=$testScratch"
+if ($LASTEXITCODE) { throw 'Estrus player test compilation failed' }
+$testTarget = Join-Path $testOutput 'MMEEstrusPregnancyTest.pex'
+if (Test-Path -LiteralPath $testTarget) { Move-Item -LiteralPath $testTarget -Destination (Join-Path $testScratch 'previous.pex') }
+Copy-Item -LiteralPath (Join-Path $testScratch 'MMEEstrusPregnancyTest.pex') -Destination $testTarget
+
+[ordered]@{
+    runtimeValidated = $false
+    pairs = $pairs
+    playerTestFacade = [ordered]@{
+        sourceSHA256 = (Get-FileHash (Join-Path $testSource 'MMEEstrusPregnancyTest.psc')).Hash
+        compiledSHA256 = (Get-FileHash $testTarget).Hash
+    }
+} | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $choice 'BuildManifest.json')

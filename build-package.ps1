@@ -31,6 +31,7 @@ $scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "M
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $scriptNames += "MMEOriginalSettings"
 $scriptNames += "MMELockProtection"
+$scriptNames += "MMEEstrusPregnancyTest"
 $scriptNames += "MMEBodyEffects"
 $scriptNames += "MMEMaidBodyScaling"
 $scriptNames += @("MMENarrationText", "MMENarrationDefaults")

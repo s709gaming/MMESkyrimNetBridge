@@ -40,6 +40,9 @@ homes = {
     'timedArmorDurationOption': 'DrawArmorPage',
     'timedArmorReleaseOption': 'DrawTroubleshootPage',
     'elsieBreastfeedingTestOption': 'DrawTroubleshootPage',
+    'estrusTestTypeOption': 'DrawTroubleshootPage',
+    'estrusTestRunOption': 'DrawTroubleshootPage',
+    'estrusTestResultOption': 'DrawTroubleshootPage',
     'runArmorInjectionCheckOption': 'DrawTroubleshootPage',
     'reverseApplyOption': 'DrawTroubleshootPage',
     'milkMaidThoughtsDebugOption': 'DrawDebugPage',
@@ -53,7 +56,7 @@ for page, text in builders.items():
         assignments[option] = page
 for option, page in homes.items():
     assert assignments.get(option) == page, (option, assignments.get(option), page)
-assert len(assignments) == 323
+assert len(assignments) == 326
 assert 'MMESexLabBreastfeedingBackend.GetBackendName()' in MCM
 assert 'does not switch the installed' in MCM
 assert 'Milk Mastery (Maid Slots)' in FACADE and 'unlocks more Milk Maid slots' in MCM
@@ -94,5 +97,5 @@ for page, text in builders.items():
     occupied = {}
     draw(text, 0, occupied)
     print(f'PASS: {page}: {len(occupied)} drawing slots; no overlap or buffer overflow')
-print('PASS: 11 pages, 323 unique controls, feature ownership and retained Debug modes')
+print('PASS: 11 pages, 326 unique controls, feature ownership and retained Debug modes')
 

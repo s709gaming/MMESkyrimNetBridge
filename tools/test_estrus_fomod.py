@@ -36,6 +36,42 @@ class EstrusTests(unittest.TestCase):
                         self.assertEqual({f.get('destination') for f in files},
                                          {'Scripts/MilkQUEST.pex', 'Source/Scripts/MilkQUEST.psc'})
 
+    def test_player_trigger_isolation_and_contract(self):
+        xml = ET.parse(ROOT / 'fomod/ModuleConfig.xml').getroot()
+        option = xml.find(".//plugin[@name='Estrus Unified pregnancy support']")
+        files = option.findall('./files/file')
+        for suffix in ('Scripts/MMEEstrusPregnancyTest.pex',
+                       'Source/Scripts/MMEEstrusPregnancyTest.psc'):
+            entry = next(f for f in files if f.get('destination') == suffix)
+            self.assertEqual(entry.get('priority'), '60')
+            self.assertTrue((ROOT / entry.get('source')).is_file())
+        base = (ROOT / 'Scripts/MMEEstrusPregnancyTest.pex').read_bytes().lower()
+        self.assertNotIn(b'estrusunifiedapi', base)
+        optional = (CHOICE / 'Scripts/MMEEstrusPregnancyTest.pex').read_bytes().lower()
+        self.assertIn(b'estrusunifiedapi', optional)
+        self.assertNotIn(b'sexlabframework', optional)
+        manifest = json.loads((CHOICE / 'BuildManifest.json').read_text(encoding='utf-8-sig'))
+        for field, path in [('sourceSHA256', 'Source/Scripts/MMEEstrusPregnancyTest.psc'),
+                            ('compiledSHA256', 'Scripts/MMEEstrusPregnancyTest.pex')]:
+            self.assertEqual(hashlib.sha256((CHOICE / path).read_bytes()).hexdigest(),
+                             manifest['playerTestFacade'][field].lower())
+
+        source = (CHOICE / 'Source/Scripts/MMEEstrusPregnancyTest.psc').read_text()
+        for name in ('ECStartAnimation', 'ESStartAnimation', 'EDStartAnimation'):
+            self.assertIn(name, source)
+        self.assertIn('Actor target = Game.GetPlayer()', source)
+        self.assertIn('actual == kind + 1', source)
+        self.assertNotIn('Debug.Trace(', source)
+        self.assertNotIn('RegisterForUpdate', source)
+        self.assertNotIn('TrackPregnancy', source)
+        self.assertNotIn('AddSpell', source)
+        self.assertIn('MMELog.MasterDiagnostic', source)
+        pushes = [line.strip() for line in source.splitlines() if line.strip().startswith('ModEvent.Push')]
+        self.assertEqual(pushes, [
+            'ModEvent.PushForm(handle, target)', 'ModEvent.PushForm(handle, target)',
+            'ModEvent.PushInt(handle, -1)', 'ModEvent.PushBool(handle, False)',
+            'ModEvent.PushInt(handle, 0)', 'ModEvent.PushBool(handle, False)'])
+
     def test_preserved_behavior_and_bytecode(self):
         for variant, original in (
             ('standard', ROOT / 'Source/MMECompatibilityOverrides/MilkQUEST.psc'),
