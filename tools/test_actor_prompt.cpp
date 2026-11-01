@@ -8,7 +8,7 @@ int main(int argc,char** argv){
   if(argc!=2)throw std::runtime_error("prompt path required");
   std::ifstream input(argv[1]);std::string source((std::istreambuf_iterator<char>(input)),{});
   inja::Environment env;env.set_line_statement("");json actor;bool maid=true;int reads=0;
-  env.add_callback("isValidActor",1,[](inja::Arguments&){return true;});
+  env.add_callback("isValidActor",1,[](inja::Arguments& a){if(a[0]->is_null())throw std::runtime_error("null actor validation");return true;});
   env.add_callback("mme_milkmaid_prompt_debug",1,[&](inja::Arguments&){return maid?"true":"";});
   env.add_callback("mme_recent_milk_drinker",1,[](inja::Arguments&){return "";});
   env.add_callback("mme_milk_lore_text",1,[](inja::Arguments&){return "Milk Maid lore.";});
@@ -29,11 +29,21 @@ int main(int argc,char** argv){
    if(a[0]->get<std::string>()!="HasFloatValue")throw std::runtime_error("unexpected has function");
    return actor.contains(a[2]->get<std::string>()=="MME.MilkMaid.MilkMaximum"?"max":"milk");
   });
+  env.add_callback("mme_breastfeeding_role",1,[](inja::Arguments&){return "source";});
+  env.add_callback("mme_breastfeeding_guidance_text",1,[](inja::Arguments&){return "Guidance.";});
   auto parsed=env.parse(source);
+  if(source.find("mme_breastfeeding_role")!=std::string::npos){
+   for(auto context:{json{{"render_mode","full"}},json{{"render_mode","full"},{"actorUUID",nullptr}}})
+    if(env.render(parsed,context).find("Guidance.")!=std::string::npos)throw std::runtime_error("guidance without actor");
+   if(env.render(parsed,{{"render_mode","full"},{"actorUUID",1}}).find("Guidance.")==std::string::npos)throw std::runtime_error("missing valid actor guidance");
+   std::cout<<"PASS: breastfeeding actual Inja missing/null/valid actor guards\n";return 0;
+  }
   auto reset=[&](int id){actor={{"id",id},{"milk",0.0},{"max",8.0},{"context",{{"enabled",true},{"milkEnabled",true},{"armorEnabled",true},{"name","NPC "+std::to_string(id)},{"armor","Wearing living armor."},{"leak","No tracked milk-leak effect is active."}}}};};
   auto render=[&](){return env.render(parsed,{{"actorUUID",actor["id"]},{"render_mode","full"}});};
   auto has=[](const std::string&s,const std::string&t){if(s.find(t)==std::string::npos)throw std::runtime_error("missing: "+t+"\n"+s);};
   auto lacks=[](const std::string&s,const std::string&t){if(s.find(t)!=std::string::npos)throw std::runtime_error("unexpected: "+t);};
+  lacks(env.render(parsed,{{"render_mode","full"}}),"Current MME Status");
+  lacks(env.render(parsed,{{"render_mode","full"},{"actorUUID",nullptr}}),"Current MME Status");
   reset(1);has(render(),"Milk state: empty.");has(render(),"0.0/8.0 (0.0%)");
   actor["milk"]=0.25;has(render(),"below half full");
   actor["milk"]=4.0;has(render(),"half full (at least 50%, below full)");

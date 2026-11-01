@@ -15,6 +15,8 @@ try{
  if($LASTEXITCODE){throw 'Actor template test compilation failed'}
  & $exe (Join-Path $root 'SkyrimNetPrompts/0260_mme_extensions_milkmaid.prompt')
  if($LASTEXITCODE){throw 'Actor template render tests failed'}
+ & $exe (Join-Path $root 'SkyrimNetPrompts/0950_mme_extensions_breastfeeding.prompt')
+ if($LASTEXITCODE){throw 'Breastfeeding template render tests failed'}
 }finally{Pop-Location}
 & python -B (Join-Path $root 'tools/test_actor_prompt_contracts.py')
 if($LASTEXITCODE){throw 'Actor prompt integration contracts failed'}

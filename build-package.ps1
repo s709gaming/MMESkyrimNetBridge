@@ -2,6 +2,10 @@ $ErrorActionPreference = "Stop"
 
 # Resolve every path from this script so it works when launched by double-click.
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+& python -B (Join-Path $projectRoot 'tools/test_lactacid_presentation.py')
+if ($LASTEXITCODE) { throw 'Lactacid presentation regressions failed' }
+& python -B (Join-Path $projectRoot 'tools/test_json_escape.py')
+if ($LASTEXITCODE) { throw 'JSON escaping regressions failed' }
 & python -B (Join-Path $projectRoot 'tools/test_dialogue_knowledge.py')
 if ($LASTEXITCODE) { throw 'Dialogue knowledge contracts failed' }
 & python -B (Join-Path $projectRoot 'tools/test_fixed_lactacid.py')
@@ -52,7 +56,7 @@ if ($LASTEXITCODE) { throw 'Narration dashboard contracts failed' }
 & python -B (Join-Path $projectRoot 'tools\test_flavor_notifications.py')
 if ($LASTEXITCODE) { throw 'Flavor notification contracts failed' }
 $mmeCompatibilityOverrideSource = Join-Path $projectRoot "Source\MMECompatibilityOverrides"
-$mmeCompatibilityOverrideNames = @("MilkQUEST", "MilkMCM")
+$mmeCompatibilityOverrideNames = @("MilkQUEST", "MilkMCM", "MilkLactacidScr")
 $diagnosticSdk = Join-Path $projectRoot "tools\mme-diagnostic-sdk"
 $scriptNames += "MMEMilkingDiagnostics"
 $scriptNames += "MMEMilkCurse"

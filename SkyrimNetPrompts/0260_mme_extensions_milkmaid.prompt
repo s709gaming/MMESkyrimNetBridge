@@ -1,4 +1,6 @@
 {% if render_mode == "full" or render_mode == "thoughts" or render_mode == "transform" or render_mode == "dialogue_target" or render_mode == "target" %}
+{% if exists("actorUUID") %}
+{% if actorUUID != null %}
 {% if isValidActor(actorUUID) %}
 {% set is_milkmaid = mme_milkmaid_prompt_debug(actorUUID) %}
 {% set is_recent_milk_drinker = mme_recent_milk_drinker(actorUUID) %}
@@ -39,5 +41,8 @@ Milk state: unknown; current amount or capacity is unavailable. Do not assume em
 This is current game state for this actor. Older events and memories describe past experiences, not current milk levels or equipment. Do not infer gushing, leaking, arousal, pain or size from Milk Maid identity or fullness alone.
 {% endif %}
 {% endif %}
+{% endif %}
+{% endif %}
+
 {% endif %}
 {% endif %}

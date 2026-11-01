@@ -1608,9 +1608,9 @@ EndFunction
 String Function EscapeJsonString(String value) Global
     value = ReplaceAll(value, "\\", "\\\\")
     value = ReplaceAll(value, "\"", "\\\"")
-    value = ReplaceAll(value, "\n", "\\n")
+    value = ReplaceAll(value, StringUtil.AsChar(10), "\\n")
     value = ReplaceAll(value, StringUtil.AsChar(13), "\\r")
-    value = ReplaceAll(value, "\t", "\\t")
+    value = ReplaceAll(value, StringUtil.AsChar(9), "\\t")
     Return value
 EndFunction
 
@@ -1623,11 +1623,18 @@ String Function ReplaceAll(String value, String token, String replacement) Globa
     Int start = 0
     Int found = StringUtil.Find(value, token, start)
     While found >= 0
-        result = result + StringUtil.Substring(value, start, found - start) + replacement
+        ; Substring length zero means the entire remainder, not an empty string.
+        If found > start
+            result = result + StringUtil.Substring(value, start, found - start)
+        EndIf
+        result = result + replacement
         start = found + tokenLength
         found = StringUtil.Find(value, token, start)
     EndWhile
-    Return result + StringUtil.Substring(value, start)
+    If start < StringUtil.GetLength(value)
+        result = result + StringUtil.Substring(value, start)
+    EndIf
+    Return result
 EndFunction
 
 ; Gives SkyrimNet a clean body format instead of its unknown-type [event_type] fallback.

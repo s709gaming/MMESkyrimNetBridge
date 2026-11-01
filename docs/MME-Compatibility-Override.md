@@ -188,3 +188,20 @@ separately authorized installation.
 - Original MME's hourly production preview uses the same helper. Standard/P+, OStim-only and Estrus Unified variants are rebuilt from matching sources. Competing MilkQUEST/MilkMCM overrides require a deliberate merge.
 - `[MME Fixed Lactacid]` cycle/settings traces use the master Papyrus logging toggle. True input/settings/save failures raise deduplicated smoke alarms when detected, independently of routine logging.
 - Live acceptance after installation: player/NPC; all/NPC-only fixed flags; dynamic and toggle OFF; +0/+50/+200%; zero/fractional/stacked fuel; sleep/wait; capacity/overflow; repeated drinks; old saves; optional backends; logging off/on and error recovery. Compilation and numerical/package checks do not prove live acceptance.
+
+## Lactacid conversion presentation repair
+
+Adds an intentional `MilkLactacidScr` override of MME 20220522. The original
+chains Moan onto a possibly absent SexLab voice and sends events through an
+expired ActiveMagicEffect after latent waits. The override checks the chosen
+voice and logs one failure per actor until voice selection recovers. Missing
+voice never skips reaction cleanup. PlayerOrgasmStart/End retain their names,
+empty string and zero numeric arguments, now sent from the existing MilkQUEST
+quest (sender is that quest rather than the transient effect). External listeners
+that filter specifically by the old effect sender require compatibility review.
+Conversion eligibility, slot assignment, dose amount, milk calculations, waits,
+animation, unconscious state and control cleanup are preserved. No MCM/property
+migration. Standard/P+ share the guarded voice; OStim-only retains its existing
+presentation-skipped backend. No new timer or script. Merge with other mods
+replacing MilkLactacidScr deliberately. Live player/NPC conversion and repeated
+already-maid dosing remain acceptance tests after installation.

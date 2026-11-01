@@ -1,8 +1,13 @@
 {% if render_mode == "full" or render_mode == "thoughts" or render_mode == "transform" or render_mode == "dialogue_target" or render_mode == "target" %}
+{% if exists("actorUUID") %}
+{% if actorUUID != null %}
 {% if isValidActor(actorUUID) %}
 {% set bf_role = mme_breastfeeding_role(actorUUID) %}
 {% if bf_role == "source" or bf_role == "drinker" %}
 {{ mme_breastfeeding_guidance_text(actorUUID) }}
 {% endif %}
+{% endif %}
+{% endif %}
+
 {% endif %}
 {% endif %}

@@ -4,8 +4,8 @@
     "pairs":  [
                   {
                       "script":  "MilkLactacidScr",
-                      "sourceSHA256":  "309EF41D7C8E39F2E9168DE5B9DBB1A09364953D168968CFBCA7525DA214F7A0",
-                      "compiledSHA256":  "BE1D9448637C31448E2D995D91C73E705FA7A0CA2F28E4AF5D31EC98415D0062"
+                      "sourceSHA256":  "7E96F4E3022FA474DF8CDC0E5352F38D024917A70EC1E88B75FF0DC3E968BA0E",
+                      "compiledSHA256":  "AB30271E030537A249EDFBA467725B6E123D4BD5AF00E290E318A9E450D972B2"
                   },
                   {
                       "script":  "MilkMCM",
@@ -39,8 +39,8 @@
                   },
                   {
                       "script":  "MMEAlertsSkyrimNet",
-                      "sourceSHA256":  "EA480B706A4FBCAEECCF2F560E20B5B61B4EBE38132E139F7EE230E1DDC7D03B",
-                      "compiledSHA256":  "98E3786A26C13BAD1AC8862B4A79D25EF429786289A602A025F49C40BA38DBA3"
+                      "sourceSHA256":  "4F4F5C10196391B873AAB87109F23B869E3FC7631D18059F1799BB6CBC62066E",
+                      "compiledSHA256":  "12596D4AE34A8D1AC54A8667EBCDB89FE4459EF53F215ED39A14ADD76186811E"
                   },
                   {
                       "script":  "MMEAnimationSafety",

@@ -4,6 +4,11 @@ Scriptname MilkLactacidScr extends activemagiceffect Hidden
 Event OnEffectStart( Actor akTarget, Actor akCaster )
 	MilkQUEST MilkQ = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
 	Actor PlayerRef = Game.Getplayer()
+    If MilkQ == None || akTarget == None
+        MMELog.Alarm("[MME Lactacid] dose failed | actor=" + akTarget + " | reason=missing MilkQUEST or target")
+        Return
+    EndIf
+    MMELog.MasterDiagnostic("[MME Lactacid] dose entry | actor=" + akTarget + " | already maid=" + (MilkQ.MilkMaid.Find(akTarget) >= 0))
 	
 	if MilkQ.Plugin_SlSW && akTarget == PlayerREF && !MilkQ.DisableSkoomaLactacid
 		akTarget.equipitem(Game.GetFormFromFile(0x57A7A, "Skyrim.esm"),false,true)
@@ -76,16 +81,16 @@ Event OnEffectStart( Actor akTarget, Actor akCaster )
 					Debug.SendAnimationEvent(akTarget,"ZaZAPCHorFd")
 					akTarget.Setunconscious(true)
 					
-    MMEFrameworkBackend.PresentationSkipped(akTarget)
+					MMEExtPlayVoiceSafe(MilkQ, akTarget)
 					
 					if akTarget == PlayerREF
-						SendModEvent("PlayerOrgasmStart")
+						MilkQ.SendModEvent("PlayerOrgasmStart")
 					endIf
 					
 					Utility.Wait( 10.0 )
 					
 					if akTarget == PlayerREF
-						SendModEvent("PlayerOrgasmEnd")
+						MilkQ.SendModEvent("PlayerOrgasmEnd")
 					endIf
 					
 					If MilkQ.MilkStory
@@ -94,6 +99,7 @@ Event OnEffectStart( Actor akTarget, Actor akCaster )
 					
 					Debug.SendAnimationEvent(akTarget,"IdleForceDefaultState")
 					akTarget.Setunconscious(false)
+                    MMELog.MasterDiagnostic("[MME Lactacid] reaction cleanup | actor=" + akTarget)
 					
 					if akTarget == PlayerREF && !MMEFrameworkBackend.IsActorActive(akTarget)
 						Game.EnablePlayerControls() ;(True,True,True,True,True,True,True,True,0)
@@ -103,3 +109,14 @@ Event OnEffectStart( Actor akTarget, Actor akCaster )
 		endif
 	endif
 EndEvent
+; Presentation failure must never bypass animation/control cleanup or change the dose.
+Function MMEExtPlayVoiceSafe(MilkQUEST MilkQ, Actor akTarget)
+    MMEFrameworkBackend.PresentationSkipped(akTarget)
+EndFunction
+
+Function MMEExtVoiceFailure(Actor akTarget, String reason)
+    If StorageUtil.GetIntValue(akTarget, "MME.Extensions.Lactacid.VoiceFailure", 0) == 0
+        StorageUtil.SetIntValue(akTarget, "MME.Extensions.Lactacid.VoiceFailure", 1)
+        MMELog.Alarm("[MME Lactacid] play conversion voice failed | actor=" + akTarget + " | reason=" + reason)
+    EndIf
+EndFunction
