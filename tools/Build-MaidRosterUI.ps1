@@ -8,9 +8,32 @@ $flags = Join-Path $GamePath 'Data\Source\Scripts\TESV_Papyrus_Flags.flg'
 if ($LASTEXITCODE) { throw 'Roster quest build/round-trip checks failed' }
 $imports = @((Join-Path $choice 'Source\Scripts'),(Join-Path $root 'tools\maid-roster-sdk'),(Join-Path $root 'tools\magelight-sdk'),(Join-Path $root 'Source\Scripts'),(Join-Path $GamePath 'Data\Scripts\Source'),(Join-Path $GamePath 'Data\Source\Scripts')) -join ';'
 New-Item -ItemType Directory -Force (Join-Path $choice 'Scripts') | Out-Null
+# As with the other backend builders, assemble into fresh output so repeated
+# package builds cannot reopen a PEX still held by the assembler/file scanner.
+$compileOutput = Join-Path $root ('build/diagnostics/roster-compiled-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Force $compileOutput | Out-Null
 foreach ($name in @('MMEMaidRosterUI','MMEMaidRosterPlayerAlias')) {
-    & $compiler "$name.psc" "-f=$flags" "-i=$imports" "-o=$(Join-Path $choice 'Scripts')"
+    & $compiler "$name.psc" "-f=$flags" "-i=$imports" "-o=$compileOutput"
     if ($LASTEXITCODE) { throw "Roster compilation failed: $name" }
+}
+# A mapped PEX can be renamed but cannot be overwritten on Windows. Preserve
+# the previous generated file before publishing the fresh build at its path.
+$previousOutput = Join-Path $compileOutput 'previous'
+New-Item -ItemType Directory -Force $previousOutput | Out-Null
+foreach ($compiled in (Get-ChildItem -LiteralPath $compileOutput -Filter '*.pex')) {
+    $destination = Join-Path (Join-Path $choice 'Scripts') $compiled.Name
+    $previous = Join-Path $previousOutput $compiled.Name
+    if (Test-Path -LiteralPath $destination) {
+        Move-Item -LiteralPath $destination -Destination $previous
+    }
+    try {
+        Copy-Item -LiteralPath $compiled.FullName -Destination $destination
+    } catch {
+        if (Test-Path -LiteralPath $previous) {
+            Move-Item -LiteralPath $previous -Destination $destination -Force
+        }
+        throw
+    }
 }
 $pairs = @(Get-ChildItem (Join-Path $choice 'Source\Scripts') -Filter '*.psc' | ForEach-Object {
     [ordered]@{ script=$_.BaseName; sourceSHA256=(Get-FileHash $_.FullName).Hash; compiledSHA256=(Get-FileHash (Join-Path $choice "Scripts\$($_.BaseName).pex")).Hash }

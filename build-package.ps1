@@ -236,10 +236,12 @@ foreach ($pplusName in @('MilkPlayerLoadGame', 'MMESexLabBreastfeedingBackend'))
 # The base package is inert; compile the Recommended-only QuickStart override
 # into its FOMOD choice folder with the same script name.
 New-Item -ItemType Directory -Force -Path $quickStartOutputDir | Out-Null
+$quickStartCompileDir = Join-Path $projectRoot ('build\diagnostics\quickstart-compile-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Force -Path $quickStartCompileDir | Out-Null
 Push-Location $quickStartSourceDir
 try {
     Write-Host "Compiling Recommended QuickStart override..." -ForegroundColor Cyan
-    & $compiler "MMEAlertsQuickTest.psc" "-f=$flags" "-i=$quickStartSourceDir;$imports" "-o=$quickStartOutputDir"
+    & $compiler "MMEAlertsQuickTest.psc" "-f=$flags" "-i=$quickStartSourceDir;$imports" "-o=$quickStartCompileDir"
     if ($LASTEXITCODE -ne 0) {
         throw "Compilation failed for Recommended QuickStart override"
     }
@@ -247,19 +249,30 @@ try {
 finally {
     Pop-Location
 }
+$quickStartTarget = Join-Path $quickStartOutputDir 'MMEAlertsQuickTest.pex'
+$quickStartPrior = Join-Path $quickStartCompileDir 'MMEAlertsQuickTest.previous.pex'
+if (Test-Path -LiteralPath $quickStartTarget) { Move-Item -LiteralPath $quickStartTarget -Destination $quickStartPrior }
+try { Copy-Item -LiteralPath (Join-Path $quickStartCompileDir 'MMEAlertsQuickTest.pex') -Destination $quickStartTarget }
+catch {
+    if (Test-Path -LiteralPath $quickStartPrior) { Move-Item -LiteralPath $quickStartPrior -Destination $quickStartTarget -Force }
+    throw
+}
 
 # Compile the optional Elsie compatibility replacements against minimal API
 # declarations. This avoids compiling or packaging Elsie's original sources.
 New-Item -ItemType Directory -Force -Path $elsieFixOutputDir | Out-Null
 $elsieImports = "$elsieFixSourceDir;$sourceDir;$elsieSdkSource;$mmeSdkSource;$skseSource;$vanillaSource"
 if ($env:MME_PAPYRUS_EXTRA_IMPORTS) { $elsieImports += ";$env:MME_PAPYRUS_EXTRA_IMPORTS" }
+$elsieCompileDir = Join-Path $projectRoot ("build\diagnostics\elsie-compile-" + [guid]::NewGuid().ToString("N"))
+New-Item -ItemType Directory -Force -Path $elsieCompileDir | Out-Null
 foreach ($elsieScript in @("ELV_DiaGreets_PlayerAliasScript", "ELVPlayerAliasscript", "ELV_MMNPC_Scene_milk", "ELV_MMNPC_Scene_milkingTime")) {
     Write-Host "Compiling Elsie compatibility override $elsieScript.psc..." -ForegroundColor Cyan
-    & $compiler "$elsieScript.psc" "-f=$flags" "-i=$elsieImports" "-o=$elsieFixOutputDir"
+    & $compiler "$elsieScript.psc" "-f=$flags" "-i=$elsieImports" "-o=$elsieCompileDir"
     if ($LASTEXITCODE -ne 0) {
         throw "Compilation failed for Elsie compatibility override $elsieScript"
     }
 }
+Get-ChildItem -LiteralPath $elsieCompileDir -Filter "*.pex" | Copy-Item -Destination $elsieFixOutputDir -Force
 
 # Rebuild the record patch when the original Elsie plugin is locally available.
 # Otherwise retain the checked-in, round-trip-verified compatibility plugin.
