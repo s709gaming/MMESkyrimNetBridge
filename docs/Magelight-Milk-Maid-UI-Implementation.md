@@ -74,3 +74,11 @@ Prisoner with 0.0 / 4.0 milk and 0.0% fullness. The new action routes still requ
 live player/NPC, inventory, focus, event, host-absent and save/load acceptance tests.
 This work changes repository/package outputs only. README, installed mods, MO2
 profiles and retained Vortex files are untouched.
+
+## Lactacid meter ? 2026-11-01
+
+- A compact blue meter below each milk meter shows Lactacid current / maximum, with one decimal place. No extra table column or polling.
+- The roster reads original MME getLactacidCurrent/getLactacidMaximum for each existing actor snapshot. The verified maximum is 5 + maid level / 2 (5 at level 0, 10 at level 10), not a hardcoded ten. Original setters can permit over-capacity values; labels preserve them while only the bar clamps to 100%.
+- Open/Refresh updates values. Unloaded actors retain the existing Last stored values label. Zero/fractional amounts, per-actor maxima and over-capacity are supported. Missing/invalid fields render N/A with an empty bar, preserving older payload compatibility and all action tokens.
+- Master-gated refresh summaries count known/unknown Lactacid data. Invalid backend values use the existing deduplicated error alarm; absent older payload fields, zero and over-capacity are not failures. No actor-state, production, capacity, inventory or registration writes.
+- Only the optional roster controller/page and compile-only original getter projection change; no new runtime script, dependency, MCM setting or save migration.

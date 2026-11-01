@@ -48,6 +48,16 @@ class RosterContracts(unittest.TestCase):
    self.assertNotIn(dependency,pex)
   self.assertFalse((CHOICE/'Source/Scripts/MMEArousalBridge.psc').exists())
   self.assertFalse((CHOICE/'Scripts/MMEArousalBridge.pex').exists())
+ def test_lactacid_read_boundary(self):
+  source=(CHOICE/'Source/Scripts/MMEMaidRosterUI.psc').read_text(encoding='utf-8-sig')
+  self.assertEqual(source.count('MME_Storage.getLactacidCurrent(candidate)'),1)
+  self.assertEqual(source.count('MME_Storage.getLactacidMaximum(candidate)'),1)
+  self.assertIn('lactacidKnown += 1',source);self.assertIn('lactacidUnknown += 1',source)
+  self.assertIn('negative current or nonpositive maximum',source)
+  self.assertIn('lactacid known=',source)
+  self.assertNotRegex(source,r'setLactacid|changeLactacid|MME.MilkMaid.Level')
+  compiled=(CHOICE/'Scripts/MMEMaidRosterUI.pex').read_bytes().lower()
+  self.assertIn(b'getlactacidcurrent',compiled);self.assertIn(b'getlactacidmaximum',compiled)
  def test_real_frontend(self):
   subprocess.run(['node',str(ROOT/'tools/test_maid_roster_page.cjs'),str(CHOICE/'Magelight/mmeextensions/views/roster/index.html')],check=True)
  def test_compiled_array_guards(self):

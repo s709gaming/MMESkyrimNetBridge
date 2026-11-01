@@ -85,3 +85,29 @@ const npcRobot=elements.rows.children[1].children[2].firstChild.children[2].firs
 window.setRoster({session:'23',rows:[{name:'Player',token:'24:0',player:1,milkingMode:0,modeReason:''},{name:'Hulda',token:'24:1',player:0,milkingMode:0,modeReason:''}]});
 assert.equal(elements.rows.children[1].children[2].firstChild.children[2].firstChild['aria-pressed'],'false');
 console.log('PASS: robot Auto/Manual payloads, legacy Off, zero milk/unavailable scene, old/invalid payloads, NPC tokens, repeat-click guard and authoritative refresh');
+
+// Lactacid uses the actor's reported maximum; never assumes ten or mutates data.
+for(const [current,maximum,label,width] of [
+ [0,5,'Lactacid 0.0 / 5.0','0%'],[2.5,5,'Lactacid 2.5 / 5.0','50%'],
+ [2.5,10,'Lactacid 2.5 / 10.0','25%'],[10,10,'Lactacid 10.0 / 10.0','100%'],
+ [12,10,'Lactacid 12.0 / 10.0','100%'],[15,15,'Lactacid 15.0 / 15.0','100%'],
+ [undefined,undefined,'Lactacid N/A / N/A','0%'],[null,10,'Lactacid N/A / 10.0','0%'],
+ [-1,10,'Lactacid N/A / 10.0','0%'],[2,0,'Lactacid 2.0 / N/A','0%'],
+ [NaN,Infinity,'Lactacid N/A / N/A','0%'],['2',10,'Lactacid N/A / 10.0','0%']]){
+ const maid={name:'Player',milk:2,capacity:4,percent:50,lactacid:current,lactacidMaximum:maximum,token:'30:0',player:1,available:1,selfReason:'',milkingMode:0,modeReason:''};
+ window.setRoster({session:'30',rows:[maid]});
+ const meter=elements.rows.children[0].children[1].firstChild.children[2];
+ assert.equal(meter.className,'lactacid-meter');assert.equal(meter.firstChild.textContent,label);
+ assert.equal(meter.children[1].firstChild.style.width,width);assert.equal(meter['aria-label'],label);assert.equal(meter.tabindex,'0');
+ assert.equal(maid.lactacid,current);assert.equal(maid.lactacidMaximum,maximum);
+ meter.listeners.focus();assert(elements.tooltip.textContent.includes('level-dependent MME maximum'));meter.listeners.blur();assert(elements.tooltip.hidden);
+}
+window.setRoster({session:'31',arousalAvailable:1,rows:[
+ {name:'Player',lactacid:1, lactacidMaximum:5,player:1,token:'31:0'},
+ {name:'Hulda',lactacid:3,lactacidMaximum:10,player:0,token:'31:1'}]});
+assert.equal(elements.rows.children[0].children[1].firstChild.children[2].firstChild.textContent,'Lactacid 1.0 / 5.0');
+assert.equal(elements.rows.children[1].children[1].firstChild.children[2].firstChild.textContent,'Lactacid 3.0 / 10.0');
+assert.equal(elements.rows.children[1].children.length,4);
+window.setRoster({session:'31',rows:[{name:'Hulda',lactacid:0,lactacidMaximum:10}]});
+assert.equal(elements.rows.children[0].children[1].firstChild.children[2].firstChild.textContent,'Lactacid 0.0 / 10.0');
+console.log('PASS: Lactacid zero/fractional/per-actor maxima/overflow, N/A and malformed values, keyboard tooltip, independent player/NPC rows and refresh.');

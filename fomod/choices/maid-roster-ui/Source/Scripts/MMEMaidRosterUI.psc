@@ -451,6 +451,8 @@ Function RefreshRoster()
     If arousalReadable
         arousalAvailableJson = "1"
     EndIf
+    Int lactacidKnown = 0
+    Int lactacidUnknown = 0
     Int arousalKnown = 0
     Int arousalUnknown = 0
     String statusMessage = ""
@@ -474,6 +476,23 @@ Function RefreshRoster()
                         actorName = "Unnamed Milk Maid"
                     EndIf
                     Float currentMilk = MME_Storage.getMilkCurrent(candidate)
+                    ; Original MME getters are read-only; maximum depends on this actor's level.
+                    Float currentLactacid = MME_Storage.getLactacidCurrent(candidate)
+                    Float maximumLactacid = MME_Storage.getLactacidMaximum(candidate)
+                    String lactacidJson = "null"
+                    String lactacidMaximumJson = "null"
+                    If currentLactacid >= 0.0
+                        lactacidJson = currentLactacid as String
+                    EndIf
+                    If maximumLactacid > 0.0
+                        lactacidMaximumJson = maximumLactacid as String
+                    EndIf
+                    If currentLactacid >= 0.0 && maximumLactacid > 0.0
+                        lactacidKnown += 1
+                    Else
+                        lactacidUnknown += 1
+                        Alarm("refresh Lactacid meter | actor=" + candidate + " | reason=negative current or nonpositive maximum")
+                    EndIf
                     String capacityJson = "null"
                     String percentJson = "null"
                     If StorageUtil.HasFloatValue(candidate, "MME.MilkMaid.MilkMaximum")
@@ -520,7 +539,7 @@ Function RefreshRoster()
                             arousalUnknown += 1
                         EndIf
                     EndIf
-                    rows += "{\"token\":\"" + (nextRevision as String) + ":" + (rowCount as String) + "\",\"player\":" + playerJson + ",\"available\":" + availableJson + ",\"milkingMode\":" + (milkingMode as String) + ",\"modeReason\":\"" + Escape(modeReason) + "\",\"selfReason\":\"" + Escape(selfReason) + "\",\"name\":\"" + Escape(actorName) + "\",\"milk\":" + (currentMilk as String) + ",\"capacity\":" + capacityJson + ",\"percent\":" + percentJson + ",\"arousal\":" + arousalJson + ",\"status\":\"" + actorStatus + "\"}"
+                    rows += "{\"token\":\"" + (nextRevision as String) + ":" + (rowCount as String) + "\",\"player\":" + playerJson + ",\"available\":" + availableJson + ",\"milkingMode\":" + (milkingMode as String) + ",\"modeReason\":\"" + Escape(modeReason) + "\",\"selfReason\":\"" + Escape(selfReason) + "\",\"name\":\"" + Escape(actorName) + "\",\"milk\":" + (currentMilk as String) + ",\"capacity\":" + capacityJson + ",\"percent\":" + percentJson + ",\"lactacid\":" + lactacidJson + ",\"lactacidMaximum\":" + lactacidMaximumJson + ",\"arousal\":" + arousalJson + ",\"status\":\"" + actorStatus + "\"}"
                     rowCount += 1
                 Else
                     skipped += 1
@@ -534,7 +553,7 @@ Function RefreshRoster()
         SnapshotRevision = nextRevision
         String payload = "{\"session\":\"" + (Generation as String) + "\",\"message\":\"" + Escape(statusMessage) + "\",\"arousalAvailable\":" + arousalAvailableJson + ",\"rows\":[" + rows + "]}"
         Magelight.Call(ViewId, "setRoster", payload)
-        Trace("refresh complete | rows=" + rowCount + " | skipped=" + skipped + " | view=" + ViewId + " | arousal reader=" + arousalAvailableJson + " | arousal known=" + arousalKnown + " | arousal unknown=" + arousalUnknown)
+        Trace("refresh complete | rows=" + rowCount + " | skipped=" + skipped + " | view=" + ViewId + " | lactacid known=" + lactacidKnown + " | lactacid unknown=" + lactacidUnknown + " | arousal reader=" + arousalAvailableJson + " | arousal known=" + arousalKnown + " | arousal unknown=" + arousalUnknown)
     Else
         Trace("refresh discarded | closed or session changed")
     EndIf
