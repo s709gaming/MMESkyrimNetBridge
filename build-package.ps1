@@ -200,18 +200,36 @@ foreach ($overrideName in $mmeCompatibilityOverrideNames) {
 # Compile the optional P+ facade against P+'s actual API sources. No P+-only
 # type is permitted in the common scripts or the standard facade.
 New-Item -ItemType Directory -Force -Path $sexLabPPlusChoiceOutput | Out-Null
+$pplusCompileOutput = Join-Path $projectRoot ("build\diagnostics\pplus-compile-" + [guid]::NewGuid().ToString("N"))
+New-Item -ItemType Directory -Force -Path $pplusCompileOutput | Out-Null
 Push-Location $sexLabPPlusChoiceSource
 try {
+    Write-Host "Compiling SexLab P+ MME load/stage hooks..." -ForegroundColor Cyan
+    $pplusHookImports = "$sexLabPPlusChoiceSource;$(Join-Path $projectRoot 'tools\pplus-hook-sdk');$mmeSdkSource;$(Join-Path $projectRoot 'tools\mme-diagnostic-sdk');$sourceDir;$skseSource;$vanillaSource"
+    & $compiler "MilkPlayerLoadGame.psc" "-f=$flags" "-i=$pplusHookImports" "-o=$pplusCompileOutput"
+    if ($LASTEXITCODE -ne 0) { throw "Compilation failed for SexLab P+ MME load/stage hooks" }
     Write-Host "Compiling SexLab P+ breastfeeding backend..." -ForegroundColor Cyan
     $pplusImports = "$sexLabPPlusChoiceSource;$sexLabPPlusSdkSource;$sourceDir;$skseSource;$vanillaSource"
     if ($env:MME_PAPYRUS_EXTRA_IMPORTS) { $pplusImports += ";$env:MME_PAPYRUS_EXTRA_IMPORTS" }
-    & $compiler "MMESexLabBreastfeedingBackend.psc" "-f=$flags" "-i=$pplusImports" "-o=$sexLabPPlusChoiceOutput"
+    & $compiler "MMESexLabBreastfeedingBackend.psc" "-f=$flags" "-i=$pplusImports" "-o=$pplusCompileOutput"
     if ($LASTEXITCODE -ne 0) {
         throw "Compilation failed for SexLab P+ breastfeeding backend"
     }
 }
 finally {
     Pop-Location
+}
+
+# Publish only a successful pair; preserve prior outputs outside the release tree.
+foreach ($pplusName in @('MilkPlayerLoadGame', 'MMESexLabBreastfeedingBackend')) {
+    $pplusTarget = Join-Path $sexLabPPlusChoiceOutput "$pplusName.pex"
+    $pplusPrior = Join-Path $pplusCompileOutput "$pplusName.previous.pex"
+    if (Test-Path -LiteralPath $pplusTarget) { Move-Item -LiteralPath $pplusTarget -Destination $pplusPrior }
+    try { Copy-Item -LiteralPath (Join-Path $pplusCompileOutput "$pplusName.pex") -Destination $pplusTarget }
+    catch {
+        if (Test-Path -LiteralPath $pplusPrior) { Move-Item -LiteralPath $pplusPrior -Destination $pplusTarget -Force }
+        throw
+    }
 }
 
 # The base package is inert; compile the Recommended-only QuickStart override

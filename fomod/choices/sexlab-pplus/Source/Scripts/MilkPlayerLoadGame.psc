@@ -136,9 +136,26 @@ endEvent
 
 Event OnSexLabStart(String _eventName, String _args, Float _argc, Form _sender)
 	MilkQUEST MilkQ = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+	If MilkQ == None
+		MMELog.MasterDiagnostic("[MME Extensions P+ Milking] skip | framework unavailable")
+		Return
+	EndIf
+	If MilkQ.SexLab == None
+		MMELog.MasterDiagnostic("[MME Extensions P+ Milking] skip | SexLab unavailable")
+		Return
+	EndIf
 	Actor[] actors = MilkQ.SexLab.HookActors(_args)											;0 - actor being sucked, 1 - actor sucking
 	sslBaseAnimation animation = MilkQ.SexLab.HookAnimation(_args)
-	String  animName = getAnimName(_args)
+	If actors.Length < 2
+		MMELog.MasterDiagnostic("[MME Extensions P+ Milking] skip | fewer than two participants | event=" + _eventName)
+		Return
+	EndIf
+	If actors[0] == None || actors[1] == None || animation == None
+		MMELog.MasterDiagnostic("[MME Extensions P+ Milking] skip | missing participant or animation | event=" + _eventName)
+		Return
+	EndIf
+	MMELog.MasterDiagnostic("[MME Extensions P+ Milking] entry | source=" + actors[0] + " | drinker=" + actors[1] + " | event=" + _eventName)
+	String animName = animation.Name
 
 	if (animName == "3J Straight Breastfeeding"\
 	|| animName == "3J Lesbian Breastfeeding"\
@@ -149,6 +166,11 @@ Event OnSexLabStart(String _eventName, String _args, Float _argc, Form _sender)
 		if MilkQ.MILKmaid.Find(actors[0]) != -1\
 		&& !actors[0].HasSpell( MilkQ.BeingMilkedPassive )\
 		&& (actors[0].GetLeveledActorBase().GetSex() == 1 || (actors[0].GetLeveledActorBase().GetSex() == 0 && MilkQ.MaleMaids))
+			; Keep stage retries for legitimate replenishment, but never dispatch an empty Mode-4 cycle.
+			If MME_Storage.getMilkCurrent(actors[0]) < 1
+				MMELog.MasterDiagnostic("[MME Extensions P+ Milking] skip | source has less than one milk | actor=" + actors[0])
+				Return
+			EndIf
 			if MME_Storage.getMilkCurrent(actors[0]) >= 1
 
 				actors[1].equipitem(MilkQ.MME_Milk_Basic.GetAt(0), true, true)
@@ -158,7 +180,16 @@ Event OnSexLabStart(String _eventName, String _args, Float _argc, Form _sender)
 					actors[0].additem(MilkQ.MME_Util_Potions.GetAt(0), 1)
 				endif
 			endif
+			; Recheck after inventory calls, which may yield to the paired startup callback.
+			If actors[0].HasSpell(MilkQ.BeingMilkedPassive) || MME_Storage.getMilkCurrent(actors[0]) < 1
+				MMELog.MasterDiagnostic("[MME Extensions P+ Milking] skip | source became busy or empty | actor=" + actors[0])
+				Return
+			EndIf
+			MMELog.MasterDiagnostic("[MME Extensions P+ Milking] dispatch | source=" + actors[0] + " | mode=4")
 			MilkQ.Milking(actors[0], 0, 4, 0)
+			MMELog.MasterDiagnostic("[MME Extensions P+ Milking] returned | source=" + actors[0])
+		Else
+			MMELog.MasterDiagnostic("[MME Extensions P+ Milking] skip | source ineligible or already being milked | actor=" + actors[0])
 		endif
 	endif
 EndEvent

@@ -1,8 +1,8 @@
 {
   "initialized": 1,
   "enabled": 1,
-  "startMessage": "{actor} has started milking herself, eagerly releasing the pressure.",
-  "endMessage": "{actor} finished milking and is empty again, deeply relieved and completely satisfied.",
+  "startMessage": "{actor} has started a milking session.",
+  "endMessage": "{actor} has finished a milking session.",
   "drinkMessage": "{actor} just drank {item}.",
   "milkmaidCreatedMessage": "{actor} has become a Milk Maid! Her breasts now feel pleasantly heavy, full, and faintly thrilling.",
   "drinkTtlMs": 90000,

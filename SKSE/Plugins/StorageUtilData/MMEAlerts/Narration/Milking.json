@@ -3,10 +3,10 @@
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "startMessage": {
-      "template": "{actor} has started milking herself, eagerly releasing the pressure."
+      "template": "{actor} has started a milking session."
     },
     "endMessage": {
-      "template": "{actor} finished milking and is empty again, deeply relieved and completely satisfied."
+      "template": "{actor} has finished a milking session."
     }
   }
 }

@@ -1,0 +1,2 @@
+Compile-only declarations for the P+ MilkPlayerLoadGame compatibility hook.
+Extracted 2026-10-31 from installed original Milk-Mod-Economy-Scripts-20220522 and SexLab Framework PPLUS 2.18.1 sources. Function signatures/defaults and property types are retained; implementations are intentionally omitted. Computed properties are represented by typed auto declarations for consumer compilation. These declarations are not gameplay scripts and must never be packaged. The P+ backend continues to use its separate, existing SDK.

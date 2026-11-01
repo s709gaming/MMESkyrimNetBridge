@@ -65,3 +65,11 @@ foreach ($eventName in $registryEvents) {
     Assert-Contract ($fnisEvents -contains $eventName) "SLSB event $eventName has a matching FNIS behavior event"
 }
 Assert-Contract (Test-Path -LiteralPath (Join-Path $root 'docs\SEXLAB-PPLUS-COMPATIBILITY.md')) 'P+ credit, permission, and installation document is present'
+
+$stageHook = Get-Content -LiteralPath (Join-Path $choiceRoot 'Source\Scripts\MilkPlayerLoadGame.psc') -Raw
+$hookStart = $stageHook.Substring($stageHook.IndexOf('Event OnSexLabStart('))
+$hookStart = $hookStart.Substring(0, $hookStart.IndexOf('EndEvent'))
+Assert-Contract ($hookStart.IndexOf('actors.Length < 2') -lt $hookStart.IndexOf('actors[0]')) 'P+ hook validates participant count before actor indexing'
+Assert-Contract ($hookStart.IndexOf('getMilkCurrent(actors[0]) < 1') -lt $hookStart.IndexOf('actors[1].equipitem')) 'empty source cannot award drinker milk or dispatch Mode 4'
+Assert-Contract ($hookStart.Contains('source became busy or empty') -and $hookStart.Contains('MilkQ.Milking(actors[0], 0, 4, 0)')) 'P+ hook rechecks original passive guard and retains original actor and milking signature'
+Assert-Contract ($stageHook.Contains('RegisterForModEvent("StageStart", "OnSexLabStart")')) 'later stage retries remain available for replenished milk'

@@ -514,10 +514,10 @@ String Function Template(String fileKey, String routeKey, Int index = 0) Global
         Return "{actor} just drank {item}."
     EndIf
     If fileKey == "Milking" && routeKey == "startMessage"
-        Return "{actor} has started milking herself, eagerly releasing the pressure."
+        Return "{actor} has started a milking session."
     EndIf
     If fileKey == "Milking" && routeKey == "endMessage"
-        Return "{actor} finished milking and is empty again, deeply relieved and completely satisfied."
+        Return "{actor} has finished a milking session."
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "narrate_milkmaid_created_1"
         Return "{actor} has just become a Milk Maid. Her body can now produce and store milk, and her breasts are becoming more sensitive. This event pertains directly to {actor}, who must speak and react from her own first-person perspective. Treat the transformation as an overwhelmingly pleasurable and wonderful surprise, never frightening, harmful, or unwanted. Exaggerate the wonderful sensation coursing through her body, the spreading warmth, tingling nipples, delicious new heaviness and sensitivity, and her thrilling realization that her breasts can now fill with milk. Keep her reaction concise, immersive, enthusiastic, playful, and appropriate to her personality. Do not narrate from an outside observer and do not merely repeat the event description."
