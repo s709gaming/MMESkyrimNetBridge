@@ -130,7 +130,7 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  assert(!Object.hasOwn(saved,'Pools.MilkCravings.craving'),'reset includes messages despite AI search filter');
  assert(!Object.hasOwn(saved,'Lore.milk_lore'),'reset includes other AI features');
  assert(!Object.hasOwn(saved,'Pools.FlavorNotifications.custom_living_remove'),'reset includes filtered-out minor entries');
- elements['editor-capture'].listeners.click();await settle();assert(elements['confirm-message'].textContent.includes('1 player-editable'));
+ elements['editor-capture'].listeners.click();await settle();assert(elements['confirm-message'].textContent.includes('1 editable'));
  elements['confirm-accept'].listeners.click();elements['editor-save'].listeners.click();await settle();
  assert.equal(saved['Fullness.nearby_status_summary'],'INTERNAL {statuses}','capture cannot overwrite hidden entry');
  assert.deepEqual(saved['Pools.MilkCravings.craving'],['{ActorName} craves captured milk.']);

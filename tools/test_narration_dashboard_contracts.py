@@ -33,6 +33,18 @@ class DashboardContracts(unittest.TestCase):
                 seen={('actor' if meta['aliases'] and t in ('ACTOR','ActorName') else t) for t in re.findall(r'\{([^{}]+)\}',template)}
                 self.assertTrue(set(meta['required'])<=seen<=set(meta['allowed']),key)
         self.assertFalse(any('openingStory' in k or 'closingStory' in k for k in catalog))
+    def test_player_facing_help(self):
+        presentation=json.loads((ROOT/'tools/narration-presentation.json').read_text(encoding='utf-8'))
+        for entry_id,meta in presentation['entries'].items():
+            if not meta['visible']:continue
+            copy=meta['description']+' '+meta.get('note','')
+            self.assertNotRegex(copy,r'\b(?:HUD|caller|runtime|dispatch|branch|code-owned|chestCurseStories|renderedReaction|ReleaseInternal)\b',entry_id)
+            self.assertNotIn('Customize the wording Skyrim.Net receives for:',copy,entry_id)
+        dashboard=(ROOT/'fomod/choices/maid-roster-ui/Magelight/mmeextensions/views/roster/dashboard.js').read_text(encoding='utf-8')
+        self.assertNotIn('\u00c2',dashboard)
+        self.assertNotIn('\u00e2\u20ac',dashboard)
+        self.assertIn('Keep these placeholders:',dashboard)
+        self.assertIn('Using shared text',dashboard)
     def test_every_direct_pool_reader_is_integrated(self):
         for name in ('MMEThoughts','MMEMilkCravings','MMEArousalEffects','MMEBreastBounceEffects','MMEAlertsController','MMEDwemerEffects','MMETentacleEffects','MMENPCDrinkDialogue','MMEServiceArmorReminder'):
             text=(ROOT/f'Source/Scripts/{name}.psc').read_text(encoding='utf-8-sig')

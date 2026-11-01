@@ -20,7 +20,7 @@
       "feature": "Armor Reactions",
       "order": 0,
       "title": "Putting On Milking Armor",
-      "description": "Customize the wording Skyrim.Net receives for: Putting On Milking Armor. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide how a character reacts to putting on milking armor.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -34,7 +34,7 @@
       "feature": "Armor Reactions",
       "order": 1,
       "title": "Putting On Living Armor",
-      "description": "Customize the wording Skyrim.Net receives for: Putting On Living Armor. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide how a character reacts to putting on living armor.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -48,7 +48,7 @@
       "feature": "Armor Reactions",
       "order": 2,
       "title": "Putting On Parasite Armor",
-      "description": "Customize the wording Skyrim.Net receives for: Putting On Parasite Armor. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide how a character reacts to putting on parasite armor.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -76,7 +76,7 @@
       "feature": "Armor Reactions",
       "order": 4,
       "title": "When Her Armor Pops Off",
-      "description": "Customize the wording Skyrim.Net receives for: When Her Armor Pops Off. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide how a character reacts when her full breasts make her armor pop off.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -133,7 +133,7 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 8,
       "title": "How Characters React During Breastfeeding",
-      "description": "Customize the wording Skyrim.Net receives for: How Characters React During Breastfeeding. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide how characters speak and react during breastfeeding.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -148,10 +148,10 @@
       "feature": "Your Character’s Speaking Style",
       "order": 9,
       "title": "Your Character’s Speaking Style",
-      "description": "Guide how your character speaks about her own experiences. Shared across several private player reactions, not a general NPC voice setting.",
+      "description": "Choose how your character talks about her own experiences. These instructions apply to several of her private reactions.",
       "badge": "Speaking Style",
       "shared": false,
-      "note": "Shared writing instructions for private player self-comments; changes can affect several features.",
+      "note": "Affects your character's private comments, rather than how all other characters speak.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -290,7 +290,7 @@
       "feature": "Dwemer Armor",
       "order": 20,
       "title": "Dwemer Armor Effects — More Arousal",
-      "description": "Customize the wording Skyrim.Net receives for: Dwemer Armor Effects — More Arousal. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide the wearer's reaction when her Dwemer armor increases her arousal.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -304,7 +304,7 @@
       "feature": "Dwemer Armor",
       "order": 21,
       "title": "Dwemer Armor Effects — More Milk",
-      "description": "Customize the wording Skyrim.Net receives for: Dwemer Armor Effects — More Milk. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide the wearer's reaction when her Dwemer armor adds milk.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -318,7 +318,7 @@
       "feature": "Dwemer Armor",
       "order": 22,
       "title": "Dwemer Armor Effects — More Milk and Arousal",
-      "description": "Customize the wording Skyrim.Net receives for: Dwemer Armor Effects — More Milk and Arousal. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide the wearer's reaction when her Dwemer armor adds milk and increases arousal.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -332,10 +332,10 @@
       "feature": "Dwemer Armor",
       "order": 23,
       "title": "Dwemer Suit — How It Works",
-      "description": "Customize the background description Skyrim.Net uses for Dwemer Suit — How It Works. This influences how it describes the subject; it does not change gameplay.",
+      "description": "Describe how the Dwemer suit works. Skyrim.Net uses this background when the wearer puts it on or is milked by it.",
       "badge": "Background Lore",
       "shared": false,
-      "note": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "note": "Also uses the matching How It Works description. Editing that background affects all four reactions for this item.",
       "tokenHelp": {}
     },
     "DwemerArmor.suit_firstEquip": {
@@ -344,10 +344,10 @@
       "feature": "Dwemer Armor",
       "order": 24,
       "title": "Dwemer Suit — First Time Wearing It",
-      "description": "Customize the wording Skyrim.Net receives for: Dwemer Suit — First Time Wearing It. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide the wearer's reaction when she puts it on for the first time.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "note": "Also uses the matching How It Works description. Editing that background affects all four reactions for this item.",
       "tokenHelp": {}
     },
     "DwemerArmor.suit_reequip": {
@@ -356,10 +356,10 @@
       "feature": "Dwemer Armor",
       "order": 25,
       "title": "Dwemer Suit — Wearing It Again",
-      "description": "Customize the wording Skyrim.Net receives for: Dwemer Suit — Wearing It Again. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide the wearer's reaction when she puts it on again.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "note": "Also uses the matching How It Works description. Editing that background affects all four reactions for this item.",
       "tokenHelp": {}
     },
     "DwemerArmor.suit_milkingStart": {
@@ -368,10 +368,10 @@
       "feature": "Dwemer Armor",
       "order": 26,
       "title": "Dwemer Suit — Milking Begins",
-      "description": "Customize the wording Skyrim.Net receives for: Dwemer Suit — Milking Begins. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide the wearer's reaction when she starts being milked by it.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "note": "Also uses the matching How It Works description. Editing that background affects all four reactions for this item.",
       "tokenHelp": {}
     },
     "DwemerArmor.suit_milkingEnd": {
@@ -380,10 +380,10 @@
       "feature": "Dwemer Armor",
       "order": 27,
       "title": "Dwemer Suit — Milking Finishes",
-      "description": "Customize the wording Skyrim.Net receives for: Dwemer Suit — Milking Finishes. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide the wearer's reaction when she finishes being milked by it.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "note": "Also uses the matching How It Works description. Editing that background affects all four reactions for this item.",
       "tokenHelp": {}
     },
     "DwemerArmor.attachment_core": {
@@ -392,10 +392,10 @@
       "feature": "Dwemer Armor",
       "order": 28,
       "title": "Hidden Dwemer Attachment — How It Works",
-      "description": "Customize the background description Skyrim.Net uses for Hidden Dwemer Attachment — How It Works. This influences how it describes the subject; it does not change gameplay.",
+      "description": "Describe how the hidden Dwemer attachment works. Skyrim.Net uses this background when the wearer puts it on or is milked by it.",
       "badge": "Background Lore",
       "shared": false,
-      "note": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "note": "Also uses the matching How It Works description. Editing that background affects all four reactions for this item.",
       "tokenHelp": {}
     },
     "DwemerArmor.attachment_firstEquip": {
@@ -404,10 +404,10 @@
       "feature": "Dwemer Armor",
       "order": 29,
       "title": "Hidden Dwemer Attachment — First Time Wearing It",
-      "description": "Customize the wording Skyrim.Net receives for: Hidden Dwemer Attachment — First Time Wearing It. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide the wearer's reaction when she puts it on for the first time.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "note": "Also uses the matching How It Works description. Editing that background affects all four reactions for this item.",
       "tokenHelp": {}
     },
     "DwemerArmor.attachment_reequip": {
@@ -416,10 +416,10 @@
       "feature": "Dwemer Armor",
       "order": 30,
       "title": "Hidden Dwemer Attachment — Wearing It Again",
-      "description": "Customize the wording Skyrim.Net receives for: Hidden Dwemer Attachment — Wearing It Again. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide the wearer's reaction when she puts it on again.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "note": "Also uses the matching How It Works description. Editing that background affects all four reactions for this item.",
       "tokenHelp": {}
     },
     "DwemerArmor.attachment_milkingStart": {
@@ -428,10 +428,10 @@
       "feature": "Dwemer Armor",
       "order": 31,
       "title": "Hidden Dwemer Attachment — Milking Begins",
-      "description": "Customize the wording Skyrim.Net receives for: Hidden Dwemer Attachment — Milking Begins. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide the wearer's reaction when she starts being milked by it.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "note": "Also uses the matching How It Works description. Editing that background affects all four reactions for this item.",
       "tokenHelp": {}
     },
     "DwemerArmor.attachment_milkingEnd": {
@@ -440,10 +440,10 @@
       "feature": "Dwemer Armor",
       "order": 32,
       "title": "Hidden Dwemer Attachment — Milking Finishes",
-      "description": "Customize the wording Skyrim.Net receives for: Hidden Dwemer Attachment — Milking Finishes. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide the wearer's reaction when she finishes being milked by it.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "note": "Also uses the matching How It Works description. Editing that background affects all four reactions for this item.",
       "tokenHelp": {}
     },
     "Fullness.send_capacity_milestone_1": {
@@ -482,7 +482,7 @@
       "feature": "Milking & Fullness",
       "order": 35,
       "title": "When Her Breasts Become Full",
-      "description": "Customize the wording Skyrim.Net receives for: When Her Breasts Become Full. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide a Milk Maid's reaction when her breasts become full.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -496,7 +496,7 @@
       "feature": "Milking & Fullness",
       "order": 36,
       "title": "When Her Breasts Become Half Full",
-      "description": "Customize the wording Skyrim.Net receives for: When Her Breasts Become Half Full. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide a Milk Maid's reaction when her breasts become half full.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -510,7 +510,7 @@
       "feature": "Milking & Fullness",
       "order": 37,
       "title": "Full Breasts with Restrained Arms",
-      "description": "Customize the wording Skyrim.Net receives for: Full Breasts with Restrained Arms. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide a Milk Maid's reaction to full breasts when her arms are restrained.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -524,7 +524,7 @@
       "feature": "Milking & Fullness",
       "order": 38,
       "title": "Half-Full Breasts with Restrained Arms",
-      "description": "Customize the wording Skyrim.Net receives for: Half-Full Breasts with Restrained Arms. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide a Milk Maid's reaction to half-full breasts when her arms are restrained.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -636,7 +636,7 @@
       "feature": "Lore & Background",
       "order": -1,
       "title": "Milk and Milking Armor Lore",
-      "description": "Customize the background description Skyrim.Net uses for Milk and Milking Armor Lore. This influences how it describes the subject; it does not change gameplay.",
+      "description": "Describe milk and milking armor in your version of Skyrim. Skyrim.Net uses this background when creating dialogue.",
       "badge": "Background Lore",
       "shared": false,
       "note": "",
@@ -648,7 +648,7 @@
       "feature": "Lore & Background",
       "order": -2,
       "title": "What It Means to Be a Milk Maid",
-      "description": "Customize the background description Skyrim.Net uses for What It Means to Be a Milk Maid. This influences how it describes the subject; it does not change gameplay.",
+      "description": "Describe what being a Milk Maid means in your version of Skyrim. Skyrim.Net uses this background when characters discuss Milk Maids.",
       "badge": "Background Lore",
       "shared": false,
       "note": "",
@@ -662,10 +662,10 @@
       "feature": "Thoughts & Cravings",
       "order": 48,
       "title": "Craving Milk",
-      "description": "Customize the wording Skyrim.Net receives for: Craving Milk. This guides the generated reaction rather than guaranteeing an exact spoken line. The selected thought/craving message is edited separately under Game Messages & Stories.",
+      "description": "Guide how a character talks about craving milk.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "",
+      "note": "Edit the actual thought or craving messages under Game Messages & Stories.",
       "tokenHelp": {
         "actor": "Affected character’s name.",
         "craving": "Selected craving text."
@@ -693,7 +693,7 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 50,
       "title": "Drinking Milk from a Trapped Chest",
-      "description": "Customize the wording Skyrim.Net receives for: Drinking Milk from a Trapped Chest. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide how a character reacts when a chest trap makes them drink milk.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -708,7 +708,7 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 51,
       "title": "An NPC Drinks Milk",
-      "description": "Customize the wording Skyrim.Net receives for: An NPC Drinks Milk. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide how another character reacts after drinking milk.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -765,10 +765,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 55,
       "title": "Your Character Drinks Milk — Basic Reaction",
-      "description": "Guide the player’s drink reaction when no detailed rendered outcome was supplied. The Detailed Reaction entry covers the alternative path.",
+      "description": "Guide your character's reaction after drinking milk when no detailed description of its effects is available.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "",
+      "note": "The Detailed Reaction is used instead when the game has a fuller description of the effects.",
       "tokenHelp": {
         "milkName": "Name of the milk drink."
       }
@@ -779,10 +779,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 56,
       "title": "Your Character Drinks Milk — Detailed Reaction",
-      "description": "Guide the player’s drink reaction when the caller supplies a detailed outcome. The Basic Reaction entry covers the alternative path.",
+      "description": "Guide your character's reaction after drinking milk, using the description of its effects.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "",
+      "note": "The Basic Reaction is used when there is no detailed description of the effects.",
       "tokenHelp": {
         "reaction": "Actual reaction description supplied by the drink route."
       }
@@ -805,7 +805,7 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 58,
       "title": "Your Character Drinks Milk with Restrained Arms",
-      "description": "Customize the wording Skyrim.Net receives for: Your Character Drinks Milk with Restrained Arms. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide your character's reaction to drinking milk while her arms are restrained.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -834,7 +834,7 @@
       "feature": "Milking & Fullness",
       "order": 60,
       "title": "When Milking Begins",
-      "description": "Customize the event description supplied to Skyrim.Net when milking begins. It describes the situation; it does not change milk amounts or force an exact spoken line.",
+      "description": "Describe the moment milking begins so Skyrim.Net can create a reaction.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -848,7 +848,7 @@
       "feature": "Milking & Fullness",
       "order": 61,
       "title": "When Milking Finishes",
-      "description": "Customize the event description supplied to Skyrim.Net when milking finishes. It describes the situation; it does not change milk amounts or force an exact spoken line.",
+      "description": "Describe the end of milking so Skyrim.Net can create a reaction.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -862,7 +862,7 @@
       "feature": "Becoming a Milk Maid",
       "order": 62,
       "title": "After Becoming a Milk Maid",
-      "description": "Customize the wording Skyrim.Net receives for: After Becoming a Milk Maid. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide a character's reaction to becoming a Milk Maid.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -876,7 +876,7 @@
       "feature": "Becoming a Milk Maid",
       "order": 63,
       "title": "After a Magical Milk Maid Transformation",
-      "description": "Customize the wording Skyrim.Net receives for: After a Magical Milk Maid Transformation. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide a character's reaction to being magically transformed into a Milk Maid.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -905,7 +905,7 @@
       "feature": "Becoming a Milk Maid",
       "order": 65,
       "title": "A Milk Curse Strikes an Existing Milk Maid",
-      "description": "Customize the wording Skyrim.Net receives for: A Milk Curse Strikes an Existing Milk Maid. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide an existing Milk Maid's reaction when a curse adds milk to her breasts.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -920,7 +920,7 @@
       "feature": "Becoming a Milk Maid",
       "order": 66,
       "title": "A Milk Maid Curse Escapes a Chest",
-      "description": "Customize the wording Skyrim.Net receives for: A Milk Maid Curse Escapes a Chest. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "description": "Guide the reaction when a chest curse turns someone into a Milk Maid or adds milk to an existing Milk Maid.",
       "badge": "Reaction Prompt",
       "shared": false,
       "note": "",
@@ -1006,10 +1006,10 @@
       "feature": "Thoughts & Cravings",
       "order": 72,
       "title": "A Milk Maid Shares Her Thoughts",
-      "description": "Customize the wording Skyrim.Net receives for: A Milk Maid Shares Her Thoughts. This guides the generated reaction rather than guaranteeing an exact spoken line. The selected thought/craving message is edited separately under Game Messages & Stories.",
+      "description": "Guide how a Milk Maid expresses her current thoughts and feelings.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "",
+      "note": "Edit the actual thought or craving messages under Game Messages & Stories.",
       "tokenHelp": {
         "actor": "Affected character’s name.",
         "thought": "Selected thought text."
@@ -1021,10 +1021,10 @@
       "feature": "Thoughts & Cravings",
       "order": 73,
       "title": "A Restrained Milk Maid Shares Her Thoughts",
-      "description": "Customize the wording Skyrim.Net receives for: A Restrained Milk Maid Shares Her Thoughts. This guides the generated reaction rather than guaranteeing an exact spoken line. The selected thought/craving message is edited separately under Game Messages & Stories.",
+      "description": "Guide how a Milk Maid expresses her thoughts while her arms are restrained.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "",
+      "note": "Edit the actual thought or craving messages under Game Messages & Stories.",
       "tokenHelp": {
         "actor": "Affected character’s name.",
         "thought": "Selected thought text."
@@ -1036,7 +1036,7 @@
       "feature": "Thoughts & Cravings",
       "order": 74,
       "title": "Milk Maid Thought — Less Than Half Full, Without Milking Armor",
-      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "description": "Write the short thoughts shown for a Milk Maid when her breasts are less than half full and she has no milking armor. Skyrim.Net can also use the chosen thought for reactions.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
       "note": "",
@@ -1050,7 +1050,7 @@
       "feature": "Thoughts & Cravings",
       "order": 75,
       "title": "Milk Maid Thought — Less Than Half Full, Milking Armor",
-      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "description": "Write the short thoughts shown for a Milk Maid when her breasts are less than half full while wearing milking armor. Skyrim.Net can also use the chosen thought for reactions.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
       "note": "",
@@ -1064,7 +1064,7 @@
       "feature": "Thoughts & Cravings",
       "order": 76,
       "title": "Milk Maid Thought — Less Than Half Full, Parasite Armor",
-      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "description": "Write the short thoughts shown for a Milk Maid when her breasts are less than half full while wearing parasite armor. Skyrim.Net can also use the chosen thought for reactions.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
       "note": "",
@@ -1078,7 +1078,7 @@
       "feature": "Thoughts & Cravings",
       "order": 77,
       "title": "Milk Maid Thought — Less Than Half Full, Living Armor",
-      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "description": "Write the short thoughts shown for a Milk Maid when her breasts are less than half full while wearing living armor. Skyrim.Net can also use the chosen thought for reactions.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
       "note": "",
@@ -1092,7 +1092,7 @@
       "feature": "Thoughts & Cravings",
       "order": 78,
       "title": "Milk Maid Thought — At Least Half Full, Without Milking Armor",
-      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "description": "Write the short thoughts shown for a Milk Maid when her breasts are at least half full and she has no milking armor. Skyrim.Net can also use the chosen thought for reactions.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
       "note": "",
@@ -1106,7 +1106,7 @@
       "feature": "Thoughts & Cravings",
       "order": 79,
       "title": "Milk Maid Thought — Restrained Arms",
-      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "description": "Write the short thoughts shown for a Milk Maid when her arms are restrained. Skyrim.Net can also use the chosen thought for reactions.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
       "note": "",
@@ -1120,7 +1120,7 @@
       "feature": "Thoughts & Cravings",
       "order": 80,
       "title": "Milk Maid Thought — At Least Half Full, Milking Armor",
-      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "description": "Write the short thoughts shown for a Milk Maid when her breasts are at least half full while wearing milking armor. Skyrim.Net can also use the chosen thought for reactions.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
       "note": "",
@@ -1134,7 +1134,7 @@
       "feature": "Thoughts & Cravings",
       "order": 81,
       "title": "Milk Maid Thought — At Least Half Full, Parasite Armor",
-      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "description": "Write the short thoughts shown for a Milk Maid when her breasts are at least half full while wearing parasite armor. Skyrim.Net can also use the chosen thought for reactions.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
       "note": "",
@@ -1148,7 +1148,7 @@
       "feature": "Thoughts & Cravings",
       "order": 82,
       "title": "Milk Maid Thought — At Least Half Full, Living Armor",
-      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "description": "Write the short thoughts shown for a Milk Maid when her breasts are at least half full while wearing living armor. Skyrim.Net can also use the chosen thought for reactions.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
       "note": "",
@@ -1162,7 +1162,7 @@
       "feature": "Thoughts & Cravings",
       "order": 83,
       "title": "When She Craves Milk — Message",
-      "description": "Wording when a periodic craving begins; also passed to AI narration.",
+      "description": "Change the short message shown when a character starts craving milk. Skyrim.Net can also use it for reactions.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
       "note": "",
@@ -1176,7 +1176,7 @@
       "feature": "Thoughts & Cravings",
       "order": 84,
       "title": "Giving In to a Milk Craving — Message",
-      "description": "Game notification when a character gives in to the craving; distinct from the later drink reaction.",
+      "description": "Change the short message shown when a character gives in to a milk craving, before the reaction to drinking.",
       "badge": "On-Screen Message",
       "shared": false,
       "note": "",
@@ -1190,7 +1190,7 @@
       "feature": "Armor Reactions",
       "order": 85,
       "title": "Milking Armor — First Time Wearing It Story",
-      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "description": "Write the story popup shown the first time your character wears milking armor. One version is chosen at random.",
       "badge": "Story Popup",
       "shared": false,
       "note": "",
@@ -1204,7 +1204,7 @@
       "feature": "Armor Reactions",
       "order": 86,
       "title": "Living Armor — First Time Wearing It Story",
-      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "description": "Write the story popup shown the first time your character wears living armor. One version is chosen at random.",
       "badge": "Story Popup",
       "shared": false,
       "note": "",
@@ -1216,7 +1216,7 @@
       "feature": "Armor Reactions",
       "order": 87,
       "title": "Parasite Armor — First Time Wearing It Story",
-      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "description": "Write the story popup shown the first time your character wears parasite armor. One version is chosen at random.",
       "badge": "Story Popup",
       "shared": false,
       "note": "",
@@ -1228,7 +1228,7 @@
       "feature": "Armor Reactions",
       "order": 88,
       "title": "Dwemer Armor — First Time Wearing It Story",
-      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "description": "Write the story popup shown the first time your character wears Dwemer armor. One version is chosen at random.",
       "badge": "Story Popup",
       "shared": false,
       "note": "",
@@ -1240,7 +1240,7 @@
       "feature": "Armor Reactions",
       "order": 89,
       "title": "Living Armor — Caught by a Chest Trap Story",
-      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "description": "Write the story popup shown when a chest trap puts living armor on your character. One version is chosen at random.",
       "badge": "Story Popup",
       "shared": false,
       "note": "",
@@ -1254,7 +1254,7 @@
       "feature": "Armor Reactions",
       "order": 90,
       "title": "Parasite Armor — Caught by a Chest Trap Story",
-      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "description": "Write the story popup shown when a chest trap puts parasite armor on your character. One version is chosen at random.",
       "badge": "Story Popup",
       "shared": false,
       "note": "",
@@ -1268,7 +1268,7 @@
       "feature": "Armor Reactions",
       "order": 91,
       "title": "Dwemer Armor — Caught by a Chest Trap Story",
-      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "description": "Write the story popup shown when a chest trap puts Dwemer armor on your character. One version is chosen at random.",
       "badge": "Story Popup",
       "shared": false,
       "note": "",
@@ -1282,7 +1282,7 @@
       "feature": "Armor Reactions",
       "order": 92,
       "title": "Milking Armor — Wearing It Again Story",
-      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "description": "Write the story popup shown when your character wears milking armor again. One version is chosen at random.",
       "badge": "Story Popup",
       "shared": false,
       "note": "",
@@ -1296,7 +1296,7 @@
       "feature": "Armor Reactions",
       "order": 93,
       "title": "Living Armor — Wearing It Again Story",
-      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "description": "Write the story popup shown when your character wears living armor again. One version is chosen at random.",
       "badge": "Story Popup",
       "shared": false,
       "note": "",
@@ -1310,7 +1310,7 @@
       "feature": "Armor Reactions",
       "order": 94,
       "title": "Parasite Armor — Wearing It Again Story",
-      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "description": "Write the story popup shown when your character wears parasite armor again. One version is chosen at random.",
       "badge": "Story Popup",
       "shared": false,
       "note": "",
@@ -1324,7 +1324,7 @@
       "feature": "Armor Reactions",
       "order": 95,
       "title": "Dwemer Armor — Wearing It Again Story",
-      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "description": "Write the story popup shown when your character wears Dwemer armor again. One version is chosen at random.",
       "badge": "Story Popup",
       "shared": false,
       "note": "",
@@ -1338,7 +1338,7 @@
       "feature": "Dwemer Armor",
       "order": 96,
       "title": "Dwemer Armor — Milking Started Story Popup",
-      "description": "Game story popup at the corresponding Dwemer milking boundary; separate from AI suit/attachment prompts.",
+      "description": "Write the story popup shown when Dwemer armor starts milking your character. One version is chosen at random.",
       "badge": "Story Popup",
       "shared": false,
       "note": "",
@@ -1350,7 +1350,7 @@
       "feature": "Dwemer Armor",
       "order": 97,
       "title": "Dwemer Armor — Milking Finished Story Popup",
-      "description": "Game story popup at the corresponding Dwemer milking boundary; separate from AI suit/attachment prompts.",
+      "description": "Write the story popup shown when Dwemer armor finishes milking your character. One version is chosen at random.",
       "badge": "Story Popup",
       "shared": false,
       "note": "",
@@ -1362,7 +1362,7 @@
       "feature": "Becoming a Milk Maid",
       "order": 98,
       "title": "A Magical Transformation — Message",
-      "description": "Conversion feedback used in HUD and some AI conversion/curse routes.",
+      "description": "Change the short message shown when someone becomes a Milk Maid or experiences a Milk Maid curse. Skyrim.Net can also use this wording for reactions.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
       "note": "",
@@ -1376,10 +1376,10 @@
       "feature": "Becoming a Milk Maid",
       "order": 99,
       "title": "A Milk Maid Curse — Story Popup",
-      "description": "Story popup used by the curse route; the internal chestCurseStories name does not mean every caller is exclusively a chest event.",
+      "description": "Write the stories shown when your character is magically made a Milk Maid by Extensions or receives a curse that adds milk. One story is chosen at random when stories are enabled.",
       "badge": "Story Popup",
       "shared": false,
-      "note": "",
+      "note": "These popups are for your character. Other characters do not open story popups.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1390,10 +1390,10 @@
       "feature": "Service Reminders",
       "order": 100,
       "title": "Armor Service Reminder — No Armor",
-      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "description": "Write what a merchant notices while your character is wearing no armor. This becomes part of a short on-screen message.",
       "badge": "On-Screen Message",
       "shared": false,
-      "note": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "note": "Keep this short. If the complete reminder is too long, the game uses a shorter built-in message instead.",
       "tokenHelp": {}
     },
     "Pools.ArmorCheckReminders.notice_regular": {
@@ -1402,10 +1402,10 @@
       "feature": "Service Reminders",
       "order": 101,
       "title": "Armor Service Reminder — Ordinary Armor",
-      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "description": "Write what a merchant notices about your character's ordinary armor. This becomes part of a short on-screen message.",
       "badge": "On-Screen Message",
       "shared": false,
-      "note": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "note": "Keep this short. If the complete reminder is too long, the game uses a shorter built-in message instead.",
       "tokenHelp": {}
     },
     "Pools.ArmorCheckReminders.notice_milking": {
@@ -1414,10 +1414,10 @@
       "feature": "Service Reminders",
       "order": 102,
       "title": "Armor Service Reminder — Milking Armor",
-      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "description": "Write what a merchant notices about your character's milking armor. This becomes part of a short on-screen message.",
       "badge": "On-Screen Message",
       "shared": false,
-      "note": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "note": "Keep this short. If the complete reminder is too long, the game uses a shorter built-in message instead.",
       "tokenHelp": {}
     },
     "Pools.ArmorCheckReminders.notice_living": {
@@ -1426,10 +1426,10 @@
       "feature": "Service Reminders",
       "order": 103,
       "title": "Armor Service Reminder — Living Armor",
-      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "description": "Write what a merchant notices about your character's living armor. This becomes part of a short on-screen message.",
       "badge": "On-Screen Message",
       "shared": false,
-      "note": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "note": "Keep this short. If the complete reminder is too long, the game uses a shorter built-in message instead.",
       "tokenHelp": {}
     },
     "Pools.ArmorCheckReminders.notice_parasite": {
@@ -1438,10 +1438,10 @@
       "feature": "Service Reminders",
       "order": 104,
       "title": "Armor Service Reminder — Parasite Armor",
-      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "description": "Write what a merchant notices about your character's parasite armor. This becomes part of a short on-screen message.",
       "badge": "On-Screen Message",
       "shared": false,
-      "note": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "note": "Keep this short. If the complete reminder is too long, the game uses a shorter built-in message instead.",
       "tokenHelp": {}
     },
     "Pools.ArmorCheckReminders.notice_dwemer": {
@@ -1450,10 +1450,10 @@
       "feature": "Service Reminders",
       "order": 105,
       "title": "Armor Service Reminder — Dwemer Armor",
-      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "description": "Write what a merchant notices about your character's Dwemer armor. This becomes part of a short on-screen message.",
       "badge": "On-Screen Message",
       "shared": false,
-      "note": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "note": "Keep this short. If the complete reminder is too long, the game uses a shorter built-in message instead.",
       "tokenHelp": {}
     },
     "Pools.ArmorCheckReminders.notice_reaction": {
@@ -1462,10 +1462,10 @@
       "feature": "Service Reminders",
       "order": 106,
       "title": "Armor Service Reminder — Vendor Reaction Ending",
-      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "description": "Write what a merchant notices at the end of an armor-service reminder. This becomes part of a short on-screen message.",
       "badge": "On-Screen Message",
       "shared": false,
-      "note": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "note": "Keep this short. If the complete reminder is too long, the game uses a shorter built-in message instead.",
       "tokenHelp": {}
     },
     "Pools.ArousalEffects.low_female": {
@@ -1474,7 +1474,7 @@
       "feature": "Arousal & Movement",
       "order": 107,
       "title": "Arousal Reaction — Low, Female: Message",
-      "description": "HUD flavor for an arousal-reaction tier and character sex. This is not a Living/Parasite tease probability or AI prompt.",
+      "description": "Change the short message for a female character's low-arousal reaction.",
       "badge": "On-Screen Message",
       "shared": false,
       "note": "",
@@ -1488,7 +1488,7 @@
       "feature": "Arousal & Movement",
       "order": 108,
       "title": "Arousal Reaction — Low, Male: Message",
-      "description": "HUD flavor for an arousal-reaction tier and character sex. This is not a Living/Parasite tease probability or AI prompt.",
+      "description": "Change the short message for a male character's low-arousal reaction.",
       "badge": "On-Screen Message",
       "shared": false,
       "note": "",
@@ -1502,7 +1502,7 @@
       "feature": "Arousal & Movement",
       "order": 109,
       "title": "Arousal Reaction — Medium, Female: Message",
-      "description": "HUD flavor for an arousal-reaction tier and character sex. This is not a Living/Parasite tease probability or AI prompt.",
+      "description": "Change the short message for a female character's medium-arousal reaction.",
       "badge": "On-Screen Message",
       "shared": false,
       "note": "",
@@ -1516,7 +1516,7 @@
       "feature": "Arousal & Movement",
       "order": 110,
       "title": "Arousal Reaction — Medium, Male: Message",
-      "description": "HUD flavor for an arousal-reaction tier and character sex. This is not a Living/Parasite tease probability or AI prompt.",
+      "description": "Change the short message for a male character's medium-arousal reaction.",
       "badge": "On-Screen Message",
       "shared": false,
       "note": "",
@@ -1530,7 +1530,7 @@
       "feature": "Arousal & Movement",
       "order": 111,
       "title": "Arousal Reaction — High, Female: Message",
-      "description": "HUD flavor for an arousal-reaction tier and character sex. This is not a Living/Parasite tease probability or AI prompt.",
+      "description": "Change the short message for a female character's high-arousal reaction.",
       "badge": "On-Screen Message",
       "shared": false,
       "note": "",
@@ -1544,7 +1544,7 @@
       "feature": "Arousal & Movement",
       "order": 112,
       "title": "Arousal Reaction — High, Male: Message",
-      "description": "HUD flavor for an arousal-reaction tier and character sex. This is not a Living/Parasite tease probability or AI prompt.",
+      "description": "Change the short message for a male character's high-arousal reaction.",
       "badge": "On-Screen Message",
       "shared": false,
       "note": "",
@@ -1558,7 +1558,7 @@
       "feature": "Arousal & Movement",
       "order": 113,
       "title": "Breast Movement — Low Bounce Message",
-      "description": "HUD flavor for this bounce/movement reaction; does not select the sound or animation.",
+      "description": "Change the short message describing a small breast bounce.",
       "badge": "On-Screen Message",
       "shared": false,
       "note": "",
@@ -1572,7 +1572,7 @@
       "feature": "Arousal & Movement",
       "order": 114,
       "title": "Breast Movement — High Bounce Message",
-      "description": "HUD flavor for this bounce/movement reaction; does not select the sound or animation.",
+      "description": "Change the short message describing a strong breast bounce.",
       "badge": "On-Screen Message",
       "shared": false,
       "note": "",
@@ -1586,7 +1586,7 @@
       "feature": "Arousal & Movement",
       "order": 115,
       "title": "Breast Movement — Movement Slap Message",
-      "description": "HUD flavor for this bounce/movement reaction; does not select the sound or animation.",
+      "description": "Change the short message describing her breasts slapping during movement.",
       "badge": "On-Screen Message",
       "shared": false,
       "note": "",
@@ -1598,10 +1598,10 @@
       "feature": "Dwemer Armor",
       "order": 116,
       "title": "Dwemer Armor — Periodic Effect Message",
-      "description": "HUD flavor after a successful armor effect. AI narration uses separate text pools.",
+      "description": "Change the short message shown after Dwemer armor successfully affects its wearer.",
       "badge": "On-Screen Message",
       "shared": false,
-      "note": "",
+      "note": "Skyrim.Net reactions have their own entries in the first tab.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1626,10 +1626,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 118,
       "title": "Milk Drink — Male, No Confirmed Milk or Arousal Increase Reaction",
-      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "description": "Change the short reaction for a male character after drinking milk, when no specific milk or arousal increase is reported.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
-      "note": "The filename is misleading: shared readers also support established Milk Maids. Rendered drink reactions can be passed to player/NPC AI narration.",
+      "note": "Works for Milk Maids and other characters. Skyrim.Net can also use the reaction.",
       "tokenHelp": {
         "actor": "Affected character’s name.",
         "milk": "Value supplied by this route; preserve the exact placeholder."
@@ -1641,10 +1641,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 119,
       "title": "Milk Drink — Female, No Confirmed Milk or Arousal Increase Reaction",
-      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "description": "Change the short reaction for a female character after drinking milk, when no specific milk or arousal increase is reported.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
-      "note": "The filename is misleading: shared readers also support established Milk Maids. Rendered drink reactions can be passed to player/NPC AI narration.",
+      "note": "Works for Milk Maids and other characters. Skyrim.Net can also use the reaction.",
       "tokenHelp": {
         "actor": "Affected character’s name.",
         "milk": "Value supplied by this route; preserve the exact placeholder."
@@ -1656,10 +1656,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 120,
       "title": "Milk Drink — Male, Arousal Increase Reaction",
-      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "description": "Change the short reaction for a male character after drinking milk, when their arousal increases.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
-      "note": "The filename is misleading: shared readers also support established Milk Maids. Rendered drink reactions can be passed to player/NPC AI narration.",
+      "note": "Works for Milk Maids and other characters. Skyrim.Net can also use the reaction.",
       "tokenHelp": {
         "actor": "Affected character’s name.",
         "milk": "Value supplied by this route; preserve the exact placeholder."
@@ -1671,10 +1671,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 121,
       "title": "Milk Drink — Female, Arousal Increase Reaction",
-      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "description": "Change the short reaction for a female character after drinking milk, when their arousal increases.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
-      "note": "The filename is misleading: shared readers also support established Milk Maids. Rendered drink reactions can be passed to player/NPC AI narration.",
+      "note": "Works for Milk Maids and other characters. Skyrim.Net can also use the reaction.",
       "tokenHelp": {
         "actor": "Affected character’s name.",
         "milk": "Value supplied by this route; preserve the exact placeholder."
@@ -1686,10 +1686,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 122,
       "title": "Milk Drink — Female, Milk Increase Reaction",
-      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "description": "Change the short reaction for a female character after drinking milk, when milk is added to her breasts.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
-      "note": "The filename is misleading: shared readers also support established Milk Maids. Rendered drink reactions can be passed to player/NPC AI narration.",
+      "note": "Works for Milk Maids and other characters. Skyrim.Net can also use the reaction.",
       "tokenHelp": {
         "actor": "Affected character’s name.",
         "milk": "Value supplied by this route; preserve the exact placeholder."
@@ -1701,10 +1701,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 123,
       "title": "Milk Drink — Female, Milk + Arousal Increase Reaction",
-      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "description": "Change the short reaction for a female character after drinking milk, when milk is added to her breasts and her arousal increases.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
-      "note": "The filename is misleading: shared readers also support established Milk Maids. Rendered drink reactions can be passed to player/NPC AI narration.",
+      "note": "Works for Milk Maids and other characters. Skyrim.Net can also use the reaction.",
       "tokenHelp": {
         "actor": "Affected character’s name.",
         "milk": "Value supplied by this route; preserve the exact placeholder."
@@ -1716,10 +1716,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 124,
       "title": "Breastfeeding — Male, No Confirmed Milk or Arousal Increase Reaction",
-      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "description": "Change the short reaction for a male character after breastfeeding, when no specific milk or arousal increase is reported.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
-      "note": "Shared completion renderer supports both framework backends. HUD reaction is forwarded to player/NPC drink narration except on conversion routes, which reserve their own narration. The filename does not restrict the reader to non-Milk-Maids.",
+      "note": "Works for Milk Maids and other characters. Skyrim.Net can also use the reaction. Becoming a Milk Maid has its own separate reaction.",
       "tokenHelp": {}
     },
     "Pools.NonMilkmaidDrinkNotifications.breastfeeding_male_aroused": {
@@ -1728,10 +1728,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 125,
       "title": "Breastfeeding — Male, Arousal Increase Reaction",
-      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "description": "Change the short reaction for a male character after breastfeeding, when their arousal increases.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
-      "note": "Shared completion renderer supports both framework backends. HUD reaction is forwarded to player/NPC drink narration except on conversion routes, which reserve their own narration. The filename does not restrict the reader to non-Milk-Maids.",
+      "note": "Works for Milk Maids and other characters. Skyrim.Net can also use the reaction. Becoming a Milk Maid has its own separate reaction.",
       "tokenHelp": {}
     },
     "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_generic": {
@@ -1740,10 +1740,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 126,
       "title": "Breastfeeding — Female, No Confirmed Milk or Arousal Increase Reaction",
-      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "description": "Change the short reaction for a female character after breastfeeding, when no specific milk or arousal increase is reported.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
-      "note": "Shared completion renderer supports both framework backends. HUD reaction is forwarded to player/NPC drink narration except on conversion routes, which reserve their own narration. The filename does not restrict the reader to non-Milk-Maids.",
+      "note": "Works for Milk Maids and other characters. Skyrim.Net can also use the reaction. Becoming a Milk Maid has its own separate reaction.",
       "tokenHelp": {}
     },
     "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_aroused": {
@@ -1752,10 +1752,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 127,
       "title": "Breastfeeding — Female, Arousal Increase Reaction",
-      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "description": "Change the short reaction for a female character after breastfeeding, when their arousal increases.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
-      "note": "Shared completion renderer supports both framework backends. HUD reaction is forwarded to player/NPC drink narration except on conversion routes, which reserve their own narration. The filename does not restrict the reader to non-Milk-Maids.",
+      "note": "Works for Milk Maids and other characters. Skyrim.Net can also use the reaction. Becoming a Milk Maid has its own separate reaction.",
       "tokenHelp": {}
     },
     "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_milk": {
@@ -1764,10 +1764,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 128,
       "title": "Breastfeeding — Female, Milk Increase Reaction",
-      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "description": "Change the short reaction for a female character after breastfeeding, when milk is added to her breasts.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
-      "note": "Shared completion renderer supports both framework backends. HUD reaction is forwarded to player/NPC drink narration except on conversion routes, which reserve their own narration. The filename does not restrict the reader to non-Milk-Maids.",
+      "note": "Works for Milk Maids and other characters. Skyrim.Net can also use the reaction. Becoming a Milk Maid has its own separate reaction.",
       "tokenHelp": {}
     },
     "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_milk_arousal": {
@@ -1776,10 +1776,10 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 129,
       "title": "Breastfeeding — Female, Milk + Arousal Increase Reaction",
-      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "description": "Change the short reaction for a female character after breastfeeding, when milk is added to her breasts and her arousal increases.",
       "badge": "Also used by Skyrim.Net",
       "shared": true,
-      "note": "Shared completion renderer supports both framework backends. HUD reaction is forwarded to player/NPC drink narration except on conversion routes, which reserve their own narration. The filename does not restrict the reader to non-Milk-Maids.",
+      "note": "Works for Milk Maids and other characters. Skyrim.Net can also use the reaction. Becoming a Milk Maid has its own separate reaction.",
       "tokenHelp": {}
     },
     "Pools.TimedArmorNotifications.unequip_resisted": {
@@ -1788,7 +1788,7 @@
       "feature": "Armor Locks",
       "order": 130,
       "title": "Timed Armor Lock — Removal Attempt Resisted",
-      "description": "HUD notification when removal is resisted while a timed armor lock is active.",
+      "description": "Change the short message shown when locked armor resists an attempt to remove it.",
       "badge": "On-Screen Message",
       "shared": false,
       "note": "",
@@ -1800,10 +1800,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 131,
       "title": "Living / Parasite — Low Tease Message",
-      "description": "On-screen flavor message for a successful Low Living/Parasite effect.",
+      "description": "Change the short message shown after a successful low tease from living or parasite armor.",
       "badge": "On-Screen Message",
       "shared": false,
-      "note": "Inherits the default tease message until customized. Reset returns to inheritance. AI narration has separate tier entries in the first tab.",
+      "note": "Uses the shared tease message until you save your own version. Reset uses the shared message again. Skyrim.Net reactions are edited in the first tab.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1814,10 +1814,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 132,
       "title": "Living / Parasite Tease — Low: More Milk",
-      "description": "Customize the wearer’s reaction after a low tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "description": "Guide the wearer's reaction after a low tease from living or parasite armor that adds milk.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "note": "Uses the shared reaction text, including your edits to it, until you customize this intensity. Reset uses that shared text again.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1828,10 +1828,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 133,
       "title": "Living / Parasite Tease — Low: More Arousal",
-      "description": "Customize the wearer’s reaction after a low tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "description": "Guide the wearer's reaction after a low tease from living or parasite armor that increases arousal.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "note": "Uses the shared reaction text, including your edits to it, until you customize this intensity. Reset uses that shared text again.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1842,10 +1842,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 134,
       "title": "Living / Parasite Tease — Low: More Milk and Arousal",
-      "description": "Customize the wearer’s reaction after a low tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "description": "Guide the wearer's reaction after a low tease from living or parasite armor that adds milk and increases arousal.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "note": "Uses the shared reaction text, including your edits to it, until you customize this intensity. Reset uses that shared text again.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1856,10 +1856,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 135,
       "title": "Living / Parasite — Medium Tease Message",
-      "description": "On-screen flavor message for a successful Medium Living/Parasite effect.",
+      "description": "Change the short message shown after a successful medium tease from living or parasite armor.",
       "badge": "On-Screen Message",
       "shared": false,
-      "note": "Inherits the default tease message until customized. Reset returns to inheritance. AI narration has separate tier entries in the first tab.",
+      "note": "Uses the shared tease message until you save your own version. Reset uses the shared message again. Skyrim.Net reactions are edited in the first tab.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1870,10 +1870,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 136,
       "title": "Living / Parasite Tease — Medium: More Milk",
-      "description": "Customize the wearer’s reaction after a medium tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "description": "Guide the wearer's reaction after a medium tease from living or parasite armor that adds milk.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "note": "Uses the shared reaction text, including your edits to it, until you customize this intensity. Reset uses that shared text again.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1884,10 +1884,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 137,
       "title": "Living / Parasite Tease — Medium: More Arousal",
-      "description": "Customize the wearer’s reaction after a medium tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "description": "Guide the wearer's reaction after a medium tease from living or parasite armor that increases arousal.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "note": "Uses the shared reaction text, including your edits to it, until you customize this intensity. Reset uses that shared text again.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1898,10 +1898,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 138,
       "title": "Living / Parasite Tease — Medium: More Milk and Arousal",
-      "description": "Customize the wearer’s reaction after a medium tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "description": "Guide the wearer's reaction after a medium tease from living or parasite armor that adds milk and increases arousal.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "note": "Uses the shared reaction text, including your edits to it, until you customize this intensity. Reset uses that shared text again.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1912,10 +1912,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 139,
       "title": "Living / Parasite — High Tease Message",
-      "description": "On-screen flavor message for a successful High Living/Parasite effect.",
+      "description": "Change the short message shown after a successful high tease from living or parasite armor.",
       "badge": "On-Screen Message",
       "shared": false,
-      "note": "Inherits the default tease message until customized. Reset returns to inheritance. AI narration has separate tier entries in the first tab.",
+      "note": "Uses the shared tease message until you save your own version. Reset uses the shared message again. Skyrim.Net reactions are edited in the first tab.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1926,10 +1926,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 140,
       "title": "Living / Parasite Tease — High: More Milk",
-      "description": "Customize the wearer’s reaction after a high tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "description": "Guide the wearer's reaction after a high tease from living or parasite armor that adds milk.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "note": "Uses the shared reaction text, including your edits to it, until you customize this intensity. Reset uses that shared text again.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1940,10 +1940,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 141,
       "title": "Living / Parasite Tease — High: More Arousal",
-      "description": "Customize the wearer’s reaction after a high tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "description": "Guide the wearer's reaction after a high tease from living or parasite armor that increases arousal.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "note": "Uses the shared reaction text, including your edits to it, until you customize this intensity. Reset uses that shared text again.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1954,10 +1954,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 142,
       "title": "Living / Parasite Tease — High: More Milk and Arousal",
-      "description": "Customize the wearer’s reaction after a high tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "description": "Guide the wearer's reaction after a high tease from living or parasite armor that adds milk and increases arousal.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "note": "Uses the shared reaction text, including your edits to it, until you customize this intensity. Reset uses that shared text again.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1968,10 +1968,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 143,
       "title": "Living / Parasite — Extreme Tease Message",
-      "description": "On-screen flavor message for a successful Extreme Living/Parasite effect.",
+      "description": "Change the short message shown after a successful extreme tease from living or parasite armor.",
       "badge": "On-Screen Message",
       "shared": false,
-      "note": "Inherits the default tease message until customized. Reset returns to inheritance. AI narration has separate tier entries in the first tab.",
+      "note": "Uses the shared tease message until you save your own version. Reset uses the shared message again. Skyrim.Net reactions are edited in the first tab.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1982,10 +1982,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 144,
       "title": "Living / Parasite Tease — Extreme: More Milk",
-      "description": "Customize the wearer’s reaction after a extreme tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "description": "Guide the wearer's reaction after an extreme tease from living or parasite armor that adds milk.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "note": "Uses the shared reaction text, including your edits to it, until you customize this intensity. Reset uses that shared text again.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -1996,10 +1996,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 145,
       "title": "Living / Parasite Tease — Extreme: More Arousal",
-      "description": "Customize the wearer’s reaction after a extreme tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "description": "Guide the wearer's reaction after an extreme tease from living or parasite armor that increases arousal.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "note": "Uses the shared reaction text, including your edits to it, until you customize this intensity. Reset uses that shared text again.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -2010,10 +2010,10 @@
       "feature": "Living / Parasite Teasing",
       "order": 146,
       "title": "Living / Parasite Tease — Extreme: More Milk and Arousal",
-      "description": "Customize the wearer’s reaction after a extreme tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "description": "Guide the wearer's reaction after an extreme tease from living or parasite armor that adds milk and increases arousal.",
       "badge": "Reaction Prompt",
       "shared": false,
-      "note": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "note": "Uses the shared reaction text, including your edits to it, until you customize this intensity. Reset uses that shared text again.",
       "tokenHelp": {
         "actor": "Affected character’s name."
       }
@@ -2024,11 +2024,11 @@
       "feature": "Milking & Fullness",
       "order": 201,
       "title": "When Her Breasts Become Half Full — Message",
-      "description": "Half-full crossing, after the existing state/reaction processing and enableCapacityNotifications gate.",
+      "description": "Change the short message shown when a Milk Maid's breasts become half full.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": false,
-      "note": "Keep crossing/latch logic and processLocalReactions early return; AI fullness wording is separate.",
+      "note": "",
       "tokenHelp": {
         "actor": "Name of the affected character."
       }
@@ -2039,11 +2039,11 @@
       "feature": "Milking & Fullness",
       "order": 202,
       "title": "When Her Breasts Become Full — Message",
-      "description": "Full crossing under the existing capacity notification gate.",
+      "description": "Change the short message shown when a Milk Maid's breasts become full.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": false,
-      "note": "No extra crossing, self-milking, sound or narration dispatch.",
+      "note": "",
       "tokenHelp": {
         "actor": "Name of the affected character."
       }
@@ -2054,11 +2054,11 @@
       "feature": "Armor Reactions",
       "order": 203,
       "title": "When Her Armor Pops Off — Message",
-      "description": "Verified stripping route with enableArmorStripNotification.",
+      "description": "Change the short message shown when full breasts make armor pop off.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": false,
-      "note": "Keep the existing second-person wording even if a caller supplies an NPC; do not quietly fix targeting/grammar in a text extraction.",
+      "note": "Written as a message to your character: use \"you\" and \"your\".",
       "tokenHelp": {
         "armorName": "Name of the armor involved."
       }
@@ -2069,11 +2069,11 @@
       "feature": "Service Reminders",
       "order": 204,
       "title": "Milking Equipment Needs a Refit — Message",
-      "description": "Verified player equipment removal while NeedsRefit; once per pending episode.",
+      "description": "Change the message shown when your character's milking equipment comes off because it needs a refit.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": false,
-      "note": "Preserve RemovalNoticeShownKey. This replaces generic strip feedback on the refit path; do not show both.",
+      "note": "",
       "tokenHelp": {}
     },
     "Pools.FlavorNotifications.refit_complete": {
@@ -2082,11 +2082,11 @@
       "feature": "Service Reminders",
       "order": 205,
       "title": "After a Successful Equipment Refit — Message",
-      "description": "Only after refit state persists successfully.",
+      "description": "Change the message confirming that your character's milking equipment has been refitted.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": false,
-      "note": "Failure wording remains internal; changing text must not affect refit state.",
+      "note": "",
       "tokenHelp": {}
     },
     "Pools.FlavorNotifications.armor_lock_player": {
@@ -2095,11 +2095,11 @@
       "feature": "Armor Locks",
       "order": 206,
       "title": "Trapped in Armor — Your Character",
-      "description": "Successful protected equip and timed lock for player.",
+      "description": "Change the message shown when your character becomes trapped in locked armor.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": false,
-      "note": "Use the existing rounded-up shownDays value, not a fresh calculation.",
+      "note": "The game fills in the character name and remaining days where those placeholders are available.",
       "tokenHelp": {
         "days": "Existing rounded-up number of locked days."
       }
@@ -2110,11 +2110,11 @@
       "feature": "Armor Locks",
       "order": 207,
       "title": "Trapped in Armor — Another Character",
-      "description": "Successful protected equip and timed lock for NPC.",
+      "description": "Change the message shown when another character becomes trapped in locked armor.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": false,
-      "note": "Keep player/NPC branch and existing deadline.",
+      "note": "The game fills in the character name and remaining days where those placeholders are available.",
       "tokenHelp": {
         "actor": "Name of the affected character.",
         "days": "Existing rounded-up number of locked days."
@@ -2126,11 +2126,11 @@
       "feature": "Armor Locks",
       "order": 208,
       "title": "Released from Timed Armor — Message",
-      "description": "ReleaseInternal only when its existing showNotification argument is true.",
+      "description": "Change the message shown when a timed armor lock is released.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": false,
-      "note": "Do not defeat callers that deliberately suppress release notifications.",
+      "note": "",
       "tokenHelp": {
         "actor": "Name of the affected character."
       }
@@ -2141,11 +2141,11 @@
       "feature": "Armor Locks",
       "order": 209,
       "title": "Parasite Armor Is Ready to Let Go — Message",
-      "description": "Parasite timer expires: lock cleared, armor stays equipped.",
+      "description": "Change the message shown when a parasite is satisfied and unlocks. The armor stays on until it is removed.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": false,
-      "note": "Must not imply automatic unequip or call Release instead of current expiry branch.",
+      "note": "",
       "tokenHelp": {
         "actor": "Name of the affected character."
       }
@@ -2156,11 +2156,11 @@
       "feature": "Armor Locks",
       "order": 210,
       "title": "Blacksmith Frees One Companion",
-      "description": "Successful rescue summary after scanning/removing armor; singular/plural and blacksmith/direct route already selected.",
+      "description": "Change the message confirming that a blacksmith freed one companion from armor.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Use actual rescued count/name, not eligible count. Direct-route wording also appears after a deliberate MCM rescue action; this is success feedback, not a debug trace. Keep no-target/rejection messages internal.",
+      "note": "",
       "tokenHelp": {
         "actor": "Name of the affected character."
       }
@@ -2171,11 +2171,11 @@
       "feature": "Armor Locks",
       "order": 211,
       "title": "One Companion Is Freed",
-      "description": "Successful rescue summary after scanning/removing armor; singular/plural and blacksmith/direct route already selected.",
+      "description": "Change the message confirming that one companion was freed from armor, including rescues started from the MCM.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Use actual rescued count/name, not eligible count. Direct-route wording also appears after a deliberate MCM rescue action; this is success feedback, not a debug trace. Keep no-target/rejection messages internal.",
+      "note": "",
       "tokenHelp": {
         "actor": "Name of the affected character."
       }
@@ -2186,11 +2186,11 @@
       "feature": "Armor Locks",
       "order": 212,
       "title": "Blacksmith Frees Several Companions",
-      "description": "Successful rescue summary after scanning/removing armor; singular/plural and blacksmith/direct route already selected.",
+      "description": "Change the message confirming that a blacksmith freed several companions from armor.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Use actual rescued count/name, not eligible count. Direct-route wording also appears after a deliberate MCM rescue action; this is success feedback, not a debug trace. Keep no-target/rejection messages internal.",
+      "note": "",
       "tokenHelp": {
         "count": "Number of companions actually freed."
       }
@@ -2201,11 +2201,11 @@
       "feature": "Armor Locks",
       "order": 213,
       "title": "Several Companions Are Freed",
-      "description": "Successful rescue summary after scanning/removing armor; singular/plural and blacksmith/direct route already selected.",
+      "description": "Change the message confirming that several companions were freed from armor, including rescues started from the MCM.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Use actual rescued count/name, not eligible count. Direct-route wording also appears after a deliberate MCM rescue action; this is success feedback, not a debug trace. Keep no-target/rejection messages internal.",
+      "note": "",
       "tokenHelp": {
         "count": "Number of companions actually freed."
       }
@@ -2216,11 +2216,11 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 214,
       "title": "Someone Nearby Wants Milk — Message",
-      "description": "OnInnPalaceEntered only when a new venue drink timer was successfully armed.",
+      "description": "Change the message announcing that someone nearby will want a drink of milk at an inn or palace.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "No drinker has been selected yet. Do not invent an actor token or change the timer.",
+      "note": "The character who will drink has not been chosen yet.",
       "tokenHelp": {}
     },
     "Pools.FlavorNotifications.venue_drink_fallback": {
@@ -2229,11 +2229,11 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 215,
       "title": "A Nearby Character Drinks Milk — Simple Message",
-      "description": "Owned venue notification only when renderedReaction is empty.",
+      "description": "Change the simple message used when someone nearby drinks milk and no more detailed reaction is available.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Rare route: normal outcome reactions already use JSON. Do not replace or suppress their existing shared wording.",
+      "note": "",
       "tokenHelp": {
         "actor": "Name of the affected character."
       }
@@ -2244,11 +2244,11 @@
       "feature": "Drinking Milk & Breastfeeding",
       "order": 216,
       "title": "A Chest Makes Someone Drink Milk — Message",
-      "description": "Owned chest drink HUD message, once per Notified context.",
+      "description": "Change the short message shown when a chest makes someone drink milk.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "BuildSituation currently has one source caller, the HUD. NarrateChestMilkDrink uses separate canonical JSON. Preserve milk-name fallback and exact ownership/deduplication.",
+      "note": "",
       "tokenHelp": {
         "actor": "Name of the affected character.",
         "milkName": "Name of the milk supplied by the chest."
@@ -2260,11 +2260,11 @@
       "feature": "Armor Reactions",
       "order": 217,
       "title": "Custom Dwemer Armor Attaches — Message",
-      "description": "Existing custom-registry compatibility equip/unequip branch; player HUD only.",
+      "description": "Change the short message shown when your character puts on custom Dwemer armor.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Do not change original-vs-custom classification, Milk Maid registration, breast-row update, passive spells or Lactacid. Preserve possible two-message rows-absorbed + attaches sequence. No added NPC notifications.",
+      "note": "",
       "tokenHelp": {
         "armorName": "Name of the armor involved."
       }
@@ -2275,11 +2275,11 @@
       "feature": "Armor Reactions",
       "order": 218,
       "title": "Custom Living Armor Absorbs Extra Breast Rows — Message",
-      "description": "Existing custom-registry compatibility equip/unequip branch; player HUD only.",
+      "description": "Change the short message shown when custom living armor absorbs your character's extra breast rows.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Do not change original-vs-custom classification, Milk Maid registration, breast-row update, passive spells or Lactacid. Preserve possible two-message rows-absorbed + attaches sequence. No added NPC notifications.",
+      "note": "The armor-attaches message may appear immediately afterward.",
       "tokenHelp": {
         "armorName": "Name of the armor involved."
       }
@@ -2290,11 +2290,11 @@
       "feature": "Armor Reactions",
       "order": 219,
       "title": "Custom Living or Parasite Armor Attaches — Message",
-      "description": "Existing custom-registry compatibility equip/unequip branch; player HUD only.",
+      "description": "Change the short message shown when your character puts on custom living or parasite armor.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Do not change original-vs-custom classification, Milk Maid registration, breast-row update, passive spells or Lactacid. Preserve possible two-message rows-absorbed + attaches sequence. No added NPC notifications.",
+      "note": "",
       "tokenHelp": {
         "armorName": "Name of the armor involved."
       }
@@ -2305,11 +2305,11 @@
       "feature": "Armor Reactions",
       "order": 220,
       "title": "Custom Milking Cups Attach — Message",
-      "description": "Existing custom-registry compatibility equip/unequip branch; player HUD only.",
+      "description": "Change the short message shown when your character puts on custom milking cups.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Do not change original-vs-custom classification, Milk Maid registration, breast-row update, passive spells or Lactacid. Preserve possible two-message rows-absorbed + attaches sequence. No added NPC notifications.",
+      "note": "",
       "tokenHelp": {}
     },
     "Pools.FlavorNotifications.custom_living_remove": {
@@ -2318,11 +2318,11 @@
       "feature": "Armor Reactions",
       "order": 221,
       "title": "Custom Living or Parasite Armor Comes Off — Message",
-      "description": "Existing custom-registry compatibility equip/unequip branch; player HUD only.",
+      "description": "Change the short message shown when your character takes off custom living or parasite armor.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Do not change original-vs-custom classification, Milk Maid registration, breast-row update, passive spells or Lactacid. Preserve possible two-message rows-absorbed + attaches sequence. No added NPC notifications.",
+      "note": "",
       "tokenHelp": {
         "armorName": "Name of the armor involved."
       }
@@ -2333,11 +2333,11 @@
       "feature": "Armor Reactions",
       "order": 222,
       "title": "Custom Milking Cups Come Off — Message",
-      "description": "Existing custom-registry compatibility equip/unequip branch; player HUD only.",
+      "description": "Change the short message shown when your character takes off custom milking cups.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Do not change original-vs-custom classification, Milk Maid registration, breast-row update, passive spells or Lactacid. Preserve possible two-message rows-absorbed + attaches sequence. No added NPC notifications.",
+      "note": "",
       "tokenHelp": {}
     },
     "Pools.FlavorNotifications.new_maid_confirmation": {
@@ -2346,11 +2346,11 @@
       "feature": "Becoming a Milk Maid",
       "order": 223,
       "title": "A New Milk Maid Is Confirmed — Message",
-      "description": "MakeTargetNewMilkMaid action after assignment and initialization succeed.",
+      "description": "Change the confirmation message shown after a character has successfully become a Milk Maid.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Not the controller diagnostic confirmation. Existing conversion feedback pools and AI creation prompts remain separate.",
+      "note": "",
       "tokenHelp": {
         "actor": "Name of the affected character."
       }
@@ -2361,11 +2361,11 @@
       "feature": "Milking & Fullness",
       "order": 224,
       "title": "Milk Maid Level Reduction Begins — Message",
-      "description": "Reverse-leveling ability successfully applied/refreshed.",
+      "description": "Change the message shown when the Milk Maid level-reduction ability is applied or renewed.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Supply existing GetDuration display and constant levels=1; do not change monitoring, baseline or level calculations.",
+      "note": "The game supplies the duration or number of levels where those placeholders are available.",
       "tokenHelp": {
         "hours": "Existing duration in game hours.",
         "levels": "Actual one-level decrease stated by the route."
@@ -2377,11 +2377,11 @@
       "feature": "Milking & Fullness",
       "order": 225,
       "title": "Milk Maid Level Reduction Ends — Message",
-      "description": "RemoveReverseLeveling when notifyPlayer is true.",
+      "description": "Change the message shown when the Milk Maid level-reduction ability is removed.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Respect silent removals; do not add an expiry notification where none exists.",
+      "note": "",
       "tokenHelp": {}
     },
     "Pools.FlavorNotifications.reverse_level_decrease": {
@@ -2390,11 +2390,11 @@
       "feature": "Milking & Fullness",
       "order": 226,
       "title": "Her Breasts Feel Lighter — Message",
-      "description": "CheckProgress success after the existing writes, under level > 0.",
+      "description": "Change the message shown when a Milk Maid loses a level and her breasts feel lighter.",
       "badge": "On-Screen Message",
       "shared": false,
       "minor": true,
-      "note": "Supply existing one-level feedback as levels=1; never derive gameplay from editable text.",
+      "note": "The game supplies the duration or number of levels where those placeholders are available.",
       "tokenHelp": {
         "levels": "Actual one-level decrease stated by the route."
       }
