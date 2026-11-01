@@ -214,3 +214,13 @@ cleanup immediately before MME_MilkingDone. The original broadcast omits mode,
 so these two hooks are necessary for reliable source attribution. No original
 mode selection, gameplay, event signature or actor-array behavior is replaced.
 See Milking-Source-API.md. Generated OStim/Estrus variants inherit both hooks.
+
+## Direct prompt-state metadata hooks
+
+AssignSlot and AssignSlotMaid refresh Extensions prompt state after their existing
+successful completion path. MaidRemove invalidates only Extensions prompt metadata
+before and after original removal. No new MME array access, slot indexing, conversion, milk
+or inventory changes. These metadata hooks also propagate into OStim-only and the
+isolated Estrus Unified variants. Their purpose is to keep prompt eligibility
+current without Skyrim.Net Papyrus decorator warmup. Other mods overriding these
+scripts still require a deliberate merge.

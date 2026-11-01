@@ -392,59 +392,30 @@ EndFunction
 
 ; Registers callbacks used by actor-specific MME prompt modules.
 Function RegisterPromptDecorator() Global
-    ; Registration may be repeated after load/MCM upgrades. Skyrim.Net's return
-    ; code can therefore mean "already registered" and is logged, not fatal.
-    ; Always register when Skyrim.Net exists; callbacks return empty when disabled.
-    ; Otherwise a first load with MME OFF leaves template functions undefined.
-    MMELog.MasterDiagnostic("[MME Actor Prompt] registration batch entry | callbacks=6")
-    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 0) == 1
-    If !IsAvailable()
-        If diagnostic
-            Debug.Notification("Skyrim.Net Prompt: registration skipped - SkyrimNet not detected")
-        EndIf
-        MMELog.MasterDiagnostic("[MME Actor Prompt] registration batch skipped | optional Skyrim.Net absent")
-        Return
-    EndIf
-    Int result = SkyrimNetApi.RegisterDecorator("mme_milkmaid_prompt_debug", "MMEAlertsSkyrimNet", "MilkmaidPromptDebug")
-    If diagnostic
-        Debug.Notification("Skyrim.Net Prompt: Milkmaid callback registration result [" + result + "]")
-    EndIf
-    MMELog.MasterDiagnostic("[MME Actor Prompt] mme_milkmaid_prompt_debug registration result=" + result)
-    Int breastfeedingResult = SkyrimNetApi.RegisterDecorator("mme_breastfeeding_role", "MMEAlertsSkyrimNet", "BreastfeedingPromptRole")
-    MMELog.MasterDiagnostic("[MME Actor Prompt] mme_breastfeeding_role registration result=" + breastfeedingResult)
-    Int recentDrinkerResult = SkyrimNetApi.RegisterDecorator("mme_recent_milk_drinker", "MMEAlertsSkyrimNet", "RecentMilkDrinkerPrompt")
-    MMELog.MasterDiagnostic("[MME Actor Prompt] mme_recent_milk_drinker registration result=" + recentDrinkerResult)
-    Int stateResult = SkyrimNetApi.RegisterDecorator("mme_actor_milk_state", "MMEActorPromptState", "GetActorState")
-    MMEActorPromptState.ReportRegistration(stateResult)
-    Int loreResult = SkyrimNetApi.RegisterDecorator("mme_milk_lore_text", "MMEAlertsSkyrimNet", "MilkLoreText")
-    MMELog.MasterDiagnostic("[MME Actor Prompt] mme_milk_lore_text registration result=" + loreResult)
-    Int guidanceResult = SkyrimNetApi.RegisterDecorator("mme_breastfeeding_guidance_text", "MMEAlertsSkyrimNet", "BreastfeedingGuidanceText")
-    MMELog.MasterDiagnostic("[MME Actor Prompt] mme_breastfeeding_guidance_text registration result=" + guidanceResult)
-    ; State callback failures already have their dedicated deduplicated alarm.
-    ; Other required callbacks need the same protection; positive duplicate
-    ; registration status is not treated as a verified failure.
-    If result < 0 || breastfeedingResult < 0 || recentDrinkerResult < 0 || loreResult < 0 || guidanceResult < 0
-        If StorageUtil.GetIntValue(None, "MME.Prompt.OtherRegistrationFailure", 0) == 0
-            StorageUtil.SetIntValue(None, "MME.Prompt.OtherRegistrationFailure", 1)
-            MMELog.Alarm("[MME Actor Prompt] SMOKE ALARM | operation=register prompt callbacks | actor=N/A | negative API result | maid=" + result + " | role=" + breastfeedingResult + " | drinker=" + recentDrinkerResult + " | lore=" + loreResult + " | guidance=" + guidanceResult)
-        EndIf
-    ElseIf StorageUtil.GetIntValue(None, "MME.Prompt.OtherRegistrationFailure", 0) == 1
-        StorageUtil.UnsetIntValue(None, "MME.Prompt.OtherRegistrationFailure")
-    EndIf
-    MMELog.MasterDiagnostic("[MME Actor Prompt] registration batch complete | six callbacks attempted; see individual results")
+    ; Retained public entry point for existing save callers. No cache registration.
+    MMEActorPromptState.Initialize()
 EndFunction
 
 Function SetBreastfeedingPromptState(Actor participant, String role, Int threadID) Global
     If participant == None || (role != "source" && role != "drinker") || threadID < 0
         Return
     EndIf
+    MMEActorPromptState.Refresh(participant)
     StorageUtil.SetStringValue(participant, "MME.Extensions.SexLabBreastfeeding.Role", role)
     StorageUtil.SetIntValue(participant, "MME.Extensions.SexLabBreastfeeding.Thread", threadID)
+    ; Publish event-owned role without validating a scene still starting.
+    StorageUtil.SetStringValue(participant, "MME.Prompt.Role", role)
+    StorageUtil.SetStringValue(participant, "MME.Prompt.Guidance", MMENarrationText.Text("Breastfeeding", "guidance", "actor", ResolveActorName(participant, "The participant"), "role", role))
     MMELog.Diagnostic("[MMEAlert SkyrimNet BF Prompt] state SET | actor=" + ResolveActorName(participant, "unnamed actor") + " | role=" + role + " | thread=" + threadID)
 EndFunction
 
 Function ClearBreastfeedingPromptState(Actor participant, Int expectedThreadID = -1) Global
-    If participant == None || !StorageUtil.HasStringValue(participant, "MME.Extensions.SexLabBreastfeeding.Role")
+    If participant == None
+        Return
+    EndIf
+    If !StorageUtil.HasStringValue(participant, "MME.Extensions.SexLabBreastfeeding.Role")
+        StorageUtil.SetStringValue(participant, "MME.Prompt.Role", "")
+        StorageUtil.SetStringValue(participant, "MME.Prompt.Guidance", "")
         Return
     EndIf
     Int storedThreadID = StorageUtil.GetIntValue(participant, "MME.Extensions.SexLabBreastfeeding.Thread", -1)
@@ -453,6 +424,8 @@ Function ClearBreastfeedingPromptState(Actor participant, Int expectedThreadID =
     EndIf
     StorageUtil.UnsetStringValue(participant, "MME.Extensions.SexLabBreastfeeding.Role")
     StorageUtil.UnsetIntValue(participant, "MME.Extensions.SexLabBreastfeeding.Thread")
+    StorageUtil.SetStringValue(participant, "MME.Prompt.Role", "")
+    StorageUtil.SetStringValue(participant, "MME.Prompt.Guidance", "")
     MMELog.Diagnostic("[MMEAlert SkyrimNet BF Prompt] state CLEARED | actor=" + ResolveActorName(participant, "unnamed actor") + " | thread=" + storedThreadID)
 EndFunction
 
@@ -496,6 +469,22 @@ Function MarkRecentMilkDrinker(Actor drinker) Global
         Return
     EndIf
     StorageUtil.SetFloatValue(drinker, "MME.Extensions.SkyrimNet.RecentMilkDrink", Utility.GetCurrentRealTime())
+    MMEActorPromptState.Refresh(drinker)
+    MMEAlertsController scheduler = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
+    If scheduler != None
+        StorageUtil.UnsetIntValue(drinker, "MME.Prompt.ExpiryAlarm")
+        scheduler.ScheduleNextUpdate()
+    Else
+        ; Do not publish an indefinitely recent drink if expiry cannot be scheduled.
+        StorageUtil.SetIntValue(drinker, "MME.Prompt.Recent", 0)
+        If StorageUtil.GetIntValue(drinker, "MME.Prompt.IsMaid", 0) != 1
+            StorageUtil.SetStringValue(drinker, "MME.Prompt.Lore", "")
+        EndIf
+        If StorageUtil.GetIntValue(drinker, "MME.Prompt.ExpiryAlarm", 0) == 0
+            StorageUtil.SetIntValue(drinker, "MME.Prompt.ExpiryAlarm", 1)
+            MMELog.Alarm("[MME Actor Prompt] schedule recent-drink expiry failed | actor=" + drinker + " | reason=controller unavailable")
+        EndIf
+    EndIf
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 0) == 1
         MMELog.Diagnostic("[MMEAlert SkyrimNet] recent milk drinker marked | actor=" + ResolveActorName(drinker, "unnamed actor"))
     EndIf

@@ -261,6 +261,7 @@ Int Function ReloadAll() Global
     EndWhile
     StorageUtil.UnsetIntValue(None, "MMEExtensions.Narration.Report.renderer")
     MMELog.MasterDiagnostic("[MME Narration JSON] reload complete | valid files=" + valid + "/" + index)
+    MMEActorPromptState.Initialize()
     Return valid
 EndFunction
 

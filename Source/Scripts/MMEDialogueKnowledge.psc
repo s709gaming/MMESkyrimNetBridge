@@ -3,6 +3,7 @@ Scriptname MMEDialogueKnowledge Hidden
 ; Request-local text composition only. No Skyrim.Net import, actor membership
 ; writes, temporary speaker flags, timers, JSON writes or persisted lore copies.
 String Function ForRequest(Actor speaker, String route) Global
+    MMEActorPromptState.Refresh(speaker)
     String milkLore = MMENarrationText.GetRaw("Lore", "milk_lore")
     ; The existing editable entry still requires {actor}. In shared background
     ; it names an example, never an ordinary NPC who happens to be speaking.

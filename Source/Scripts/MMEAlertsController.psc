@@ -161,6 +161,8 @@ Function InitializeController(Bool reportStatus = False)
     ; outer boundary keeps the non-Skyrim.Net startup path completely isolated.
     If Game.GetModByName("SkyrimNet.esp") != 255
         MMEAlertsSkyrimNet.RegisterPromptDecorator()
+        UnregisterForModEvent("MMEExtensions_NarrationEditorResult")
+        RegisterForModEvent("MMEExtensions_NarrationEditorResult", "OnPromptLoreEdited")
         MMESkyrimNetVoiceControls.RegisterSelfMilkingAction()
     EndIf
     UnregisterForModEvent("MMEExtensions_Lifecycle")
@@ -1268,7 +1270,8 @@ EndFunction
 
 Function RememberMilkmaid(Actor candidate)
     If IsMMEMilkMaid(candidate)
-        StorageUtil.SetIntValue(candidate, KnownMilkmaidKey, 1)
+        MMEActorPromptState.Refresh(candidate)
+    StorageUtil.SetIntValue(candidate, KnownMilkmaidKey, 1)
     EndIf
 EndFunction
 
@@ -1401,6 +1404,7 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
         MMEArmorScript.ReportArmor(diagnostic, "equip rejected: actor or plugin missing")
         Return
     EndIf
+    MMEActorPromptState.Refresh(wearer)
     Armor equippedArmor = Game.GetFormFromFile(localArmorForm as Int, pluginName) as Armor
     If equippedArmor == None
         MMEArmorScript.ReportArmor(diagnostic, "armor resolve failed | " + pluginName + ":" + (localArmorForm as Int))
@@ -1482,6 +1486,7 @@ Event OnArmorUnequipped(String eventName, String pluginName, Float localArmorFor
         MMELog.MasterDiagnostic("[MME Extensions Custom Armor] armor resolve failed on unequip | " + pluginName + ":" + (localArmorForm as Int))
         Return
     EndIf
+    MMEActorPromptState.Refresh(wearer)
     MMEArmorRemoval.HandleArmorUnequipped(wearer, unequippedArmor)
     If MMETimedArmorLock.HandleUnequip(wearer, unequippedArmor)
         MMELog.MasterDiagnostic("[MME Extensions Timed Armor] ordinary unequip cleanup suppressed after protected re-equip | actor=" + GetActorName(wearer))
@@ -1588,9 +1593,11 @@ Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form send
         ; Keep it before the master-off return; disabled callbacks render empty.
         MMELog.MasterDiagnostic("[MME Actor Prompt] save-load recovery entry | MME enabled=" + IsExtensionsEnabled())
         If Game.GetModByName("SkyrimNet.esp") != 255
-            MMELog.MasterDiagnostic("[MME Actor Prompt] save-load recovery dispatch | registering all prompt callbacks")
+            MMELog.MasterDiagnostic("[MME Actor Prompt] save-load recovery dispatch | initializing direct prompt state")
             MMEAlertsSkyrimNet.RegisterPromptDecorator()
-            MMELog.MasterDiagnostic("[MME Actor Prompt] save-load recovery returned | see callback result codes")
+            UnregisterForModEvent("MMEExtensions_NarrationEditorResult")
+            RegisterForModEvent("MMEExtensions_NarrationEditorResult", "OnPromptLoreEdited")
+            MMELog.MasterDiagnostic("[MME Actor Prompt] save-load recovery returned | direct transport refreshed")
         Else
             MMELog.MasterDiagnostic("[MME Actor Prompt] save-load recovery skipped | optional Skyrim.Net absent")
         EndIf
@@ -2081,6 +2088,16 @@ Function ScheduleNextUpdate()
             delay = candidate
         EndIf
     EndIf
+    Float promptExpiry = MMEActorPromptState.NextExpiry()
+    If promptExpiry > 0.0
+        candidate = promptExpiry - now
+        If candidate < 0.01
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
+    EndIf
     If delay > 0.0
         ; The dialogue-menu armor reminder needs a short retry. All other work
         ; is intentionally throttled to one second to avoid tight Papyrus loops.
@@ -2100,6 +2117,7 @@ EndFunction
 
 ; Services independent local-capacity and SkyrimNet status schedules.
 Event OnUpdate()
+    MMEActorPromptState.ExpireRecent()
     If !IsExtensionsEnabled()
         StopMovementSlap("Extensions disabled")
         NextMovementSlapUpdate = 0.0
@@ -2415,6 +2433,7 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
     MMETentacleTiers.Observe(nearbyActors)
     MMEMilkLeakAPI.Observe(nearbyActors)
+    MMEActorPromptState.Observe(nearbyActors)
     If processArousalEffects
         MMEArousalEffects.ProcessNearbyActors(nearbyActors)
     EndIf
@@ -2730,3 +2749,8 @@ Function TryMovementSlapNotification()
     MovementSlapNotificationAlarmActive = False
     MMELog.MasterDiagnostic("[MME Extensions Movement Slap] notification shown | actor=PLAYER | eligible=True | cooldown game hours=" + hours + " | game day=" + now)
 EndFunction
+
+Event OnPromptLoreEdited(String eventName, String reply, Float numArg, Form sender)
+    ; Editor completion is infrequent; resolve the current personal text again.
+    MMEActorPromptState.Initialize()
+EndEvent

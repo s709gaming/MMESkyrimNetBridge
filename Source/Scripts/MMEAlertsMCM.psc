@@ -5877,3 +5877,8 @@ State LeakThreshold
         SetInfoText("Default 100% of MME milk capacity. At or above this threshold: 5 seconds High, 5 Medium, then sustained Low. Stops below the threshold. Interrupted leaks resume Low; loading full starts a fresh taper.")
     EndEvent
 EndState
+
+Event OnConfigClose()
+    ; Publish final toggles after the paused menu closes, including master OFF.
+    MMEActorPromptState.Initialize()
+EndEvent

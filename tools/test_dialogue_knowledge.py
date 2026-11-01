@@ -24,7 +24,7 @@ class Composer:
    if line.startswith('If '):active.append(active[-1] and bool(expr(line[3:])));continue
    if line=='EndIf':active.pop();continue
    if not active[-1]:continue
-   if line.startswith('MMELog.') or line.startswith('StorageUtil.Set'):continue
+   if line.startswith('MMELog.') or line.startswith('StorageUtil.Set') or line.startswith('MMEActorPromptState.Refresh('):continue
    if line.startswith('AlarmOnce('):self.alarms.append('missing lore');continue
    if line.startswith('Return '):return expr(line[7:])
    match=re.fullmatch(r'String (\w+) = (.+)',line);assert match,line

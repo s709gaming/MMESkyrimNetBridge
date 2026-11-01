@@ -17,7 +17,7 @@ class Contracts(unittest.TestCase):
   self.assertNotIn('EvaluateMilkMaidFlavor(candidate)',fn(c,'ScanNearbyMilkMaids'))
  def test_read_only_framework_boundaries(self):
   s=read('Source/Scripts/MMEActorPromptState.psc')
-  for token in ['GetNearbyActors','RegisterForUpdate','AddSpell','ForceRef','SetActorValue','DirectNarration','getMilkMaximum(','getMilkCurrent(']:self.assertNotIn(token,s)
+  for token in ['RegisterForUpdate','AddSpell','ForceRef','SetActorValue','DirectNarration','getMilkMaximum(','getMilkCurrent(']:self.assertNotIn(token,s)
   for token in ['MMEArmorScript.IsValidMilkMaid(target, milk)','ClassifyArmorQuiet(milk, worn, target)','GetDwemerPresentationProfile(worn)','MMEMilkLeakAPI.Manager() == None','MMEMilkLeakAPI.GetLeakSource(target)']:self.assertIn(token,s)
   self.assertNotRegex(s,r'StorageUtil\.(?:Set|Unset|Adjust)\w+Value\([^\n]*"MME\.MilkMaid\.')
   self.assertIn('MMELog.MasterDiagnostic',s);self.assertIn('MMELog.Alarm',s);self.assertNotIn('Debug.Notification',s)
@@ -31,10 +31,10 @@ class Contracts(unittest.TestCase):
  def test_registration_and_render_time_native_reads(self):
   s=read('SkyrimNetPrompts/0260_mme_extensions_milkmaid.prompt')
   self.assertEqual(s,read('SKSE/Plugins/SkyrimNet/prompts/submodules/character_bio/0260_mme_extensions_milkmaid.prompt'))
-  self.assertIn('mme_actor_milk_state(actorUUID)',s)
+  self.assertIn('MME.Prompt.Ready',s);self.assertIn('MME.Prompt.Epoch',s);self.assertNotIn('mme_actor_milk_state(',s)
   for key in ['MME.MilkMaid.MilkCount','MME.MilkMaid.MilkMaximum']:self.assertIn('"'+key+'"',s)
   self.assertNotIn('!IsExtensionsEnabled()',fn(read('Source/Scripts/MMEAlertsSkyrimNet.psc'),'RegisterPromptDecorator'))
-  self.assertIn('SkyrimNetApi.RegisterDecorator("mme_actor_milk_state", "MMEActorPromptState", "GetActorState")',read('Source/Scripts/MMEAlertsSkyrimNet.psc'))
+  self.assertIn('MMEActorPromptState.Initialize()',fn(read('Source/Scripts/MMEAlertsSkyrimNet.psc'),'RegisterPromptDecorator'))
   self.assertIn('$scriptNames += "MMEActorPromptState"',read('build-package.ps1'))
  def test_existing_save_load_restores_all_callbacks_before_master_off(self):
   controller=read('Source/Scripts/MMEAlertsController.psc')
@@ -49,12 +49,11 @@ class Contracts(unittest.TestCase):
   self.assertNotIn('ScheduleTestSetup(',load)
   self.assertIn('MMELog.MasterDiagnostic("[MME Actor Prompt] save-load recovery entry',load)
   bridge=fn(read('Source/Scripts/MMEAlertsSkyrimNet.psc'),'RegisterPromptDecorator')
-  self.assertEqual(bridge.count('SkyrimNetApi.RegisterDecorator('),6)
+  self.assertEqual(bridge.count('SkyrimNetApi.RegisterDecorator('),0)
   self.assertNotIn('!IsExtensionsEnabled()',bridge)
-  self.assertIn('MMELog.Alarm',bridge)
-  self.assertIn('OtherRegistrationFailure',bridge)
+  self.assertIn('MMEActorPromptState.Initialize()',bridge)
   for name in ['mme_milkmaid_prompt_debug','mme_breastfeeding_role','mme_recent_milk_drinker','mme_actor_milk_state','mme_milk_lore_text','mme_breastfeeding_guidance_text']:
-   self.assertIn('SkyrimNetApi.RegisterDecorator("'+name+'"',bridge)
+   self.assertNotIn('SkyrimNetApi.RegisterDecorator("'+name+'"',bridge)
  def test_narration_rechecks_before_submit(self):
   s=read('Source/Scripts/MMEAlertsSkyrimNet.psc')
   for name in ['NarrateMilkFull','NarrateMilkHalfFull']:

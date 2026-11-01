@@ -29,18 +29,18 @@
                   },
                   {
                       "script":  "MilkQUEST",
-                      "sourceSHA256":  "8A55D796D1C9D2CD8717475181B3FF9EF1D2588BE11254C45220C8AAC7B77751",
-                      "compiledSHA256":  "93840BFEB69069BCFE8CFE66C4E89718674ACC79AAD6F9955C367277FF79CDD9"
+                      "sourceSHA256":  "4F22DF9EC41AFF3F386358FD56F08C0FA50D6521D5C580D20004E7CBFF4027F7",
+                      "compiledSHA256":  "98A259FF14F4E5963AB945533F4E77EE8EE2A2842027260EC35FB4E7788500CB"
                   },
                   {
                       "script":  "MMEAlertsController",
-                      "sourceSHA256":  "FF70D378EFCDED166329EE8AAA5E8523242AEA830F6832384BBBAFD63A412D31",
-                      "compiledSHA256":  "9CB8F2EC98BF7BC0E79571992F93CDFF5200436AFD67CD35ED806461E74B0171"
+                      "sourceSHA256":  "6E0FD4E5A0E249EDC3AA11D95EFA9B72F3A350CC71D193A5B08302EB760E8013",
+                      "compiledSHA256":  "F60766D620339F3DCFE77DE570AB0C0F24FBE1D6B2637370A3B0CF30B5344775"
                   },
                   {
                       "script":  "MMEAlertsSkyrimNet",
-                      "sourceSHA256":  "1D7267911C7F235951802503D249153FA870992DC57360D8E37F3A40F19005A0",
-                      "compiledSHA256":  "A335461A1EBB8AF730EDB69E1C758903D0B540BBAC05D12ADE05DB439A2618FF"
+                      "sourceSHA256":  "47BE96C3E737B00496548165926E318701F3B51EF53E375BEE67470C641394E5",
+                      "compiledSHA256":  "5F2E116EA7F845AE16F74B48878D587FBC24C9B45C3A509FC08278B42072067C"
                   },
                   {
                       "script":  "MMEAnimationSafety",
@@ -54,8 +54,8 @@
                   },
                   {
                       "script":  "MMEDebug",
-                      "sourceSHA256":  "759525DDFBB207047F6FE724403640FE7D9A52DE6614C394C3ABB211E903EEEF",
-                      "compiledSHA256":  "FB360A8778276FF87109443884529B8829A15D841D1D26DD961EAF9FAA80F73E"
+                      "sourceSHA256":  "C533E60D52748ED0EE57140442B9E8B96062202A8A59E0A5C1386BC7B8144B91",
+                      "compiledSHA256":  "C964693FB3B92CB8245491AC310F46840BEB134C2101FD7601A44B4787A0EDAE"
                   },
                   {
                       "script":  "MMEDiagnostics",

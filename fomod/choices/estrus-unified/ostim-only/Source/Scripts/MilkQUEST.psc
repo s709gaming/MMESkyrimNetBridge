@@ -1005,6 +1005,7 @@ Function AssignSlot(Actor akActor)
 	String MaidName = akActor.GetLeveledActorBase().GetName()
 	Debug.Notification(formatString(JsonUtil.GetStringValue("/MME/Strings", "assignslotmaid"), MaidName))
 	akActor.AddToFaction(MilkMaidFaction)
+    MMEActorPromptState.Refresh(akActor)
 EndFunction
 
 Function AssignSlotMaid(Actor akActor)
@@ -1045,6 +1046,7 @@ Function AssignSlotMaid(Actor akActor)
 	String MaidName = akActor.GetLeveledActorBase().GetName()
 	Debug.Notification(formatString(JsonUtil.GetStringValue("/MME/Strings", "assignslotmaid"), MaidName))
 	akActor.AddToFaction(MilkMaidFaction)
+    MMEActorPromptState.Refresh(akActor)
 EndFunction
 
 Function AssignSlotSlave(Actor akActor, Int Level, Float Milk)
@@ -3274,6 +3276,7 @@ Function RemoveMilkFx2(Actor akActor)
 EndFunction
 
 Function MaidRemove(Actor akActor)
+    MMEActorPromptState.Invalidate(akActor, "MME maid removal")
 		debug.notification("MilkModEconomy existing maid/slave " + akActor.GetLeveledActorBase().GetName() + "resetting")
 	If akActor != None
 		MME_BodyMod BodyMod = Quest.GetQuest("MME_MilkQUEST") as MME_BodyMod
@@ -3347,6 +3350,7 @@ Function MaidRemove(Actor akActor)
 			StorageUtil.UnSetStringValue(akActor, "MME.FirstTimeStoryEnd")
 		endif
 	EndIf
+    MMEActorPromptState.Invalidate(akActor, "MME maid removal complete")
 EndFunction
 
 Function MaidResetNodes(Actor akActor)

@@ -9,19 +9,36 @@ int main(int argc,char** argv){
   std::ifstream input(argv[1]);std::string source((std::istreambuf_iterator<char>(input)),{});
   inja::Environment env;env.set_line_statement("");json actor;bool maid=true;int reads=0;
   env.add_callback("isValidActor",1,[](inja::Arguments& a){if(a[0]->is_null())throw std::runtime_error("null actor validation");return true;});
-  env.add_callback("mme_milkmaid_prompt_debug",1,[&](inja::Arguments&){return maid?"true":"";});
-  env.add_callback("mme_recent_milk_drinker",1,[](inja::Arguments&){return "";});
-  env.add_callback("mme_milk_lore_text",1,[](inja::Arguments&){return "Milk Maid lore.";});
-  env.add_callback("mme_actor_milk_state",1,[&](inja::Arguments& a){
-   if(a[0]->get<int>()!=actor["id"].get<int>())throw std::runtime_error("wrong actor callback");
-   return actor["context"];
-  });
+  bool globalEnabled=true,ready=true;int globalEpoch=2,actorEpoch=2;
+  std::string role="source",guidance="Guidance.";bool recent=false;
   env.add_callback("papyrus_util",4,[&](inja::Arguments& a)->json{
-   ++reads;if(a[1]->get<int>()!=actor["id"].get<int>())throw std::runtime_error("wrong actor storage read");
    auto fn=a[0]->get<std::string>(),key=a[2]->get<std::string>();
-   bool isMax=key=="MME.MilkMaid.MilkMaximum";
-   auto name=isMax?"max":"milk";
-   if(fn=="GetFloatValue")return actor.contains(name)?actor[name]:*a[3];
+   if(a[1]->is_string() && a[1]->get<std::string>()=="none"){
+    if(key=="MME.Prompt.Enabled")return globalEnabled?1:0;
+    if(key=="MME.Prompt.Epoch")return globalEpoch;
+    throw std::runtime_error("unexpected global key");
+   }
+   if(a[1]->get<int>()!=actor["id"].get<int>())throw std::runtime_error("wrong actor storage read");
+   if(fn=="GetFloatValue"){
+    ++reads;auto name=key=="MME.MilkMaid.MilkMaximum"?"max":"milk";
+    return actor.contains(name)?actor[name]:*a[3];
+   }
+   auto context=actor["context"];
+   if(fn=="GetIntValue"){
+    if(key=="MME.Prompt.Ready")return ready?1:0;
+    if(key=="MME.Prompt.Epoch")return actorEpoch;
+    if(key=="MME.Prompt.IsMaid")return maid?1:0;
+    if(key=="MME.Prompt.Recent")return recent?1:0;
+    auto field=key=="MME.Prompt.StateEnabled"?"enabled":key=="MME.Prompt.MilkEnabled"?"milkEnabled":"armorEnabled";
+    return context.value(field,false)?1:0;
+   }
+   if(fn=="GetStringValue"){
+    if(key=="MME.Prompt.Lore")return "Milk Maid lore.";
+    if(key=="MME.Prompt.Role")return role;
+    if(key=="MME.Prompt.Guidance")return guidance;
+    auto field=key=="MME.Prompt.Name"?"name":key=="MME.Prompt.Armor"?"armor":"leak";
+    return context.contains(field)?context[field]:*a[3];
+   }
    throw std::runtime_error("unexpected storage function");
   });
   env.add_callback("papyrus_util",3,[&](inja::Arguments& a)->json{
@@ -29,22 +46,26 @@ int main(int argc,char** argv){
    if(a[0]->get<std::string>()!="HasFloatValue")throw std::runtime_error("unexpected has function");
    return actor.contains(a[2]->get<std::string>()=="MME.MilkMaid.MilkMaximum"?"max":"milk");
   });
-  env.add_callback("mme_breastfeeding_role",1,[](inja::Arguments&){return "source";});
-  env.add_callback("mme_breastfeeding_guidance_text",1,[](inja::Arguments&){return "Guidance.";});
   auto parsed=env.parse(source);
-  if(source.find("mme_breastfeeding_role")!=std::string::npos){
-   for(auto context:{json{{"render_mode","full"}},json{{"render_mode","full"},{"actorUUID",nullptr}}})
-    if(env.render(parsed,context).find("Guidance.")!=std::string::npos)throw std::runtime_error("guidance without actor");
-   if(env.render(parsed,{{"render_mode","full"},{"actorUUID",1}}).find("Guidance.")==std::string::npos)throw std::runtime_error("missing valid actor guidance");
-   std::cout<<"PASS: breastfeeding actual Inja missing/null/valid actor guards\n";return 0;
-  }
   auto reset=[&](int id){actor={{"id",id},{"milk",0.0},{"max",8.0},{"context",{{"enabled",true},{"milkEnabled",true},{"armorEnabled",true},{"name","NPC "+std::to_string(id)},{"armor","Wearing living armor."},{"leak","No tracked milk-leak effect is active."}}}};};
   auto render=[&](){return env.render(parsed,{{"actorUUID",actor["id"]},{"render_mode","full"}});};
   auto has=[](const std::string&s,const std::string&t){if(s.find(t)==std::string::npos)throw std::runtime_error("missing: "+t+"\n"+s);};
   auto lacks=[](const std::string&s,const std::string&t){if(s.find(t)!=std::string::npos)throw std::runtime_error("unexpected: "+t);};
   lacks(env.render(parsed,{{"render_mode","full"}}),"Current MME Status");
   lacks(env.render(parsed,{{"render_mode","full"},{"actorUUID",nullptr}}),"Current MME Status");
-  reset(1);has(render(),"Milk state: empty.");has(render(),"0.0/8.0 (0.0%)");
+  reset(1);
+  if(source.find("MME.Prompt.Role")!=std::string::npos){
+   has(render(),"Guidance.");role="drinker";has(render(),"Guidance.");role="";lacks(render(),"Guidance.");role="source";
+   ready=false;lacks(render(),"Guidance.");ready=true;actorEpoch=1;lacks(render(),"Guidance.");actorEpoch=2;
+   globalEnabled=false;lacks(render(),"Guidance.");globalEnabled=true;
+   guidance="Edited guidance.";has(render(),guidance);
+   std::cout<<"PASS: direct breastfeeding render without Papyrus callbacks; roles/cleanup, missing/null, settings, generation and edited guidance\n";return 0;
+  }
+  ready=false;lacks(render(),"Current MME Status");ready=true;
+  actorEpoch=1;lacks(render(),"Current MME Status");actorEpoch=2;
+  globalEnabled=false;lacks(render(),"Current MME Status");globalEnabled=true;
+  maid=false;recent=true;has(render(),"Milk Maid lore.");lacks(render(),"Current MME Status");recent=false;lacks(render(),"Milk Maid lore.");maid=true;
+  has(render(),"Milk state: empty.");has(render(),"0.0/8.0 (0.0%)");
   actor["milk"]=0.25;has(render(),"below half full");
   actor["milk"]=4.0;has(render(),"half full (at least 50%, below full)");
   actor["milk"]=7.99;has(render(),"half full (at least 50%, below full)");

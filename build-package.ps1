@@ -1,4 +1,6 @@
 $ErrorActionPreference = "Stop"
+& python -B (Join-Path $PSScriptRoot "tools/test_direct_prompt_state.py")
+if ($LASTEXITCODE) { throw "Direct prompt state contracts failed" }
 & python -B (Join-Path $PSScriptRoot "tools/test_prompt_callback_diagnostics.py")
 if ($LASTEXITCODE) { throw "Prompt callback diagnostics contracts failed" }
 & python -B (Join-Path $PSScriptRoot "tools/test_milking_source.py")

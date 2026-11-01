@@ -2,10 +2,15 @@
 {% if exists("actorUUID") %}
 {% if actorUUID != null %}
 {% if isValidActor(actorUUID) %}
-{% set bf_role = mme_breastfeeding_role(actorUUID) %}
+{% if papyrus_util("GetIntValue", "none", "MME.Prompt.Enabled", 0) == 1 %}
+{% if papyrus_util("GetIntValue", actorUUID, "MME.Prompt.Ready", 0) == 1 and papyrus_util("GetIntValue", actorUUID, "MME.Prompt.Epoch", -1) == papyrus_util("GetIntValue", "none", "MME.Prompt.Epoch", 0) %}
+{% set bf_role = papyrus_util("GetStringValue", actorUUID, "MME.Prompt.Role", "") %}
 {% if bf_role == "source" or bf_role == "drinker" %}
-{{ mme_breastfeeding_guidance_text(actorUUID) }}
+{{ papyrus_util("GetStringValue", actorUUID, "MME.Prompt.Guidance", "") }}
 {% endif %}
+{% endif %}
+{% endif %}
+
 {% endif %}
 {% endif %}
 

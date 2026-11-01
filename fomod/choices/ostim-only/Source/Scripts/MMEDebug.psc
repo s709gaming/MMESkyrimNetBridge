@@ -1223,6 +1223,8 @@ Function UnregisterSessionEvents()
 EndFunction
 
 Function ClearSessionState()
+    Actor promptSource = ActiveMilkSource
+    Actor promptDrinker = ActiveDrinker
     ActiveThreadID = -1
     ActiveSceneID = ""
     ActiveMilkSource = None
@@ -1245,6 +1247,8 @@ Function ClearSessionState()
     ActiveAPIAcceptedPublished = False
     ActiveAPIStartedPublished = False
     ActiveAPITerminalPublished = False
+    MMEActorPromptState.Refresh(promptSource)
+    MMEActorPromptState.Refresh(promptDrinker)
 EndFunction
 
 Function EndSession(String reason = "completed", Bool completedNormally = False)
@@ -1277,6 +1281,8 @@ Bool Function TryConfirmOStimStartup(String confirmationSource)
     EndIf
 
     ActiveStartupConfirmed = True
+    MMEActorPromptState.Refresh(ActiveMilkSource)
+    MMEActorPromptState.Refresh(ActiveDrinker)
     PublishAPIStarted()
     String finalSceneID = MMEOStimIntegration.GetThreadScene(ActiveThreadID)
     TraceActive("OStim startup confirmed asynchronously by " + confirmationSource + " | thread=" + ActiveThreadID + " | selected scene=" + ActiveSceneID + " | current scene=" + finalSceneID)

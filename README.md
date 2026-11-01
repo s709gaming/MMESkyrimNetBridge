@@ -234,6 +234,7 @@ https://github.com/s709gaming/MMESkyrimNetBridge
 - Venomr - Tips on fixing Elsie Lavache
 - Thorax339 - Tips on integrating SexLab P+
 - Scrab - His many lewd mods
+- Risal for his estrus unified patched
 
 ## 📜 LICENSE / PERMISSIONS
 

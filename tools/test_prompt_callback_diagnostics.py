@@ -12,6 +12,8 @@ class Contracts(unittest.TestCase):
    body=re.sub(r'^.*TracePromptCallback\([^\n]*\n','',body,flags=re.M)
    body=re.sub(r'Return (?:MMEAlertsSkyrimNet\.)?PromptCallbackReturn\("[^"\n]+", \w+, (.*), "[^"\n]+"\)',r'Return \1',body)
    # OStim entry includes its backend label; wrappers preserve all original expressions.
+   if name=='GetActorState':
+    body=re.sub(r'^.*StorageUtil.Set(?:Int|String)Value\(target, "MME.Prompt.[^\n]+\n','',body,flags=re.M)
    self.assertEqual(hashlib.sha256(re.sub(r'\s+','',body).encode()).hexdigest(),digest,key)
  def test_logging_gated_and_return_identity(self):
   s=(R/'Source/Scripts/MMEAlertsSkyrimNet.psc').read_text()

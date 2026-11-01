@@ -278,6 +278,7 @@ Function Advance(Int slot)
                 Cleanup(slot, "setup failure")
             Else
                 visibleStages[slot] = stage
+                MMEActorPromptState.Refresh(target)
                 Trace("action result | actor=" + target + " | stage=" + stage + " | equipped=True")
             EndIf
         EndIf
@@ -307,6 +308,7 @@ Function Cleanup(Int slot, String reason)
         EndIf
     EndIf
     tracked[slot] = None
+    MMEActorPromptState.Refresh(target)
 EndFunction
 
 Event OnUpdate()
@@ -341,6 +343,7 @@ EndFunction
 Function OnExternalEnd(Form who)
     Actor target = who as Actor
     If target != None
+        MMEActorPromptState.Refresh(target)
         Trace("external removal event | actor=" + target + " | source now=" + GetLeakSource(target))
     EndIf
 EndFunction

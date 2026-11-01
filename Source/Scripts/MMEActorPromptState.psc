@@ -1,6 +1,7 @@
 Scriptname MMEActorPromptState Hidden
 
-; Actor-local prompt data only. No actor scan, timers, MME writes or LLM calls.
+; Actor-local prompt data; existing scans/events supply updates, with one load bootstrap.
+; No independent polling, MME writes, inventory changes or LLM calls.
 ; Native papyrus_util reads the milk floats again at actual template render time.
 String Function GetActorState(Actor target) Global
     MMEAlertsSkyrimNet.TracePromptCallback("GetActorState", target, "entry")
@@ -64,6 +65,12 @@ String Function GetActorState(Actor target) Global
     EndIf
     String name = MMEAlertsSkyrimNet.ResolveActorName(target, "This Milk Maid")
     String result = "{\"enabled\":true,\"milkEnabled\":" + BoolJson(milkEnabled) + ",\"armorEnabled\":" + BoolJson(armorEnabled) + ",\"name\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(name) + "\",\"armor\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(armorText) + "\",\"leak\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(leakText) + "\"}"
+    StorageUtil.SetIntValue(target, "MME.Prompt.StateEnabled", 1)
+    StorageUtil.SetIntValue(target, "MME.Prompt.MilkEnabled", milkEnabled as Int)
+    StorageUtil.SetIntValue(target, "MME.Prompt.ArmorEnabled", armorEnabled as Int)
+    StorageUtil.SetStringValue(target, "MME.Prompt.Name", name)
+    StorageUtil.SetStringValue(target, "MME.Prompt.Armor", armorText)
+    StorageUtil.SetStringValue(target, "MME.Prompt.Leak", leakText)
     TraceSnapshot(target, result, milkEnabled)
     Return MMEAlertsSkyrimNet.PromptCallbackReturn("GetActorState", target, result, "current actor state composed")
 EndFunction
@@ -142,4 +149,155 @@ Function ReportRegistration(Int result) Global
         StorageUtil.UnsetIntValue(None, "MME.Prompt.RegistrationFailure")
     EndIf
     MMELog.MasterDiagnostic("[MME Actor Prompt] decorator registration | result=" + result + " | periodic AI status events retired")
+EndFunction
+
+; Direct prompt transport. These functions run at existing gameplay boundaries,
+; never on Skyrim.Net's render worker or through RegisterDecorator.
+Function Invalidate(Actor target, String reason = "state changed") Global
+    If target != None
+        StorageUtil.AdjustIntValue(target, "MME.Prompt.Version", 1)
+        StorageUtil.SetIntValue(target, "MME.Prompt.Ready", 0)
+        StorageUtil.SetIntValue(target, "MME.Prompt.StateEnabled", 0)
+        StorageUtil.SetStringValue(target, "MME.Prompt.Role", "")
+        StorageUtil.SetStringValue(target, "MME.Prompt.Guidance", "")
+        StorageUtil.UnsetStringValue(target, "MME.Prompt.Lore")
+        StorageUtil.UnsetStringValue(target, "MME.Prompt.Armor")
+        StorageUtil.UnsetStringValue(target, "MME.Prompt.Leak")
+        StorageUtil.UnsetStringValue(target, "MME.Prompt.Name")
+        StorageUtil.UnsetStringValue(target, "MME.Prompt.Published")
+        MMELog.MasterDiagnostic("[MME Actor Prompt] direct snapshot invalidated | actor=" + target + " | reason=" + reason)
+    EndIf
+EndFunction
+
+Function RefreshConfig() Global
+    Bool enabled = Game.GetModByName("SkyrimNet.esp") != 255 && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableMMEExtensions", 1) == 1 && JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) == 1
+    StorageUtil.SetIntValue(None, "MME.Prompt.Enabled", enabled as Int)
+EndFunction
+
+Function Initialize() Global
+    StorageUtil.AdjustIntValue(None, "MME.Prompt.Epoch", 1)
+    StorageUtil.FormListClear(None, "MME.Prompt.Expiring")
+    StorageUtil.SetFloatValue(None, "MME.Prompt.NextExpiry", 0.0)
+    RefreshConfig()
+    MMELog.MasterDiagnostic("[MME Actor Prompt] direct transport initialized | old snapshots invalidated; no Papyrus decorators")
+    If StorageUtil.GetIntValue(None, "MME.Prompt.Enabled", 0) == 1
+        Observe(MMEExtensionsNative.GetNearbyActors(2000.0))
+        Refresh(Game.GetPlayer())
+    EndIf
+EndFunction
+
+Function Observe(Actor[] nearby) Global
+    RefreshConfig()
+    ; Clear actors that left the observed set instead of retaining stale equipment.
+    Int old = StorageUtil.FormListCount(None, "MME.Prompt.Observed")
+    While old > 0
+        old -= 1
+        Actor previous = StorageUtil.FormListGet(None, "MME.Prompt.Observed", old) as Actor
+        If previous != None && nearby.Find(previous) < 0
+            Invalidate(previous, "left observed area")
+        EndIf
+    EndWhile
+    StorageUtil.FormListClear(None, "MME.Prompt.Observed")
+    Int index = 0
+    While index < nearby.Length
+        Actor target = nearby[index]
+        If target != None
+            Refresh(target)
+            StorageUtil.FormListAdd(None, "MME.Prompt.Observed", target, False)
+        EndIf
+        index += 1
+    EndWhile
+EndFunction
+
+Function Refresh(Actor target) Global
+    If target == None
+        Return
+    EndIf
+    ; Optional Skyrim.Net absent: no calls into its integration script.
+    If Game.GetModByName("SkyrimNet.esp") == 255
+        StorageUtil.SetIntValue(target, "MME.Prompt.Ready", 0)
+        Return
+    EndIf
+    RefreshConfig()
+    If StorageUtil.GetIntValue(None, "MME.Prompt.Enabled", 0) != 1
+        Invalidate(target, "integration disabled")
+        Return
+    EndIf
+    If target.IsDead() || target.IsDisabled()
+        Invalidate(target, "dead or disabled actor")
+        Return
+    EndIf
+    Int requestEpoch = StorageUtil.GetIntValue(None, "MME.Prompt.Epoch", 0)
+    Int requestVersion = StorageUtil.AdjustIntValue(target, "MME.Prompt.Version", 1)
+    StorageUtil.SetIntValue(target, "MME.Prompt.Ready", 0)
+    StorageUtil.SetIntValue(target, "MME.Prompt.StateEnabled", 0)
+    ; Preserve the existing facade's exact eligibility semantics.
+    Bool maid = MMEAlertsSkyrimNet.IsRealMMEMilkmaid(target)
+    String recent = MMEAlertsSkyrimNet.RecentMilkDrinkerPrompt(target)
+    StorageUtil.SetIntValue(target, "MME.Prompt.IsMaid", maid as Int)
+    StorageUtil.SetIntValue(target, "MME.Prompt.Recent", (recent == "true") as Int)
+    If recent == "true"
+        TrackRecent(target)
+    EndIf
+    String lore = ""
+    If maid || recent == "true"
+        lore = MMEAlertsSkyrimNet.MilkLoreText(target)
+    EndIf
+    StorageUtil.SetStringValue(target, "MME.Prompt.Lore", lore)
+    String role = MMEAlertsSkyrimNet.BreastfeedingPromptRole(target)
+    StorageUtil.SetStringValue(target, "MME.Prompt.Role", role)
+    StorageUtil.SetStringValue(target, "MME.Prompt.Guidance", MMEAlertsSkyrimNet.BreastfeedingGuidanceText(target))
+    String ignored = GetActorState(target)
+    If requestEpoch != StorageUtil.GetIntValue(None, "MME.Prompt.Epoch", 0) || requestVersion != StorageUtil.GetIntValue(target, "MME.Prompt.Version", 0)
+        Invalidate(target, "snapshot superseded during load or state change")
+        Return
+    EndIf
+    StorageUtil.SetIntValue(target, "MME.Prompt.Epoch", requestEpoch)
+    ; Commit last; readers suppress incomplete snapshots.
+    StorageUtil.SetIntValue(target, "MME.Prompt.Ready", 1)
+    String signature = (maid as String) + "|" + role + "|" + lore + "|" + ignored
+    If StorageUtil.GetStringValue(target, "MME.Prompt.Published", "") != signature
+        StorageUtil.SetStringValue(target, "MME.Prompt.Published", signature)
+        MMELog.MasterDiagnostic("[MME Actor Prompt] direct snapshot published | actor=" + target + " | maid=" + maid + " | role=" + role)
+    EndIf
+EndFunction
+
+; One-shot expiry joins the controller's existing deadline scheduler, not polling.
+Function TrackRecent(Actor target) Global
+    StorageUtil.FormListAdd(None, "MME.Prompt.Expiring", target, False)
+    Float deadline = StorageUtil.GetFloatValue(target, "MME.Extensions.SkyrimNet.RecentMilkDrink", -120.0) + 90.0
+    Float previous = NextExpiry()
+    If previous <= 0.0 || deadline < previous
+        StorageUtil.SetFloatValue(None, "MME.Prompt.NextExpiry", deadline)
+    EndIf
+EndFunction
+
+Float Function NextExpiry() Global
+    Return StorageUtil.GetFloatValue(None, "MME.Prompt.NextExpiry", 0.0)
+EndFunction
+
+Function ExpireRecent() Global
+    Float now = Utility.GetCurrentRealTime()
+    Float next = 0.0
+    Int index = StorageUtil.FormListCount(None, "MME.Prompt.Expiring")
+    While index > 0
+        index -= 1
+        Actor target = StorageUtil.FormListGet(None, "MME.Prompt.Expiring", index) as Actor
+        Float marked = StorageUtil.GetFloatValue(target, "MME.Extensions.SkyrimNet.RecentMilkDrink", -120.0)
+        Float deadline = marked + 90.0
+        If target == None || marked > now || deadline <= now
+            StorageUtil.FormListRemove(None, "MME.Prompt.Expiring", target, True)
+            If target != None
+                StorageUtil.SetIntValue(target, "MME.Prompt.Recent", 0)
+                StorageUtil.UnsetFloatValue(target, "MME.Extensions.SkyrimNet.RecentMilkDrink")
+                If StorageUtil.GetIntValue(target, "MME.Prompt.IsMaid", 0) != 1
+                    StorageUtil.SetStringValue(target, "MME.Prompt.Lore", "")
+                EndIf
+                MMELog.MasterDiagnostic("[MME Actor Prompt] recent drink expired | actor=" + target)
+            EndIf
+        ElseIf next <= 0.0 || deadline < next
+            next = deadline
+        EndIf
+    EndWhile
+    StorageUtil.SetFloatValue(None, "MME.Prompt.NextExpiry", next)
 EndFunction

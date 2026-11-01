@@ -65,12 +65,11 @@ class NarrationContracts(unittest.TestCase):
             self.assertEqual(render('{'+alias+'} / {'+alias+'}',{'actor':'A {item} "é›ª"'}),'A {item} "é›ª" / A {item} "é›ª"')
         self.assertEqual(json.loads(json.dumps({'text':render('{actor}\n{item}',{'actor':'é›ª','item':'a "cup"\\'})}))['text'],'é›ª\na "cup"\\')
     def test_prompt_adapters_and_file_packaging(self):
-        for decorator in ('mme_milk_lore_text','mme_breastfeeding_guidance_text'):
-            self.assertIn('RegisterDecorator("'+decorator+'"',self.source)
+        self.assertNotIn('SkyrimNetApi.RegisterDecorator(',self.source)
         prompts=[p.read_text(encoding='utf-8-sig') for p in (ROOT/'SkyrimNetPrompts').glob('*.prompt')]
         self.assertTrue(any('{{ playerInstructions }}' in p for p in prompts))
-        self.assertTrue(any('{{ mme_milk_lore_text(actorUUID) }}' in p for p in prompts))
-        self.assertTrue(any('{{ mme_breastfeeding_guidance_text(actorUUID) }}' in p for p in prompts))
+        self.assertTrue(any('"MME.Prompt.Lore"' in p for p in prompts))
+        self.assertTrue(any('"MME.Prompt.Guidance"' in p for p in prompts))
         build=(ROOT/'build-package.ps1').read_text(encoding='utf-8-sig')
         self.assertIn('MMEAlerts\\Narration',build)
         for helper in ('MMENarrationText','MMENarrationDefaults'):self.assertIn('"'+helper+'"',build)
