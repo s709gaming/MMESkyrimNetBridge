@@ -1,0 +1,80 @@
+{
+  "capacity_half": [
+    "{actor}'s tits are half-full! Walking normally is optional."
+  ],
+  "capacity_full": [
+    "{actor}'s tits are full! Watch out for those watermelons!"
+  ],
+  "armor_strip": [
+    "Your {armorName} flies off! Your tits exceeded its rated capacity!"
+  ],
+  "refit_needed": [
+    "Your chests have gotten too big! Visit the blacksmith!"
+  ],
+  "refit_complete": [
+    "Your milking equipment now fits again"
+  ],
+  "armor_lock_player": [
+    "The armor magically wraps around you. Enjoy it for the next {days} days!"
+  ],
+  "armor_lock_npc": [
+    "{actor} is trapped in the armor for {days} days!"
+  ],
+  "armor_released": [
+    "{actor} is released from the armor."
+  ],
+  "parasite_satisfied": [
+    "{actor}'s armor is satisfied and willing to release its well milked morsel!"
+  ],
+  "rescue_blacksmith_single": [
+    "The blacksmith frees {actor} from her overly affectionate armor."
+  ],
+  "rescue_direct_single": [
+    "{actor} is released from her overly affectionate armor."
+  ],
+  "rescue_blacksmith_group": [
+    "The blacksmith frees {count} companions from their overly affectionate armor."
+  ],
+  "rescue_direct_group": [
+    "{count} nearby companions are released from their overly affectionate armor."
+  ],
+  "venue_thirst": [
+    "Someone nearby looks thirsty for a refreshing drink of milk!"
+  ],
+  "venue_drink_fallback": [
+    "{actor} is thirsty and drinks some milk!"
+  ],
+  "chest_drink": [
+    "{actor} is magically forced to drink {milkName} from the chest!"
+  ],
+  "custom_dwemer_equip": [
+    "{armorName}'s kinky milking and teasing devices attach to your most intimate places"
+  ],
+  "custom_rows_absorbed": [
+    "{armorName} attaches to your breasts, absorbing your additional breast rows"
+  ],
+  "custom_living_equip": [
+    "{armorName} attaches to your breasts"
+  ],
+  "custom_cups_equip": [
+    "The milking cups attach to your breasts, ready to milk you"
+  ],
+  "custom_living_remove": [
+    "You are free from {armorName}"
+  ],
+  "custom_cups_remove": [
+    "The milking cups detach from your breasts"
+  ],
+  "new_maid_confirmation": [
+    "{actor} is now a Milk Maid."
+  ],
+  "reverse_level_applied": [
+    "For the next {hours} hours, each milking will lower your Milk Maid level by {levels}."
+  ],
+  "reverse_level_removed": [
+    "Reverse leveling removed."
+  ],
+  "reverse_level_decrease": [
+    "Your breasts feel lighter. Milk maid level decreased by {levels}."
+  ]
+}

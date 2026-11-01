@@ -250,9 +250,9 @@ Bool Function TryLock(Actor target, Armor targetArmor, Float durationDays = -1.0
         shownDays += 1
     EndIf
     If target == Game.GetPlayer()
-        Debug.Notification("The armor magically wraps around you. Enjoy it for the next " + shownDays + " days!")
+        Debug.Notification(MMEFlavorText.Text("armor_lock_player", "The armor magically wraps around you. Enjoy it for the next " + shownDays + " days!", target, "days", shownDays as String))
     Else
-        Debug.Notification(GetActorName(target) + " is trapped in the armor for " + shownDays + " days!")
+        Debug.Notification(MMEFlavorText.Text("armor_lock_npc", GetActorName(target) + " is trapped in the armor for " + shownDays + " days!", target, "actor", GetActorName(target), "days", shownDays as String))
     EndIf
     Trace("lock complete | source=" + source + " | actor=" + GetActorName(target) + " | armor=" + targetArmor.GetName() + " | days=" + durationDays + " | deadline=" + deadline)
     Publish("MMEExtensions_TimedArmorLocked", target, targetArmor, durationDays, source)
@@ -357,7 +357,7 @@ Bool Function ReleaseInternal(Actor target, String source, Bool showNotification
     ; later, so an immediate IsEquipped check is not a valid failure signal.
     ; Guarded service calls use MMEArmorRemoval's scheduled verification.
     If showNotification
-        Debug.Notification(GetActorName(target) + " is released from the armor.")
+        Debug.Notification(MMEFlavorText.Text("armor_released", GetActorName(target) + " is released from the armor.", target, "actor", GetActorName(target)))
     EndIf
     Trace("release complete | source=" + source + " | actor=" + GetActorName(target))
     Publish("MMEExtensions_TimedArmorReleased", target, targetArmor, 0.0, source)
@@ -420,7 +420,7 @@ Function Expire(Actor target) Global
     If armorClass == 3
         ClearState(target)
         RefreshPlayerIndicator(target)
-        Debug.Notification(GetActorName(target) + "'s armor is satisfied and willing to release its well milked morsel!")
+        Debug.Notification(MMEFlavorText.Text("parasite_satisfied", GetActorName(target) + "'s armor is satisfied and willing to release its well milked morsel!", target, "actor", GetActorName(target)))
         Trace("parasite timer expired | lock cleared; armor intentionally retained | actor=" + GetActorName(target) + " | armor=" + targetArmor.GetName() + " | equipped=" + target.IsEquipped(targetArmor))
         Publish("MMEExtensions_TimedArmorReleased", target, targetArmor, 0.0, "Timer Expired")
         RefreshScheduling()

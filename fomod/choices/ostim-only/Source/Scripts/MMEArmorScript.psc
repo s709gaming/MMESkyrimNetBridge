@@ -264,7 +264,7 @@ Function HandleArmorStripNotification(Actor wearer, Armor strippedArmor) Global
         ReportArmorStripReaction(diagnostic, "[MME Extensions Armor Strip Notification]", "Armor Strip Notification: skipped - feature disabled")
         Return
     EndIf
-    Debug.Notification("Your " + armorName + " flies off! Your tits exceeded its rated capacity!")
+    Debug.Notification(MMEFlavorText.Text("armor_strip", "Your " + armorName + " flies off! Your tits exceeded its rated capacity!", wearer, "armorName", armorName))
     ReportArmorStripReaction(diagnostic, "[MME Extensions Armor Strip Notification]", "Armor Strip Notification: SHOWN | " + armorName)
 EndFunction
 

@@ -33,15 +33,17 @@ if ($LASTEXITCODE) { throw 'Narration JSON/default generation failed' }
 & python -B (Join-Path $PSScriptRoot 'tools\test_narration_json.py')
 if ($LASTEXITCODE) { throw 'Narration JSON contracts failed' }
 & python -B (Join-Path $projectRoot 'tools\test_narration_dashboard_contracts.py')
-if ($LASTEXITCODE) { throw 'Narration dashboard integration contracts failed' }
+if ($LASTEXITCODE) { throw 'Narration dashboard contracts failed' }
+& python -B (Join-Path $projectRoot 'tools\test_flavor_notifications.py')
+if ($LASTEXITCODE) { throw 'Flavor notification contracts failed' }
 $mmeCompatibilityOverrideSource = Join-Path $projectRoot "Source\MMECompatibilityOverrides"
 $mmeCompatibilityOverrideNames = @("MilkQUEST")
 $diagnosticSdk = Join-Path $projectRoot "tools\mme-diagnostic-sdk"
 $scriptNames += "MMEMilkingDiagnostics"
 $scriptNames += "MMEMilkCurse"
-$scriptNames += "MMEEstrusUnified"
 $scriptNames += "MMEChestCurseNarration"
 $scriptNames += "MMETextPool"
+$scriptNames += "MMEFlavorText"
 $scriptNames += "MMENarrationOverrides"
 $scriptNames += "MMETentacleTiers"
 $quickStartOutputDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Scripts"
@@ -280,6 +282,7 @@ finally {
 # Build and validate the isolated no-SexLab FOMOD variant before staging.
 & (Join-Path $projectRoot "tools\Build-OStimOnly.ps1")
 & (Join-Path $projectRoot "tools\Test-OStimOnly.ps1")
+& (Join-Path $projectRoot "tools\Build-EstrusUnified.ps1")
 & (Join-Path $projectRoot "tools\Test-EstrusUnifiedContracts.ps1")
 
 # Recreate a clean staging directory with Skyrim/Vortex-compatible paths.
@@ -324,6 +327,7 @@ New-Item -ItemType Directory -Force -Path $packageDocs | Out-Null
 Copy-Item -LiteralPath $elsieFixChangelog -Destination $packageDocs
 Copy-Item -LiteralPath $jugsChangelog -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MME-Compatibility-Override.md") -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Estrus-Unified-Compatibility.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Editor-Proof.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Dashboard-Implementation.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Tentacle-Four-Tier-Implementation.md') -Destination $packageDocs
@@ -361,7 +365,7 @@ $packageConfig = Join-Path $stageDir "SKSE\Plugins\StorageUtilData\MMEAlerts"
 New-Item -ItemType Directory -Force -Path $packageConfig | Out-Null
 Copy-Item -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\Narration") -Destination $packageConfig -Recurse -Force
 
-foreach ($configName in @("SkyrimNet.json", "Thoughts.json", "MilkCravings.json", "ArousalEffects.json", "BreastBounceNotifications.json", "Injection.json", "TentacleEffectNarration.json", "DwemerEffectNotifications.json", "DwemerEffectNarration.json", "DwemerSuitNarration.json", "DwemerAttachmentNarration.json", "ArmorCheckReminders.json", "NonMilkmaidDrinkNotifications.json", "ForcedMilkMaidConversion.json", "CustomArmorRegistry.json", "DwemerArmorStories.json", "ArmorIntroductionStories.json", "TimedArmorRegistry.json", "TimedArmorNotifications.json")) {
+foreach ($configName in @("SkyrimNet.json", "FlavorNotifications.json", "Thoughts.json", "MilkCravings.json", "ArousalEffects.json", "BreastBounceNotifications.json", "Injection.json", "TentacleEffectNarration.json", "DwemerEffectNotifications.json", "DwemerEffectNarration.json", "DwemerSuitNarration.json", "DwemerAttachmentNarration.json", "ArmorCheckReminders.json", "NonMilkmaidDrinkNotifications.json", "ForcedMilkMaidConversion.json", "CustomArmorRegistry.json", "DwemerArmorStories.json", "ArmorIntroductionStories.json", "TimedArmorRegistry.json", "TimedArmorNotifications.json")) {
     $configPath = Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\$configName"
     if (!(Test-Path -LiteralPath $configPath)) {
         throw "Required JSON configuration is missing: $configPath"
@@ -703,6 +707,8 @@ if (Test-Path -LiteralPath $zipPath) {
     Remove-Item -LiteralPath $zipPath -Force
 }
 Compress-Archive -Path (Join-Path $stageDir "*") -DestinationPath $zipPath -CompressionLevel Optimal
+& python -B (Join-Path $projectRoot 'tools\verify_fomod_sources.py') $zipPath
+if ($LASTEXITCODE) { throw 'FOMOD archive contains missing installer sources' }
 & (Join-Path $projectRoot "tools\Test-FomodXmlEncoding.ps1") -ArchivePath $zipPath
 
 Write-Host ""

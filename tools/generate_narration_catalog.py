@@ -49,6 +49,29 @@ def generate():
                 family='Stories, thoughts & notifications',required=['actor'],allowed=['actor'],
                 aliases=not notification,poolOnly=True,default=default,optionalTier=True,fallbackEntry=fallback)
     assert len(entries)==147
+    flavor=json.loads((DATA/'FlavorNotifications.json').read_text(encoding='utf-8-sig'))
+    flavor_schema=json.loads((ROOT/'tools/flavor-notification-schema.json').read_text(encoding='utf-8'))
+    assert set(flavor)==set(flavor_schema) and len(flavor)==26
+    for key,contract in flavor_schema.items():
+        value=flavor[key]
+        assert isinstance(value,list) and value and all(isinstance(text,str) for text in value)
+        for text in value:
+            assert set(contract['required'])<=tokens(text)<=set(contract['allowed']), key
+        entries['Pools.FlavorNotifications.'+key]=dict(file='FlavorNotifications.json',path=[key],
+            group='FlavorNotifications',label=label(key),family='Stories, thoughts & notifications',
+            required=contract['required'],allowed=contract['allowed'],aliases=False,poolOnly=True,default=value)
+    assert len(entries)==173
+    presentation=json.loads((ROOT/'tools/narration-presentation.json').read_text(encoding='utf-8'))
+    assert set(presentation['entries'])==set(entries), 'Presentation metadata must cover every catalog ID exactly'
+    for entry_id,meta in entries.items():
+        display=dict(presentation['entries'][entry_id])
+        assert display['section'] in ('skyrimnet','messages','internal')
+        assert display['visible']==(display['section']!='internal')
+        assert display['section']!='skyrimnet' or meta['aliases'], 'AI section requires the existing actor-alias validation contract'
+        assert display['title'] and display['description']
+        display['featureOrder']=presentation['featureOrder'].index(display['feature'])
+        meta['presentation']=display
+        meta['label']=display['title']
     catalog=dict(protocolVersion=2,entries=entries,
         legacy=json.loads((ROOT/'tools/narration-legacy-map.json').read_text(encoding='utf-8-sig')))
     serialized=json.dumps(catalog,ensure_ascii=False,separators=(',',':'))

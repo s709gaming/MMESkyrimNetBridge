@@ -2574,9 +2574,9 @@ Event OnPageReset(String page)
         ; Shared settings occupy twelve rows in each column. Tier settings
         ; belong only to Living/Parasite and share rows by intensity.
         SetCursorPosition(24)
-        AddHeaderOption("Living / Parasite Chances")
+        AddHeaderOption("Living / Parasite Tease Intensity")
         SetCursorPosition(25)
-        AddHeaderOption("Living / Parasite Durations")
+        AddHeaderOption("Living / Parasite Animation Durations")
         String[] tierLabels = new String[4]
         tierLabels[0] = "Low"
         tierLabels[1] = "Medium"
@@ -2585,9 +2585,9 @@ Event OnPageReset(String page)
         Int tierIndex = 0
         While tierIndex < 4
             SetCursorPosition(26 + tierIndex * 2)
-            tentacleChanceOptions[tierIndex] = AddSliderOption(tierLabels[tierIndex] + " Chance", JsonUtil.GetIntValue(SettingsFile, MMETentacleTiers.ChanceKey(tierIndex + 1), MMETentacleTiers.DefaultChance(tierIndex + 1)), "{0}%")
+            tentacleChanceOptions[tierIndex] = AddSliderOption(tierLabels[tierIndex] + " Tease Chance", JsonUtil.GetIntValue(SettingsFile, MMETentacleTiers.ChanceKey(tierIndex + 1), MMETentacleTiers.DefaultChance(tierIndex + 1)), "{0}%")
             SetCursorPosition(27 + tierIndex * 2)
-            tentacleDurationOptions[tierIndex] = AddSliderOption(tierLabels[tierIndex] + " Duration", MMETentacleTiers.Duration(tierIndex + 1), "{1} seconds")
+            tentacleDurationOptions[tierIndex] = AddSliderOption(tierLabels[tierIndex] + " Animation Duration", MMETentacleTiers.Duration(tierIndex + 1), "{1} seconds")
             tierIndex += 1
         EndWhile
         SetCursorPosition(34)
@@ -2733,6 +2733,32 @@ EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
+    Int teaseTierIndex = TentacleOptionIndex(option, False)
+    If teaseTierIndex >= 0
+        If teaseTierIndex == 0
+            SetInfoText("A little wriggle, a little blush - the armor is only saying hello. Sets the chance of Low intensity after a successful effect. Adjusts in 5% steps; the other tiers rebalance to total 100%. Separate from Effect Chance above.")
+        ElseIf teaseTierIndex == 1
+            SetInfoText("Those wandering tendrils have discovered that their wearer is delightfully ticklish. Sets the chance of Medium intensity after a successful effect. Adjusts in 5% steps; the other tiers rebalance to total 100%. Separate from Effect Chance above.")
+        ElseIf teaseTierIndex == 2
+            SetInfoText("Oh dear. The armor has abandoned its manners, and standing gracefully may require some concentration. Sets the chance of High intensity after a successful effect. Adjusts in 5% steps; the other tiers rebalance to total 100%. Separate from Effect Chance above.")
+        ElseIf teaseTierIndex == 3
+            SetInfoText("A proper fairy-tale predicament: enchanted armor, rosy cheeks, and absolutely no interest in behaving. Sets the chance of Extreme intensity after a successful effect. Adjusts in 5% steps; the other tiers rebalance to total 100%. Separate from Effect Chance above.")
+        EndIf
+        Return
+    EndIf
+    teaseTierIndex = TentacleOptionIndex(option, True)
+    If teaseTierIndex >= 0
+        If teaseTierIndex == 0
+            SetInfoText("How many seconds our heroine spends composing herself after that entirely innocent little wriggle. Controls the Low-tier animation duration, in seconds. Animation type is fixed. Applies only to Living/Parasite effects.")
+        ElseIf teaseTierIndex == 1
+            SetInfoText("Give those fluttering knees a moment to remember their royal duties. Controls the Medium-tier animation duration, in seconds. Animation type is fixed. Applies only to Living/Parasite effects.")
+        ElseIf teaseTierIndex == 2
+            SetInfoText("Even a brave adventuress needs a moment when her wardrobe becomes this affectionate. Controls the High-tier animation duration, in seconds. Animation type is fixed. Applies only to Living/Parasite effects.")
+        ElseIf teaseTierIndex == 3
+            SetInfoText("The armor requests an encore. Her dignity requests a curtain. Controls the Extreme-tier animation duration, in seconds. Animation type is fixed. Applies only to Living/Parasite effects.")
+        EndIf
+        Return
+    EndIf
     If option == rosterOpenOption || option == rosterEnabledOption || option == rosterKeyOption
         SetInfoText("Optional Milk Maid roster: requires the Maid Roster add-on plugin and Magelight UI 1.5.0 or newer. Open, then close MCM to show it. Assign an optional keyboard hotkey; PageUp is reserved by Magelight. Displays stored milk amounts and fullness. Give Milk/Drink uses player inventory and the Free Jug setting; Self Milk starts eligible maids.")
         Return

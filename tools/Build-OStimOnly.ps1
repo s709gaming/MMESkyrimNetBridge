@@ -48,7 +48,7 @@ if ($LASTEXITCODE) { throw 'Isolated import preparation failed' }
 Copy-Item -Path (Join-Path $projectRoot 'tools\ostim-sdk\*.psc') -Destination $library -Force
 # These common facades must match this repository's DLL, not an older installed
 # copy picked up from physical Data while preparing the isolated dependency set.
-foreach ($commonFacade in @('MMEExtensionsNative', 'MMEEstrusUnified')) {
+foreach ($commonFacade in @('MMEExtensionsNative')) {
     Copy-Item -LiteralPath (Join-Path $projectRoot "Source\Scripts\$commonFacade.psc") -Destination $library -Force
 }
 Copy-Item -LiteralPath (Join-Path $projectRoot 'Source\Scripts\MMENarrationOverrides.psc') -Destination $library -Force

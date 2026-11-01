@@ -165,7 +165,7 @@ Bool Function TryRefit(Actor blacksmith) Global
         Debug.Notification("The refit failed; no changes were made")
         Return False
     EndIf
-    Debug.Notification("Your milking equipment now fits again")
+    Debug.Notification(MMEFlavorText.Text("refit_complete", "Your milking equipment now fits again", playerActor))
     Trace("refit complete | level=" + currentLevel + " | context=" + refitContext + " | armor=" + GetArmorName(wornArmor) + " | blacksmith=" + MMEForcedMilkDrink.GetActorName(blacksmith))
     Return True
 EndFunction
@@ -198,7 +198,7 @@ Function HandleSuccessfulRemoval(Actor playerActor, Armor removedArmor) Global
         Return
     EndIf
     StorageUtil.SetIntValue(playerActor, RemovalNoticeShownKey(), 1)
-    Debug.Notification("Your chests have gotten too big! Visit the blacksmith!")
+    Debug.Notification(MMEFlavorText.Text("refit_needed", "Your chests have gotten too big! Visit the blacksmith!", playerActor))
     Trace("successful removal reminder shown | armor=" + GetArmorName(removedArmor))
 EndFunction
 

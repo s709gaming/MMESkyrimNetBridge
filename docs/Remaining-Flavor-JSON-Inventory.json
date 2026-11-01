@@ -1,0 +1,538 @@
+{
+  "status": "Research preflight only; proposed IDs/templates, not runtime JSON",
+  "date": "2026-10-31",
+  "baselineCatalogEntries": 147,
+  "proposedEntries": 26,
+  "normalEntries": 9,
+  "minorEntries": 17,
+  "entries": [
+    {
+      "proposedId": "Pools.FlavorNotifications.capacity_half",
+      "title": "When Her Breasts Become Half Full — Message",
+      "source": "Source/Scripts/MMEAlertsController.psc",
+      "sourceLine": 2384,
+      "function": "Int Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactionKinds, Bool processLocalReactions = True)",
+      "originalExpression": "Debug.Notification(GetActorName(candidate) + \"'s tits are half-full! Walking normally is optional.\")",
+      "proposedTemplate": "{actor}'s tits are half-full! Walking normally is optional.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "feature": "Milking & Fullness",
+      "section": "messages",
+      "minor": false,
+      "usedBy": "Game messages only",
+      "trigger": "Half-full crossing, after the existing state/reaction processing and enableCapacityNotifications gate.",
+      "caution": "Keep crossing/latch logic and processLocalReactions early return; AI fullness wording is separate."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.capacity_full",
+      "title": "When Her Breasts Become Full — Message",
+      "source": "Source/Scripts/MMEAlertsController.psc",
+      "sourceLine": 2382,
+      "function": "Int Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactionKinds, Bool processLocalReactions = True)",
+      "originalExpression": "Debug.Notification(GetActorName(candidate) + \"'s tits are full! Watch out for those watermelons!\")",
+      "proposedTemplate": "{actor}'s tits are full! Watch out for those watermelons!",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "feature": "Milking & Fullness",
+      "section": "messages",
+      "minor": false,
+      "usedBy": "Game messages only",
+      "trigger": "Full crossing under the existing capacity notification gate.",
+      "caution": "No extra crossing, self-milking, sound or narration dispatch."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.armor_strip",
+      "title": "When Her Armor Pops Off — Message",
+      "source": "Source/Scripts/MMEArmorScript.psc",
+      "sourceLine": 266,
+      "function": "Function HandleArmorStripNotification(Actor wearer, Armor strippedArmor) Global",
+      "originalExpression": "Debug.Notification(\"Your \" + armorName + \" flies off! Your tits exceeded its rated capacity!\")",
+      "proposedTemplate": "Your {armorName} flies off! Your tits exceeded its rated capacity!",
+      "requiredTokens": [
+        "armorName"
+      ],
+      "allowedTokens": [
+        "armorName"
+      ],
+      "feature": "Armor Reactions",
+      "section": "messages",
+      "minor": false,
+      "usedBy": "Game messages only",
+      "trigger": "Verified stripping route with enableArmorStripNotification.",
+      "caution": "Keep the existing second-person wording even if a caller supplies an NPC; do not quietly fix targeting/grammar in a text extraction."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.refit_needed",
+      "title": "Milking Equipment Needs a Refit — Message",
+      "source": "Source/Scripts/MMEMilkingEquipmentRefit.psc",
+      "sourceLine": 201,
+      "function": "Function HandleSuccessfulRemoval(Actor playerActor, Armor removedArmor) Global",
+      "originalExpression": "Debug.Notification(\"Your chests have gotten too big! Visit the blacksmith!\")",
+      "proposedTemplate": "Your chests have gotten too big! Visit the blacksmith!",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "feature": "Service Reminders",
+      "section": "messages",
+      "minor": false,
+      "usedBy": "Game messages only",
+      "trigger": "Verified player equipment removal while NeedsRefit; once per pending episode.",
+      "caution": "Preserve RemovalNoticeShownKey. This replaces generic strip feedback on the refit path; do not show both."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.refit_complete",
+      "title": "After a Successful Equipment Refit — Message",
+      "source": "Source/Scripts/MMEMilkingEquipmentRefit.psc",
+      "sourceLine": 168,
+      "function": "Bool Function TryRefit(Actor blacksmith) Global",
+      "originalExpression": "Debug.Notification(\"Your milking equipment now fits again\")",
+      "proposedTemplate": "Your milking equipment now fits again",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "feature": "Service Reminders",
+      "section": "messages",
+      "minor": false,
+      "usedBy": "Game messages only",
+      "trigger": "Only after refit state persists successfully.",
+      "caution": "Failure wording remains internal; changing text must not affect refit state."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.armor_lock_player",
+      "title": "Trapped in Armor — Your Character",
+      "source": "Source/Scripts/MMETimedArmorLock.psc",
+      "sourceLine": 253,
+      "function": "Bool Function TryLock(Actor target, Armor targetArmor, Float durationDays = -1.0, String source = \"API\") Global",
+      "originalExpression": "Debug.Notification(\"The armor magically wraps around you. Enjoy it for the next \" + shownDays + \" days!\")",
+      "proposedTemplate": "The armor magically wraps around you. Enjoy it for the next {days} days!",
+      "requiredTokens": [
+        "days"
+      ],
+      "allowedTokens": [
+        "days"
+      ],
+      "feature": "Armor Locks",
+      "section": "messages",
+      "minor": false,
+      "usedBy": "Game messages only",
+      "trigger": "Successful protected equip and timed lock for player.",
+      "caution": "Use the existing rounded-up shownDays value, not a fresh calculation."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.armor_lock_npc",
+      "title": "Trapped in Armor — Another Character",
+      "source": "Source/Scripts/MMETimedArmorLock.psc",
+      "sourceLine": 255,
+      "function": "Bool Function TryLock(Actor target, Armor targetArmor, Float durationDays = -1.0, String source = \"API\") Global",
+      "originalExpression": "Debug.Notification(GetActorName(target) + \" is trapped in the armor for \" + shownDays + \" days!\")",
+      "proposedTemplate": "{actor} is trapped in the armor for {days} days!",
+      "requiredTokens": [
+        "actor",
+        "days"
+      ],
+      "allowedTokens": [
+        "actor",
+        "days"
+      ],
+      "feature": "Armor Locks",
+      "section": "messages",
+      "minor": false,
+      "usedBy": "Game messages only",
+      "trigger": "Successful protected equip and timed lock for NPC.",
+      "caution": "Keep player/NPC branch and existing deadline."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.armor_released",
+      "title": "Released from Timed Armor — Message",
+      "source": "Source/Scripts/MMETimedArmorLock.psc",
+      "sourceLine": 360,
+      "function": "Bool Function ReleaseInternal(Actor target, String source, Bool showNotification) Global",
+      "originalExpression": "Debug.Notification(GetActorName(target) + \" is released from the armor.\")",
+      "proposedTemplate": "{actor} is released from the armor.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "feature": "Armor Locks",
+      "section": "messages",
+      "minor": false,
+      "usedBy": "Game messages only",
+      "trigger": "ReleaseInternal only when its existing showNotification argument is true.",
+      "caution": "Do not defeat callers that deliberately suppress release notifications."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.parasite_satisfied",
+      "title": "Parasite Armor Is Ready to Let Go — Message",
+      "source": "Source/Scripts/MMETimedArmorLock.psc",
+      "sourceLine": 423,
+      "function": "Function Expire(Actor target) Global",
+      "originalExpression": "Debug.Notification(GetActorName(target) + \"'s armor is satisfied and willing to release its well milked morsel!\")",
+      "proposedTemplate": "{actor}'s armor is satisfied and willing to release its well milked morsel!",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "feature": "Armor Locks",
+      "section": "messages",
+      "minor": false,
+      "usedBy": "Game messages only",
+      "trigger": "Parasite timer expires: lock cleared, armor stays equipped.",
+      "caution": "Must not imply automatic unequip or call Release instead of current expiry branch."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.rescue_blacksmith_single",
+      "title": "Blacksmith Frees One Companion",
+      "source": "Source/Scripts/MMEFollowerArmorRescue.psc",
+      "sourceLine": 92,
+      "function": "Bool Function RescueNearbyCompanionsFromAnchor(Actor anchor, String source, Bool blacksmithMessages) Global",
+      "originalExpression": "Debug.Notification(\"The blacksmith frees \" + rescuedName + \" from her overly affectionate armor.\")",
+      "proposedTemplate": "The blacksmith frees {actor} from her overly affectionate armor.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "feature": "Armor Locks",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "Successful rescue summary after scanning/removing armor; singular/plural and blacksmith/direct route already selected.",
+      "caution": "Use actual rescued count/name, not eligible count. Direct-route wording also appears after a deliberate MCM rescue action; this is success feedback, not a debug trace. Keep no-target/rejection messages internal."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.rescue_direct_single",
+      "title": "One Companion Is Freed",
+      "source": "Source/Scripts/MMEFollowerArmorRescue.psc",
+      "sourceLine": 94,
+      "function": "Bool Function RescueNearbyCompanionsFromAnchor(Actor anchor, String source, Bool blacksmithMessages) Global",
+      "originalExpression": "Debug.Notification(rescuedName + \" is released from her overly affectionate armor.\")",
+      "proposedTemplate": "{actor} is released from her overly affectionate armor.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "feature": "Armor Locks",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "Successful rescue summary after scanning/removing armor; singular/plural and blacksmith/direct route already selected.",
+      "caution": "Use actual rescued count/name, not eligible count. Direct-route wording also appears after a deliberate MCM rescue action; this is success feedback, not a debug trace. Keep no-target/rejection messages internal."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.rescue_blacksmith_group",
+      "title": "Blacksmith Frees Several Companions",
+      "source": "Source/Scripts/MMEFollowerArmorRescue.psc",
+      "sourceLine": 98,
+      "function": "Bool Function RescueNearbyCompanionsFromAnchor(Actor anchor, String source, Bool blacksmithMessages) Global",
+      "originalExpression": "Debug.Notification(\"The blacksmith frees \" + rescued + \" companions from their overly affectionate armor.\")",
+      "proposedTemplate": "The blacksmith frees {count} companions from their overly affectionate armor.",
+      "requiredTokens": [
+        "count"
+      ],
+      "allowedTokens": [
+        "count"
+      ],
+      "feature": "Armor Locks",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "Successful rescue summary after scanning/removing armor; singular/plural and blacksmith/direct route already selected.",
+      "caution": "Use actual rescued count/name, not eligible count. Direct-route wording also appears after a deliberate MCM rescue action; this is success feedback, not a debug trace. Keep no-target/rejection messages internal."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.rescue_direct_group",
+      "title": "Several Companions Are Freed",
+      "source": "Source/Scripts/MMEFollowerArmorRescue.psc",
+      "sourceLine": 100,
+      "function": "Bool Function RescueNearbyCompanionsFromAnchor(Actor anchor, String source, Bool blacksmithMessages) Global",
+      "originalExpression": "Debug.Notification(rescued + \" nearby companions are released from their overly affectionate armor.\")",
+      "proposedTemplate": "{count} nearby companions are released from their overly affectionate armor.",
+      "requiredTokens": [
+        "count"
+      ],
+      "allowedTokens": [
+        "count"
+      ],
+      "feature": "Armor Locks",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "Successful rescue summary after scanning/removing armor; singular/plural and blacksmith/direct route already selected.",
+      "caution": "Use actual rescued count/name, not eligible count. Direct-route wording also appears after a deliberate MCM rescue action; this is success feedback, not a debug trace. Keep no-target/rejection messages internal."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.venue_thirst",
+      "title": "Someone Nearby Wants Milk — Message",
+      "source": "Source/Scripts/MMEAlertsController.psc",
+      "sourceLine": 279,
+      "function": "Event OnInnPalaceEntered(String eventName, String unusedText, Float venueKindValue, Form sender)",
+      "originalExpression": "Debug.Notification(\"Someone nearby looks thirsty for a refreshing drink of milk!\")",
+      "proposedTemplate": "Someone nearby looks thirsty for a refreshing drink of milk!",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "feature": "Drinking Milk & Breastfeeding",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "OnInnPalaceEntered only when a new venue drink timer was successfully armed.",
+      "caution": "No drinker has been selected yet. Do not invent an actor token or change the timer."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.venue_drink_fallback",
+      "title": "A Nearby Character Drinks Milk — Simple Message",
+      "source": "Source/Scripts/MMEInnPalaceMilkEvent.psc",
+      "sourceLine": 223,
+      "function": "Bool Function ShowNotificationIfOwned(Actor drinker, Form milkItem, String renderedReaction = \"\") Global",
+      "originalExpression": "Debug.Notification(MMEForcedMilkDrink.GetActorName(drinker) + \" is thirsty and drinks some milk!\")",
+      "proposedTemplate": "{actor} is thirsty and drinks some milk!",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "feature": "Drinking Milk & Breastfeeding",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "Owned venue notification only when renderedReaction is empty.",
+      "caution": "Rare route: normal outcome reactions already use JSON. Do not replace or suppress their existing shared wording."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.chest_drink",
+      "title": "A Chest Makes Someone Drink Milk — Message",
+      "source": "Source/Scripts/MMEChestMilkTrap.psc",
+      "sourceLine": 176,
+      "function": "Bool Function ShowNotificationIfOwned(Actor drinker, Form milkItem) Global",
+      "originalExpression": "Debug.Notification(BuildSituation(drinker))",
+      "proposedTemplate": "{actor} is magically forced to drink {milkName} from the chest!",
+      "requiredTokens": [
+        "actor",
+        "milkName"
+      ],
+      "allowedTokens": [
+        "actor",
+        "milkName"
+      ],
+      "feature": "Drinking Milk & Breastfeeding",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "Owned chest drink HUD message, once per Notified context.",
+      "caution": "BuildSituation currently has one source caller, the HUD. NarrateChestMilkDrink uses separate canonical JSON. Preserve milk-name fallback and exact ownership/deduplication."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.custom_dwemer_equip",
+      "title": "Custom Dwemer Armor Attaches — Message",
+      "source": "Source/Scripts/MMECustomArmorRegistry.psc",
+      "sourceLine": 321,
+      "function": "Function HandleCustomArmorEquipped(Actor wearer, Armor equippedArmor) Global",
+      "originalExpression": "Debug.Notification(armorName + \"'s kinky milking and teasing devices attach to your most intimate places\")",
+      "proposedTemplate": "{armorName}'s kinky milking and teasing devices attach to your most intimate places",
+      "requiredTokens": [
+        "armorName"
+      ],
+      "allowedTokens": [
+        "armorName"
+      ],
+      "feature": "Armor Reactions",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "Existing custom-registry compatibility equip/unequip branch; player HUD only.",
+      "caution": "Do not change original-vs-custom classification, Milk Maid registration, breast-row update, passive spells or Lactacid. Preserve possible two-message rows-absorbed + attaches sequence. No added NPC notifications."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.custom_rows_absorbed",
+      "title": "Custom Living Armor Absorbs Extra Breast Rows — Message",
+      "source": "Source/Scripts/MMECustomArmorRegistry.psc",
+      "sourceLine": 327,
+      "function": "Function HandleCustomArmorEquipped(Actor wearer, Armor equippedArmor) Global",
+      "originalExpression": "Debug.Notification(armorName + \" attaches to your breasts, absorbing your additional breast rows\")",
+      "proposedTemplate": "{armorName} attaches to your breasts, absorbing your additional breast rows",
+      "requiredTokens": [
+        "armorName"
+      ],
+      "allowedTokens": [
+        "armorName"
+      ],
+      "feature": "Armor Reactions",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "Existing custom-registry compatibility equip/unequip branch; player HUD only.",
+      "caution": "Do not change original-vs-custom classification, Milk Maid registration, breast-row update, passive spells or Lactacid. Preserve possible two-message rows-absorbed + attaches sequence. No added NPC notifications."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.custom_living_equip",
+      "title": "Custom Living or Parasite Armor Attaches — Message",
+      "source": "Source/Scripts/MMECustomArmorRegistry.psc",
+      "sourceLine": 331,
+      "function": "Function HandleCustomArmorEquipped(Actor wearer, Armor equippedArmor) Global",
+      "originalExpression": "Debug.Notification(armorName + \" attaches to your breasts\")",
+      "proposedTemplate": "{armorName} attaches to your breasts",
+      "requiredTokens": [
+        "armorName"
+      ],
+      "allowedTokens": [
+        "armorName"
+      ],
+      "feature": "Armor Reactions",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "Existing custom-registry compatibility equip/unequip branch; player HUD only.",
+      "caution": "Do not change original-vs-custom classification, Milk Maid registration, breast-row update, passive spells or Lactacid. Preserve possible two-message rows-absorbed + attaches sequence. No added NPC notifications."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.custom_cups_equip",
+      "title": "Custom Milking Cups Attach — Message",
+      "source": "Source/Scripts/MMECustomArmorRegistry.psc",
+      "sourceLine": 344,
+      "function": "Function HandleCustomArmorEquipped(Actor wearer, Armor equippedArmor) Global",
+      "originalExpression": "Debug.Notification(\"The milking cups attach to your breasts, ready to milk you\")",
+      "proposedTemplate": "The milking cups attach to your breasts, ready to milk you",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "feature": "Armor Reactions",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "Existing custom-registry compatibility equip/unequip branch; player HUD only.",
+      "caution": "Do not change original-vs-custom classification, Milk Maid registration, breast-row update, passive spells or Lactacid. Preserve possible two-message rows-absorbed + attaches sequence. No added NPC notifications."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.custom_living_remove",
+      "title": "Custom Living or Parasite Armor Comes Off — Message",
+      "source": "Source/Scripts/MMECustomArmorRegistry.psc",
+      "sourceLine": 364,
+      "function": "Function HandleCustomArmorUnequipped(Actor wearer, Armor unequippedArmor) Global",
+      "originalExpression": "Debug.Notification(\"You are free from \" + GetArmorName(unequippedArmor))",
+      "proposedTemplate": "You are free from {armorName}",
+      "requiredTokens": [
+        "armorName"
+      ],
+      "allowedTokens": [
+        "armorName"
+      ],
+      "feature": "Armor Reactions",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "Existing custom-registry compatibility equip/unequip branch; player HUD only.",
+      "caution": "Do not change original-vs-custom classification, Milk Maid registration, breast-row update, passive spells or Lactacid. Preserve possible two-message rows-absorbed + attaches sequence. No added NPC notifications."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.custom_cups_remove",
+      "title": "Custom Milking Cups Come Off — Message",
+      "source": "Source/Scripts/MMECustomArmorRegistry.psc",
+      "sourceLine": 373,
+      "function": "Function HandleCustomArmorUnequipped(Actor wearer, Armor unequippedArmor) Global",
+      "originalExpression": "Debug.Notification(\"The milking cups detach from your breasts\")",
+      "proposedTemplate": "The milking cups detach from your breasts",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "feature": "Armor Reactions",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "Existing custom-registry compatibility equip/unequip branch; player HUD only.",
+      "caution": "Do not change original-vs-custom classification, Milk Maid registration, breast-row update, passive spells or Lactacid. Preserve possible two-message rows-absorbed + attaches sequence. No added NPC notifications."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.new_maid_confirmation",
+      "title": "A New Milk Maid Is Confirmed — Message",
+      "source": "Source/Scripts/MMENewMilkMaid.psc",
+      "sourceLine": 345,
+      "function": "Function MakeTargetNewMilkMaid(Actor candidate) Global",
+      "originalExpression": "Debug.Notification(GetActorName(candidate) + \" is now a Milk Maid.\")",
+      "proposedTemplate": "{actor} is now a Milk Maid.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "feature": "Becoming a Milk Maid",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "MakeTargetNewMilkMaid action after assignment and initialization succeed.",
+      "caution": "Not the controller diagnostic confirmation. Existing conversion feedback pools and AI creation prompts remain separate."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.reverse_level_applied",
+      "title": "Milk Maid Level Reduction Begins — Message",
+      "source": "Source/Scripts/MMEReverseLevel.psc",
+      "sourceLine": 98,
+      "function": "Bool Function ApplyReverseLeveling()",
+      "originalExpression": "Debug.Notification(\"For the next \" + GetDuration() + \" hours, each milking will lower your Milk Maid level by 1.\")",
+      "proposedTemplate": "For the next {hours} hours, each milking will lower your Milk Maid level by {levels}.",
+      "requiredTokens": [
+        "hours",
+        "levels"
+      ],
+      "allowedTokens": [
+        "hours",
+        "levels"
+      ],
+      "feature": "Milking & Fullness",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "Reverse-leveling ability successfully applied/refreshed.",
+      "caution": "Supply existing GetDuration display and constant levels=1; do not change monitoring, baseline or level calculations."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.reverse_level_removed",
+      "title": "Milk Maid Level Reduction Ends — Message",
+      "source": "Source/Scripts/MMEReverseLevel.psc",
+      "sourceLine": 117,
+      "function": "Function RemoveReverseLeveling(Bool notifyPlayer = True)",
+      "originalExpression": "Debug.Notification(\"Reverse leveling removed.\")",
+      "proposedTemplate": "Reverse leveling removed.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "feature": "Milking & Fullness",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "RemoveReverseLeveling when notifyPlayer is true.",
+      "caution": "Respect silent removals; do not add an expiry notification where none exists."
+    },
+    {
+      "proposedId": "Pools.FlavorNotifications.reverse_level_decrease",
+      "title": "Her Breasts Feel Lighter — Message",
+      "source": "Source/Scripts/MMEReverseLevel.psc",
+      "sourceLine": 316,
+      "function": "Function CheckProgress()",
+      "originalExpression": "Debug.Notification(\"Your breasts feel lighter. Milk maid level decreased by 1.\")",
+      "proposedTemplate": "Your breasts feel lighter. Milk maid level decreased by {levels}.",
+      "requiredTokens": [
+        "levels"
+      ],
+      "allowedTokens": [
+        "levels"
+      ],
+      "feature": "Milking & Fullness",
+      "section": "messages",
+      "minor": true,
+      "usedBy": "Game messages only",
+      "trigger": "CheckProgress success after the existing writes, under level > 0.",
+      "caution": "Supply existing one-level feedback as levels=1; never derive gameplay from editable text."
+    }
+  ]
+}

@@ -6,6 +6,15 @@
 - Do not commit, publish, deploy to Skyrim, or modify installed MO2 mods, profiles, game-root files, or the retained Vortex installation unless the user explicitly requests it.
 - Keep temporary diagnostics, test artifacts, and failed builds out of release packages.
 - Name generated archives `MME Extensions.zip`. Leave release version numbers and versioned filenames to the user unless explicitly requested.
+- Do not add, remove, or materially reinterpret permanent repository instructions without explicit user approval. Propose architectural preferences before making them mandatory rules.
+- Investigation and planning do not authorize implementation or builds. After implementation, compile affected scripts and perform the required package verification.
+
+## Development workflow
+
+- Use the single working directory `E:\SkyrimModDev\MMESkyrimNetBridge` on `main`.
+- Multiple chats may brainstorm or investigate, but only one session implements, builds or controls the test environment at a time.
+- Keep the current implementation status in local `TASK.md`; it is not part of release packages.
+- Create additional branches or worktrees only when the user requests them.
 
 ## Papyrus diagnostics
 
@@ -36,17 +45,23 @@
 ## Optional dependencies
 
 - Skyrim.Net, SexLab, SexLab P+, OStim, Devious Devices, Elsie LaVache, JUGS, and supported armor mods remain optional unless the user explicitly designates one as a hard requirement.
-- Resolve optional plugins, forms, quests, and scripts dynamically and fail safely when they are unavailable.
-- Do not accidentally introduce a compile-time script dependency or plugin master dependency on an optional mod.
+- Keep optional integrations safe when dependencies are absent. Use the simplest verified approach, including guarded Papyrus calls or isolated FOMOD compatibility options. A native bridge is not required.
 - Test both dependency-present and dependency-absent behavior when changing an integration.
 - Keep compatibility overrides isolated and clearly attributable to their target mod or FOMOD option.
+
+## Script organization and reusable APIs
+
+- Proactively organize functionality into focused, clearly named scripts when this makes behavior easier to locate, understand, test, and repair.
+- Give scripts a clear responsibility. Prefer reusable public functions or facade APIs when they provide a sensible boundary for current or reasonably anticipated callers.
+- Keep framework-specific details behind those interfaces where practical. Reuse original MME functions rather than duplicating its calculations or state management.
+- Creating a helper script or reusable function is a routine implementation decision within the authorized task; it does not require separate approval.
+- Scale the structure to the feature. Avoid unnecessary layers, trivial forwarding scripts, or speculative APIs that make a simple behavior harder to follow. Use native code when its concrete benefits justify the additional complexity.
 
 ## Papyrus and build discipline
 
 - Compile every affected `.psc` file. Do not ship source-only gameplay changes.
 - Confirm shipped `.psc` and `.pex` files represent the same revision.
 - Treat overrides of original MME or third-party scripts as invasive. Use them only when necessary and document the reason in the appropriate compatibility changelog.
-- Prefer isolated extension scripts and facade APIs when they can preserve behavior without duplicating a framework.
 - Preserve save compatibility and existing MCM property names unless a migration is intentionally implemented.
 - New MCM settings need safe defaults plus initialization and upgrade handling for existing saves.
 - Rebuild the distributable after implementation and inspect the final mod-manager archive structure and contents for MO2 and retained Vortex compatibility.

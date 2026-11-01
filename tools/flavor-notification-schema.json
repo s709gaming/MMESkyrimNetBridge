@@ -1,0 +1,192 @@
+{
+  "capacity_half": {
+    "required": [
+      "actor"
+    ],
+    "allowed": [
+      "actor"
+    ]
+  },
+  "capacity_full": {
+    "required": [
+      "actor"
+    ],
+    "allowed": [
+      "actor"
+    ]
+  },
+  "armor_strip": {
+    "required": [
+      "armorName"
+    ],
+    "allowed": [
+      "armorName"
+    ]
+  },
+  "refit_needed": {
+    "required": [],
+    "allowed": []
+  },
+  "refit_complete": {
+    "required": [],
+    "allowed": []
+  },
+  "armor_lock_player": {
+    "required": [
+      "days"
+    ],
+    "allowed": [
+      "days"
+    ]
+  },
+  "armor_lock_npc": {
+    "required": [
+      "actor",
+      "days"
+    ],
+    "allowed": [
+      "actor",
+      "days"
+    ]
+  },
+  "armor_released": {
+    "required": [
+      "actor"
+    ],
+    "allowed": [
+      "actor"
+    ]
+  },
+  "parasite_satisfied": {
+    "required": [
+      "actor"
+    ],
+    "allowed": [
+      "actor"
+    ]
+  },
+  "rescue_blacksmith_single": {
+    "required": [
+      "actor"
+    ],
+    "allowed": [
+      "actor"
+    ]
+  },
+  "rescue_direct_single": {
+    "required": [
+      "actor"
+    ],
+    "allowed": [
+      "actor"
+    ]
+  },
+  "rescue_blacksmith_group": {
+    "required": [
+      "count"
+    ],
+    "allowed": [
+      "count"
+    ]
+  },
+  "rescue_direct_group": {
+    "required": [
+      "count"
+    ],
+    "allowed": [
+      "count"
+    ]
+  },
+  "venue_thirst": {
+    "required": [],
+    "allowed": []
+  },
+  "venue_drink_fallback": {
+    "required": [
+      "actor"
+    ],
+    "allowed": [
+      "actor"
+    ]
+  },
+  "chest_drink": {
+    "required": [
+      "actor",
+      "milkName"
+    ],
+    "allowed": [
+      "actor",
+      "milkName"
+    ]
+  },
+  "custom_dwemer_equip": {
+    "required": [
+      "armorName"
+    ],
+    "allowed": [
+      "armorName"
+    ]
+  },
+  "custom_rows_absorbed": {
+    "required": [
+      "armorName"
+    ],
+    "allowed": [
+      "armorName"
+    ]
+  },
+  "custom_living_equip": {
+    "required": [
+      "armorName"
+    ],
+    "allowed": [
+      "armorName"
+    ]
+  },
+  "custom_cups_equip": {
+    "required": [],
+    "allowed": []
+  },
+  "custom_living_remove": {
+    "required": [
+      "armorName"
+    ],
+    "allowed": [
+      "armorName"
+    ]
+  },
+  "custom_cups_remove": {
+    "required": [],
+    "allowed": []
+  },
+  "new_maid_confirmation": {
+    "required": [
+      "actor"
+    ],
+    "allowed": [
+      "actor"
+    ]
+  },
+  "reverse_level_applied": {
+    "required": [
+      "hours",
+      "levels"
+    ],
+    "allowed": [
+      "hours",
+      "levels"
+    ]
+  },
+  "reverse_level_removed": {
+    "required": [],
+    "allowed": []
+  },
+  "reverse_level_decrease": {
+    "required": [
+      "levels"
+    ],
+    "allowed": [
+      "levels"
+    ]
+  }
+}

@@ -343,7 +343,7 @@ Function MakeTargetNewMilkMaid(Actor candidate) Global
     Bool initialized = assigned && MME_Storage.getLactacidCurrent(candidate) >= 1.0
     ReleaseActionLock(lockKey, lockTimeKey)
     If assigned && initialized
-        Debug.Notification(GetActorName(candidate) + " is now a Milk Maid.")
+        Debug.Notification(MMEFlavorText.Text("new_maid_confirmation", GetActorName(candidate) + " is now a Milk Maid.", candidate, "actor", GetActorName(candidate)))
         MMELog.Diagnostic("[MME Extensions Create Milk Maid] COMPLETE | target=" + GetActorIdentity(candidate))
     ElseIf assigned
         ; Roll back through MME's own complete single-actor reset. Never edit

@@ -1,0 +1,4997 @@
+{
+  "status": "Complete player-facing draft; supersedes all-fields presentation; documentation only",
+  "entries": [
+    {
+      "id": "Armor.narrate_armor_equip_1",
+      "currentTitle": "Armor equip 1",
+      "proposedTitle": "Putting On Milking Armor",
+      "feature": "Armor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Putting On Milking Armor. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Armor.json",
+      "jsonPath": [
+        "routes",
+        "narrate_armor_equip_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milking Armor — Equip Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Armor.narrate_armor_equip_2",
+      "currentTitle": "Armor equip 2",
+      "proposedTitle": "Putting On Living Armor",
+      "feature": "Armor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Putting On Living Armor. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Armor.json",
+      "jsonPath": [
+        "routes",
+        "narrate_armor_equip_2",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living Armor — Equip Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Armor.narrate_armor_equip_3",
+      "currentTitle": "Armor equip 3",
+      "proposedTitle": "Putting On Parasite Armor",
+      "feature": "Armor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Putting On Parasite Armor. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Armor.json",
+      "jsonPath": [
+        "routes",
+        "narrate_armor_equip_3",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Parasite Armor — Equip Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Armor.narrate_armor_equip_4",
+      "currentTitle": "Armor equip 4",
+      "proposedTitle": "Trapped Armor — Surprise Equip Prompt Fragment",
+      "feature": "Armor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI prompt fragment / wrapper",
+      "description": "Trapped Armor. Combined with other prompt pieces before being sent to Skyrim.Net; not a standalone spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Armor.json",
+      "jsonPath": [
+        "routes",
+        "narrate_armor_equip_4",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Trapped Armor — Surprise Equip Prompt Fragment",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Armor.narrate_armor_strip_1",
+      "currentTitle": "Armor strip 1",
+      "proposedTitle": "When Her Armor Pops Off",
+      "feature": "Armor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: When Her Armor Pops Off. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "armorName"
+      ],
+      "allowedTokens": [
+        "actor",
+        "armorName"
+      ],
+      "file": "Narration/Armor.json",
+      "jsonPath": [
+        "routes",
+        "narrate_armor_strip_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Armor Stripping — Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "armorName": "Name of the armor involved."
+      }
+    },
+    {
+      "id": "Armor.build_nearby_armor_status_1",
+      "currentTitle": "Nearby armor status 1",
+      "proposedTitle": "Milking Armor — Nearby Wearer Context",
+      "feature": "Armor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Milking Armor. Supplies factual situation/status text to Skyrim.Net; does not itself change the event or character.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Armor.json",
+      "jsonPath": [
+        "routes",
+        "build_nearby_armor_status_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milking Armor — Nearby Wearer Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Armor.build_nearby_armor_status_2",
+      "currentTitle": "Nearby armor status 2",
+      "proposedTitle": "Living Armor — Nearby Wearer Context",
+      "feature": "Armor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Living Armor. Supplies factual situation/status text to Skyrim.Net; does not itself change the event or character.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Armor.json",
+      "jsonPath": [
+        "routes",
+        "build_nearby_armor_status_2",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living Armor — Nearby Wearer Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Armor.build_nearby_armor_status_3",
+      "currentTitle": "Nearby armor status 3",
+      "proposedTitle": "Parasite Armor — Nearby Wearer Context",
+      "feature": "Armor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Parasite Armor. Supplies factual situation/status text to Skyrim.Net; does not itself change the event or character.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Armor.json",
+      "jsonPath": [
+        "routes",
+        "build_nearby_armor_status_3",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Parasite Armor — Nearby Wearer Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Breastfeeding.guidance",
+      "currentTitle": "Guidance",
+      "proposedTitle": "How Characters React During Breastfeeding",
+      "feature": "Breastfeeding",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: How Characters React During Breastfeeding. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "role"
+      ],
+      "allowedTokens": [
+        "actor",
+        "role"
+      ],
+      "file": "Narration/Breastfeeding.json",
+      "jsonPath": [
+        "routes",
+        "guidance",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Breastfeeding — AI Scene and Participant Guidance",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Breastfeeding",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "role": "Milk giver or milk drinker."
+      }
+    },
+    {
+      "id": "Common.player_instructions",
+      "currentTitle": "Private player self-comment instructions",
+      "proposedTitle": "Your Character’s Speaking Style",
+      "feature": "Common",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Guide how your character speaks about her own experiences. Shared across several private player reactions, not a general NPC voice setting.",
+      "sharedUseOrFallback": "Shared writing instructions for private player self-comments; changes can affect several features.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Common.json",
+      "jsonPath": [
+        "routes",
+        "player_instructions",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Player Speech — Private Self-Comment Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Speaking Style",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Speaking Style",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "DwemerArmor.narrate_dwemer_effect_1",
+      "currentTitle": "Dwemer effect 1",
+      "proposedTitle": "Dwemer Effects — Wearer-Perspective Prompt Fragment",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI prompt fragment / wrapper",
+      "description": "Dwemer Effects. Combined with other prompt pieces before being sent to Skyrim.Net; not a standalone spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "narrate_dwemer_effect_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Effects — Wearer-Perspective Prompt Fragment",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Dwemer Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.build_dwemer_suit_prompt_1",
+      "currentTitle": "Dwemer suit prompt 1",
+      "proposedTitle": "Dwemer Wearer — AI Prompt Assembly Wrapper",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI prompt fragment / wrapper",
+      "description": "Dwemer Wearer. Combined with other prompt pieces before being sent to Skyrim.Net; not a standalone spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "core",
+        "event",
+        "profile"
+      ],
+      "allowedTokens": [
+        "actor",
+        "core",
+        "event",
+        "profile"
+      ],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "build_dwemer_suit_prompt_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Wearer — AI Prompt Assembly Wrapper",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Dwemer Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "core": "Value supplied by this route; preserve the exact placeholder.",
+        "event": "Value supplied by this route; preserve the exact placeholder.",
+        "profile": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_profile_fallback_1",
+      "currentTitle": "Dwemer profile fallback 1",
+      "proposedTitle": "Dwemer Devious Suit — Fallback Profile Context",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI fallback text",
+      "description": "Dwemer Devious Suit. Supplies fallback prompt wording, rather than enabling or triggering gameplay.",
+      "sharedUseOrFallback": "Used only when the corresponding configured profile/event text is unavailable; not an additional event.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "get_dwemer_profile_fallback_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Devious Suit — Fallback Profile Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Dwemer Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_profile_fallback_2",
+      "currentTitle": "Dwemer profile fallback 2",
+      "proposedTitle": "Dwemer Hidden Attachment — Fallback Profile Context",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI fallback text",
+      "description": "Dwemer Hidden Attachment. Supplies fallback prompt wording, rather than enabling or triggering gameplay.",
+      "sharedUseOrFallback": "Used only when the corresponding configured profile/event text is unavailable; not an additional event.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "get_dwemer_profile_fallback_2",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Hidden Attachment — Fallback Profile Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Dwemer Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_event_fallback_1",
+      "currentTitle": "Dwemer event fallback 1",
+      "proposedTitle": "Dwemer First Equip — Fallback Event Context",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI fallback text",
+      "description": "Dwemer First Equip. Supplies fallback prompt wording, rather than enabling or triggering gameplay.",
+      "sharedUseOrFallback": "Used only when the corresponding configured profile/event text is unavailable; not an additional event.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "get_dwemer_event_fallback_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer First Equip — Fallback Event Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Dwemer Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_event_fallback_2",
+      "currentTitle": "Dwemer event fallback 2",
+      "proposedTitle": "Dwemer Re-equip — Fallback Event Context",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI fallback text",
+      "description": "Dwemer Re-equip. Supplies fallback prompt wording, rather than enabling or triggering gameplay.",
+      "sharedUseOrFallback": "Used only when the corresponding configured profile/event text is unavailable; not an additional event.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "get_dwemer_event_fallback_2",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Re-equip — Fallback Event Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Dwemer Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_event_fallback_3",
+      "currentTitle": "Dwemer event fallback 3",
+      "proposedTitle": "Dwemer Milking Started — Fallback Event Context",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI fallback text",
+      "description": "Dwemer Milking Started. Supplies fallback prompt wording, rather than enabling or triggering gameplay.",
+      "sharedUseOrFallback": "Used only when the corresponding configured profile/event text is unavailable; not an additional event.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "get_dwemer_event_fallback_3",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Milking Started — Fallback Event Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Dwemer Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_event_fallback_4",
+      "currentTitle": "Dwemer event fallback 4",
+      "proposedTitle": "Dwemer Milking Finished — Fallback Event Context",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI fallback text",
+      "description": "Dwemer Milking Finished. Supplies fallback prompt wording, rather than enabling or triggering gameplay.",
+      "sharedUseOrFallback": "Used only when the corresponding configured profile/event text is unavailable; not an additional event.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "get_dwemer_event_fallback_4",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Milking Finished — Fallback Event Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Dwemer Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.get_dwemer_event_fallback_5",
+      "currentTitle": "Dwemer event fallback 5",
+      "proposedTitle": "Dwemer Unrecognized Event — Fallback Event Context",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI fallback text",
+      "description": "Dwemer Unrecognized Event. Supplies fallback prompt wording, rather than enabling or triggering gameplay.",
+      "sharedUseOrFallback": "Used only when the corresponding configured profile/event text is unavailable; not an additional event.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "get_dwemer_event_fallback_5",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Unrecognized Event — Fallback Event Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Dwemer Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.build_dwemer_effect_narration_1",
+      "currentTitle": "Dwemer effect narration 1",
+      "proposedTitle": "Dwemer Effects — AI Situation Wrapper",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI prompt fragment / wrapper",
+      "description": "Dwemer Effects. Combined with other prompt pieces before being sent to Skyrim.Net; not a standalone spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "content"
+      ],
+      "allowedTokens": [
+        "actor",
+        "content"
+      ],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "build_dwemer_effect_narration_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Effects — AI Situation Wrapper",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Dwemer Armor",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "content": "Event text assembled by the caller."
+      }
+    },
+    {
+      "id": "DwemerArmor.effects_arousal",
+      "currentTitle": "Effects arousal",
+      "proposedTitle": "Dwemer Armor Effects — More Arousal",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Dwemer Armor Effects — More Arousal. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "effects_arousal",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Effects — Arousal Increase AI Narration Pool",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "DwemerArmor.effects_milk",
+      "currentTitle": "Effects milk",
+      "proposedTitle": "Dwemer Armor Effects — More Milk",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Dwemer Armor Effects — More Milk. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "effects_milk",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Effects — Milk Increase AI Narration Pool",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "DwemerArmor.effects_milkAndArousal",
+      "currentTitle": "Effects milk And Arousal",
+      "proposedTitle": "Dwemer Armor Effects — More Milk and Arousal",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Dwemer Armor Effects — More Milk and Arousal. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "effects_milkAndArousal",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Effects — Milk + Arousal Increase AI Narration Pool",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "DwemerArmor.suit_core",
+      "currentTitle": "Suit core",
+      "proposedTitle": "Dwemer Suit — How It Works",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Customize the background description Skyrim.Net uses for Dwemer Suit — How It Works. This influences how it describes the subject; it does not change gameplay.",
+      "sharedUseOrFallback": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "suit_core",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Devious Suit — Shared AI Profile Context",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Background Lore",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.suit_firstEquip",
+      "currentTitle": "Suit first Equip",
+      "proposedTitle": "Dwemer Suit — First Time Wearing It",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Dwemer Suit — First Time Wearing It. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "suit_firstEquip",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Devious Suit — First Equip Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.suit_reequip",
+      "currentTitle": "Suit reequip",
+      "proposedTitle": "Dwemer Suit — Wearing It Again",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Dwemer Suit — Wearing It Again. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "suit_reequip",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Devious Suit — Re-equip Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.suit_milkingStart",
+      "currentTitle": "Suit milking Start",
+      "proposedTitle": "Dwemer Suit — Milking Begins",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Dwemer Suit — Milking Begins. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "suit_milkingStart",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Devious Suit — Milking Started Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.suit_milkingEnd",
+      "currentTitle": "Suit milking End",
+      "proposedTitle": "Dwemer Suit — Milking Finishes",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Dwemer Suit — Milking Finishes. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "suit_milkingEnd",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Devious Suit — Milking Finished Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.attachment_core",
+      "currentTitle": "Attachment core",
+      "proposedTitle": "Hidden Dwemer Attachment — How It Works",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Customize the background description Skyrim.Net uses for Hidden Dwemer Attachment — How It Works. This influences how it describes the subject; it does not change gameplay.",
+      "sharedUseOrFallback": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "attachment_core",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Hidden Attachment — Shared AI Profile Context",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Background Lore",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.attachment_firstEquip",
+      "currentTitle": "Attachment first Equip",
+      "proposedTitle": "Hidden Dwemer Attachment — First Time Wearing It",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Hidden Dwemer Attachment — First Time Wearing It. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "attachment_firstEquip",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Hidden Attachment — First Equip Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.attachment_reequip",
+      "currentTitle": "Attachment reequip",
+      "proposedTitle": "Hidden Dwemer Attachment — Wearing It Again",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Hidden Dwemer Attachment — Wearing It Again. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "attachment_reequip",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Hidden Attachment — Re-equip Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.attachment_milkingStart",
+      "currentTitle": "Attachment milking Start",
+      "proposedTitle": "Hidden Dwemer Attachment — Milking Begins",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Hidden Dwemer Attachment — Milking Begins. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "attachment_milkingStart",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Hidden Attachment — Milking Started Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {}
+    },
+    {
+      "id": "DwemerArmor.attachment_milkingEnd",
+      "currentTitle": "Attachment milking End",
+      "proposedTitle": "Hidden Dwemer Attachment — Milking Finishes",
+      "feature": "DwemerArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Hidden Dwemer Attachment — Milking Finishes. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "The matching How It Works description is combined with each event prompt. Editing that background affects first equip, wearing it again, milking start and milking end for this profile.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/DwemerArmor.json",
+      "jsonPath": [
+        "routes",
+        "attachment_milkingEnd",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Hidden Attachment — Milking Finished Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Fullness.send_capacity_milestone_1",
+      "currentTitle": "Send capacity milestone 1",
+      "proposedTitle": "Half Full — AI Milestone Event Context",
+      "feature": "Fullness",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Half Full. Supplies factual situation/status text to Skyrim.Net; does not itself change the event or character.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "tag"
+      ],
+      "allowedTokens": [
+        "actor",
+        "tag"
+      ],
+      "file": "Narration/Fullness.json",
+      "jsonPath": [
+        "routes",
+        "send_capacity_milestone_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Half Full — AI Milestone Event Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Fullness",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "tag": "Event tag supplied by the caller."
+      }
+    },
+    {
+      "id": "Fullness.send_capacity_milestone_2",
+      "currentTitle": "Send capacity milestone 2",
+      "proposedTitle": "Completely Full — AI Milestone Event Context",
+      "feature": "Fullness",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Completely Full. Supplies factual situation/status text to Skyrim.Net; does not itself change the event or character.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "tag"
+      ],
+      "allowedTokens": [
+        "actor",
+        "tag"
+      ],
+      "file": "Narration/Fullness.json",
+      "jsonPath": [
+        "routes",
+        "send_capacity_milestone_2",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Completely Full — AI Milestone Event Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Fullness",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "tag": "Event tag supplied by the caller."
+      }
+    },
+    {
+      "id": "Fullness.narrate_milk_full_1",
+      "currentTitle": "Milk full 1",
+      "proposedTitle": "When Her Breasts Become Full",
+      "feature": "Fullness",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: When Her Breasts Become Full. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Fullness.json",
+      "jsonPath": [
+        "routes",
+        "narrate_milk_full_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Completely Full — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Fullness",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Fullness.narrate_milk_half_full_1",
+      "currentTitle": "Milk half full 1",
+      "proposedTitle": "When Her Breasts Become Half Full",
+      "feature": "Fullness",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: When Her Breasts Become Half Full. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Fullness.json",
+      "jsonPath": [
+        "routes",
+        "narrate_milk_half_full_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Half Full — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Fullness",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Fullness.build_restrained_capacity_content_1",
+      "currentTitle": "Restrained capacity content 1",
+      "proposedTitle": "Full Breasts with Restrained Arms",
+      "feature": "Fullness",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Full Breasts with Restrained Arms. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Fullness.json",
+      "jsonPath": [
+        "routes",
+        "build_restrained_capacity_content_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Restrained and Completely Full — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Fullness",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Fullness.build_restrained_capacity_content_2",
+      "currentTitle": "Restrained capacity content 2",
+      "proposedTitle": "Half-Full Breasts with Restrained Arms",
+      "feature": "Fullness",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Half-Full Breasts with Restrained Arms. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Fullness.json",
+      "jsonPath": [
+        "routes",
+        "build_restrained_capacity_content_2",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Restrained and Half Full — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Fullness",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Fullness.build_milk_status_1",
+      "currentTitle": "Milk status 1",
+      "proposedTitle": "Restrained and Completely Full — Character Status Context",
+      "feature": "Fullness",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Restrained and Completely Full. Supplies factual situation/status text to Skyrim.Net; does not itself change the event or character.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Fullness.json",
+      "jsonPath": [
+        "routes",
+        "build_milk_status_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Restrained and Completely Full — Character Status Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Fullness",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Fullness.build_milk_status_2",
+      "currentTitle": "Milk status 2",
+      "proposedTitle": "Restrained and Above Half Full — Character Status Context",
+      "feature": "Fullness",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Restrained and Above Half Full. Supplies factual situation/status text to Skyrim.Net; does not itself change the event or character.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Fullness.json",
+      "jsonPath": [
+        "routes",
+        "build_milk_status_2",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Restrained and Above Half Full — Character Status Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Fullness",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Fullness.build_milk_status_3",
+      "currentTitle": "Milk status 3",
+      "proposedTitle": "Restrained and Below Half Full — Character Status Context",
+      "feature": "Fullness",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Restrained and Below Half Full. Supplies factual situation/status text to Skyrim.Net; does not itself change the event or character.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Fullness.json",
+      "jsonPath": [
+        "routes",
+        "build_milk_status_3",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Restrained and Below Half Full — Character Status Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Fullness",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Fullness.build_milk_status_4",
+      "currentTitle": "Milk status 4",
+      "proposedTitle": "Completely Full — Character Status Context",
+      "feature": "Fullness",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Completely Full. Supplies factual situation/status text to Skyrim.Net; does not itself change the event or character.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Fullness.json",
+      "jsonPath": [
+        "routes",
+        "build_milk_status_4",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Completely Full — Character Status Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Fullness",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Fullness.build_milk_status_5",
+      "currentTitle": "Milk status 5",
+      "proposedTitle": "Above Half Full — Character Status Context",
+      "feature": "Fullness",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Above Half Full. Supplies factual situation/status text to Skyrim.Net; does not itself change the event or character.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Fullness.json",
+      "jsonPath": [
+        "routes",
+        "build_milk_status_5",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Above Half Full — Character Status Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Fullness",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Fullness.build_milk_status_6",
+      "currentTitle": "Milk status 6",
+      "proposedTitle": "Below Half Full — Character Status Context",
+      "feature": "Fullness",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Below Half Full. Supplies factual situation/status text to Skyrim.Net; does not itself change the event or character.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Fullness.json",
+      "jsonPath": [
+        "routes",
+        "build_milk_status_6",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Below Half Full — Character Status Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Fullness",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Fullness.nearby_status_summary",
+      "currentTitle": "Nearby status summary",
+      "proposedTitle": "Nearby Milk Maids — AI Milk-Level Summary Wrapper",
+      "feature": "Fullness",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI prompt fragment / wrapper",
+      "description": "Nearby Milk Maids. Combined with other prompt pieces before being sent to Skyrim.Net; not a standalone spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "statuses"
+      ],
+      "allowedTokens": [
+        "statuses"
+      ],
+      "file": "Narration/Fullness.json",
+      "jsonPath": [
+        "routes",
+        "nearby_status_summary",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Nearby Milk Maids — AI Milk-Level Summary Wrapper",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Fullness",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "statuses": "Assembled nearby-character milk status descriptions."
+      }
+    },
+    {
+      "id": "Lore.milk_lore",
+      "currentTitle": "General milk and milking-armor lore",
+      "proposedTitle": "Milk and Milking Armor Lore",
+      "feature": "Lore",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI background lore",
+      "description": "Customize the background description Skyrim.Net uses for Milk and Milking Armor Lore. This influences how it describes the subject; it does not change gameplay.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/Lore.json",
+      "jsonPath": [
+        "routes",
+        "milk_lore",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "World Lore — Milk and Milking Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Lore",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Background Lore",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Lore.milkmaid_lore",
+      "currentTitle": "Milk Maid character lore",
+      "proposedTitle": "What It Means to Be a Milk Maid",
+      "feature": "Lore",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI background lore",
+      "description": "Customize the background description Skyrim.Net uses for What It Means to Be a Milk Maid. This influences how it describes the subject; it does not change gameplay.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Lore.json",
+      "jsonPath": [
+        "routes",
+        "milkmaid_lore",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Character Lore — Being a Milk Maid",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Lore",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Background Lore",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "MilkCravings.narrate_milk_craving_1",
+      "currentTitle": "Milk craving 1",
+      "proposedTitle": "Craving Milk",
+      "feature": "MilkCravings",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Craving Milk. This guides the generated reaction rather than guaranteeing an exact spoken line. The selected thought/craving message is edited separately under Game Messages & Stories.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "craving"
+      ],
+      "allowedTokens": [
+        "actor",
+        "craving"
+      ],
+      "file": "Narration/MilkCravings.json",
+      "jsonPath": [
+        "routes",
+        "narrate_milk_craving_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Craving — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "craving": "Selected craving text."
+      }
+    },
+    {
+      "id": "MilkDrinking.narrate_chest_milk_drink_1",
+      "currentTitle": "Chest milk drink 1",
+      "proposedTitle": "Chest Trap Milk Drink — Event Description",
+      "feature": "MilkDrinking",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Chest Trap Milk Drink. Guides Skyrim.Net in generating a reaction; the edited text is not necessarily spoken verbatim.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "chestKind",
+        "milkName"
+      ],
+      "allowedTokens": [
+        "actor",
+        "chestKind",
+        "milkName"
+      ],
+      "file": "Narration/MilkDrinking.json",
+      "jsonPath": [
+        "routes",
+        "narrate_chest_milk_drink_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Chest Trap Milk Drink — Event Description",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Milk Drinking",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "chestKind": "Kind of chest involved.",
+        "milkName": "Name of the milk drink."
+      }
+    },
+    {
+      "id": "MilkDrinking.narrate_chest_milk_drink_2",
+      "currentTitle": "Chest milk drink 2",
+      "proposedTitle": "Drinking Milk from a Trapped Chest",
+      "feature": "MilkDrinking",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Drinking Milk from a Trapped Chest. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "situation"
+      ],
+      "allowedTokens": [
+        "actor",
+        "situation"
+      ],
+      "file": "Narration/MilkDrinking.json",
+      "jsonPath": [
+        "routes",
+        "narrate_chest_milk_drink_2",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Chest Trap Milk Drink — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Milk Drinking",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "situation": "Event situation supplied by the caller."
+      }
+    },
+    {
+      "id": "MilkDrinking.narrate_n_p_c_milk_drink_1",
+      "currentTitle": "NPC milk drink 1",
+      "proposedTitle": "An NPC Drinks Milk",
+      "feature": "MilkDrinking",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: An NPC Drinks Milk. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "reaction"
+      ],
+      "allowedTokens": [
+        "actor",
+        "reaction"
+      ],
+      "file": "Narration/MilkDrinking.json",
+      "jsonPath": [
+        "routes",
+        "narrate_n_p_c_milk_drink_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "NPC Milk Drink — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Milk Drinking",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "reaction": "Actual reaction description supplied by the drink route."
+      }
+    },
+    {
+      "id": "MilkDrinking.narrate_n_p_c_milk_drink_2",
+      "currentTitle": "NPC milk drink 2",
+      "proposedTitle": "NPC Milk Drink — Restrained-Arms Prompt Fragment",
+      "feature": "MilkDrinking",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI prompt fragment / wrapper",
+      "description": "NPC Milk Drink. Combined with other prompt pieces before being sent to Skyrim.Net; not a standalone spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/MilkDrinking.json",
+      "jsonPath": [
+        "routes",
+        "narrate_n_p_c_milk_drink_2",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "NPC Milk Drink — Restrained-Arms Prompt Fragment",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Milk Drinking",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "MilkDrinking.narrate_n_p_c_milk_drink_3",
+      "currentTitle": "NPC milk drink 3",
+      "proposedTitle": "NPC Milk Drink — Non-Milk-Maid Factual Guard",
+      "feature": "MilkDrinking",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "NPC Milk Drink. Guides Skyrim.Net in generating a reaction; the edited text is not necessarily spoken verbatim.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/MilkDrinking.json",
+      "jsonPath": [
+        "routes",
+        "narrate_n_p_c_milk_drink_3",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "NPC Milk Drink — Non-Milk-Maid Factual Guard",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Milk Drinking",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "MilkDrinking.narrate_n_p_c_milk_drink_4",
+      "currentTitle": "NPC milk drink 4",
+      "proposedTitle": "NPC Milk Drink — Established Milk Maid Factual Guard",
+      "feature": "MilkDrinking",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "NPC Milk Drink. Guides Skyrim.Net in generating a reaction; the edited text is not necessarily spoken verbatim.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/MilkDrinking.json",
+      "jsonPath": [
+        "routes",
+        "narrate_n_p_c_milk_drink_4",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "NPC Milk Drink — Established Milk Maid Factual Guard",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Milk Drinking",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "MilkDrinking.narrate_player_milk_drink_1",
+      "currentTitle": "Player milk drink 1",
+      "proposedTitle": "Your Character Drinks Milk — Basic Reaction",
+      "feature": "MilkDrinking",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Guide the player’s drink reaction when no detailed rendered outcome was supplied. The Detailed Reaction entry covers the alternative path.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "milkName"
+      ],
+      "allowedTokens": [
+        "milkName"
+      ],
+      "file": "Narration/MilkDrinking.json",
+      "jsonPath": [
+        "routes",
+        "narrate_player_milk_drink_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Player Milk Drink — Basic AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Milk Drinking",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "milkName": "Name of the milk drink."
+      }
+    },
+    {
+      "id": "MilkDrinking.narrate_player_milk_drink_2",
+      "currentTitle": "Player milk drink 2",
+      "proposedTitle": "Your Character Drinks Milk — Detailed Reaction",
+      "feature": "MilkDrinking",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Guide the player’s drink reaction when the caller supplies a detailed outcome. The Basic Reaction entry covers the alternative path.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "reaction"
+      ],
+      "allowedTokens": [
+        "reaction"
+      ],
+      "file": "Narration/MilkDrinking.json",
+      "jsonPath": [
+        "routes",
+        "narrate_player_milk_drink_2",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Player Milk Drink — Outcome-Based AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Milk Drinking",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "reaction": "Actual reaction description supplied by the drink route."
+      }
+    },
+    {
+      "id": "MilkDrinking.narrate_player_milk_drink_3",
+      "currentTitle": "Player milk drink 3",
+      "proposedTitle": "Player Milk Drink — Restrained-Arms Prompt Fragment",
+      "feature": "MilkDrinking",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI prompt fragment / wrapper",
+      "description": "Player Milk Drink. Combined with other prompt pieces before being sent to Skyrim.Net; not a standalone spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/MilkDrinking.json",
+      "jsonPath": [
+        "routes",
+        "narrate_player_milk_drink_3",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Player Milk Drink — Restrained-Arms Prompt Fragment",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Milk Drinking",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {}
+    },
+    {
+      "id": "MilkDrinking.build_restrained_player_drink_content_1",
+      "currentTitle": "Restrained player drink content 1",
+      "proposedTitle": "Your Character Drinks Milk with Restrained Arms",
+      "feature": "MilkDrinking",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: Your Character Drinks Milk with Restrained Arms. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "milkName"
+      ],
+      "allowedTokens": [
+        "milkName"
+      ],
+      "file": "Narration/MilkDrinking.json",
+      "jsonPath": [
+        "routes",
+        "build_restrained_player_drink_content_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Restrained Player Milk Drink — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Milk Drinking",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "milkName": "Name of the milk drink."
+      }
+    },
+    {
+      "id": "MilkDrinking.drinkMessage",
+      "currentTitle": "Drink Message",
+      "proposedTitle": "Milk Drink — AI Event Context",
+      "feature": "MilkDrinking",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Milk Drink. Supplies factual situation/status text to Skyrim.Net; does not itself change the event or character.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "item"
+      ],
+      "allowedTokens": [
+        "actor",
+        "item"
+      ],
+      "file": "Narration/MilkDrinking.json",
+      "jsonPath": [
+        "routes",
+        "drinkMessage",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Drink — AI Event Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Milk Drinking",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "item": "Name of the consumed item."
+      }
+    },
+    {
+      "id": "Milking.startMessage",
+      "currentTitle": "Start Message",
+      "proposedTitle": "When Milking Begins",
+      "feature": "Milking",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Customize the event description supplied to Skyrim.Net when milking begins. It describes the situation; it does not change milk amounts or force an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Milking.json",
+      "jsonPath": [
+        "routes",
+        "startMessage",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milking Started — AI Event Context",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Milking",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Milking.endMessage",
+      "currentTitle": "End Message",
+      "proposedTitle": "When Milking Finishes",
+      "feature": "Milking",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "Customize the event description supplied to Skyrim.Net when milking finishes. It describes the situation; it does not change milk amounts or force an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/Milking.json",
+      "jsonPath": [
+        "routes",
+        "endMessage",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milking Finished — AI Event Context",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Milking",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "MilkMaidCreation.narrate_milkmaid_created_1",
+      "currentTitle": "Milkmaid created 1",
+      "proposedTitle": "After Becoming a Milk Maid",
+      "feature": "MilkMaidCreation",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: After Becoming a Milk Maid. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/MilkMaidCreation.json",
+      "jsonPath": [
+        "routes",
+        "narrate_milkmaid_created_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "New Milk Maid — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Becoming a Milk Maid",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "MilkMaidCreation.narrate_forced_milk_maid_conversion_1",
+      "currentTitle": "Forced milk maid conversion 1",
+      "proposedTitle": "After a Magical Milk Maid Transformation",
+      "feature": "MilkMaidCreation",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: After a Magical Milk Maid Transformation. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "conversion"
+      ],
+      "allowedTokens": [
+        "actor",
+        "conversion"
+      ],
+      "file": "Narration/MilkMaidCreation.json",
+      "jsonPath": [
+        "routes",
+        "narrate_forced_milk_maid_conversion_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Forced Milk Maid Conversion — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Becoming a Milk Maid",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "conversion": "Conversion or curse description supplied by the caller."
+      }
+    },
+    {
+      "id": "MilkMaidCreation.milkmaidCreatedMessage",
+      "currentTitle": "Milkmaid Created Message",
+      "proposedTitle": "New Milk Maid — AI Event Context",
+      "feature": "MilkMaidCreation",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI event or character context",
+      "description": "New Milk Maid. Supplies factual situation/status text to Skyrim.Net; does not itself change the event or character.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/MilkMaidCreation.json",
+      "jsonPath": [
+        "routes",
+        "milkmaidCreatedMessage",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "New Milk Maid — AI Event Context",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Becoming a Milk Maid",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "MilkMaidCreation.narrate_milk_maid_curse_1",
+      "currentTitle": "Milk maid curse 1",
+      "proposedTitle": "A Milk Curse Strikes an Existing Milk Maid",
+      "feature": "MilkMaidCreation",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: A Milk Curse Strikes an Existing Milk Maid. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "conversion"
+      ],
+      "allowedTokens": [
+        "actor",
+        "conversion"
+      ],
+      "file": "Narration/MilkMaidCreation.json",
+      "jsonPath": [
+        "routes",
+        "narrate_milk_maid_curse_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Existing Milk Maid Curse — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Becoming a Milk Maid",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "conversion": "Conversion or curse description supplied by the caller."
+      }
+    },
+    {
+      "id": "MilkMaidCreation.narrate_chest_milk_maid_curse_1",
+      "currentTitle": "Chest milk maid curse 1",
+      "proposedTitle": "A Milk Maid Curse Escapes a Chest",
+      "feature": "MilkMaidCreation",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: A Milk Maid Curse Escapes a Chest. This guides the generated reaction rather than guaranteeing an exact spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "outcome",
+        "chest_kind",
+        "milk_added"
+      ],
+      "allowedTokens": [
+        "actor",
+        "outcome",
+        "chest_kind",
+        "milk_added"
+      ],
+      "file": "Narration/MilkMaidCreation.json",
+      "jsonPath": [
+        "routes",
+        "narrate_chest_milk_maid_curse_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Chest Milk Maid Curse — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Becoming a Milk Maid",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "outcome": "Curse result supplied by the caller.",
+        "chest_kind": "Kind of chest involved.",
+        "milk_added": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "TentacleArmor.narrate_tentacle_effect_1",
+      "currentTitle": "Tentacle effect 1",
+      "proposedTitle": "Living / Parasite Effects — Wearer-Perspective Prompt Fragment",
+      "feature": "TentacleArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI prompt fragment / wrapper",
+      "description": "Living / Parasite Effects. Combined with other prompt pieces before being sent to Skyrim.Net; not a standalone spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "Narration/TentacleArmor.json",
+      "jsonPath": [
+        "routes",
+        "narrate_tentacle_effect_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite Effects — Wearer-Perspective Prompt Fragment",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {}
+    },
+    {
+      "id": "TentacleArmor.build_tentacle_effect_narration_1",
+      "currentTitle": "Tentacle effect narration 1",
+      "proposedTitle": "Living / Parasite Effects — AI Situation Wrapper",
+      "feature": "TentacleArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI prompt fragment / wrapper",
+      "description": "Living / Parasite Effects. Combined with other prompt pieces before being sent to Skyrim.Net; not a standalone spoken line.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "content"
+      ],
+      "allowedTokens": [
+        "actor",
+        "content"
+      ],
+      "file": "Narration/TentacleArmor.json",
+      "jsonPath": [
+        "routes",
+        "build_tentacle_effect_narration_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite Effects — AI Situation Wrapper",
+      "visibility": "Internal",
+      "hiddenReason": "Internal prompt assembly, status formatting, factual boundary, or fallback. Not an independently useful creative control.",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "content": "Event text assembled by the caller."
+      }
+    },
+    {
+      "id": "TentacleArmor.effects_arousal",
+      "currentTitle": "Effects arousal",
+      "proposedTitle": "Living / Parasite Effects — Arousal Increase AI Narration Pool / Tier Fallback",
+      "feature": "TentacleArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI fallback text",
+      "description": "Living / Parasite Effects. Supplies fallback prompt wording, rather than enabling or triggering gameplay.",
+      "sharedUseOrFallback": "Untiered parent is inherited by matching tier pools until a tier-specific override is supplied.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/TentacleArmor.json",
+      "jsonPath": [
+        "routes",
+        "effects_arousal",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite Effects — Arousal Increase AI Narration Pool / Tier Fallback",
+      "visibility": "Internal",
+      "hiddenReason": "Untiered narration parent retained for existing overrides and inheritance. Expose the twelve tier/outcome entries rather than competing parent controls.",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "TentacleArmor.effects_milk",
+      "currentTitle": "Effects milk",
+      "proposedTitle": "Living / Parasite Effects — Milk Increase AI Narration Pool / Tier Fallback",
+      "feature": "TentacleArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI fallback text",
+      "description": "Living / Parasite Effects. Supplies fallback prompt wording, rather than enabling or triggering gameplay.",
+      "sharedUseOrFallback": "Untiered parent is inherited by matching tier pools until a tier-specific override is supplied.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/TentacleArmor.json",
+      "jsonPath": [
+        "routes",
+        "effects_milk",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite Effects — Milk Increase AI Narration Pool / Tier Fallback",
+      "visibility": "Internal",
+      "hiddenReason": "Untiered narration parent retained for existing overrides and inheritance. Expose the twelve tier/outcome entries rather than competing parent controls.",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "TentacleArmor.effects_milkAndArousal",
+      "currentTitle": "Effects milk And Arousal",
+      "proposedTitle": "Living / Parasite Effects — Milk + Arousal Increase AI Narration Pool / Tier Fallback",
+      "feature": "TentacleArmor",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI fallback text",
+      "description": "Living / Parasite Effects. Supplies fallback prompt wording, rather than enabling or triggering gameplay.",
+      "sharedUseOrFallback": "Untiered parent is inherited by matching tier pools until a tier-specific override is supplied.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Narration/TentacleArmor.json",
+      "jsonPath": [
+        "routes",
+        "effects_milkAndArousal",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite Effects — Milk + Arousal Increase AI Narration Pool / Tier Fallback",
+      "visibility": "Internal",
+      "hiddenReason": "Untiered narration parent retained for existing overrides and inheritance. Expose the twelve tier/outcome entries rather than competing parent controls.",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Thoughts.narrate_milk_maid_thought_1",
+      "currentTitle": "Milk maid thought 1",
+      "proposedTitle": "A Milk Maid Shares Her Thoughts",
+      "feature": "Thoughts",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: A Milk Maid Shares Her Thoughts. This guides the generated reaction rather than guaranteeing an exact spoken line. The selected thought/craving message is edited separately under Game Messages & Stories.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "thought"
+      ],
+      "allowedTokens": [
+        "actor",
+        "thought"
+      ],
+      "file": "Narration/Thoughts.json",
+      "jsonPath": [
+        "routes",
+        "narrate_milk_maid_thought_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Maid Thoughts — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "thought": "Selected thought text."
+      }
+    },
+    {
+      "id": "Thoughts.narrate_bound_milk_maid_thought_1",
+      "currentTitle": "Bound milk maid thought 1",
+      "proposedTitle": "A Restrained Milk Maid Shares Her Thoughts",
+      "feature": "Thoughts",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI reaction instructions",
+      "description": "Customize the wording Skyrim.Net receives for: A Restrained Milk Maid Shares Her Thoughts. This guides the generated reaction rather than guaranteeing an exact spoken line. The selected thought/craving message is edited separately under Game Messages & Stories.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor",
+        "thought"
+      ],
+      "allowedTokens": [
+        "actor",
+        "thought"
+      ],
+      "file": "Narration/Thoughts.json",
+      "jsonPath": [
+        "routes",
+        "narrate_bound_milk_maid_thought_1",
+        "template"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Restrained Milk Maid Thoughts — AI Reaction Instructions",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "thought": "Selected thought text."
+      }
+    },
+    {
+      "id": "Pools.Thoughts.belowHalf_noArmor",
+      "currentTitle": "Below Half no Armor",
+      "proposedTitle": "Milk Maid Thought — Less Than Half Full, Without Milking Armor",
+      "feature": "Thoughts",
+      "usedBy": "Shared",
+      "textPurpose": "HUD thought + AI input",
+      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Thoughts.json",
+      "jsonPath": [
+        "belowHalf_noArmor"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEThoughts.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Maid Thought — Below Half Full, No Supported Milking Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.Thoughts.belowHalf_milkingArmor",
+      "currentTitle": "Below Half milking Armor",
+      "proposedTitle": "Milk Maid Thought — Less Than Half Full, Milking Armor",
+      "feature": "Thoughts",
+      "usedBy": "Shared",
+      "textPurpose": "HUD thought + AI input",
+      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Thoughts.json",
+      "jsonPath": [
+        "belowHalf_milkingArmor"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEThoughts.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Maid Thought — Below Half Full, Milking Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.Thoughts.belowHalf_parasiteArmor",
+      "currentTitle": "Below Half parasite Armor",
+      "proposedTitle": "Milk Maid Thought — Less Than Half Full, Parasite Armor",
+      "feature": "Thoughts",
+      "usedBy": "Shared",
+      "textPurpose": "HUD thought + AI input",
+      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Thoughts.json",
+      "jsonPath": [
+        "belowHalf_parasiteArmor"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEThoughts.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Maid Thought — Below Half Full, Parasite Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.Thoughts.belowHalf_livingArmor",
+      "currentTitle": "Below Half living Armor",
+      "proposedTitle": "Milk Maid Thought — Less Than Half Full, Living Armor",
+      "feature": "Thoughts",
+      "usedBy": "Shared",
+      "textPurpose": "HUD thought + AI input",
+      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Thoughts.json",
+      "jsonPath": [
+        "belowHalf_livingArmor"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEThoughts.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Maid Thought — Below Half Full, Living Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.Thoughts.halfPlus_noArmor",
+      "currentTitle": "Half Plus no Armor",
+      "proposedTitle": "Milk Maid Thought — At Least Half Full, Without Milking Armor",
+      "feature": "Thoughts",
+      "usedBy": "Shared",
+      "textPurpose": "HUD thought + AI input",
+      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Thoughts.json",
+      "jsonPath": [
+        "halfPlus_noArmor"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEThoughts.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Maid Thought — Half Full or Above, No Supported Milking Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.Thoughts.armsBound",
+      "currentTitle": "Arms Bound",
+      "proposedTitle": "Milk Maid Thought — Restrained Arms",
+      "feature": "Thoughts",
+      "usedBy": "Shared",
+      "textPurpose": "HUD thought + AI input",
+      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Thoughts.json",
+      "jsonPath": [
+        "armsBound"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEThoughts.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Maid Thought — Restrained Arms",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.Thoughts.halfPlus_milkingArmor",
+      "currentTitle": "Half Plus milking Armor",
+      "proposedTitle": "Milk Maid Thought — At Least Half Full, Milking Armor",
+      "feature": "Thoughts",
+      "usedBy": "Shared",
+      "textPurpose": "HUD thought + AI input",
+      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Thoughts.json",
+      "jsonPath": [
+        "halfPlus_milkingArmor"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEThoughts.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Maid Thought — Half Full or Above, Milking Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.Thoughts.halfPlus_parasiteArmor",
+      "currentTitle": "Half Plus parasite Armor",
+      "proposedTitle": "Milk Maid Thought — At Least Half Full, Parasite Armor",
+      "feature": "Thoughts",
+      "usedBy": "Shared",
+      "textPurpose": "HUD thought + AI input",
+      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Thoughts.json",
+      "jsonPath": [
+        "halfPlus_parasiteArmor"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEThoughts.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Maid Thought — Half Full or Above, Parasite Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.Thoughts.halfPlus_livingArmor",
+      "currentTitle": "Half Plus living Armor",
+      "proposedTitle": "Milk Maid Thought — At Least Half Full, Living Armor",
+      "feature": "Thoughts",
+      "usedBy": "Shared",
+      "textPurpose": "HUD thought + AI input",
+      "description": "Selected thought is displayed as a game message and can be included in Skyrim.Net reaction instructions.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Thoughts.json",
+      "jsonPath": [
+        "halfPlus_livingArmor"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEThoughts.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Maid Thought — Half Full or Above, Living Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.MilkCravings.craving",
+      "currentTitle": "Craving",
+      "proposedTitle": "When She Craves Milk — Message",
+      "feature": "MilkCravings",
+      "usedBy": "Shared",
+      "textPurpose": "HUD notification variants",
+      "description": "Wording when a periodic craving begins; also passed to AI narration.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "ActorName"
+      ],
+      "allowedTokens": [
+        "ActorName"
+      ],
+      "file": "MilkCravings.json",
+      "jsonPath": [
+        "craving"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEMilkCravings.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Craving — Craving Begins: Message + AI Input",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "ActorName": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.MilkCravings.give_in",
+      "currentTitle": "Give in",
+      "proposedTitle": "Giving In to a Milk Craving — Message",
+      "feature": "MilkCravings",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "Game notification when a character gives in to the craving; distinct from the later drink reaction.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "ActorName"
+      ],
+      "allowedTokens": [
+        "ActorName"
+      ],
+      "file": "MilkCravings.json",
+      "jsonPath": [
+        "give_in"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEMilkCravings.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Craving — Giving In: Game Message",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Thoughts & Cravings",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "ActorName": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.milking_first_equip",
+      "currentTitle": "Milking first equip",
+      "proposedTitle": "Milking Armor — First Time Wearing It Story",
+      "feature": "ArmorIntroductionStories",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "ActorName"
+      ],
+      "allowedTokens": [
+        "ActorName"
+      ],
+      "file": "ArmorIntroductionStories.json",
+      "jsonPath": [
+        "stringList",
+        "milking_first_equip"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArmorIntroduction.psc",
+        "Source/Scripts/MMEStoryPopup.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milking Armor — First Equip Story",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {
+        "ActorName": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.living_first_equip",
+      "currentTitle": "Living first equip",
+      "proposedTitle": "Living Armor — First Time Wearing It Story",
+      "feature": "ArmorIntroductionStories",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "ArmorIntroductionStories.json",
+      "jsonPath": [
+        "stringList",
+        "living_first_equip"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArmorIntroduction.psc",
+        "Source/Scripts/MMEStoryPopup.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living Armor — First Equip Story",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.parasite_first_equip",
+      "currentTitle": "Parasite first equip",
+      "proposedTitle": "Parasite Armor — First Time Wearing It Story",
+      "feature": "ArmorIntroductionStories",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "ArmorIntroductionStories.json",
+      "jsonPath": [
+        "stringList",
+        "parasite_first_equip"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArmorIntroduction.psc",
+        "Source/Scripts/MMEStoryPopup.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Parasite Armor — First Equip Story",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.dwemer_first_equip",
+      "currentTitle": "Dwemer first equip",
+      "proposedTitle": "Dwemer Armor — First Time Wearing It Story",
+      "feature": "ArmorIntroductionStories",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "ArmorIntroductionStories.json",
+      "jsonPath": [
+        "stringList",
+        "dwemer_first_equip"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArmorIntroduction.psc",
+        "Source/Scripts/MMEStoryPopup.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Armor — First Equip Story",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.living_trap_equip",
+      "currentTitle": "Living trap equip",
+      "proposedTitle": "Living Armor — Caught by a Chest Trap Story",
+      "feature": "ArmorIntroductionStories",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "ActorName"
+      ],
+      "allowedTokens": [
+        "ActorName"
+      ],
+      "file": "ArmorIntroductionStories.json",
+      "jsonPath": [
+        "stringList",
+        "living_trap_equip"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArmorIntroduction.psc",
+        "Source/Scripts/MMEStoryPopup.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living Armor — Chest Trap Equip Story",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {
+        "ActorName": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.parasite_trap_equip",
+      "currentTitle": "Parasite trap equip",
+      "proposedTitle": "Parasite Armor — Caught by a Chest Trap Story",
+      "feature": "ArmorIntroductionStories",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "ActorName"
+      ],
+      "allowedTokens": [
+        "ActorName"
+      ],
+      "file": "ArmorIntroductionStories.json",
+      "jsonPath": [
+        "stringList",
+        "parasite_trap_equip"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArmorIntroduction.psc",
+        "Source/Scripts/MMEStoryPopup.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Parasite Armor — Chest Trap Equip Story",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {
+        "ActorName": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.dwemer_trap_equip",
+      "currentTitle": "Dwemer trap equip",
+      "proposedTitle": "Dwemer Armor — Caught by a Chest Trap Story",
+      "feature": "ArmorIntroductionStories",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "ActorName"
+      ],
+      "allowedTokens": [
+        "ActorName"
+      ],
+      "file": "ArmorIntroductionStories.json",
+      "jsonPath": [
+        "stringList",
+        "dwemer_trap_equip"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArmorIntroduction.psc",
+        "Source/Scripts/MMEStoryPopup.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Armor — Chest Trap Equip Story",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {
+        "ActorName": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.milking_repeat_equip",
+      "currentTitle": "Milking repeat equip",
+      "proposedTitle": "Milking Armor — Wearing It Again Story",
+      "feature": "ArmorIntroductionStories",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "ActorName"
+      ],
+      "allowedTokens": [
+        "ActorName"
+      ],
+      "file": "ArmorIntroductionStories.json",
+      "jsonPath": [
+        "stringList",
+        "milking_repeat_equip"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArmorIntroduction.psc",
+        "Source/Scripts/MMEStoryPopup.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milking Armor — Re-equip Story",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {
+        "ActorName": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.living_repeat_equip",
+      "currentTitle": "Living repeat equip",
+      "proposedTitle": "Living Armor — Wearing It Again Story",
+      "feature": "ArmorIntroductionStories",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "ActorName"
+      ],
+      "allowedTokens": [
+        "ActorName"
+      ],
+      "file": "ArmorIntroductionStories.json",
+      "jsonPath": [
+        "stringList",
+        "living_repeat_equip"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArmorIntroduction.psc",
+        "Source/Scripts/MMEStoryPopup.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living Armor — Re-equip Story",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {
+        "ActorName": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.parasite_repeat_equip",
+      "currentTitle": "Parasite repeat equip",
+      "proposedTitle": "Parasite Armor — Wearing It Again Story",
+      "feature": "ArmorIntroductionStories",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "ActorName"
+      ],
+      "allowedTokens": [
+        "ActorName"
+      ],
+      "file": "ArmorIntroductionStories.json",
+      "jsonPath": [
+        "stringList",
+        "parasite_repeat_equip"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArmorIntroduction.psc",
+        "Source/Scripts/MMEStoryPopup.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Parasite Armor — Re-equip Story",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {
+        "ActorName": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.ArmorIntroductionStories.dwemer_repeat_equip",
+      "currentTitle": "Dwemer repeat equip",
+      "proposedTitle": "Dwemer Armor — Wearing It Again Story",
+      "feature": "ArmorIntroductionStories",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Random story popup for this armor family and equip route; AI equip narration has separate entries.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "ActorName"
+      ],
+      "allowedTokens": [
+        "ActorName"
+      ],
+      "file": "ArmorIntroductionStories.json",
+      "jsonPath": [
+        "stringList",
+        "dwemer_repeat_equip"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArmorIntroduction.psc",
+        "Source/Scripts/MMEStoryPopup.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Armor — Re-equip Story",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {
+        "ActorName": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.DwemerArmorStories.dwemerarmorstart",
+      "currentTitle": "Dwemerarmorstart",
+      "proposedTitle": "Dwemer Armor — Milking Started Story Popup",
+      "feature": "DwemerArmorStories",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Game story popup at the corresponding Dwemer milking boundary; separate from AI suit/attachment prompts.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "DwemerArmorStories.json",
+      "jsonPath": [
+        "stringList",
+        "dwemerarmorstart"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEDwemerArmor.psc",
+        "Source/Scripts/MMEStoryPopup.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Armor — Milking Started Story Popup",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.DwemerArmorStories.dwemerarmorend",
+      "currentTitle": "Dwemerarmorend",
+      "proposedTitle": "Dwemer Armor — Milking Finished Story Popup",
+      "feature": "DwemerArmorStories",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Game story popup at the corresponding Dwemer milking boundary; separate from AI suit/attachment prompts.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "DwemerArmorStories.json",
+      "jsonPath": [
+        "stringList",
+        "dwemerarmorend"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEDwemerArmor.psc",
+        "Source/Scripts/MMEStoryPopup.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Armor — Milking Finished Story Popup",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.ForcedMilkMaidConversion.conversionMessages",
+      "currentTitle": "Conversion Messages",
+      "proposedTitle": "A Magical Transformation — Message",
+      "feature": "ForcedMilkMaidConversion",
+      "usedBy": "Shared",
+      "textPurpose": "HUD feedback + AI input",
+      "description": "Conversion feedback used in HUD and some AI conversion/curse routes.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "ForcedMilkMaidConversion.json",
+      "jsonPath": [
+        "conversionMessages"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENewMilkMaid.psc",
+        "Source/Scripts/MMEMilkCurse.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Maid Conversion — Shared Feedback",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Becoming a Milk Maid",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.ForcedMilkMaidConversion.chestCurseStories",
+      "currentTitle": "Chest Curse Stories",
+      "proposedTitle": "A Milk Maid Curse — Story Popup",
+      "feature": "ForcedMilkMaidConversion",
+      "usedBy": "Game messages only",
+      "textPurpose": "Story popup variants",
+      "description": "Story popup used by the curse route; the internal chestCurseStories name does not mean every caller is exclusively a chest event.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "ForcedMilkMaidConversion.json",
+      "jsonPath": [
+        "chestCurseStories"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENewMilkMaid.psc",
+        "Source/Scripts/MMEMilkCurse.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Maid Curse — Story Popup",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Becoming a Milk Maid",
+      "tab": "Game Messages & Stories",
+      "badge": "Story Popup",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_none",
+      "currentTitle": "Notice none",
+      "proposedTitle": "Armor Service Reminder — No Armor",
+      "feature": "ArmorCheckReminders",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "sharedUseOrFallback": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "ArmorCheckReminders.json",
+      "jsonPath": [
+        "notice_none"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEServiceArmorReminder.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Armor Service Reminder — No Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor Service Reminders",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_regular",
+      "currentTitle": "Notice regular",
+      "proposedTitle": "Armor Service Reminder — Ordinary Armor",
+      "feature": "ArmorCheckReminders",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "sharedUseOrFallback": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "ArmorCheckReminders.json",
+      "jsonPath": [
+        "notice_regular"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEServiceArmorReminder.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Armor Service Reminder — Ordinary Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor Service Reminders",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_milking",
+      "currentTitle": "Notice milking",
+      "proposedTitle": "Armor Service Reminder — Milking Armor",
+      "feature": "ArmorCheckReminders",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "sharedUseOrFallback": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "ArmorCheckReminders.json",
+      "jsonPath": [
+        "notice_milking"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEServiceArmorReminder.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Armor Service Reminder — Milking Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor Service Reminders",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_living",
+      "currentTitle": "Notice living",
+      "proposedTitle": "Armor Service Reminder — Living Armor",
+      "feature": "ArmorCheckReminders",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "sharedUseOrFallback": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "ArmorCheckReminders.json",
+      "jsonPath": [
+        "notice_living"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEServiceArmorReminder.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Armor Service Reminder — Living Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor Service Reminders",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_parasite",
+      "currentTitle": "Notice parasite",
+      "proposedTitle": "Armor Service Reminder — Parasite Armor",
+      "feature": "ArmorCheckReminders",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "sharedUseOrFallback": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "ArmorCheckReminders.json",
+      "jsonPath": [
+        "notice_parasite"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEServiceArmorReminder.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Armor Service Reminder — Parasite Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor Service Reminders",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_dwemer",
+      "currentTitle": "Notice dwemer",
+      "proposedTitle": "Armor Service Reminder — Dwemer Armor",
+      "feature": "ArmorCheckReminders",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "sharedUseOrFallback": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "ArmorCheckReminders.json",
+      "jsonPath": [
+        "notice_dwemer"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEServiceArmorReminder.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Armor Service Reminder — Dwemer Armor",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor Service Reminders",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.ArmorCheckReminders.notice_reaction",
+      "currentTitle": "Notice reaction",
+      "proposedTitle": "Armor Service Reminder — Vendor Reaction Ending",
+      "feature": "ArmorCheckReminders",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "Vendor observation or reaction ending combined into a HUD reminder during an eligible armor-service interaction.",
+      "sharedUseOrFallback": "Long combined reminders are replaced by compact code-owned wording; a longer edit may not appear verbatim.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "ArmorCheckReminders.json",
+      "jsonPath": [
+        "notice_reaction"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEServiceArmorReminder.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Armor Service Reminder — Vendor Reaction Ending",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor Service Reminders",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.ArousalEffects.low_female",
+      "currentTitle": "Low female",
+      "proposedTitle": "Arousal Reaction — Low, Female: Message",
+      "feature": "ArousalEffects",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "HUD flavor for an arousal-reaction tier and character sex. This is not a Living/Parasite tease probability or AI prompt.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "ArousalEffects.json",
+      "jsonPath": [
+        "low_female"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArousalEffects.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Arousal Reaction — Low, Female: Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Arousal",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.ArousalEffects.low_male",
+      "currentTitle": "Low male",
+      "proposedTitle": "Arousal Reaction — Low, Male: Message",
+      "feature": "ArousalEffects",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "HUD flavor for an arousal-reaction tier and character sex. This is not a Living/Parasite tease probability or AI prompt.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "ArousalEffects.json",
+      "jsonPath": [
+        "low_male"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArousalEffects.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Arousal Reaction — Low, Male: Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Arousal",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.ArousalEffects.medium_female",
+      "currentTitle": "Medium female",
+      "proposedTitle": "Arousal Reaction — Medium, Female: Message",
+      "feature": "ArousalEffects",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "HUD flavor for an arousal-reaction tier and character sex. This is not a Living/Parasite tease probability or AI prompt.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "ArousalEffects.json",
+      "jsonPath": [
+        "medium_female"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArousalEffects.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Arousal Reaction — Medium, Female: Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Arousal",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.ArousalEffects.medium_male",
+      "currentTitle": "Medium male",
+      "proposedTitle": "Arousal Reaction — Medium, Male: Message",
+      "feature": "ArousalEffects",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "HUD flavor for an arousal-reaction tier and character sex. This is not a Living/Parasite tease probability or AI prompt.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "ArousalEffects.json",
+      "jsonPath": [
+        "medium_male"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArousalEffects.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Arousal Reaction — Medium, Male: Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Arousal",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.ArousalEffects.high_female",
+      "currentTitle": "High female",
+      "proposedTitle": "Arousal Reaction — High, Female: Message",
+      "feature": "ArousalEffects",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "HUD flavor for an arousal-reaction tier and character sex. This is not a Living/Parasite tease probability or AI prompt.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "ArousalEffects.json",
+      "jsonPath": [
+        "high_female"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArousalEffects.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Arousal Reaction — High, Female: Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Arousal",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.ArousalEffects.high_male",
+      "currentTitle": "High male",
+      "proposedTitle": "Arousal Reaction — High, Male: Message",
+      "feature": "ArousalEffects",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "HUD flavor for an arousal-reaction tier and character sex. This is not a Living/Parasite tease probability or AI prompt.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "ArousalEffects.json",
+      "jsonPath": [
+        "high_male"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEArousalEffects.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Arousal Reaction — High, Male: Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Arousal",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.BreastBounceNotifications.low",
+      "currentTitle": "Low",
+      "proposedTitle": "Breast Movement — Low Bounce Message",
+      "feature": "BreastBounceNotifications",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "HUD flavor for this bounce/movement reaction; does not select the sound or animation.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "BreastBounceNotifications.json",
+      "jsonPath": [
+        "low"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEBreastBounceEffects.psc",
+        "Source/Scripts/MMEAlertsController.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Breast Movement — Low Bounce Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Breast Movement",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.BreastBounceNotifications.high",
+      "currentTitle": "High",
+      "proposedTitle": "Breast Movement — High Bounce Message",
+      "feature": "BreastBounceNotifications",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "HUD flavor for this bounce/movement reaction; does not select the sound or animation.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "BreastBounceNotifications.json",
+      "jsonPath": [
+        "high"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEBreastBounceEffects.psc",
+        "Source/Scripts/MMEAlertsController.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Breast Movement — High Bounce Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Breast Movement",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.BreastBounceNotifications.movement",
+      "currentTitle": "Movement",
+      "proposedTitle": "Breast Movement — Movement Slap Message",
+      "feature": "BreastBounceNotifications",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "HUD flavor for this bounce/movement reaction; does not select the sound or animation.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "BreastBounceNotifications.json",
+      "jsonPath": [
+        "movement"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEBreastBounceEffects.psc",
+        "Source/Scripts/MMEAlertsController.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Breast Movement — Movement Slap Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Breast Movement",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.DwemerEffectNotifications.lines",
+      "currentTitle": "Lines",
+      "proposedTitle": "Dwemer Armor — Periodic Effect Message",
+      "feature": "DwemerEffectNotifications",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "HUD flavor after a successful armor effect. AI narration uses separate text pools.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "DwemerEffectNotifications.json",
+      "jsonPath": [
+        "lines"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMEDwemerEffects.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Dwemer Armor — Periodic Effect Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Dwemer Armor",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.Injection.lines",
+      "currentTitle": "Lines",
+      "proposedTitle": "Living / Parasite — Default Tease Message",
+      "feature": "Injection",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "HUD flavor after a successful armor effect. AI narration uses separate text pools.",
+      "sharedUseOrFallback": "Parent/default notification pool for all four tiers until tier wording is customized.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Injection.json",
+      "jsonPath": [
+        "lines"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleEffects.psc",
+        "Source/Scripts/MMETentacleTiers.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — Default Tease Notification",
+      "visibility": "Internal",
+      "hiddenReason": "Untiered notification parent retained for old edits and inheritance. Expose four tier messages instead of a competing default control.",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": null,
+      "badge": "Internal",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.male_generic",
+      "currentTitle": "Male generic",
+      "proposedTitle": "Milk Drink — Male, No Confirmed Milk or Arousal Increase Reaction",
+      "feature": "NonMilkmaidDrinkNotifications",
+      "usedBy": "Shared",
+      "textPurpose": "Reaction wording / HUD and AI input",
+      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "sharedUseOrFallback": "The filename is misleading: shared readers also support established Milk Maids. Rendered drink reactions can be passed to player/NPC AI narration.",
+      "requiredTokens": [
+        "actor",
+        "milk"
+      ],
+      "allowedTokens": [
+        "actor",
+        "milk"
+      ],
+      "file": "NonMilkmaidDrinkNotifications.json",
+      "jsonPath": [
+        "male_generic"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENPCDrinkDialogue.psc",
+        "Source/Scripts/MMEActorDrinkTransaction.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc",
+        "Source/Scripts/MMESexLabBreastfeedingBackend.psc",
+        "Source/Scripts/MMEOStimBreastfeeding.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Drink — Male, No Confirmed Increase Reaction",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Milk Drinking",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "milk": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.female_generic",
+      "currentTitle": "Female generic",
+      "proposedTitle": "Milk Drink — Female, No Confirmed Milk or Arousal Increase Reaction",
+      "feature": "NonMilkmaidDrinkNotifications",
+      "usedBy": "Shared",
+      "textPurpose": "Reaction wording / HUD and AI input",
+      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "sharedUseOrFallback": "The filename is misleading: shared readers also support established Milk Maids. Rendered drink reactions can be passed to player/NPC AI narration.",
+      "requiredTokens": [
+        "actor",
+        "milk"
+      ],
+      "allowedTokens": [
+        "actor",
+        "milk"
+      ],
+      "file": "NonMilkmaidDrinkNotifications.json",
+      "jsonPath": [
+        "female_generic"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENPCDrinkDialogue.psc",
+        "Source/Scripts/MMEActorDrinkTransaction.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc",
+        "Source/Scripts/MMESexLabBreastfeedingBackend.psc",
+        "Source/Scripts/MMEOStimBreastfeeding.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Drink — Female, No Confirmed Increase Reaction",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Milk Drinking",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "milk": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.male_aroused",
+      "currentTitle": "Male aroused",
+      "proposedTitle": "Milk Drink — Male, Arousal Increase Reaction",
+      "feature": "NonMilkmaidDrinkNotifications",
+      "usedBy": "Shared",
+      "textPurpose": "Reaction wording / HUD and AI input",
+      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "sharedUseOrFallback": "The filename is misleading: shared readers also support established Milk Maids. Rendered drink reactions can be passed to player/NPC AI narration.",
+      "requiredTokens": [
+        "actor",
+        "milk"
+      ],
+      "allowedTokens": [
+        "actor",
+        "milk"
+      ],
+      "file": "NonMilkmaidDrinkNotifications.json",
+      "jsonPath": [
+        "male_aroused"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENPCDrinkDialogue.psc",
+        "Source/Scripts/MMEActorDrinkTransaction.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc",
+        "Source/Scripts/MMESexLabBreastfeedingBackend.psc",
+        "Source/Scripts/MMEOStimBreastfeeding.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Drink — Male, Arousal Increase Reaction",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Milk Drinking",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "milk": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.female_aroused",
+      "currentTitle": "Female aroused",
+      "proposedTitle": "Milk Drink — Female, Arousal Increase Reaction",
+      "feature": "NonMilkmaidDrinkNotifications",
+      "usedBy": "Shared",
+      "textPurpose": "Reaction wording / HUD and AI input",
+      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "sharedUseOrFallback": "The filename is misleading: shared readers also support established Milk Maids. Rendered drink reactions can be passed to player/NPC AI narration.",
+      "requiredTokens": [
+        "actor",
+        "milk"
+      ],
+      "allowedTokens": [
+        "actor",
+        "milk"
+      ],
+      "file": "NonMilkmaidDrinkNotifications.json",
+      "jsonPath": [
+        "female_aroused"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENPCDrinkDialogue.psc",
+        "Source/Scripts/MMEActorDrinkTransaction.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc",
+        "Source/Scripts/MMESexLabBreastfeedingBackend.psc",
+        "Source/Scripts/MMEOStimBreastfeeding.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Drink — Female, Arousal Increase Reaction",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Milk Drinking",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "milk": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.female_milk",
+      "currentTitle": "Female milk",
+      "proposedTitle": "Milk Drink — Female, Milk Increase Reaction",
+      "feature": "NonMilkmaidDrinkNotifications",
+      "usedBy": "Shared",
+      "textPurpose": "Reaction wording / HUD and AI input",
+      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "sharedUseOrFallback": "The filename is misleading: shared readers also support established Milk Maids. Rendered drink reactions can be passed to player/NPC AI narration.",
+      "requiredTokens": [
+        "actor",
+        "milk"
+      ],
+      "allowedTokens": [
+        "actor",
+        "milk"
+      ],
+      "file": "NonMilkmaidDrinkNotifications.json",
+      "jsonPath": [
+        "female_milk"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENPCDrinkDialogue.psc",
+        "Source/Scripts/MMEActorDrinkTransaction.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc",
+        "Source/Scripts/MMESexLabBreastfeedingBackend.psc",
+        "Source/Scripts/MMEOStimBreastfeeding.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Drink — Female, Milk Increase Reaction",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Milk Drinking",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "milk": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.female_milk_arousal",
+      "currentTitle": "Female milk arousal",
+      "proposedTitle": "Milk Drink — Female, Milk + Arousal Increase Reaction",
+      "feature": "NonMilkmaidDrinkNotifications",
+      "usedBy": "Shared",
+      "textPurpose": "Reaction wording / HUD and AI input",
+      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "sharedUseOrFallback": "The filename is misleading: shared readers also support established Milk Maids. Rendered drink reactions can be passed to player/NPC AI narration.",
+      "requiredTokens": [
+        "actor",
+        "milk"
+      ],
+      "allowedTokens": [
+        "actor",
+        "milk"
+      ],
+      "file": "NonMilkmaidDrinkNotifications.json",
+      "jsonPath": [
+        "female_milk_arousal"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENPCDrinkDialogue.psc",
+        "Source/Scripts/MMEActorDrinkTransaction.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc",
+        "Source/Scripts/MMESexLabBreastfeedingBackend.psc",
+        "Source/Scripts/MMEOStimBreastfeeding.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Milk Drink — Female, Milk + Arousal Increase Reaction",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Milk Drinking",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "milk": "Value supplied by this route; preserve the exact placeholder."
+      }
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.breastfeeding_male_generic",
+      "currentTitle": "Breastfeeding male generic",
+      "proposedTitle": "Breastfeeding — Male, No Confirmed Milk or Arousal Increase Reaction",
+      "feature": "NonMilkmaidDrinkNotifications",
+      "usedBy": "Shared",
+      "textPurpose": "Reaction wording / HUD and AI input",
+      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "sharedUseOrFallback": "Shared completion renderer supports both framework backends. HUD reaction is forwarded to player/NPC drink narration except on conversion routes, which reserve their own narration. The filename does not restrict the reader to non-Milk-Maids.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "NonMilkmaidDrinkNotifications.json",
+      "jsonPath": [
+        "breastfeeding_male_generic"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENPCDrinkDialogue.psc",
+        "Source/Scripts/MMEActorDrinkTransaction.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc",
+        "Source/Scripts/MMESexLabBreastfeedingBackend.psc",
+        "Source/Scripts/MMEOStimBreastfeeding.psc",
+        "Source/Scripts/MMEDebug.psc"
+      ],
+      "evidence": "Source traced through MMENPCDrinkDialogue.BuildBreastfeedingReaction and MMEDebug verified completion handoff (around lines 1264-1284); no new runtime test.",
+      "previousDraftTitle": "Breastfeeding — Male, No Confirmed Increase Reaction",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Breastfeeding",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.breastfeeding_male_aroused",
+      "currentTitle": "Breastfeeding male aroused",
+      "proposedTitle": "Breastfeeding — Male, Arousal Increase Reaction",
+      "feature": "NonMilkmaidDrinkNotifications",
+      "usedBy": "Shared",
+      "textPurpose": "Reaction wording / HUD and AI input",
+      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "sharedUseOrFallback": "Shared completion renderer supports both framework backends. HUD reaction is forwarded to player/NPC drink narration except on conversion routes, which reserve their own narration. The filename does not restrict the reader to non-Milk-Maids.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "NonMilkmaidDrinkNotifications.json",
+      "jsonPath": [
+        "breastfeeding_male_aroused"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENPCDrinkDialogue.psc",
+        "Source/Scripts/MMEActorDrinkTransaction.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc",
+        "Source/Scripts/MMESexLabBreastfeedingBackend.psc",
+        "Source/Scripts/MMEOStimBreastfeeding.psc",
+        "Source/Scripts/MMEDebug.psc"
+      ],
+      "evidence": "Source traced through MMENPCDrinkDialogue.BuildBreastfeedingReaction and MMEDebug verified completion handoff (around lines 1264-1284); no new runtime test.",
+      "previousDraftTitle": "Breastfeeding — Male, Arousal Increase Reaction",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Breastfeeding",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_generic",
+      "currentTitle": "Breastfeeding female generic",
+      "proposedTitle": "Breastfeeding — Female, No Confirmed Milk or Arousal Increase Reaction",
+      "feature": "NonMilkmaidDrinkNotifications",
+      "usedBy": "Shared",
+      "textPurpose": "Reaction wording / HUD and AI input",
+      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "sharedUseOrFallback": "Shared completion renderer supports both framework backends. HUD reaction is forwarded to player/NPC drink narration except on conversion routes, which reserve their own narration. The filename does not restrict the reader to non-Milk-Maids.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "NonMilkmaidDrinkNotifications.json",
+      "jsonPath": [
+        "breastfeeding_female_generic"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENPCDrinkDialogue.psc",
+        "Source/Scripts/MMEActorDrinkTransaction.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc",
+        "Source/Scripts/MMESexLabBreastfeedingBackend.psc",
+        "Source/Scripts/MMEOStimBreastfeeding.psc",
+        "Source/Scripts/MMEDebug.psc"
+      ],
+      "evidence": "Source traced through MMENPCDrinkDialogue.BuildBreastfeedingReaction and MMEDebug verified completion handoff (around lines 1264-1284); no new runtime test.",
+      "previousDraftTitle": "Breastfeeding — Female, No Confirmed Increase Reaction",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Breastfeeding",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_aroused",
+      "currentTitle": "Breastfeeding female aroused",
+      "proposedTitle": "Breastfeeding — Female, Arousal Increase Reaction",
+      "feature": "NonMilkmaidDrinkNotifications",
+      "usedBy": "Shared",
+      "textPurpose": "Reaction wording / HUD and AI input",
+      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "sharedUseOrFallback": "Shared completion renderer supports both framework backends. HUD reaction is forwarded to player/NPC drink narration except on conversion routes, which reserve their own narration. The filename does not restrict the reader to non-Milk-Maids.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "NonMilkmaidDrinkNotifications.json",
+      "jsonPath": [
+        "breastfeeding_female_aroused"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENPCDrinkDialogue.psc",
+        "Source/Scripts/MMEActorDrinkTransaction.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc",
+        "Source/Scripts/MMESexLabBreastfeedingBackend.psc",
+        "Source/Scripts/MMEOStimBreastfeeding.psc",
+        "Source/Scripts/MMEDebug.psc"
+      ],
+      "evidence": "Source traced through MMENPCDrinkDialogue.BuildBreastfeedingReaction and MMEDebug verified completion handoff (around lines 1264-1284); no new runtime test.",
+      "previousDraftTitle": "Breastfeeding — Female, Arousal Increase Reaction",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Breastfeeding",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_milk",
+      "currentTitle": "Breastfeeding female milk",
+      "proposedTitle": "Breastfeeding — Female, Milk Increase Reaction",
+      "feature": "NonMilkmaidDrinkNotifications",
+      "usedBy": "Shared",
+      "textPurpose": "Reaction wording / HUD and AI input",
+      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "sharedUseOrFallback": "Shared completion renderer supports both framework backends. HUD reaction is forwarded to player/NPC drink narration except on conversion routes, which reserve their own narration. The filename does not restrict the reader to non-Milk-Maids.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "NonMilkmaidDrinkNotifications.json",
+      "jsonPath": [
+        "breastfeeding_female_milk"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENPCDrinkDialogue.psc",
+        "Source/Scripts/MMEActorDrinkTransaction.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc",
+        "Source/Scripts/MMESexLabBreastfeedingBackend.psc",
+        "Source/Scripts/MMEOStimBreastfeeding.psc",
+        "Source/Scripts/MMEDebug.psc"
+      ],
+      "evidence": "Source traced through MMENPCDrinkDialogue.BuildBreastfeedingReaction and MMEDebug verified completion handoff (around lines 1264-1284); no new runtime test.",
+      "previousDraftTitle": "Breastfeeding — Female, Milk Increase Reaction",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Breastfeeding",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_milk_arousal",
+      "currentTitle": "Breastfeeding female milk arousal",
+      "proposedTitle": "Breastfeeding — Female, Milk + Arousal Increase Reaction",
+      "feature": "NonMilkmaidDrinkNotifications",
+      "usedBy": "Shared",
+      "textPurpose": "Reaction wording / HUD and AI input",
+      "description": "Outcome-based reaction selected for this route and sex; can be displayed as a game notification.",
+      "sharedUseOrFallback": "Shared completion renderer supports both framework backends. HUD reaction is forwarded to player/NPC drink narration except on conversion routes, which reserve their own narration. The filename does not restrict the reader to non-Milk-Maids.",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "NonMilkmaidDrinkNotifications.json",
+      "jsonPath": [
+        "breastfeeding_female_milk_arousal"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMENPCDrinkDialogue.psc",
+        "Source/Scripts/MMEActorDrinkTransaction.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc",
+        "Source/Scripts/MMESexLabBreastfeedingBackend.psc",
+        "Source/Scripts/MMEOStimBreastfeeding.psc",
+        "Source/Scripts/MMEDebug.psc"
+      ],
+      "evidence": "Source traced through MMENPCDrinkDialogue.BuildBreastfeedingReaction and MMEDebug verified completion handoff (around lines 1264-1284); no new runtime test.",
+      "previousDraftTitle": "Breastfeeding — Female, Milk + Arousal Increase Reaction",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Breastfeeding",
+      "tab": "Game Messages & Stories",
+      "badge": "Also used by Skyrim.Net",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.TimedArmorNotifications.unequip_resisted",
+      "currentTitle": "Unequip resisted",
+      "proposedTitle": "Timed Armor Lock — Removal Attempt Resisted",
+      "feature": "TimedArmorNotifications",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "HUD notification when removal is resisted while a timed armor lock is active.",
+      "sharedUseOrFallback": "",
+      "requiredTokens": [],
+      "allowedTokens": [],
+      "file": "TimedArmorNotifications.json",
+      "jsonPath": [
+        "stringList",
+        "unequip_resisted"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETimedArmorLock.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Timed Armor Lock — Removal Attempt Resisted",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Armor Locks",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {}
+    },
+    {
+      "id": "Pools.Injection.tiers.low.lines",
+      "currentTitle": "Low notification",
+      "proposedTitle": "Living / Parasite — Low Tease Message",
+      "feature": "Tentacle Low",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "On-screen flavor message for a successful Low Living/Parasite effect.",
+      "sharedUseOrFallback": "Inherits the default tease message until customized. Reset returns to inheritance. AI narration has separate tier entries in the first tab.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Injection.json",
+      "jsonPath": [
+        "tiers",
+        "low",
+        "lines"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleEffects.psc",
+        "Source/Scripts/MMETentacleTiers.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — Low Tease Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.TentacleEffectNarration.tiers.low.milk",
+      "currentTitle": "Low milk narration",
+      "proposedTitle": "Living / Parasite Tease — Low: More Milk",
+      "feature": "Tentacle Low",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI narration variants",
+      "description": "Customize the wearer’s reaction after a low tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "sharedUseOrFallback": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "TentacleEffectNarration.json",
+      "jsonPath": [
+        "tiers",
+        "low",
+        "milk"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleTiers.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — Low Tease: Milk Increase Narration",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.TentacleEffectNarration.tiers.low.arousal",
+      "currentTitle": "Low arousal narration",
+      "proposedTitle": "Living / Parasite Tease — Low: More Arousal",
+      "feature": "Tentacle Low",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI narration variants",
+      "description": "Customize the wearer’s reaction after a low tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "sharedUseOrFallback": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "TentacleEffectNarration.json",
+      "jsonPath": [
+        "tiers",
+        "low",
+        "arousal"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleTiers.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — Low Tease: Arousal Increase Narration",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.TentacleEffectNarration.tiers.low.milkAndArousal",
+      "currentTitle": "Low milkAndArousal narration",
+      "proposedTitle": "Living / Parasite Tease — Low: More Milk and Arousal",
+      "feature": "Tentacle Low",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI narration variants",
+      "description": "Customize the wearer’s reaction after a low tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "sharedUseOrFallback": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "TentacleEffectNarration.json",
+      "jsonPath": [
+        "tiers",
+        "low",
+        "milkAndArousal"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleTiers.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — Low Tease: Milk + Arousal Increase Narration",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.Injection.tiers.medium.lines",
+      "currentTitle": "Medium notification",
+      "proposedTitle": "Living / Parasite — Medium Tease Message",
+      "feature": "Tentacle Medium",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "On-screen flavor message for a successful Medium Living/Parasite effect.",
+      "sharedUseOrFallback": "Inherits the default tease message until customized. Reset returns to inheritance. AI narration has separate tier entries in the first tab.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Injection.json",
+      "jsonPath": [
+        "tiers",
+        "medium",
+        "lines"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleEffects.psc",
+        "Source/Scripts/MMETentacleTiers.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — Medium Tease Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.TentacleEffectNarration.tiers.medium.milk",
+      "currentTitle": "Medium milk narration",
+      "proposedTitle": "Living / Parasite Tease — Medium: More Milk",
+      "feature": "Tentacle Medium",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI narration variants",
+      "description": "Customize the wearer’s reaction after a medium tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "sharedUseOrFallback": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "TentacleEffectNarration.json",
+      "jsonPath": [
+        "tiers",
+        "medium",
+        "milk"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleTiers.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — Medium Tease: Milk Increase Narration",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.TentacleEffectNarration.tiers.medium.arousal",
+      "currentTitle": "Medium arousal narration",
+      "proposedTitle": "Living / Parasite Tease — Medium: More Arousal",
+      "feature": "Tentacle Medium",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI narration variants",
+      "description": "Customize the wearer’s reaction after a medium tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "sharedUseOrFallback": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "TentacleEffectNarration.json",
+      "jsonPath": [
+        "tiers",
+        "medium",
+        "arousal"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleTiers.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — Medium Tease: Arousal Increase Narration",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.TentacleEffectNarration.tiers.medium.milkAndArousal",
+      "currentTitle": "Medium milkAndArousal narration",
+      "proposedTitle": "Living / Parasite Tease — Medium: More Milk and Arousal",
+      "feature": "Tentacle Medium",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI narration variants",
+      "description": "Customize the wearer’s reaction after a medium tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "sharedUseOrFallback": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "TentacleEffectNarration.json",
+      "jsonPath": [
+        "tiers",
+        "medium",
+        "milkAndArousal"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleTiers.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — Medium Tease: Milk + Arousal Increase Narration",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.Injection.tiers.high.lines",
+      "currentTitle": "High notification",
+      "proposedTitle": "Living / Parasite — High Tease Message",
+      "feature": "Tentacle High",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "On-screen flavor message for a successful High Living/Parasite effect.",
+      "sharedUseOrFallback": "Inherits the default tease message until customized. Reset returns to inheritance. AI narration has separate tier entries in the first tab.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Injection.json",
+      "jsonPath": [
+        "tiers",
+        "high",
+        "lines"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleEffects.psc",
+        "Source/Scripts/MMETentacleTiers.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — High Tease Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.TentacleEffectNarration.tiers.high.milk",
+      "currentTitle": "High milk narration",
+      "proposedTitle": "Living / Parasite Tease — High: More Milk",
+      "feature": "Tentacle High",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI narration variants",
+      "description": "Customize the wearer’s reaction after a high tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "sharedUseOrFallback": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "TentacleEffectNarration.json",
+      "jsonPath": [
+        "tiers",
+        "high",
+        "milk"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleTiers.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — High Tease: Milk Increase Narration",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.TentacleEffectNarration.tiers.high.arousal",
+      "currentTitle": "High arousal narration",
+      "proposedTitle": "Living / Parasite Tease — High: More Arousal",
+      "feature": "Tentacle High",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI narration variants",
+      "description": "Customize the wearer’s reaction after a high tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "sharedUseOrFallback": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "TentacleEffectNarration.json",
+      "jsonPath": [
+        "tiers",
+        "high",
+        "arousal"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleTiers.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — High Tease: Arousal Increase Narration",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.TentacleEffectNarration.tiers.high.milkAndArousal",
+      "currentTitle": "High milkAndArousal narration",
+      "proposedTitle": "Living / Parasite Tease — High: More Milk and Arousal",
+      "feature": "Tentacle High",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI narration variants",
+      "description": "Customize the wearer’s reaction after a high tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "sharedUseOrFallback": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "TentacleEffectNarration.json",
+      "jsonPath": [
+        "tiers",
+        "high",
+        "milkAndArousal"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleTiers.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — High Tease: Milk + Arousal Increase Narration",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.Injection.tiers.extreme.lines",
+      "currentTitle": "Extreme notification",
+      "proposedTitle": "Living / Parasite — Extreme Tease Message",
+      "feature": "Tentacle Extreme",
+      "usedBy": "Game messages only",
+      "textPurpose": "HUD notification variants",
+      "description": "On-screen flavor message for a successful Extreme Living/Parasite effect.",
+      "sharedUseOrFallback": "Inherits the default tease message until customized. Reset returns to inheritance. AI narration has separate tier entries in the first tab.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "Injection.json",
+      "jsonPath": [
+        "tiers",
+        "extreme",
+        "lines"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleEffects.psc",
+        "Source/Scripts/MMETentacleTiers.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — Extreme Tease Notification",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Game Messages & Stories",
+      "badge": "On-Screen Message",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.TentacleEffectNarration.tiers.extreme.milk",
+      "currentTitle": "Extreme milk narration",
+      "proposedTitle": "Living / Parasite Tease — Extreme: More Milk",
+      "feature": "Tentacle Extreme",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI narration variants",
+      "description": "Customize the wearer’s reaction after a extreme tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "sharedUseOrFallback": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "TentacleEffectNarration.json",
+      "jsonPath": [
+        "tiers",
+        "extreme",
+        "milk"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleTiers.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — Extreme Tease: Milk Increase Narration",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.TentacleEffectNarration.tiers.extreme.arousal",
+      "currentTitle": "Extreme arousal narration",
+      "proposedTitle": "Living / Parasite Tease — Extreme: More Arousal",
+      "feature": "Tentacle Extreme",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI narration variants",
+      "description": "Customize the wearer’s reaction after a extreme tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "sharedUseOrFallback": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "TentacleEffectNarration.json",
+      "jsonPath": [
+        "tiers",
+        "extreme",
+        "arousal"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleTiers.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — Extreme Tease: Arousal Increase Narration",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    {
+      "id": "Pools.TentacleEffectNarration.tiers.extreme.milkAndArousal",
+      "currentTitle": "Extreme milkAndArousal narration",
+      "proposedTitle": "Living / Parasite Tease — Extreme: More Milk and Arousal",
+      "feature": "Tentacle Extreme",
+      "usedBy": "Skyrim.Net only",
+      "textPurpose": "AI narration variants",
+      "description": "Customize the wearer’s reaction after a extreme tease with this confirmed outcome. Tease selection and milk/arousal changes remain controlled by gameplay.",
+      "sharedUseOrFallback": "Uses the matching untiered narration default until customized. Reset returns to inheritance, including any existing personal edit to that parent.",
+      "requiredTokens": [
+        "actor"
+      ],
+      "allowedTokens": [
+        "actor"
+      ],
+      "file": "TentacleEffectNarration.json",
+      "jsonPath": [
+        "tiers",
+        "extreme",
+        "milkAndArousal"
+      ],
+      "sourceReaders": [
+        "Source/Scripts/MMETentacleTiers.psc",
+        "Source/Scripts/MMEAlertsSkyrimNet.psc"
+      ],
+      "evidence": "Source-reviewed draft; no new runtime test.",
+      "previousDraftTitle": "Living / Parasite — Extreme Tease: Milk + Arousal Increase Narration",
+      "visibility": "Main",
+      "hiddenReason": "",
+      "playerFeature": "Living / Parasite Teasing",
+      "tab": "Skyrim.Net Reactions & Lore",
+      "badge": "Reaction Prompt",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    }
+  ],
+  "summary": {
+    "entries": 147,
+    "visible": 111,
+    "internal": 36,
+    "tabs": {
+      "Skyrim.Net Reactions & Lore": 51,
+      "Game Messages & Stories": 60
+    }
+  }
+}

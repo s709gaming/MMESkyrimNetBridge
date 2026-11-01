@@ -220,7 +220,7 @@ Bool Function ShowNotificationIfOwned(Actor drinker, Form milkItem, String rende
             Debug.Notification(renderedReaction)
             Report("randomized drink reaction shown | actor=" + MMEForcedMilkDrink.GetActorName(drinker))
         Else
-            Debug.Notification(MMEForcedMilkDrink.GetActorName(drinker) + " is thirsty and drinks some milk!")
+            Debug.Notification(MMEFlavorText.Text("venue_drink_fallback", MMEForcedMilkDrink.GetActorName(drinker) + " is thirsty and drinks some milk!", drinker, "actor", MMEForcedMilkDrink.GetActorName(drinker)))
             Report("fallback drink notification shown | actor=" + MMEForcedMilkDrink.GetActorName(drinker))
         EndIf
     EndIf

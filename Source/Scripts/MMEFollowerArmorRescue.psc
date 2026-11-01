@@ -89,15 +89,15 @@ Bool Function RescueNearbyCompanionsFromAnchor(Actor anchor, String source, Bool
 
     If rescued == 1
         If blacksmithMessages
-            Debug.Notification("The blacksmith frees " + rescuedName + " from her overly affectionate armor.")
+            Debug.Notification(MMEFlavorText.Text("rescue_blacksmith_single", "The blacksmith frees " + rescuedName + " from her overly affectionate armor.", None, "actor", rescuedName))
         Else
-            Debug.Notification(rescuedName + " is released from her overly affectionate armor.")
+            Debug.Notification(MMEFlavorText.Text("rescue_direct_single", rescuedName + " is released from her overly affectionate armor.", None, "actor", rescuedName))
         EndIf
     ElseIf rescued > 1
         If blacksmithMessages
-            Debug.Notification("The blacksmith frees " + rescued + " companions from their overly affectionate armor.")
+            Debug.Notification(MMEFlavorText.Text("rescue_blacksmith_group", "The blacksmith frees " + rescued + " companions from their overly affectionate armor.", None, "count", rescued as String))
         Else
-            Debug.Notification(rescued + " nearby companions are released from their overly affectionate armor.")
+            Debug.Notification(MMEFlavorText.Text("rescue_direct_group", rescued + " nearby companions are released from their overly affectionate armor.", None, "count", rescued as String))
         EndIf
     Else
         Debug.Notification("Nobody nearby still needs rescuing.")

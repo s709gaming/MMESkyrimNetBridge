@@ -1,3 +1,7 @@
+> Historical preflight for the retired native implementation. The current
+> author-style optional FOMOD implementation supersedes its design decisions;
+> see Estrus-Unified-Compatibility.md. Retained for development provenance.
+
 # Estrus Unified integration preflight
 
 Prepared 2026-10-29. Planning and baseline verification only; no gameplay implementation, installation, or live mutation.

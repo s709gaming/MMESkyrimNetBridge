@@ -173,7 +173,7 @@ Bool Function ShowNotificationIfOwned(Actor drinker, Form milkItem) Global
     If StorageUtil.GetIntValue(drinker, "MMEExtensions.ChestDrink.Notified", 0) != 1
         StorageUtil.SetIntValue(drinker, "MMEExtensions.ChestDrink.Notified", 1)
         If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableChestMilkTrapNotification", 1) == 1
-            Debug.Notification(BuildSituation(drinker))
+            Debug.Notification(MMEFlavorText.Text("chest_drink", BuildSituation(drinker), drinker, "actor", GetActorName(drinker), "milkName", StorageUtil.GetStringValue(drinker, "MMEExtensions.ChestDrink.MilkName", "exotic milk")))
         EndIf
     EndIf
     Return True

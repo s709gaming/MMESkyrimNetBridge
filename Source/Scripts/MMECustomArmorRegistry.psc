@@ -318,17 +318,17 @@ Function HandleCustomArmorEquipped(Actor wearer, Armor equippedArmor) Global
             Trace("Dwemer Lactacid raised to 1 | actor=" + MMEArmorScript.GetActorName(wearer))
         EndIf
         If wearer == Game.GetPlayer()
-            Debug.Notification(armorName + "'s kinky milking and teasing devices attach to your most intimate places")
+            Debug.Notification(MMEFlavorText.Text("custom_dwemer_equip", armorName + "'s kinky milking and teasing devices attach to your most intimate places", wearer, "armorName", armorName))
         EndIf
         Trace("Dwemer equip compatibility complete | dedicated system owns reactions")
         Return
     ElseIf armorClass == 2 || armorClass == 3
         If wearer == Game.GetPlayer() && MME_Storage.getBreastRows(wearer) > 1 && wearer.GetWornForm(Armor.GetMaskForSlot(32)) == equippedArmor
-            Debug.Notification(armorName + " attaches to your breasts, absorbing your additional breast rows")
+            Debug.Notification(MMEFlavorText.Text("custom_rows_absorbed", armorName + " attaches to your breasts, absorbing your additional breast rows", wearer, "armorName", armorName))
             MME_Storage.setBreastRows(wearer, 1)
         EndIf
         If wearer == Game.GetPlayer()
-            Debug.Notification(armorName + " attaches to your breasts")
+            Debug.Notification(MMEFlavorText.Text("custom_living_equip", armorName + " attaches to your breasts", wearer, "armorName", armorName))
         EndIf
         If milkController.MilkForSprigganPassive != None
             wearer.AddSpell(milkController.MilkForSprigganPassive, False)
@@ -341,7 +341,7 @@ Function HandleCustomArmorEquipped(Actor wearer, Armor equippedArmor) Global
             Trace("Lactacid raised to 1 | actor=" + MMEArmorScript.GetActorName(wearer))
         EndIf
     ElseIf wearer == Game.GetPlayer()
-        Debug.Notification("The milking cups attach to your breasts, ready to milk you")
+        Debug.Notification(MMEFlavorText.Text("custom_cups_equip", "The milking cups attach to your breasts, ready to milk you", wearer))
     EndIf
     Trace("equip compatibility effects complete")
 EndFunction
@@ -361,7 +361,7 @@ Function HandleCustomArmorUnequipped(Actor wearer, Armor unequippedArmor) Global
         Return
     ElseIf armorClass == 2 || armorClass == 3
         If wearer == Game.GetPlayer()
-            Debug.Notification("You are free from " + GetArmorName(unequippedArmor))
+            Debug.Notification(MMEFlavorText.Text("custom_living_remove", "You are free from " + GetArmorName(unequippedArmor), wearer, "armorName", GetArmorName(unequippedArmor)))
         EndIf
         If !HasWornLivingArmor(wearer, milkController) && milkController.MilkForSprigganPassive != None
             wearer.RemoveSpell(milkController.MilkForSprigganPassive)
@@ -370,7 +370,7 @@ Function HandleCustomArmorUnequipped(Actor wearer, Armor unequippedArmor) Global
             Trace("Living passive retained | another Living/Parasite armor remains worn")
         EndIf
     ElseIf wearer == Game.GetPlayer()
-        Debug.Notification("The milking cups detach from your breasts")
+        Debug.Notification(MMEFlavorText.Text("custom_cups_remove", "The milking cups detach from your breasts", wearer))
     EndIf
     Trace("unequip compatibility cleanup complete")
 EndFunction

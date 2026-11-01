@@ -19,12 +19,17 @@ def verify():
             assert Path(name).suffix.lower() not in ('.pas','.log','.tmp','.bak','.pyc','.pdb','.obj'),name
             assert Path(name).name.lower() not in ('overrides.json','overrides.previous.json','profile.lock'),name
         pairs={}
-        for script in ('MMETentacleTiers','MMETentacleEffects','MMEAlertsController','MMEAlertsMCM','MMEAlertsSkyrimNet','MMEArousalEffects'):
+        flavor_inventory=json.loads((ROOT/'docs/Remaining-Flavor-JSON-Inventory.json').read_text(encoding='utf-8'))['entries']
+        flavor_scripts={Path(row['source']).stem for row in flavor_inventory}|{'MMEFlavorText'}
+        for script in sorted(flavor_scripts|{'MMETentacleTiers','MMETentacleEffects','MMEAlertsController','MMEAlertsMCM','MMEAlertsSkyrimNet','MMEArousalEffects'}):
             source=f'Source/Scripts/{script}.psc';compiled=f'Scripts/{script}.pex'
             assert archive.read(source)==(ROOT/source).read_bytes(),source
             assert archive.read(compiled)==(ROOT/compiled).read_bytes(),compiled
             assert (ROOT/compiled).stat().st_mtime >= (ROOT/source).stat().st_mtime,script+' was edited after compilation'
             pairs[script]={'sourceSHA256':digest(archive.read(source)),'compiledSHA256':digest(archive.read(compiled))}
+        flavor_path='SKSE/Plugins/StorageUtilData/MMEAlerts/FlavorNotifications.json'
+        assert archive.read(flavor_path)==(ROOT/flavor_path).read_bytes()
+        assert len(json.loads(archive.read(flavor_path)))==26
         for name in ('Injection','TentacleEffectNarration'):
             path=f'SKSE/Plugins/StorageUtilData/MMEAlerts/{name}.json'
             current=json.loads(archive.read(path))

@@ -95,7 +95,7 @@ Bool Function ApplyReverseLeveling()
     ArmMonitoring()
     TraceState("APPLY duration=" + GetDuration() + " baselineLevel=" + baselineLevel)
     busy = False
-    Debug.Notification("For the next " + GetDuration() + " hours, each milking will lower your Milk Maid level by 1.")
+    Debug.Notification(MMEFlavorText.Text("reverse_level_applied", "For the next " + GetDuration() + " hours, each milking will lower your Milk Maid level by 1.", playerActor, "hours", GetDuration() as String, "levels", "1"))
     Return True
 EndFunction
 
@@ -114,7 +114,7 @@ Function RemoveReverseLeveling(Bool notifyPlayer = True)
         playerActor.RemoveSpell(ReverseAbility)
     EndIf
     If notifyPlayer
-        Debug.Notification("Reverse leveling removed.")
+        Debug.Notification(MMEFlavorText.Text("reverse_level_removed", "Reverse leveling removed.", playerActor))
     EndIf
 EndFunction
 
@@ -313,7 +313,7 @@ Function CheckProgress()
     EndIf
     TraceState("DECREASE baseline=" + baselineLevel + " observed=" + level + " target=" + newLevel)
     If level > 0
-        Debug.Notification("Your breasts feel lighter. Milk maid level decreased by 1.")
+        Debug.Notification(MMEFlavorText.Text("reverse_level_decrease", "Your breasts feel lighter. Milk maid level decreased by 1.", playerActor, "levels", "1"))
     EndIf
     baseline = LevelBase(newLevel, scale)
     baselineLevel = newLevel

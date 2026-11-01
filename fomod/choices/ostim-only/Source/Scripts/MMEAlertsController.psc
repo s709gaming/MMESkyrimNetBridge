@@ -277,7 +277,7 @@ Event OnInnPalaceEntered(String eventName, String unusedText, Float venueKindVal
     If due <= 0.0
         Return
     EndIf
-    Debug.Notification("Someone nearby looks thirsty for a refreshing drink of milk!")
+    Debug.Notification(MMEFlavorText.Text("venue_thirst", "Someone nearby looks thirsty for a refreshing drink of milk!", None))
     PendingInnPalaceVenue = venue
     PendingInnPalaceVenueKind = venueKind
     NextInnPalaceDrink = due
@@ -2342,9 +2342,9 @@ Int Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactio
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableCapacityNotifications", 1) == 1
         If crossing == 2
-            Debug.Notification(GetActorName(candidate) + "'s tits are full! Watch out for those watermelons!")
+            Debug.Notification(MMEFlavorText.Text("capacity_full", GetActorName(candidate) + "'s tits are full! Watch out for those watermelons!", candidate, "actor", GetActorName(candidate)))
         Else
-            Debug.Notification(GetActorName(candidate) + "'s tits are half-full! Walking normally is optional.")
+            Debug.Notification(MMEFlavorText.Text("capacity_half", GetActorName(candidate) + "'s tits are half-full! Walking normally is optional.", candidate, "actor", GetActorName(candidate)))
         EndIf
     EndIf
     Return crossing

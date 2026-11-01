@@ -398,6 +398,7 @@ namespace MME::Narration
                 for (const auto& [id,meta] : Catalog().items()) {
                     snapshot["entries"].push_back(Json{{"id",id},{"label",meta["label"]},{"group",meta["group"]},{"family",meta["family"]},
                         {"required",meta["required"]},{"allowed",meta["allowed"]},{"poolOnly",meta["poolOnly"]},
+                        {"presentation",meta["presentation"]},
                         {"customized",document["overrides"].contains(id)}});
                 }
             } else if (operation == "entry") {

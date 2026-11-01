@@ -9,8 +9,8 @@ the original MME script. It includes these intentional compatibility changes:
 2. Missing SexLab facial expressions are skipped safely, and closed-gag feeding
    blocks use gated traces instead of interrupting message boxes.
 3. Optional DD calls are guarded as described below.
-4. Estrus Unified pregnancies are recognized through its public API as described
-   below, alongside the existing separate Estrus mods.
+4. The optional Estrus Unified FOMOD override adds public-API pregnancy recognition
+   alongside the existing separate Estrus checks; the default override omits it.
 
 The original MME production-cycle `MME_MilkCycleComplete` event is retained;
 it is not a new hook introduced by this override.
@@ -22,39 +22,12 @@ unchanged apart from the compatibility safeguards described here.
 
 ## Estrus Unified pregnancy recognition
 
-Based on risarei's supplied pregnancy-detection patch, both standard SexLab/P+
-and generated OStim-only MilkQUEST variants recognize Unified Chaurus, Spider
-and Dwemer pregnancies on the actual player or NPC reference. The legacy separate
-Estrus plugin checks and other pregnancy integrations remain unchanged. Do not
-load the old Estrus plugins alongside Unified merely because detection supports
-either setup.
-
-Unified remains optional. The extension's DLL resolves the public IsReady and
-GetPregnancyType functions dynamically and validates their native, static,
-non-latent signatures before forwarding through the VM marshaller. It returns
-the result synchronously, without queues, stale pregnancy caches or suspended
-save stacks. Common scripts reference only the extension's own facade; no
-Estrus API shim, Unified script type or plugin master is added to the package.
-Missing/unready Unified and failed queries fall through to MME's old checks.
-
-This recognizes pregnancy; it does not start Unified scenes, replace MilkMCM,
-or change MME's calculations. Original MME can automatically assign an eligible
-pregnant player a Milk Maid slot: recognizing a Unified pregnancy allows that
-existing behavior too. No separate conversion or inventory-transfer logic is
-added. No new setting or existing-save migration is required.
-
-[MME Extensions Estrus] result/state footprints use the existing master Papyrus
-logging toggle. Repeated query entry/completion details additionally require
-verbose logging. Unchanged results are suppressed using bounded native diagnostic
-history, reset on load/new game; this history is never used to answer pregnancy
-queries. Actual API failures produce deduplicated alarms with actor and reason.
-Normal absence, startup unready state and nonpregnancy are not alarms.
-
-Native policy tests cover absent dependencies, player/NPC result isolation,
-birth/reset, readiness transitions, invalid results and logging suppression.
-They do not prove engine-side binding or gameplay. Runtime validation remains
-required for all three pregnancy types on player/NPC, birth/reset, original MME
-conversion rules, dependency absence, save/load, logging and both backends.
+Estrus Unified support is an optional FOMOD compatibility choice, based on the
+mod author's supplied MilkQUEST patch. The default Standard/P+ and OStim scripts
+have no Unified API references. Selecting the option installs a freshly compiled
+matching backend override at installer priority 60. See
+[Estrus Unified compatibility](Estrus-Unified-Compatibility.md) for dependencies,
+credits, upgrade instructions, diagnostics and validation limits.
 
 Because `MilkQUEST.pex` is an override, another mod that replaces the same
 script requires a deliberate merge. Let MME Extensions win this script conflict
