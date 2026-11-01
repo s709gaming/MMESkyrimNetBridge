@@ -3,23 +3,24 @@ Scriptname MMEActorPromptState Hidden
 ; Actor-local prompt data only. No actor scan, timers, MME writes or LLM calls.
 ; Native papyrus_util reads the milk floats again at actual template render time.
 String Function GetActorState(Actor target) Global
+    MMEAlertsSkyrimNet.TracePromptCallback("GetActorState", target, "entry")
     If target == None || target.IsDead() || target.IsDisabled()
-        Return "{\"enabled\":false}"
+        Return MMEAlertsSkyrimNet.PromptCallbackReturn("GetActorState", target, "{\"enabled\":false}", "missing, dead, or disabled actor")
     EndIf
     If !MMEAlertsSkyrimNet.IsExtensionsEnabled() || !MMEAlertsSkyrimNet.IsAvailable()
-        Return "{\"enabled\":false}"
+        Return MMEAlertsSkyrimNet.PromptCallbackReturn("GetActorState", target, "{\"enabled\":false}", "Extensions disabled or Skyrim.Net absent")
     EndIf
     If JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
-        Return "{\"enabled\":false}"
+        Return MMEAlertsSkyrimNet.PromptCallbackReturn("GetActorState", target, "{\"enabled\":false}", "Skyrim.Net integration disabled")
     EndIf
     Bool milkEnabled = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkStatuses", 1) == 1
     Bool armorEnabled = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableNearbyMilkArmorStatus", 1) == 1
     If !milkEnabled && !armorEnabled
-        Return "{\"enabled\":false}"
+        Return MMEAlertsSkyrimNet.PromptCallbackReturn("GetActorState", target, "{\"enabled\":false}", "milk and armor status both disabled")
     EndIf
     MilkQUEST milk = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milk == None || !MMEArmorScript.IsValidMilkMaid(target, milk)
-        Return "{\"enabled\":false}"
+        Return MMEAlertsSkyrimNet.PromptCallbackReturn("GetActorState", target, "{\"enabled\":false}", "missing MilkQUEST or invalid Milk Maid")
     EndIf
     String armorText = ""
     If armorEnabled
@@ -64,7 +65,7 @@ String Function GetActorState(Actor target) Global
     String name = MMEAlertsSkyrimNet.ResolveActorName(target, "This Milk Maid")
     String result = "{\"enabled\":true,\"milkEnabled\":" + BoolJson(milkEnabled) + ",\"armorEnabled\":" + BoolJson(armorEnabled) + ",\"name\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(name) + "\",\"armor\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(armorText) + "\",\"leak\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(leakText) + "\"}"
     TraceSnapshot(target, result, milkEnabled)
-    Return result
+    Return MMEAlertsSkyrimNet.PromptCallbackReturn("GetActorState", target, result, "current actor state composed")
 EndFunction
 
 String Function BoolJson(Bool value) Global

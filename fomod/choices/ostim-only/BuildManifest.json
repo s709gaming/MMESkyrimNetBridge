@@ -39,8 +39,8 @@
                   },
                   {
                       "script":  "MMEAlertsSkyrimNet",
-                      "sourceSHA256":  "4F4F5C10196391B873AAB87109F23B869E3FC7631D18059F1799BB6CBC62066E",
-                      "compiledSHA256":  "75E4DAC16B0C3B008EB1B66AF9F9C820DD609F77C85CF00E962449D52EE2E25F"
+                      "sourceSHA256":  "1D7267911C7F235951802503D249153FA870992DC57360D8E37F3A40F19005A0",
+                      "compiledSHA256":  "A335461A1EBB8AF730EDB69E1C758903D0B540BBAC05D12ADE05DB439A2618FF"
                   },
                   {
                       "script":  "MMEAnimationSafety",

@@ -209,14 +209,15 @@ EndFunction
     s = replace_body(s, 'IsActorBusy', '    Return IsActorInScene(target) || MMEFrameworkBackend.IsReserved(target)')
     s = replace_body(s, 'Report', '    MMELog.MasterDiagnostic("[MME Extensions Backend] " + reportText)')
     variants['MMEOStimIntegration'] = s
-    variants['MMEAlertsSkyrimNet'] = replace_body(read('MMEAlertsSkyrimNet'), 'BreastfeedingPromptRole', '''    If !IsExtensionsEnabled() || participant == None
-        Return ""
+    variants['MMEAlertsSkyrimNet'] = replace_body(read('MMEAlertsSkyrimNet'), 'BreastfeedingPromptRole', '''    TracePromptCallback("BreastfeedingPromptRole", participant, "entry | backend=OStim")
+    If !IsExtensionsEnabled() || participant == None
+        Return PromptCallbackReturn("BreastfeedingPromptRole", participant, "", "Extensions disabled or missing actor")
     EndIf
     MMEDebug service = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
     If service == None
-        Return ""
+        Return PromptCallbackReturn("BreastfeedingPromptRole", participant, "", "OStim service unavailable")
     EndIf
-    Return service.GetOStimBreastfeedingRole(participant)''')
+    Return PromptCallbackReturn("BreastfeedingPromptRole", participant, service.GetOStimBreastfeedingRole(participant), "OStim service role result")''')
     variants['MMEDiagnostics'] = replace_body(read('MMEDiagnostics'), 'GetSexLabStatus', '    Return "NOT USED (OStim-only)"')
     s = read('MMEElsieBreastfeeding')
     s = skip(s, 'IsTasteAnimation', 'False', {'sslThreadController':'Form'})

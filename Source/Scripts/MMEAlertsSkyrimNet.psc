@@ -456,13 +456,14 @@ Function ClearBreastfeedingPromptState(Actor participant, Int expectedThreadID =
 EndFunction
 
 String Function BreastfeedingPromptRole(Actor participant) Global
+    TracePromptCallback("BreastfeedingPromptRole", participant, "entry")
     If !IsExtensionsEnabled() || participant == None
-        Return ""
+        Return PromptCallbackReturn("BreastfeedingPromptRole", participant, "", "Extensions disabled or missing actor")
     EndIf
     String role = StorageUtil.GetStringValue(participant, "MME.Extensions.SexLabBreastfeeding.Role", "")
     Int threadID = StorageUtil.GetIntValue(participant, "MME.Extensions.SexLabBreastfeeding.Thread", -1)
     If role == "" || threadID < 0
-        Return ""
+        Return PromptCallbackReturn("BreastfeedingPromptRole", participant, "", "no active stored role or thread")
     EndIf
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     sslThreadController thread = None
@@ -471,10 +472,10 @@ String Function BreastfeedingPromptRole(Actor participant) Global
     EndIf
     If thread == None || thread.tid != threadID || thread.Positions == None || thread.Positions.Find(participant) < 0 || !milkController.SexLab.IsActorActive(participant)
         ClearBreastfeedingPromptState(participant, threadID)
-        Return ""
+        Return PromptCallbackReturn("BreastfeedingPromptRole", participant, "", "stored scene no longer valid; cleared")
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet BF Prompt] prompt rendered | actor=" + ResolveActorName(participant, "unnamed actor") + " | role=" + role + " | thread=" + threadID)
-    Return role
+    Return PromptCallbackReturn("BreastfeedingPromptRole", participant, role, "validated active scene")
 EndFunction
 
 ; Uses MME's authoritative runtime list rather than an inferred StorageUtil value.
@@ -490,13 +491,14 @@ Bool Function IsRealMMEMilkmaid(Actor candidate) Global
 EndFunction
 
 String Function MilkmaidPromptDebug(Actor milkMaid) Global
+    TracePromptCallback("MilkmaidPromptDebug", milkMaid, "entry")
     If !IsExtensionsEnabled() || milkMaid == None || !IsRealMMEMilkmaid(milkMaid)
-        Return ""
+        Return PromptCallbackReturn("MilkmaidPromptDebug", milkMaid, "", "Extensions disabled, missing actor, or actor not in MME registry")
     EndIf
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 0) == 1
         MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid lore rendered for " + ResolveActorName(milkMaid, "unnamed actor"))
     EndIf
-    Return "true"
+    Return PromptCallbackReturn("MilkmaidPromptDebug", milkMaid, "true", "eligible Milk Maid")
 EndFunction
 
 Function MarkRecentMilkDrinker(Actor drinker) Global
@@ -510,19 +512,20 @@ Function MarkRecentMilkDrinker(Actor drinker) Global
 EndFunction
 
 String Function RecentMilkDrinkerPrompt(Actor drinker) Global
+    TracePromptCallback("RecentMilkDrinkerPrompt", drinker, "entry")
     If !IsExtensionsEnabled() || drinker == None || !StorageUtil.HasFloatValue(drinker, "MME.Extensions.SkyrimNet.RecentMilkDrink")
-        Return ""
+        Return PromptCallbackReturn("RecentMilkDrinkerPrompt", drinker, "", "Extensions disabled, missing actor, or no drink timestamp")
     EndIf
     Float markedAt = StorageUtil.GetFloatValue(drinker, "MME.Extensions.SkyrimNet.RecentMilkDrink", -120.0)
     Float now = Utility.GetCurrentRealTime()
     If markedAt > now || now - markedAt > 90.0
         StorageUtil.UnsetFloatValue(drinker, "MME.Extensions.SkyrimNet.RecentMilkDrink")
-        Return ""
+        Return PromptCallbackReturn("RecentMilkDrinkerPrompt", drinker, "", "timestamp expired or clock rolled back; cleared")
     EndIf
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 0) == 1
         MMELog.Diagnostic("[MMEAlert SkyrimNet] recent milk drinker lore rendered | actor=" + ResolveActorName(drinker, "unnamed actor"))
     EndIf
-    Return "true"
+    Return PromptCallbackReturn("RecentMilkDrinkerPrompt", drinker, "true", "recent drink eligible")
 EndFunction
 
 ; Global entry points let the established controller call SkyrimNet directly.
@@ -1893,20 +1896,46 @@ EndFunction
 
 ; Text-only decorators. Existing status/role functions remain unchanged.
 String Function MilkLoreText(Actor participant) Global
+    TracePromptCallback("MilkLoreText", participant, "entry")
     If participant == None || !IsExtensionsEnabled() || !IsAvailable()
-        Return ""
+        Return PromptCallbackReturn("MilkLoreText", participant, "", "missing actor, Extensions disabled, or Skyrim.Net absent")
     EndIf
     String output = MMENarrationText.GetRaw("Lore", "milk_lore")
     If IsRealMMEMilkmaid(participant)
         output += "\n\n" + MMENarrationText.Text("Lore", "milkmaid_lore", "actor", ResolveActorName(participant, "The Milk Maid"))
     EndIf
-    Return output
+    Return PromptCallbackReturn("MilkLoreText", participant, output, "current lore composed")
 EndFunction
 
 String Function BreastfeedingGuidanceText(Actor participant) Global
+    TracePromptCallback("BreastfeedingGuidanceText", participant, "entry")
     String role = BreastfeedingPromptRole(participant)
     If role != "source" && role != "drinker"
-        Return ""
+        Return PromptCallbackReturn("BreastfeedingGuidanceText", participant, "", "no source or drinker role")
     EndIf
-    Return MMENarrationText.Text("Breastfeeding", "guidance", "actor", ResolveActorName(participant, "The participant"), "role", role)
+    Return PromptCallbackReturn("BreastfeedingGuidanceText", participant, MMENarrationText.Text("Breastfeeding", "guidance", "actor", ResolveActorName(participant, "The participant"), "role", role), "current guidance composed")
+EndFunction
+
+; Focused callback boundaries: no polling, lore dump, notification or game-state write.
+Function TracePromptCallback(String callbackName, Actor target, String detail) Global
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePapyrusTrace", 0) != 1 || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 0) != 1
+        Return
+    EndIf
+    MMELog.MasterDiagnostic("[MME Prompt Callback] callback=" + callbackName + " | actor=" + target + " | " + detail)
+EndFunction
+
+String Function PromptCallbackReturn(String callbackName, Actor target, String value, String reason) Global
+    ; Preserve the exact existing callback result. Skyrim.Net owns decoding/caching.
+    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePapyrusTrace", 0) == 1 && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 0) == 1
+        String kind = "text"
+        If value == ""
+            kind = "empty"
+        ElseIf value == "true" || value == "false" || value == "source" || value == "drinker"
+            kind = "scalar:" + value
+        ElseIf StringUtil.Substring(value, 0, 1) == "{"
+            kind = "object-shaped text; not a parse validation"
+        EndIf
+        TracePromptCallback(callbackName, target, "return | reason=" + reason + " | PapyrusType=String | shape=" + kind + " | characters=" + StringUtil.GetLength(value))
+    EndIf
+    Return value
 EndFunction

@@ -84,3 +84,22 @@ full-profile render. Fresh-process existing-save validation remains required.
 - This is request-content enrichment, not permanent biography editing or a pre-speech callback. DirectNarration content can remain in Skyrim.Net event history; there is no strict promise that the knowledge can never influence later conversation. No world-knowledge database writes or temporary global actor flags are used.
 - Existing narration switches/cooldowns and Skyrim.Net absence guards remain authoritative. Sparse master-gated traces identify route, known/automatic speaker and composed character count without logging full lore. Empty lore after normal fallback raises a deduplicated alarm independently of routine logging.
 - Runtime acceptance requires installed matched source/PEX/template files: actual NPC, automatic speaker, player-only custom generation, edited lore, identity preservation, queue overlap, disabled/absent dependency, save/reload and rendered request inspection. Text composition does not guarantee model compliance with the desired tone.
+
+## Focused callback boundary diagnostics
+
+Enable Papyrus Logging and Debug / Milkmaid Bio Prompt. Verbose logging is not
+required for the new `[MME Prompt Callback]` entry/return lines. All six registered
+callbacks, including the OStim role override, report actor and return boundary.
+Returns report the guard reason, Papyrus String type, empty/scalar/object-shaped
+text classification and length; no full lore or prompts are dumped. Object-shaped
+text is not a JSON validation result. Existing results and eligibility remain
+unchanged. Disabled/ineligible actors are normal skips, not smoke alarms.
+
+Use a fresh actual dialogue request as well as dashboard previews. Registration
+success followed by cache misses and no callback entry points toward missing
+dispatch/warmup; entry with an early return identifies the eligibility boundary;
+a successful return with missing prompt content points toward decoding, caching
+or template consumption. A preview alone may not run normal dialogue warmup.
+No automatic retry, registration polling, cache resets or new actor tagging.
+Turn the focused option off after reproducing. Cache timing and JSON return
+contract remain investigation targets; these diagnostics do not fix either.
