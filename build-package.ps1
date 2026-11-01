@@ -11,6 +11,7 @@ if ($LASTEXITCODE) { throw 'MCM page ownership or layout checks failed' }
 & python -B (Join-Path $projectRoot 'tools/test_tentacle_tiers.py')
 if ($LASTEXITCODE) { throw 'Four-tier Tentacle Effects regressions failed' }
 & (Join-Path $projectRoot "tools\Test-FomodXmlEncoding.ps1")
+& (Join-Path $projectRoot "tools\Test-ActorPrompt.ps1")
 $gameRoot = "E:\Steam\steamapps\common\Skyrim Special Edition"
 $compiler = Join-Path $gameRoot "Papyrus Compiler\PapyrusCompiler.exe"
 $flags = Join-Path $gameRoot "Data\Source\Scripts\TESV_Papyrus_Flags.flg"
@@ -32,6 +33,7 @@ $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
 $scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEBreastBounceEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEArousalEffects", "MMEArousalAnimations", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMEArmorRemoval", "MMETrapArmorDialogue", "MMEFollowerArmorRescue", "TIF_MMEExtFollowerArmorRescue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMESexLabBreastfeedingBackend", "MMEElsieBreastfeeding", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $scriptNames += "MMEOriginalSettings"
+$scriptNames += "MMEActorPromptState"
 $scriptNames += "MMEFixedLactacid"
 $scriptNames += "MMELockProtection"
 $scriptNames += "MMEEstrusPregnancyTest"
@@ -375,6 +377,7 @@ Copy-Item -LiteralPath $jugsChangelog -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MME-Compatibility-Override.md") -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MCM-Organization-Review.md") -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Estrus-Unified-Compatibility.md') -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\SkyrimNet-Actor-Status.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Milk-Leaks-Compatibility.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Editor-Proof.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Dashboard-Implementation.md') -Destination $packageDocs

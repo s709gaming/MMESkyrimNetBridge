@@ -1875,11 +1875,8 @@ Function UpdatePolling()
         NextBodyEffectsUpdate = 0.0
         MMEBodyEffects.Reconcile("body scheduler disabled")
     EndIf
-    If JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1 || JsonUtil.GetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", 1) == 1
-        NextSkyrimNetUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
-    Else
-        NextSkyrimNetUpdate = 0.0
-    EndIf
+    ; Legacy deadline retained for saved fields; actor state is prompt-rendered.
+    NextSkyrimNetUpdate = 0.0
     If JsonUtil.GetIntValue(SettingsFile, "enableDebugMilkReport", 0) == 1
         NextDebugUpdate = now + 5.0
     Else
@@ -1976,15 +1973,6 @@ Function ScheduleNextUpdate()
     EndIf
     If NextBodyEffectsUpdate > 0.0
         candidate = NextBodyEffectsUpdate - now
-        If candidate <= 0.0
-            candidate = 0.01
-        EndIf
-        If delay <= 0.0 || candidate < delay
-            delay = candidate
-        EndIf
-    EndIf
-    If NextSkyrimNetUpdate > 0.0
-        candidate = NextSkyrimNetUpdate - now
         If candidate <= 0.0
             candidate = 0.01
         EndIf
@@ -2141,7 +2129,6 @@ Event OnUpdate()
             NextMovementSlapUpdate = 0.0
         EndIf
     EndIf
-    Bool skyrimNetDue = NextSkyrimNetUpdate > 0.0 && now >= NextSkyrimNetUpdate
     Bool debugDue = NextDebugUpdate > 0.0 && now >= NextDebugUpdate
     Bool thoughtDebugDue = NextThoughtDebugUpdate > 0.0 && now >= NextThoughtDebugUpdate
     Bool armorReminderDue = NextArmorReminder > 0.0 && now >= NextArmorReminder
@@ -2153,8 +2140,8 @@ Event OnUpdate()
     If armorRemovalDue
         MMEArmorRemoval.ResolveDueVerifications(now)
     EndIf
-    If milkLeakDue || capacityDue || skyrimNetDue || thoughtDebugDue || arousalEffectDue || tentacleDiscoveryDue
-        ScanNearbyMilkMaids(skyrimNetDue, capacityDue, thoughtDebugDue, arousalEffectDue)
+    If milkLeakDue || capacityDue || thoughtDebugDue || arousalEffectDue || tentacleDiscoveryDue
+        ScanNearbyMilkMaids(False, capacityDue, thoughtDebugDue, arousalEffectDue)
     EndIf
     If milkLeakDue
         NextMilkLeakUpdate = now + 15.0
@@ -2186,9 +2173,7 @@ Event OnUpdate()
             NextBodyEffectsUpdate = 0.0
         EndIf
     EndIf
-    If skyrimNetDue
-        NextSkyrimNetUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0)
-    EndIf
+    NextSkyrimNetUpdate = 0.0
     If debugDue
         ShowDebugCapacitySnapshot()
         NextDebugUpdate = now + 5.0
@@ -2386,7 +2371,6 @@ Int Function ProcessActor(Actor candidate, Actor[] reactionActors, Int[] reactio
     If crossing == 0
         Return 0
     EndIf
-    MMEAlertsSkyrimNet.SendCapacityMilestone(candidate, crossing)
     MMESkyrimNetVoiceControls.PlayFullnessSelfMilkAnimation(candidate, crossing)
     If crossing == 2
         QueueAutoSelfMilking(candidate)
@@ -2411,7 +2395,8 @@ EndFunction
 
 ; Scans the current cell and selects one highest-priority capacity sound.
 Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReactions = True, Bool runRapidThought = False, Bool processArousalEffects = False)
-    ; Phase 1: scan the player and current cell once for all consumers. Only
+    ; publishSkyrimNet is a retired compatibility argument; never publishes AI state.
+    ; Phase 1: scan the player and current cell once for gameplay consumers. Only
     ; loaded actors inside NearbyRange are considered; MME membership is checked
     ; again by ProcessActor/Skyrim.Net helpers before publication.
     Actor[] reactionActors = new Actor[128]
@@ -2434,26 +2419,20 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     EndIf
     ; Thought-only deadlines exit after the shared pipeline consumes the native
     ; result; capacity/status enumeration remains reserved for its own deadlines.
-    If !publishSkyrimNet && !processReactions
+    If !processReactions
         Return
     EndIf
 
     ; Retired after native/Papyrus parity testing passed:
     ; Cell.GetNumRefs(43) + Cell.GetNthRef() enumeration previously ran here.
     ; MME validation and all capacity behavior remain in ProcessActor below.
-    ; Phase 2: accumulate capacity crossings and short-lived context text during
-    ; the scan. Skyrim.Net receives one combined Player-attached event rather
-    ; than one event per NPC, keeping context bounded and replaceable.
-    String milkStatuses = ""
-    String armorStatuses = ""
-    Int milkmaidCount = 0
-    Int armorCount = 0
+    ; Phase 2: gameplay capacity crossings only. AI state is prompt-rendered.
     Actor halfFullNarrationActor = None
     Actor fullNarrationActor = None
     Int i = 0
     While i < nearbyActors.Length
         Actor candidate = nearbyActors[i]
-        If processReactions || publishSkyrimNet
+        If processReactions
             Int crossing = ProcessActor(candidate, reactionActors, reactionKinds, processReactions)
             If crossing == 2 && fullNarrationActor == None
                 fullNarrationActor = candidate
@@ -2466,30 +2445,8 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
         If processReactions && candidate == Game.GetPlayer() && MMEArmorScript.IsConfigurableArmorStrippingEnabled()
             MMEArmorScript.EvaluateArmorStrippingForActor(candidate, MME_Storage.getMilkCurrent(candidate), "poll")
         EndIf
-        String status = EvaluateMilkMaidFlavor(candidate)
-        If status != ""
-            If milkStatuses != ""
-                milkStatuses = milkStatuses + " "
-            EndIf
-            milkStatuses = milkStatuses + status
-            milkmaidCount += 1
-        EndIf
-        If publishSkyrimNet
-            String armorStatus = MMEAlertsSkyrimNet.BuildNearbyArmorStatus(candidate)
-            If armorStatus != ""
-                If armorStatuses != ""
-                    armorStatuses = armorStatuses + "\n"
-                EndIf
-                armorStatuses = armorStatuses + armorStatus
-                armorCount += 1
-            EndIf
-        EndIf
         i += 1
     EndWhile
-    If publishSkyrimNet
-        MMEAlertsSkyrimNet.SendNearbyMilkStatuses(Game.GetPlayer(), milkStatuses, nearbyActors.Length, milkmaidCount)
-        MMEAlertsSkyrimNet.SendNearbyArmorStatuses(Game.GetPlayer(), armorStatuses, armorCount)
-    EndIf
     If fullNarrationActor != None
         MMEAlertsSkyrimNet.NarrateMilkFull(fullNarrationActor)
     EndIf

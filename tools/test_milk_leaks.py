@@ -55,7 +55,7 @@ class MilkLeakSafety(unittest.TestCase):
         scan=re.search(r'(?ms)^Function ScanNearbyMilkMaids\([^\n]*\)\n(.*?)^EndFunction',controller).group(1)
         self.assertEqual(controller.count('MMEMilkLeakAPI.Observe(nearbyActors)'),1)
         self.assertIn('MMEMilkLeakAPI.Observe(nearbyActors)',scan)
-        self.assertLess(scan.index('MMEMilkLeakAPI.Observe'),scan.index('If !publishSkyrimNet && !processReactions'))
+        self.assertLess(scan.index('MMEMilkLeakAPI.Observe'),scan.index('If !processReactions'))
         self.assertIn('If milkLeakDue || capacityDue',controller)
         polling=re.search(r'(?ms)^Function UpdatePolling\(\)\n(.*?)^EndFunction',controller).group(1)
         self.assertIn('If MMEMilkLeakAPI.Manager() != None\n        NextMilkLeakUpdate = now + 15.0',polling)

@@ -344,7 +344,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 170
+    Return 171
 EndFunction
 
 Function SetPageNames()
@@ -2545,7 +2545,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == skyrimNetCreationDiagnosticOption
         SetInfoText("Report SkyrimNet new-Milkmaid schema, payload, and API results.")
     ElseIf option == skyrimNetStatusDiagnosticOption
-        SetInfoText("Report SkyrimNet nearby Milkmaid status updates and failures.")
+        SetInfoText("Detailed actor prompt snapshots require master and verbose Papyrus logging. Changed snapshots use master logging.")
     ElseIf option == skyrimNetPromptDiagnosticOption
         SetInfoText("Report when Skyrim.Net renders the optional Milkmaid bio prompt for an actor.")
     ElseIf option == skyrimNetOStimTraceOption
@@ -2555,9 +2555,9 @@ Event OnOptionHighlight(Int option)
     ElseIf option == skyrimNetStatusOption
         SetInfoText("Read-only. Enabled when SkyrimNet.esp is active in the load order.")
     ElseIf option == skyrimNetMilkStatusesOption
-        SetInfoText("Send nearby Milkmaid states plus half-full and full milestones to Skyrim.Net.")
+        SetInfoText("Include current milk amounts, fullness and confirmed leaking in each Milk Maid's Skyrim.Net prompt. Current state takes precedence over older memories.")
     ElseIf option == skyrimNetStatusIntervalOption
-        SetInfoText("Set the shared nearby Skyrim.Net refresh interval. Nearby armor context keeps a 45-second lifetime.")
+        SetInfoText("Retired: milk and armor state are read when actor prompts render. The saved interval is preserved for compatibility.")
     ElseIf option == milkFullNarrationOption
         SetInfoText("Ask Skyrim.Net for one immediate Milk Maid reaction at full capacity. Uses LLM tokens.")
     ElseIf option == milkFullNarrationCooldownOption
@@ -2643,7 +2643,7 @@ Event OnOptionHighlight(Int option)
     ElseIf option == playerLivingParasiteEquipAnimationOption || option == npcLivingParasiteEquipAnimationOption
         SetInfoText("Play the shared three-second Kneeling reaction whenever configured AM Living Parasite armor is equipped.")
     ElseIf option == nearbyMilkArmorStatusOption
-        SetInfoText("Refresh one combined Player-attached Skyrim.Net context for nearby Milk Maids wearing supported MME armor.")
+        SetInfoText("Include the currently worn living, parasite, milking or Dwemer body armor in each Milk Maid actor prompt. Dwemer attachments are described separately from full suits.")
     ElseIf option == playerMilkArmorEquipNarrationOption
         SetInfoText("Directly narrate supported Player Milk Armor equips through Skyrim.Net.")
     ElseIf option == npcMilkArmorEquipNarrationOption
@@ -5499,10 +5499,10 @@ Function DrawSkyrimNetPage()
     skyrimNetMilkDrinksOption = AddToggleOption("Track Milk Drinks", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkDrinks", 1) == 1)
     skyrimNetMilkingEventsOption = AddToggleOption("Track Milking Start/End", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", 1) == 1)
     skyrimNetMilkmaidCreatedOption = AddToggleOption("Track New Milkmaids", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1) == 1)
-    skyrimNetMilkStatusesOption = AddToggleOption("Track Nearby Milk Statuses", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1)
-    skyrimNetStatusIntervalOption = AddSliderOption("Milk Status Interval", JsonUtil.GetFloatValue(SettingsFile, "skyrimNetStatusInterval", 15.0), "{0} seconds")
+    skyrimNetMilkStatusesOption = AddToggleOption("Milk Status in Actor Prompts", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1)
+    ; Legacy interval field/handlers retained for save compatibility; no active control.
     AddHeaderOption("Milk Armor")
-    nearbyMilkArmorStatusOption = AddToggleOption("Track Nearby Milk Armor Status", JsonUtil.GetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", 1) == 1)
+    nearbyMilkArmorStatusOption = AddToggleOption("Armor Status in Actor Prompts", JsonUtil.GetIntValue(SettingsFile, "enableNearbyMilkArmorStatus", 1) == 1)
     playerMilkArmorEquipNarrationOption = AddToggleOption("Player Milk Armor Equip Narration", JsonUtil.GetIntValue(SettingsFile, "enablePlayerMilkArmorEquipNarration", 1) == 1)
     npcMilkArmorEquipNarrationOption = AddToggleOption("NPC Milk Armor Equip Narration", JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkArmorEquipNarration", 1) == 1)
     Int playerArmorNarrationFlags = OPTION_FLAG_NONE

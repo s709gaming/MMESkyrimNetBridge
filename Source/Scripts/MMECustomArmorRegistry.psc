@@ -131,7 +131,7 @@ String Function GetDwemerPresentationProfile(Armor targetArmor) Global
     Int index = 0
     While index < entries.Length
         String[] parts = StringUtil.Split(entries[index], "|")
-        If parts.Length >= 2 && parts[0] != "" && parts[1] != ""
+        If parts.Length >= 2 && parts[0] != "" && parts[1] != "" && Game.GetModByName(parts[0]) != 255
             Armor configuredArmor = Game.GetFormFromFile(parts[1] as Int, parts[0]) as Armor
             If configuredArmor != None && configuredArmor == targetArmor
                 If parts.Length >= 4 && parts[3] == "deviousSuit"
@@ -198,7 +198,7 @@ Int Function MatchExactClass(Armor targetArmor, Int armorClass) Global
     Int index = 0
     While index < entries.Length
         String[] parts = StringUtil.Split(entries[index], "|")
-        If parts.Length >= 2 && parts[0] != "" && parts[1] != ""
+        If parts.Length >= 2 && parts[0] != "" && parts[1] != "" && Game.GetModByName(parts[0]) != 255
             Armor configuredArmor = Game.GetFormFromFile(parts[1] as Int, parts[0]) as Armor
             If configuredArmor != None && configuredArmor == targetArmor
                 Return armorClass

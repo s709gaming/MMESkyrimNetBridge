@@ -390,9 +390,8 @@ EndFunction
 Function RegisterPromptDecorator() Global
     ; Registration may be repeated after load/MCM upgrades. Skyrim.Net's return
     ; code can therefore mean "already registered" and is logged, not fatal.
-    If !IsExtensionsEnabled()
-        Return
-    EndIf
+    ; Always register when Skyrim.Net exists; callbacks return empty when disabled.
+    ; Otherwise a first load with MME OFF leaves template functions undefined.
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 0) == 1
     If !IsAvailable()
         If diagnostic
@@ -410,6 +409,8 @@ Function RegisterPromptDecorator() Global
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Breastfeeding prompt decorator registration result " + breastfeedingResult)
     Int recentDrinkerResult = SkyrimNetApi.RegisterDecorator("mme_recent_milk_drinker", "MMEAlertsSkyrimNet", "RecentMilkDrinkerPrompt")
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Recent milk drinker prompt decorator registration result " + recentDrinkerResult)
+    Int stateResult = SkyrimNetApi.RegisterDecorator("mme_actor_milk_state", "MMEActorPromptState", "GetActorState")
+    MMEActorPromptState.ReportRegistration(stateResult)
     Int loreResult = SkyrimNetApi.RegisterDecorator("mme_milk_lore_text", "MMEAlertsSkyrimNet", "MilkLoreText")
     MMELog.MasterDiagnostic("[MME Narration JSON] lore decorator registration result=" + loreResult)
     Int guidanceResult = SkyrimNetApi.RegisterDecorator("mme_breastfeeding_guidance_text", "MMEAlertsSkyrimNet", "BreastfeedingGuidanceText")
@@ -693,59 +694,11 @@ Function ReportArmorStripNarration(Bool diagnostic, String reportText) Global
     Debug.Notification(reportText)
 EndFunction
 
-; Publishes actor-specific capacity crossings for two minutes without forcing dialogue.
+; Deprecated actor-state publisher; retained as a no-op compatibility entry point.
 Function SendCapacityMilestone(Actor milkMaid, Int crossing) Global
-    ; Validate feature/plugin state before building payloads. Milestones are
-    ; context only: they use stable per-actor IDs and never consume narration.
-    If !IsExtensionsEnabled()
-        Return
-    EndIf
-    String settingsFile = "/MMEAlerts/SkyrimNet"
-    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetStatusDiagnostic", 0) == 1
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkStatuses", 1) != 1
-        Return
-    EndIf
-    If !IsAvailable() || milkMaid == None || JsonUtil.GetIntValue(settingsFile, "enabled", 1) != 1
-        If diagnostic
-            Debug.Notification("Skyrim.Net Milestone: skipped - integration or actor unavailable")
-        EndIf
-        Return
-    EndIf
-
-    String actorName = milkMaid.GetDisplayName()
-    If actorName == ""
-        actorName = "The Milk Maid"
-    EndIf
-    String eventType = "milk_half_full"
-    String tag = "[half full]"
-    String content = MMENarrationText.Text("Fullness", "send_capacity_milestone_1", "tag", tag, "actor", actorName)
-    If crossing == 2
-        eventType = "milk_full"
-        tag = "[milk full]"
-        content = MMENarrationText.Text("Fullness", "send_capacity_milestone_2", "tag", tag, "actor", actorName)
-    EndIf
-    String restrainedContent = BuildRestrainedCapacityContent(milkMaid, crossing)
-    If restrainedContent != ""
-        content = tag + " " + restrainedContent
-    EndIf
-
-    String actorUuid = SkyrimNetApi.GetEntityUUID(milkMaid)
-    If actorUuid == ""
-        actorUuid = "form_" + milkMaid.GetFormID()
-    EndIf
-    String eventId = eventType + "_" + actorUuid
-    ; Stable event ID + TTL makes repeated crossings refresh/replace context
-    ; rather than grow an unbounded history of transient fullness statements.
-    Int ttlMs = JsonUtil.GetIntValue(settingsFile, "capacityMilestoneTtlMs", 120000)
-    Int result = SkyrimNetApi.RegisterShortLivedEvent(eventId, eventType, content, "{}", ttlMs, milkMaid, None)
-    If diagnostic
-        If result == 0
-            Debug.Notification("Skyrim.Net Milestone: " + tag + " accepted | " + actorName + " | 120s")
-        Else
-            Debug.Notification("Skyrim.Net Milestone: " + tag + " rejected [" + result + "]")
-        EndIf
-    EndIf
-    MMELog.Diagnostic("[MMEAlert SkyrimNet] Capacity milestone " + eventType + " result " + result + " | " + actorName + " | " + content)
+    ; Deprecated: current milk/armor state is rendered by mme_actor_milk_state.
+    ; Keep the signature for external/save compatibility; never publish stale TTL state.
+    Return
 EndFunction
 
 ; Makes at most one token-using narration request for a completed scan's full crossings.
@@ -788,6 +741,11 @@ Function NarrateMilkFull(Actor milkMaid) Global
         Return
     EndIf
 
+    Int fullnessSnapshot = MMEActorPromptState.GetFullnessState(milkMaid)
+    If fullnessSnapshot < 3
+        MMELog.MasterDiagnostic("[MME Actor Prompt] narration skipped | actor=" + milkMaid + " | fullness changed or unavailable | state=" + fullnessSnapshot)
+        Return
+    EndIf
     ; Phase 2: choose restraint-aware prose, submit once, and commit cooldown
     ; only on success so a rejected API call can be retried later.
     String actorName = ResolveActorName(milkMaid, "The Milk Maid")
@@ -851,6 +809,11 @@ Function NarrateMilkHalfFull(Actor milkMaid) Global
         Return
     EndIf
 
+    Int fullnessSnapshot = MMEActorPromptState.GetFullnessState(milkMaid)
+    If fullnessSnapshot != 2
+        MMELog.MasterDiagnostic("[MME Actor Prompt] narration skipped | actor=" + milkMaid + " | fullness changed or unavailable | state=" + fullnessSnapshot)
+        Return
+    EndIf
     String actorName = ResolveActorName(milkMaid, "The Milk Maid")
     String content = MMENarrationText.Text("Fullness", "narrate_milk_half_full_1", "actor", actorName)
     String restrainedContent = BuildRestrainedCapacityContent(milkMaid, 1)
@@ -1413,29 +1376,11 @@ String Function BuildNearbyArmorStatus(Actor candidate) Global
     Return content
 EndFunction
 
-; Refreshes one stable Player-attached context event. Empty scans intentionally
-; do nothing so the last 45-second event expires naturally.
+; Deprecated polled armor summary; current equipment belongs in the actor prompt.
 Function SendNearbyArmorStatuses(Actor playerActor, String statuses, Int armorCount) Global
-    ; Empty scans deliberately do not publish a clearing event. The previous
-    ; 45-second context expires naturally, avoiding needless API traffic.
-    If !IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableNearbyMilkArmorStatus", 1) != 1
-        Return
-    EndIf
-    Bool diagnostic = MMEArmorScript.GetArmorDiagnostic()
-    If armorCount <= 0 || statuses == ""
-        MMEArmorScript.ReportArmor(diagnostic, "nearby tracker not refreshed: no nearby Milk Maid wears supported armor")
-        Return
-    EndIf
-    If playerActor == None || !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
-        MMEArmorScript.ReportArmor(diagnostic, "nearby tracker failed: Player or Skyrim.Net unavailable")
-        Return
-    EndIf
-
-    ; One stable ID attached to Player replaces the previous combined snapshot.
-    ; Never split this into per-NPC events and never call DirectNarration here.
-    Int result = SkyrimNetApi.RegisterShortLivedEvent("nearby_milk_armor_status_player", "nearby_milk_armor_status", statuses, "{}", 45000, playerActor, None)
-    MMEArmorScript.ReportArmor(diagnostic, "nearby tracker publish result=" + result + " | entries=" + armorCount + " | attached=Player | TTL=45s")
-    MMELog.Diagnostic("[MMEAlert SkyrimNet] Nearby armor status result " + result + " | entries " + armorCount + " | " + statuses)
+    ; Deprecated: current milk/armor state is rendered by mme_actor_milk_state.
+    ; Keep the signature for external/save compatibility; never publish stale TTL state.
+    Return
 EndFunction
 
 ; Requests one AI-generated reaction to the exact rendered situation selected
@@ -1545,62 +1490,11 @@ Function NarrateBoundMilkMaidThought(Actor milkMaid, String renderedThought) Glo
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Bound Milk Maid Thought DirectNarration result " + result + " | target=" + actorName + " | " + content)
 EndFunction
 
-; Publishes one replaceable five-minute summary from the existing capacity scan.
+; Deprecated polled milk summary; current state belongs in the actor prompt.
 Function SendNearbyMilkStatuses(Actor playerActor, String statuses, Int scannedCount, Int milkmaidCount) Global
-    ; This is the milk-state sibling of nearby armor context. It consumes the
-    ; same controller scan and publishes one replaceable Player-attached summary.
-    If !IsExtensionsEnabled()
-        Return
-    EndIf
-    String settingsFile = "/MMEAlerts/SkyrimNet"
-    Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetStatusDiagnostic", 0) == 1
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetMilkStatuses", 1) != 1
-        Return
-    EndIf
-    If !IsAvailable()
-        If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: milk statuses failed - SkyrimNet not detected")
-        EndIf
-        MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet.esp is not enabled; milk statuses skipped")
-        Return
-    EndIf
-    If JsonUtil.GetIntValue(settingsFile, "enabled", 1) != 1
-        If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: milk statuses failed - bridge disabled in JSON")
-        EndIf
-        MMELog.Diagnostic("[MMEAlert SkyrimNet] Milk statuses skipped; JSON bridge disabled")
-        Return
-    EndIf
-    If playerActor == None
-        If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: milk statuses failed - player missing")
-        EndIf
-        Return
-    EndIf
-    If milkmaidCount <= 0 || statuses == ""
-        If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: milk statuses skipped - no nearby Milkmaids")
-        EndIf
-        MMELog.Diagnostic("[MMEAlert SkyrimNet] Milk statuses skipped; no nearby Milkmaids")
-        Return
-    EndIf
-
-    String content = MMENarrationText.Text("Fullness", "nearby_status_summary", "statuses", statuses)
-    Float interval = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "skyrimNetStatusInterval", 15.0)
-    Int ttlMs = (interval * 1000.0) as Int
-    MMELog.Diagnostic("[MMEAlert SkyrimNet] Calling milk_statuses_player | interval " + interval + " | TTL " + ttlMs + " | " + content)
-    Int result = SkyrimNetApi.RegisterShortLivedEvent("milk_statuses_player", "milk_statuses", content, "{}", ttlMs, playerActor, None)
-    If result != 0
-        If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: milk statuses rejected [" + result + "]")
-        EndIf
-        MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet rejected milk statuses (code " + result + ")")
-    Else
-        If diagnostic
-            Debug.Notification("Skyrim.Net Status: accepted | " + milkmaidCount + " Milkmaids | " + interval + "s")
-        EndIf
-        MMELog.Diagnostic("[MMEAlert SkyrimNet] Sent timed milk statuses event: " + content)
-    EndIf
+    ; Deprecated: current milk/armor state is rendered by mme_actor_milk_state.
+    ; Keep the signature for external/save compatibility; never publish stale TTL state.
+    Return
 EndFunction
 
 ; Records a confirmed false-to-true Milkmaid transition in SkyrimNet history.

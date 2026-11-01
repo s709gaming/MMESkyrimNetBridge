@@ -1,12 +1,43 @@
 {% if render_mode == "full" or render_mode == "thoughts" or render_mode == "transform" or render_mode == "dialogue_target" or render_mode == "target" %}
 {% if isValidActor(actorUUID) %}
 {% set is_milkmaid = mme_milkmaid_prompt_debug(actorUUID) %}
+{% set is_recent_milk_drinker = mme_recent_milk_drinker(actorUUID) %}
+{% if is_milkmaid == "true" or is_recent_milk_drinker == "true" %}
+{{ mme_milk_lore_text(actorUUID) }}
+{% endif %}
 {% if is_milkmaid == "true" %}
-## Milk Maid Lore
-
-{{ decnpc(actorUUID).name }} is a Milk Maid and produces milk.
-
-Skyrim milk comes from Milk Maids; cow milk is considered barbaric. It is a common staple drink and a mild aphrodisiac. Milk Maids are the socially valued backbone of Skyrim's milk supply. Women may become Milk Maids through Lactacid sold by alchemists, unusual milk, magic, curses, blessings, potions, experiments, accidents, voluntary transformation, or birth; many traditionally begin lactating at adulthood as a rite of passage.
+{% set milk_context = mme_actor_milk_state(actorUUID) %}
+{% if milk_context and milk_context.enabled %}
+## Current MME Status
+Actor: {{ milk_context.name }}.
+{% if milk_context.milkEnabled %}
+{% set milk_known = papyrus_util("HasFloatValue", actorUUID, "MME.MilkMaid.MilkCount") %}
+{% set capacity_known = papyrus_util("HasFloatValue", actorUUID, "MME.MilkMaid.MilkMaximum") %}
+{% set milk_now = papyrus_util("GetFloatValue", actorUUID, "MME.MilkMaid.MilkCount", -1.0) %}
+{% set milk_max = papyrus_util("GetFloatValue", actorUUID, "MME.MilkMaid.MilkMaximum", -1.0) %}
+{% if milk_known and capacity_known and milk_now >= 0 and milk_max > 0 %}
+Milk: {{ milk_now }}/{{ milk_max }} ({{ milk_now * 100 / milk_max }}%).
+{% if milk_now == 0 %}
+Milk state: empty. Milk Maid identity does not mean currently full.
+{% else if milk_now > milk_max %}
+Milk state: full and over capacity.
+{% else if milk_now == milk_max %}
+Milk state: full.
+{% else if milk_now >= milk_max * 0.5 %}
+Milk state: half full (at least 50%, below full).
+{% else %}
+Milk state: below half full, not full.
+{% endif %}
+{% else %}
+Milk state: unknown; current amount or capacity is unavailable. Do not assume empty or full.
+{% endif %}
+{{ milk_context.leak }}
+{% endif %}
+{% if milk_context.armorEnabled %}
+{{ milk_context.armor }}
+{% endif %}
+This is current game state for this actor. Older events and memories describe past experiences, not current milk levels or equipment. Do not infer gushing, leaking, arousal, pain or size from Milk Maid identity or fullness alone.
+{% endif %}
 {% endif %}
 {% endif %}
 {% endif %}

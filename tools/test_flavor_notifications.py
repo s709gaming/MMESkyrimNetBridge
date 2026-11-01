@@ -97,7 +97,13 @@ class InventoryTests(unittest.TestCase):
         self.assertEqual(sum(e['minor'] for e in INVENTORY),17)
         for e in INVENTORY:
             key=e['proposedId'].split('.')[-1]
-            self.assertEqual(config[key],[e['proposedTemplate']])
+            if key in ('capacity_half','capacity_full'):
+                self.assertEqual(len(config[key]),5)
+                self.assertEqual(len(set(config[key])),5)
+                for variant in config[key]:
+                    self.assertEqual(set(re.findall(r'\{([^{}]+)\}',variant)),{'actor'})
+            else:
+                self.assertEqual(config[key],[e['proposedTemplate']])
             self.assertEqual(schema[key]['required'],e['requiredTokens'])
             source=(ROOT/e['source']).read_text(encoding='utf-8')
             matching=[line for line in source.splitlines() if 'MMEFlavorText.Text("'+key+'",' in line]

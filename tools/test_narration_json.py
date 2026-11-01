@@ -22,12 +22,21 @@ class NarrationContracts(unittest.TestCase):
             self.assertEqual(hashlib.sha256(text.encode()).hexdigest(),row['sha256'],row['key'])
             call=f'MMENarrationText.Text("{row["file"]}", "{row["key"]}"'
             for token,var in row['args']:call+=f', "{token}", {var}'
-            self.assertIn(call+')',self.source)
+            if row['key'] not in ('send_capacity_milestone_1','send_capacity_milestone_2'):
+                self.assertIn(call+')',self.source)
+            else:
+                # Saved custom text remains preserved, but retired state events cannot publish it.
+                retired=self.source.split('Function SendCapacityMilestone(',1)[1].split('EndFunction',1)[0]
+                self.assertNotIn('RegisterShortLivedEvent',retired)
         for row in fixture['promptAndSummary']:
             text=self.data[row['file']]['routes'][row['key']]['template']
             self.assertEqual(hashlib.sha256(text.encode()).hexdigest(),row['sha256'],row['key'])
         baseline_source=re.sub(r'(?s)Function NarrateMilkMaidCurse\(.*?\nEndFunction','',self.source)
         for name,calls in fixture['nativeCalls'].items():
+            if name == 'RegisterShortLivedEvent':
+                # Retire only milestone and polled milk/armor state, retaining drink/milking events.
+                self.assertEqual(len(calls),5)
+                calls=calls[3:]
             self.assertEqual(re.findall(r'SkyrimNetApi\.'+name+r'\([^\n]*',baseline_source),calls,name)
     def test_legacy_mappings_and_defaults(self):
         for row in json.loads((ROOT/'tools/narration-legacy-map.json').read_text(encoding='utf-8-sig')):

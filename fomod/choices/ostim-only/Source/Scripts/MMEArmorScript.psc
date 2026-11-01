@@ -929,9 +929,22 @@ Int Function ClassifyArmor(MilkQUEST milkController, Armor equippedArmor, String
     Return armorClass
 EndFunction
 
+; Separate entry point keeps existing compiled callers' parameter contracts intact.
+Int Function ClassifyArmorQuiet(MilkQUEST milkController, Armor equippedArmor, Actor wearer = None) Global
+    Int armorClass = ClassifyOriginalArmorInternal(milkController, equippedArmor, "actor prompt", wearer, True)
+    If armorClass == 0
+        armorClass = MMECustomArmorRegistry.ClassifyCustomArmor(equippedArmor, False)
+    EndIf
+    Return armorClass
+EndFunction
+
 ; Original MME-only classification is kept separate so the compatibility
 ; equip handler can prove that MME itself will not also apply the same effects.
 Int Function ClassifyOriginalArmor(MilkQUEST milkController, Armor equippedArmor, String source = "unknown", Actor wearer = None) Global
+    Return ClassifyOriginalArmorInternal(milkController, equippedArmor, source, wearer, False)
+EndFunction
+
+Int Function ClassifyOriginalArmorInternal(MilkQUEST milkController, Armor equippedArmor, String source, Actor wearer, Bool quiet) Global
     ; Direct form properties identify MME's canonical cuirasses even if renamed.
     ; Array matching intentionally uses the live display name because that is how
     ; MME exposes configurable third-party Milking/Living/Parasite equipment.
@@ -960,7 +973,7 @@ Int Function ClassifyOriginalArmor(MilkQUEST milkController, Armor equippedArmor
     Else
         armorClass = GetSpecialArmorNameClass(armorName)
     EndIf
-    If GetArmorLookupDiagnostic()
+    If !quiet && GetArmorLookupDiagnostic()
         ReportArmorLookupForensics(milkController, equippedArmor, source, wearer, armorName, milkingIndex, basicIndex, parasiteIndex, GetArmorTypeLabel(armorClass))
     EndIf
     Return armorClass
