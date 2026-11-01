@@ -61,9 +61,6 @@ Function EnsureDefaults() Global
     If !JsonUtil.HasIntValue(settings, "enableMilkLeaks")
         JsonUtil.SetIntValue(settings, "enableMilkLeaks", 1)
     EndIf
-    If !JsonUtil.HasIntValue(settings, "milkLeakIntensity")
-        JsonUtil.SetIntValue(settings, "milkLeakIntensity", 2)
-    EndIf
     If !JsonUtil.HasIntValue(settings, "milkLeakThroughClothing")
         JsonUtil.SetIntValue(settings, "milkLeakThroughClothing", 1)
     EndIf

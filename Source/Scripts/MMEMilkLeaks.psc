@@ -13,6 +13,7 @@ Bool[] busy
 Bool initialized = False
 Int epoch = 0
 Float lastNarration = -1200.0
+Float lastScanTrace = -300.0
 String settings = "/MMEAlerts/Settings"
 
 Event OnInit()
@@ -117,6 +118,11 @@ Function Observe(Actor[] nearby)
     If !initialized || !Enabled()
         Return
     EndIf
+    Float scanNow = Utility.GetCurrentRealTime()
+    If scanNow - lastScanTrace >= 60.0
+        lastScanTrace = scanNow
+        Trace("scan delivered | nearby=" + nearby.Length)
+    EndIf
     Int i = 0
     MilkQUEST milk = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If milk == None
@@ -136,6 +142,14 @@ Function Observe(Actor[] nearby)
                     threshold = 100.0
                 EndIf
                 String latch = "MMELeaks.ThresholdLatched"
+                Int thresholdState = 0
+                If percent >= threshold
+                    thresholdState = 1
+                EndIf
+                If StorageUtil.GetIntValue(target, "MMELeaks.ThresholdState", -1) != thresholdState
+                    StorageUtil.SetIntValue(target, "MMELeaks.ThresholdState", thresholdState)
+                    Trace("threshold | actor=" + target + " | fullness=" + percent + " | threshold=" + threshold + " | reached=" + thresholdState)
+                EndIf
                 If percent < threshold
                     StorageUtil.UnsetIntValue(target, latch)
                 ElseIf StorageUtil.GetIntValue(target, latch, 0) == 0 && tracked.Find(target) < 0
@@ -176,13 +190,8 @@ Function StartLeak(Actor target)
     EndIf
     tracked[slot] = target
     started[slot] = Utility.GetCurrentRealTime()
-    Int level = JsonUtil.GetIntValue(settings, "milkLeakIntensity", 2)
-    If level < 0
-        level = 0
-    ElseIf level > 2
-        level = 2
-    EndIf
-    maximumStages[slot] = level
+    ; Fixed taper; legacy intensity settings are retained but no longer read.
+    maximumStages[slot] = 2
     visibleStages[slot] = -1
     Advance(slot)
     If requestEpoch != epoch || tracked[slot] != target

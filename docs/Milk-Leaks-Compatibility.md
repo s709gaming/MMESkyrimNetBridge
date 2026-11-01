@@ -13,8 +13,8 @@ permits one burst. Going below the threshold rearms the actor. Save loading
 cleans owned effects and rearms nearby actors. No milk, levels, inventory
 rewards, animations, movement locks or Milk Maid conversion are changed.
 
-Uncovered intensity defaults High: five seconds High, five Medium, five Low.
-Medium starts at Medium and Low starts at Low. Timings are approximate Papyrus
+Uncovered leaks use a fixed taper: five seconds High, five Medium, five Low.
+There is no intensity slider. Timings are approximate Papyrus
 deadlines; suspended menus or VM latency can delay changes. A body/chest item
 in slot 32 caps the current stage at Low. Clothing leaks default On; disabling
 them stops/prevents a covered leak. Removing clothes does not restart time.
@@ -47,13 +47,13 @@ no tracked leaks. No global tracking of unloaded NPCs is claimed.
 ## Settings and editable text
 
 Gameplay: SKSE/Plugins/StorageUtilData/MMEAlerts/Settings.json:
-enableMilkLeaks=1; milkLeakThroughClothing=1; milkLeakIntensity=2;
+enableMilkLeaks=1; milkLeakThroughClothing=1;
 milkLeakThreshold=100; milkLeakNarration=1; milkLeakNarrationCooldown=30.
 Missing values are initialized without replacing existing user choices.
 
 Narration: SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkLeaks.json:
 start and instructions. Both appear under Milk Leaking in the existing
-Magelight narration editor; the Body-page link opens that feature. Personal
+Magelight narration editor under Milk Leaking. No MCM editor link is needed. Personal
 overrides use the existing editor storage and do not change gameplay settings.
 Narration is requested once after confirmed owned equip, with a global
 0–1200 real-second cooldown (default 30), to avoid simultaneous NPC chatter.
@@ -76,3 +76,8 @@ Do not claim particles rendered merely because an armor equipped.
 When removing the optional FOMOD option, use the mod manager's Replace install
 to avoid stale plugin/source/compiled/SEQ files. Disable the feature and allow
 owned bursts to clean up before removing the dependency in a live save.
+
+The legacy milkLeakIntensity JSON value is preserved but ignored. Scan delivery
+is traced at most once per minute; threshold state changes get actor-specific
+master-gated footprints. Discovery is in ScanNearbyMilkMaids, never conditional
+on the tentacle injection timer.

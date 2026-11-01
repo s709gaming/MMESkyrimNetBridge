@@ -16,6 +16,13 @@
 - Keep the current implementation status in local `TASK.md`; it is not part of release packages.
 - Create additional branches or worktrees only when the user requests them.
 
+## Investigation and preflight checklist
+
+- **Master Papyrus footprints — Yes/No:** Identify useful traces, gated behind the existing master logging toggle.
+- **Smoke alarms needed — Yes/No:** Identify genuine failures. Alarms fire when errors occur, independently of the master logging toggle. Deduplicate repeated failures; expected skips are not alarms.
+- **New script appropriate — Yes/No:** Briefly explain. If yes, name the exact filename and responsibility. If no, name the existing owner script.
+- **Communication:** Present findings, plans, and reports in brief, concise bullets.
+
 ## Papyrus diagnostics
 
 - New or substantially changed gameplay routes must include useful Papyrus trace footprints.

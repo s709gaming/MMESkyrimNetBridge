@@ -23,8 +23,8 @@ String Function MilkingModeBlockReason(Actor candidate) Global
         Return "MME controller unavailable"
     EndIf
     Actor[] maids = milk.MilkMaid
-    Failure("modeMaids", maids == None, "validate milking mode target", candidate, "MilkMaid array unavailable")
-    If maids == None
+    Failure("modeMaids", maids.Length == 0, "validate milking mode target", candidate, "MilkMaid array unavailable")
+    If maids.Length == 0
         Return "MME maid list unavailable"
     EndIf
     If maids.Find(candidate) < 0
@@ -316,8 +316,8 @@ Function SetSlider(SKI_ConfigBase menu, String settingName, Float value) Global
     EndIf
     Failure("range", False, "", None, "")
     If settingName == "MaxSize"
-        Failure("maids", milk.MilkMaid == None, "set maximum breast size", None, "MilkMaid array unavailable")
-        If milk.MilkMaid == None
+        Failure("maids", milk.MilkMaid.Length == 0, "set maximum breast size", None, "MilkMaid array unavailable")
+        If milk.MilkMaid.Length == 0
             Return
         EndIf
     EndIf
@@ -359,8 +359,8 @@ Function Toggle(SKI_ConfigBase menu, String settingName) Global
         If milk.MilkQC == None
             Return
         EndIf
-        Failure("maids", milk.MilkMaid == None, "toggle original effects", None, "MilkMaid array unavailable")
-        If milk.MilkMaid == None
+        Failure("maids", milk.MilkMaid.Length == 0, "toggle original effects", None, "MilkMaid array unavailable")
+        If milk.MilkMaid.Length == 0
             Return
         EndIf
         milk.MilkQC.Buffs = !milk.MilkQC.Buffs
@@ -394,8 +394,8 @@ Function RefreshMaids(MilkQUEST milk, Bool effects) Global
     ; Same slot iteration as original MCM. Do not index parallel MME arrays,
     ; recalculate maid levels, assign slots, convert actors or alter overrides.
     Actor[] maids = milk.MilkMaid
-    Failure("maids", maids == None, "refresh MME maids", None, "MilkMaid array unavailable")
-    If maids == None
+    Failure("maids", maids.Length == 0, "refresh MME maids", None, "MilkMaid array unavailable")
+    If maids.Length == 0
         Return
     EndIf
     Int index = 0

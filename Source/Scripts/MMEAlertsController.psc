@@ -453,6 +453,7 @@ Function DisableController()
         SkyrimNetApi.UnregisterAction("StartMilkMaidSelfMilking")
     EndIf
     NextCapacityUpdate = 0.0
+    NextMilkLeakUpdate = 0.0
     NextArousalEffectUpdate = 0.0
     NextBodyEffectsUpdate = 0.0
     MMEBodyEffects.ClearOwnedEffects(Game.GetPlayer(), "controller disabled")
@@ -1098,7 +1099,6 @@ Event OnUpdateGameTime()
     EndIf
     If injectionDue
         MMETentacleTiers.Observe(nearbyActors)
-    MMEMilkLeakAPI.Observe(nearbyActors)
         MMETentacleEffects.RunInjectionCheck(nearbyActors, False, True, True)
         ScheduleNextInjection(now)
     EndIf
@@ -2418,6 +2418,7 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     Int[] reactionKinds = new Int[128]
     Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
     MMETentacleTiers.Observe(nearbyActors)
+    MMEMilkLeakAPI.Observe(nearbyActors)
     If processArousalEffects
         MMEArousalEffects.ProcessNearbyActors(nearbyActors)
     EndIf

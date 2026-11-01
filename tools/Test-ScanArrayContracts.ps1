@@ -11,14 +11,17 @@ $testDirectory = Join-Path ([IO.Path]::GetTempPath()) ('MME-ScanArrayTests-' + [
 New-Item -ItemType Directory -Path $testDirectory | Out-Null
 Push-Location $testDirectory
 try {
-    foreach ($scriptName in @('MMEMilkLeaks', 'MMEMilkLeakAPI', 'MMEAlertsController', 'MMETentacleEffects', 'MMEThoughts', 'MMEOStimIntegration', 'MMEOManiaCompatibility', 'MMEElsieBreastfeeding', 'MMEDebug', 'MMETextPool')) {
+    foreach ($scriptName in @('MMEOriginalSettings', 'MMEMilkLeaks', 'MMEMilkLeakAPI', 'MMEAlertsController', 'MMETentacleEffects', 'MMEThoughts', 'MMEOStimIntegration', 'MMEOManiaCompatibility', 'MMEElsieBreastfeeding', 'MMEDebug', 'MMETextPool')) {
         Copy-Item -LiteralPath (Join-Path $CompiledDirectory "$scriptName.pex") -Destination $testDirectory
         & $Assembler $scriptName -D -Q
         if ($LASTEXITCODE -ne 0) { throw "Disassembly failed: $scriptName" }
         $arrayVariables = @{}
         $inspectFunction = $false
+        $functionName = ''
+        $leakDispatchCount = 0
         foreach ($line in Get-Content -LiteralPath "$scriptName.disassemble.pas") {
             if ($line -match '^\s*\.function\s+(\S+)') {
+                $functionName = $matches[1]
                 $arrayVariables = @{}
                 if ($scriptName -eq 'MMEAlertsController') {
                     $inspectFunction = $matches[1] -in @('OnUpdateGameTime', 'RunArmorInjectionCheckNow', 'ScanNearbyMilkMaids')
@@ -36,7 +39,12 @@ try {
             if ($inspectFunction -and $line -match '^\s*Cast\s+(\S+)\s+None(?:\s|$)' -and $arrayVariables.ContainsKey($matches[1])) {
                 throw "Invalid None-to-array cast in ${scriptName}: $($line.Trim())"
             }
+            if ($scriptName -eq 'MMEAlertsController' -and $line -match '^\s*CallStatic\s+MMEMilkLeakAPI\s+Observe\b') {
+                if ($functionName -ne 'ScanNearbyMilkMaids') { throw "Leak dispatch compiled into wrong function: $functionName" }
+                $leakDispatchCount += 1
+            }
         }
+        if ($scriptName -eq 'MMEAlertsController' -and $leakDispatchCount -ne 1) { throw 'Expected exactly one compiled leak dispatch in the shared scan' }
         Write-Host "PASS: $scriptName scan/content functions have no None-to-array casts"
     }
 } finally {
