@@ -2,6 +2,8 @@ $ErrorActionPreference = "Stop"
 
 # Resolve every path from this script so it works when launched by double-click.
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+& python -B (Join-Path $projectRoot 'tools/test_dialogue_knowledge.py')
+if ($LASTEXITCODE) { throw 'Dialogue knowledge contracts failed' }
 & python -B (Join-Path $projectRoot 'tools/test_fixed_lactacid.py')
 if ($LASTEXITCODE) { throw 'Fixed Lactacid regression checks failed' }
 & python -B (Join-Path $projectRoot 'tools/test_mme_quick_settings.py')
@@ -35,6 +37,7 @@ $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickst
 $scriptNames += "MMEOriginalSettings"
 $scriptNames += "MMEActorPromptState"
 $scriptNames += "MMEFixedLactacid"
+$scriptNames += "MMEDialogueKnowledge"
 $scriptNames += "MMELockProtection"
 $scriptNames += "MMEEstrusPregnancyTest"
 $scriptNames += "MMEBodyEffects"

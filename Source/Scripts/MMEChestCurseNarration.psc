@@ -74,11 +74,12 @@ Function Publish(Actor target, Bool converted, String chestKind, String chestIde
             AlarmOnce(target, "required player narration callback unavailable")
             Return
         EndIf
-        String contextJson = "{\"playerInstructions\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(actorName) + "\",\"source\":\"treasure_chest\",\"outcome\":\"" + outcomeKind + "\",\"situation\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(prompt) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(actorName) + "\",\"source\":\"treasure_chest\",\"outcome\":\"" + outcomeKind + "\",\"situation\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(prompt) + "\",\"milkKnowledge\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(MMEDialogueKnowledge.ForRequest(Game.GetPlayer(), "player self-comment")) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnChestCursePlayerLine")
         Trace("player request result | actor=" + target + " | chest=" + chestIdentity + " | result=" + queued + " (1=queued); no NPC fallback")
         Return
     EndIf
+    prompt = MMEDialogueKnowledge.Append(prompt, target)
     Int result = SkyrimNetApi.DirectNarration(prompt, target, Game.GetPlayer())
     Trace("NPC request result | speaker=" + target + " | chest=" + chestIdentity + " | result=" + result + " (0=accepted)")
 EndFunction

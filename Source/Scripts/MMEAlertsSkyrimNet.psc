@@ -83,13 +83,14 @@ Function NarrateTentacleEffect(Actor wearer, Float milkAdded, Int arousalBefore,
             MMETentacleEffects.TraceDiagnostic(diagnostic, "narration skipped: player callback script unavailable; no fallback")
             Return
         EndIf
-        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\",\"milkKnowledge\":\"" + EscapeJsonString(MMEDialogueKnowledge.ForRequest(Game.GetPlayer(), "player self-comment")) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnTentaclePlayerLine")
         MMETentacleEffects.TraceDiagnostic(diagnostic, "player-only generation queue result=" + queued + " (1=queued); no bystander fallback")
         Return
     EndIf
     content += MMENarrationText.Text("TentacleArmor", "narrate_tentacle_effect_1")
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Tentacle Effects DirectNarration | speaker=" + actorName)
+    content = MMEDialogueKnowledge.Append(content, wearer)
     Int result = SkyrimNetApi.DirectNarration(content, wearer, Game.GetPlayer())
     If result == 0
         MMETentacleEffects.TraceDiagnostic(diagnostic, "narration request accepted [0] | NPC wearer=" + actorName)
@@ -228,12 +229,13 @@ Function NarrateDwemerEffect(Actor wearer, Float milkAdded, Int arousalBefore, B
             MMELog.Alarm("[MME Extensions Dwemer Effects] player narration callback unavailable")
             Return
         EndIf
-        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\",\"milkKnowledge\":\"" + EscapeJsonString(MMEDialogueKnowledge.ForRequest(Game.GetPlayer(), "player self-comment")) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnDwemerEffectPlayerLine")
         MMEDwemerEffects.TraceDiagnostic(False, "player-only generation queue result=" + queued + " (1=queued); no bystander fallback")
         Return
     EndIf
     content += MMENarrationText.Text("DwemerArmor", "narrate_dwemer_effect_1")
+    content = MMEDialogueKnowledge.Append(content, wearer)
     Int result = SkyrimNetApi.DirectNarration(content, wearer, Game.GetPlayer())
     MMEDwemerEffects.TraceDiagnostic(False, "NPC DirectNarration result=" + result + " | wearer=" + actorName)
 EndFunction
@@ -297,11 +299,12 @@ Function NarrateDwemerSuitEvent(Actor wearer, Armor equippedArmor, String eventK
             MMELog.Alarm("[MME Extensions Dwemer Suit Narration] player callback unavailable | event=" + eventKey)
             Return
         EndIf
-        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(prompt) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(prompt) + "\",\"milkKnowledge\":\"" + EscapeJsonString(MMEDialogueKnowledge.ForRequest(Game.GetPlayer(), "player self-comment")) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnDwemerSuitPlayerLine")
         MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] player queue result=" + queued + " | profile=" + profile + " | event=" + eventKey + " | actor=" + actorName)
         Return
     EndIf
+    prompt = MMEDialogueKnowledge.Append(prompt, wearer)
     Int result = SkyrimNetApi.DirectNarration(prompt, wearer, Game.GetPlayer())
     MMELog.MasterDiagnostic("[MME Extensions Dwemer Suit Narration] NPC DirectNarration result=" + result + " | profile=" + profile + " | event=" + eventKey + " | actor=" + actorName)
 EndFunction
@@ -613,6 +616,7 @@ Int Function NarrateArmorEquip(Actor wearer, Armor equippedArmor) Global
         MMEArmorScript.ReportArmor(diagnostic, "equip narration received chest-trap origin | actor=" + actorName + " | type=" + narrationType)
     EndIf
     MMEArmorScript.ReportArmor(diagnostic, "equip narration sending | api=targeted DirectNarration | target=" + actorName + " | role=" + role + " | type=" + narrationType + " | tone=humorous/suggestive/playful")
+    content = MMEDialogueKnowledge.Append(content, None)
     Int result = SkyrimNetApi.DirectNarration(content, None, wearer)
     If result == 0
         JsonUtil.SetFloatValue("/MMEAlerts/Settings", lastKey, now)
@@ -686,6 +690,7 @@ Int Function NarrateArmorStrip(Actor wearer, Armor strippedArmor, String sourceL
 
     String content = MMENarrationText.Text("Armor", "narrate_armor_strip_1", "actor", actorName, "armorName", armorName)
     ReportArmorStripNarration(diagnostic, "Armor Strip Narration: sending DirectNarration")
+    content = MMEDialogueKnowledge.Append(content, None)
     Int result = SkyrimNetApi.DirectNarration(content, None, wearer)
     If result == 0
         JsonUtil.SetFloatValue(settingsFile, "lastArmorStripNarrationRealTime", now)
@@ -770,6 +775,7 @@ Function NarrateMilkFull(Actor milkMaid) Global
     If diagnostic
         Debug.Notification("Milk Full Narration: sending general Milk Maid situation")
     EndIf
+    content = MMEDialogueKnowledge.Append(content, None)
     Int result = SkyrimNetApi.DirectNarration(content, None, None)
     If result == 0
         JsonUtil.SetFloatValue(settingsFile, "lastMilkFullNarrationRealTime", now)
@@ -836,6 +842,7 @@ Function NarrateMilkHalfFull(Actor milkMaid) Global
     If diagnostic
         Debug.Notification("Half-Full Narration: sending general Milk Maid situation")
     EndIf
+    content = MMEDialogueKnowledge.Append(content, None)
     Int result = SkyrimNetApi.DirectNarration(content, None, None)
     If result == 0
         JsonUtil.SetFloatValue(settingsFile, "lastMilkHalfFullNarrationRealTime", now)
@@ -877,6 +884,7 @@ Function NarrateChestMilkDrink(Actor drinker, String milkName, String chestKind)
     EndIf
     String situation = MMENarrationText.Text("MilkDrinking", "narrate_chest_milk_drink_1", "actor", actorName, "milkName", milkName, "chestKind", chestKind)
     String content = MMENarrationText.Text("MilkDrinking", "narrate_chest_milk_drink_2", "situation", situation, "actor", actorName)
+    content = MMEDialogueKnowledge.Append(content, None)
     Int result = SkyrimNetApi.DirectNarration(content, None, drinker)
     If result != 0
         MMELog.Alarm("[MME Extensions Chest Milk Narration] FAILURE: Skyrim.Net rejected request [" + result + "] for " + actorName)
@@ -912,7 +920,7 @@ Function NarrateMilkCraving(Actor cravingActor, String renderedCraving) Global
             MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: Skyrim.Net player callback quest could not resolve")
             Return
         EndIf
-        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\",\"milkKnowledge\":\"" + EscapeJsonString(MMEDialogueKnowledge.ForRequest(Game.GetPlayer(), "player self-comment")) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnMilkCravingPlayerLine")
         If queued != 1
             MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: Skyrim.Net rejected player craving generation [" + queued + "] | actor=" + actorName)
@@ -923,6 +931,7 @@ Function NarrateMilkCraving(Actor cravingActor, String renderedCraving) Global
     EndIf
 
     Actor listener = Game.GetPlayer()
+    content = MMEDialogueKnowledge.Append(content, cravingActor)
     Int result = SkyrimNetApi.DirectNarration(content, cravingActor, listener)
     If result != 0
         MMELog.Alarm("[MME Extensions Milk Craving] FAILURE: Skyrim.Net rejected NPC craving narration [" + result + "] | actor=" + actorName)
@@ -1025,6 +1034,7 @@ Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String r
     If diagnosticTest
         MMELog.Status("[MME Extensions Global NPC Drink Test] 04 SKYRIM.NET DISPATCH | route=" + route + " | actor=" + actorName + " | cooldown bypassed")
     EndIf
+    content = MMEDialogueKnowledge.Append(content, None)
     Int result = SkyrimNetApi.DirectNarration(content, None, drinker)
     If result == 0
         If !diagnosticTest
@@ -1121,6 +1131,7 @@ Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem, String renderedRe
             content = restrainedContent
         EndIf
     EndIf
+    content = MMEDialogueKnowledge.Append(content, None)
     Int result = SkyrimNetApi.DirectNarration(content, None, None)
     If result == 0
         JsonUtil.SetFloatValue(settingsFile, "lastPlayerDrinkNarrationRealTime", now)
@@ -1185,7 +1196,7 @@ Function NarrateMilkmaidCreated(Actor milkMaid) Global
             MMELog.Alarm("[MMEAlert SkyrimNet] New Milk Maid player narration skipped: callback script unavailable")
             Return
         EndIf
-        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(content) + "\",\"milkKnowledge\":\"" + EscapeJsonString(MMEDialogueKnowledge.ForRequest(Game.GetPlayer(), "player self-comment")) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnNewMilkMaidPlayerLine")
         MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] New Milk Maid player generation result " + queued + " (1=queued); no NPC fallback")
         If queued == 1
@@ -1204,6 +1215,7 @@ Function NarrateMilkmaidCreated(Actor milkMaid) Global
     ; Supplying an NPC as originator makes Skyrim.Net select her as speaker.
     ; Player speech uses the private generation/TTS branch above because the
     ; DirectNarration dialogue manager only chooses eligible NPC speakers.
+    content = MMEDialogueKnowledge.Append(content, milkMaid)
     Int result = SkyrimNetApi.DirectNarration(content, milkMaid, listener)
     If result == 0
         JsonUtil.SetFloatValue(settingsFile, "lastMilkmaidCreatedNarrationRealTime", now)
@@ -1244,7 +1256,7 @@ Function NarrateForcedMilkMaidConversion(Actor milkMaid, String conversionMessag
             MMELog.Alarm("[MMEAlert SkyrimNet] Forced Milk Maid player narration skipped: callback script unavailable")
             Return
         EndIf
-        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(prompt) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(prompt) + "\",\"milkKnowledge\":\"" + EscapeJsonString(MMEDialogueKnowledge.ForRequest(Game.GetPlayer(), "player self-comment")) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnForcedMilkMaidPlayerLine")
         MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] Forced Milk Maid player generation result " + queued + " (1=queued); no NPC fallback")
         If diagnostic
@@ -1255,6 +1267,7 @@ Function NarrateForcedMilkMaidConversion(Actor milkMaid, String conversionMessag
     Actor listener = Game.GetPlayer()
     ; Forced conversion owns this one narration and explicitly selects the
     ; affected actor as speaker. No automatic-speaker fallback is allowed.
+    prompt = MMEDialogueKnowledge.Append(prompt, milkMaid)
     Int result = SkyrimNetApi.DirectNarration(prompt, milkMaid, listener)
     MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] Forced Milk Maid DirectNarration result " + result + " | speaker=" + actorName + " | listener=" + ResolveActorName(listener, "everyone nearby"))
     If diagnostic
@@ -1287,7 +1300,7 @@ Function NarrateMilkMaidCurse(Actor milkMaid, String conversionMessage) Global
             MMELog.Alarm("[MMEAlert SkyrimNet] Forced Milk Maid player narration skipped: callback script unavailable")
             Return
         EndIf
-        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(prompt) + "\"}"
+        String contextJson = "{\"playerInstructions\":\"" + EscapeJsonString(MMENarrationText.Text("Common", "player_instructions", "actor", actorName)) + "\",\"speaker\":\"" + EscapeJsonString(actorName) + "\",\"situation\":\"" + EscapeJsonString(prompt) + "\",\"milkKnowledge\":\"" + EscapeJsonString(MMEDialogueKnowledge.ForRequest(Game.GetPlayer(), "player self-comment")) + "\"}"
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnForcedMilkMaidPlayerLine")
         MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] Forced Milk Maid player generation result " + queued + " (1=queued); no NPC fallback")
         If diagnostic
@@ -1298,6 +1311,7 @@ Function NarrateMilkMaidCurse(Actor milkMaid, String conversionMessage) Global
     Actor listener = Game.GetPlayer()
     ; Forced conversion owns this one narration and explicitly selects the
     ; affected actor as speaker. No automatic-speaker fallback is allowed.
+    prompt = MMEDialogueKnowledge.Append(prompt, milkMaid)
     Int result = SkyrimNetApi.DirectNarration(prompt, milkMaid, listener)
     MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] Forced Milk Maid DirectNarration result " + result + " | speaker=" + actorName + " | listener=" + ResolveActorName(listener, "everyone nearby"))
     If diagnostic
@@ -1448,6 +1462,7 @@ Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass, S
         Debug.Notification("Thoughts narration: targeted DirectNarration for " + actorName)
         MMELog.Diagnostic("[MMEThoughts] narration target=" + actorName + " | fullness=" + fullnessState + " | armor=" + armorType + " | tone=humorous/suggestive/playful | grounding=" + renderedThought)
     EndIf
+    content = MMEDialogueKnowledge.Append(content, None)
     Int result = SkyrimNetApi.DirectNarration(content, None, milkMaid)
     If result == 0
         JsonUtil.SetFloatValue(settingsFile, "lastMilkMaidThoughtNarrationRealTime", now)
@@ -1498,6 +1513,7 @@ Function NarrateBoundMilkMaidThought(Actor milkMaid, String renderedThought) Glo
     String actorName = ResolveActorName(milkMaid, "The Milk Maid")
     String content = MMENarrationText.Text("Thoughts", "narrate_bound_milk_maid_thought_1", "thought", renderedThought, "actor", actorName)
     MMELog.MasterDiagnostic("[MME Bound Thoughts] narration dispatch | target=" + actorName)
+    content = MMEDialogueKnowledge.Append(content, None)
     Int result = SkyrimNetApi.DirectNarration(content, None, milkMaid)
     MMELog.MasterDiagnostic("[MME Bound Thoughts] narration result=" + result + " | target=" + actorName)
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Bound Milk Maid Thought DirectNarration result " + result + " | target=" + actorName + " | " + content)

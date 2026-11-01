@@ -1,5 +1,9 @@
 [ system ]
 {{ playerInstructions }}
+
+{% if exists("milkKnowledge") %}
+{{ milkKnowledge }}
+{% endif %}
 [ end system ]
 [ user ]
 Situation: {{ situation }}

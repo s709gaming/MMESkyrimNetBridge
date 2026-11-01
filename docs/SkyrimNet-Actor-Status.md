@@ -74,3 +74,13 @@ requirement. Master-gated load entry/dispatch/completion and each callback resul
 make restoration observable; negative callback failures are deduplicated alarms.
 A completed registration batch is an API attempt report, not proof of a successful
 full-profile render. Fresh-process existing-save validation remains required.
+
+## Shared knowledge in MME dialogue requests (2026-11-01)
+
+- MMEDialogueKnowledge reads the existing editable Lore.milk_lore and Lore.milkmaid_lore through MMENarrationText, including saved personal overrides and normal default resolution. No duplicate lore setting or lore rewrite is introduced.
+- Existing {actor} tokens in the shared Milk Maid entry use An example Milk Maid, with an explicit general-background frame. They do not identify an ordinary speaker/listener as a Milk Maid. Actual Milk Maid decorators retain their existing actor-name rendering and current-state guards.
+- Every MME DirectNarration submission appends the background before the API call, retaining its exact content variable, originator, target, guards and API-result handling. This covers automatically selected speakers without temporarily marking nearby actors. Empty requests retain their original behavior; an already composed block is not appended twice.
+- Private player requests include milkKnowledge in their escaped context JSON. The custom player template places it in the system message before generation, retaining playerInstructions, situation and callbacks. Player TTS remains playback only; it does not receive a second prompt or trigger bystander fallback.
+- This is request-content enrichment, not permanent biography editing or a pre-speech callback. DirectNarration content can remain in Skyrim.Net event history; there is no strict promise that the knowledge can never influence later conversation. No world-knowledge database writes or temporary global actor flags are used.
+- Existing narration switches/cooldowns and Skyrim.Net absence guards remain authoritative. Sparse master-gated traces identify route, known/automatic speaker and composed character count without logging full lore. Empty lore after normal fallback raises a deduplicated alarm independently of routine logging.
+- Runtime acceptance requires installed matched source/PEX/template files: actual NPC, automatic speaker, player-only custom generation, edited lore, identity preservation, queue overlap, disabled/absent dependency, save/reload and rendered request inspection. Text composition does not guarantee model compliance with the desired tone.
