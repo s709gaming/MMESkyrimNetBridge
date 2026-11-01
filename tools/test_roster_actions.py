@@ -40,4 +40,35 @@ class ActionContracts(unittest.TestCase):
         self.assertNotIn('Debug.Notification', report)
         self.assertIn('consume | giver=', text)
 
+    def test_original_mode_mirror_is_actor_scoped_and_has_no_gameplay_dispatch(self):
+        text = source('MMEOriginalSettings')
+        setter = text.split('Bool Function SetMilkingMode(', 1)[1].split('EndFunction', 1)[0]
+        self.assertIn('requestedMode != 0 && requestedMode != 2', setter)
+        self.assertIn('StorageUtil.SetIntValue(candidate, "MME.MilkMaid.MilkingMode", requestedMode)', setter)
+        self.assertIn('actualMode == requestedMode', setter)
+        self.assertIn('maids.Find(candidate) < 0', text)
+        self.assertNotRegex(setter, r'Game.GetPlayer|AssignSlot|changeMilk|[.]Cast|RegisterFor|Utility.Wait')
+        self.assertIn('MMELog.MasterDiagnostic', setter)
+        self.assertIn('Failure("modeReadback." + candidate', setter)
+        self.assertNotIn('Debug.Notification', setter)
+        sdk = (ROOT / 'tools/maid-roster-sdk/MMEOriginalSettings.psc').read_text()
+        for signature in ['Int Function GetMilkingMode(Actor candidate) Global', 'String Function MilkingModeBlockReason(Actor candidate) Global', 'Bool Function SetMilkingMode(Actor candidate, Int requestedMode) Global']:
+            self.assertIn(signature, text)
+            self.assertIn(signature, sdk)
+
+    def test_mode_action_keeps_snapshot_guards_and_stays_in_roster(self):
+        text = (ROOT / 'fomod/choices/maid-roster-ui/Source/Scripts/MMEMaidRosterUI.psc').read_text()
+        action = text.split('Event OnActionClick(', 1)[1].split('EndEvent', 1)[0]
+        mode = action.split('    If parts[2] == "mode_auto" || parts[2] == "mode_manual"', 1)[1]
+        # The first occurrence is stale-snapshot recovery; select the setter branch.
+        mode = action[action.index('        ; Configuration-only action:'):action.index('    PendingActor =')]
+        self.assertIn('SnapshotActors[rowIndex] as Actor', mode)
+        self.assertIn('MMEOriginalSettings.SetMilkingMode(modeActor, requestedMode)', mode)
+        self.assertIn('ActionBusy = False', mode)
+        self.assertIn('RefreshRoster()', mode)
+        self.assertNotIn('CloseRoster(', mode)
+        self.assertNotIn('RegisterForSingleUpdate', mode)
+        self.assertLess(action.index('rowIndex >= SnapshotActors.Length'), action.index('MMEOriginalSettings.SetMilkingMode'))
+        self.assertLess(action.index('rowToken[0] != (SnapshotRevision as String)'), action.index('MMEOriginalSettings.SetMilkingMode'))
+
 if __name__ == '__main__': unittest.main()

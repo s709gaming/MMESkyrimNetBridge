@@ -1,5 +1,67 @@
 Scriptname MMEOriginalSettings Hidden
 
+; Per-actor mirror of original MilkMCM.Debug_MM_Maid_MilkingMode.
+; Original Off (1) remains readable; this two-choice facade writes only 0/2.
+Int Function GetMilkingMode(Actor candidate) Global
+    If candidate == None
+        Return -1
+    EndIf
+    Int currentMode = StorageUtil.GetIntValue(candidate, "MME.MilkMaid.MilkingMode", 0)
+    Failure("modeInvalid." + candidate, currentMode < 0 || currentMode > 2, "read milking mode", candidate, "unknown original MME mode=" + currentMode)
+    Return currentMode
+EndFunction
+
+String Function MilkingModeBlockReason(Actor candidate) Global
+    If candidate == None
+        Return "actor unavailable"
+    EndIf
+    If candidate.IsDeleted() || candidate.IsDead() || candidate.IsChild()
+        Return "actor unavailable"
+    EndIf
+    MilkQUEST milk = Resolve()
+    If milk == None
+        Return "MME controller unavailable"
+    EndIf
+    Actor[] maids = milk.MilkMaid
+    Failure("modeMaids", maids == None, "validate milking mode target", candidate, "MilkMaid array unavailable")
+    If maids == None
+        Return "MME maid list unavailable"
+    EndIf
+    If maids.Find(candidate) < 0
+        Return "actor is no longer an MME Milk Maid"
+    EndIf
+    Int currentMode = GetMilkingMode(candidate)
+    If currentMode < 0 || currentMode > 2
+        Return "original MME mode is invalid"
+    EndIf
+    ; Preferences do not require milk, armor, proximity, loaded 3D or idle scenes.
+    Return ""
+EndFunction
+
+Bool Function SetMilkingMode(Actor candidate, Int requestedMode) Global
+    MMELog.MasterDiagnostic("[MME Original Settings] mode entry | actor=" + candidate + " | requested=" + requestedMode)
+    Failure("modeRequest", requestedMode != 0 && requestedMode != 2, "set milking mode", candidate, "two-choice mirror accepts Manual=0 or Auto=2; requested=" + requestedMode)
+    If requestedMode != 0 && requestedMode != 2
+        Return False
+    EndIf
+    String reason = MilkingModeBlockReason(candidate)
+    MMELog.MasterDiagnostic("[MME Original Settings] mode eligibility | actor=" + candidate + " | eligible=" + (reason == "") + " | reason=" + reason)
+    If reason != ""
+        Return False
+    EndIf
+    Int previousMode = GetMilkingMode(candidate)
+    If previousMode == requestedMode
+        MMELog.MasterDiagnostic("[MME Original Settings] mode skip | actor=" + candidate + " | already selected=" + previousMode)
+        Return True
+    EndIf
+    StorageUtil.SetIntValue(candidate, "MME.MilkMaid.MilkingMode", requestedMode)
+    Int actualMode = GetMilkingMode(candidate)
+    Bool success = actualMode == requestedMode
+    Failure("modeReadback." + candidate, !success, "set milking mode", candidate, "requested=" + requestedMode + " actual=" + actualMode)
+    MMELog.MasterDiagnostic("[MME Original Settings] mode result | actor=" + candidate + " | old=" + previousMode + " | requested=" + requestedMode + " | actual=" + actualMode + " | success=" + success)
+    Return success
+EndFunction
+
 ; Thin MME facade: the original quest, StorageUtil mastery and player spells
 ; remain authoritative. No settings copies, defaults migration or polling.
 MilkQUEST Function Resolve() Global

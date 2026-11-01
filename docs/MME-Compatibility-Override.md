@@ -136,3 +136,40 @@ set the process environment variable MME_PAPYRUS_EXTRA_IMPORTS to a semicolon-se
 list of dependency source directories in the enabled MO2 mods before running
 build-package.ps1. These directories supplement existing imports, are not packaged,
 and do not install or deploy anything. Use MO2 precedence when constructing the list.
+
+## Roster Auto/Manual mode mirror
+
+The optional Maid Roster adds a robot button beside Drink/Give Milk and Self Milk.
+Its highlighted state is original MME Auto (2); clicking sets Manual (0), and
+clicking Manual sets Auto. Existing Off (1) remains untouched on opening and is
+identified in the tooltip; it is not offered as a third choice. Missing original
+storage defaults to Manual exactly as MME does. This does not configure Extensions'
+separate Auto Self-Milking feature or override original armor/slave behavior.
+
+MMEOriginalSettings owns the per-actor read/write and readback check. Only the
+existing MME.MilkMaid.MilkingMode integer is changed. No milk amounts, slots,
+maid levels, spells, animations, timers or gameplay JSON defaults are changed.
+The roster keeps its session/revision/row bounds and action allowlist checks,
+resolves the actor from its own snapshot, then revalidates current MME membership.
+Mode changes keep the roster open and refresh authoritative values. Zero milk,
+combat, scene animation and unloaded 3D do not by themselves block a stored
+preference edit; no scene or milking action is dispatched by the new route.
+Deleted, dead, child or deregistered targets are rejected. Drink/Self Milk retain
+their existing availability guards and close/dispatch behavior.
+
+Routine request, token, actor, current/requested mode, eligibility, readback and
+cleanup footprints use the existing master Papyrus logging switch. Expected stale
+requests, unavailable actors and repeated selections are traces, not smoke alarms.
+Invalid original values, invalid setter requests and failed readback produce
+failure alarms through the existing deduplication helper. There are no diagnostic
+notifications or new update loops. No original MME script edit is needed for this
+mode mirror: the original MCM reads the same value when its page redraws.
+
+Validation: real-page JavaScript tests cover both states, legacy Off preservation,
+zero milk, unknown/older payloads, NPC row tokens, duplicate clicks and refreshed
+state. Source contracts protect actor targeting, snapshot guards, master logging
+and absence of gameplay dispatch. Both affected Papyrus scripts are compiled;
+the narrow roster SDK projection is compile-only and must never be shipped.
+Live two-way original-MCM synchronization, player/NPC selection, logging off/on,
+existing saves and disabled/optional-host scenarios remain acceptance tests after
+separately authorized installation.

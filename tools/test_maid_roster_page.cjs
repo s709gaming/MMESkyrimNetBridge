@@ -59,3 +59,29 @@ console.log('PASS: optional arousal column, old payload compatibility, 0/50/100/
 const alignmentCell=elements.rows.children[0];
 window.setRoster({session:'13',rows:[{name:'Maid',milk:2,capacity:4,percent:50}]});
 const actionCell=elements.rows.children[0].children[2];assert.equal(actionCell.tagName,'td');assert.notEqual(actionCell.className,'actions');assert.equal(actionCell.firstChild.tagName,'div');assert.equal(actionCell.firstChild.className,'actions');
+
+// Robot mirrors the real MME mode, independently of milk/scene availability.
+for(const [mode,pressed,next,label] of [[0,'false','mode_auto','Manual'],[2,'true','mode_manual','Auto'],[1,'false','mode_auto','Off (set in MME)']]){
+ const beforeRender=calls.length;
+ window.setRoster({session:'20',rows:[{name:'Player',milk:0,capacity:4,percent:0,token:'20:0',player:1,available:0,selfReason:'no milk available',milkingMode:mode,modeReason:''}]});
+ assert.equal(calls.length,beforeRender);
+ const actions=elements.rows.children[0].children[2].firstChild;
+ assert.equal(actions.children.length,3);const robot=actions.children[2].firstChild;
+ assert.equal(robot.textContent,'\u{1f916}');assert(!robot.disabled);assert.equal(robot['aria-pressed'],pressed);assert(robot['aria-label'].includes(label));
+ robot.listeners.focus();assert(elements.tooltip.textContent.includes('Extensions Auto Self-Milking is separate'));
+ const before=calls.length;robot.listeners.click();assert.deepEqual(calls[calls.length-1],['action','20|20:0|'+next]);assert.equal(calls.length,before+1);
+ assert(actions.children.every(slot=>slot.firstChild.disabled));robot.listeners.click();assert.equal(calls.length,before+1);
+
+}
+for(const bad of [undefined,null,3,-1,'2']){
+ window.setRoster({session:'21',rows:[{name:'Maid',token:'21:0',milkingMode:bad,modeReason:''}]});
+ const robot=elements.rows.children[0].children[2].firstChild.children[2].firstChild;assert(robot.disabled);
+ const before=calls.length;robot.listeners.click();assert.equal(calls.length,before);
+}
+window.setRoster({session:'22',rows:[{name:'Removed maid',token:'22:0',milkingMode:0,modeReason:'actor is no longer an MME Milk Maid'}]});
+assert(elements.rows.children[0].children[2].firstChild.children[2].firstChild.disabled);
+window.setRoster({session:'23',rows:[{name:'Player',token:'23:0',player:1,milkingMode:0,modeReason:''},{name:'Hulda',token:'23:1',player:0,milkingMode:2,modeReason:''}]});
+const npcRobot=elements.rows.children[1].children[2].firstChild.children[2].firstChild;npcRobot.listeners.click();assert.deepEqual(calls.pop(),['action','23|23:1|mode_manual']);
+window.setRoster({session:'23',rows:[{name:'Player',token:'24:0',player:1,milkingMode:0,modeReason:''},{name:'Hulda',token:'24:1',player:0,milkingMode:0,modeReason:''}]});
+assert.equal(elements.rows.children[1].children[2].firstChild.children[2].firstChild['aria-pressed'],'false');
+console.log('PASS: robot Auto/Manual payloads, legacy Off, zero milk/unavailable scene, old/invalid payloads, NPC tokens, repeat-click guard and authoritative refresh');

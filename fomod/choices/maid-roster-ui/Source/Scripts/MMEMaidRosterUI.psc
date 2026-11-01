@@ -498,6 +498,8 @@ Function RefreshRoster()
                         availableJson = "1"
                     EndIf
                     String selfReason = MMEExtensionsAPI.GetSelfMilkBlockReason(candidate)
+                    Int milkingMode = MMEOriginalSettings.GetMilkingMode(candidate)
+                    String modeReason = MMEOriginalSettings.MilkingModeBlockReason(candidate)
                     String arousalJson = "null"
                     If arousalReadable
                         ; A read-only snapshot; never apply exposure, reactions or animations.
@@ -512,7 +514,7 @@ Function RefreshRoster()
                             arousalUnknown += 1
                         EndIf
                     EndIf
-                    rows += "{\"token\":\"" + (nextRevision as String) + ":" + (rowCount as String) + "\",\"player\":" + playerJson + ",\"available\":" + availableJson + ",\"selfReason\":\"" + Escape(selfReason) + "\",\"name\":\"" + Escape(actorName) + "\",\"milk\":" + (currentMilk as String) + ",\"capacity\":" + capacityJson + ",\"percent\":" + percentJson + ",\"arousal\":" + arousalJson + ",\"status\":\"" + actorStatus + "\"}"
+                    rows += "{\"token\":\"" + (nextRevision as String) + ":" + (rowCount as String) + "\",\"player\":" + playerJson + ",\"available\":" + availableJson + ",\"milkingMode\":" + (milkingMode as String) + ",\"modeReason\":\"" + Escape(modeReason) + "\",\"selfReason\":\"" + Escape(selfReason) + "\",\"name\":\"" + Escape(actorName) + "\",\"milk\":" + (currentMilk as String) + ",\"capacity\":" + capacityJson + ",\"percent\":" + percentJson + ",\"arousal\":" + arousalJson + ",\"status\":\"" + actorStatus + "\"}"
                     rowCount += 1
                 Else
                     skipped += 1
@@ -549,16 +551,38 @@ Event OnActionClick(String eventName, String strArg, Float numArg, Form sender)
     String[] rowToken = StringUtil.Split(parts[1], ":")
     If rowToken.Length != 2 || rowToken[0] != (SnapshotRevision as String)
         Trace("action skipped | stale snapshot")
+        If parts[2] == "mode_auto" || parts[2] == "mode_manual"
+            RefreshRoster()
+        EndIf
         Return
     EndIf
     Int rowIndex = rowToken[1] as Int
     If rowIndex < 0 || rowIndex >= SnapshotActors.Length || (rowIndex as String) != rowToken[1]
         Return
     EndIf
-    If parts[2] != "drink" && parts[2] != "self"
+    If parts[2] != "drink" && parts[2] != "self" && parts[2] != "mode_auto" && parts[2] != "mode_manual"
         Return
     EndIf
     If SnapshotActors[rowIndex] == None
+        Return
+    EndIf
+    If parts[2] == "mode_auto" || parts[2] == "mode_manual"
+        ; Configuration-only action: do not close the panel or queue a scene.
+        If Refreshing
+            Trace("mode skipped | roster refresh in progress | token=" + parts[1])
+            Return
+        EndIf
+        ActionBusy = True
+        Actor modeActor = SnapshotActors[rowIndex] as Actor
+        Int requestedMode = 0
+        If parts[2] == "mode_auto"
+            requestedMode = 2
+        EndIf
+        Trace("mode request | actor=" + modeActor + " | token=" + parts[1] + " | current=" + MMEOriginalSettings.GetMilkingMode(modeActor) + " | requested=" + requestedMode)
+        Bool modeChanged = MMEOriginalSettings.SetMilkingMode(modeActor, requestedMode)
+        ActionBusy = False
+        Trace("mode cleanup | actor=" + modeActor + " | result=" + modeChanged + " | request unlocked; authoritative roster refresh")
+        RefreshRoster()
         Return
     EndIf
     ActionBusy = True
