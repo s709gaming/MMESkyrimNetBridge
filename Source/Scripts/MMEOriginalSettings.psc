@@ -116,10 +116,20 @@ Function DrawGeneralAt(SKI_ConfigBase menu, Int firstRow) Global
     menu.AddSliderOptionST("OGDuration", "Milking Cycle Duration", milk.Milking_Duration, "{0} seconds")
     menu.AddSliderOptionST("OGProduction", "Milk Production Rate", milk.MilkProdMod, "{0}%")
     menu.AddToggleOptionST("OGFixed", "Fixed Milk Production - All", milk.FixedMilkGen)
+    Int fixedFlags = 0
+    If !milk.FixedMilkGen && !milk.FixedMilkGen4Followers
+        fixedFlags = 1
+    EndIf
+    menu.AddToggleOptionST("FixedLactacidEnabled", "Fixed Mode Lactacid Boost", MMEFixedLactacid.IsEnabled(), fixedFlags)
+    Int bonusFlags = fixedFlags
+    If !MMEFixedLactacid.IsEnabled()
+        bonusFlags = 1
+    EndIf
+    menu.AddSliderOptionST("FixedLactacidPercent", "Lactacid Production Bonus", MMEFixedLactacid.BonusPercent(), "+{0}%", bonusFlags)
     menu.AddHeaderOption("Economy")
     menu.AddSliderOptionST("OGPrices", "Milk Price Multiplier", milk.MilkPriceMod, "x{0}")
     ; Both columns finish before the existing General controls begin.
-    menu.SetCursorPosition((firstRow + 8) * 2)
+    menu.SetCursorPosition((firstRow + 10) * 2)
 EndFunction
 
 Function DrawBody(SKI_ConfigBase menu) Global

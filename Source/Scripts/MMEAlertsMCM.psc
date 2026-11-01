@@ -344,7 +344,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 168
+    Return 169
 EndFunction
 
 Function SetPageNames()
@@ -413,6 +413,7 @@ EndFunction
 
 ; Seeds new settings and runs one-time migrations without overriding later choices.
 Function EnsureDefaults()
+    MMEFixedLactacid.EnsureDefaults()
     MMEMilkLeakAPI.EnsureDefaults()
     MMETentacleTiers.Configure()
     If !JsonUtil.HasIntValue(SettingsFile, "enableChestCurseNarration")
@@ -5052,6 +5053,32 @@ State OGFixed
     EndEvent
     Event OnHighlightST()
         SetInfoText("Uses MME's fixed production formula for all Milk Maids instead of its lactacid-dependent dynamic formula. The formula still respects MME modifiers and Milk Production Rate.")
+    EndEvent
+EndState
+
+State FixedLactacidEnabled
+    Event OnSelectST()
+        MMEFixedLactacid.SetEnabled(!MMEFixedLactacid.IsEnabled())
+        ForcePageReset()
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Default on. Only actors using fixed milk production gain the selected bonus while stored Lactacid lasts. Consumes 1 stored unit per simulated game hour, including sleep/wait catch-up. Does not drink inventory bottles. Off restores original MME fixed-mode consumption. Dynamic production is unchanged.")
+    EndEvent
+EndState
+
+State FixedLactacidPercent
+    Event OnSliderOpenST()
+        SetSliderDialogStartValue(MMEFixedLactacid.BonusPercent())
+        SetSliderDialogDefaultValue(50.0)
+        SetSliderDialogRange(0.0, 200.0)
+        SetSliderDialogInterval(5.0)
+    EndEvent
+    Event OnSliderAcceptST(Float value)
+        MMEFixedLactacid.SetBonusPercent(value)
+        ForcePageReset()
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Extra fixed-mode milk production while Lactacid is above zero: +50% makes 1.5 times normal production. Extra Lactacid extends duration without stacking strength. Production returns to normal when fuel reaches zero; a partial final hour receives a proportional bonus. At 0%, fuel still depletes hourly.")
     EndEvent
 EndState
 

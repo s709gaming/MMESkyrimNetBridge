@@ -11,10 +11,10 @@ The shortcuts remain usable independently of the Extensions gameplay switch;
 they configure original MME, not Extensions gameplay.
 
 The additional `MilkMCM.pex` override is based on original MME 20220522.
-Its only behavioral changes are reading `TimesMilkedMult` to synchronize the
+Its Difficulty changes read `TimesMilkedMult` to synchronize the
 private Difficulty selection when a page or its selector opens, displaying
 unknown multipliers as Custom, and rejecting invalid selection indices.
-Original Difficulty setters and economy refresh behavior remain intact.
+Original Difficulty setters and economy refresh behavior remain intact. Its fixed-production hourly preview also includes the new Lactacid bonus through the shared helper below.
 Both Standard/P+ and the generated OStim-only backend include this fix.
 Another mod replacing MilkMCM requires a deliberate merge; this is an
 intentional, small override, not a replacement MME menu.
@@ -60,6 +60,8 @@ the original MME script. It includes these intentional compatibility changes:
 3. Optional DD calls are guarded as described below.
 4. The optional Estrus Unified FOMOD override adds public-API pregnancy recognition
    alongside the existing separate Estrus checks; the default override omits it.
+5. The default-on, fixed-mode Lactacid feature below adds a configurable bonus
+   and hourly fuel depletion; OFF restores original fixed behavior.
 
 The original MME production-cycle `MME_MilkCycleComplete` event is retained;
 it is not a new hook introduced by this override.
@@ -67,7 +69,7 @@ it is not a new hook introduced by this override.
 The former diagnostic instrumentation and `MME_StartMilking.pex` override are
 not included. MME's capacity progression, player slot, notifications, actor
 initialization, factions, milk calculations, animations, and stories remain
-unchanged apart from the compatibility safeguards described here.
+unchanged apart from the compatibility safeguards and fixed-mode Lactacid feature described here.
 
 ## Estrus Unified pregnancy recognition
 
@@ -173,3 +175,16 @@ the narrow roster SDK projection is compile-only and must never be shipped.
 Live two-way original-MCM synchronization, player/NPC selection, logging off/on,
 existing saves and disabled/optional-host scenarios remain acceptance tests after
 separately authorized installation.
+
+## Fixed-mode Lactacid boost (2026-11-01)
+
+- General: **Fixed Mode Lactacid Boost** defaults ON. **Lactacid Production Bonus** defaults +50%, range 0-200% in 5% steps. These are Extensions settings, separate from the 13 original MME shortcuts above.
+- Applies only to an actor using original fixed production (all actors, or the original NPC-only flag). Both controls are disabled when neither fixed option is on; the percentage is also disabled when this toggle is OFF.
+- Each stored Lactacid unit lasts one simulated MME hour. Additional Lactacid extends duration rather than strength. No inventory bottles are automatically consumed. At zero fuel, fixed production returns to its normal formula immediately for subsequent simulated time.
+- Enabled fixed mode replaces original fixed Lactacid depletion, avoiding double consumption. It ignores original Lactacid decay/strength settings. OFF restores original fixed consumption; dynamic production retains original behavior. 0% adds no milk but still depletes fuel hourly.
+- Sleep/wait catch-up boosts only the fueled portion, including fractional final hours. Original breast-scale production caps remain; fuel expiry uses the elapsed time before the production cap. MME's legacy real-time MilkPoll >24 still advances one simulated hour per tick, rather than following elapsed game hours.
+- The shared `MMEFixedLactacid.psc` helper calculates bonus milk; MilkQUEST owns actor-state writes. Original MME downstream overflow, pain reduction and optional production-based progression receive the boosted milk total.
+- Existing saves: missing keys initialize ON/+50% through MCM version 169; explicit OFF/custom percentages are preserved. No actor migration, new quest properties, timer, dynamic lactation write or slot change is introduced.
+- Original MME's hourly production preview uses the same helper. Standard/P+, OStim-only and Estrus Unified variants are rebuilt from matching sources. Competing MilkQUEST/MilkMCM overrides require a deliberate merge.
+- `[MME Fixed Lactacid]` cycle/settings traces use the master Papyrus logging toggle. True input/settings/save failures raise deduplicated smoke alarms when detected, independently of routine logging.
+- Live acceptance after installation: player/NPC; all/NPC-only fixed flags; dynamic and toggle OFF; +0/+50/+200%; zero/fractional/stacked fuel; sleep/wait; capacity/overflow; repeated drinks; old saves; optional backends; logging off/on and error recovery. Compilation and numerical/package checks do not prove live acceptance.

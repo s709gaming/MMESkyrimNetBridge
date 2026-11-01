@@ -5,12 +5,12 @@
                   {
                       "script":  "MMELeakPlayerAlias",
                       "sourceSHA256":  "128875A437106047B5019261AFED34ED53201E51F70480183C5FA7FF90F1CDAF",
-                      "compiledSHA256":  "D559D69F7F60735B4E22A73C9A5B7A466E5A50CEE4F8212D75D7365B121C20CE"
+                      "compiledSHA256":  "0451677AE8BEEDF6FB84DF939655FCAE1F5B8DECD1269587D4C17E96101C197D"
                   },
                   {
                       "script":  "MMELeakVisual",
                       "sourceSHA256":  "FA8CFF1888EC54E9DD020C464C84FB6C9DC17D9238E619DD865E016618C3C79F",
-                      "compiledSHA256":  "391923B24ADD3D30FEE6AE794186ADEFF5B7E08C2ACFD072ECC255EE40DAD71E"
+                      "compiledSHA256":  "8795A5213EA686E2F272100219B2CF4874F66F6E45CE6B1AE34EE5587ADD01D3"
                   }
               ]
 }

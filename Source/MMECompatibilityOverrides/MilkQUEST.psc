@@ -676,6 +676,8 @@ Function MilkCycle(Actor akActor, int t)
 		BoobTick = 0.01
 	endif
 
+	; Preserve elapsed fuel time even when MME caps production catch-up.
+	Int MMEElapsedHours = t
 	if t > MilkMax && BreastScaleLimit
 		t = MilkMax as int
 	endif
@@ -683,7 +685,16 @@ Function MilkCycle(Actor akActor, int t)
 	;cycle to generate milk, raise/lower generation
 	If (FixedMilkGen || (akActor != PlayerREF && FixedMilkGen4Followers ))												;fixed milkproduction
 		MilkTick = 1.0 / 3 * BreastRows * (1 + SLA.GetActorArousal(akActor)/100) * MilkProdMod/100 * t
-		if LactacidDecayRate > 0																						;reduce lactacid, for purpose of belly decrease
+		If MMEFixedLactacid.IsEnabled()
+			Float beforeLactacid = LactacidCnt
+			Float fixedBonus = MMEFixedLactacid.BonusMilk(akActor, MilkTick, LactacidCnt, t)
+			MilkTick += fixedBonus
+			LactacidCnt -= MMEElapsedHours
+			If LactacidCnt < 0.0
+			    LactacidCnt = 0.0
+			EndIf
+			MMEFixedLactacid.TraceCycle(akActor, beforeLactacid, LactacidCnt, MMEElapsedHours, fixedBonus)
+		ElseIf LactacidDecayRate > 0																						;reduce lactacid, for purpose of belly decrease
 			LactacidCnt -= LactacidDecayRate
 		elseif LactacidDecayRate == 0
 			LactacidCnt -= MilkTick

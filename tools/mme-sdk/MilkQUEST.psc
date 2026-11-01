@@ -25,6 +25,7 @@ String[] Property BasicLivingArmor Auto
 String[] Property ParasiteLivingArmor Auto
 Bool Property ArmorStrippingDisabled Auto
 Bool Property FixedMilkGen Auto
+Bool Property FixedMilkGen4Followers Auto
 Bool Property MaidLvlCap Auto
 Int Property TimesMilkedMult Auto
 Float Property MilkGenValue Auto

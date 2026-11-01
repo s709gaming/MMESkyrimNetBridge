@@ -574,6 +574,8 @@ function Page_MilkMaidDebug()
 				if MilkQ.FixedMilkGen || (MaidlistA[MaidIndex] != MilkQ.PlayerREF && MilkQ.FixedMilkGen4Followers)
 					MilkTick = 1.0/3 * BreastRows * (1 + MilkQ.SLA.GetActorArousal(MaidlistA[MaidIndex])/100) * MilkQ.MilkProdMod/100
 					FinalMilkTick = MilkTick
+					; Fixed-mode preview shares the fuel-weighted bonus calculation.
+					FinalMilkTick += MMEFixedLactacid.BonusMilk(MaidlistA[MaidIndex], MilkTick, LactacidCnt, 1)
 				else
 					MilkTick = (MaidBreastsBasevalue + MaidMilkGen)/3/10 * (1 + MilkQ.SLA.GetActorArousal(MaidlistA[MaidIndex])/100) * MilkQ.MilkProdMod/100
 					FinalMilkTick = MilkTick + PapyrusUtil.ClampFloat(MilkTick * LactacidFactor, 0, LactacidCnt)

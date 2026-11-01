@@ -2,6 +2,8 @@ $ErrorActionPreference = "Stop"
 
 # Resolve every path from this script so it works when launched by double-click.
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+& python -B (Join-Path $projectRoot 'tools/test_fixed_lactacid.py')
+if ($LASTEXITCODE) { throw 'Fixed Lactacid regression checks failed' }
 & python -B (Join-Path $projectRoot 'tools/test_mme_quick_settings.py')
 if ($LASTEXITCODE) { throw 'Original MME quick-settings contracts failed' }
 & python -B (Join-Path $projectRoot 'tools/test_mcm_organization.py')
@@ -30,6 +32,7 @@ $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
 $scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEBreastBounceEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEArousalEffects", "MMEArousalAnimations", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMEArmorRemoval", "MMETrapArmorDialogue", "MMEFollowerArmorRescue", "TIF_MMEExtFollowerArmorRescue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMESexLabBreastfeedingBackend", "MMEElsieBreastfeeding", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $scriptNames += "MMEOriginalSettings"
+$scriptNames += "MMEFixedLactacid"
 $scriptNames += "MMELockProtection"
 $scriptNames += "MMEEstrusPregnancyTest"
 $scriptNames += "MMEBodyEffects"

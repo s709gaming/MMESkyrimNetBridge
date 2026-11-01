@@ -5,6 +5,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 original = (ROOT / 'Source/MMECompatibilityOverrides/MilkMCM.psc').read_text()
+original = original.replace('\t\t\t\t\t; Fixed-mode preview shares the fuel-weighted bonus calculation.\n\t\t\t\t\tFinalMilkTick += MMEFixedLactacid.BonusMilk(MaidlistA[MaidIndex], MilkTick, LactacidCnt, 1)\n', '', 1)
 restored = original.split('\n; MME Extensions: derive the original menu label')[0]
 restored = restored.replace('\n\tMMEExtSyncDifficulty()', '', 1)
 restored = restored.replace('\n\t\tMMEExtSyncDifficulty()', '', 1)
@@ -32,4 +33,4 @@ assert "variants['MilkMCM'] = (ROOT / 'Source/MMECompatibilityOverrides/MilkMCM.
 build = (ROOT / 'build-package.ps1').read_text()
 assert '$scriptNames += "MMEOriginalSettings"' in build
 assert '$mmeCompatibilityOverrideNames = @("MilkQUEST", "MilkMCM")' in build
-print('PASS: 13 mirrored controls; original MCM only has reviewed sync changes; single authority, safe refresh boundaries and backend packaging wired')
+print('PASS: 13 mirrored controls; original MCM only has reviewed sync/bonus-preview changes; single authority, safe refresh boundaries and backend packaging wired')
