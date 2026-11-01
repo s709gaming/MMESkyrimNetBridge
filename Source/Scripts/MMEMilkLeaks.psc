@@ -12,7 +12,6 @@ Int[] visibleStages
 Bool[] busy
 Bool initialized = False
 Int epoch = 0
-Float lastNarration = -1200.0
 Float lastScanTrace = -300.0
 String settings = "/MMEAlerts/Settings"
 
@@ -51,7 +50,6 @@ Function Maintenance()
             i += 1
         EndWhile
     EndIf
-    lastNarration = -1200.0
     MMEMilkLeakAPI.EnsureDefaults()
     Actor[] nearby = MMEExtensionsNative.GetNearbyActors(2000.0)
     Int resetIndex = 0
@@ -135,12 +133,7 @@ Function Observe(Actor[] nearby)
             Float capacity = MME_Storage.getMilkMaximum(target)
             If capacity > 0.0
                 Float percent = 100.0 * MME_Storage.getMilkCurrent(target) / capacity
-                Float threshold = JsonUtil.GetFloatValue(settings, "milkLeakThreshold", 100.0)
-                If threshold < 1.0
-                    threshold = 1.0
-                ElseIf threshold > 100.0
-                    threshold = 100.0
-                EndIf
+                Float threshold = Threshold()
                 String latch = "MMELeaks.ThresholdLatched"
                 Int thresholdState = 0
                 If percent >= threshold
@@ -152,7 +145,7 @@ Function Observe(Actor[] nearby)
                 EndIf
                 If percent < threshold
                     StorageUtil.UnsetIntValue(target, latch)
-                ElseIf StorageUtil.GetIntValue(target, latch, 0) == 0 && tracked.Find(target) < 0
+                ElseIf tracked.Find(target) < 0
                     String reason = BlockReason(target)
                     If GetLeakSource(target) > 0
                         reason = "existing spray"
@@ -190,6 +183,10 @@ Function StartLeak(Actor target)
     EndIf
     tracked[slot] = target
     started[slot] = Utility.GetCurrentRealTime()
+    If StorageUtil.GetIntValue(target, "MMELeaks.ThresholdLatched", 0) == 1
+        ; Interrupted leaks resume Low instead of repeating the initial taper.
+        started[slot] = started[slot] - 10.0
+    EndIf
     ; Fixed taper; legacy intensity settings are retained but no longer read.
     maximumStages[slot] = 2
     visibleStages[slot] = -1
@@ -200,7 +197,6 @@ Function StartLeak(Actor target)
     If tracked[slot] != None && GetLeakSource(target) == 1
         StorageUtil.SetIntValue(target, "MMELeaks.ThresholdLatched", 1)
         StorageUtil.UnsetStringValue(target, "MMELeaks.Skip")
-        Narrate(target)
     EndIf
     RegisterForSingleUpdate(1.0)
 EndFunction
@@ -214,6 +210,9 @@ Function Advance(Int slot)
     Actor target = tracked[slot]
     Float elapsed = Utility.GetCurrentRealTime() - started[slot]
     Int stage = maximumStages[slot] - Math.Floor(elapsed / 5.0)
+    If stage < 0
+        stage = 0
+    EndIf
     String reason = BlockReason(target)
     If !Enabled()
         reason = "feature/master/dependency disabled"
@@ -222,8 +221,23 @@ Function Advance(Int slot)
     ElseIf StorageUtil.GetFloatValue(target, "MMELeaks.ExternalUntil", 0.0) > Utility.GetCurrentRealTime()
         reason = "yield to external request"
     EndIf
-    If stage < 0 || reason != ""
-        Cleanup(slot, reason + " / sequence complete")
+    If reason == ""
+        ; Verified original getters read these exact keys. Keep MME's upgrade
+        ; initialization, but avoid its unconditional traces on every active tick.
+        If !StorageUtil.HasFloatValue(target, "MME.MilkMaid.MilkMaximum")
+            MME_Storage.getMilkMaximum(target)
+        EndIf
+        Float capacity = StorageUtil.GetFloatValue(target, "MME.MilkMaid.MilkMaximum", 0.0)
+        If capacity <= 0.0
+            reason = "invalid milk capacity"
+            Alarm("sustain", target, reason)
+        ElseIf 100.0 * StorageUtil.GetFloatValue(target, "MME.MilkMaid.MilkCount", 0.0) / capacity < Threshold()
+            StorageUtil.UnsetIntValue(target, "MMELeaks.ThresholdLatched")
+            reason = "fullness below threshold"
+        EndIf
+    EndIf
+    If reason != ""
+        Cleanup(slot, reason)
         busy[slot] = False
         Return
     EndIf
@@ -331,23 +345,13 @@ Function OnExternalEnd(Form who)
     EndIf
 EndFunction
 
-Function Narrate(Actor target)
-    Float now = Utility.GetCurrentRealTime()
-    Float cooldown = JsonUtil.GetFloatValue(settings, "milkLeakNarrationCooldown", 30.0)
-    If cooldown < 0.0
-        cooldown = 0.0
-    ElseIf cooldown > 1200.0
-        cooldown = 1200.0
+
+Float Function Threshold()
+    Float value = JsonUtil.GetFloatValue(settings, "milkLeakThreshold", 100.0)
+    If value < 1.0
+        Return 1.0
+    ElseIf value > 100.0
+        Return 100.0
     EndIf
-    If JsonUtil.GetIntValue(settings, "milkLeakNarration", 1) != 1 || now - lastNarration < cooldown || !MMEAlertsSkyrimNet.IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
-        Trace("narration skip | actor=" + target + " | disabled/cooldown/optional dependency")
-        Return
-    EndIf
-    String content = MMENarrationText.Render(MMENarrationText.GetRaw("MilkLeaks", "start"), "actor", target.GetDisplayName())
-    content += " " + MMENarrationText.GetRaw("MilkLeaks", "instructions")
-    Int result = SkyrimNetApi.DirectNarration(content, None, target)
-    If result == 0
-        lastNarration = now
-    EndIf
-    Trace("narration result | actor=" + target + " | result=" + result)
+    Return value
 EndFunction

@@ -98,7 +98,3 @@ Thoughts.json
   narrate_milk_maid_thought_1: {actor}, {thought}
   narrate_bound_milk_maid_thought_1: {actor}, {thought}
 
-MilkLeaks.json
-  start: {actor}
-  instructions: (no placeholders)
-

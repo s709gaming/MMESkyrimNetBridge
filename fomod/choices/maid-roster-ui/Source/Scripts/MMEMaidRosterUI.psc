@@ -18,7 +18,6 @@ Bool PendingOpen = False
 Bool Refreshing = False
 Int RefreshGeneration = -1
 Bool Initializing = False
-Bool OpenLeakEditor = False
 String Settings = "/MMEAlerts/Settings"
 
 Function Trace(String detail)
@@ -83,8 +82,9 @@ Function Initialize()
     UnregisterForAllKeys()
     BoundKey = -1
     LastCloseTime = -10.0
+    ; Retire the old MCM shortcut registration from existing saves.
+    UnregisterForModEvent("MMEExtensions_LeakEditorOpen")
     RegisterForModEvent("MMEExtensions_RosterOpen", "OnOpenRequest")
-    RegisterForModEvent("MMEExtensions_LeakEditorOpen", "OnLeakEditorRequest")
     RegisterForModEvent("MMEExtensions_RosterSettings", "OnSettingsChanged")
     RegisterForModEvent("Magelight_ViewDomReady", "OnDomReady")
     RegisterForModEvent("Magelight_ViewLoadFailed", "OnViewFailed")
@@ -240,10 +240,6 @@ Function ShowReadyView()
     BindViewHotkey()
     Trace("focus acquired | view=" + ViewId)
     RefreshRoster()
-    If OpenLeakEditor
-        OpenLeakEditor = False
-        Magelight.Call(ViewId, "openMilkLeaksEditor", "")
-    EndIf
 EndFunction
 
 Bool Function OwnHostEvent(String strArg, Float numArg)
@@ -697,8 +693,3 @@ Function UnbindViewHotkey()
         Magelight.BindHotkey(ViewId, BoundKey, 0)
     EndIf
 EndFunction
-
-Event OnLeakEditorRequest(String eventName, String strArg, Float numArg, Form sender)
-    OpenLeakEditor = True
-    OnOpenRequest(eventName, strArg, numArg, sender)
-EndEvent

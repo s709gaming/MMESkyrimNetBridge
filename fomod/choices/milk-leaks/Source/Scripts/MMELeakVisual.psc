@@ -11,7 +11,7 @@ Event OnContainerChanged(ObjectReference newContainer, ObjectReference oldContai
     If !wearer.IsEquipped(GetBaseObject())
         Return
     EndIf
-    OninusLactis original = Quest.GetQuest("OninusLactisQuest") as OninusLactis
+    OninusLactis original = Quest.GetQuest("OninusLactis") as OninusLactis
     If original == None
         ReportFailure(wearer, "Oninus positioning quest unavailable")
         Return
@@ -26,8 +26,14 @@ Event OnContainerChanged(ObjectReference newContainer, ObjectReference oldContai
         ReportFailure(wearer, "invalid nipple offset")
         Return
     EndIf
+    ; Match the author's UpdateArmorProperties: mirror X for the right nipple.
+    ; Never mutate the original settings/storage array.
+    Float[] rightOffset = new Float[3]
+    rightOffset[0] = -offset[0]
+    rightOffset[1] = offset[1]
+    rightOffset[2] = offset[2]
     NetImmerse.SetNodeLocalPosition(wearer, "Lactis Group L", offset, False)
-    NetImmerse.SetNodeLocalPosition(wearer, "Lactis Group R", offset, False)
+    NetImmerse.SetNodeLocalPosition(wearer, "Lactis Group R", rightOffset, False)
     NetImmerse.SetNodeScale(wearer, "Lactis Group L", original.GlobalEmitterScale * scale, False)
     NetImmerse.SetNodeScale(wearer, "Lactis Group R", original.GlobalEmitterScale * scale, False)
     NetImmerse.SetNodeScale(wearer, "Lactis Axis L", 0.0, False)

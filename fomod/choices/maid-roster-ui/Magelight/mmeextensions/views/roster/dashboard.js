@@ -239,9 +239,6 @@ function showTab(editor){
   rpc('catalog').then(reply=>{if(reply.revision===state.revision){state.uncertain=false;status('Saved revision unchanged. Your drafts are ready to save.');updateFooter();}else status('Saved text changed while the window was closed. Drafts kept; copy them before Reload Saved.');}).catch(error=>status(error.message));
  }
 }
-window.openMilkLeaksEditor=function(){
- preferences.section='skyrimnet';preferences.features.skyrimnet='Milk Leaking';el('editor-search').value='';el('editor-modified').checked=false;remember();showTab(true);updateSections();renderList();applySplit();
-};
 el('roster-tab').addEventListener('click',()=>showTab(false));el('lore-tab').addEventListener('click',()=>{showTab(true);applySplit();});
 window.requestEditorClose=function(){
  const close=()=>{if(typeof window.mmeRosterClose==='function')window.mmeRosterClose(state.session);};

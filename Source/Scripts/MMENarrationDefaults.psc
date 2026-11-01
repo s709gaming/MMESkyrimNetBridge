@@ -2,7 +2,7 @@
 Scriptname MMENarrationDefaults Hidden
 
 Int Function FileCount() Global
-    Return 13
+    Return 12
 EndFunction
 
 String Function FileName(Int index) Global
@@ -42,9 +42,6 @@ String Function FileName(Int index) Global
     If index == 11
         Return "Thoughts"
     EndIf
-    If index == 12
-        Return "MilkLeaks"
-    EndIf
     Return ""
 EndFunction
 
@@ -83,9 +80,6 @@ Int Function RouteCount(String fileKey) Global
         Return 5
     EndIf
     If fileKey == "Thoughts"
-        Return 2
-    EndIf
-    If fileKey == "MilkLeaks"
         Return 2
     EndIf
     Return 0
@@ -313,12 +307,6 @@ String Function RouteKey(String fileKey, Int index) Global
     EndIf
     If fileKey == "Thoughts" && index == 1
         Return "narrate_bound_milk_maid_thought_1"
-    EndIf
-    If fileKey == "MilkLeaks" && index == 0
-        Return "start"
-    EndIf
-    If fileKey == "MilkLeaks" && index == 1
-        Return "instructions"
     EndIf
     Return ""
 EndFunction
@@ -609,20 +597,6 @@ String Function Template(String fileKey, String routeKey, Int index = 0) Global
     If fileKey == "Thoughts" && routeKey == "narrate_bound_milk_maid_thought_1"
         Return "Immediate situation: {thought} Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on {actor} and only the bound-arm, breast, milk, weight, or fullness details actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
     EndIf
-    If fileKey == "MilkLeaks" && routeKey == "start"
-        If index == 0
-            Return "{actor} has started leaking milk. Apparently, full was more of a suggestion. A small spill and a relieved sigh."
-        EndIf
-        If index == 1
-            Return "{actor} has started leaking milk. Someone is getting a little enthusiastic about sharing. It feels pleasantly relieving."
-        EndIf
-        If index == 2
-            Return "{actor} has started leaking milk. A little wardrobe weather, with a very local forecast. The relief is welcome."
-        EndIf
-    EndIf
-    If fileKey == "MilkLeaks" && routeKey == "instructions"
-        Return "Use light, flirtatious, humorous teasing about this fresh milk leak. Keep it positive and comfortable: it feels pleasantly relieving. A nearby adult may make one short playful comment, or the affected adult may joke about it. Do not invent witnesses, speak for the player, use graphic sexual descriptions, shame anyone, imply pain, or treat leaking as consent. No repeated commentary for intensity changes."
-    EndIf
     Return ""
 EndFunction
 
@@ -644,9 +618,6 @@ Int Function PoolCount(String fileKey, String routeKey) Global
     EndIf
     If fileKey == "TentacleArmor" && routeKey == "effects_milkAndArousal"
         Return 5
-    EndIf
-    If fileKey == "MilkLeaks" && routeKey == "start"
-        Return 3
     EndIf
     Return 0
 EndFunction
@@ -873,12 +844,6 @@ String Function Tokens(String fileKey, String routeKey) Global
     EndIf
     If fileKey == "Thoughts" && routeKey == "narrate_bound_milk_maid_thought_1"
         Return "|actor|thought|"
-    EndIf
-    If fileKey == "MilkLeaks" && routeKey == "start"
-        Return "|actor|"
-    EndIf
-    If fileKey == "MilkLeaks" && routeKey == "instructions"
-        Return "||"
     EndIf
     Return ""
 EndFunction

@@ -344,7 +344,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 169
+    Return 170
 EndFunction
 
 Function SetPageNames()
@@ -5823,8 +5823,6 @@ Function DrawMilkLeakOptions()
     AddToggleOptionST("LeakEnabled", "Enable Milk Leaking", JsonUtil.GetIntValue(SettingsFile, "enableMilkLeaks", 1) == 1, flags)
     AddToggleOptionST("LeakClothing", "Leak Through Clothing", JsonUtil.GetIntValue(SettingsFile, "milkLeakThroughClothing", 1) == 1, flags)
     AddSliderOptionST("LeakThreshold", "Milk Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "milkLeakThreshold", 100.0), "{0}%", flags)
-    AddToggleOptionST("LeakNarration", "Skyrim.Net Leak Narration", JsonUtil.GetIntValue(SettingsFile, "milkLeakNarration", 1) == 1, flags)
-    AddSliderOptionST("LeakCooldown", "Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "milkLeakNarrationCooldown", 30.0), "{0} seconds", flags)
 EndFunction
 
 State LeakDetected
@@ -5856,16 +5854,6 @@ State LeakClothing
     EndEvent
 EndState
 
-State LeakNarration
-    Event OnSelectST()
-        JsonUtil.SetIntValue(SettingsFile, "milkLeakNarration", 1 - JsonUtil.GetIntValue(SettingsFile, "milkLeakNarration", 1))
-        JsonUtil.Save(SettingsFile, False)
-        SetToggleOptionValueST(JsonUtil.GetIntValue(SettingsFile, "milkLeakNarration", 1) == 1)
-    EndEvent
-    Event OnHighlightST()
-        SetInfoText("Request playful, positive narration once when our leak starts. Optional Skyrim.Net; cooldown limits narration only, never the visuals.")
-    EndEvent
-EndState
 
 
 State LeakThreshold
@@ -5886,28 +5874,6 @@ State LeakThreshold
         SetSliderOptionValueST(value, "{0}%")
     EndEvent
     Event OnHighlightST()
-        SetInfoText("Default 100% of MME milk capacity. One burst when full enough: 5 seconds High, 5 Medium, 5 Low. Another burst requires fullness to fall below this threshold first. Loading full permits one burst.")
-    EndEvent
-EndState
-
-State LeakCooldown
-    Event OnSliderOpenST()
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkLeakNarrationCooldown", 30.0))
-        SetSliderDialogDefaultValue(30.0)
-        SetSliderDialogRange(0.0, 1200.0)
-        SetSliderDialogInterval(5.0)
-    EndEvent
-    Event OnSliderAcceptST(Float value)
-        If value < 0.0
-            value = 0.0
-        ElseIf value > 1200.0
-            value = 1200.0
-        EndIf
-        JsonUtil.SetFloatValue(SettingsFile, "milkLeakNarrationCooldown", value)
-        JsonUtil.Save(SettingsFile, False)
-        SetSliderOptionValueST(value, "{0} seconds")
-    EndEvent
-    Event OnHighlightST()
-        SetInfoText("Minimum real seconds between leak narration requests across all actors. Default 30; zero allows each leak start. Never delays a visual or narrates each taper stage.")
+        SetInfoText("Default 100% of MME milk capacity. At or above this threshold: 5 seconds High, 5 Medium, then sustained Low. Stops below the threshold. Interrupted leaks resume Low; loading full starts a fresh taper.")
     EndEvent
 EndState

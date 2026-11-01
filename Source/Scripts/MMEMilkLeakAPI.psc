@@ -64,14 +64,8 @@ Function EnsureDefaults() Global
     If !JsonUtil.HasIntValue(settings, "milkLeakThroughClothing")
         JsonUtil.SetIntValue(settings, "milkLeakThroughClothing", 1)
     EndIf
-    If !JsonUtil.HasIntValue(settings, "milkLeakNarration")
-        JsonUtil.SetIntValue(settings, "milkLeakNarration", 1)
-    EndIf
     If !JsonUtil.HasFloatValue(settings, "milkLeakThreshold")
         JsonUtil.SetFloatValue(settings, "milkLeakThreshold", 100.0)
-    EndIf
-    If !JsonUtil.HasFloatValue(settings, "milkLeakNarrationCooldown")
-        JsonUtil.SetFloatValue(settings, "milkLeakNarrationCooldown", 30.0)
     EndIf
     JsonUtil.Save(settings, False)
 EndFunction

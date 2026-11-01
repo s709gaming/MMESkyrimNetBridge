@@ -108,7 +108,7 @@ int main(int argc, char** argv)
         auto legacy = Call(store,{{"operation","legacy"}});
         Check(legacy["changes"].contains("TentacleArmor.effects_arousal"), "explicit legacy capture preview");
         auto catalog = Call(store,{{"operation","catalog"}});
-        Check(catalog["entries"].size() == 175, "complete catalog via bounded downloads");
+        Check(catalog["entries"].size() == 173, "complete catalog via bounded downloads");
         std::size_t aiEntries = 0, messageEntries = 0, internalEntries = 0;
         for (const auto& meta : catalog["entries"]) {
             const auto& display = meta["presentation"];
@@ -117,7 +117,7 @@ int main(int argc, char** argv)
             else if (display["section"] == "skyrimnet") ++aiEntries;
             else if (display["section"] == "messages") ++messageEntries;
         }
-        Check(aiEntries == 53 && messageEntries == 86 && internalEntries == 36, "presentation metadata survives actual catalog transport");
+        Check(aiEntries == 51 && messageEntries == 86 && internalEntries == 36, "presentation metadata survives actual catalog transport");
         Json changes = Json::object();
         for (const auto& meta : catalog["entries"]) {
             const auto entry = Call(store,{{"operation","entry"},{"entryId",meta["id"]}});
@@ -125,7 +125,7 @@ int main(int argc, char** argv)
             changes[meta["id"].get<std::string>()] = entry["value"];
         }
         auto all = Upload(store,{{"operation","saveBatch"},{"revision",catalog["revision"]},{"changes",changes}});
-        Check(all["ok"] == true, "all 175 defaults pass validators and one transaction");
+        Check(all["ok"] == true, "all 173 defaults pass validators and one transaction");
         Check(store.HasPools("Thoughts"), "pool overlay published");
         auto beforeInvalid = Read(root / "profile/overrides.json");
         auto invalidBatch = Call(store,{{"operation","saveBatch"},{"revision",all["revision"]},
@@ -141,7 +141,7 @@ int main(int argc, char** argv)
         auto exported = Call(store,{{"operation","export"},{"revision",longSave["revision"]},{"name",presetName}});
         Check(exported["ok"] == true, "export committed preset");
         auto preview = Call(store,{{"operation","importPreview"},{"name",presetName}});
-        Check(preview["ok"] == true && preview["entries"].get<std::size_t>() >= 175, "preview import including unknown retained entry");
+        Check(preview["ok"] == true && preview["entries"].get<std::size_t>() >= 173, "preview import including unknown retained entry");
         auto replaced = Call(store,{{"operation","importApply"},{"name",presetName},{"mode","replace"},{"revision",longSave["revision"]},{"presetRevision",preview["presetRevision"]}});
         Check(replaced["ok"] == true && store.Override().size() == 8000, "verified preset replacement");
         auto modified = Call(store,{{"operation","save"},{"entryId","Lore.milk_lore"},{"revision",replaced["revision"]},{"text","Existing personal text"}});

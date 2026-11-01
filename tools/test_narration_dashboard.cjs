@@ -72,14 +72,10 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  window.requestEditorClose();assert(window.closed,'close works before first roster payload');window.closed=false;
  let escapePrevented=false;handlers.keydown({key:'Escape',preventDefault:()=>escapePrevented=true});assert(escapePrevented&&window.closed);window.closed=false;
  window.editorSessionChanged('4');elements['lore-tab'].listeners.click();await settle();
- assert.equal(elements['editor-list'].children.length,53);assert(downloadChunks>1,'catalog downloads in chunks');assert(elements['roster-panel'].hidden);
+ assert.equal(elements['editor-list'].children.length,51);assert(downloadChunks>1,'catalog downloads in chunks');assert(elements['roster-panel'].hidden);
  assert.equal(elements['editor-list'].children[0].attributes['data-entry-id'],'Lore.milkmaid_lore','Milk Maid lore leads');
  assert.equal(elements['editor-list'].children[1].attributes['data-entry-id'],'Lore.milk_lore');
  assert(!elements['editor-list'].children.some(c=>c.attributes['data-entry-id']==='Fullness.nearby_status_summary'),'internal assembly is hidden');
- window.openMilkLeaksEditor();await settle();
- assert.equal(elements['editor-list'].children.length,2,'Milk Leak link filters to its text and instructions');
- assert.deepEqual(elements['editor-list'].children.map(c=>c.attributes['data-entry-id']),['MilkLeaks.start','MilkLeaks.instructions']);
- elements['editor-group'].value='';elements['editor-group'].listeners.change();
 
  elements['editor-messages'].listeners.click();assert.equal(elements['editor-list'].children.length,69);
  assert(elements['editor-minor-note'].textContent.includes('17 minor messages hidden'));
@@ -146,5 +142,5 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  assert.equal(elements['editor-messages'].attributes['aria-pressed'],'true','reopened page restores message section');
  assert.equal(elements['editor-group'].value,'Thoughts & Cravings','reopened page restores feature');
  assert(elements['editor-minor'].checked,'reopened page restores minor-message preference');
- console.log('PASS: actual dashboard JS: 53 AI/69 normal/86 expanded message entries, minor filtering/drafts/reset, lore-first order, shared badges, persistence, atomic save and session recovery.');
+ console.log('PASS: actual dashboard JS: 51 AI/69 normal/86 expanded message entries, minor filtering/drafts/reset, lore-first order, shared badges, persistence, atomic save and session recovery.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

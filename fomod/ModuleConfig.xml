@@ -157,7 +157,7 @@
         <group name="Optional mod compatibility" type="SelectAny">
           <plugins order="Explicit">
             <plugin name="Oninus Lactis milk leaking">
-              <description>Optional visual-only fullness leaks and nearby leak tracker. Preselected when OninusLactis.esp is active. Three tapering intensities, clothing-aware gentle leaks, optional Skyrim.Net narration. Preserves external Oninus/DW effects and MME milk amounts. Requires Oninus Lactis NG 2.1 assets. Select Replace when reinstalling without this option.</description>
+              <description>Optional visual-only fullness leaks and nearby leak tracker. Preselected when OninusLactis.esp is active. Three tapering intensities, clothing-aware sustained gentle leaks. Existing milk-full narration remains unchanged. Preserves external Oninus/DW effects and MME milk amounts. Requires Oninus Lactis NG 2.1 assets. Select Replace when reinstalling without this option.</description>
               <files>
                 <file source="fomod/choices/milk-leaks/MME Extensions - Milk Leaks.esp" destination="MME Extensions - Milk Leaks.esp" priority="60" />
                 <folder source="fomod/choices/milk-leaks/Scripts" destination="Scripts" priority="60" />

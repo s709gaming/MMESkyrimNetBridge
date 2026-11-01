@@ -120,7 +120,7 @@ class FixedLactacidTests(unittest.TestCase):
         self.assertIn('If !JsonUtil.HasIntValue', HELPER)
         self.assertIn('If !JsonUtil.HasFloatValue', HELPER)
         self.assertIn("MMEFixedLactacid.EnsureDefaults()", MCM)
-        self.assertIn("Return 169", MCM)
+        self.assertGreaterEqual(int(re.search(r"Int Function GetVersion\(\)\s+Return (\d+)", MCM).group(1)), 169)
         self.assertIn("MMELog.MasterDiagnostic", HELPER)
         self.assertIn("MMELog.Alarm", HELPER)
         self.assertIn('StorageUtil.GetIntValue(None, alarmKey, 0) == 0', HELPER)
