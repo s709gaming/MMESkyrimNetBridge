@@ -5,3 +5,11 @@
 /extern/CommonLibSSE-NG/
 /vcpkg_installed/
 /assets/debug/
+
+/TASK.md
+
+# Local recovery files and generated tool outputs
+/backups/
+/tools/elsie-fix-builder/bin/
+/tools/elsie-fix-builder/obj/
+/fomod/choices/**/Scripts/*.pas
