@@ -206,12 +206,17 @@ Function RefreshPlayerIndicator(Actor target) Global
 EndFunction
 
 Bool Function TryLock(Actor target, Armor targetArmor, Float durationDays = -1.0, String source = "API") Global
+    If !MMEAlertsController.IsExtensionsEnabled()
+        Trace("lock skipped | Extensions disabled | source=" + source)
+        Return False
+    EndIf
     If target == None || targetArmor == None || !IsRegisteredArmor(targetArmor) || !IsSlot32Armor(targetArmor)
         Trace("lock rejected | source=" + source + " | actor/armor invalid or unregistered")
         Return False
     EndIf
     If IsLocked(target)
         If GetLockedArmor(target) == targetArmor
+            MMELockProtection.EnsureActor(target)
             Trace("duplicate lock ignored | actor=" + GetActorName(target) + " | armor=" + targetArmor.GetName())
         Else
             Trace("lock rejected | actor already owns another timed chest lock | actor=" + GetActorName(target))
@@ -231,6 +236,18 @@ Bool Function TryLock(Actor target, Armor targetArmor, Float durationDays = -1.0
     StorageUtil.SetFormValue(target, GetArmorKey(), targetArmor)
     StorageUtil.SetFloatValue(target, GetDeadlineKey(), deadline)
     StorageUtil.FormListAdd(None, GetActorListKey(), target, False)
+    ; Establish framework protection before a trap/API equip can start reactions.
+    ; A stale request must not clear lock data belonging to a newer save/session.
+    Int protectionResult = MMELockProtection.Apply(target, targetArmor)
+    If protectionResult != 1
+        If protectionResult != -2 && GetLockedArmor(target) == targetArmor
+            ClearState(target)
+        EndIf
+        Return False
+    EndIf
+    If !MMEAlertsController.IsExtensionsEnabled() || !IsLocked(target) || GetLockedArmor(target) != targetArmor
+        Return False
+    EndIf
     ; Do not use abPreventRemoval here. Skyrim owns its generic rejection text
     ; and emits no unequip event when it blocks the attempt. The native equip
     ; sink instead observes a real removal and this service restores the piece.
@@ -374,6 +391,8 @@ Function ClearState(Actor target) Global
     StorageUtil.UnsetFloatValue(target, GetDeadlineKey())
     StorageUtil.UnsetIntValue(target, GetGuardKey())
     StorageUtil.FormListRemove(None, GetActorListKey(), target, True)
+    ; Release our actor ownership, preserving other wearers and pre-existing tags.
+    MMELockProtection.Apply(target, None)
 EndFunction
 
 Float Function GetNextDeadline() Global
@@ -430,6 +449,7 @@ Function Expire(Actor target) Global
 EndFunction
 
 Function RecoverAfterLoad() Global
+    MMEExtensionsNative.ResetLockProtection()
     Float now = Utility.GetCurrentGameTime()
     ResolveDue(now)
     Int index = StorageUtil.FormListCount(None, GetActorListKey()) - 1
@@ -441,10 +461,15 @@ Function RecoverAfterLoad() Global
                 Alarm("load recovery cleared unresolved armor | actor=" + GetActorName(target))
                 ClearState(target)
             Else
+                Bool protected = MMELockProtection.EnsureActor(target)
                 ; Reapplying with abPreventRemoval=False also converts locks
                 ; created by the previous hard-lock release to the soft path.
-                target.EquipItem(targetArmor, False, True)
-                Trace("load recovery refreshed soft lock | actor=" + GetActorName(target) + " | armor=" + targetArmor.GetName())
+                If protected
+                    target.EquipItem(targetArmor, False, True)
+                    Trace("load recovery refreshed soft lock | actor=" + GetActorName(target) + " | armor=" + targetArmor.GetName())
+                Else
+                    Trace("load recovery equip skipped | actor=" + GetActorName(target) + " | active lock protection not ready")
+                EndIf
                 RefreshPlayerIndicator(target)
             EndIf
         EndIf

@@ -379,6 +379,8 @@ EndFunction
 
 ; Stops scheduled work and event subscriptions without removing saved state.
 Function DisableController()
+    ; Runtime compatibility tags stop with observation; saved lock data survives.
+    MMEExtensionsNative.ResetLockProtection()
     MMEMaidBodyScaling.ReconcileAll("Extensions disabled")
     StopMovementSlap("Extensions disabled")
     NextMovementSlapUpdate = 0.0

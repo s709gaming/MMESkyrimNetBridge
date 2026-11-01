@@ -28,6 +28,14 @@ Int Function StartManualScene(Actor[] actors, String sceneID, String metadata, B
         Report(diagnostic, context + "invalid actors or scene passed to OStim")
         Return -1
     EndIf
+    Int protectionIndex = 0
+    While protectionIndex < actors.Length
+        If !MMELockProtection.EnsureActor(actors[protectionIndex])
+            MMELog.MasterDiagnostic("[MME Lock Protection] OStim start skipped | actor=" + actors[protectionIndex] + " | active lock protection not ready")
+            Return -1
+        EndIf
+        protectionIndex += 1
+    EndWhile
     If !ValidatePairForCommit(actors, diagnostic, True, context)
         Return -1
     EndIf

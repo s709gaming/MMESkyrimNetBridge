@@ -1,4 +1,5 @@
 #include <SKSE/SKSE.h>
+#include "../include/LockProtection.h"
 
 #include <RE/P/PlayerCharacter.h>
 #include <RE/P/ProcessLists.h>
@@ -860,6 +861,7 @@ namespace
 
     bool RegisterPapyrus(RE::BSScript::IVirtualMachine* vm)
     {
+        MME::LockProtection::Register(vm);
         vm->RegisterFunction("QueueNarrationEditorRequest", "MMEExtensionsNative", MME::NarrationEditor::Queue);
         vm->RegisterFunction("GetGeneralLoreOverride", "MMEExtensionsNative", MME::NarrationEditor::GeneralLore);
         vm->RegisterFunction("GetNarrationOverrideValues", "MMEExtensionsNative", MME::NarrationEditor::Values);
@@ -1228,6 +1230,7 @@ namespace
         if (message->type == SKSE::MessagingInterface::kPreLoadGame ||
             message->type == SKSE::MessagingInterface::kNewGame) {
             gMovementSlapSession.fetch_add(1);
+            MME::LockProtection::ResetSession();
             MME::NarrationEditor::ResetSession();
             std::scoped_lock lock(gMaidMorphFailureMutex);
             gMaidMorphFailures.clear();

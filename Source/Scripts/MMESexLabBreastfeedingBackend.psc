@@ -22,6 +22,10 @@ Int Function StartBreastfeeding(MilkQUEST milkController, Actor milkSource, Acto
     If !IsAvailable(milkController) || milkSource == None || drinker == None
         Return -1
     EndIf
+    If !MMELockProtection.EnsurePair(milkSource, drinker)
+        MMELog.MasterDiagnostic("[MME Lock Protection] SexLab start skipped | source=" + milkSource + " | drinker=" + drinker + " | active lock protection not ready")
+        Return -1
+    EndIf
     String registrar = "zjBreastFeeding"
     ActorBase drinkerBase = drinker.GetLeveledActorBase()
     If drinkerBase != None && drinkerBase.GetSex() == 0

@@ -85,6 +85,10 @@ Int Function StartAutonomousFeed(Actor milkSource, Actor drinker, String caller 
     ; ELV_Taste is a legacy Elsie registrar and has no known SLSB conversion.
     ; Preserve it only as a Standard SexLab fallback.
     If threadID < 0 && !MMESexLabBreastfeedingBackend.IsPPlus()
+        If !MMELockProtection.EnsurePair(milkSource, drinker)
+            MMELog.MasterDiagnostic("[MME Lock Protection] Elsie fallback skipped | active lock protection not ready")
+            Return -1
+        EndIf
         sslBaseAnimation tasteAnimation = milkController.SexLab.AnimSlots.GetbyRegistrar("ELV_Taste")
         If tasteAnimation != None
             Actor[] participants = new Actor[2]

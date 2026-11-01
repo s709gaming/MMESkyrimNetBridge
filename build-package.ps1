@@ -30,6 +30,7 @@ $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
 $scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEBreastBounceEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEArousalEffects", "MMEArousalAnimations", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMEArmorRemoval", "MMETrapArmorDialogue", "MMEFollowerArmorRescue", "TIF_MMEExtFollowerArmorRescue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMESexLabBreastfeedingBackend", "MMEElsieBreastfeeding", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $scriptNames += "MMEOriginalSettings"
+$scriptNames += "MMELockProtection"
 $scriptNames += "MMEBodyEffects"
 $scriptNames += "MMEMaidBodyScaling"
 $scriptNames += @("MMENarrationText", "MMENarrationDefaults")
@@ -165,6 +166,7 @@ if ($ostimSceneData.actors.Count -ne 2 -or
 & (Join-Path $projectRoot "tools\Test-DwemerArmorContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-DwemerEffectsContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-TimedArmorLockContracts.ps1")
+& (Join-Path $projectRoot "tools\Test-LockProtection.ps1")
 & (Join-Path $projectRoot "tools\Test-MMECompatibilityOverrideContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-ElsieBreastfeedingContracts.ps1")
 & (Join-Path $projectRoot "tools\Test-JugsCompatibilityContracts.ps1")

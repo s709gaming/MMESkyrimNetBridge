@@ -31,6 +31,10 @@ Int Function StartBreastfeeding(MilkQUEST milkController, Actor milkSource, Acto
         MMELog.Alarm("[MME Extensions SexLab P+] breastfeeding backend unavailable or received a missing actor | hook=" + hookName)
         Return -1
     EndIf
+    If !MMELockProtection.EnsurePair(milkSource, drinker)
+        MMELog.MasterDiagnostic("[MME Lock Protection] P+ start skipped | source=" + milkSource + " | drinker=" + drinker + " | active lock protection not ready")
+        Return -1
+    EndIf
     String sceneID = GetLesbianScene()
     Int drinkerSex = SexlabRegistry.GetSex(drinker, False)
     If drinkerSex == 0 || drinkerSex == 2

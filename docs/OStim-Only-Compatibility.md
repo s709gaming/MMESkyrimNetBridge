@@ -53,6 +53,13 @@ Armor policy preserves MME's local protection, then delegates to OStim's verifie
 OUndress.CanUndress API, including its no-strip keyword and configured slots.
 This is the OStim policy, not a claim that every SexLab stripping rule is identical.
 
+Active timed armor locks also add the real `OStimNoStrip` keyword in memory through
+the bundled DLL. Protection is confirmed before our scene starts and removed on
+release/expiry; existing third-party keywords are retained. The helper has no
+SexLab script dependency. An absent or inactive framework is skipped safely.
+Keywords belong to the armor form, so all copies share protection while any actor
+has that form locked. This does not turn registration into permanent protection.
+
 MME's existing SOS and equipped-schlong checks remain in akActorSex. Without
 SexLab's custom gender overrides, classification defaults to the actor-base sex;
 an explicit integer StorageUtil override, MMEExtensions.Backend.Gender, supports

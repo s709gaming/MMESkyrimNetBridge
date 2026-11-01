@@ -109,6 +109,28 @@ This addresses Papyrus DD errors; it does not establish or fix the native CTD ca
 
 ## Building with MO2 dependency sources
 
+Active timed armor locks now acquire optional framework no-strip keywords through
+the existing native DLL. The public timed-lock API, lock durations, and vendor/API
+release routes are retained. Both frameworks may be absent: shared scripts import
+neither framework API for protection. No installed framework scripts are overridden
+by this feature, and no new MCM setting or required extender mod is introduced.
+
+Keyword writes run on the game thread with bounded Papyrus confirmation. Lock
+release, failed lock cleanup, expiration, disable, and save changes release owned
+additions; existing-save locks rebuild them on recovery. Parasite expiry still
+leaves the armor equipped and makes it removable. Only keywords added by this
+service are removed, and another actor's lock on the same form retains protection.
+Because keywords belong to the armor form, unlocked copies of that same form also
+receive framework protection while a lock exists. Explicit framework Always Strip
+overrides can supersede keywords; this feature preserves those user settings.
+Third parties adding the identical keyword after us have no shared ownership
+protocol, so they should retain/reapply their own protection when our lock ends.
+
+Routine lock-protection traces use the master `enablePapyrusTrace` switch. Actual
+application/timeout failures produce deduplicated smoke alarms. Forced removal
+recovery remains the fallback. Compilation/package checks are separate from live
+acceptance of scene startup, transition, cleanup, and saved-game recovery.
+
 When physical Data no longer contains optional SDK sources after a Vortex purge,
 set the process environment variable MME_PAPYRUS_EXTRA_IMPORTS to a semicolon-separated
 list of dependency source directories in the enabled MO2 mods before running

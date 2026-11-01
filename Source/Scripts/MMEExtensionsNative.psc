@@ -1,5 +1,11 @@
 Scriptname MMEExtensionsNative Hidden
 
+; Private lock service: queued game-thread work. Result: 0 pending, 1 applied,
+; -1 failed, -2 superseded/session changed. None armor releases this actor.
+Int Function QueueLockProtection(Actor target, Armor targetArmor) Global Native
+Int Function GetLockProtectionResult(Actor target, Int token) Global Native
+Function ResetLockProtection() Global Native
+
 ; Versioned editor transport: lowercase hex UTF-8 JSON preserves case across VM interning.
 ; Queues bounded native worker I/O; completion is a generation/view-scoped ModEvent.
 Bool Function QueueNarrationEditorRequest(String payload, Int generation, Int view) Global Native
