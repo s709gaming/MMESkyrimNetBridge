@@ -49,6 +49,7 @@ String AutoSelfMilkingDueKey = "MMEExtensions.AutoSelfMilking.Due"
 String AutoSelfMilkingDispatchKey = "MMEExtensions.AutoSelfMilking.Dispatched"
 Float NearbyRange = 2000.0
 Float NextCapacityUpdate = 0.0
+Float NextMilkLeakUpdate = 0.0
 Float NextArousalEffectUpdate = 0.0
 Float NextBodyEffectsUpdate = 0.0
 Float NextMovementSlapUpdate = 0.0
@@ -1097,6 +1098,7 @@ Event OnUpdateGameTime()
     EndIf
     If injectionDue
         MMETentacleTiers.Observe(nearbyActors)
+    MMEMilkLeakAPI.Observe(nearbyActors)
         MMETentacleEffects.RunInjectionCheck(nearbyActors, False, True, True)
         ScheduleNextInjection(now)
     EndIf
@@ -1835,6 +1837,7 @@ Function UpdatePolling()
     UnregisterForUpdate()
     If !IsExtensionsEnabled()
         NextCapacityUpdate = 0.0
+        NextMilkLeakUpdate = 0.0
         NextArousalEffectUpdate = 0.0
         NextBodyEffectsUpdate = 0.0
         NextSkyrimNetUpdate = 0.0
@@ -1853,6 +1856,10 @@ Function UpdatePolling()
         NextCapacityUpdate = now + JsonUtil.GetFloatValue(SettingsFile, "pollingInterval", 15.0)
     Else
         NextCapacityUpdate = 0.0
+    EndIf
+    NextMilkLeakUpdate = 0.0
+    If MMEMilkLeakAPI.Manager() != None
+        NextMilkLeakUpdate = now + 15.0
     EndIf
     If MMEArousalEffects.IsEnabled()
         NextArousalEffectUpdate = now + MMEArousalEffects.GetScanInterval()
@@ -1948,6 +1955,15 @@ Function ScheduleNextUpdate()
             candidate = 0.01
         EndIf
         delay = candidate
+    EndIf
+    If NextMilkLeakUpdate > 0.0
+        candidate = NextMilkLeakUpdate - now
+        If candidate < 0.01
+            candidate = 0.01
+        EndIf
+        If delay <= 0.0 || candidate < delay
+            delay = candidate
+        EndIf
     EndIf
     If NextArousalEffectUpdate > 0.0
         candidate = NextArousalEffectUpdate - now
@@ -2113,6 +2129,7 @@ Event OnUpdate()
     Bool armorRemovalDue = armorRemovalDeadline > 0.0 && now >= armorRemovalDeadline
     MMETentacleTiers.Complete()
     Bool tentacleDiscoveryDue = NextTentacleDiscovery > 0.0 && now >= NextTentacleDiscovery
+    Bool milkLeakDue = NextMilkLeakUpdate > 0.0 && now >= NextMilkLeakUpdate
     Bool capacityDue = NextCapacityUpdate > 0.0 && now >= NextCapacityUpdate
     Bool arousalEffectDue = NextArousalEffectUpdate > 0.0 && now >= NextArousalEffectUpdate
     Bool bodyEffectsDue = NextBodyEffectsUpdate > 0.0 && now >= NextBodyEffectsUpdate
@@ -2136,8 +2153,11 @@ Event OnUpdate()
     If armorRemovalDue
         MMEArmorRemoval.ResolveDueVerifications(now)
     EndIf
-    If capacityDue || skyrimNetDue || thoughtDebugDue || arousalEffectDue || tentacleDiscoveryDue
+    If milkLeakDue || capacityDue || skyrimNetDue || thoughtDebugDue || arousalEffectDue || tentacleDiscoveryDue
         ScanNearbyMilkMaids(skyrimNetDue, capacityDue, thoughtDebugDue, arousalEffectDue)
+    EndIf
+    If milkLeakDue
+        NextMilkLeakUpdate = now + 15.0
     EndIf
     If tentacleDiscoveryDue
         NextTentacleDiscovery = 0.0

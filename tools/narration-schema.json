@@ -372,5 +372,15 @@
         "thought"
       ]
     }
+  },
+  "MilkLeaks": {
+    "start": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "instructions": {
+      "tokens": []
+    }
   }
 }

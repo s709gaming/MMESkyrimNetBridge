@@ -49,6 +49,7 @@ $diagnosticSdk = Join-Path $projectRoot "tools\mme-diagnostic-sdk"
 $scriptNames += "MMEMilkingDiagnostics"
 $scriptNames += "MMEMilkCurse"
 $scriptNames += "MMEChestCurseNarration"
+$scriptNames += @("MMEMilkLeaks", "MMEMilkLeakAPI")
 $scriptNames += "MMETextPool"
 $scriptNames += "MMEFlavorText"
 $scriptNames += "MMENarrationOverrides"
@@ -340,6 +341,9 @@ $packageSKSEPlugins = Join-Path $stageDir "SKSE\Plugins"
 New-Item -ItemType Directory -Force -Path $packageScripts, $packageSources, $packageSounds, $packageSKSEPlugins | Out-Null
 
 & (Join-Path $projectRoot "tools\Build-MaidRosterUI.ps1")
+& (Join-Path $projectRoot "tools\Build-MilkLeaks.ps1")
+& python -B (Join-Path $projectRoot 'tools\test_milk_leaks.py')
+if ($LASTEXITCODE) { throw 'Milk leak ownership, optional integration or narration contracts failed' }
 & python -B (Join-Path $projectRoot "tools\test_chest_curse_narration.py")
 if ($LASTEXITCODE) { throw "Chest curse narration contracts failed" }
 & python -B (Join-Path $projectRoot "tools\test_text_pool.py")
@@ -368,6 +372,7 @@ Copy-Item -LiteralPath $jugsChangelog -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MME-Compatibility-Override.md") -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MCM-Organization-Review.md") -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Estrus-Unified-Compatibility.md') -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Milk-Leaks-Compatibility.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Editor-Proof.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Dashboard-Implementation.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Tentacle-Four-Tier-Implementation.md') -Destination $packageDocs

@@ -156,6 +156,17 @@
       <optionalFileGroups order="Explicit">
         <group name="Optional mod compatibility" type="SelectAny">
           <plugins order="Explicit">
+            <plugin name="Oninus Lactis milk leaking">
+              <description>Optional visual-only fullness leaks and nearby leak tracker. Preselected when OninusLactis.esp is active. Three tapering intensities, clothing-aware gentle leaks, optional Skyrim.Net narration. Preserves external Oninus/DW effects and MME milk amounts. Requires Oninus Lactis NG 2.1 assets. Select Replace when reinstalling without this option.</description>
+              <files>
+                <file source="fomod/choices/milk-leaks/MME Extensions - Milk Leaks.esp" destination="MME Extensions - Milk Leaks.esp" priority="60" />
+                <folder source="fomod/choices/milk-leaks/Scripts" destination="Scripts" priority="60" />
+                <folder source="fomod/choices/milk-leaks/Source" destination="Source" priority="60" />
+                <folder source="fomod/choices/milk-leaks/SEQ" destination="SEQ" priority="60" />
+                <file source="docs/Milk-Leaks-Compatibility.md" destination="Docs/Milk Leaks Compatibility.md" priority="60" />
+              </files>
+              <typeDescriptor><dependencyType><defaultType name="NotUsable" /><patterns><pattern><dependencies operator="And"><fileDependency file="OninusLactis.esp" state="Active" /></dependencies><type name="Recommended" /></pattern></patterns></dependencyType></typeDescriptor>
+            </plugin>
             <plugin name="Estrus Unified pregnancy support">
               <description>Optional author-style pregnancy detection for Estrus Unified. Preselected when EstrusUnified.esp is active; you can untick this compatibility option. Requires EstrusUnified.esp and its DLL/API. Recognizes Chaurus, Spider and Dwemer pregnancies without changing MME milk rules or starting scenes. Automatically uses your selected Standard/P+ or OStim backend. Do not enable legacy Estrus plugins alongside Unified. Reinstall using Replace when changing this option to remove stale compatibility scripts.</description>
               <files>

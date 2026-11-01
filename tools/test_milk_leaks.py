@@ -1,0 +1,64 @@
+"""Safety contracts, not a substitute for live Papyrus/visual acceptance."""
+from pathlib import Path
+import json,re,unittest,xml.etree.ElementTree as ET
+ROOT=Path(__file__).resolve().parents[1]
+def read(path):return (ROOT/path).read_text(encoding='utf-8-sig')
+class MilkLeakSafety(unittest.TestCase):
+    def test_external_effects_are_never_modified(self):
+        service=read('Source/Scripts/MMEMilkLeaks.psc')
+        visual=read('fomod/choices/milk-leaks/Source/Scripts/MMELeakVisual.psc')
+        self.assertNotRegex(service+visual,r'\.(?:StopNippleSquirt|ForceStopNippleSquirt|StopAllNippleSquirts|SetModelPath|SetLevel)\(')
+        self.assertNotRegex(service,r'(?:UnequipItem|RemoveItem)\(ExternalArmor')
+        for contract in ['existing spray','external spray pending','external request/disabled during setup','yield to external spray']:
+            self.assertIn(contract,service)
+        self.assertIn('IsEquipped(ExternalArmor)',service)
+        self.assertIn('If !wearer.IsEquipped(GetBaseObject())',visual)
+    def test_no_milk_consumption_conversion_or_movement_lock(self):
+        service=read('Source/Scripts/MMEMilkLeaks.psc')
+        self.assertNotRegex(service,r'\.(?:setMilkCurrent|changeMilkCurrent|MilkMaidAdd|DisablePlayerControls|SetUnconscious|SetDontMove|SendAnimationEvent)\(')
+        self.assertIn('MME_Storage.getMilkCurrent(target) / capacity',service)
+        self.assertIn('MMEArmorScript.IsMMEMilkMaid(target, milk)',service)
+        self.assertIn('target.IsChild()',service)
+        self.assertIn('MMEOStimIntegration.IsActorBusy(target)',service)
+        self.assertIn('MMESelfMilking.GetInvalidReason',service)
+    def test_timing_and_one_start_narration(self):
+        service=read('Source/Scripts/MMEMilkLeaks.psc')
+        self.assertEqual(service.count('        Narrate(target)'),1)
+        start=service.index('Function StartLeak(');advance=service.index('Function Advance(')
+        self.assertIn('GetLeakSource(target) == 1',service[start:advance])
+        self.assertIn('Math.Floor(elapsed / 5.0)',service)
+        self.assertIn('stage = 0',service)
+        self.assertIn('"MMELeaks.ThresholdLatched"',service)
+        self.assertIn('now - lastNarration < cooldown',service)
+        self.assertIn('lastNarration = now',service)
+        self.assertNotIn('RegisterForUpdate(',service)
+    def test_optional_installation_and_defaults(self):
+        api=read('Source/Scripts/MMEMilkLeakAPI.psc')
+        self.assertIn('Game.GetModByName("MME Extensions - Milk Leaks.esp") == 255',api)
+        self.assertIn('"milkLeakIntensity", 2',api)
+        self.assertIn('"milkLeakThreshold", 100.0',api)
+        self.assertIn('"milkLeakNarrationCooldown", 30.0',api)
+        tree=ET.fromstring(read('fomod/ModuleConfig.xml'))
+        option=tree.find(".//plugin[@name='Oninus Lactis milk leaking']")
+        self.assertIsNotNone(option)
+        self.assertEqual(option.find('.//fileDependency').attrib,{'file':'OninusLactis.esp','state':'Active'})
+        self.assertEqual(option.find('.//pattern/type').attrib['name'],'Recommended')
+        for node in option.findall('./files/*'):
+            self.assertTrue((ROOT/node.attrib['source']).exists(),node.attrib)
+    def test_shared_scheduler_and_master_logging(self):
+        controller=read('Source/Scripts/MMEAlertsController.psc')
+        self.assertIn('MMEMilkLeakAPI.Observe(nearbyActors)',controller)
+        self.assertIn('If milkLeakDue || capacityDue',controller)
+        service=read('Source/Scripts/MMEMilkLeaks.psc')
+        self.assertIn('MMELog.MasterDiagnostic("[MME Milk Leaks]',service)
+        self.assertIn('>= 60.0',service)
+        self.assertNotIn('Debug.Notification',service)
+        self.assertNotRegex(service,r'(tracked|visuals|started|maximumStages|visibleStages|busy)\s*==\s*None')
+    def test_authored_text_and_editor_feature(self):
+        doc=json.loads(read('SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkLeaks.json'))
+        self.assertEqual(set(doc['routes']),{'start','instructions'})
+        self.assertTrue(all('{actor}' in v for v in doc['routes']['start']['template']))
+        self.assertIn('consent',doc['routes']['instructions']['template'])
+        self.assertIn('openMilkLeaksEditor',read('fomod/choices/maid-roster-ui/Source/Scripts/MMEMaidRosterUI.psc'))
+        self.assertIn("preferences.features.skyrimnet='Milk Leaking'",read('fomod/choices/maid-roster-ui/Magelight/mmeextensions/views/roster/dashboard.js'))
+if __name__=='__main__':unittest.main()

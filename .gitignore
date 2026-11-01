@@ -10,6 +10,8 @@
 
 # Local recovery files and generated tool outputs
 /backups/
+/tools/milk-leak-builder/bin/
+/tools/milk-leak-builder/obj/
 /tools/elsie-fix-builder/bin/
 /tools/elsie-fix-builder/obj/
 /fomod/choices/**/Scripts/*.pas

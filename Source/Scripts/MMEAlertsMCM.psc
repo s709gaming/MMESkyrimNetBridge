@@ -344,7 +344,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 166
+    Return 167
 EndFunction
 
 Function SetPageNames()
@@ -413,6 +413,7 @@ EndFunction
 
 ; Seeds new settings and runs one-time migrations without overriding later choices.
 Function EnsureDefaults()
+    MMEMilkLeakAPI.EnsureDefaults()
     MMETentacleTiers.Configure()
     If !JsonUtil.HasIntValue(SettingsFile, "enableChestCurseNarration")
         JsonUtil.SetIntValue(SettingsFile, "enableChestCurseNarration", 1)
@@ -5120,6 +5121,7 @@ EndState
 
 Function DrawBodyPage()
     MMEOriginalSettings.DrawBody(Self)
+    DrawMilkLeakOptions()
     AddHeaderOption("Milk Fullness Reactions")
     capacityOption = AddToggleOption("Enable 50% Capacity Reactions", JsonUtil.GetIntValue(SettingsFile, "enableCapacityReactions", 1) == 1)
     notificationOption = AddToggleOption("Enable Capacity Notifications", JsonUtil.GetIntValue(SettingsFile, "enableCapacityNotifications", 1) == 1)
@@ -5782,3 +5784,139 @@ String Function InstalledBackendLabel()
     EndIf
     Return backend
 EndFunction
+
+
+Function DrawMilkLeakOptions()
+    AddHeaderOption("Milk Leaking")
+    AddToggleOptionST("LeakDetected", "Oninus Lactis Detected", MMEMilkLeakAPI.IsDetected(), OPTION_FLAG_DISABLED)
+    Int flags = OPTION_FLAG_NONE
+    If !MMEMilkLeakAPI.IsDetected() || MMEMilkLeakAPI.Manager() == None
+        flags = OPTION_FLAG_DISABLED
+    EndIf
+    AddToggleOptionST("LeakEnabled", "Enable Milk Leaking", JsonUtil.GetIntValue(SettingsFile, "enableMilkLeaks", 1) == 1, flags)
+    AddToggleOptionST("LeakClothing", "Leak Through Clothing", JsonUtil.GetIntValue(SettingsFile, "milkLeakThroughClothing", 1) == 1, flags)
+    AddSliderOptionST("LeakIntensity", "Uncovered Spray Intensity", JsonUtil.GetIntValue(SettingsFile, "milkLeakIntensity", 2) + 1, "{0} / 3", flags)
+    AddSliderOptionST("LeakThreshold", "Milk Fullness Threshold", JsonUtil.GetFloatValue(SettingsFile, "milkLeakThreshold", 100.0), "{0}%", flags)
+    AddToggleOptionST("LeakNarration", "Skyrim.Net Leak Narration", JsonUtil.GetIntValue(SettingsFile, "milkLeakNarration", 1) == 1, flags)
+    AddSliderOptionST("LeakCooldown", "Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "milkLeakNarrationCooldown", 30.0), "{0} seconds", flags)
+    Int editorFlags = OPTION_FLAG_DISABLED
+    If RosterUiAvailable()
+        editorFlags = OPTION_FLAG_NONE
+    EndIf
+    AddTextOptionST("LeakEditor", "Edit Leak Text & Instructions", "OPEN", editorFlags)
+EndFunction
+
+State LeakDetected
+    Event OnHighlightST()
+        SetInfoText("Detection only. Checks OninusLactis.esp; does not certify body alignment or effect health. Install the Milk Leaks FOMOD option to enable these controls.")
+    EndEvent
+EndState
+
+State LeakEditor
+    Event OnSelectST()
+        SendModEvent("MMEExtensions_LeakEditorOpen")
+        SetTextOptionValueST("Close MCM to open")
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Open Milk Leaking in Magelight's narration editor. Edit the start text and dialogue instructions. Base text: MMEAlerts/Narration/MilkLeaks.json; gameplay settings: MMEAlerts/Settings.json. Personal text overrides remain separate.")
+    EndEvent
+EndState
+
+State LeakEnabled
+    Event OnSelectST()
+        JsonUtil.SetIntValue(SettingsFile, "enableMilkLeaks", 1 - JsonUtil.GetIntValue(SettingsFile, "enableMilkLeaks", 1))
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValueST(JsonUtil.GetIntValue(SettingsFile, "enableMilkLeaks", 1) == 1)
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Optional visual-only leaks for the player and nearby MME Milk Maids. One burst per fullness crossing; no milk is removed. Existing Oninus sprays take priority.")
+    EndEvent
+EndState
+
+State LeakClothing
+    Event OnSelectST()
+        JsonUtil.SetIntValue(SettingsFile, "milkLeakThroughClothing", 1 - JsonUtil.GetIntValue(SettingsFile, "milkLeakThroughClothing", 1))
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValueST(JsonUtil.GetIntValue(SettingsFile, "milkLeakThroughClothing", 1) == 1)
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Slot 32 occupied means covered: Low intensity throughout. Removing clothing reveals the current taper stage. When disabled, covering the chest stops our leak.")
+    EndEvent
+EndState
+
+State LeakNarration
+    Event OnSelectST()
+        JsonUtil.SetIntValue(SettingsFile, "milkLeakNarration", 1 - JsonUtil.GetIntValue(SettingsFile, "milkLeakNarration", 1))
+        JsonUtil.Save(SettingsFile, False)
+        SetToggleOptionValueST(JsonUtil.GetIntValue(SettingsFile, "milkLeakNarration", 1) == 1)
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Request playful, positive narration once when our leak starts. Optional Skyrim.Net; cooldown limits narration only, never the visuals.")
+    EndEvent
+EndState
+
+State LeakIntensity
+    Event OnSliderOpenST()
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "milkLeakIntensity", 2) + 1)
+        SetSliderDialogDefaultValue(3.0)
+        SetSliderDialogRange(1.0, 3.0)
+        SetSliderDialogInterval(1.0)
+    EndEvent
+    Event OnSliderAcceptST(Float value)
+        If value < 1.0
+            value = 1.0
+        ElseIf value > 3.0
+            value = 3.0
+        EndIf
+        JsonUtil.SetIntValue(SettingsFile, "milkLeakIntensity", (value as Int) - 1)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValueST(value, "{0} / 3")
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("1 Low, 2 Medium, 3 High. Default High: five seconds High, five Medium, five Low. Clothing limits the active stage to Low. Moving remains unrestricted.")
+    EndEvent
+EndState
+
+State LeakThreshold
+    Event OnSliderOpenST()
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkLeakThreshold", 100.0))
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(1.0, 100.0)
+        SetSliderDialogInterval(1.0)
+    EndEvent
+    Event OnSliderAcceptST(Float value)
+        If value < 1.0
+            value = 1.0
+        ElseIf value > 100.0
+            value = 100.0
+        EndIf
+        JsonUtil.SetFloatValue(SettingsFile, "milkLeakThreshold", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValueST(value, "{0}%")
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("MME milk divided by MME capacity. Default 100%. Falling below the threshold rearms the next leak; loading full permits one burst.")
+    EndEvent
+EndState
+
+State LeakCooldown
+    Event OnSliderOpenST()
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkLeakNarrationCooldown", 30.0))
+        SetSliderDialogDefaultValue(30.0)
+        SetSliderDialogRange(0.0, 1200.0)
+        SetSliderDialogInterval(5.0)
+    EndEvent
+    Event OnSliderAcceptST(Float value)
+        If value < 0.0
+            value = 0.0
+        ElseIf value > 1200.0
+            value = 1200.0
+        EndIf
+        JsonUtil.SetFloatValue(SettingsFile, "milkLeakNarrationCooldown", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValueST(value, "{0} seconds")
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText("Minimum real seconds between leak narration requests across all actors. Default 30; zero allows each leak start. Never delays a visual or narrates each taper stage.")
+    EndEvent
+EndState

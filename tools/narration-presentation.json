@@ -11,7 +11,8 @@
     "Thoughts & Cravings",
     "Arousal & Movement",
     "Service Reminders",
-    "Armor Locks"
+    "Armor Locks",
+    "Milk Leaking"
   ],
   "entries": {
     "Armor.narrate_armor_equip_1": {
@@ -2398,6 +2399,32 @@
       "tokenHelp": {
         "levels": "Actual one-level decrease stated by the route."
       }
+    },
+    "MilkLeaks.start": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Milk Leaking",
+      "order": 0,
+      "title": "Milk Leak Starts",
+      "description": "Optional Oninus visuals. Narration is requested once at leak start, subject to its cooldown. Gameplay settings are on Body > Milk Leaking.",
+      "badge": "Reaction Prompt",
+      "shared": false,
+      "note": "Base text: MMEAlerts/Narration/MilkLeaks.json. Gameplay: MMEAlerts/Settings.json.",
+      "tokenHelp": {
+        "actor": "Actor whose leak actually started."
+      }
+    },
+    "MilkLeaks.instructions": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Milk Leaking",
+      "order": 1,
+      "title": "Milk Leak Dialogue Instructions",
+      "description": "Optional Oninus visuals. Narration is requested once at leak start, subject to its cooldown. Gameplay settings are on Body > Milk Leaking.",
+      "badge": "Dialogue Instructions",
+      "shared": false,
+      "note": "Base text: MMEAlerts/Narration/MilkLeaks.json. Gameplay: MMEAlerts/Settings.json.",
+      "tokenHelp": {}
     }
   }
 }

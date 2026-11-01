@@ -35,7 +35,7 @@ def generate():
                 group=name,label=label(key),family='Stories, thoughts & notifications',
                 required=sorted(set.intersection(*observed)),allowed=sorted(set.union(*observed)),
                 aliases=False,poolOnly=True,default=value)
-    assert len(entries)==131 and len([x for x in entries if x.startswith('Pools.')])==57
+    assert len(entries)==133 and len([x for x in entries if x.startswith('Pools.')])==57
     for tier in ('low','medium','high','extreme'):
         for outcome in ('lines','milk','arousal','milkAndArousal'):
             notification=outcome=='lines'
@@ -48,7 +48,7 @@ def generate():
                 label=tier.title()+' '+('notification' if notification else outcome+' narration'),
                 family='Stories, thoughts & notifications',required=['actor'],allowed=['actor'],
                 aliases=not notification,poolOnly=True,default=default,optionalTier=True,fallbackEntry=fallback)
-    assert len(entries)==147
+    assert len(entries)==149
     flavor=json.loads((DATA/'FlavorNotifications.json').read_text(encoding='utf-8-sig'))
     flavor_schema=json.loads((ROOT/'tools/flavor-notification-schema.json').read_text(encoding='utf-8'))
     assert set(flavor)==set(flavor_schema) and len(flavor)==26
@@ -60,7 +60,7 @@ def generate():
         entries['Pools.FlavorNotifications.'+key]=dict(file='FlavorNotifications.json',path=[key],
             group='FlavorNotifications',label=label(key),family='Stories, thoughts & notifications',
             required=contract['required'],allowed=contract['allowed'],aliases=False,poolOnly=True,default=value)
-    assert len(entries)==173
+    assert len(entries)==175
     presentation=json.loads((ROOT/'tools/narration-presentation.json').read_text(encoding='utf-8'))
     assert set(presentation['entries'])==set(entries), 'Presentation metadata must cover every catalog ID exactly'
     for entry_id,meta in entries.items():

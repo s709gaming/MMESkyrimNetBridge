@@ -74,7 +74,9 @@ def draw(text, cursor, occupied, variables=None):
                 cursor = draw('\n'.join(lines[i + 1:end]), cursor, occupied, dict(variables, tierIndex=tier))
             i = end + 1
             continue
-        if 'MMEOriginalSettings.DrawBody(Self)' in line:
+        if 'DrawMilkLeakOptions()' in line:
+            cursor = draw(function(MCM, 'DrawMilkLeakOptions'), cursor, occupied)
+        elif 'MMEOriginalSettings.DrawBody(Self)' in line:
             cursor = draw(function(FACADE, 'DrawBody'), cursor, occupied)
         elif 'MMEOriginalSettings.DrawGeneralAt(Self,' in line:
             row = int(re.search(r'Self, (\d+)', line)[1])
@@ -97,5 +99,5 @@ for page, text in builders.items():
     occupied = {}
     draw(text, 0, occupied)
     print(f'PASS: {page}: {len(occupied)} drawing slots; no overlap or buffer overflow')
-print('PASS: 11 pages, 326 unique controls, feature ownership and retained Debug modes')
+print('PASS: 11 pages, 335 unique controls including Milk Leaking, feature ownership and retained Debug modes')
 
