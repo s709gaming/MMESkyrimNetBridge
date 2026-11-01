@@ -59,3 +59,18 @@ freshness/timeout behavior, full-to-empty, armor unequip and Dwemer attachment/s
 leak onset/end/tracker absence, reload and optional dependencies. The prior read-only
 beta28 probe established native float reads for a player; this does not prove all
 NPC or full-profile cases. No new native DLL or hard Skyrim.Net requirement is added.
+
+## Existing-save registration repair
+
+Each native save-load lifecycle event now restores all six MME prompt callbacks
+before the master-enabled early return. This also covers existing saves whose
+quest initialization, MCM migration or permanent player-effect load handler does
+not run. Optional Skyrim.Net absence is guarded outside the bridge call.
+Disabled callbacks remain registered and return empty output.
+
+This does not rerun full controller initialization, defaults, QuickStart or
+conversion. It adds no polling, timer, quest, script attachment or new save
+requirement. Master-gated load entry/dispatch/completion and each callback result
+make restoration observable; negative callback failures are deduplicated alarms.
+A completed registration batch is an API attempt report, not proof of a successful
+full-profile render. Fresh-process existing-save validation remains required.

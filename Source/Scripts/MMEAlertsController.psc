@@ -1583,6 +1583,17 @@ EndEvent
 ; Receives low-cost lifecycle signals from the optional CommonLibSSE-NG DLL.
 Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form sender)
     If reason == "load"
+        ; Runtime callbacks are not restored from a save. This path is required
+        ; even when quest OnInit/MCM upgrades/player-effect load do not run.
+        ; Keep it before the master-off return; disabled callbacks render empty.
+        MMELog.MasterDiagnostic("[MME Actor Prompt] save-load recovery entry | MME enabled=" + IsExtensionsEnabled())
+        If Game.GetModByName("SkyrimNet.esp") != 255
+            MMELog.MasterDiagnostic("[MME Actor Prompt] save-load recovery dispatch | registering all prompt callbacks")
+            MMEAlertsSkyrimNet.RegisterPromptDecorator()
+            MMELog.MasterDiagnostic("[MME Actor Prompt] save-load recovery returned | see callback result codes")
+        Else
+            MMELog.MasterDiagnostic("[MME Actor Prompt] save-load recovery skipped | optional Skyrim.Net absent")
+        EndIf
         ; Existing saves need new listeners even without an MCM version update
         ; or an ActiveMagicEffect OnPlayerLoadGame callback.
         UnregisterForModEvent("MMEExtensions_MaidBodyTrace")

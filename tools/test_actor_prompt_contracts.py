@@ -36,6 +36,25 @@ class Contracts(unittest.TestCase):
   self.assertNotIn('!IsExtensionsEnabled()',fn(read('Source/Scripts/MMEAlertsSkyrimNet.psc'),'RegisterPromptDecorator'))
   self.assertIn('SkyrimNetApi.RegisterDecorator("mme_actor_milk_state", "MMEActorPromptState", "GetActorState")',read('Source/Scripts/MMEAlertsSkyrimNet.psc'))
   self.assertIn('$scriptNames += "MMEActorPromptState"',read('build-package.ps1'))
+ def test_existing_save_load_restores_all_callbacks_before_master_off(self):
+  controller=read('Source/Scripts/MMEAlertsController.psc')
+  load=re.search(r'(?ms)^Event OnNativeLifecycle\([^\n]*\)\n(.*?)^EndEvent',controller).group(1)
+  registration=load.index('MMEAlertsSkyrimNet.RegisterPromptDecorator()')
+  self.assertLess(load.index('If reason == "load"'),registration)
+  self.assertLess(load.index('If Game.GetModByName("SkyrimNet.esp") != 255'),registration)
+  self.assertLess(registration,load.index('If !IsExtensionsEnabled()'))
+  self.assertEqual(load.count('RegisterPromptDecorator()'),1)
+  self.assertNotIn('InitializeController(',load)
+  self.assertNotIn('ApplyDefaults(',load)
+  self.assertNotIn('ScheduleTestSetup(',load)
+  self.assertIn('MMELog.MasterDiagnostic("[MME Actor Prompt] save-load recovery entry',load)
+  bridge=fn(read('Source/Scripts/MMEAlertsSkyrimNet.psc'),'RegisterPromptDecorator')
+  self.assertEqual(bridge.count('SkyrimNetApi.RegisterDecorator('),6)
+  self.assertNotIn('!IsExtensionsEnabled()',bridge)
+  self.assertIn('MMELog.Alarm',bridge)
+  self.assertIn('OtherRegistrationFailure',bridge)
+  for name in ['mme_milkmaid_prompt_debug','mme_breastfeeding_role','mme_recent_milk_drinker','mme_actor_milk_state','mme_milk_lore_text','mme_breastfeeding_guidance_text']:
+   self.assertIn('SkyrimNetApi.RegisterDecorator("'+name+'"',bridge)
  def test_narration_rechecks_before_submit(self):
   s=read('Source/Scripts/MMEAlertsSkyrimNet.psc')
   for name in ['NarrateMilkFull','NarrateMilkHalfFull']:

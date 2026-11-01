@@ -393,29 +393,42 @@ Function RegisterPromptDecorator() Global
     ; code can therefore mean "already registered" and is logged, not fatal.
     ; Always register when Skyrim.Net exists; callbacks return empty when disabled.
     ; Otherwise a first load with MME OFF leaves template functions undefined.
+    MMELog.MasterDiagnostic("[MME Actor Prompt] registration batch entry | callbacks=6")
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSkyrimNetPromptDiagnostic", 0) == 1
     If !IsAvailable()
         If diagnostic
             Debug.Notification("Skyrim.Net Prompt: registration skipped - SkyrimNet not detected")
         EndIf
-        MMELog.Diagnostic("[MMEAlert SkyrimNet] prompt decorator registration skipped; SkyrimNet not detected")
+        MMELog.MasterDiagnostic("[MME Actor Prompt] registration batch skipped | optional Skyrim.Net absent")
         Return
     EndIf
     Int result = SkyrimNetApi.RegisterDecorator("mme_milkmaid_prompt_debug", "MMEAlertsSkyrimNet", "MilkmaidPromptDebug")
     If diagnostic
         Debug.Notification("Skyrim.Net Prompt: Milkmaid callback registration result [" + result + "]")
     EndIf
-    MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid prompt decorator registration result " + result)
+    MMELog.MasterDiagnostic("[MME Actor Prompt] mme_milkmaid_prompt_debug registration result=" + result)
     Int breastfeedingResult = SkyrimNetApi.RegisterDecorator("mme_breastfeeding_role", "MMEAlertsSkyrimNet", "BreastfeedingPromptRole")
-    MMELog.Diagnostic("[MMEAlert SkyrimNet] Breastfeeding prompt decorator registration result " + breastfeedingResult)
+    MMELog.MasterDiagnostic("[MME Actor Prompt] mme_breastfeeding_role registration result=" + breastfeedingResult)
     Int recentDrinkerResult = SkyrimNetApi.RegisterDecorator("mme_recent_milk_drinker", "MMEAlertsSkyrimNet", "RecentMilkDrinkerPrompt")
-    MMELog.Diagnostic("[MMEAlert SkyrimNet] Recent milk drinker prompt decorator registration result " + recentDrinkerResult)
+    MMELog.MasterDiagnostic("[MME Actor Prompt] mme_recent_milk_drinker registration result=" + recentDrinkerResult)
     Int stateResult = SkyrimNetApi.RegisterDecorator("mme_actor_milk_state", "MMEActorPromptState", "GetActorState")
     MMEActorPromptState.ReportRegistration(stateResult)
     Int loreResult = SkyrimNetApi.RegisterDecorator("mme_milk_lore_text", "MMEAlertsSkyrimNet", "MilkLoreText")
-    MMELog.MasterDiagnostic("[MME Narration JSON] lore decorator registration result=" + loreResult)
+    MMELog.MasterDiagnostic("[MME Actor Prompt] mme_milk_lore_text registration result=" + loreResult)
     Int guidanceResult = SkyrimNetApi.RegisterDecorator("mme_breastfeeding_guidance_text", "MMEAlertsSkyrimNet", "BreastfeedingGuidanceText")
-    MMELog.MasterDiagnostic("[MME Narration JSON] breastfeeding decorator registration result=" + guidanceResult)
+    MMELog.MasterDiagnostic("[MME Actor Prompt] mme_breastfeeding_guidance_text registration result=" + guidanceResult)
+    ; State callback failures already have their dedicated deduplicated alarm.
+    ; Other required callbacks need the same protection; positive duplicate
+    ; registration status is not treated as a verified failure.
+    If result < 0 || breastfeedingResult < 0 || recentDrinkerResult < 0 || loreResult < 0 || guidanceResult < 0
+        If StorageUtil.GetIntValue(None, "MME.Prompt.OtherRegistrationFailure", 0) == 0
+            StorageUtil.SetIntValue(None, "MME.Prompt.OtherRegistrationFailure", 1)
+            MMELog.Alarm("[MME Actor Prompt] SMOKE ALARM | operation=register prompt callbacks | actor=N/A | negative API result | maid=" + result + " | role=" + breastfeedingResult + " | drinker=" + recentDrinkerResult + " | lore=" + loreResult + " | guidance=" + guidanceResult)
+        EndIf
+    ElseIf StorageUtil.GetIntValue(None, "MME.Prompt.OtherRegistrationFailure", 0) == 1
+        StorageUtil.UnsetIntValue(None, "MME.Prompt.OtherRegistrationFailure")
+    EndIf
+    MMELog.MasterDiagnostic("[MME Actor Prompt] registration batch complete | six callbacks attempted; see individual results")
 EndFunction
 
 Function SetBreastfeedingPromptState(Actor participant, String role, Int threadID) Global

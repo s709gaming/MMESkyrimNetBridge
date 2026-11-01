@@ -34,13 +34,13 @@
                   },
                   {
                       "script":  "MMEAlertsController",
-                      "sourceSHA256":  "ED0DB89CD119FBE4FB071C1A8432EA10192B81B38E5752CB5CFFB3E543255E29",
-                      "compiledSHA256":  "7D45B896CEF666B33299F97F99D61E44365DA2DB1AC6418267813F387CCB2281"
+                      "sourceSHA256":  "FF70D378EFCDED166329EE8AAA5E8523242AEA830F6832384BBBAFD63A412D31",
+                      "compiledSHA256":  "A33835536A5DBFFBF9942414E5BE48B9B35550B0B17829D61F4B775B3D7409D6"
                   },
                   {
                       "script":  "MMEAlertsSkyrimNet",
-                      "sourceSHA256":  "9D02579A805C245643BE8493C2CF66A828FBA9AF9504B0C8A9003288959AC697",
-                      "compiledSHA256":  "610930882C3619F78B32578C6159EDBD69482DBD1351297518D48941C88370D6"
+                      "sourceSHA256":  "86E4088A8BAF838BA5B46133E677A3D83BB0E9046F806E4DC9E841456D8BB073",
+                      "compiledSHA256":  "3F39647E0983B1A2112410B147C7727E9AB7F8D0E5B574EC94F14F5388AE7DBD"
                   },
                   {
                       "script":  "MMEAnimationSafety",
