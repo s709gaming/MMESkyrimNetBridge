@@ -8,3 +8,9 @@ EndFunction
 
 Function Complete(Actor target, Int sessionId, Int bottles, Int boobgasms, Int cumCount) Global
 EndFunction
+
+; The completion publisher queries this existing public facade while the
+; original MME override is compiled. Runtime implementation remains separate.
+String Function MethodName(Int method) Global
+    Return "Generic"
+EndFunction

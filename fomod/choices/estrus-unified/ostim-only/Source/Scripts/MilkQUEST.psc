@@ -3,6 +3,23 @@ Scriptname MilkQUEST extends Quest
 {Core MME script}
 
 
+Bool MMEExtMissingVoiceActorReported = False
+
+; Presentation only. Keep the original picker, strength ranges and victim flag;
+; a disabled framework or missing eligible voice must not abort milking.
+Function MMEExtPlayMilkingVoiceSafe(Actor akActor, Int minimumStrength, Int maximumStrength, Bool isVictim)
+    MMEFrameworkBackend.PresentationSkipped(akActor)
+EndFunction
+
+Function MMEExtTraceMilkingVoice(Actor akActor, String status)
+    ; State changes only: this helper is reached repeatedly inside both loops.
+    String reportKey = "MME.Extensions.Milking.VoiceStatus"
+    If StorageUtil.GetStringValue(akActor, reportKey, "") != status
+        StorageUtil.SetStringValue(akActor, reportKey, status)
+        MMELog.MasterDiagnostic("[MME Milking Voice] actor=" + akActor + " | " + status)
+    EndIf
+EndFunction
+
 Bool MMEExtMissingExpressionReported = False
 
 Function MMEExtApplyExpressionSafe(Actor akActor, String expressionName, Int strength)
@@ -1852,13 +1869,13 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				;if DDGag == false || ZaZGag == false
 					if 	PainCnt >= PainMax
 						Expression = 4
-                        MMEFrameworkBackend.PresentationSkipped(akActor)
+						MMEExtPlayMilkingVoiceSafe(akActor, 70, 100, true)
 					elseif 	PainCnt >= (PainMax/3*2) || ( Mode == 1 )
 						Expression = Utility.RandomInt(2, 4)
-                        MMEFrameworkBackend.PresentationSkipped(akActor)
+						MMEExtPlayMilkingVoiceSafe(akActor, 30, 100, true)
 					else
 						Expression = Utility.RandomInt(1, 3)
-                        MMEFrameworkBackend.PresentationSkipped(akActor)
+						MMEExtPlayMilkingVoiceSafe(akActor, 30, 100, false)
 					endif
 				;else
 				;	zbf.Main.PlayGagSound(akActor)
@@ -2005,13 +2022,13 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				;if DDGag == false || ZaZGag == false
 					if 	PainCnt >= PainMax
 						Expression = 4
-                        MMEFrameworkBackend.PresentationSkipped(akActor)
+						MMEExtPlayMilkingVoiceSafe(akActor, 70, 100, true)
 					elseif 	PainCnt >= (PainMax/3*2) || ( Mode == 1 )
 						Expression = Utility.RandomInt(2, 4)
-                        MMEFrameworkBackend.PresentationSkipped(akActor)
+						MMEExtPlayMilkingVoiceSafe(akActor, 30, 100, true)
 					else
 						Expression = Utility.RandomInt(1, 3)
-                        MMEFrameworkBackend.PresentationSkipped(akActor)
+						MMEExtPlayMilkingVoiceSafe(akActor, 30, 100, false)
 					endif
 				;else
 				;	zbf.Main.PlayGagSound(akActor)
@@ -2054,7 +2071,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				if akActor == PlayerREF && Game.GetCameraState() != 3
 					Game.ShakeCamera(none, Utility.RandomFloat(0.5 , 1), 5)
 				endIf
-                        MMEFrameworkBackend.PresentationSkipped(akActor)
+				MMEExtPlayMilkingVoiceSafe(akActor, 70, 100, false)
 				if akActor == PlayerREF
 					SendModEvent("PlayerOrgasmStart")
 					Utility.Wait(5.0)

@@ -26,7 +26,8 @@ EndFunction
 Function Alarm(String alarmKey, Actor target, String reason)
     Float now = Utility.GetCurrentRealTime()
     String stamp = "MMELeaks.Alarm." + alarmKey
-    If now - StorageUtil.GetFloatValue(target, stamp, -300.0) >= 60.0
+    Float previous = StorageUtil.GetFloatValue(target, stamp, -300.0)
+    If now < previous || now - previous >= 60.0
         StorageUtil.SetFloatValue(target, stamp, now)
         MMELog.Alarm("[MME Milk Leaks] operation=" + alarmKey + " | actor=" + target + " | failure=" + reason)
     EndIf
@@ -304,15 +305,43 @@ Function Advance(Int slot)
 EndFunction
 
 Function RemoveVisual(Int slot)
-    Actor target = tracked[slot]
-    ObjectReference effectRef = visuals[slot]
-    If target != None && effectRef != None
-        target.UnequipItem(effectRef.GetBaseObject(), False, True)
-        target.RemoveItem(effectRef, 1, True)
-        effectRef.Delete()
+    If slot < 0 || slot >= tracked.Length || slot >= visuals.Length || slot >= visibleStages.Length
+        Alarm("cleanup", None, "invalid visual slot=" + slot)
+        Return
     EndIf
+    Actor target = tracked[slot]
+    ; Relinquish tracking before inventory events can reenter cleanup. An item
+    ; reference may already be unbound; never dereference or delete it here.
     visuals[slot] = None
     visibleStages[slot] = -1
+    If target == None
+        Return
+    EndIf
+    RemoveOwnedVisual(target, LowArmor)
+    RemoveOwnedVisual(target, MediumArmor)
+    RemoveOwnedVisual(target, HighArmor)
+EndFunction
+
+Function RemoveOwnedVisual(Actor target, Armor ownedArmor)
+    If target == None
+        Return
+    EndIf
+    If ownedArmor == None || ownedArmor == ExternalArmor
+        Alarm("cleanup", target, "invalid owned visual armor; external armor will not be removed")
+        Return
+    EndIf
+    Int count = target.GetItemCount(ownedArmor)
+    If count <= 0
+        Return
+    EndIf
+    target.UnequipItem(ownedArmor, False, True)
+    ; RemoveItem without a destination disposes of the inventory item. Calling
+    ; Delete on its old scripted reference afterward caused the unbound error.
+    target.RemoveItem(ownedArmor, count, True)
+    Trace("visual removal | actor=" + target + " | own armor=" + ownedArmor + " | count=" + count)
+    If target.GetItemCount(ownedArmor) > 0
+        Alarm("cleanup", target, "owned visual armor remained in inventory after removal")
+    EndIf
 EndFunction
 
 Function Cleanup(Int slot, String reason)

@@ -1,5 +1,7 @@
 ; Compile-only interface extracted from installed source; never packaged.
 scriptname SexLabFramework extends Quest
+; Read-only runtime getter exists in Standard 1.66d and P+ 2.18.1.
+bool property Enabled auto hidden
 bool Function IsValidActor(Actor ActorRef) Native
 string property ModName auto
 Faction property AnimatingFaction auto hidden

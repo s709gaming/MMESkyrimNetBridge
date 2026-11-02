@@ -7,8 +7,13 @@ Event OnContainerChanged(ObjectReference newContainer, ObjectReference oldContai
     If wearer == None || !wearer.Is3DLoaded()
         Return
     EndIf
+    ; Inventory removal can unbind this reference while the stack is waiting.
+    Form visualArmor = GetBaseObject()
+    If visualArmor == None
+        Return
+    EndIf
     Utility.Wait(0.1)
-    If !wearer.IsEquipped(GetBaseObject())
+    If wearer == None || !wearer.Is3DLoaded() || !wearer.IsEquipped(visualArmor)
         Return
     EndIf
     OninusLactis original = Quest.GetQuest("OninusLactis") as OninusLactis

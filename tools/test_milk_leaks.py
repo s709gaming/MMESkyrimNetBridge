@@ -44,7 +44,9 @@ class MilkLeakSafety(unittest.TestCase):
         for contract in ['existing spray','external spray pending','external request/disabled during setup','yield to external spray']:
             self.assertIn(contract,service)
         self.assertIn('IsEquipped(ExternalArmor)',service)
-        self.assertIn('If !wearer.IsEquipped(GetBaseObject())',visual)
+        self.assertIn('Form visualArmor = GetBaseObject()',visual)
+        self.assertIn('!wearer.IsEquipped(visualArmor)',visual)
+        self.assertNotIn('GetBaseObject()',visual.split('Utility.Wait(0.1)',1)[1])
     def test_no_milk_consumption_conversion_or_movement_lock(self):
         service=read('Source/Scripts/MMEMilkLeaks.psc')
         self.assertNotRegex(service,r'\.(?:setMilkCurrent|changeMilkCurrent|MilkMaidAdd|DisablePlayerControls|SetUnconscious|SetDontMove|SendAnimationEvent)\(')

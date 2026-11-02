@@ -55,7 +55,7 @@ the original MME script. It includes these intentional compatibility changes:
 1. `AssignSlot()` and `AssignSlotMaid()` scan NPC slots `1..Length-1` without
    reading index `Length`. Original MME increments the index before reading it,
    which attempts `MilkMaid[20]` on its 20-entry array.
-2. Missing SexLab facial expressions are skipped safely, and closed-gag feeding
+2. Missing SexLab facial expressions and milking voices are skipped safely, and closed-gag feeding
    blocks use gated traces instead of interrupting message boxes.
 3. Optional DD calls are guarded as described below.
 4. The optional Estrus Unified FOMOD override adds public-API pregnancy recognition
@@ -65,6 +65,24 @@ the original MME script. It includes these intentional compatibility changes:
 
 The original MME production-cycle `MME_MilkCycleComplete` event is retained;
 it is not a new hook introduced by this override.
+
+## Safe milking voice playback
+
+All seven original milking voice calls use a small guarded helper. Standard
+SexLab and P+ can return no eligible voice; the old chained PickVoice().Moan()
+call then logged repeated errors during milking. The helper keeps the original
+picker, strength ranges, victim flags and picker-before-strength random order.
+It skips a missing/disabled framework, child actor or unavailable voice without
+changing milking, progression, inventory, animation cleanup or source tracking.
+Voice choice is not cached for the entire session, and no fallback scene/sound
+or framework installation/reset is started.
+
+Changed-only actor status traces use master Papyrus logging. Optional absence
+and unavailable voices are ordinary skips; an impossible missing actor raises
+a deduplicated alarm independent of that toggle. The OStim generator replaces
+the helper body with its existing presentation skip, so no SexLab voice types
+or calls leak into OStim-only bytecode. Estrus variants inherit the appropriate
+backend source. Existing saves require no setting or property migration.
 
 The former diagnostic instrumentation and `MME_StartMilking.pex` override are
 not included. MME's capacity progression, player slot, notifications, actor

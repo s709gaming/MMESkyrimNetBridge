@@ -9,8 +9,8 @@
                   },
                   {
                       "script":  "MMELeakVisual",
-                      "sourceSHA256":  "1520CF7055287492A558B38232CF0EDE5E5155637A3D7F35B83E8F9E9EE8CBC3",
-                      "compiledSHA256":  "8D919D52B12E7C1EA99754FA521B82E457B05D353BFFE1B518C1C83320A78251"
+                      "sourceSHA256":  "7E10B48137EB3E83AC61D01DFC9A5F791FB1865F8B0E52010930CAF54E403FFE",
+                      "compiledSHA256":  "8B42AFFC3D436B7F251901A33DBA219089DF9A648C4E6BD4E6D267AE053D6EE8"
                   }
               ]
 }

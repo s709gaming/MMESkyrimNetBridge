@@ -90,6 +90,7 @@ def main():
 EndFunction''', size_block[0])
     s = s[:size_block.start()] + updated_size + s[size_block.end():]
     s = replace_body(s, 'MMEExtApplyExpressionSafe', '    MMEFrameworkBackend.PresentationSkipped(akActor)')
+    s = replace_body(s, 'MMEExtPlayMilkingVoiceSafe', '    MMEFrameworkBackend.PresentationSkipped(akActor)')
     s = s.replace('SLSD.IsMilkingBlocked_Bra_SLSD(akActor)', 'MMEExtSLSDCheck(akActor)')
     s += '''
 Bool Function MMEExtSLSDCheck(Actor target)

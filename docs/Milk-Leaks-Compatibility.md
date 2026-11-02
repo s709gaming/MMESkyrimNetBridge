@@ -97,3 +97,16 @@ not a blocking condition; combat/scenes/framework milking guards remain.
 Eligibility changes include actor, exact reason, sit state and furniture
 reference only behind master logging, once per changed result. No animation
 graph variable named bInFurniture is queried.
+## Temporary visual cleanup safety
+
+Cleanup clears its owned reference/stage tracking before changing inventory,
+then unequips and removes only the three owned visual armor forms. It does not
+dereference stale inventory handles or call Delete after RemoveItem; the old
+double-disposal sequence caused an unbound MMELeakVisual error. Repeated cleanup
+and already-removed visuals are safe; external Oninus armor is never removed.
+The visual callback caches its base armor before its brief positioning wait and
+rechecks the actor/equipment afterward, without calling natives on the temporary
+reference after waiting. Offsets, scaling, threshold/taper and external ownership
+are unchanged. Invalid slot/form or failed removal has a rate-limited alarm;
+normal removals use the master-gated trace. Alarm rate limiting handles a new
+process's reset real-time clock. No new quest properties, settings or migration.

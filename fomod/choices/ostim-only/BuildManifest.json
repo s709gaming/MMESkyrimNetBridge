@@ -29,8 +29,8 @@
                   },
                   {
                       "script":  "MilkQUEST",
-                      "sourceSHA256":  "4F22DF9EC41AFF3F386358FD56F08C0FA50D6521D5C580D20004E7CBFF4027F7",
-                      "compiledSHA256":  "98A259FF14F4E5963AB945533F4E77EE8EE2A2842027260EC35FB4E7788500CB"
+                      "sourceSHA256":  "6EE5328B83134A1C97FF380D784BCD68F476548052377E54E909E7AA972AD71D",
+                      "compiledSHA256":  "4061590DC8DC1D14D503C709D3177FA5A9B682DBA0586F3EA784CD2C8FDEC6D2"
                   },
                   {
                       "script":  "MMEAlertsController",

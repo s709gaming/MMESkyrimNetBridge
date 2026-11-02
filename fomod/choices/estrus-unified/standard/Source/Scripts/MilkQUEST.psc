@@ -3,6 +3,45 @@ Scriptname MilkQUEST extends Quest
 
 SexLabFramework property SexLab auto
 
+Bool MMEExtMissingVoiceActorReported = False
+
+; Presentation only. Keep the original picker, strength ranges and victim flag;
+; a disabled framework or missing eligible voice must not abort milking.
+Function MMEExtPlayMilkingVoiceSafe(Actor akActor, Int minimumStrength, Int maximumStrength, Bool isVictim)
+    If akActor == None
+        If !MMEExtMissingVoiceActorReported
+            MMEExtMissingVoiceActorReported = True
+            MMELog.Alarm("[MME Milking Voice] operation=play | actor=None | failure=missing milking actor")
+        EndIf
+        Return
+    EndIf
+    MMEExtMissingVoiceActorReported = False
+    If akActor.IsChild()
+        MMEExtTraceMilkingVoice(akActor, "skipped | reason=child actor")
+        Return
+    EndIf
+    If SexLab == None || !SexLab.Enabled
+        MMEExtTraceMilkingVoice(akActor, "skipped | reason=SexLab absent or disabled")
+        Return
+    EndIf
+    sslBaseVoice voice = SexLab.PickVoice(akActor)
+    If voice == None
+        MMEExtTraceMilkingVoice(akActor, "skipped | reason=no eligible SexLab voice")
+        Return
+    EndIf
+    voice.Moan(akActor, Utility.RandomInt(minimumStrength, maximumStrength), isVictim)
+    MMEExtTraceMilkingVoice(akActor, "voice call dispatched")
+EndFunction
+
+Function MMEExtTraceMilkingVoice(Actor akActor, String status)
+    ; State changes only: this helper is reached repeatedly inside both loops.
+    String reportKey = "MME.Extensions.Milking.VoiceStatus"
+    If StorageUtil.GetStringValue(akActor, reportKey, "") != status
+        StorageUtil.SetStringValue(akActor, reportKey, status)
+        MMELog.MasterDiagnostic("[MME Milking Voice] actor=" + akActor + " | " + status)
+    EndIf
+EndFunction
+
 Bool MMEExtMissingExpressionReported = False
 
 Function MMEExtApplyExpressionSafe(Actor akActor, String expressionName, Int strength)
@@ -1853,13 +1892,13 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				;if DDGag == false || ZaZGag == false
 					if 	PainCnt >= PainMax
 						Expression = 4
-						SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (70, 100), true)
+						MMEExtPlayMilkingVoiceSafe(akActor, 70, 100, true)
 					elseif 	PainCnt >= (PainMax/3*2) || ( Mode == 1 )
 						Expression = Utility.RandomInt(2, 4)
-						SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (30, 100), true)
+						MMEExtPlayMilkingVoiceSafe(akActor, 30, 100, true)
 					else
 						Expression = Utility.RandomInt(1, 3)
-						SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (30, 100), false)
+						MMEExtPlayMilkingVoiceSafe(akActor, 30, 100, false)
 					endif
 				;else
 				;	zbf.Main.PlayGagSound(akActor)
@@ -2006,13 +2045,13 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				;if DDGag == false || ZaZGag == false
 					if 	PainCnt >= PainMax
 						Expression = 4
-						SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (70, 100), true)
+						MMEExtPlayMilkingVoiceSafe(akActor, 70, 100, true)
 					elseif 	PainCnt >= (PainMax/3*2) || ( Mode == 1 )
 						Expression = Utility.RandomInt(2, 4)
-						SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (30, 100), true)
+						MMEExtPlayMilkingVoiceSafe(akActor, 30, 100, true)
 					else
 						Expression = Utility.RandomInt(1, 3)
-						SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (30, 100), false)
+						MMEExtPlayMilkingVoiceSafe(akActor, 30, 100, false)
 					endif
 				;else
 				;	zbf.Main.PlayGagSound(akActor)
@@ -2055,7 +2094,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				if akActor == PlayerREF && Game.GetCameraState() != 3
 					Game.ShakeCamera(none, Utility.RandomFloat(0.5 , 1), 5)
 				endIf
-				SexLab.PickVoice(akActor).Moan(akActor, Utility.RandomInt (70, 100), false)
+				MMEExtPlayMilkingVoiceSafe(akActor, 70, 100, false)
 				if akActor == PlayerREF
 					SendModEvent("PlayerOrgasmStart")
 					Utility.Wait(5.0)
