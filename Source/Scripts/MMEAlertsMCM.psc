@@ -2142,7 +2142,7 @@ Event OnOptionHighlight(Int option)
         SetInfoText("Speak after successful milking, with a reaction matching hands, pump, equipment, tendrils or Dwemer machinery. Turning speech off still allows tracked history.")
         Return
     ElseIf option == postMilkingCooldownOption
-        SetInfoText("Real seconds between accepted completion reactions for the same actor. Other actors have their own cooldown.")
+        SetInfoText("Real seconds between accepted completion reactions across all Milk Maids, including the player. One accepted reaction starts the shared cooldown.")
         Return
     ElseIf option == postMilkingChanceOption || option == milkFullNarrationChanceOption
         SetInfoText("Chance of a spoken reaction. Zero disables that reaction; tracked history is still recorded.")

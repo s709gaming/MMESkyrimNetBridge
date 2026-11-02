@@ -153,6 +153,28 @@ Function RecordFull(Actor target) Global
     EndIf
 EndFunction
 
+; Serialize submissions: two actors must not both pass the shared cooldown before
+; the first API call returns. The atomic counter is scoped to this native load.
+String Function AcquireNarrationGate() Global
+    String lockKey = "MME.After.NarrationGate." + MMEExtensionsNative.GetMovementSlapSession()
+    If StorageUtil.AdjustIntValue(None, lockKey, 1) != 1
+        StorageUtil.AdjustIntValue(None, lockKey, -1)
+        Return ""
+    EndIf
+    String previousKey = StorageUtil.GetStringValue(None, "MME.After.LastGateKey", "")
+    If previousKey != "" && previousKey != lockKey
+        StorageUtil.UnsetIntValue(None, previousKey)
+    EndIf
+    StorageUtil.SetStringValue(None, "MME.After.LastGateKey", lockKey)
+    Return lockKey
+EndFunction
+
+Function ReleaseNarrationGate(String lockKey) Global
+    If lockKey == "MME.After.NarrationGate." + MMEExtensionsNative.GetMovementSlapSession()
+        StorageUtil.AdjustIntValue(None, lockKey, -1)
+    EndIf
+EndFunction
+
 ; Generic sessions arrive via MME_MilkingDone. Dwemer calls after its own cleanup.
 Function NarrateLast(Actor target) Global
     If target == None
@@ -176,16 +198,23 @@ Function NarrateLast(Actor target) Global
         Trace("narration skip | actor=" + target + " | reason=" + reason + " | no successful extraction=" + MMENarrationText.IsBlank(content))
         Return
     EndIf
+    String narrationGate = AcquireNarrationGate()
+    If narrationGate == ""
+        Trace("narration skip | actor=" + target + " | another completion request is submitting")
+        Return
+    EndIf
     Float now = Utility.GetCurrentRealTime()
-    Float last = StorageUtil.GetFloatValue(target, "MME.After.LastNarration", -1.0)
+    Float last = StorageUtil.GetFloatValue(None, "MME.After.LastNarrationGlobal", -1.0)
     Float cooldown = JsonUtil.GetFloatValue("/MMEAlerts/Settings", "postMilkingNarrationCooldown", 120.0)
     If last >= 0.0 && last <= now && now - last < cooldown
-        Trace("narration skip | actor=" + target + " | cooldown")
+        Trace("narration skip | actor=" + target + " | global cooldown")
+        ReleaseNarrationGate(narrationGate)
         Return
     EndIf
     Int chance = JsonUtil.GetIntValue("/MMEAlerts/Settings", "postMilkingNarrationChance", 100)
     If chance <= 0 || (chance < 100 && Utility.RandomInt(1, 100) > chance)
         Trace("narration skip | actor=" + target + " | chance=" + chance)
+        ReleaseNarrationGate(narrationGate)
         Return
     EndIf
     String actorName = MMEAlertsSkyrimNet.ResolveActorName(target, "The Milk Maid")
@@ -196,11 +225,13 @@ Function NarrateLast(Actor target) Global
         Bool sameGeneration = StorageUtil.GetIntValue(target, "MME.After.PendingGeneration", -1) == MMEExtensionsNative.GetMovementSlapSession()
         If StorageUtil.GetIntValue(target, "MME.After.PendingPlayer", 0) != 0 && sameGeneration && now >= pendingAt && now - pendingAt < 120.0
             Trace("narration skip | actor=" + target + " | previous player request pending")
+            ReleaseNarrationGate(narrationGate)
             Return
         EndIf
         MMEAlertsController bridge = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEAlertsController
         If bridge == None
             AlarmOnce(target, "player narration", "required callback controller missing")
+            ReleaseNarrationGate(narrationGate)
             Return
         EndIf
         ; Correlate asynchronous replies across new sessions and save loads.
@@ -224,10 +255,11 @@ Function NarrateLast(Actor target) Global
     EndIf
     Trace("narration result | actor=" + target + " | session=" + sessionId + " | result=" + result + " (0=accepted)")
     If result == 0
-        StorageUtil.SetFloatValue(target, "MME.After.LastNarration", now)
+        StorageUtil.SetFloatValue(None, "MME.After.LastNarrationGlobal", now)
     Else
         AlarmOnce(target, "narration request", "request rejected result=" + result)
     EndIf
+    ReleaseNarrationGate(narrationGate)
 EndFunction
 
 Function PlayPlayerLine(String response, Int success) Global

@@ -714,7 +714,7 @@ EndFunction
 
 ; Makes at most one token-using narration request for a completed scan's full crossings.
 Function NarrateMilkFull(Actor milkMaid) Global
-    ; Speech selection remains scan-level; the cooldown is actor-local.
+    ; Speech selection remains scan-level; the cooldown is shared by all actors.
     ; The controller selects at most one full actor per scan before calling here.
     If !IsExtensionsEnabled()
         Return
@@ -739,7 +739,7 @@ Function NarrateMilkFull(Actor milkMaid) Global
 
     Float cooldown = JsonUtil.GetFloatValue(settingsFile, "milkFullNarrationCooldown", 120.0)
     Float now = Utility.GetCurrentRealTime()
-    Float last = StorageUtil.GetFloatValue(milkMaid, "MME.After.FullNarrationLast", -1.0)
+    Float last = StorageUtil.GetFloatValue(None, "MME.After.FullNarrationGlobal", -1.0)
     ; GetCurrentRealTime restarts with Skyrim, so discard a timestamp from an older session.
     If last > now
         last = -1.0
@@ -776,7 +776,7 @@ Function NarrateMilkFull(Actor milkMaid) Global
     content = MMEDialogueKnowledge.Append(content, None)
     Int result = SkyrimNetApi.DirectNarration(content, None, None)
     If result == 0
-        StorageUtil.SetFloatValue(milkMaid, "MME.After.FullNarrationLast", now)
+        StorageUtil.SetFloatValue(None, "MME.After.FullNarrationGlobal", now)
         If diagnostic
             Debug.Notification("Milk Full Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
         EndIf

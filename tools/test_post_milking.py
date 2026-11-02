@@ -11,6 +11,8 @@ class CastInt(int):
   return other+str(self) if isinstance(other,str) else int(other)+int(self)
 class Storage(Store):
  def GetIntValue(self,a,k,d=0):return CastInt(super().GetIntValue(a,k,d))
+ def AdjustIntValue(self,a,k,amount):
+  value=self.GetIntValue(a,k)+amount;self.SetIntValue(a,k,value);return CastInt(value)
  GetStringValue=Store.GetFloatValue
  SetStringValue=Store.SetFloatValue
  UnsetStringValue=Store.UnsetFloatValue
@@ -48,7 +50,7 @@ class Publisher(unittest.TestCase):
    'SkyrimNetApi':NS(RegisterPersistentEvent=saveEvent,DirectNarration=speak,SendCustomPromptToLLM=request,TriggerPlayerTTS=lambda s:self.tts.append(s) or 0),
    'Noop':lambda:None,'AlarmOnce':lambda *args:self.alarms.append(args)}
   source=re.sub(r'(?m)^\s*Trace\(.*$','    Noop()',SOURCE).replace(' as MMEAlertsController','').replace('MMEAlertsController bridge =','Actor bridge =')
-  for name,args in [('IntegrationBlock','target'),('NarrationBlock','target'),('RouteForMethod','method'),('RecordCompletion','target,sessionId,method,afterMilk,netRemoved,extracted'),('RecordFull','target'),('NarrateLast','target'),('PlayPlayerLine','response,success')]:
+  for name,args in [('IntegrationBlock','target'),('NarrationBlock','target'),('RouteForMethod','method'),('RecordCompletion','target,sessionId,method,afterMilk,netRemoved,extracted'),('RecordFull','target'),('AcquireNarrationGate',''),('ReleaseNarrationGate','lockKey'),('NarrateLast','target'),('PlayPlayerLine','response,success')]:
    exec(translate(name,args,source),self.ns)
  def record(self,a,method=4,after=0,delta=10,extracted=1,token=1):
   self.store.SetIntValue(a,'MME.Source.LastSession',token)
@@ -59,6 +61,7 @@ class Publisher(unittest.TestCase):
    content,origin,target=self.events[-1];self.assertIs(origin,a);self.assertIsNone(target)
    self.assertIn('empty at completion',content)
    self.ns['NarrateLast'](a);self.assertIs(self.lines[-1][1],a)
+   self.now+=120
   self.assertIn('Living tendrils',self.events[4][0]);self.assertIn('Dwemer mechanism',self.events[5][0])
  def test_partial_productive_failed_and_duplicate(self):
   a=Actor('Lydia');self.record(a,after=3);self.assertIn('Some milk remained',self.events[-1][0])
@@ -73,8 +76,9 @@ class Publisher(unittest.TestCase):
   self.record(a,token=2);self.ns['NarrateLast'](a);self.assertEqual(len(self.events),2);self.assertEqual(self.lines,[])
   self.settings['postMilkingNarrationChance']=100;self.record(a,token=3);self.ns['NarrateLast'](a);self.assertEqual(len(self.lines),1)
   self.record(a,token=4);self.ns['NarrateLast'](a);self.assertEqual(len(self.events),4);self.assertEqual(len(self.lines),1)
-  b=Actor('Other');self.record(b);self.ns['NarrateLast'](b);self.assertEqual(len(self.lines),2)
-  self.now+=120;self.record(a,token=5);self.ns['NarrateLast'](a);self.ns['NarrateLast'](a);self.assertEqual(len(self.lines),3)
+  b=Actor('Other');self.record(b);self.ns['NarrateLast'](b);self.assertEqual(len(self.lines),1)
+  self.assertEqual(len(self.events),5)
+  self.now+=120;self.record(a,token=5);self.ns['NarrateLast'](a);self.ns['NarrateLast'](a);self.assertEqual(len(self.lines),2)
  def test_full_history_does_not_require_narration(self):
   for a in [Actor('Player'),Actor('NPC')]:self.ns['RecordFull'](a)
   self.assertEqual(len(self.events),2);self.assertTrue(all('began leaking' in e[0] for e in self.events));self.assertEqual(self.lines,[])
@@ -87,7 +91,19 @@ class Publisher(unittest.TestCase):
   a=Actor('Stale');self.record(a);self.now+=121;self.ns['NarrateLast'](a);self.assertEqual(self.lines,[])
   self.record(a,token=2);self.generation+=1;self.ns['NarrateLast'](a);self.assertEqual(self.lines,[])
   self.result=1;self.record(a,token=3);self.ns['NarrateLast'](a);self.assertTrue(self.alarms)
-  self.assertEqual(self.store.GetFloatValue(a,'MME.After.LastNarration',-1),-1)
+  self.assertEqual(self.store.GetFloatValue(None,'MME.After.LastNarrationGlobal',-1),-1)
+ def test_global_gate_reentrancy_failure_release_and_new_load(self):
+  gate=self.ns['AcquireNarrationGate']();self.assertTrue(gate)
+  self.assertEqual(self.ns['AcquireNarrationGate'](),'')
+  self.assertEqual(self.store.GetIntValue(None,gate),1)
+  self.ns['ReleaseNarrationGate'](gate);self.assertEqual(self.store.GetIntValue(None,gate),0)
+  self.generation+=1;new=self.ns['AcquireNarrationGate']();self.assertNotEqual(new,gate)
+  self.assertNotIn((None,gate),self.store.data)
+  self.ns['ReleaseNarrationGate'](gate);self.assertEqual(self.store.GetIntValue(None,new),1)
+  self.ns['ReleaseNarrationGate'](new)
+  a,b=Actor('First'),Actor('Second');self.result=1;self.record(a);self.ns['NarrateLast'](a)
+  self.assertEqual(self.store.GetIntValue(None,new),0)
+  self.result=0;self.record(b);self.ns['NarrateLast'](b);self.assertEqual(len(self.lines),2)
  def test_player_private_reply_correlation_and_cleanup(self):
   a=self.player;self.record(a);self.ns['NarrateLast'](a)
   self.assertEqual(len(self.playerRequests),1);self.assertEqual(self.lines,[])
@@ -148,6 +164,6 @@ class Integration(unittest.TestCase):
   full=bridge.split('Function NarrateMilkFull(',1)[1].split('EndFunction',1)[0]
   self.assertIn('"milkFullNarrationCooldown", 120.0',full)
   self.assertIn('"milkFullNarrationChance", 100',full)
-  self.assertIn('StorageUtil.GetFloatValue(milkMaid, "MME.After.FullNarrationLast"',full)
-  self.assertIn('StorageUtil.SetFloatValue(milkMaid, "MME.After.FullNarrationLast", now)',full)
+  self.assertIn('StorageUtil.GetFloatValue(None, "MME.After.FullNarrationGlobal"',full)
+  self.assertIn('StorageUtil.SetFloatValue(None, "MME.After.FullNarrationGlobal", now)',full)
 if __name__=='__main__':unittest.main()

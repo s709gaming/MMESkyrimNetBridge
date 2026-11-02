@@ -78,7 +78,7 @@ publish the old ending context. Confirmed, productive completions record a
 source-specific persistent event. Ordinary completion speech is dispatched from
 MME_MilkingDone; Dwemer speech waits for its dedicated cleanup and replaces its
 old ending request. The publisher consumes each session once, checks snapshots,
-and applies actor-local speech cooldown/chance separately from history tracking.
+and applies a global speech cooldown and chance separately from history tracking.
 Breastfeeding is not identified as a separate method; if
 it invokes an MME milking transaction without a known source, Generic applies.
 Leaking and periodic armor teasing alone are not MME milking sessions.
@@ -86,10 +86,13 @@ Leaking and periodic armor teasing alone are not MME milking sessions.
 ## History and narration settings
 
 Skyrim.Net MCM owns Track Full Capacity, Track Milking Start / Completion,
-Narrate Milking Completion (ON), Completion Cooldown (120 real seconds per
-actor), Completion Chance (100%), and Milk Full Narration Chance (100%). New
+Narrate Milking Completion (ON), Completion Cooldown (120 real seconds shared by
+all actors), Completion Chance (100%), and Milk Full Narration Chance (100%). New
 fullness cooldown defaults are 120 seconds; saved cooldown choices are retained.
-Missing-only initialization and MCM version 172 support existing saves.
+Missing-only initialization and MCM version 172 support existing saves. Completion
+and fullness each share their own cooldown across all actors and source methods;
+they retain separate settings. History still records every eligible event. A short
+submission gate prevents overlapping completion requests from bypassing cooldown.
 
 Milking.json contains six editable source descriptions, result fragments, a
 productive-without-net-reduction description and a shared reaction instruction.
