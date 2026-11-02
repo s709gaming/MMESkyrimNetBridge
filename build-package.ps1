@@ -46,6 +46,7 @@ $scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "M
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $scriptNames += "MMEOriginalSettings"
 $scriptNames += "MMEMilkingSource"
+$scriptNames += "MMEPostMilking"
 $scriptNames += "MMEActorPromptState"
 $scriptNames += "MMEFixedLactacid"
 $scriptNames += "MMEDialogueKnowledge"

@@ -141,11 +141,13 @@ Function Complete(Actor target, Int sessionId, Int bottles, Int boobgasms, Int c
     StorageUtil.SetIntValue(target, "MME.Source.LastRemoved", removed)
     StorageUtil.SetIntValue(target, "MME.Source.LastBottles", bottles)
     StorageUtil.SetFloatValue(target, "MME.Source.LastDelta", beforeMilk - afterMilk)
+    StorageUtil.SetFloatValue(target, "MME.Source.LastAfter", afterMilk)
     StorageUtil.SetFloatValue(target, "MME.Source.LastFinishedDays", Utility.GetCurrentGameTime())
     StorageUtil.SetFormValue(target, "MME.Source.LastEquipment", StorageUtil.GetFormValue(target, "MME.Source.Equipment"))
     StorageUtil.SetIntValue(target, "MME.Source.LastSession", sessionId)
     ClearActive(target)
     Trace("COMPLETE | actor=" + target + " | session=" + sessionId + " | method=" + MethodName(method) + " | bottles=" + bottles + " | milkRemoved=" + removed + " | before=" + beforeMilk + " | after=" + afterMilk)
+    MMEPostMilking.RecordCompletion(target, sessionId, method, afterMilk, beforeMilk - afterMilk, removed)
 EndFunction
 
 ; Original passive spell is authority, including old saves with no tracker yet.

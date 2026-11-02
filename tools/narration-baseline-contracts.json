@@ -110,7 +110,7 @@
     {
       "file": "Armor",
       "key": "narrate_armor_equip_1",
-      "sha256": "d9e3a6af23688f21d36af597832646b56fc98706aafac0b2ad4fe80d61c4d46c",
+      "sha256": "2150f6758bbd00051eda76bd41abdeeb32a0fa1a9a30d6202c1714062a66e9f2",
       "args": [
         [
           "actor",
@@ -121,7 +121,7 @@
     {
       "file": "Armor",
       "key": "narrate_armor_equip_2",
-      "sha256": "0c72520fc35cde8d6809c1a2b45a7578a1ebb7a36054b4190e2f641aadb7b5c1",
+      "sha256": "86ac35416e55f4bcc2ab8f0d7d33817d4382bac5e2f8e0244647367e01f1c401",
       "args": [
         [
           "actor",
@@ -132,7 +132,7 @@
     {
       "file": "Armor",
       "key": "narrate_armor_equip_3",
-      "sha256": "648a021bbafd7002ddb6a3cf780af6345f5166d52c0c5965aab73ee47409d038",
+      "sha256": "af9070728c741abd9e4613289ab671ec181652be3e264460ed619f1f03154246",
       "args": [
         [
           "actor",
@@ -143,7 +143,7 @@
     {
       "file": "Armor",
       "key": "narrate_armor_equip_4",
-      "sha256": "edb46d1b914b0505b0843596dfbe4da9b6df98f300a77085097d24ef0f2c3544",
+      "sha256": "21570dc10a5c6c12ca185921db9eb5ddd34a642d1724cebc7c0251556173d278",
       "args": [
         [
           "actor",
@@ -154,7 +154,7 @@
     {
       "file": "Armor",
       "key": "narrate_armor_strip_1",
-      "sha256": "3ef238ca6427a384738876e1e759d9f02d184a43debcc4459ff4a133b8502db3",
+      "sha256": "2bfaa650f5901d4693b0e939564b40e7172e9f2e29a564eb427bc7d61a51bd67",
       "args": [
         [
           "actor",
@@ -199,7 +199,7 @@
     {
       "file": "Fullness",
       "key": "narrate_milk_full_1",
-      "sha256": "982c65b1d0a2b413410733ffcd08b84f956c9de2dd45f303a5b653c672f0bb42",
+      "sha256": "18c757f080585933abb1b69996b823f3ca66e628ffa0b6d74ce9f91fd50b035d",
       "args": [
         [
           "actor",
@@ -210,7 +210,7 @@
     {
       "file": "Fullness",
       "key": "narrate_milk_half_full_1",
-      "sha256": "def5c8cadfb9caa2e2bf4a04834645abe0fed2e941b347bb76a3bf4457337122",
+      "sha256": "009dcfec41ace7c4e51daae54c1fa62c79ff60bec0ebf8869033b3d2b7a7da34",
       "args": [
         [
           "actor",
@@ -240,7 +240,7 @@
     {
       "file": "MilkDrinking",
       "key": "narrate_chest_milk_drink_2",
-      "sha256": "a6b6be95339a77cb3c8983a9380388aa2c5798aa7e30ecf09049aba7602f6a07",
+      "sha256": "26c80fa8f0691c739b20f5532ce197d01270ac45e96342f5290f78e859c8d759",
       "args": [
         [
           "situation",
@@ -255,7 +255,7 @@
     {
       "file": "MilkCravings",
       "key": "narrate_milk_craving_1",
-      "sha256": "b6f9560a4195ff1962a02100f9abfbb03c82326bd36a355db89a7aa62f16c6b1",
+      "sha256": "c5729610d8d67a8d28477cbb41adee00a9ee07ab832648dbe007926b0fa4f34a",
       "args": [
         [
           "craving",
@@ -270,7 +270,7 @@
     {
       "file": "MilkDrinking",
       "key": "narrate_n_p_c_milk_drink_1",
-      "sha256": "f97052508d32611567b41e41d7b1624f106d698d3e7102e4aaa3677784b1776b",
+      "sha256": "7e11461b0ef1eba376bc1fbc7b3814d3bbcf72d6cb9032090616df2146ae3dfc",
       "args": [
         [
           "reaction",
@@ -285,7 +285,7 @@
     {
       "file": "MilkDrinking",
       "key": "narrate_n_p_c_milk_drink_2",
-      "sha256": "b68ad6150f5e1790d8c07d9bfc72d802bb065ba96f83ec5d50a19fc972ba6a2c",
+      "sha256": "d2a1d718952f06702a9de1f2313a5dbfca0c6361b0441ed884b87cb50802f0d3",
       "args": [
         [
           "actor",
@@ -307,7 +307,7 @@
     {
       "file": "MilkDrinking",
       "key": "narrate_n_p_c_milk_drink_4",
-      "sha256": "64357805b65ad11df65dfd0ee93d369fae985471f86caeb41475ebdaec0aecea",
+      "sha256": "da1795cb0757c66d14ac9ccf17470d86f498b3fd9f82087a1f08733c85e4afef",
       "args": [
         [
           "actor",
@@ -318,7 +318,7 @@
     {
       "file": "MilkDrinking",
       "key": "narrate_player_milk_drink_1",
-      "sha256": "539df343cd454aca6a1a8e18bf412ae98d03ad1d5107a28656d20623fd9c65ff",
+      "sha256": "ba33fc2169c522abba5b58a3974012851b073e6bcac636f08ba5b72127b3bdcd",
       "args": [
         [
           "milkName",
@@ -329,7 +329,7 @@
     {
       "file": "MilkDrinking",
       "key": "narrate_player_milk_drink_2",
-      "sha256": "513ac659d57224bb29e48ca7fea7764948ed683b83e952946d57dbef63935a81",
+      "sha256": "159f5f63880e15f49d9ef89d4e2290ef34d740fe43d7b1f23619132a3d465dfe",
       "args": [
         [
           "reaction",
@@ -340,13 +340,13 @@
     {
       "file": "MilkDrinking",
       "key": "narrate_player_milk_drink_3",
-      "sha256": "ef7090b056158bc18dc5d84fa569a0a8b6f1f5e32ff44e2b5192135a4fb3f387",
+      "sha256": "88ef353adc1232927bd8f421816cb198b9367c588e6af15269983b21ddc30aac",
       "args": []
     },
     {
       "file": "MilkMaidCreation",
       "key": "narrate_milkmaid_created_1",
-      "sha256": "6b0f8c327d296ecd5c418af3aab2c74a608a78fb40ccbd7a75c8a4e2852b2d12",
+      "sha256": "bbc04ab179e3bbdea83ed65f0616ed741e786b06ec8b9b97dd0359c4055eae82",
       "args": [
         [
           "actor",
@@ -357,7 +357,7 @@
     {
       "file": "MilkMaidCreation",
       "key": "narrate_forced_milk_maid_conversion_1",
-      "sha256": "bbfb683f53721bf98bd841285d41bcc9557f1df97638ec3229825d247be42618",
+      "sha256": "0d09c1ee419989464115550b639a438292673dad8f5c6d7b5925b81dfb4c9ec8",
       "args": [
         [
           "conversion",
@@ -405,7 +405,7 @@
     {
       "file": "Thoughts",
       "key": "narrate_milk_maid_thought_1",
-      "sha256": "ba27f07d7bcc60c2cfb3d8ce59ec34f22109c88494a9cb6b1d24bf365f76f5bd",
+      "sha256": "14fed0df3bbdf6262f5ac37c81daac3e08bcb37a71cb558414888d1e66f3cfc9",
       "args": [
         [
           "thought",
@@ -420,7 +420,7 @@
     {
       "file": "Thoughts",
       "key": "narrate_bound_milk_maid_thought_1",
-      "sha256": "b4fb194307de0bae94e98a29f3c56f0ae2641a8ea040e134cb5fd1a6502d2dfd",
+      "sha256": "040489a5c434c5b9d3ae3f1311cb640b28b127bb3e81e67b32ab846a2f26040c",
       "args": [
         [
           "thought",
@@ -435,7 +435,7 @@
     {
       "file": "Fullness",
       "key": "build_restrained_capacity_content_1",
-      "sha256": "88665f0de2afba62afbfa9364ff101993b6a861ce4449e757e91fd20d360e998",
+      "sha256": "d591b328e81256f5b678e0539badd01801eb7d81e7dede00dd45fbdf41927187",
       "args": [
         [
           "actor",
@@ -446,7 +446,7 @@
     {
       "file": "Fullness",
       "key": "build_restrained_capacity_content_2",
-      "sha256": "9feded8c8b1e1c2deadb621971de6c4741f9e398e8a3852654127aff6483ec67",
+      "sha256": "5fd31ca08a07c5b479d899b4a1639f29364f30c6fdaecb471ff344656553322f",
       "args": [
         [
           "actor",
@@ -523,7 +523,7 @@
     {
       "file": "MilkDrinking",
       "key": "build_restrained_player_drink_content_1",
-      "sha256": "1dbe281e9a959743d170b1a8bf4c28cdd2e46506d97766e31ae30238f63657bf",
+      "sha256": "992b520dc0ebe161679e42303510f1660fd810132d4f8054873b37e9af1868d9",
       "args": [
         [
           "milkName",
@@ -585,12 +585,12 @@
     {
       "file": "Lore",
       "key": "milk_lore",
-      "sha256": "71c27dee4059b6fd3e988696222ba24882afebdf4dfc6ae8115b63d63625e99d"
+      "sha256": "69475467b818d521a27faef5ee1a64362752e097d08df5ea91e23de6848e5542"
     },
     {
       "file": "Lore",
       "key": "milkmaid_lore",
-      "sha256": "fd9ac94b1d1bd788f6b983cf76086546dfd3fb47e005b9fd31c961f0ada4b37d"
+      "sha256": "ab8117052d42e156c3e4314296fc9afb518ca8ac2946d0813cbe6d817fce66e1"
     },
     {
       "file": "Breastfeeding",

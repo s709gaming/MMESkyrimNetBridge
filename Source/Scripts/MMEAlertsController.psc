@@ -1,5 +1,9 @@
 Scriptname MMEAlertsController extends Quest
 
+Function OnPostMilkingPlayerLine(String response, Int success)
+    MMEPostMilking.PlayPlayerLine(response, success)
+EndFunction
+
 ; Skyrim.Net requires an instance callback on an attached quest script.
 ; Keep all API calls and playback gates inside the publication boundary.
 Function OnTentaclePlayerLine(String response, Int success)
@@ -1763,6 +1767,9 @@ Event OnMMEMilkingDone(Form actorForm, Int bottles, Int boobgasmCount, Int cumCo
     ; per-actor state prevents the normal stop/done pair from playing twice.
     Actor milkMaid = actorForm as Actor
     FinishMilking(milkMaid)
+    If milkMaid != None && StorageUtil.GetIntValue(milkMaid, "MME.Source.LastMethod", 0) != 5
+        MMEPostMilking.NarrateLast(milkMaid)
+    EndIf
     MMEMaidWeightScaling.ReconcileActor(milkMaid, "MME milking completed")
     MMEMaidBodyScaling.ReconcileActor(milkMaid, "MME milking completed")
     If milkMaid == Game.GetPlayer()
@@ -2384,6 +2391,7 @@ Int Function UpdateCapacityState(Actor candidate)
     If previousState < 0
         Return 0
     ElseIf previousState < 2 && currentState == 2
+        MMEPostMilking.RecordFull(candidate)
         Return 2
     ElseIf previousState == 0 && currentState == 1
         Return 1

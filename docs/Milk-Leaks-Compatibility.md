@@ -91,3 +91,9 @@ The legacy milkLeakIntensity JSON value is preserved but ignored. Scan delivery
 is traced at most once per minute; threshold state changes get actor-specific
 master-gated footprints. Discovery is in ScanNearbyMilkMaids, never conditional
 on the tentacle injection timer.
+
+Ordinary sitting and leaning are allowed for visual-only leaks. Furniture is
+not a blocking condition; combat/scenes/framework milking guards remain.
+Eligibility changes include actor, exact reason, sit state and furniture
+reference only behind master logging, once per changed result. No animation
+graph variable named bInFurniture is queried.

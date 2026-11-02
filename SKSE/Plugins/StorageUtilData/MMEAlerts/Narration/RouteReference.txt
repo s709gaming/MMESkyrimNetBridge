@@ -55,10 +55,12 @@ Fullness.json
   build_milk_status_5: {actor}
   build_milk_status_6: {actor}
   nearby_status_summary: {statuses}
+  full_event: {actor}
 
 Lore.json
   milk_lore: (no placeholders)
   milkmaid_lore: {actor}
+  shared_guidance: (no placeholders)
 
 MilkCravings.json
   narrate_milk_craving_1: {actor}, {craving}
@@ -79,6 +81,16 @@ MilkDrinking.json
 Milking.json
   startMessage: {actor}
   endMessage: {actor}
+  complete_hands: {actor}, {result}
+  complete_pump: {actor}, {result}
+  complete_equipment: {actor}, {result}
+  complete_tendrils: {actor}, {result}
+  complete_dwemer: {actor}, {result}
+  complete_generic: {actor}, {result}
+  complete_productive: {actor}, {method}
+  result_empty: (no placeholders)
+  result_remaining: (no placeholders)
+  completion_instruction: {actor}
 
 MilkMaidCreation.json
   narrate_milkmaid_created_1: {actor}

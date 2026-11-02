@@ -103,13 +103,30 @@ String Function BlockReason(Actor target)
     If target.IsChild() || target.IsDead() || target.IsDisabled() || !target.Is3DLoaded() || target.GetDistance(Game.GetPlayer()) > 2000.0
         Return "actor unavailable"
     EndIf
-    If target.IsInCombat() || target.GetCurrentScene() != None || target.GetAnimationVariableBool("bInFurniture")
-        Return "combat/scene/furniture"
+    ; Leaks are visual-only: ordinary sitting/leaning does not block them.
+    If target.IsInCombat()
+        Return "in combat"
+    EndIf
+    If target.GetCurrentScene() != None
+        Return "scene active"
     EndIf
     If MMEOStimIntegration.IsActorBusy(target)
         Return "framework scene"
     EndIf
     Return MMESelfMilking.GetInvalidReason(target, True, False, True)
+EndFunction
+
+Function TraceEligibility(Actor target, String reason)
+    If target == None
+        Return
+    EndIf
+    If StorageUtil.GetStringValue(target, "MMELeaks.Skip", "<unchecked>") == reason
+        Return
+    EndIf
+    StorageUtil.SetStringValue(target, "MMELeaks.Skip", reason)
+    If JsonUtil.GetIntValue(settings, "enablePapyrusTrace", 0) == 1
+        Trace("eligibility changed | actor=" + target + " | eligible=" + (reason == "") + " | reason=" + reason + " | sitState=" + target.GetSitState() + " | furniture=" + target.GetFurnitureReference())
+    EndIf
 EndFunction
 
 Function Observe(Actor[] nearby)
@@ -156,12 +173,10 @@ Function Observe(Actor[] nearby)
                     If target.GetWornForm(0x00000004) != None && JsonUtil.GetIntValue(settings, "milkLeakThroughClothing", 1) != 1
                         reason = "covered; clothing leaks disabled"
                     EndIf
+                    TraceEligibility(target, reason)
                     If reason == ""
                         Trace("entry | actor=" + target + " | fullness=" + percent + " | eligible=True")
                         StartLeak(target)
-                    ElseIf StorageUtil.GetStringValue(target, "MMELeaks.Skip", "") != reason
-                        StorageUtil.SetStringValue(target, "MMELeaks.Skip", reason)
-                        Trace("eligibility | actor=" + target + " | skip=" + reason)
                     EndIf
                 EndIf
             EndIf
@@ -196,7 +211,6 @@ Function StartLeak(Actor target)
     EndIf
     If tracked[slot] != None && GetLeakSource(target) == 1
         StorageUtil.SetIntValue(target, "MMELeaks.ThresholdLatched", 1)
-        StorageUtil.UnsetStringValue(target, "MMELeaks.Skip")
     EndIf
     RegisterForSingleUpdate(1.0)
 EndFunction
@@ -237,18 +251,21 @@ Function Advance(Int slot)
         EndIf
     EndIf
     If reason != ""
+        TraceEligibility(target, reason)
         Cleanup(slot, reason)
         busy[slot] = False
         Return
     EndIf
     If target.GetWornForm(0x00000004) != None
         If JsonUtil.GetIntValue(settings, "milkLeakThroughClothing", 1) != 1
+            TraceEligibility(target, "clothing leaks disabled")
             Cleanup(slot, "clothing leaks disabled")
             busy[slot] = False
             Return
         EndIf
         stage = 0
     EndIf
+    TraceEligibility(target, "")
     If visibleStages[slot] != stage
         RemoveVisual(slot)
         Armor effectArmor = LowArmor

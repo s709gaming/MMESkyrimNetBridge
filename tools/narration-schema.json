@@ -209,6 +209,11 @@
       "tokens": [
         "statuses"
       ]
+    },
+    "full_event": {
+      "tokens": [
+        "actor"
+      ]
     }
   },
   "Lore": {
@@ -219,6 +224,9 @@
       "tokens": [
         "actor"
       ]
+    },
+    "shared_guidance": {
+      "tokens": []
     }
   },
   "MilkCravings": {
@@ -296,6 +304,59 @@
       ]
     },
     "endMessage": {
+      "tokens": [
+        "actor"
+      ]
+    },
+    "complete_hands": {
+      "tokens": [
+        "actor",
+        "result"
+      ]
+    },
+    "complete_pump": {
+      "tokens": [
+        "actor",
+        "result"
+      ]
+    },
+    "complete_equipment": {
+      "tokens": [
+        "actor",
+        "result"
+      ]
+    },
+    "complete_tendrils": {
+      "tokens": [
+        "actor",
+        "result"
+      ]
+    },
+    "complete_dwemer": {
+      "tokens": [
+        "actor",
+        "result"
+      ]
+    },
+    "complete_generic": {
+      "tokens": [
+        "actor",
+        "result"
+      ]
+    },
+    "complete_productive": {
+      "tokens": [
+        "actor",
+        "method"
+      ]
+    },
+    "result_empty": {
+      "tokens": []
+    },
+    "result_remaining": {
+      "tokens": []
+    },
+    "completion_instruction": {
       "tokens": [
         "actor"
       ]

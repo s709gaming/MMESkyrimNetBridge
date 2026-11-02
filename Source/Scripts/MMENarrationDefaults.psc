@@ -59,10 +59,10 @@ Int Function RouteCount(String fileKey) Global
         Return 23
     EndIf
     If fileKey == "Fullness"
-        Return 13
+        Return 14
     EndIf
     If fileKey == "Lore"
-        Return 2
+        Return 3
     EndIf
     If fileKey == "MilkCravings"
         Return 1
@@ -71,7 +71,7 @@ Int Function RouteCount(String fileKey) Global
         Return 11
     EndIf
     If fileKey == "Milking"
-        Return 2
+        Return 12
     EndIf
     If fileKey == "MilkMaidCreation"
         Return 5
@@ -224,11 +224,17 @@ String Function RouteKey(String fileKey, Int index) Global
     If fileKey == "Fullness" && index == 12
         Return "nearby_status_summary"
     EndIf
+    If fileKey == "Fullness" && index == 13
+        Return "full_event"
+    EndIf
     If fileKey == "Lore" && index == 0
         Return "milk_lore"
     EndIf
     If fileKey == "Lore" && index == 1
         Return "milkmaid_lore"
+    EndIf
+    If fileKey == "Lore" && index == 2
+        Return "shared_guidance"
     EndIf
     If fileKey == "MilkCravings" && index == 0
         Return "narrate_milk_craving_1"
@@ -272,6 +278,36 @@ String Function RouteKey(String fileKey, Int index) Global
     If fileKey == "Milking" && index == 1
         Return "endMessage"
     EndIf
+    If fileKey == "Milking" && index == 2
+        Return "complete_hands"
+    EndIf
+    If fileKey == "Milking" && index == 3
+        Return "complete_pump"
+    EndIf
+    If fileKey == "Milking" && index == 4
+        Return "complete_equipment"
+    EndIf
+    If fileKey == "Milking" && index == 5
+        Return "complete_tendrils"
+    EndIf
+    If fileKey == "Milking" && index == 6
+        Return "complete_dwemer"
+    EndIf
+    If fileKey == "Milking" && index == 7
+        Return "complete_generic"
+    EndIf
+    If fileKey == "Milking" && index == 8
+        Return "complete_productive"
+    EndIf
+    If fileKey == "Milking" && index == 9
+        Return "result_empty"
+    EndIf
+    If fileKey == "Milking" && index == 10
+        Return "result_remaining"
+    EndIf
+    If fileKey == "Milking" && index == 11
+        Return "completion_instruction"
+    EndIf
     If fileKey == "MilkMaidCreation" && index == 0
         Return "narrate_milkmaid_created_1"
     EndIf
@@ -313,19 +349,19 @@ EndFunction
 
 String Function Template(String fileKey, String routeKey, Int index = 0) Global
     If fileKey == "Armor" && routeKey == "narrate_armor_equip_1"
-        Return "{actor} has just equipped Milking Armor, sealing its suction cups over her breasts ready to milk them. Generate a short, humorous, suggestive, and playful reaction specifically about this equip event. Stay focused on her breasts, milk, suction, and the newly attached cups. Create a fresh reaction; do not merely repeat this description or change subjects."
+        Return "{actor} equipped milking armor; its suction cups attach to her breasts. React to the attachment."
     EndIf
     If fileKey == "Armor" && routeKey == "narrate_armor_equip_2"
-        Return "{actor} has just equipped Living Armor. Its living tendrils tease and stimulate her breasts and nipples while pleasurably drawing out her milk. Treat the armor's behavior as kinky and fun, not frightening. Generate a short, humorous, suggestive, and playful reaction specifically about this equip event. Create a fresh reaction; do not merely repeat this description or change subjects."
+        Return "Living armor wraps around {actor}. React to its movements and touch."
     EndIf
     If fileKey == "Armor" && routeKey == "narrate_armor_equip_3"
-        Return "{actor} has just equipped Living Parasite armor. Its parasitic tentacles tease and stimulate her breasts while pleasurably drawing out her milk. Treat the parasite's behavior as kinky and fun, not frightening. Generate a short, humorous, suggestive, and playful reaction specifically about this equip event. Create a fresh reaction; do not merely repeat this description or change subjects."
+        Return "Living Parasite armor attaches to {actor}. React to its movements and touch."
     EndIf
     If fileKey == "Armor" && routeKey == "narrate_armor_equip_4"
-        Return " This armor sprang from a magically trapped treasure chest and unexpectedly wrapped itself around {actor}. Acknowledge the chest's mischievous surprise and treat the ambush as exaggerated, playful, suggestive, pleasurable, and funny rather than frightening."
+        Return " This armor sprang from a trapped treasure chest and wrapped around {actor}. Acknowledge the surprise."
     EndIf
     If fileKey == "Armor" && routeKey == "narrate_armor_strip_1"
-        Return "{actor}'s {armorName} has flown right off her body because her milk-swollen breasts have gotten far too big for it. React creatively with exaggerated, playful, suggestive humor. Don't simply restate the event."
+        Return "{actor}'s {armorName} came off because of her milk-swollen breasts. React to the wardrobe mishap."
     EndIf
     If fileKey == "Armor" && routeKey == "build_nearby_armor_status_1"
         Return "[Milking Armor] {actor} is wearing Milking Armor. Suction cups are attached to her nipples for milking."
@@ -439,16 +475,16 @@ String Function Template(String fileKey, String routeKey, Int index = 0) Global
         Return "{tag} {actor} is completely full of milk, deliciously swollen and savoring the ultimate pleasure."
     EndIf
     If fileKey == "Fullness" && routeKey == "narrate_milk_full_1"
-        Return "{actor} is completely full. Her breasts are absurdly large and heavy, making ordinary movement increasingly ridiculous. She is near a boobgasm and enjoying the fullness. She can enjoy being full without needing immediate milking. React creatively with exaggerated, playful, suggestive humor. Don't simply restate the event."
+        Return "{actor} has reached full milk capacity and is leaking. React to the fullness and leaking."
     EndIf
     If fileKey == "Fullness" && routeKey == "narrate_milk_half_full_1"
-        Return "{actor} has become half full. Her breasts are noticeably larger, heavier, and bouncier, making everyday movement increasingly awkward. React creatively with playful, suggestive humor. Don't simply restate the event."
+        Return "{actor} is halfway to full milk capacity. React to the growing fullness."
     EndIf
     If fileKey == "Fullness" && routeKey == "build_restrained_capacity_content_1"
-        Return "{actor} is completely full. Her breasts are absurdly large and heavy, and her restrained arms make supporting or adjusting them difficult. She is near a boobgasm and seems to be enjoying herself. React creatively with exaggerated, playful, suggestive humor. Don't simply restate the event."
+        Return "{actor} is full of milk and leaking, with her arms restrained. React to the predicament."
     EndIf
     If fileKey == "Fullness" && routeKey == "build_restrained_capacity_content_2"
-        Return "{actor} has become half full. Her breasts are noticeably larger, heavier, and bouncier, while her restrained arms make dealing with them awkward. React creatively with playful, suggestive humor. Don't simply restate the event."
+        Return "{actor} is halfway to full milk capacity, with her arms restrained. React to the growing fullness."
     EndIf
     If fileKey == "Fullness" && routeKey == "build_milk_status_1"
         Return "{actor} is completely full, deliciously heavy and savoring the pleasure near a boobgasm. Her arms are restrained, leaving her unable to freely touch or relieve her milk-heavy breasts, turning the fullness into prolonged erotic teasing and edging that she enjoys."
@@ -471,44 +507,50 @@ String Function Template(String fileKey, String routeKey, Int index = 0) Global
     If fileKey == "Fullness" && routeKey == "nearby_status_summary"
         Return "**Current milk levels:** {statuses}"
     EndIf
+    If fileKey == "Fullness" && routeKey == "full_event"
+        Return "{actor} reached full milk capacity and began leaking, enjoying a pleasantly overflowing fullness."
+    EndIf
     If fileKey == "Lore" && routeKey == "milk_lore"
-        Return "## Skyrim Milk and Milking Armor Lore\n\nSkyrim milk comes from Milk Maids and is a common staple drink with exotic aphrodisiac properties. Kinky Living, Parasite, and Dwemer milking armor and devices are known to trap unsuspecting adult women. For kinky women who welcome such contraptions, their relentless teasing can provide sublime ecstasy."
+        Return "## Skyrim Milk Maid Lore\n\nThis is general world knowledge. It does not establish that the speaker or listener is a Milk Maid, wears enchanted armor, or is experiencing these effects. Use current actor status and context to determine what applies.\n\n### Shared World Lore\n\n- Skyrim's milk comes from Milk Maids, not cows. This fine drink is a common staple with exotic aphrodisiac properties, guaranteed to get things flowing in all the fun ways.\n- Milk Maids are the socially valued backbone of Skyrim's milk supply.\n- Women may become Milk Maids through Lactacid sold by alchemists, drinking enough milk, magical curses, or unfortunate encounters with devious traps and enchanted armor.\n- Kinky living armor, parasites, and Dwemer milking contraptions are notorious for wrapping themselves around unsuspecting adult women, becoming living attire that pumps their wearers full of aphrodisiacs and milk-production stimulants.\n- Initial panic can give way to delirious, sublime ecstasy, leaving some wearers craving every relentless tease and caress. Such pleasures can become deliciously addictive."
     EndIf
     If fileKey == "Lore" && routeKey == "milkmaid_lore"
-        Return "## Milk Maid Lore\n\n{actor} is a Milk Maid and produces milk.\n\ncow milk is considered barbaric. Milk Maids are the socially valued backbone of Skyrim's milk supply. Women may become Milk Maids through Lactacid sold by alchemists, unusual milk, magic, curses, blessings, potions, experiments, accidents, voluntary transformation, or birth; many traditionally begin lactating at adulthood as a rite of passage."
+        Return "## Milk Maid Status\n\n{actor} is a Milk Maid and produces milk."
+    EndIf
+    If fileKey == "Lore" && routeKey == "shared_guidance"
+        Return "Be playful, positive, and strongly suggestive. Use clever innuendo without explicit vocabulary. Read the room, match the speaker's personality, and react briefly to the immediate event. Do not repeat the event or invent effects."
     EndIf
     If fileKey == "MilkCravings" && routeKey == "narrate_milk_craving_1"
-        Return "Immediate situation: {craving} This powerful milk craving pertains directly to {actor}, who should speak and react from her own first-person perspective. Make the anticipated taste and sensation of drinking milk feel wonderfully tempting and increasingly difficult to resist. Keep the reaction short, eager, playful, slightly embarrassed, positive, and appropriate to her personality. Stay focused on wanting milk; do not claim she has already drunk it, do not assign the reaction to another nearby character, and do not merely repeat the immediate situation."
+        Return "{actor} craves milk. {craving} Express the temptation in her own voice; she has not drunk it yet."
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_chest_milk_drink_1"
         Return "{actor} is magically forced to drink {milkName} from the {chestKind}."
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_chest_milk_drink_2"
-        Return "Immediate situation: {situation} Prioritize {actor} as the speaker and have them react immediately, enthusiastically, and with delightful overstatement. The trapped chest may surprise them, but milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as their first milk drink or as surprise merely because milk has its normal effects. Generate one short, silly, suggestive reaction filled with mischievous milk innuendo and clever adult humor, like an animated comedy slipping a joke past the younger audience. Make the magical chest feel comically brazen. Stay focused on the magical forced drink; do not become graphically explicit or invent a different milk source, additional effects, fear, pain, or genuine distress."
+        Return "{situation} React as {actor} to the trapped chest's forced drink. Milk is familiar; do not invent its source or extra effects."
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_n_p_c_milk_drink_1"
-        Return "Immediate situation: {reaction} Prioritize {actor} as the speaker and let them react to what is happening to their own body. Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as their first milk drink or express surprise merely because milk has its normal effects. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted, mischievous, and character-appropriate, like an animated comedy slipping a joke past the younger audience. Stay focused on {actor} and only the effects actually described. Create a fresh joke or reaction; do not merely repeat the situation, become graphically explicit, change subjects, or invent additional effects."
+        Return "{reaction} React as {actor} to the drink's reported taste and effects. Milk is familiar."
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_n_p_c_milk_drink_2"
-        Return " {actor} also has restrained arms. Treat this as comically inconvenient and fertile ground for cheeky innuendo. Exaggerate the awkwardness without inventing new restraints, danger, pain, or additional effects."
+        Return " {actor}'s arms are also restrained. Account for the inconvenience without inventing restraints or effects."
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_n_p_c_milk_drink_3"
         Return " Factual boundary: {actor} is not a Milk Maid, and this drink did not add breast milk, breast fullness, breast weight, swelling, growth, leaking, or lactation. Do not imply or invent any of those effects."
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_n_p_c_milk_drink_4"
-        Return " {actor} is an established Milk Maid. You may joke about confirmed milk, breast-fullness, sensitivity, or arousal effects described in the immediate situation, but do not add effects that were not reported."
+        Return " {actor} is an established Milk Maid. Use only the reported effects."
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_player_milk_drink_1"
-        Return "Immediate situation: The player just drank {milkName}. Their breasts are becoming heavier and more sensitive. Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as the player's first milk drink or express surprise merely because milk has its normal effects. Prefer one appropriate nearby character reacting to the player; do not make two characters speak simultaneously. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted and mischievous, like an animated comedy slipping a joke past the younger audience. Do not merely repeat the situation, become graphically explicit, change subjects, or invent additional effects."
+        Return "The player drank {milkName}; their breasts are becoming heavier and more sensitive. Have one nearby character react. Milk is familiar."
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_player_milk_drink_2"
-        Return "Immediate situation: {reaction} Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as the player's first milk drink or express surprise merely because milk has its normal effects. Prefer one appropriate nearby character reacting to the player; do not make two characters speak simultaneously. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted and mischievous, like an animated comedy slipping a joke past the younger audience. Stay focused on the player and only the effects actually described. Create a fresh joke or reaction; do not merely repeat the situation, become graphically explicit, change subjects, or invent additional effects."
+        Return "{reaction} Have one nearby character react to the player's reported drink effects. Milk is familiar."
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_player_milk_drink_3"
-        Return " The player also has restrained arms. Treat this as comically inconvenient and fertile ground for cheeky innuendo. Exaggerate the awkwardness without inventing new restraints, danger, pain, or additional effects."
+        Return " The player's arms are also restrained. Account for the inconvenience without inventing restraints or effects."
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "build_restrained_player_drink_content_1"
-        Return "Immediate situation: The player just drank {milkName} despite having their arms restrained. Their breasts are becoming heavier and more sensitive. Milk and its familiar effects are an ordinary, established part of life in Skyrim; do not frame this as the player's first milk drink or express surprise merely because milk has its normal effects. Prefer one appropriate nearby character reacting to the player; do not make two characters speak simultaneously. Generate one short, exaggerated, silly, and suggestive reaction using cheeky double meanings, playful milk innuendo, comic overstatement, and clever adult humor likely to make the player chuckle. Keep it lighthearted and mischievous, like an animated comedy slipping a joke past the younger audience. Treat the restrained arms as comically inconvenient and fertile ground for cheeky innuendo, but do not invent new restraints, danger, pain, or additional effects. Do not merely repeat the situation or become graphically explicit."
+        Return "The player drank {milkName} with their arms restrained; their breasts are becoming heavier and more sensitive. Have one nearby character react. Milk is familiar."
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "drinkMessage"
         Return "{actor} just drank {item}."
@@ -519,20 +561,50 @@ String Function Template(String fileKey, String routeKey, Int index = 0) Global
     If fileKey == "Milking" && routeKey == "endMessage"
         Return "{actor} has finished a milking session."
     EndIf
+    If fileKey == "Milking" && routeKey == "complete_hands"
+        Return "{actor} finishes a hands-on milking, pleasantly relieved and satisfied. {result}"
+    EndIf
+    If fileKey == "Milking" && routeKey == "complete_pump"
+        Return "The pump finishes drawing milk from {actor}, leaving her lighter and pleasantly refreshed. {result}"
+    EndIf
+    If fileKey == "Milking" && routeKey == "complete_equipment"
+        Return "The milking cups finish their work on {actor}, leaving her relieved and pleasantly sensitive. {result}"
+    EndIf
+    If fileKey == "Milking" && routeKey == "complete_tendrils"
+        Return "Living tendrils have drawn milk from {actor}, leaving her breathless and pleasantly spent. {result}"
+    EndIf
+    If fileKey == "Milking" && routeKey == "complete_dwemer"
+        Return "The Dwemer mechanism finishes its rhythmic harvest from {actor}, leaving her dazed and deliciously satisfied. {result}"
+    EndIf
+    If fileKey == "Milking" && routeKey == "complete_generic"
+        Return "{actor} finishes milking, pleasantly refreshed. {result}"
+    EndIf
+    If fileKey == "Milking" && routeKey == "complete_productive"
+        Return "{actor} completed a productive {method} milking session. Milk was extracted, but production or feeding left no net reduction in her reserves."
+    EndIf
+    If fileKey == "Milking" && routeKey == "result_empty"
+        Return "Her milk reserves were empty at completion."
+    EndIf
+    If fileKey == "Milking" && routeKey == "result_remaining"
+        Return "Some milk remained at completion."
+    EndIf
+    If fileKey == "Milking" && routeKey == "completion_instruction"
+        Return "React as {actor} to this source-specific milking experience and its aftermath. Describe the completed session, not a new or ongoing one."
+    EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "narrate_milkmaid_created_1"
-        Return "{actor} has just become a Milk Maid. Her body can now produce and store milk, and her breasts are becoming more sensitive. This event pertains directly to {actor}, who must speak and react from her own first-person perspective. Treat the transformation as an overwhelmingly pleasurable and wonderful surprise, never frightening, harmful, or unwanted. Exaggerate the wonderful sensation coursing through her body, the spreading warmth, tingling nipples, delicious new heaviness and sensitivity, and her thrilling realization that her breasts can now fill with milk. Keep her reaction concise, immersive, enthusiastic, playful, and appropriate to her personality. Do not narrate from an outside observer and do not merely repeat the event description."
+        Return "{actor} has become a Milk Maid and can now produce milk. React in her own voice to discovering this ability."
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "narrate_forced_milk_maid_conversion_1"
-        Return "{conversion} This sudden magical transformation pertains directly to {actor}, who must speak and react from her own first-person perspective. Treat the transformation as an overwhelmingly pleasurable and wonderful surprise, never frightening, harmful, or unwanted. Exaggerate the wonderful sensation coursing through her body, the spreading warmth, tingling nipples, delicious new heaviness and sensitivity, and her thrilling realization that her breasts can now fill with milk. Keep her reaction concise, immersive, enthusiastic, playful, and appropriate to her personality. Do not narrate from an outside observer, do not claim she drank anything because the cause is deliberately unspecified, and do not merely repeat the event description."
+        Return "{conversion} React as {actor} to the transformation. Its cause is unspecified; do not invent a drink."
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "milkmaidCreatedMessage"
         Return "{actor} has become a Milk Maid! Her breasts now feel pleasantly heavy, full, and faintly thrilling."
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "narrate_milk_maid_curse_1"
-        Return "{conversion} This event affects {actor}, who is already a Milk Maid. A magical curse has added milk to her existing reserves, possibly beyond her normal capacity. She has not just become a Milk Maid. React briefly in her own first-person voice with playful surprise at the sudden warmth, ripeness and abundant milk. Do not invent a second conversion or a drink."
+        Return "{conversion} React as {actor}, an existing Milk Maid, to the added milk. This is not a new conversion or a drink."
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "narrate_chest_milk_maid_curse_1"
-        Return "A magical Milk Maid curse has emerged from a {chest_kind} and affected {actor}. {outcome} Speak as {actor} in first person. React in one or two short sentences of cheerful, lightly sensual storybook banter. Express surprise at the sudden change, then playfully suspect a cheeky enchantment or magical treasure inside that chest. Keep the chest connection identifiable, but do not mechanically explain the spell or repeat these instructions. Favor natural rhetorical questions and playful innuendo about ripeness, fullness, unexpected bounty or wobbling back to town. Treat the effect as a delightful surprise, with personality-appropriate humor. Vary the wording and punchline; not every line needs a wobbling joke. Do not claim she drank anything, invent physical loot, or say she became a Milk Maid again if she was already one. Milk added by this event: {milk_added}; use this only as factual context, not a demand to recite numbers."
+        Return "A curse from a {chest_kind} affected {actor}. {outcome} React as {actor} to the chest's enchantment. Milk added: {milk_added}; do not recite numbers or invent a drink, loot, or another conversion."
     EndIf
     If fileKey == "TentacleArmor" && routeKey == "narrate_tentacle_effect_1"
         Return " React from your own perspective as the affected armor wearer."
@@ -592,10 +664,10 @@ String Function Template(String fileKey, String routeKey, Int index = 0) Global
         EndIf
     EndIf
     If fileKey == "Thoughts" && routeKey == "narrate_milk_maid_thought_1"
-        Return "Immediate situation: {thought} Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on {actor} and the milk, breast, fullness, or armor details actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+        Return "{actor}'s situation: {thought} Express a brief thought about it."
     EndIf
     If fileKey == "Thoughts" && routeKey == "narrate_bound_milk_maid_thought_1"
-        Return "Immediate situation: {thought} Generate a short, humorous, suggestive, and playful reaction specifically about this situation. Stay focused on {actor} and only the bound-arm, breast, milk, weight, or fullness details actually described. Create a fresh reaction; do not merely repeat the immediate situation or change subjects."
+        Return "{actor}'s situation: {thought} React to the described restraint and milk-related details."
     EndIf
     Return ""
 EndFunction
@@ -761,11 +833,17 @@ String Function Tokens(String fileKey, String routeKey) Global
     If fileKey == "Fullness" && routeKey == "nearby_status_summary"
         Return "|statuses|"
     EndIf
+    If fileKey == "Fullness" && routeKey == "full_event"
+        Return "|actor|"
+    EndIf
     If fileKey == "Lore" && routeKey == "milk_lore"
         Return "||"
     EndIf
     If fileKey == "Lore" && routeKey == "milkmaid_lore"
         Return "|actor|"
+    EndIf
+    If fileKey == "Lore" && routeKey == "shared_guidance"
+        Return "||"
     EndIf
     If fileKey == "MilkCravings" && routeKey == "narrate_milk_craving_1"
         Return "|actor|craving|"
@@ -807,6 +885,36 @@ String Function Tokens(String fileKey, String routeKey) Global
         Return "|actor|"
     EndIf
     If fileKey == "Milking" && routeKey == "endMessage"
+        Return "|actor|"
+    EndIf
+    If fileKey == "Milking" && routeKey == "complete_hands"
+        Return "|actor|result|"
+    EndIf
+    If fileKey == "Milking" && routeKey == "complete_pump"
+        Return "|actor|result|"
+    EndIf
+    If fileKey == "Milking" && routeKey == "complete_equipment"
+        Return "|actor|result|"
+    EndIf
+    If fileKey == "Milking" && routeKey == "complete_tendrils"
+        Return "|actor|result|"
+    EndIf
+    If fileKey == "Milking" && routeKey == "complete_dwemer"
+        Return "|actor|result|"
+    EndIf
+    If fileKey == "Milking" && routeKey == "complete_generic"
+        Return "|actor|result|"
+    EndIf
+    If fileKey == "Milking" && routeKey == "complete_productive"
+        Return "|actor|method|"
+    EndIf
+    If fileKey == "Milking" && routeKey == "result_empty"
+        Return "||"
+    EndIf
+    If fileKey == "Milking" && routeKey == "result_remaining"
+        Return "||"
+    EndIf
+    If fileKey == "Milking" && routeKey == "completion_instruction"
         Return "|actor|"
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "narrate_milkmaid_created_1"

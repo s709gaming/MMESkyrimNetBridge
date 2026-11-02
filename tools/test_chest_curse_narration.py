@@ -8,7 +8,7 @@ class ChestNarrationTests(unittest.TestCase):
   data=json.loads((ROOT/'SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/MilkMaidCreation.json').read_text(encoding='utf-8'))
   text=data['routes']['narrate_chest_milk_maid_curse_1']['template']
   self.assertEqual(set(re.findall(r'\{(.*?)\}',text)),{'actor','outcome','chest_kind','milk_added'})
-  for phrase in ['magical Milk Maid curse','first person','playfully suspect','Vary the wording','Do not claim she drank anything','already one']:
+  for phrase in ['curse from a {chest_kind}','React as {actor}',"chest's enchantment",'do not recite numbers','invent a drink, loot, or another conversion']:
    self.assertIn(phrase,text)
   values={'actor':'雪 "Hulda" {name}','outcome':'Already a Milk Maid; 2 milk added.','chest_kind':'boss treasure chest','milk_added':'2'}
   rendered=re.sub(r'\{([^{}]+)\}',lambda m:values[m[1]],text)

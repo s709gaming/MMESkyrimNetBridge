@@ -5,18 +5,17 @@ Scriptname MMEDialogueKnowledge Hidden
 String Function ForRequest(Actor speaker, String route) Global
     MMEActorPromptState.Refresh(speaker)
     String milkLore = MMENarrationText.GetRaw("Lore", "milk_lore")
-    ; The existing editable entry still requires {actor}. In shared background
-    ; it names an example, never an ordinary NPC who happens to be speaking.
-    String maidLore = MMENarrationText.Text("Lore", "milkmaid_lore", "actor", "An example Milk Maid")
-    If MMENarrationText.IsBlank(milkLore) || MMENarrationText.IsBlank(maidLore)
+    ; Actor identity stays in the actor decorator, not shared speaker guidance.
+    String guidance = MMENarrationText.GetRaw("Lore", "shared_guidance")
+    If MMENarrationText.IsBlank(milkLore) || MMENarrationText.IsBlank(guidance)
         AlarmOnce("compose shared knowledge", speaker, "required lore was empty after normal default resolution")
         Return ""
     EndIf
     If StorageUtil.GetIntValue(None, "MMEExtensions.DialogueKnowledge.Alarm.compose shared knowledge", 0) != 0
         StorageUtil.SetIntValue(None, "MMEExtensions.DialogueKnowledge.Alarm.compose shared knowledge", 0)
     EndIf
-    String output = "[MME shared knowledge]\nThe following is background about milk and Milk Maids. Use it to interpret the situation and guide the response, consistent with the speaker's own identity and personality. Do not read these notes aloud. The example Milk Maid described below is not the current speaker. This background does not make the speaker or listener a Milk Maid; actual identity and current game state remain authoritative.\n\n" + milkLore + "\n\n" + maidLore + "\n[End MME shared knowledge]"
-    MMELog.MasterDiagnostic("[MME Dialogue Knowledge] compose | route=" + route + " | speaker=" + speaker + " | automatic speaker=" + (speaker == None) + " | characters=" + StringUtil.GetLength(output) + " | entries=Lore.milk_lore,Lore.milkmaid_lore")
+    String output = "[MME shared knowledge]\nBackground and instructions; do not read aloud. Actual identity and current game state remain authoritative.\n\n" + milkLore + "\n\nShared Narration Guidance:\n" + guidance + "\n[End MME shared knowledge]"
+    MMELog.MasterDiagnostic("[MME Dialogue Knowledge] compose | route=" + route + " | speaker=" + speaker + " | automatic speaker=" + (speaker == None) + " | characters=" + StringUtil.GetLength(output) + " | entries=Lore.milk_lore,Lore.shared_guidance")
     Return output
 EndFunction
 

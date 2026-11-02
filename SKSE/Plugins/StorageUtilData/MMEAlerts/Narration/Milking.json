@@ -7,6 +7,36 @@
     },
     "endMessage": {
       "template": "{actor} has finished a milking session."
+    },
+    "complete_hands": {
+      "template": "{actor} finishes a hands-on milking, pleasantly relieved and satisfied. {result}"
+    },
+    "complete_pump": {
+      "template": "The pump finishes drawing milk from {actor}, leaving her lighter and pleasantly refreshed. {result}"
+    },
+    "complete_equipment": {
+      "template": "The milking cups finish their work on {actor}, leaving her relieved and pleasantly sensitive. {result}"
+    },
+    "complete_tendrils": {
+      "template": "Living tendrils have drawn milk from {actor}, leaving her breathless and pleasantly spent. {result}"
+    },
+    "complete_dwemer": {
+      "template": "The Dwemer mechanism finishes its rhythmic harvest from {actor}, leaving her dazed and deliciously satisfied. {result}"
+    },
+    "complete_generic": {
+      "template": "{actor} finishes milking, pleasantly refreshed. {result}"
+    },
+    "complete_productive": {
+      "template": "{actor} completed a productive {method} milking session. Milk was extracted, but production or feeding left no net reduction in her reserves."
+    },
+    "result_empty": {
+      "template": "Her milk reserves were empty at completion."
+    },
+    "result_remaining": {
+      "template": "Some milk remained at completion."
+    },
+    "completion_instruction": {
+      "template": "React as {actor} to this source-specific milking experience and its aftermath. Describe the completed session, not a new or ongoing one."
     }
   }
 }

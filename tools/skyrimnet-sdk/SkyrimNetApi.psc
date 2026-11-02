@@ -13,6 +13,7 @@ Int Function RegisterShortLivedEvent(String eventId, String eventType, String de
 Int Function RegisterEvent(String eventType, String content, Actor originatorActor, Actor targetActor) Global Native
 Int Function SendCustomPromptToLLM(String promptName, String variant, String contextJson, Quest callbackQuest, String callbackScriptName, String callbackFunctionName) Global Native
 Int Function DirectNarration(String content, Actor originatorActor = None, Actor targetActor = None) Global Native
+Int Function RegisterPersistentEvent(String content, Actor originatorActor = None, Actor targetActor = None) Global Native
 String Function GetEntityUUID(Actor akActor) Global Native
 String Function GetBuildVersion() Global Native
 String Function GetBuildType() Global Native

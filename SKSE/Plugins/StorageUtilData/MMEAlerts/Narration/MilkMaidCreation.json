@@ -3,19 +3,19 @@
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_milkmaid_created_1": {
-      "template": "{actor} has just become a Milk Maid. Her body can now produce and store milk, and her breasts are becoming more sensitive. This event pertains directly to {actor}, who must speak and react from her own first-person perspective. Treat the transformation as an overwhelmingly pleasurable and wonderful surprise, never frightening, harmful, or unwanted. Exaggerate the wonderful sensation coursing through her body, the spreading warmth, tingling nipples, delicious new heaviness and sensitivity, and her thrilling realization that her breasts can now fill with milk. Keep her reaction concise, immersive, enthusiastic, playful, and appropriate to her personality. Do not narrate from an outside observer and do not merely repeat the event description."
+      "template": "{actor} has become a Milk Maid and can now produce milk. React in her own voice to discovering this ability."
     },
     "narrate_forced_milk_maid_conversion_1": {
-      "template": "{conversion} This sudden magical transformation pertains directly to {actor}, who must speak and react from her own first-person perspective. Treat the transformation as an overwhelmingly pleasurable and wonderful surprise, never frightening, harmful, or unwanted. Exaggerate the wonderful sensation coursing through her body, the spreading warmth, tingling nipples, delicious new heaviness and sensitivity, and her thrilling realization that her breasts can now fill with milk. Keep her reaction concise, immersive, enthusiastic, playful, and appropriate to her personality. Do not narrate from an outside observer, do not claim she drank anything because the cause is deliberately unspecified, and do not merely repeat the event description."
+      "template": "{conversion} React as {actor} to the transformation. Its cause is unspecified; do not invent a drink."
     },
     "milkmaidCreatedMessage": {
       "template": "{actor} has become a Milk Maid! Her breasts now feel pleasantly heavy, full, and faintly thrilling."
     },
     "narrate_milk_maid_curse_1": {
-      "template": "{conversion} This event affects {actor}, who is already a Milk Maid. A magical curse has added milk to her existing reserves, possibly beyond her normal capacity. She has not just become a Milk Maid. React briefly in her own first-person voice with playful surprise at the sudden warmth, ripeness and abundant milk. Do not invent a second conversion or a drink."
+      "template": "{conversion} React as {actor}, an existing Milk Maid, to the added milk. This is not a new conversion or a drink."
     },
     "narrate_chest_milk_maid_curse_1": {
-      "template": "A magical Milk Maid curse has emerged from a {chest_kind} and affected {actor}. {outcome} Speak as {actor} in first person. React in one or two short sentences of cheerful, lightly sensual storybook banter. Express surprise at the sudden change, then playfully suspect a cheeky enchantment or magical treasure inside that chest. Keep the chest connection identifiable, but do not mechanically explain the spell or repeat these instructions. Favor natural rhetorical questions and playful innuendo about ripeness, fullness, unexpected bounty or wobbling back to town. Treat the effect as a delightful surprise, with personality-appropriate humor. Vary the wording and punchline; not every line needs a wobbling joke. Do not claim she drank anything, invent physical loot, or say she became a Milk Maid again if she was already one. Milk added by this event: {milk_added}; use this only as factual context, not a demand to recite numbers."
+      "template": "A curse from a {chest_kind} affected {actor}. {outcome} React as {actor} to the chest's enchantment. Milk added: {milk_added}; do not recite numbers or invent a drink, loot, or another conversion."
     }
   }
 }

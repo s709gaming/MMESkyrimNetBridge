@@ -72,9 +72,9 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  window.requestEditorClose();assert(window.closed,'close works before first roster payload');window.closed=false;
  let escapePrevented=false;handlers.keydown({key:'Escape',preventDefault:()=>escapePrevented=true});assert(escapePrevented&&window.closed);window.closed=false;
  window.editorSessionChanged('4');elements['lore-tab'].listeners.click();await settle();
- assert.equal(elements['editor-list'].children.length,51);assert(downloadChunks>1,'catalog downloads in chunks');assert(elements['roster-panel'].hidden);
- assert.equal(elements['editor-list'].children[0].attributes['data-entry-id'],'Lore.milkmaid_lore','Milk Maid lore leads');
- assert.equal(elements['editor-list'].children[1].attributes['data-entry-id'],'Lore.milk_lore');
+ assert.equal(elements['editor-list'].children.length,63);assert(downloadChunks>1,'catalog downloads in chunks');assert(elements['roster-panel'].hidden);
+ assert.equal(elements['editor-list'].children[0].attributes['data-entry-id'],'Lore.milk_lore','Shared lore leads');
+ assert.equal(elements['editor-list'].children[1].attributes['data-entry-id'],'Lore.shared_guidance');
  assert(!elements['editor-list'].children.some(c=>c.attributes['data-entry-id']==='Fullness.nearby_status_summary'),'internal assembly is hidden');
 
  elements['editor-messages'].listeners.click();assert.equal(elements['editor-list'].children.length,69);
@@ -99,7 +99,7 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  elements['editor-skyrimnet'].listeners.click();elements['editor-messages'].listeners.click();assert.equal(elements['editor-group'].value,'Thoughts & Cravings','feature selection is retained per section');
  elements['editor-skyrimnet'].listeners.click();
  let card=await open('Lore.milk_lore'),field=descendants(card,'textarea')[0];
- const long='MiLk Ã©â€ºÂª\n'+'x'.repeat(6000);field.value=long;field.listeners.input();assert(!elements['editor-save'].disabled);
+ const long='MiLk ÃƒÂ©Ã¢â‚¬ÂºÃ‚Âª\n'+'x'.repeat(6000);field.value=long;field.listeners.input();assert(!elements['editor-save'].disabled);
  elements['editor-search'].value='Milking.startMessage';elements['editor-search'].listeners.input();
  card=await open('Milking.startMessage');field=descendants(card,'textarea')[0];field.value='{actor} starts milking.';field.listeners.input();
  assert(elements['editor-changes'].textContent.includes('2 unsaved'));
@@ -142,5 +142,5 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  assert.equal(elements['editor-messages'].attributes['aria-pressed'],'true','reopened page restores message section');
  assert.equal(elements['editor-group'].value,'Thoughts & Cravings','reopened page restores feature');
  assert(elements['editor-minor'].checked,'reopened page restores minor-message preference');
- console.log('PASS: actual dashboard JS: 51 AI/69 normal/86 expanded message entries, minor filtering/drafts/reset, lore-first order, shared badges, persistence, atomic save and session recovery.');
+ console.log('PASS: actual dashboard JS: 63 AI/69 normal/86 expanded message entries, minor filtering/drafts/reset, lore-first order, shared badges, persistence, atomic save and session recovery.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

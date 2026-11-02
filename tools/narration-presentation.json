@@ -634,8 +634,8 @@
       "visible": true,
       "section": "skyrimnet",
       "feature": "Lore & Background",
-      "order": -1,
-      "title": "Milk and Milking Armor Lore",
+      "order": 0,
+      "title": "Skyrim Milk Maid Lore",
       "description": "Describe milk and milking armor in your version of Skyrim. Skyrim.Net uses this background when creating dialogue.",
       "badge": "Background Lore",
       "shared": false,
@@ -646,7 +646,7 @@
       "visible": true,
       "section": "skyrimnet",
       "feature": "Lore & Background",
-      "order": -2,
+      "order": 2,
       "title": "What It Means to Be a Milk Maid",
       "description": "Describe what being a Milk Maid means in your version of Skyrim. Skyrim.Net uses this background when characters discuss Milk Maids.",
       "badge": "Background Lore",
@@ -2397,6 +2397,175 @@
       "note": "The game supplies the duration or number of levels where those placeholders are available.",
       "tokenHelp": {
         "levels": "Actual one-level decrease stated by the route."
+      }
+    },
+    "Lore.shared_guidance": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Lore & Background",
+      "order": 1,
+      "title": "Shared Narration Guidance",
+      "description": "Set the tone and response style used across MME dialogue reactions.",
+      "badge": "Shared Instructions",
+      "shared": true,
+      "note": "Included once with each MME dialogue request. Individual event prompts supply the situation.",
+      "tokenHelp": {}
+    },
+    "Milking.complete_hands": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Milking & Fullness",
+      "order": 100,
+      "title": "Hands",
+      "description": "Edit the completion history and reaction wording for this milking outcome.",
+      "badge": "Completion Text",
+      "shared": false,
+      "note": "Shared tone guidance is added separately. History is recorded independently of spoken reactions.",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "result": "Confirmed milk result at completion."
+      }
+    },
+    "Milking.complete_pump": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Milking & Fullness",
+      "order": 101,
+      "title": "Pump",
+      "description": "Edit the completion history and reaction wording for this milking outcome.",
+      "badge": "Completion Text",
+      "shared": false,
+      "note": "Shared tone guidance is added separately. History is recorded independently of spoken reactions.",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "result": "Confirmed milk result at completion."
+      }
+    },
+    "Milking.complete_equipment": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Milking & Fullness",
+      "order": 102,
+      "title": "Milking Equipment",
+      "description": "Edit the completion history and reaction wording for this milking outcome.",
+      "badge": "Completion Text",
+      "shared": false,
+      "note": "Shared tone guidance is added separately. History is recorded independently of spoken reactions.",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "result": "Confirmed milk result at completion."
+      }
+    },
+    "Milking.complete_tendrils": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Milking & Fullness",
+      "order": 103,
+      "title": "Living Tendrils",
+      "description": "Edit the completion history and reaction wording for this milking outcome.",
+      "badge": "Completion Text",
+      "shared": false,
+      "note": "Shared tone guidance is added separately. History is recorded independently of spoken reactions.",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "result": "Confirmed milk result at completion."
+      }
+    },
+    "Milking.complete_dwemer": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Milking & Fullness",
+      "order": 104,
+      "title": "Dwemer Machinery",
+      "description": "Edit the completion history and reaction wording for this milking outcome.",
+      "badge": "Completion Text",
+      "shared": false,
+      "note": "Shared tone guidance is added separately. History is recorded independently of spoken reactions.",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "result": "Confirmed milk result at completion."
+      }
+    },
+    "Milking.complete_generic": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Milking & Fullness",
+      "order": 105,
+      "title": "Other Milking",
+      "description": "Edit the completion history and reaction wording for this milking outcome.",
+      "badge": "Completion Text",
+      "shared": false,
+      "note": "Shared tone guidance is added separately. History is recorded independently of spoken reactions.",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "result": "Confirmed milk result at completion."
+      }
+    },
+    "Milking.complete_productive": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Milking & Fullness",
+      "order": 106,
+      "title": "Extraction Without Reduced Fullness",
+      "description": "Edit the completion history and reaction wording for this milking outcome.",
+      "badge": "Completion Text",
+      "shared": false,
+      "note": "Shared tone guidance is added separately. History is recorded independently of spoken reactions.",
+      "tokenHelp": {
+        "actor": "Affected character’s name.",
+        "method": "Recorded milking method."
+      }
+    },
+    "Milking.result_empty": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Milking & Fullness",
+      "order": 107,
+      "title": "Empty After Milking",
+      "description": "Edit the completion history and reaction wording for this milking outcome.",
+      "badge": "Completion Text",
+      "shared": false,
+      "note": "Shared tone guidance is added separately. History is recorded independently of spoken reactions.",
+      "tokenHelp": {}
+    },
+    "Milking.result_remaining": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Milking & Fullness",
+      "order": 108,
+      "title": "Milk Remaining After Milking",
+      "description": "Edit the completion history and reaction wording for this milking outcome.",
+      "badge": "Completion Text",
+      "shared": false,
+      "note": "Shared tone guidance is added separately. History is recorded independently of spoken reactions.",
+      "tokenHelp": {}
+    },
+    "Milking.completion_instruction": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Milking & Fullness",
+      "order": 109,
+      "title": "Completion Reaction Instruction",
+      "description": "Guide the spoken reaction after the recorded milking experience.",
+      "badge": "Completion Text",
+      "shared": false,
+      "note": "Shared tone guidance is added separately. History is recorded independently of spoken reactions.",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
+      }
+    },
+    "Fullness.full_event": {
+      "visible": true,
+      "section": "skyrimnet",
+      "feature": "Milking & Fullness",
+      "order": 111,
+      "title": "Full Capacity History",
+      "description": "Edit the history recorded when a character reaches full milk capacity.",
+      "badge": "Event Text",
+      "shared": false,
+      "note": "Recorded once per observed crossing, independently of narration chance and cooldown.",
+      "tokenHelp": {
+        "actor": "Affected character’s name."
       }
     }
   }

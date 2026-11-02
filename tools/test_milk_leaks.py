@@ -1,9 +1,41 @@
 """Safety contracts, not a substitute for live Papyrus/visual acceptance."""
 from pathlib import Path
 import json,re,unittest,xml.etree.ElementTree as ET
+from types import SimpleNamespace as NS
+from test_tentacle_tiers import translate
 ROOT=Path(__file__).resolve().parents[1]
 def read(path):return (ROOT/path).read_text(encoding='utf-8-sig')
 class MilkLeakSafety(unittest.TestCase):
+    def test_visual_leaks_allow_furniture_but_keep_busy_guards(self):
+        service=read('Source/Scripts/MMEMilkLeaks.psc')
+        self.assertNotIn('bInFurniture',service)
+        for sit,furniture in [(0,None),(3,'chair'),(0,'leaning desk'),(4,'chair')]:
+            flags={'combat':False,'scene':None,'framework':False,'milk':''}
+            actor=NS(IsChild=lambda:False,IsDead=lambda:False,IsDisabled=lambda:False,
+                     Is3DLoaded=lambda:True,GetDistance=lambda other:10,
+                     IsInCombat=lambda:flags['combat'],GetCurrentScene=lambda:flags['scene'],
+                     GetSitState=lambda:sit,GetFurnitureReference=lambda:furniture)
+            ns={'Game':NS(GetPlayer=lambda:None),
+                'MMEOStimIntegration':NS(IsActorBusy=lambda target:flags['framework']),
+                'MMESelfMilking':NS(GetInvalidReason=lambda *args:flags['milk'])}
+            exec(translate('BlockReason','target',service),ns)
+            self.assertEqual(ns['BlockReason'](actor),'')
+            flags['combat']=True;self.assertEqual(ns['BlockReason'](actor),'in combat');flags['combat']=False
+            flags['scene']='scene';self.assertEqual(ns['BlockReason'](actor),'scene active');flags['scene']=None
+            flags['framework']=True;self.assertEqual(ns['BlockReason'](actor),'framework scene');flags['framework']=False
+            flags['milk']='actor is already milking';self.assertEqual(ns['BlockReason'](actor),flags['milk'])
+    def test_eligibility_footprints_are_changed_only_and_master_gated(self):
+        service=read('Source/Scripts/MMEMilkLeaks.psc')
+        data={};master=[1];records=[]
+        ns={'StorageUtil':NS(GetStringValue=lambda a,k,d:data.get((a,k),d),SetStringValue=lambda a,k,v:data.__setitem__((a,k),v)),
+            'JsonUtil':NS(GetIntValue=lambda *args:master[0]),'settings':'settings','Record':lambda:records.append(True)}
+        source=re.sub(r'(?m)^\s*Trace\("eligibility changed.*$', '        Record()',service)
+        exec(translate('TraceEligibility','target,reason',source),ns)
+        for _ in range(50):ns['TraceEligibility']('Hulda','')
+        self.assertEqual(len(records),1)
+        ns['TraceEligibility']('Hulda','scene active');self.assertEqual(len(records),2)
+        master[0]=0;ns['TraceEligibility']('Player','in combat');self.assertEqual(len(records),2)
+        self.assertIn('sitState=',service);self.assertIn('furniture=',service)
     def test_external_effects_are_never_modified(self):
         service=read('Source/Scripts/MMEMilkLeaks.psc')
         visual=read('fomod/choices/milk-leaks/Source/Scripts/MMELeakVisual.psc')

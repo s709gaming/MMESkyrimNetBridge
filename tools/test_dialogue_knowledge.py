@@ -9,11 +9,11 @@ def function(name):
  return re.search(r'String Function '+name+r'\([^\n]+\n(.*?)EndFunction',HELPER,re.S)[1]
 
 class Composer:
- def __init__(self,milk='Milk background.',maid='{actor} is a Milk Maid and produces milk.'):
-  self.milk,self.maid=milk,maid;self.alarms=[]
+ def __init__(self,milk='Milk background.',guidance='Shared test guidance.'):
+  self.milk,self.guidance=milk,guidance;self.alarms=[]
  def run(self,name,**values):
   storage=SimpleNamespace(GetIntValue=lambda *a:0,SetIntValue=lambda *a:None)
-  text=SimpleNamespace(GetRaw=lambda *a:self.milk,Text=lambda *a:self.maid.replace('{actor}',a[-1]),IsBlank=lambda s:not s.strip())
+  text=SimpleNamespace(GetRaw=lambda file,key:self.milk if key=='milk_lore' else self.guidance,IsBlank=lambda s:not s.strip())
   strings=SimpleNamespace(Find=lambda s,t:s.lower().find(t.lower()),GetLength=len)
   values.update(MMENarrationText=text,StringUtil=strings,StorageUtil=storage,ForRequest=self.ForRequest)
   active=[True]
@@ -34,14 +34,29 @@ class Composer:
  def Append(self,content,speaker):return self.run('Append',content=content,speaker=speaker)
 
 class Contracts(unittest.TestCase):
+ def test_editable_shared_guidance_and_current_defaults(self):
+  data=ROOT/'SKSE/Plugins/StorageUtilData/MMEAlerts/Narration'
+  lore=json.loads((data/'Lore.json').read_text(encoding='utf-8'))['routes']
+  guidance=lore['shared_guidance']['template']
+  self.assertNotIn(guidance,lore['milk_lore']['template'])
+  for speaker in ['Player','Lydia',None]:
+   output=Composer(milk=lore['milk_lore']['template'],guidance=guidance).Append('Event.',speaker)
+   self.assertEqual(output.count(guidance),1)
+   self.assertNotIn('## Milk Maid Status',output)
+  full=json.loads((data/'Fullness.json').read_text())['routes']
+  for key in ['narrate_milk_full_1','build_restrained_capacity_content_1']:
+   self.assertIn('leaking',full[key]['template'])
+  self.assertIn('"shared_guidance"', (ROOT/'Source/Scripts/MMENarrationDefaults.psc').read_text())
+  presentation=json.loads((ROOT/'tools/narration-presentation.json').read_text(encoding='utf-8'))['entries']
+  self.assertEqual(presentation['Lore.shared_guidance']['order'],presentation['Lore.milk_lore']['order']+1)
  def test_actual_composition_neutral_identity_and_fresh_text(self):
   c=Composer();output=c.Append('Lydia drinks milk.','Lydia')
   self.assertTrue(output.startswith('Lydia drinks milk.'))
-  self.assertIn('An example Milk Maid is a Milk Maid',output)
+  self.assertEqual(output.count('Shared test guidance.'),1)
   self.assertNotIn('Lydia is a Milk Maid',output)
-  self.assertIn('actual identity and current game state remain authoritative',output)
-  c.maid='{actor} follows EDITED knowledge.'
-  self.assertIn('EDITED knowledge',c.Append('Another event.',None))
+  self.assertIn('Actual identity and current game state remain authoritative',output)
+  c.guidance='EDITED shared guidance.'
+  self.assertIn('EDITED shared guidance',c.Append('Another event.',None))
  def test_no_duplicate_empty_or_cross_request_state(self):
   c=Composer();first=c.Append('An event.','Hulda')
   self.assertEqual(c.Append(first,'Hulda'),first)
@@ -49,7 +64,7 @@ class Contracts(unittest.TestCase):
   self.assertEqual(c.ForRequest(None,'automatic'),c.ForRequest('Lydia','known'))
   self.assertNotIn('Hulda',c.ForRequest('Lydia','known'))
  def test_bad_lore_preserves_original_event(self):
-  for c in [Composer(milk=''),Composer(maid='')]:
+  for c in [Composer(milk=''),Composer(guidance='')]:
    self.assertEqual(c.Append('Original event.',None),'Original event.')
    self.assertEqual(len(c.alarms),1)
  def test_every_direct_request_uses_its_actual_originator(self):

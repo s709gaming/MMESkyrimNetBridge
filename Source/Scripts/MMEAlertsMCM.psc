@@ -196,6 +196,11 @@ Int skyrimNetMilkDrinksOption
 Int skyrimNetMilkingEventsOption
 Int skyrimNetMilkmaidCreatedOption
 Int skyrimNetStatusIntervalOption
+Int postMilkingNarrationOption
+Int postMilkingCooldownOption
+Int postMilkingChanceOption
+Int fullHistoryOption
+Int milkFullNarrationChanceOption
 Int milkFullNarrationOption
 Int milkFullNarrationCooldownOption
 Int milkFullNarrationDiagnosticOption
@@ -344,7 +349,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 171
+    Return 172
 EndFunction
 
 Function SetPageNames()
@@ -413,6 +418,7 @@ EndFunction
 
 ; Seeds new settings and runs one-time migrations without overriding later choices.
 Function EnsureDefaults()
+    MMEPostMilking.EnsureDefaults()
     MMEFixedLactacid.EnsureDefaults()
     MMEMilkLeakAPI.EnsureDefaults()
     MMETentacleTiers.Configure()
@@ -584,7 +590,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableVoiceGiveMilk", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableVoiceGiveMilkDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkFullNarration", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "milkFullNarrationCooldown", 60.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkFullNarrationCooldown", 120.0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkFullNarrationDiagnostic", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkHalfFullNarration", 1)
         JsonUtil.SetFloatValue(SettingsFile, "milkHalfFullNarrationCooldown", 60.0)
@@ -826,7 +832,7 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1)
         JsonUtil.SetIntValue(SettingsFile, "enableMilkFullNarration", 1)
-        JsonUtil.SetFloatValue(SettingsFile, "milkFullNarrationCooldown", 60.0)
+        JsonUtil.SetFloatValue(SettingsFile, "milkFullNarrationCooldown", 120.0)
         JsonUtil.SetIntValue(SettingsFile, "enableVoiceMilking", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableVoiceGiveMilk", 0)
         JsonUtil.SetIntValue(SettingsFile, "enableDebugMilkReport", 0)
@@ -1949,6 +1955,11 @@ Event OnPageReset(String page)
     skyrimNetMilkingEventsOption = -1
     skyrimNetMilkmaidCreatedOption = -1
     skyrimNetStatusIntervalOption = -1
+    postMilkingNarrationOption = -1
+    postMilkingCooldownOption = -1
+    postMilkingChanceOption = -1
+    fullHistoryOption = -1
+    milkFullNarrationChanceOption = -1
     milkFullNarrationOption = -1
     milkFullNarrationCooldownOption = -1
     milkFullNarrationDiagnosticOption = -1
@@ -2127,6 +2138,19 @@ EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
+    If option == postMilkingNarrationOption
+        SetInfoText("Speak after successful milking, with a reaction matching hands, pump, equipment, tendrils or Dwemer machinery. Turning speech off still allows tracked history.")
+        Return
+    ElseIf option == postMilkingCooldownOption
+        SetInfoText("Real seconds between accepted completion reactions for the same actor. Other actors have their own cooldown.")
+        Return
+    ElseIf option == postMilkingChanceOption || option == milkFullNarrationChanceOption
+        SetInfoText("Chance of a spoken reaction. Zero disables that reaction; tracked history is still recorded.")
+        Return
+    ElseIf option == fullHistoryOption
+        SetInfoText("Record when each observed Milk Maid reaches full capacity and begins leaking. No speech is required; dropping below full allows another crossing to be recorded.")
+        Return
+    EndIf
     If option == installedBackendOption
         SetInfoText("Read-only installed backend selected by the FOMOD: Standard SexLab, SexLab P+, or OStim-only. Change the installed backend by reinstalling the matching FOMOD choice. The OStim breastfeeding toggle only controls breastfeeding routes.")
         Return
@@ -2861,6 +2885,20 @@ EndEvent
 
 ; Persists toggle changes and refreshes only controllers affected by that option.
 Event OnOptionSelect(Int option)
+    If option == fullHistoryOption
+        Int postValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetFullEvents", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableSkyrimNetFullEvents", postValue)
+        JsonUtil.Save(SettingsFile, False)
+        ForcePageReset()
+        Return
+    EndIf
+    If option == postMilkingNarrationOption
+        Int postValue = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePostMilkingNarration", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enablePostMilkingNarration", postValue)
+        JsonUtil.Save(SettingsFile, False)
+        ForcePageReset()
+        Return
+    EndIf
     If option == rosterOpenOption
         If RosterUiAvailable() && JsonUtil.GetIntValue(SettingsFile, "enableMMEExtensions", 1) == 1 && JsonUtil.GetIntValue(SettingsFile, "maidRosterUiEnabled", 1) == 1
             SendModEvent("MMEExtensions_RosterOpen")
@@ -3896,6 +3934,27 @@ EndFunction
 
 ; Configures the shared sound-volume and capacity-interval slider dialogs.
 Event OnOptionSliderOpen(Int option)
+    If option == milkFullNarrationChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "milkFullNarrationChance", 100))
+        SetSliderDialogDefaultValue(100)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    EndIf
+    If option == postMilkingChanceOption
+        SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "postMilkingNarrationChance", 100))
+        SetSliderDialogDefaultValue(100)
+        SetSliderDialogRange(0.0, 100.0)
+        SetSliderDialogInterval(1.0)
+        Return
+    EndIf
+    If option == postMilkingCooldownOption
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "postMilkingNarrationCooldown", 120.0))
+        SetSliderDialogDefaultValue(120.0)
+        SetSliderDialogRange(0.0, 3600.0)
+        SetSliderDialogInterval(10.0)
+        Return
+    EndIf
     Int tierIndex = TentacleOptionIndex(option, False)
     If tierIndex >= 0
         SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, MMETentacleTiers.ChanceKey(tierIndex + 1), MMETentacleTiers.DefaultChance(tierIndex + 1)))
@@ -4342,8 +4401,8 @@ Event OnOptionSliderOpen(Int option)
         SetSliderDialogRange(0.0, 100.0)
         SetSliderDialogInterval(1.0)
     ElseIf option == milkFullNarrationCooldownOption
-        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkFullNarrationCooldown", 60.0))
-        SetSliderDialogDefaultValue(60.0)
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "milkFullNarrationCooldown", 120.0))
+        SetSliderDialogDefaultValue(120.0)
         SetSliderDialogRange(10.0, 3600.0)
         SetSliderDialogInterval(10.0)
     ElseIf option == milkHalfFullNarrationCooldownOption
@@ -4441,6 +4500,24 @@ EndEvent
 
 ; Saves accepted slider values and reschedules polling when its interval changes.
 Event OnOptionSliderAccept(Int option, Float value)
+    If option == milkFullNarrationChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "milkFullNarrationChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        Return
+    EndIf
+    If option == postMilkingChanceOption
+        JsonUtil.SetIntValue(SettingsFile, "postMilkingNarrationChance", value as Int)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        Return
+    EndIf
+    If option == postMilkingCooldownOption
+        JsonUtil.SetFloatValue(SettingsFile, "postMilkingNarrationCooldown", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0} seconds")
+        Return
+    EndIf
     Int tierIndex = TentacleOptionIndex(option, False)
     If tierIndex >= 0
         MMETentacleTiers.Configure(tierIndex, value as Int)
@@ -5496,8 +5573,9 @@ Function DrawSkyrimNetPage()
     AddHeaderOption("Integration Status")
     skyrimNetStatusOption = AddToggleOption("Skyrim.Net Detected", MMEAlertsSkyrimNet.IsAvailable(), OPTION_FLAG_DISABLED)
     AddHeaderOption("Event Tracking")
+    fullHistoryOption = AddToggleOption("Track Full Capacity", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetFullEvents", 1) == 1)
     skyrimNetMilkDrinksOption = AddToggleOption("Track Milk Drinks", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkDrinks", 1) == 1)
-    skyrimNetMilkingEventsOption = AddToggleOption("Track Milking Start/End", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", 1) == 1)
+    skyrimNetMilkingEventsOption = AddToggleOption("Track Milking Start / Completion", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkingEvents", 1) == 1)
     skyrimNetMilkmaidCreatedOption = AddToggleOption("Track New Milkmaids", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkmaidCreated", 1) == 1)
     skyrimNetMilkStatusesOption = AddToggleOption("Milk Status in Actor Prompts", JsonUtil.GetIntValue(SettingsFile, "enableSkyrimNetMilkStatuses", 1) == 1)
     ; Legacy interval field/handlers retained for save compatibility; no active control.
@@ -5531,13 +5609,22 @@ Function DrawSkyrimNetPage()
         giveMilkCooldownFlags = OPTION_FLAG_DISABLED
     EndIf
     giveMilkActionCooldownOption = AddSliderOption("Give Milk Action Cooldown", JsonUtil.GetFloatValue(SettingsFile, "giveMilkActionCooldown", 0.0), "{0} seconds", giveMilkCooldownFlags)
+    AddHeaderOption("Milking Completion")
+    postMilkingNarrationOption = AddToggleOption("Narrate Milking Completion", JsonUtil.GetIntValue(SettingsFile, "enablePostMilkingNarration", 1) == 1)
+    Int completionFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enablePostMilkingNarration", 1) != 1
+        completionFlags = OPTION_FLAG_DISABLED
+    EndIf
+    postMilkingCooldownOption = AddSliderOption("Completion Cooldown", JsonUtil.GetFloatValue(SettingsFile, "postMilkingNarrationCooldown", 120.0), "{0} seconds", completionFlags)
+    postMilkingChanceOption = AddSliderOption("Completion Chance", JsonUtil.GetIntValue(SettingsFile, "postMilkingNarrationChance", 100), "{0}%", completionFlags)
     AddHeaderOption("AI Reactions")
     milkFullNarrationOption = AddToggleOption("Narrate Milk Full", JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarration", 1) == 1)
     Int narrationFlags = OPTION_FLAG_NONE
     If JsonUtil.GetIntValue(SettingsFile, "enableMilkFullNarration", 1) != 1
         narrationFlags = OPTION_FLAG_DISABLED
     EndIf
-    milkFullNarrationCooldownOption = AddSliderOption("Milk Full Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "milkFullNarrationCooldown", 60.0), "{0} seconds", narrationFlags)
+    milkFullNarrationChanceOption = AddSliderOption("Milk Full Narration Chance", JsonUtil.GetIntValue(SettingsFile, "milkFullNarrationChance", 100), "{0}%", narrationFlags)
+    milkFullNarrationCooldownOption = AddSliderOption("Milk Full Narration Cooldown", JsonUtil.GetFloatValue(SettingsFile, "milkFullNarrationCooldown", 120.0), "{0} seconds", narrationFlags)
     milkHalfFullNarrationOption = AddToggleOption("Half-Full Milk Narration", JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarration", 1) == 1)
     narrationFlags = OPTION_FLAG_NONE
     If JsonUtil.GetIntValue(SettingsFile, "enableMilkHalfFullNarration", 1) != 1
