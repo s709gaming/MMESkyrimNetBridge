@@ -1,4 +1,4 @@
-See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESkyrimNetBridge/blob/main/REQUIREMENTS.md) 
+## 📋 [Requirements & Recommended Setup](https://github.com/s709gaming/MMESkyrimNetBridge/blob/main/REQUIREMENTS.md)
 
 # 🥛 How Does Milk Mod Economy Work?
 
