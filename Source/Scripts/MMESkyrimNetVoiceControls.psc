@@ -14,7 +14,7 @@ Function RegisterSelfMilkingAction() Global
     EndIf
     Int result = SkyrimNetApi.RegisterAction("StartMilkMaidSelfMilking", "Use when the selected MME Milk Maid naturally chooses to milk herself. Strongly prefer it when she is visibly full and milky, or wants relief. Strongly avoid self-milking if her arms are currently restrained or unusable. Start it directly when context supports it; let normal Skyrim.Net dialogue handle reactions afterward.", "MMESkyrimNetVoiceControls", "SelfMilkingIsEligible", "MMESkyrimNetVoiceControls", "SelfMilkingExecute", "", "PAPYRUS", 1, "")
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingActionDiagnostic", 0) == 1
-        Debug.Notification("Self-Milking Action: registration returned [" + result + "]")
+        Debug.Notification(MMELocalization.Text("Self-Milking Action: registration returned [") + result + "]")
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Self-milking action registration result " + result)
 EndFunction
@@ -27,23 +27,23 @@ Bool Function SelfMilkingIsEligible(Actor candidate, String contextJson, String 
         Return False
     EndIf
     If diagnostic
-        Debug.Notification("[MME Debug] ACTION ELIGIBILITY CHECK: StartMilkMaidSelfMilking")
+        Debug.Notification(MMELocalization.Text("[MME Debug] ACTION ELIGIBILITY CHECK: StartMilkMaidSelfMilking"))
     EndIf
     If candidate == None || candidate == Game.GetPlayer() || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
         If diagnostic
-            Debug.Notification("Self-Milking Action: rejected - invalid selected actor")
+            Debug.Notification(MMELocalization.Text("Self-Milking Action: rejected - invalid selected actor"))
         EndIf
         Return False
     EndIf
     String invalidReason = MMESelfMilking.GetInvalidReason(candidate, False, False, False)
     If invalidReason != ""
         If diagnostic
-            Debug.Notification("Self-Milking Action: rejected - " + invalidReason)
+            Debug.Notification(MMELocalization.Text("Self-Milking Action: rejected - ") + invalidReason)
         EndIf
         Return False
     EndIf
     If diagnostic
-        Debug.Notification("Self-Milking Action: eligible | milk " + MME_Storage.getMilkCurrent(candidate))
+        Debug.Notification(MMELocalization.Text("Self-Milking Action: eligible | milk ") + MME_Storage.getMilkCurrent(candidate))
     EndIf
     Return True
 EndFunction
@@ -53,28 +53,28 @@ Function SelfMilkingExecute(Actor candidate, String contextJson, String paramsJs
     ; spell. This adapter does not reproduce MME's milking implementation.
     Bool diagnostic = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingActionDiagnostic", 0) == 1
     If diagnostic
-        Debug.Notification("[MME Debug] LLM ACTION RECEIVED: StartMilkMaidSelfMilking")
+        Debug.Notification(MMELocalization.Text("[MME Debug] LLM ACTION RECEIVED: StartMilkMaidSelfMilking"))
     EndIf
     If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableSelfMilkingAction", 1) != 1
         If diagnostic
-            Debug.Notification("[MME Debug] FAILED: self-milking action disabled")
+            Debug.Notification(MMELocalization.Text("[MME Debug] FAILED: self-milking action disabled"))
         EndIf
         Return
     EndIf
     String invalidReason = MMESelfMilking.GetInvalidReason(candidate, False, False, False)
     If invalidReason != ""
         If diagnostic
-            Debug.Notification("Self-Milking Action: execution rejected - " + invalidReason)
+            Debug.Notification(MMELocalization.Text("Self-Milking Action: execution rejected - ") + invalidReason)
         EndIf
         Return
     EndIf
     If diagnostic
-        Debug.Notification("[MME Debug] Actor resolved: " + candidate.GetDisplayName())
-        Debug.Notification("[MME Debug] Calling MME MilkSelf")
+        Debug.Notification(MMELocalization.Text("[MME Debug] Actor resolved: ") + candidate.GetDisplayName())
+        Debug.Notification(MMELocalization.Text("[MME Debug] Calling MME MilkSelf"))
     EndIf
     Bool started = MMESelfMilking.StartExisting(candidate, False, False, False)
     If diagnostic
-        Debug.Notification("[MME Debug] MME MilkSelf cast requested: " + started)
+        Debug.Notification(MMELocalization.Text("[MME Debug] MME MilkSelf cast requested: ") + started)
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Self-milking action cast result=" + started + " | actor=" + candidate)
 EndFunction
@@ -94,7 +94,7 @@ Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
         actorName = candidate.GetDisplayName()
     EndIf
     If actorName == ""
-        actorName = "Unknown actor"
+        actorName = MMELocalization.Text("Unknown actor")
     EndIf
 
     String threshold = "Half-Full"
@@ -113,7 +113,7 @@ Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
         EndIf
     ElseIf crossing != 1
         If diagnostic
-            Debug.Notification("[" + role + "] " + actorName + " fullness animation skipped: invalid threshold")
+            Debug.Notification("[" + role + "] " + actorName + MMELocalization.Text(" fullness animation skipped: invalid threshold"))
         EndIf
         Return
     EndIf
@@ -122,7 +122,7 @@ Function PlayFullnessSelfMilkAnimation(Actor candidate, Int crossing) Global
     ; reset to MMEReactionAnimation; this adapter only chooses policy.
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", setting, 0) != 1
         If diagnostic
-            Debug.Notification("[" + role + "] " + actorName + " " + threshold + " animation skipped: disabled")
+            Debug.Notification("[" + role + "] " + actorName + " " + threshold + MMELocalization.Text(" animation skipped: disabled"))
         EndIf
         Return
     EndIf
@@ -167,13 +167,13 @@ Function GivePlayerMilkToSpeaker(Actor target) Global
     Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableGiveMilkActionDiagnostic", 0) == 1
     If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue(settingsFile, "enableGiveMilkAction", 1) != 1
         If diagnostic
-            Debug.Notification("Skyrim.Net Give Milk: rejected - action disabled")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Give Milk: rejected - action disabled"))
         EndIf
         Return
     EndIf
     If target == None || target == Game.GetPlayer() || target.IsDead() || target.IsDisabled() || !target.Is3DLoaded() || target.IsChild()
         If diagnostic
-            Debug.Notification("Skyrim.Net Give Milk: rejected - speaker is not an available adult NPC")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Give Milk: rejected - speaker is not an available adult NPC"))
         EndIf
         Return
     EndIf
@@ -186,7 +186,7 @@ Function GivePlayerMilkToSpeaker(Actor target) Global
     Bool establishedMilkmaid = MMEArmorScript.IsMMEMilkMaid(target, milkController)
     If !establishedMilkmaid && !MMENPCDrinkDialogue.IsEligible(target, milkController, diagnostic)
         If diagnostic
-            Debug.Notification("Skyrim.Net Give Milk: rejected - speaker is not an eligible adult receiver")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Give Milk: rejected - speaker is not an eligible adult receiver"))
         EndIf
         Return
     EndIf
@@ -195,7 +195,7 @@ Function GivePlayerMilkToSpeaker(Actor target) Global
     If cooldownRemaining > 0.0
         MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] rejected | action cooldown active | remaining=" + (cooldownRemaining as Int) + "s")
         If diagnostic
-            Debug.Notification("Skyrim.Net Give Milk: cooldown " + (cooldownRemaining as Int) + "s")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Give Milk: cooldown ") + (cooldownRemaining as Int) + MMELocalization.Text("s"))
         EndIf
         Return
     EndIf
@@ -207,9 +207,9 @@ Function GivePlayerMilkToSpeaker(Actor target) Global
     Bool success = MMENPCDialog.GiveMilkToTarget(target, diagnostic, False, True)
     If diagnostic
         If success
-            Debug.Notification("Skyrim.Net Give Milk: milk consumed")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Give Milk: milk consumed"))
         Else
-            Debug.Notification("Skyrim.Net Give Milk: transaction failed; see preceding reason")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Give Milk: transaction failed; see preceding reason"))
         EndIf
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] transaction complete | success=" + success + " | speaker/drinker=" + target)
@@ -254,7 +254,7 @@ Function ExecuteGiveMilkDrink(Actor giver, Actor drinker, String route) Global
     Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableGiveMilkActionDiagnostic", 0) == 1
     If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue(settingsFile, "enableGiveMilkAction", 1) != 1
         If diagnostic
-            Debug.Notification("Actor Give Drink: rejected - action disabled")
+            Debug.Notification(MMELocalization.Text("Actor Give Drink: rejected - action disabled"))
         EndIf
         Return
     EndIf
@@ -264,7 +264,7 @@ Function ExecuteGiveMilkDrink(Actor giver, Actor drinker, String route) Global
     If giver == None || drinker == None || giver == drinker || !MMEActorDrinkTransaction.IsAvailableAdult(giver) || !MMEActorDrinkTransaction.IsAvailableAdult(drinker)
         MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] invalid actor mapping | giver=" + giver + " | drinker=" + drinker)
         If diagnostic
-            Debug.Notification("Actor Give Drink: rejected - invalid participants")
+            Debug.Notification(MMELocalization.Text("Actor Give Drink: rejected - invalid participants"))
         EndIf
         Return
     EndIf
@@ -273,7 +273,7 @@ Function ExecuteGiveMilkDrink(Actor giver, Actor drinker, String route) Global
     If cooldownRemaining > 0.0
         MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] actor action cooldown active | remaining=" + (cooldownRemaining as Int) + "s")
         If diagnostic
-            Debug.Notification("Actor Give Drink: cooldown " + (cooldownRemaining as Int) + "s")
+            Debug.Notification(MMELocalization.Text("Actor Give Drink: cooldown ") + (cooldownRemaining as Int) + MMELocalization.Text("s"))
         EndIf
         Return
     EndIf
@@ -283,9 +283,9 @@ Function ExecuteGiveMilkDrink(Actor giver, Actor drinker, String route) Global
     Bool success = MMEActorDrinkTransaction.GiveDrink(giver, drinker, diagnostic)
     If diagnostic
         If success
-            Debug.Notification("Actor Give Drink: milk consumed")
+            Debug.Notification(MMELocalization.Text("Actor Give Drink: milk consumed"))
         Else
-            Debug.Notification("Actor Give Drink: transaction failed; see preceding reason")
+            Debug.Notification(MMELocalization.Text("Actor Give Drink: transaction failed; see preceding reason"))
         EndIf
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet Give Milk] actor transaction complete | route=" + route + " | success=" + success + " | giver=" + giver + " | drinker=" + drinker)
@@ -299,7 +299,7 @@ Function RegisterGiveMilkAction() Global
     EndIf
     Int result = SkyrimNetApi.RegisterAction("GiveMilkToMilkmaid", "Use when the player naturally offers milk or Lactacid to the current MME Milkmaid. Give and consume one supported milk item from the player's inventory. Never use on a non-Milkmaid.", "MMESkyrimNetVoiceControls", "VoiceGiveMilkIsEligible", "MMESkyrimNetVoiceControls", "VoiceGiveMilkExecute", "", "PAPYRUS", 1, "")
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableVoiceGiveMilkDiagnostic", 1) == 1
-        Debug.Notification("Give Milk Voice: registration returned [" + result + "]")
+        Debug.Notification(MMELocalization.Text("Give Milk Voice: registration returned [") + result + "]")
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Give Milk action registration result " + result)
 EndFunction
@@ -312,19 +312,19 @@ Bool Function VoiceGiveMilkIsEligible(Actor candidate) Global
     EndIf
     If candidate == None || candidate == Game.GetPlayer() || candidate.IsDead() || candidate.IsDisabled() || !candidate.Is3DLoaded()
         If diagnostic
-            Debug.Notification("Give Milk Voice: rejected - invalid target")
+            Debug.Notification(MMELocalization.Text("Give Milk Voice: rejected - invalid target"))
         EndIf
         Return False
     EndIf
     String actorName = candidate.GetDisplayName()
     If !MMEAlertsSkyrimNet.IsRealMMEMilkmaid(candidate)
         If diagnostic
-            Debug.Notification("Give Milk Voice: " + actorName + " rejected - not a Milkmaid")
+            Debug.Notification(MMELocalization.Text("Give Milk Voice: ") + actorName + MMELocalization.Text(" rejected - not a Milkmaid"))
         EndIf
         Return False
     EndIf
     If diagnostic
-        Debug.Notification("Give Milk Voice: " + actorName + " eligible")
+        Debug.Notification(MMELocalization.Text("Give Milk Voice: ") + actorName + MMELocalization.Text(" eligible"))
     EndIf
     Return True
 EndFunction
@@ -339,14 +339,14 @@ Function VoiceGiveMilkExecute(Actor candidate) Global
         Return
     EndIf
     If diagnostic
-        Debug.Notification("Give Milk Voice: action attempted")
+        Debug.Notification(MMELocalization.Text("Give Milk Voice: action attempted"))
     EndIf
     Bool success = MMENPCDialog.GiveMilkToTarget(candidate, diagnostic)
     If diagnostic
         If success
-            Debug.Notification("Give Milk Voice: item successfully processed")
+            Debug.Notification(MMELocalization.Text("Give Milk Voice: item successfully processed"))
         Else
-            Debug.Notification("Give Milk Voice: failed; see preceding reason")
+            Debug.Notification(MMELocalization.Text("Give Milk Voice: failed; see preceding reason"))
         EndIf
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Give Milk action completed | success=" + success)
@@ -391,15 +391,15 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
     String drinkerName = MMEOStimBreastfeeding.GetActorName(drinker)
     MMELog.Diagnostic("[MMEAlert SkyrimNet BF] action received | semantic intent=" + semanticIntent + " | normalized milk source=" + milkSourceName + " " + milkSource + " | normalized drinker=" + drinkerName + " " + drinker)
     If routeDiagnostic
-        Debug.Notification("Skyrim.Net BF: action received")
+        Debug.Notification(MMELocalization.Text("Skyrim.Net BF: action received"))
     EndIf
     If skyrimNetOStimTrace
-        Debug.Notification("SN BF intent: " + semanticIntent)
+        Debug.Notification(MMELocalization.Text("SN BF intent: ") + semanticIntent)
     EndIf
     If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingAction", 1) != 1
         MMELog.Diagnostic("[MMEAlert SkyrimNet BF] rejected | MME Extensions or paired milking action disabled")
         If routeDiagnostic
-            Debug.Notification("Skyrim.Net BF: rejected - action disabled")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net BF: rejected - action disabled"))
         EndIf
         Return
     EndIf
@@ -407,32 +407,32 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
     If cooldownRemaining > 0.0
         MMELog.Diagnostic("[MMEAlert SkyrimNet BF] rejected | post-scene action cooldown active | remaining=" + (cooldownRemaining as Int) + "s")
         If routeDiagnostic
-            Debug.Notification("Skyrim.Net BF: cooldown " + (cooldownRemaining as Int) + "s")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net BF: cooldown ") + (cooldownRemaining as Int) + MMELocalization.Text("s"))
         EndIf
         Return
     EndIf
     If milkSource == None || drinker == None
         MMELog.Diagnostic("[MMEAlert SkyrimNet BF] rejected | milk source or drinker did not resolve")
         If routeDiagnostic
-            Debug.Notification("Skyrim.Net BF: rejected - actor unresolved")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net BF: rejected - actor unresolved"))
         EndIf
         Return
     EndIf
     If milkSource == drinker || milkSource.IsDead() || milkSource.IsDisabled() || !milkSource.Is3DLoaded() || drinker.IsDead() || drinker.IsDisabled() || !drinker.Is3DLoaded()
         MMELog.Diagnostic("[MMEAlert SkyrimNet BF] rejected | actors must be different, alive, enabled, and loaded")
         If routeDiagnostic
-            Debug.Notification("Skyrim.Net BF: rejected - actors unavailable")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net BF: rejected - actors unavailable"))
         EndIf
         Return
     EndIf
     If routeDiagnostic
-        Debug.Notification("Skyrim.Net BF: source=" + milkSourceName + " | drinker=" + drinkerName)
+        Debug.Notification(MMELocalization.Text("Skyrim.Net BF: source=") + milkSourceName + MMELocalization.Text(" | drinker=") + drinkerName)
     EndIf
 
     If skyrimNetOStimTrace
         Bool ostimDetected = MMEOStimBreastfeeding.IsOStimDetected()
         Bool ostimToggle = JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableOStimBreastfeeding", 0) == 1
-        Debug.Notification("SN OStim Trace: actors valid | detected=" + ostimDetected + " | toggle=" + ostimToggle)
+        Debug.Notification(MMELocalization.Text("SN OStim Trace: actors valid | detected=") + ostimDetected + MMELocalization.Text(" | toggle=") + ostimToggle)
     EndIf
 
     ; Phase 2: OStim is an independent complete backend when enabled. A rejected
@@ -444,7 +444,7 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
     If MMEOStimBreastfeeding.IsBreastfeedingEnabled()
         MMELog.Diagnostic("[MMEAlert SkyrimNet BF] backend=OStim | calling persistent shared breastfeeding service | milk source=" + milkSourceName + " | drinker=" + drinkerName)
         If routeDiagnostic
-            Debug.Notification("Skyrim.Net BF: backend=OStim")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net BF: backend=OStim"))
         EndIf
         ; TopicInfo scripts are instantiated for dialogue fragments and cannot
         ; be used safely as an external API. Resolve the persistent quest script
@@ -452,12 +452,12 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
         Form ostimServiceForm = Game.GetFormFromFile(0x000800, "MMEAlert.esp")
         MMELog.Diagnostic("[MMEAlert SkyrimNet BF] OStim service raw form=" + ostimServiceForm)
         If skyrimNetOStimTrace
-            Debug.Notification("SN OStim Trace: service form=" + ostimServiceForm)
+            Debug.Notification(MMELocalization.Text("SN OStim Trace: service form=") + ostimServiceForm)
         EndIf
         MMEDebug ostimService = ostimServiceForm as MMEDebug
         MMELog.Diagnostic("[MMEAlert SkyrimNet BF] OStim service script=" + ostimService)
         If skyrimNetOStimTrace
-            Debug.Notification("SN OStim Trace: service script=" + ostimService)
+            Debug.Notification(MMELocalization.Text("SN OStim Trace: service script=") + ostimService)
         EndIf
         If ostimService == None
             MMEOStimBreastfeeding.Report(routeDiagnostic, "Skyrim.Net breastfeeding rejected: persistent OStim breastfeeding service could not resolve")
@@ -465,7 +465,7 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet BF] calling StartBreastfeeding")
         If skyrimNetOStimTrace
-            Debug.Notification("SN OStim Trace: calling shared StartBreastfeeding")
+            Debug.Notification(MMELocalization.Text("SN OStim Trace: calling shared StartBreastfeeding"))
         EndIf
         Bool ostimStarted = ostimService.StartBreastfeeding(milkSource, drinker, routeDiagnostic, "Skyrim.Net", semanticIntent)
         If ostimStarted
@@ -473,13 +473,13 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
         EndIf
         If routeDiagnostic
             If ostimStarted
-                Debug.Notification("Skyrim.Net BF: OStim breastfeeding started")
+                Debug.Notification(MMELocalization.Text("Skyrim.Net BF: OStim breastfeeding started"))
             Else
-                Debug.Notification("Skyrim.Net BF: OStim rejected request; see log")
+                Debug.Notification(MMELocalization.Text("Skyrim.Net BF: OStim rejected request; see log"))
             EndIf
         EndIf
         If skyrimNetOStimTrace
-            Debug.Notification("SN OStim Trace: start result=" + ostimStarted + " | SexLab fallback blocked")
+            Debug.Notification(MMELocalization.Text("SN OStim Trace: start result=") + ostimStarted + MMELocalization.Text(" | SexLab fallback blocked"))
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet BF] OStim StartBreastfeeding result=" + ostimStarted + " | milk source=" + milkSourceName + " | drinker=" + drinkerName + " | SexLab fallback=blocked")
         Return
@@ -488,7 +488,7 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
     ; Phase 3: delegate to the persistent defensive SexLab transaction owner.
     MMELog.Diagnostic("[MMEAlert SkyrimNet BF] backend=SexLab | OStim breastfeeding integration not selected")
     If routeDiagnostic
-        Debug.Notification("Skyrim.Net BF: backend=SexLab")
+        Debug.Notification(MMELocalization.Text("Skyrim.Net BF: backend=SexLab"))
     EndIf
     MMEDebug service = Game.GetFormFromFile(0x000800, "MMEAlert.esp") as MMEDebug
     If service == None

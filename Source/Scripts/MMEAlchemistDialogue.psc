@@ -45,7 +45,7 @@ Bool Function TryAddLivingArmor(Actor alchemist, GlobalVariable stateGlobal) Glo
     EndIf
     String armorName = wornArmor.GetName()
     If MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != ""
-        Debug.Notification("That armor is already bound to another MME system.")
+        Debug.Notification(MMELocalization.Text("That armor is already bound to another MME system."))
         Reject("protected armor cannot be registered", False)
         Return False
     EndIf
@@ -55,7 +55,7 @@ Bool Function TryAddLivingArmor(Actor alchemist, GlobalVariable stateGlobal) Glo
     EndIf
     Int emptyIndex = MMEArmorScript.FindBasicLivingArmorEmptySlotDirect(milkController)
     If emptyIndex < 0
-        Debug.Notification("Error: Basic Living Armor is full")
+        Debug.Notification(MMELocalization.Text("Error: Basic Living Armor is full"))
         Reject("BasicLivingArmor has no Empty slot", False)
         Return False
     EndIf
@@ -75,7 +75,7 @@ Bool Function TryAddLivingArmor(Actor alchemist, GlobalVariable stateGlobal) Glo
         Reject("MME did not retain the added registration")
         Return False
     EndIf
-    Debug.Notification(armorName + " Added to Basic Living Armor")
+    Debug.Notification(armorName + MMELocalization.Text(" Added to Basic Living Armor"))
     MMELog.Diagnostic("[MME Extensions Alchemist] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
     Bool introduced = False
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableRepeatOrdinaryArmorStories", 1) == 1
@@ -103,7 +103,7 @@ Bool Function TryRemoveLivingArmor(Actor alchemist, GlobalVariable stateGlobal) 
     EndIf
     String armorName = wornArmor.GetName()
     If MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != ""
-        Debug.Notification("That armor is bound to another MME system.")
+        Debug.Notification(MMELocalization.Text("That armor is bound to another MME system."))
         Reject("protected armor cannot be removed", False)
         Return False
     EndIf
@@ -132,7 +132,7 @@ Bool Function TryRemoveLivingArmor(Actor alchemist, GlobalVariable stateGlobal) 
         Reject("MME did not retain the removed registration")
         Return False
     EndIf
-    Debug.Notification(armorName + " Removed from Basic Living Armor")
+    Debug.Notification(armorName + MMELocalization.Text(" Removed from Basic Living Armor"))
     MMELog.Diagnostic("[MME Extensions Alchemist] REMOVE complete | armor=" + armorName + " | index=" + registeredIndex)
     Return True
 EndFunction
@@ -181,7 +181,7 @@ EndFunction
 
 Function Reject(String reason, Bool notifyPlayer = True) Global
     If notifyPlayer
-        Debug.Notification("Armor state changed; no changes made")
+        Debug.Notification(MMELocalization.Text("Armor state changed; no changes made"))
     EndIf
     MMELog.Diagnostic("[MME Extensions Alchemist] REJECTED: " + reason, 1)
 EndFunction

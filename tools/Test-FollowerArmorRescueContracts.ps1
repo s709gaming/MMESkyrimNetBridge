@@ -1,10 +1,11 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$service = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEFollowerArmorRescue.psc") -Raw
-$lock = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMETimedArmorLock.psc") -Raw
-$wrapper = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEBlacksmithDialogue.psc") -Raw
-$tif = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\TIF_MMEExtFollowerArmorRescue.psc") -Raw
-$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw
+$service = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEFollowerArmorRescue.psc") -Raw | Remove-MMELocalizationWrappers
+$lock = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMETimedArmorLock.psc") -Raw | Remove-MMELocalizationWrappers
+$wrapper = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEBlacksmithDialogue.psc") -Raw | Remove-MMELocalizationWrappers
+$tif = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\TIF_MMEExtFollowerArmorRescue.psc") -Raw | Remove-MMELocalizationWrappers
+$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw | Remove-MMELocalizationWrappers
 $dialogueBuilder = Get-Content -LiteralPath (Join-Path $projectRoot "build\mutagen-dialogue-repair\Program.cs") -Raw
 $build = Get-Content -LiteralPath (Join-Path $projectRoot "build-package.ps1") -Raw
 

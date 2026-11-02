@@ -1,10 +1,11 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$bridge = Get-Content (Join-Path $projectRoot 'Source\Scripts\MMEAlertsSkyrimNet.psc') -Raw
-$effects = Get-Content (Join-Path $projectRoot 'Source\Scripts\MMETentacleEffects.psc') -Raw
-$mcm = Get-Content (Join-Path $projectRoot 'Source\Scripts\MMEAlertsMCM.psc') -Raw
+$bridge = Get-Content (Join-Path $projectRoot 'Source\Scripts\MMEAlertsSkyrimNet.psc') -Raw | Remove-MMELocalizationWrappers
+$effects = Get-Content (Join-Path $projectRoot 'Source\Scripts\MMETentacleEffects.psc') -Raw | Remove-MMELocalizationWrappers
+$mcm = Get-Content (Join-Path $projectRoot 'Source\Scripts\MMEAlertsMCM.psc') -Raw | Remove-MMELocalizationWrappers
 $config = Get-Content (Join-Path $projectRoot 'SKSE\Plugins\StorageUtilData\MMEAlerts\Narration\TentacleArmor.json') -Raw | ConvertFrom-Json
-$textReader = Get-Content (Join-Path $projectRoot 'Source\Scripts\MMENarrationText.psc') -Raw
+$textReader = Get-Content (Join-Path $projectRoot 'Source\Scripts\MMENarrationText.psc') -Raw | Remove-MMELocalizationWrappers
 
 function Assert-Contract([bool]$Condition, [string]$Message) {
     if (!$Condition) { throw "Tentacle narration contract: $Message" }

@@ -9,7 +9,7 @@ Function ApplyMilkDrinkBonus(Actor drinker, Int drinkKind) Global
     Bool showDebug = JsonUtil.GetIntValue(settingsFile, "enableAddMilkDebug", 0) == 1
     If drinker == None || drinker != Game.GetPlayer()
         If showDebug
-            Debug.Notification("Milk Debug: boost failed (drinker is not player)")
+            Debug.Notification(MMELocalization.Text("Milk Debug: boost failed (drinker is not player)"))
         EndIf
         Return
     EndIf
@@ -26,7 +26,7 @@ Float Function ApplyMilkDrinkBonusForActor(Actor drinker, Int drinkKind, Bool sh
     EndIf
     If !StorageUtil.HasFloatValue(drinker, "MME.MilkMaid.Level")
         If showDebug
-            Debug.Notification("Milk Debug: boost failed (player is not an MME Milkmaid)")
+            Debug.Notification(MMELocalization.Text("Milk Debug: boost failed (player is not an MME Milkmaid)"))
         EndIf
         Return 0.0
     EndIf
@@ -37,24 +37,24 @@ Float Function ApplyMilkDrinkBonusForActor(Actor drinker, Int drinkKind, Bool sh
     Float levelBonus = 0.0
     Float lactacidMultiplier = 1.0
     Bool levelBonusEnabled = JsonUtil.GetIntValue(settingsFile, "enableMilkmaidLevelBonus", 1) == 1
-    String calculationMode = "level bonus OFF"
+    String calculationMode = MMELocalization.Text("level bonus OFF")
     If drinkKind == 2
         lactacidMultiplier = JsonUtil.GetFloatValue(settingsFile, "lactacidFlatMultiplier", 2.0)
         milkAdded = flatBonus * lactacidMultiplier
-        calculationMode = "Lactacid x" + lactacidMultiplier
+        calculationMode = MMELocalization.Text("Lactacid x") + lactacidMultiplier
     EndIf
     If levelBonusEnabled
         levelBonus = maidLevel as Float / 2.0
         milkAdded += levelBonus
         If drinkKind == 2
-            calculationMode = "Lactacid x" + lactacidMultiplier + " + level"
+            calculationMode = MMELocalization.Text("Lactacid x") + lactacidMultiplier + MMELocalization.Text(" + level")
         Else
-            calculationMode = "MME level ON"
+            calculationMode = MMELocalization.Text("MME level ON")
         EndIf
     EndIf
 
     If showDebug
-        Debug.Notification("Milk Debug: " + calculationMode + " | level " + maidLevel + " | flat +" + flatBonus + " | level +" + levelBonus + " | total +" + milkAdded)
+        Debug.Notification(MMELocalization.Text("Milk Debug: ") + calculationMode + MMELocalization.Text(" | level ") + maidLevel + MMELocalization.Text(" | flat +") + flatBonus + MMELocalization.Text(" | level +") + levelBonus + MMELocalization.Text(" | total +") + milkAdded)
     EndIf
 
     ; Phase 2: snapshot capacity before the enforcing MME write. When the desired
@@ -87,7 +87,7 @@ Float Function ApplyMilkDrinkBonusForActor(Actor drinker, Int drinkKind, Bool sh
             EndIf
         EndIf
         If showDebug
-            Debug.Notification("Milk Debug: MME add called | " + milkBefore + " -> " + milkAfter + " (wanted +" + milkAdded + ")")
+            Debug.Notification(MMELocalization.Text("Milk Debug: MME add called | ") + milkBefore + " -> " + milkAfter + MMELocalization.Text(" (wanted +") + milkAdded + ")")
         EndIf
         MMELog.Diagnostic("[MMEAlert MilkBoost] milkBefore=" + milkBefore + " | bonus=" + milkAdded + " | attempted=" + attemptedMilk + " | milkAfter=" + milkAfter + " | enforceMilkLimit=" + enforceMilkLimit)
         If drinker == Game.GetPlayer()
@@ -95,7 +95,7 @@ Float Function ApplyMilkDrinkBonusForActor(Actor drinker, Int drinkKind, Bool sh
         EndIf
         Return milkAfter - milkBefore
     ElseIf showDebug
-        Debug.Notification("Milk Debug: MME add not called (total is zero)")
+        Debug.Notification(MMELocalization.Text("Milk Debug: MME add not called (total is zero)"))
     EndIf
     Return 0.0
 EndFunction

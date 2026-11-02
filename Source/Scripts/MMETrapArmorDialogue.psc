@@ -17,7 +17,7 @@ Bool Function TryVendorRelease(Actor speaker) Global
     Actor playerActor = Game.GetPlayer()
     String reason = GetEligibilityFailure(speaker, playerActor)
     If reason != ""
-        Debug.Notification("The armor situation changed; no removal was attempted.")
+        Debug.Notification(MMELocalization.Text("The armor situation changed; no removal was attempted."))
         Trace("release rejected | " + reason)
         Return False
     EndIf

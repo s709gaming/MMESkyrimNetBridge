@@ -1,14 +1,15 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $registryPath = Join-Path $projectRoot "Source\Scripts\MMECustomArmorRegistry.psc"
 $registry = Get-Content -LiteralPath $registryPath -Raw
-$armor = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArmorScript.psc") -Raw
-$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw
-$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw
+$armor = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArmorScript.psc") -Raw | Remove-MMELocalizationWrappers
+$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw | Remove-MMELocalizationWrappers
+$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw | Remove-MMELocalizationWrappers
 $native = Get-Content -LiteralPath (Join-Path $projectRoot "src\Plugin.cpp") -Raw
 $build = Get-Content -LiteralPath (Join-Path $projectRoot "build-package.ps1") -Raw
-$quickStart = Get-Content -LiteralPath (Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts\MMEAlertsQuickTest.psc") -Raw
+$quickStart = Get-Content -LiteralPath (Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts\MMEAlertsQuickTest.psc") -Raw | Remove-MMELocalizationWrappers
 $config = Get-Content -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\CustomArmorRegistry.json") -Raw | ConvertFrom-Json
 
 function Assert-Contract([bool]$condition, [string]$message) {

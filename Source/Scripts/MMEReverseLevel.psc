@@ -65,14 +65,14 @@ EndFunction
 
 Bool Function ApplyReverseLeveling()
     If busy
-        Debug.Notification("Reverse leveling is updating; try again in a moment.")
+        Debug.Notification(MMELocalization.Text("Reverse leveling is updating; try again in a moment."))
         Return False
     EndIf
     playerActor = Game.GetPlayer()
     milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     If ReverseAbility == None || !MMEAlertsController.IsExtensionsEnabled() || !IsPlayerMaid() \
         || milkController == None || milkController.TimesMilkedMult <= 0
-        Debug.Notification("Reverse leveling needs its installed ability and an active Milk Maid.")
+        Debug.Notification(MMELocalization.Text("Reverse leveling needs its installed ability and an active Milk Maid."))
         Return False
     EndIf
     busy = True
@@ -88,7 +88,7 @@ Bool Function ApplyReverseLeveling()
             active = False
             busy = False
             StopMonitoring()
-            Debug.Notification("Reverse leveling ability could not be applied.")
+            Debug.Notification(MMELocalization.Text("Reverse leveling ability could not be applied."))
             Return False
         EndIf
     EndIf

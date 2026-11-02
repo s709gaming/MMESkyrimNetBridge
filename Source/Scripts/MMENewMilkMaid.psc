@@ -771,11 +771,11 @@ Function TraceSexLabStop(Int stopNumber, String traceText, Bool failed = False, 
     If stopNumber < 10
         stopLabel = "0" + stopLabel
     EndIf
-    String line = "NMM SexLab " + stopLabel + " " + traceText
+    String line = MMELocalization.Text("NMM SexLab ") + stopLabel + " " + traceText
     If failed
-        line = "NMM SexLab " + stopLabel + " FAIL: " + traceText
+        line = MMELocalization.Text("NMM SexLab ") + stopLabel + MMELocalization.Text(" FAIL: ") + traceText
     ElseIf blocked
-        line = "NMM SexLab " + stopLabel + " BLOCKED: " + traceText
+        line = MMELocalization.Text("NMM SexLab ") + stopLabel + MMELocalization.Text(" BLOCKED: ") + traceText
     EndIf
     MMELog.Diagnostic("[MME Extensions New Milkmaid SexLab] " + line)
     ; Rapid one-line notifications overwrite one another. Report grouped route
@@ -789,7 +789,7 @@ EndFunction
 Function TraceSexLabMessage(String traceText) Global
     If IsSexLabTraceEnabled()
         MMELog.Diagnostic("[MME Extensions New Milkmaid SexLab] " + traceText)
-        Debug.Notification("NMM SexLab: " + traceText)
+        Debug.Notification(MMELocalization.Text("NMM SexLab: ") + traceText)
     EndIf
 EndFunction
 
@@ -797,9 +797,9 @@ Function TraceStep(String traceText, Bool failed = False) Global
     If !IsTraceEnabled()
         Return
     EndIf
-    String line = "New Milkmaid: " + traceText
+    String line = MMELocalization.Text("New Milkmaid: ") + traceText
     If failed
-        line = "New Milkmaid FAIL: " + traceText
+        line = MMELocalization.Text("New Milkmaid FAIL: ") + traceText
     EndIf
     MMELog.Diagnostic("[MME Extensions New Milkmaid] " + line)
     Debug.Notification(line)
@@ -839,6 +839,6 @@ EndFunction
 Function Report(Bool showNotification, String reportText) Global
     MMELog.Diagnostic("[MME Extensions New Milk Maid] " + reportText)
     If showNotification
-        Debug.Notification("New Milk Maid: " + reportText)
+        Debug.Notification(MMELocalization.Text("New Milk Maid: ") + reportText)
     EndIf
 EndFunction

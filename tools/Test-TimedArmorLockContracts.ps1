@@ -1,21 +1,22 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$lockScript = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMETimedArmorLock.psc") -Raw
-$trapScript = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEChestArmorTrap.psc") -Raw
+$lockScript = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMETimedArmorLock.psc") -Raw | Remove-MMELocalizationWrappers
+$trapScript = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEChestArmorTrap.psc") -Raw | Remove-MMELocalizationWrappers
 $nativeSource = Get-Content -LiteralPath (Join-Path $projectRoot "src\Plugin.cpp") -Raw
-$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw
-$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw
-$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw
+$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw | Remove-MMELocalizationWrappers
+$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw | Remove-MMELocalizationWrappers
+$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw | Remove-MMELocalizationWrappers
 $build = Get-Content -LiteralPath (Join-Path $projectRoot "build-package.ps1") -Raw
 $fomod = Get-Content -LiteralPath (Join-Path $projectRoot "fomod\ModuleConfig.xml") -Raw
 $c5 = Get-Content -LiteralPath (Join-Path $projectRoot "fomod\choices\timed-armor-c5kev\TimedArmor_C5Kev.json") -Raw | ConvertFrom-Json
 $dwemer = Get-Content -LiteralPath (Join-Path $projectRoot "fomod\choices\timed-armor-dwemer\TimedArmor_Dwemer.json") -Raw | ConvertFrom-Json
 $notifications = Get-Content -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\TimedArmorNotifications.json") -Raw | ConvertFrom-Json
-$dialogue = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMETrapArmorDialogue.psc") -Raw
-$dialogueFragments = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEBlacksmithDialogue.psc") -Raw
-$venueDrink = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEInnPalaceMilkEvent.psc") -Raw
-$chestTargets = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEChestTrapTargets.psc") -Raw
+$dialogue = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMETrapArmorDialogue.psc") -Raw | Remove-MMELocalizationWrappers
+$dialogueFragments = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEBlacksmithDialogue.psc") -Raw | Remove-MMELocalizationWrappers
+$venueDrink = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEInnPalaceMilkEvent.psc") -Raw | Remove-MMELocalizationWrappers
+$chestTargets = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEChestTrapTargets.psc") -Raw | Remove-MMELocalizationWrappers
 
 function Assert-Match([string]$Text, [string]$Pattern, [string]$Message) {
     if ($Text -notmatch $Pattern) { throw $Message }

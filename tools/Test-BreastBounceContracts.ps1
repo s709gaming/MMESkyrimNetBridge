@@ -1,3 +1,4 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 
@@ -5,9 +6,9 @@ function Assert-Contract([bool]$condition, [string]$message) {
     if (!$condition) { throw "Breast bounce contract failed: $message" }
 }
 
-$effect = Get-Content -LiteralPath (Join-Path $projectRoot 'Source\Scripts\MMEBreastBounceEffects.psc') -Raw
-$controller = Get-Content -LiteralPath (Join-Path $projectRoot 'Source\Scripts\MMEAlertsController.psc') -Raw
-$mcm = Get-Content -LiteralPath (Join-Path $projectRoot 'Source\Scripts\MMEAlertsMCM.psc') -Raw
+$effect = Get-Content -LiteralPath (Join-Path $projectRoot 'Source\Scripts\MMEBreastBounceEffects.psc') -Raw | Remove-MMELocalizationWrappers
+$controller = Get-Content -LiteralPath (Join-Path $projectRoot 'Source\Scripts\MMEAlertsController.psc') -Raw | Remove-MMELocalizationWrappers
+$mcm = Get-Content -LiteralPath (Join-Path $projectRoot 'Source\Scripts\MMEAlertsMCM.psc') -Raw | Remove-MMELocalizationWrappers
 $build = Get-Content -LiteralPath (Join-Path $projectRoot 'build-package.ps1') -Raw
 $soundPatch = Get-Content -LiteralPath (Join-Path $projectRoot 'tools\AddMMEBreastBounceSound.pas') -Raw
 $jsonPath = Join-Path $projectRoot 'SKSE\Plugins\StorageUtilData\MMEAlerts\BreastBounceNotifications.json'

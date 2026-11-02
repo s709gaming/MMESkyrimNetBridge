@@ -4,13 +4,14 @@ This small translator covers ONLY the statements in LevelBase, CaptureBaseline,
 and CheckProgress, failing on unsupported syntax. It is not a Papyrus VM or an
 in-game concurrency test. Run: python tools/test_reverse_leveling.py
 """
+from localization_contract import unlocalize
 import re
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = (ROOT / 'Source/Scripts/MMEReverseLevel.psc').read_text()
+SOURCE = unlocalize((ROOT / 'Source/Scripts/MMEReverseLevel.psc').read_text())
 
 
 def expression(text):
@@ -238,8 +239,8 @@ class ReverseTests(unittest.TestCase):
             self.assertEqual(env['GetRequiredLevel'](), expected)
 
     def test_mcm_threshold_is_not_a_player_level_setter(self):
-        mcm=(ROOT/'Source/Scripts/MMEAlertsMCM.psc').read_text()
-        mage=(ROOT/'Source/Scripts/MMEMageDialogue.psc').read_text()
+        mcm=unlocalize((ROOT/'Source/Scripts/MMEAlertsMCM.psc').read_text())
+        mage=unlocalize((ROOT/'Source/Scripts/MMEMageDialogue.psc').read_text())
         self.assertNotIn('SetPlayerMaidLevel',mcm)
         self.assertIn('>= MMEReverseLevel.GetRequiredLevel()',mage)
         self.assertIn('Pages[8] = "Misc"',mcm)

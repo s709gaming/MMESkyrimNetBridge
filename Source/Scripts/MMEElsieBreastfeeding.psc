@@ -147,15 +147,15 @@ Bool Function RunNearbyTest() Global
     EndIf
     If milkSource == None || drinker == None || milkSource == drinker
         MMELog.Alarm("[MME Extensions Elsie BF] TEST FAILURE | no nearby Milk Maid/customer pair could be selected")
-        Debug.Notification("Elsie test failed: no nearby Milk Maid and customer.")
+        Debug.Notification(MMELocalization.Text("Elsie test failed: no nearby Milk Maid and customer."))
         Return False
     EndIf
 
     Int threadID = StartAutonomousFeed(milkSource, drinker, "MCM Test")
     If threadID < 0
-        Debug.Notification("Elsie breastfeeding test could not start. Check Papyrus log.")
+        Debug.Notification(MMELocalization.Text("Elsie breastfeeding test could not start. Check Papyrus log."))
         Return False
     EndIf
-    Debug.Notification("Elsie breastfeeding test started.")
+    Debug.Notification(MMELocalization.Text("Elsie breastfeeding test started."))
     Return True
 EndFunction

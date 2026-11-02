@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "narrate_milk_craving_1": {
+      "template": "{actor} жаждет молока. {craving} Выразите искушение своим собственным голосом; она еще не выпила."
+    }
+  }
+}

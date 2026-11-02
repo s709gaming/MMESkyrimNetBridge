@@ -89,12 +89,12 @@ EndFunction
 Function DrawGeneralAt(SKI_ConfigBase menu, Int firstRow) Global
     menu.SetCursorPosition(firstRow * 2)
     MilkQUEST milk = Resolve()
-    menu.AddHeaderOption("MME Quick Settings")
+    menu.AddHeaderOption(MMELocalization.Text("MME Quick Settings"))
     If milk == None
-        menu.AddTextOption("Original MME settings", "Unavailable", 1)
+        menu.AddTextOption(MMELocalization.Text("Original MME settings"), MMELocalization.Text("Unavailable"), 1)
         Return
     EndIf
-    menu.AddHeaderOption("Spells & Progression")
+    menu.AddHeaderOption(MMELocalization.Text("Spells & Progression"))
     Int spellFlags = 0
     If milk.PlayerREF == None || milk.MilkSelf == None || milk.MilkTarget == None
         spellFlags = 1
@@ -106,37 +106,37 @@ Function DrawGeneralAt(SKI_ConfigBase menu, Int firstRow) Global
         selfKnown = milk.PlayerREF.HasSpell(milk.MilkSelf)
         friendKnown = milk.PlayerREF.HasSpell(milk.MilkTarget)
     EndIf
-    menu.AddToggleOptionST("OGMilkSelf", "Milk Self Spell", selfKnown, spellFlags)
-    menu.AddToggleOptionST("OGMilkFriend", "Milk Friend Spell", friendKnown, spellFlags)
-    menu.AddMenuOptionST("OGLeveling", "Leveling Speed", DifficultyLabel(milk))
-    menu.AddSliderOptionST("OGMastery", "Milk Mastery (Maid Slots)", Read(milk, "Mastery"), "{0}")
+    menu.AddToggleOptionST("OGMilkSelf", MMELocalization.Text("Milk Self Spell"), selfKnown, spellFlags)
+    menu.AddToggleOptionST("OGMilkFriend", MMELocalization.Text("Milk Friend Spell"), friendKnown, spellFlags)
+    menu.AddMenuOptionST("OGLeveling", MMELocalization.Text("Leveling Speed"), DifficultyLabel(milk))
+    menu.AddSliderOptionST("OGMastery", MMELocalization.Text("Milk Mastery (Maid Slots)"), Read(milk, "Mastery"), "{0}")
     menu.SetCursorPosition(firstRow * 2 + 1)
-    menu.AddHeaderOption("Milking & Production")
-    menu.AddSliderOptionST("OGSpeed", "Milking Speed", milk.GushPct, "{0}% per cycle")
-    menu.AddSliderOptionST("OGDuration", "Milking Cycle Duration", milk.Milking_Duration, "{0} seconds")
-    menu.AddSliderOptionST("OGProduction", "Milk Production Rate", milk.MilkProdMod, "{0}%")
-    menu.AddToggleOptionST("OGFixed", "Fixed Milk Production - All", milk.FixedMilkGen)
+    menu.AddHeaderOption(MMELocalization.Text("Milking & Production"))
+    menu.AddSliderOptionST("OGSpeed", MMELocalization.Text("Milking Speed"), milk.GushPct, MMELocalization.Text("{0}% per cycle"))
+    menu.AddSliderOptionST("OGDuration", MMELocalization.Text("Milking Cycle Duration"), milk.Milking_Duration, MMELocalization.Text("{0} seconds"))
+    menu.AddSliderOptionST("OGProduction", MMELocalization.Text("Milk Production Rate"), milk.MilkProdMod, "{0}%")
+    menu.AddToggleOptionST("OGFixed", MMELocalization.Text("Fixed Milk Production - All"), milk.FixedMilkGen)
     Int fixedFlags = 0
     If !milk.FixedMilkGen && !milk.FixedMilkGen4Followers
         fixedFlags = 1
     EndIf
-    menu.AddToggleOptionST("FixedLactacidEnabled", "Fixed Mode Lactacid Boost", MMEFixedLactacid.IsEnabled(), fixedFlags)
+    menu.AddToggleOptionST("FixedLactacidEnabled", MMELocalization.Text("Fixed Mode Lactacid Boost"), MMEFixedLactacid.IsEnabled(), fixedFlags)
     Int bonusFlags = fixedFlags
     If !MMEFixedLactacid.IsEnabled()
         bonusFlags = 1
     EndIf
-    menu.AddSliderOptionST("FixedLactacidPercent", "Lactacid Production Bonus", MMEFixedLactacid.BonusPercent(), "+{0}%", bonusFlags)
-    menu.AddHeaderOption("Economy")
-    menu.AddSliderOptionST("OGPrices", "Milk Price Multiplier", milk.MilkPriceMod, "x{0}")
+    menu.AddSliderOptionST("FixedLactacidPercent", MMELocalization.Text("Lactacid Production Bonus"), MMEFixedLactacid.BonusPercent(), "+{0}%", bonusFlags)
+    menu.AddHeaderOption(MMELocalization.Text("Economy"))
+    menu.AddSliderOptionST("OGPrices", MMELocalization.Text("Milk Price Multiplier"), milk.MilkPriceMod, "x{0}")
     ; Both columns finish before the existing General controls begin.
     menu.SetCursorPosition((firstRow + 10) * 2)
 EndFunction
 
 Function DrawBody(SKI_ConfigBase menu) Global
     MilkQUEST milk = Resolve()
-    menu.AddHeaderOption("Original MME Effects")
+    menu.AddHeaderOption(MMELocalization.Text("Original MME Effects"))
     If milk == None
-        menu.AddTextOption("Original MME settings", "Unavailable", 1)
+        menu.AddTextOption(MMELocalization.Text("Original MME settings"), MMELocalization.Text("Unavailable"), 1)
         Return
     EndIf
     Int flags = 0
@@ -147,15 +147,15 @@ Function DrawBody(SKI_ConfigBase menu) Global
         buffs = milk.MilkQC.Buffs
     EndIf
     Failure("conditions", flags != 0, "display original effects", None, "MilkQC unavailable")
-    menu.AddToggleOptionST("OGDebuffs", "OG Milk Mod Debuffs", buffs, flags)
-    menu.AddHeaderOption("Original MME Breast Growth")
+    menu.AddToggleOptionST("OGDebuffs", MMELocalization.Text("OG Milk Mod Debuffs"), buffs, flags)
+    menu.AddHeaderOption(MMELocalization.Text("Original MME Breast Growth"))
     String units = "{2}"
     If milk.BreastVolumeScale
-        units = "{1} volume"
+        units = MMELocalization.Text("{1} volume")
     EndIf
-    menu.AddSliderOptionST("OGPerMilk", "Breast Growth per Milk", milk.BoobIncr, units)
-    menu.AddSliderOptionST("OGPerLevel", "Breast Growth per Level", milk.BoobPerLvl, units)
-    menu.AddSliderOptionST("OGMaxSize", "Maximum Breast Size", milk.BoobMAX, "{2}")
+    menu.AddSliderOptionST("OGPerMilk", MMELocalization.Text("Breast Growth per Milk"), milk.BoobIncr, units)
+    menu.AddSliderOptionST("OGPerLevel", MMELocalization.Text("Breast Growth per Level"), milk.BoobPerLvl, units)
+    menu.AddSliderOptionST("OGMaxSize", MMELocalization.Text("Maximum Breast Size"), milk.BoobMAX, "{2}")
 EndFunction
 
 Int Function DifficultyIndex(MilkQUEST milk) Global
@@ -181,19 +181,19 @@ EndFunction
 
 String[] Function DifficultyOptions() Global
     String[] choices = new String[6]
-    choices[0] = "Very Slow (Legendary)"
-    choices[1] = "Slow (Master)"
-    choices[2] = "Moderately Slow (Expert)"
-    choices[3] = "Normal (Adept)"
-    choices[4] = "Fast (Apprentice)"
-    choices[5] = "Very Fast (Novice)"
+    choices[0] = MMELocalization.Text("Very Slow (Legendary)")
+    choices[1] = MMELocalization.Text("Slow (Master)")
+    choices[2] = MMELocalization.Text("Moderately Slow (Expert)")
+    choices[3] = MMELocalization.Text("Normal (Adept)")
+    choices[4] = MMELocalization.Text("Fast (Apprentice)")
+    choices[5] = MMELocalization.Text("Very Fast (Novice)")
     Return choices
 EndFunction
 
 String Function DifficultyLabel(MilkQUEST milk) Global
     Int index = DifficultyIndex(milk)
     If index < 0
-        Return "Custom (" + milk.TimesMilkedMult + ")"
+        Return MMELocalization.Text("Custom (") + milk.TimesMilkedMult + ")"
     EndIf
     String[] choices = DifficultyOptions()
     Return choices[index]

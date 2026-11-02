@@ -182,7 +182,7 @@ Function ShowStory(Actor target) Global
     EndIf
     ; Historical JSON key retained so customized story pools keep working.
     String config = "/MMEAlerts/ForcedMilkMaidConversion"
-    String fallbackStory = "A mysterious enchantment washes over {actor}. Her breasts tingle with warmth and the promise of a wonderfully abundant harvest!"
+    String fallbackStory = MMELocalization.Text("A mysterious enchantment washes over {actor}. Her breasts tingle with warmth and the promise of a wonderfully abundant harvest!")
     String story = MMETextPool.Pick(config, "chestCurseStories", fallbackStory, target, "Milk Maid story")
     Debug.MessageBox(MMEAlertsSkyrimNet.RenderMessage(story, MMENewMilkMaid.GetActorName(target)))
 EndFunction

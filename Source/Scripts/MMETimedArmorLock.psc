@@ -330,7 +330,7 @@ EndFunction
 Function ShowUnequipResistedNotification(Actor target) Global
     String configFile = GetNotificationFile()
     String poolName = "unequip_resisted"
-    String selected = "The armor gives you a teasing squeeze and refuses to let go."
+    String selected = MMELocalization.Text("The armor gives you a teasing squeeze and refuses to let go.")
     String[] personal = MMENarrationOverrides.PersonalPool(configFile, poolName, target)
     If personal.Length > 0
         selected = personal[Utility.RandomInt(0, personal.Length - 1)]
@@ -343,7 +343,7 @@ Function ShowUnequipResistedNotification(Actor target) Global
         Alarm("unequip notification JSON is missing or malformed; using fallback")
     EndIf
     If selected == ""
-        selected = "The armor gives you a teasing squeeze and refuses to let go."
+        selected = MMELocalization.Text("The armor gives you a teasing squeeze and refuses to let go.")
     EndIf
     Debug.Notification(selected)
     Trace("playful removal rejection shown | actor=" + GetActorName(target))

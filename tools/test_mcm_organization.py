@@ -4,12 +4,13 @@ This models drawing calls only, not Papyrus execution or live game behavior.
 Flags do not change slot occupancy. Missing-MME helper alternatives are omitted
 from the full/available layout, which exercises the largest control count.
 """
+from localization_contract import unlocalize
 from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-MCM = (ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text()
-FACADE = (ROOT / 'Source/Scripts/MMEOriginalSettings.psc').read_text()
+MCM = unlocalize((ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text())
+FACADE = unlocalize((ROOT / 'Source/Scripts/MMEOriginalSettings.psc').read_text())
 
 
 def function(source, name):

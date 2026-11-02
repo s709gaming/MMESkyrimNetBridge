@@ -151,6 +151,6 @@ EndFunction
 Function Report(Bool showNotification, String reportText) Global
     MMELog.Diagnostic("[MME Extensions Minor Animation] " + reportText)
     If showNotification
-        Debug.Notification("Minor Animation: " + reportText)
+        Debug.Notification(MMELocalization.Text("Minor Animation: ") + reportText)
     EndIf
 EndFunction

@@ -1,10 +1,11 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$service = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArmorRemoval.psc") -Raw
-$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw
-$followers = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEFollowerArmorRescue.psc") -Raw
-$timed = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMETimedArmorLock.psc") -Raw
-$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw
+$service = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArmorRemoval.psc") -Raw | Remove-MMELocalizationWrappers
+$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw | Remove-MMELocalizationWrappers
+$followers = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEFollowerArmorRescue.psc") -Raw | Remove-MMELocalizationWrappers
+$timed = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMETimedArmorLock.psc") -Raw | Remove-MMELocalizationWrappers
+$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw | Remove-MMELocalizationWrappers
 $build = Get-Content -LiteralPath (Join-Path $projectRoot "build-package.ps1") -Raw
 
 function Assert-Contract([bool]$condition, [string]$message) {

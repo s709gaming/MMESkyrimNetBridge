@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "narrate_milkmaid_created_1": {
+      "template": "{actor} стал дояркой и теперь может производить молоко. Отреагируйте своим собственным голосом на обнаружение этой способности."
+    },
+    "narrate_forced_milk_maid_conversion_1": {
+      "template": "{conversion} Реагирует на преобразование как {actor}. Его причина не установлена; не придумывайте напиток."
+    },
+    "milkmaidCreatedMessage": {
+      "template": "{actor} стал дояркой! Ее грудь теперь кажется приятно тяжелой, полной и слегка волнующей."
+    },
+    "narrate_milk_maid_curse_1": {
+      "template": "{conversion} Реагирует как существующая доярка {actor} на добавленное молоко. Это не новое обращение или напиток."
+    },
+    "narrate_chest_milk_maid_curse_1": {
+      "template": "Проклятие {chest_kind} затронуло {actor}. {outcome} Реагируйте как {actor} на чары сундука. Добавлено молоко: {milk_added}; не цитируйте цифры и не придумывайте выпивку, добычу или другое преобразование."
+    }
+  }
+}

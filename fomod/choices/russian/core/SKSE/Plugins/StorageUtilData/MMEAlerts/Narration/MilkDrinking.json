@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "narrate_chest_milk_drink_1": {
+      "template": "{actor} волшебным образом вынужден выпить {milkName} из {chestKind}."
+    },
+    "narrate_chest_milk_drink_2": {
+      "template": "{situation} Реагируйте как {actor} на принудительный напиток из сундука-ловушки. Молоко знакомое; не изобретайте его источник или дополнительные эффекты."
+    },
+    "narrate_n_p_c_milk_drink_1": {
+      "template": "{reaction} Реагировать как {actor} на заявленный вкус и действие напитка. Молоко знакомое."
+    },
+    "narrate_n_p_c_milk_drink_2": {
+      "template": " Руки {actor} также скованы. Учитывайте неудобства, не изобретая ограничений или эффектов."
+    },
+    "narrate_n_p_c_milk_drink_3": {
+      "template": " Фактическая граница: {actor} не является препаратом, и этот напиток не увеличивает количество грудного молока, полноту груди, ее вес, отек, рост, подтекание или лактацию. Не подразумевайте и не изобретайте какие-либо из этих эффектов."
+    },
+    "narrate_n_p_c_milk_drink_4": {
+      "template": " {actor} — признанная доярка. Используйте только заявленные эффекты."
+    },
+    "narrate_player_milk_drink_1": {
+      "template": "Игрок выпил {milkName}; их грудь становится тяжелее и чувствительнее. Пусть один из персонажей, находящихся поблизости, отреагирует. Молоко знакомое."
+    },
+    "narrate_player_milk_drink_2": {
+      "template": "{reaction} Пусть один из персонажей поблизости отреагирует на сообщаемый игроком эффект выпитого напитка. Молоко знакомое."
+    },
+    "narrate_player_milk_drink_3": {
+      "template": " Руки игрока также скованы. Учитывайте неудобства, не изобретая ограничений или эффектов."
+    },
+    "build_restrained_player_drink_content_1": {
+      "template": "Игрок выпил {milkName} со скованными руками; их грудь становится тяжелее и чувствительнее. Пусть один из персонажей, находящихся поблизости, отреагирует. Молоко знакомое."
+    },
+    "drinkMessage": {
+      "template": "{actor} только что выпил {item}."
+    }
+  }
+}

@@ -1,3 +1,4 @@
+#include "../include/Localization.h"
 #include "NarrationStore.h"
 #include "../include/NarrationCatalog.h"
 
@@ -64,7 +65,12 @@ namespace MME::Narration
         }
         const Json& CatalogRoot()
         {
-            static const auto catalog = [] { std::string bytes; for (auto part : kCatalogParts) bytes += part; return Json::parse(bytes); }();
+            static const auto catalog = [] { std::string bytes; for (auto part : kCatalogParts) bytes += part; auto root = Json::parse(bytes);
+                const auto defaults = MME::Localization::Defaults();
+                for (const auto& [id, value] : defaults.items()) {
+                    if (root["entries"].contains(id)) root["entries"][id]["default"] = value;
+                }
+                return root; }();
             return catalog;
         }
         const Json& Catalog() { return CatalogRoot()["entries"]; }

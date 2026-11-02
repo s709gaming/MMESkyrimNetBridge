@@ -1,3 +1,4 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $sourceDir = Join-Path $projectRoot "fomod\choices\jugs-compatibility\Source\Scripts"
@@ -16,12 +17,12 @@ foreach ($sceneSource in $sceneSources) {
     }
 }
 
-$safety = Get-Content -LiteralPath (Join-Path $sourceDir "MMEJugsSafety.psc") -Raw
+$safety = Get-Content -LiteralPath (Join-Path $sourceDir "MMEJugsSafety.psc") -Raw | Remove-MMELocalizationWrappers
 foreach ($required in @('GetState\(\) != "Enabled"', 'IsValidActor', 'animations\.Length < 1', 'threadID < 0', 'MMELog\.MasterDiagnostic', 'MMELog\.Alarm')) {
     if ($safety -notmatch $required) { throw "JUGS safe starter is missing contract: $required" }
 }
 
-$listener = Get-Content -LiteralPath (Join-Path $sourceDir "JugsPlayerAlias.psc") -Raw
+$listener = Get-Content -LiteralPath (Join-Path $sourceDir "JugsPlayerAlias.psc") -Raw | Remove-MMELocalizationWrappers
 $lengthGuard = $listener.IndexOf('participants.Length < 2')
 $firstIndexRead = $listener.IndexOf('participants[0]')
 if ($lengthGuard -lt 0 -or $firstIndexRead -lt 0 -or $lengthGuard -gt $firstIndexRead) {
@@ -34,7 +35,7 @@ if ($listener -match 'MMEExtensionsAPI\.(ForceMilkDrink|DrinkNormalMilk|GiveAvai
     throw "JUGS breastfeeding completion must not invoke an inventory/cup-drinking API"
 }
 
-$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw
+$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw | Remove-MMELocalizationWrappers
 foreach ($required in @('CompleteBreastfeedingMilkShare', 'service\.CompleteBreastfeedingDrink', 'IsMilkMaid\(milkSource\)', 'persistent breastfeeding service unavailable')) {
     if ($api -notmatch $required) { throw "Public breastfeeding completion API is missing contract: $required" }
 }
@@ -43,12 +44,12 @@ foreach ($required in @('MME\.Extensions\.JUGS\.Thread', 'MME\.Extensions\.JUGS\
     if ($safety -notmatch $required) { throw "JUGS ownership marker is missing contract: $required" }
 }
 
-$main = Get-Content -LiteralPath (Join-Path $sourceDir "JugsMain.psc") -Raw
+$main = Get-Content -LiteralPath (Join-Path $sourceDir "JugsMain.psc") -Raw | Remove-MMELocalizationWrappers
 foreach ($required in @('duplicate SGO pair ignored', 'SGO queue full', 'If !removed\s+i \+= 1', 'Int lastActive = numParticipants - 1')) {
     if ($main -notmatch $required) { throw "JUGS queue repair is missing contract: $required" }
 }
 
-$makeMaid = Get-Content -LiteralPath (Join-Path $sourceDir "JUGs_MakeAMaid1C024.psc") -Raw
+$makeMaid = Get-Content -LiteralPath (Join-Path $sourceDir "JUGs_MakeAMaid1C024.psc") -Raw | Remove-MMELocalizationWrappers
 if ($makeMaid -notmatch 'MMEExtensionsAPI\.TryCreateMilkMaidForcedAnimated' -or $makeMaid -match 'GetFormFromFile') {
     throw "JUGS make-a-maid route must use the public animated API without hard-coded armor"
 }

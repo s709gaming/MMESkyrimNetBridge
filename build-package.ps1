@@ -49,6 +49,7 @@ $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
 $scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEBreastBounceEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEArousalEffects", "MMEArousalAnimations", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMETimedArmorLock", "MMEArmorRemoval", "MMETrapArmorDialogue", "MMEFollowerArmorRescue", "TIF_MMEExtFollowerArmorRescue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMESexLabBreastfeedingBackend", "MMEElsieBreastfeeding", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $scriptNames += "MMEOriginalSettings"
+$scriptNames += "MMELocalization"
 $scriptNames += "MMEMilkingSource"
 $scriptNames += "MMEPostMilking"
 $scriptNames += "MMEActorPromptState"
@@ -366,6 +367,11 @@ New-Item -ItemType Directory -Force -Path $packageScripts, $packageSources, $pac
 
 & (Join-Path $projectRoot "tools\Build-MaidRosterUI.ps1")
 & (Join-Path $projectRoot "tools\Build-MilkLeaks.ps1")
+& python -B (Join-Path $projectRoot 'tools/localization/generate.py')
+if ($LASTEXITCODE) { throw 'Russian language generation failed' }
+& (Join-Path $projectRoot 'tools/Test-Localization.ps1')
+
+
 & python -B (Join-Path $projectRoot 'tools\test_milk_leaks.py')
 if ($LASTEXITCODE) { throw 'Milk leak ownership, optional integration or narration contracts failed' }
 & python -B (Join-Path $projectRoot "tools\test_chest_curse_narration.py")
@@ -406,6 +412,10 @@ New-Item -ItemType Directory -Force (Join-Path $packageDocs 'licenses') | Out-Nu
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\licenses\nlohmann-json.txt') -Destination (Join-Path $packageDocs 'licenses')
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\OStim-Only-Compatibility.md") -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MOVEMENT-SLAP-FLAT-MILK-STRIPPING.md") -Destination $packageDocs
+
+New-Item -ItemType Directory -Force (Join-Path $stageDir 'SKSE/Plugins/StorageUtilData/MMEAlerts') | Out-Null
+Copy-Item -LiteralPath (Join-Path $projectRoot 'SKSE/Plugins/StorageUtilData/MMEAlerts/Localization') -Destination (Join-Path $stageDir 'SKSE/Plugins/StorageUtilData/MMEAlerts') -Recurse -Force
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/Russian-Edition.md') -Destination $packageDocs
 
 # Copy the active compiled scripts and matching sources.
 foreach ($scriptName in $scriptNames) {

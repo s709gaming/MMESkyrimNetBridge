@@ -1,13 +1,14 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$dwemer = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDwemerArmor.psc") -Raw
-$registry = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMECustomArmorRegistry.psc") -Raw
-$armor = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArmorScript.psc") -Raw
-$skyrimNet = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsSkyrimNet.psc") -Raw
-$thoughts = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEThoughts.psc") -Raw
-$reminder = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEServiceArmorReminder.psc") -Raw
-$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw
+$dwemer = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDwemerArmor.psc") -Raw | Remove-MMELocalizationWrappers
+$registry = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMECustomArmorRegistry.psc") -Raw | Remove-MMELocalizationWrappers
+$armor = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArmorScript.psc") -Raw | Remove-MMELocalizationWrappers
+$skyrimNet = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsSkyrimNet.psc") -Raw | Remove-MMELocalizationWrappers
+$thoughts = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEThoughts.psc") -Raw | Remove-MMELocalizationWrappers
+$reminder = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEServiceArmorReminder.psc") -Raw | Remove-MMELocalizationWrappers
+$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw | Remove-MMELocalizationWrappers
 $build = Get-Content -LiteralPath (Join-Path $projectRoot "build-package.ps1") -Raw
 $stories = Get-Content -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\DwemerArmorStories.json") -Raw | ConvertFrom-Json
 $suitNarration = Get-Content -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\DwemerSuitNarration.json") -Raw | ConvertFrom-Json
@@ -18,8 +19,8 @@ foreach ($eventKey in @('core', 'firstEquip', 'reequip', 'milkingStart', 'milkin
     $suitNarration[$eventKey] = $narrationData.routes.("suit_" + $eventKey).template
     $attachmentNarration[$eventKey] = $narrationData.routes.("attachment_" + $eventKey).template
 }
-$selfMilking = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMESelfMilking.psc") -Raw
-$introduction = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArmorIntroduction.psc") -Raw
+$selfMilking = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMESelfMilking.psc") -Raw | Remove-MMELocalizationWrappers
+$introduction = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArmorIntroduction.psc") -Raw | Remove-MMELocalizationWrappers
 
 function Assert-Contract([bool]$condition, [string]$message) {
     if (!$condition) { throw "FAIL: $message" }

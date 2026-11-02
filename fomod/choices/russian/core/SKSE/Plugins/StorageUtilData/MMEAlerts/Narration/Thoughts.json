@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "narrate_milk_maid_thought_1": {
+      "template": "Ситуация {actor}: {thought} Выразите краткое мнение по этому поводу."
+    },
+    "narrate_bound_milk_maid_thought_1": {
+      "template": "Ситуация {actor}: {thought} Реагируйте на описанные ограничения и детали, связанные с молоком."
+    }
+  }
+}

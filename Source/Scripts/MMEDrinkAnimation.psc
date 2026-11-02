@@ -45,6 +45,6 @@ EndFunction
 Function Report(Bool showNotification, String reportText) Global
     MMELog.Diagnostic("[MMEAlert Drink Animation] " + reportText)
     If showNotification
-        Debug.Notification("Milk Drink Animation: " + reportText)
+        Debug.Notification(MMELocalization.Text("Milk Drink Animation: ") + reportText)
     EndIf
 EndFunction

@@ -1,8 +1,9 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw
-$body = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEBodyEffects.psc") -Raw
-$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw
+$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw | Remove-MMELocalizationWrappers
+$body = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEBodyEffects.psc") -Raw | Remove-MMELocalizationWrappers
+$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw | Remove-MMELocalizationWrappers
 $build = Get-Content -LiteralPath (Join-Path $projectRoot "build-package.ps1") -Raw
 $xedit = Get-Content -LiteralPath (Join-Path $projectRoot "tools\AddMMEBodyEffects.pas") -Raw
 
@@ -10,7 +11,7 @@ function Assert-Contract([bool]$condition, [string]$message) {
     if (!$condition) { throw "Body effects contract failed: $message" }
 }
 
-Assert-Contract ($mcm -match 'Pages = new String\[11\]' -and $mcm -match 'Pages\[2\] = "B" \+ "ody "') "Body MCM page is registered"
+Assert-Contract ($mcm -match 'Pages = new String\[11\]' -and $mcm -match 'Pages\[2\] = "Body "') "Body MCM page is registered"
 Assert-Contract ($mcm -match 'enableCustomMilkSpeedDebuff", 0' -and $mcm -match 'enableCustomMilkWeight", 0') "replacement features default off"
 Assert-Contract ($mcm -match 'milkSpeedMediumThreshold", 50\.0' -and $mcm -match 'milkSpeedHighThreshold", 100\.0') "threshold defaults are preserved"
 Assert-Contract ($mcm -match 'milkSpeedMediumPenalty", 3\.0' -and $mcm -match 'milkSpeedHighPenalty", 10\.0') "penalty defaults are preserved"

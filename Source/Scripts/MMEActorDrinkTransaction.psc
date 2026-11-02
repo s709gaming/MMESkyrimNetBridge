@@ -207,6 +207,6 @@ EndFunction
 Function Report(Bool diagnostic, String reportText) Global
     MMELog.Diagnostic("[MME Extensions Actor Drink] " + reportText)
     If diagnostic
-        Debug.Notification("Actor Give Drink: " + reportText)
+        Debug.Notification(MMELocalization.Text("Actor Give Drink: ") + reportText)
     EndIf
 EndFunction

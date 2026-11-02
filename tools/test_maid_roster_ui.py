@@ -31,6 +31,7 @@ class RosterContracts(unittest.TestCase):
   self.assertEqual(hashlib.sha256((CHOICE/'MME Extensions - Maid Roster.esp').read_bytes()).hexdigest().lower(),data['pluginSHA256'].lower())
   self.assertEqual(hashlib.sha256((CHOICE/'Magelight/mmeextensions/views/roster/index.html').read_bytes()).hexdigest().lower(),data['pageSHA256'].lower())
   self.assertEqual(hashlib.sha256((CHOICE/'Magelight/mmeextensions/views/roster/dashboard.js').read_bytes()).hexdigest().lower(),data['dashboardSHA256'].lower())
+  self.assertEqual(hashlib.sha256((CHOICE/'Magelight/mmeextensions/views/roster/locale.js').read_bytes()).hexdigest().lower(),data['localeSHA256'].lower())
   self.assertFalse(list((CHOICE/'Scripts').glob('Magelight.*')))
  def test_optional_arousal_read_boundary(self):
   source=(CHOICE/'Source/Scripts/MMEMaidRosterUI.psc').read_text(encoding='utf-8-sig')

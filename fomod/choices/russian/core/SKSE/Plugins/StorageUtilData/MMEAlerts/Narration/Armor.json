@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "narrate_armor_equip_1": {
+      "template": "{actor} оснащен доильной броней; его присоски прикрепляются к ее груди. Реагируйте на вложение."
+    },
+    "narrate_armor_equip_2": {
+      "template": "Живая броня окутывает {actor}. Реагируйте на его движения и прикосновения."
+    },
+    "narrate_armor_equip_3": {
+      "template": "Броня Живого Паразита прикрепляется к {actor}. Реагируйте на его движения и прикосновения."
+    },
+    "narrate_armor_equip_4": {
+      "template": " Эта броня выскочила из сундука с сокровищами и обернулась вокруг {actor}. Признайте сюрприз."
+    },
+    "narrate_armor_strip_1": {
+      "template": "{armorName} {actor} оторвалась из-за ее набухшей от молока груди. Реагируйте на неудачу с гардеробом."
+    },
+    "build_nearby_armor_status_1": {
+      "template": "[Доильная броня] {actor} носит доильную броню. Для доения к ее соскам прикреплены присоски."
+    },
+    "build_nearby_armor_status_2": {
+      "template": "[Живая броня] {actor} носит Живую броню. Живые усики впиваются в ее соски, вводя стимуляторы и с удовольствием высасывая молоко."
+    },
+    "build_nearby_armor_status_3": {
+      "template": "[Живой Паразит] {actor} носит броню Живого Паразита. Паразитические усики впиваются в ее соски, вводя стимуляторы и с удовольствием высасывая молоко."
+    }
+  }
+}

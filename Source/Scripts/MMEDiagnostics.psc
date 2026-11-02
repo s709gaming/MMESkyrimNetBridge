@@ -845,7 +845,7 @@ EndFunction
 
 Function Report(String reportText, Int severity = 0) Global
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableDiagnosticNotifications", 1) == 1
-        Debug.Notification("MME Diagnostics: " + reportText)
+        Debug.Notification(MMELocalization.Text("MME Diagnostics: ") + reportText)
     EndIf
     If MMELog.IsDiagnosticEnabled()
         MMELog.Diagnostic("[MME Extensions Diagnostics] " + reportText, severity)

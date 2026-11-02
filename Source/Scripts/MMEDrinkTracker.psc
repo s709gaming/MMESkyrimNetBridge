@@ -70,7 +70,7 @@ Event OnObjectEquipped(Form akBaseObject, ObjectReference akReference)
     EndIf
     If !IsEligibleDrinker(drinker)
         If diagnostic
-            Debug.Notification("Milk Debug: drink detected but player is not an eligible MME Milk Maid")
+            Debug.Notification(MMELocalization.Text("Milk Debug: drink detected but player is not an eligible MME Milk Maid"))
             MMELog.Diagnostic("[MMEAlert Player Drink] alias milk rejected | ineligible player | " + akBaseObject.GetName())
         EndIf
         Return
@@ -263,7 +263,7 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
         StorageUtil.UnsetIntValue(drinker, "MMEExtensions.NPCDrink.SuppressForm")
         StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "dialogue duplicate suppressed")
         If diagnostic
-            Debug.Notification("NPC Milk: duplicate dialogue event suppressed")
+            Debug.Notification(MMELocalization.Text("NPC Milk: duplicate dialogue event suppressed"))
         EndIf
         Return
     EndIf
@@ -271,7 +271,7 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
     If !diagnosticTest && IsDuplicateDrink(drinker, drinkItem, "MMEExtensions.NPCDrink", 1.0)
         StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "native duplicate suppressed")
         If diagnostic
-            Debug.Notification("NPC Milk: duplicate native event suppressed")
+            Debug.Notification(MMELocalization.Text("NPC Milk: duplicate native event suppressed"))
         EndIf
         Return
     EndIf
@@ -328,7 +328,7 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
     ; Disabling effects must not erase the verified drink or its local reaction.
     If JsonUtil.GetIntValue(SettingsFile, "enableNPCMilkEffects", 1) != 1
         If diagnostic
-            Debug.Notification("NPC Milk: effects disabled for " + actorName)
+            Debug.Notification(MMELocalization.Text("NPC Milk: effects disabled for ") + actorName)
         EndIf
         String genericReaction = MMENPCDrinkDialogue.BuildDrinkReaction(drinker, drinkItem, establishedMilkmaid, 0.0, False)
         If MMEInnPalaceMilkEvent.ShowNotificationIfOwned(drinker, drinkItem, genericReaction)
@@ -384,7 +384,7 @@ Function HandleNativeNPCDrink(Actor drinker, Form drinkItem, Int drinkKind, Stri
         If arousalSent
             arousalResult = arousalBefore + " -> " + arousalAfter
         EndIf
-        Debug.Notification("NPC Milk: applied to " + actorName + " | milk " + milkBefore + " -> " + milkAfter + " (+" + milkAdded + ") | arousal " + arousalResult)
+        Debug.Notification(MMELocalization.Text("NPC Milk: applied to ") + actorName + MMELocalization.Text(" | milk ") + milkBefore + " -> " + milkAfter + " (+" + milkAdded + MMELocalization.Text(") | arousal ") + arousalResult)
     EndIf
     StorageUtil.SetStringValue(drinker, "MMEExtensions.NPCDrink.LastStage", "complete Milkmaid")
     ReportNPCDrink(diagnostic, diagnosticTest, "03 COMPLETE | Milkmaid | milk " + milkBefore + " -> " + milkAfter)
@@ -446,17 +446,17 @@ Function RunCrosshairNPCDrinkTest()
     Actor candidate = Game.GetCurrentCrosshairRef() as Actor
     If candidate == None
         MMELog.Status("[MME Extensions Global NPC Drink Test] 00 FAIL | no NPC under crosshair")
-        Debug.Notification("Global NPC Drink Test: no NPC under crosshair")
+        Debug.Notification(MMELocalization.Text("Global NPC Drink Test: no NPC under crosshair"))
         Return
     EndIf
     Form testMilk = Game.GetFormFromFile(0x003534, "HearthFires.esm")
     If testMilk == None
         MMELog.Alarm("[MME Extensions Global NPC Drink Test] 00 FAIL | HearthFires Jug of Milk did not resolve")
-        Debug.Notification("Global NPC Drink Test: HearthFires milk missing")
+        Debug.Notification(MMELocalization.Text("Global NPC Drink Test: HearthFires milk missing"))
         Return
     EndIf
     MMELog.Status("[MME Extensions Global NPC Drink Test] 00 START | actor=" + GetActorName(candidate) + " | simulated post-consumption event")
-    Debug.Notification("Global NPC Drink Test: simulating Jug of Milk for " + GetActorName(candidate))
+    Debug.Notification(MMELocalization.Text("Global NPC Drink Test: simulating Jug of Milk for ") + GetActorName(candidate))
     HandleNativeNPCDrink(candidate, testMilk, 3, "MCMTest", 0x003534, True)
 EndFunction
 
@@ -468,7 +468,7 @@ Function ReportNPCDrink(Bool diagnostic, Bool diagnosticTest, String reportText)
         MMELog.Status("[MME Extensions Global NPC Drink Test] " + reportText)
     Else
         MMELog.Diagnostic("[MMEAlert NPC Drink] " + reportText)
-        Debug.Notification("NPC Milk: " + reportText)
+        Debug.Notification(MMELocalization.Text("NPC Milk: ") + reportText)
     EndIf
 EndFunction
 
@@ -504,13 +504,13 @@ Function ShowNPCDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded
     EndIf
     If JsonUtil.GetIntValue(configFile, "enableNPCDrinkNotifications", 1) != 1
         If diagnostic
-            Debug.Notification("NPC Drink Notification: skipped - feature disabled")
+            Debug.Notification(MMELocalization.Text("NPC Drink Notification: skipped - feature disabled"))
         EndIf
         Return
     EndIf
     If drinker == None || drinkItem == None
         If diagnostic
-            Debug.Notification("NPC Drink Notification: skipped - drinker or item missing")
+            Debug.Notification(MMELocalization.Text("NPC Drink Notification: skipped - drinker or item missing"))
         EndIf
         Return
     EndIf
@@ -524,7 +524,7 @@ Function ShowNPCDrinkNotification(Actor drinker, Form drinkItem, Float milkAdded
     EndIf
     Debug.Notification(renderedReaction)
     If diagnostic
-        Debug.Notification("NPC Drink Notification: shown | milk +" + milkAdded + " | arousal " + arousalSent)
+        Debug.Notification(MMELocalization.Text("NPC Drink Notification: shown | milk +") + milkAdded + MMELocalization.Text(" | arousal ") + arousalSent)
     EndIf
 EndFunction
 
@@ -573,7 +573,7 @@ Float Function HandleDrinkDetected(Actor drinker, Form drinkItem, Int drinkKind)
         If itemName == ""
             itemName = "<unnamed>"
         EndIf
-        Debug.Notification("Milk Debug: detected " + itemName + " [form " + drinkItem.GetFormID() + ", kind " + drinkKind + "]")
+        Debug.Notification(MMELocalization.Text("Milk Debug: detected ") + itemName + MMELocalization.Text(" [form ") + drinkItem.GetFormID() + MMELocalization.Text(", kind ") + drinkKind + "]")
     EndIf
     ; Phase 1: keep the proven reaction path first so an optional gameplay integration
     ; cannot prevent the consumption sound from running.
@@ -596,35 +596,35 @@ Function ShowPlayerDrinkNotification(Actor drinker, Form drinkItem, Float milkAd
     EndIf
     If JsonUtil.GetIntValue(configFile, "enablePlayerDrinkNotifications", 1) != 1
         If diagnostic
-            Debug.Notification("Player Drink Notification: skipped - feature disabled")
+            Debug.Notification(MMELocalization.Text("Player Drink Notification: skipped - feature disabled"))
         EndIf
         Return
     EndIf
     If drinker == None || drinkItem == None
         If diagnostic
-            Debug.Notification("Player Drink Notification: skipped - drinker or item missing")
+            Debug.Notification(MMELocalization.Text("Player Drink Notification: skipped - drinker or item missing"))
         EndIf
         Return
     EndIf
 
     String drinkName = drinkItem.GetName()
     If drinkName == ""
-        drinkName = "some milk"
+        drinkName = MMELocalization.Text("some milk")
     EndIf
     String actorName = GetActorName(drinker)
     String notificationText = ""
     If milkAdded > 0.0 && arousalSent
-        notificationText = actorName + " drank " + drinkName + ". " + actorName + "'s breasts feel heavier. " + actorName + " is feeling horny."
+        notificationText = actorName + MMELocalization.Text(" drank ") + drinkName + ". " + actorName + MMELocalization.Text("'s breasts feel heavier. ") + actorName + MMELocalization.Text(" is feeling horny.")
     ElseIf milkAdded > 0.0
-        notificationText = actorName + " drank " + drinkName + ". " + actorName + "'s breasts feel heavier."
+        notificationText = actorName + MMELocalization.Text(" drank ") + drinkName + ". " + actorName + MMELocalization.Text("'s breasts feel heavier.")
     ElseIf arousalSent
-        notificationText = actorName + " drank " + drinkName + ". " + actorName + " is feeling horny."
+        notificationText = actorName + MMELocalization.Text(" drank ") + drinkName + ". " + actorName + MMELocalization.Text(" is feeling horny.")
     Else
-        notificationText = actorName + " drank " + drinkName + ". It was great."
+        notificationText = actorName + MMELocalization.Text(" drank ") + drinkName + MMELocalization.Text(". It was great.")
     EndIf
     Debug.Notification(notificationText)
     If diagnostic
-        Debug.Notification("Player Drink Notification: shown | milk +" + milkAdded + " | arousal " + arousalSent)
+        Debug.Notification(MMELocalization.Text("Player Drink Notification: shown | milk +") + milkAdded + MMELocalization.Text(" | arousal ") + arousalSent)
     EndIf
 EndFunction
 

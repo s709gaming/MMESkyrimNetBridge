@@ -13,7 +13,7 @@ EndFunction
 
 Bool Function TryApplyReverseLeveling(Actor mage) Global
     If !CanOfferReverseLeveling(mage)
-        Debug.Notification("Reverse leveling is not available right now.")
+        Debug.Notification(MMELocalization.Text("Reverse leveling is not available right now."))
         Return False
     EndIf
     Return MMEReverseLevel.GetService().ApplyReverseLeveling()
@@ -64,7 +64,7 @@ Bool Function TryAddParasiteArmor(Actor mage, GlobalVariable stateGlobal) Global
     EndIf
     String armorName = wornArmor.GetName()
     If MMEArmorScript.GetMMEProtectedForParasiteLivingArmorReason(milkController, wornArmor) != ""
-        Debug.Notification("That armor is already bound to another MME system.")
+        Debug.Notification(MMELocalization.Text("That armor is already bound to another MME system."))
         Reject("protected armor cannot be registered", False)
         Return False
     EndIf
@@ -74,7 +74,7 @@ Bool Function TryAddParasiteArmor(Actor mage, GlobalVariable stateGlobal) Global
     EndIf
     Int emptyIndex = MMEArmorScript.FindParasiteLivingArmorEmptySlotDirect(milkController)
     If emptyIndex < 0
-        Debug.Notification("Error: Parasite Living Armor is full")
+        Debug.Notification(MMELocalization.Text("Error: Parasite Living Armor is full"))
         Reject("ParasiteLivingArmor has no Empty slot", False)
         Return False
     EndIf
@@ -94,7 +94,7 @@ Bool Function TryAddParasiteArmor(Actor mage, GlobalVariable stateGlobal) Global
         Reject("MME did not retain the added registration")
         Return False
     EndIf
-    Debug.Notification(armorName + " Added to Parasite Living Armor")
+    Debug.Notification(armorName + MMELocalization.Text(" Added to Parasite Living Armor"))
     MMELog.Diagnostic("[MME Extensions Mage] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
     Bool introduced = False
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableRepeatOrdinaryArmorStories", 1) == 1
@@ -122,7 +122,7 @@ Bool Function TryRemoveParasiteArmor(Actor mage, GlobalVariable stateGlobal) Glo
     EndIf
     String armorName = wornArmor.GetName()
     If MMEArmorScript.GetMMEProtectedForParasiteLivingArmorReason(milkController, wornArmor) != ""
-        Debug.Notification("That armor is bound to another MME system.")
+        Debug.Notification(MMELocalization.Text("That armor is bound to another MME system."))
         Reject("protected armor cannot be removed", False)
         Return False
     EndIf
@@ -151,7 +151,7 @@ Bool Function TryRemoveParasiteArmor(Actor mage, GlobalVariable stateGlobal) Glo
         Reject("MME did not retain the removed registration")
         Return False
     EndIf
-    Debug.Notification(armorName + " Removed from Parasite Living Armor")
+    Debug.Notification(armorName + MMELocalization.Text(" Removed from Parasite Living Armor"))
     MMELog.Diagnostic("[MME Extensions Mage] REMOVE complete | armor=" + armorName + " | index=" + registeredIndex)
     Return True
 EndFunction
@@ -200,7 +200,7 @@ EndFunction
 
 Function Reject(String reason, Bool notifyPlayer = True) Global
     If notifyPlayer
-        Debug.Notification("Armor state changed; no changes made")
+        Debug.Notification(MMELocalization.Text("Armor state changed; no changes made"))
     EndIf
     MMELog.Diagnostic("[MME Extensions Mage] REJECTED: " + reason, 1)
 EndFunction

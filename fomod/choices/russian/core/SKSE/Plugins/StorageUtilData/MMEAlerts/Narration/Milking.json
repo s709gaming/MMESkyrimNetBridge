@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "startMessage": {
+      "template": "{actor} начал сеанс доения."
+    },
+    "endMessage": {
+      "template": "{actor} завершил сеанс доения."
+    },
+    "complete_hands": {
+      "template": "{actor} заканчивает доение с приятным облегчением и удовлетворением. {result}"
+    },
+    "complete_pump": {
+      "template": "Насос завершает забор молока из {actor}, оставляя ее более легкой и приятно освеженной. {result}"
+    },
+    "complete_equipment": {
+      "template": "Доильные стаканы завершают свою работу над {actor}, оставляя ее с облегчением и приятной чувствительностью. {result}"
+    },
+    "complete_tendrils": {
+      "template": "Живые усики вытянули молоко из {actor}, оставив ее запыхавшейся и приятно утомленной. {result}"
+    },
+    "complete_dwemer": {
+      "template": "Двемерский механизм ритмично завершает сбор урожая с {actor}, оставляя ее ошеломленной и восхитительно удовлетворенной. {result}"
+    },
+    "complete_generic": {
+      "template": "{actor} заканчивает доение, приятно освеженный. {result}"
+    },
+    "complete_productive": {
+      "template": "{actor} завершил продуктивный сеанс доения {method}. Молоко было добыто, но производство или кормление не привели к чистому сокращению ее запасов."
+    },
+    "result_empty": {
+      "template": "К моменту завершения ее запасы молока были пусты."
+    },
+    "result_remaining": {
+      "template": "Немного молока осталось до завершения."
+    },
+    "completion_instruction": {
+      "template": "Реагируйте как {actor} на этот опыт доения и его последствия. Описывайте завершенную сессию, а не новую или текущую."
+    }
+  }
+}

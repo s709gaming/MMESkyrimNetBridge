@@ -17,7 +17,7 @@ Function RunFastDebug(Actor[] alreadyScannedActors) Global
     EndIf
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "traceMilkMaidThoughtsLogic", 0) == 1
         Int scannedCount = alreadyScannedActors.Length
-        Debug.Notification("Thoughts trace: 15-second check fired; scanned " + scannedCount + " actor(s)")
+        Debug.Notification(MMELocalization.Text("Thoughts trace: 15-second check fired; scanned ") + scannedCount + MMELocalization.Text(" actor(s)"))
     EndIf
     GenerateAndShowThought(alreadyScannedActors, False)
 EndFunction
@@ -438,7 +438,7 @@ String Function ResolveActorName(Actor candidate) Global
         EndIf
     EndIf
     If actorName == ""
-        actorName = "The Milk Maid"
+        actorName = MMELocalization.Text("The Milk Maid")
     EndIf
     Return actorName
 EndFunction
@@ -471,6 +471,6 @@ EndFunction
 Function ReportFailure(String reason) Global
     TraceDebug("thought skipped | " + reason)
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "traceMilkMaidThoughtsLogic", 0) == 1
-        Debug.Notification("Thoughts trace: " + reason)
+        Debug.Notification(MMELocalization.Text("Thoughts trace: ") + reason)
     EndIf
 EndFunction

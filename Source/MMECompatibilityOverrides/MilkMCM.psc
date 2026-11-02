@@ -86,9 +86,9 @@ Function RefreshStrings()
 	
 	Armorlist = new string[4]
 	Armorlist[0] = "--"
-	Armorlist[1] = "Milking equipment"
-	Armorlist[2] = "Basic living armor"
-	Armorlist[3] = "Parasite living armor(EC+)"
+	Armorlist[1] = MMELocalization.Text("Milking equipment")
+	Armorlist[2] = MMELocalization.Text("Basic living armor")
+	Armorlist[3] = MMELocalization.Text("Parasite living armor(EC+)")
 
 	MaidlistMode = new string[2]
 	MaidlistMode[0] = "Maids"
@@ -289,7 +289,7 @@ function Page_Overview()
 			if MilkLevel < 10
 				AddTextOption("$MME_MENU_Next_Level", ((MilkLevel as int + 1) * MilkQ.TimesMilkedMult as int) )
 			else
-				AddTextOption("$MME_MENU_Next_Level", "MAX")
+				AddTextOption("$MME_MENU_Next_Level", MMELocalization.Text("MAX"))
 			endif	
 			AddTextOption("$MME_MENU_Times_Milked_(overall)", StorageUtil.GetFloatValue(none, "MME.Progression.TimesMilkedAll") as int)
 			AddTextOption("$MME_MENU_Maid_Slots_Unlocked", MilkQ.Milklvl0fix())
@@ -379,7 +379,7 @@ function Page_Settings()
 			AddMenuOptionST("Difficulty_Menu", "Difficulty:", MMEExtDifficultyLabel())
 			int i = 1
 			while i <= 10
-				AddTextOption("Times milked for level " + i + ":", i*MilkQ.TimesMilkedMult as int, OPTION_FLAG_DISABLED)	
+				AddTextOption(MMELocalization.Text("Times milked for level ") + i + ":", i*MilkQ.TimesMilkedMult as int, OPTION_FLAG_DISABLED)	
 				i = i +1
 			endwhile
 endfunction	
@@ -501,7 +501,7 @@ function Page_Debug()
 		endif
 
 			AddHeaderOption("$MME_MENU_PAGE_Debug_Maintenance_Header")
-				AddToggleOptionST("Debug_enabled", "Debug enabled", MilkQ.MilkQC.Debug_enabled)
+				AddToggleOptionST("Debug_enabled", MMELocalization.Text("Debug enabled"), MilkQ.MilkQC.Debug_enabled)
 				AddTextOptionST("Debug_ResetMaidsNiO_Toggle", "$MME_MENU_PAGE_Debug_H3_S5", "")
 				AddTextOptionST("Debug_ResetMaids_Toggle", "$MME_MENU_PAGE_Debug_H3_S1", "")
 				AddTextOptionST("Debug_ResetSlaves_Toggle", "$MME_MENU_PAGE_Debug_H3_S4", "")
@@ -541,7 +541,7 @@ function Page_MilkMaidDebug()
 	SetCursorFillMode(TOP_TO_BOTTOM)
 		AddHeaderOption("$MME_MENU_PAGE_Debug_Milk_Maid")
 		if MilkQ.MilkQC.Debug_enabled
-			AddMenuOptionST("MaidlistMode_Menu", "List Selection", MaidlistMode[MaidlistModeIndex])
+			AddMenuOptionST("MaidlistMode_Menu", MMELocalization.Text("List Selection"), MaidlistMode[MaidlistModeIndex])
 			AddMenuOptionST("Debug_Milk_Maid_Menu", "$MME_MENU_PAGE_Debug_Milk_Maid_H1_S2", Maidlist[MaidIndex])
 			if MaidlistA[MaidIndex] != none
 				float MaidBoobIncr = StorageUtil.GetFloatValue(MaidlistA[MaidIndex],"MME.MilkMaid.BoobIncr")			;fetch individual maid data
@@ -635,11 +635,11 @@ function Page_MilkMaidDebug()
 
 				AddSliderOptionST("Debug_MM_LactacidCount_Slider", "$MME_MENU_PAGE_Debug_Milk_Maid_H1_S12", LactacidCnt, "{2}")
 				if MilkQ.BreastScaleLimit
-					AddSliderOptionST("Debug_MM_MilkCount_Slider", "Milk stored [Max = " + MilkQ.ReduceFloat(MilkMax) + "]:", MilkCnt, "{2}")
-					AddSliderOptionST("Debug_MM_MilkMax_Basevalue_Slider", "Milk Limit (base value):", MME_Storage.getMilkMaxBasevalue(MaidlistA[MaidIndex]), "{2}")
-					AddSliderOptionST("Debug_MM_MilkMax_Scalefactor_Slider", "Milk Limit (level scale factor):", MME_Storage.getMilkMaxScalefactor(MaidlistA[MaidIndex]), "{2}")
+					AddSliderOptionST("Debug_MM_MilkCount_Slider", MMELocalization.Text("Milk stored [Max = ") + MilkQ.ReduceFloat(MilkMax) + "]:", MilkCnt, "{2}")
+					AddSliderOptionST("Debug_MM_MilkMax_Basevalue_Slider", MMELocalization.Text("Milk Limit (base value):"), MME_Storage.getMilkMaxBasevalue(MaidlistA[MaidIndex]), "{2}")
+					AddSliderOptionST("Debug_MM_MilkMax_Scalefactor_Slider", MMELocalization.Text("Milk Limit (level scale factor):"), MME_Storage.getMilkMaxScalefactor(MaidlistA[MaidIndex]), "{2}")
 				else
-					AddSliderOptionST("Debug_MM_MilkCount_Slider", "Milk stored [unlimited]:", MilkCnt, "{2}")
+					AddSliderOptionST("Debug_MM_MilkCount_Slider", MMELocalization.Text("Milk stored [unlimited]:"), MilkCnt, "{2}")
 				endif
 				AddSliderOptionST("Debug_MM_MilkGeneration_Slider", "$MME_MENU_PAGE_Debug_Milk_Maid_H1_S13", MilkTick, "{3}")
 				AddTextOptionST("Debug_MM_Maid_Lactacid_Milk_Production_PH", "$MME_MENU_PAGE_Debug_Milk_Maid_H1_S15", MilkQ.ReduceFloat(FinalMilkTick), OPTION_FLAG_DISABLED)
@@ -670,13 +670,13 @@ function Page_MilkMaidDebug()
 		if MilkQ.MilkQC.Debug_enabled
 			if MaidlistA[MaidIndex] != none
 				Debug_MM_SP_Spell_T = AddToggleOption(MilkQ.MilkForSprigganPassive.getname(), MaidlistA[MaidIndex].HasSpell(MilkQ.MilkForSprigganPassive))
-				Debug_MM_MP_Spell_T = AddToggleOption(MilkQ.BeingMilkedPassive.getname() + " (Hidden in UI)", MaidlistA[MaidIndex].HasSpell(MilkQ.BeingMilkedPassive))
+				Debug_MM_MP_Spell_T = AddToggleOption(MilkQ.BeingMilkedPassive.getname() + MMELocalization.Text(" (Hidden in UI)"), MaidlistA[MaidIndex].HasSpell(MilkQ.BeingMilkedPassive))
 				Debug_MM_EX_Spell_T = AddToggleOption((MilkQ.MME_Spells_Buffs.GetAt(3) as Spell).getname(), MaidlistA[MaidIndex].HasSpell(MilkQ.MME_Spells_Buffs.GetAt(3) as Spell))
 				Debug_MM_MEX_Spell_T = AddToggleOption((MilkQ.MME_Spells_Buffs.GetAt(4) as Spell).getname(), MaidlistA[MaidIndex].HasSpell(MilkQ.MME_Spells_Buffs.GetAt(4) as Spell))
 				Debug_MM_MC_Spell_T = AddToggleOption(MilkQ.MilkCritical.getname(), MaidlistA[MaidIndex].HasSpell(MilkQ.MilkCritical))
-				Debug_MM_LFx1_Spell_T = AddToggleOption(MilkQ.MilkFx1.getname() + " (Hidden in UI)", MaidlistA[MaidIndex].HasSpell(MilkQ.MilkFx1))
-				Debug_MM_LFx2_Spell_T = AddToggleOption(MilkQ.MilkFx2.getname() + " (Hidden in UI)", MaidlistA[MaidIndex].HasSpell(MilkQ.MilkFx2))
-				Debug_MM_LL_Spell_T = AddToggleOption(MilkQ.MilkLeak.getname() + " (Hidden in UI)", MaidlistA[MaidIndex].HasSpell(MilkQ.MilkLeak))
+				Debug_MM_LFx1_Spell_T = AddToggleOption(MilkQ.MilkFx1.getname() + MMELocalization.Text(" (Hidden in UI)"), MaidlistA[MaidIndex].HasSpell(MilkQ.MilkFx1))
+				Debug_MM_LFx2_Spell_T = AddToggleOption(MilkQ.MilkFx2.getname() + MMELocalization.Text(" (Hidden in UI)"), MaidlistA[MaidIndex].HasSpell(MilkQ.MilkFx2))
+				Debug_MM_LL_Spell_T = AddToggleOption(MilkQ.MilkLeak.getname() + MMELocalization.Text(" (Hidden in UI)"), MaidlistA[MaidIndex].HasSpell(MilkQ.MilkLeak))
 				Debug_MM_BB_Spell_T = AddToggleOption((MilkQ.MME_Spells_Buffs.GetAt(0) as Spell).getname(), MaidlistA[MaidIndex].HasSpell(MilkQ.MME_Spells_Buffs.GetAt(0) as Spell))
 				Debug_MM_UM1_Spell_T = AddToggleOption((MilkQ.MME_Spells_Buffs.GetAt(1) as Spell).getname(), MaidlistA[MaidIndex].HasSpell(MilkQ.MME_Spells_Buffs.GetAt(1) as Spell))
 				Debug_MM_WM1_Spell_T = AddToggleOption((MilkQ.MME_Spells_Buffs.GetAt(2) as Spell).getname(), MaidlistA[MaidIndex].HasSpell(MilkQ.MME_Spells_Buffs.GetAt(2) as Spell))
@@ -686,88 +686,88 @@ endfunction
 
 function Page_PluginChecks()
 	SetCursorFillMode(TOP_TO_BOTTOM)
-		AddTextOption("DLC HearthFires", MilkQ.Plugin_HearthFires, OPTION_FLAG_DISABLED)
-		AddTextOption("	locHeljarchenHall", MilkQ.MilkE.locHeljarchenHall.getname(), OPTION_FLAG_DISABLED)
-		AddTextOption("	locWindstadManor", MilkQ.MilkE.locWindstadManor.getname(), OPTION_FLAG_DISABLED)
-		AddTextOption("	locLakeviewManor", MilkQ.MilkE.locLakeviewManor.getname(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("DLC HearthFires"), MilkQ.Plugin_HearthFires, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("	locHeljarchenHall"), MilkQ.MilkE.locHeljarchenHall.getname(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("	locWindstadManor"), MilkQ.MilkE.locWindstadManor.getname(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("	locLakeviewManor"), MilkQ.MilkE.locLakeviewManor.getname(), OPTION_FLAG_DISABLED)
 		AddEmptyOption()
 
-		AddTextOption("DLC Dawnguard", MilkQ.Plugin_Dawnguard, OPTION_FLAG_DISABLED)
-		AddTextOption("	locFortDawnguard", MilkQ.MilkE.locFortDawnguard.getname(), OPTION_FLAG_DISABLED)
-		AddTextOption("	locDayspringCanyon", MilkQ.MilkE.locDayspringCanyon.getname(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("DLC Dawnguard"), MilkQ.Plugin_Dawnguard, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("	locFortDawnguard"), MilkQ.MilkE.locFortDawnguard.getname(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("	locDayspringCanyon"), MilkQ.MilkE.locDayspringCanyon.getname(), OPTION_FLAG_DISABLED)
 		AddEmptyOption()
 		
-		AddTextOption("DLC Dragonborn", MilkQ.Plugin_Dragonborn, OPTION_FLAG_DISABLED)
-		AddTextOption("	locRavenRock", MilkQ.MilkE.locRavenRock.getname(), OPTION_FLAG_DISABLED)
-		AddTextOption("	locSkaalVillage", MilkQ.MilkE.locSkaalVillage.getname(), OPTION_FLAG_DISABLED)
-		AddTextOption("	locTelMithryn", MilkQ.MilkE.locTelMithryn.getname(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("DLC Dragonborn"), MilkQ.Plugin_Dragonborn, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("	locRavenRock"), MilkQ.MilkE.locRavenRock.getname(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("	locSkaalVillage"), MilkQ.MilkE.locSkaalVillage.getname(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("	locTelMithryn"), MilkQ.MilkE.locTelMithryn.getname(), OPTION_FLAG_DISABLED)
 		AddEmptyOption()
 		
-		AddTextOption("SexLab Aroused", MilkQ.Plugin_SLA, OPTION_FLAG_DISABLED)
-		AddTextOption("*SLA Integration Script", MilkQ.SLA.IsIntegraged(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("SexLab Aroused"), MilkQ.Plugin_SLA, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("*SLA Integration Script"), MilkQ.SLA.IsIntegraged(), OPTION_FLAG_DISABLED)
 		AddEmptyOption()
 
-		AddTextOption("ZaZAnimationPack", true, OPTION_FLAG_DISABLED)
-		AddTextOption("	zbfWornGag", (Game.GetFormFromFile(0x8a4d , "ZaZAnimationPack.esm") as Keyword).GetString(), OPTION_FLAG_DISABLED)
-		AddTextOption("*zbf Integration Script", MilkQ.zbf.IsIntegraged(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("ZaZAnimationPack"), true, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("	zbfWornGag"), (Game.GetFormFromFile(0x8a4d , "ZaZAnimationPack.esm") as Keyword).GetString(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("*zbf Integration Script"), MilkQ.zbf.IsIntegraged(), OPTION_FLAG_DISABLED)
 		AddEmptyOption()
 
-		AddTextOption("Devious Devices - Integration", MilkQ.Plugin_DDI, OPTION_FLAG_DISABLED)
-		AddTextOption("*DDi Integration Script", MilkQ.DDi.IsIntegraged(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("Devious Devices - Integration"), MilkQ.Plugin_DDI, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("*DDi Integration Script"), MilkQ.DDi.IsIntegraged(), OPTION_FLAG_DISABLED)
 		AddEmptyOption()
 			
-		AddTextOption("SexLab-StoriesDevious", MilkQ.Plugin_SLSD, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("SexLab-StoriesDevious"), MilkQ.Plugin_SLSD, OPTION_FLAG_DISABLED)
 			if MilkQ.Plugin_SLSD
-				AddTextOption("	_SLSD_CowHarness", (Game.GetFormFromFile(0x4395 , "SexLab-StoriesDevious.esp") as Keyword).GetString(), OPTION_FLAG_DISABLED)
-				AddTextOption("	_SLSD_CowMilker", (Game.GetFormFromFile(0x18D18 , "SexLab-StoriesDevious.esp") as Keyword).GetString(), OPTION_FLAG_DISABLED)
+				AddTextOption(MMELocalization.Text("	_SLSD_CowHarness"), (Game.GetFormFromFile(0x4395 , "SexLab-StoriesDevious.esp") as Keyword).GetString(), OPTION_FLAG_DISABLED)
+				AddTextOption(MMELocalization.Text("	_SLSD_CowMilker"), (Game.GetFormFromFile(0x18D18 , "SexLab-StoriesDevious.esp") as Keyword).GetString(), OPTION_FLAG_DISABLED)
 			endif
-		AddTextOption("*SLSD Integration Script", MilkQ.SLSD.IsIntegraged(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("*SLSD Integration Script"), MilkQ.SLSD.IsIntegraged(), OPTION_FLAG_DISABLED)
 		AddEmptyOption()
 
 	SetCursorPosition(1)
-		AddTextOption("iNeed", MilkQ.Plugin_iNeed, OPTION_FLAG_DISABLED)
-		AddTextOption("*iNeed Integration Script", MilkQ.ineed.IsIntegraged(), OPTION_FLAG_DISABLED)
-		AddTextOption("RealisticNeedsandDiseases", MilkQ.Plugin_RealisticNeedsandDiseases, OPTION_FLAG_DISABLED)
-		AddTextOption("SexLabSkoomaWhore", MilkQ.Plugin_SlSW, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("iNeed"), MilkQ.Plugin_iNeed, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("*iNeed Integration Script"), MilkQ.ineed.IsIntegraged(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("RealisticNeedsandDiseases"), MilkQ.Plugin_RealisticNeedsandDiseases, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("SexLabSkoomaWhore"), MilkQ.Plugin_SlSW, OPTION_FLAG_DISABLED)
 		AddEmptyOption()
 
-		AddTextOption("Schlongs of Skyrim", MilkQ.Plugin_SOS, OPTION_FLAG_DISABLED)
-		AddTextOption("Schlongs of Skyrim - UNP", MilkQ.Plugin_SOS_UNP, OPTION_FLAG_DISABLED)
-		AddTextOption("SOS Equipable Schlong", MilkQ.Plugin_SOS_EQUIP, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("Schlongs of Skyrim"), MilkQ.Plugin_SOS, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("Schlongs of Skyrim - UNP"), MilkQ.Plugin_SOS_UNP, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("SOS Equipable Schlong"), MilkQ.Plugin_SOS_EQUIP, OPTION_FLAG_DISABLED)
 			if MilkQ.Plugin_SOS_EQUIP
-				AddTextOption("	SOS Equipable Schlong", (Game.GetFormFromFile(0xD62, "SOS Equipable Schlong.esp") as Armor).GetName(), OPTION_FLAG_DISABLED)
+				AddTextOption(MMELocalization.Text("	SOS Equipable Schlong"), (Game.GetFormFromFile(0xD62, "SOS Equipable Schlong.esp") as Armor).GetName(), OPTION_FLAG_DISABLED)
 			endif
-		AddTextOption("*SOS Integration Script", MilkQ.SOS.IsIntegraged(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("*SOS Integration Script"), MilkQ.SOS.IsIntegraged(), OPTION_FLAG_DISABLED)
 		AddEmptyOption()
 		
-		AddTextOption("PSQ PlayerSuccubusQuest", MilkQ.Plugin_PSQ, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("PSQ PlayerSuccubusQuest"), MilkQ.Plugin_PSQ, OPTION_FLAG_DISABLED)
 			if MilkQ.Plugin_PSQ
-				AddTextOption("	PlayerIsSuccubus", (Game.GetFormFromFile(0xDAF, "PSQ PlayerSuccubusQuest.esm") as GlobalVariable).GetValue(), OPTION_FLAG_DISABLED)
+				AddTextOption(MMELocalization.Text("	PlayerIsSuccubus"), (Game.GetFormFromFile(0xDAF, "PSQ PlayerSuccubusQuest.esm") as GlobalVariable).GetValue(), OPTION_FLAG_DISABLED)
 			endif
-		AddTextOption("*PSQ Integration Script", MilkQ.PSQ.IsIntegraged(), OPTION_FLAG_DISABLED)
-		AddTextOption("HentaiPregnancy", MilkQ.Plugin_HentaiPregnancy, OPTION_FLAG_DISABLED)
-		AddTextOption("*HP Integration Script", MilkQ.SLHP.IsIntegraged(), OPTION_FLAG_DISABLED)
-		AddTextOption("SexLabProcreation", MilkQ.Plugin_SexLabProcreation, OPTION_FLAG_DISABLED)
-		AddTextOption("*SLP Integration Script", MilkQ.SLP.IsIntegraged(), OPTION_FLAG_DISABLED)
-		AddTextOption("*SGO3 Integration Script", MilkQ.SGO.IsIntegraged(), OPTION_FLAG_DISABLED)
-		AddTextOption("EstrusChaurus", MilkQ.Plugin_EstrusChaurus, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("*PSQ Integration Script"), MilkQ.PSQ.IsIntegraged(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("HentaiPregnancy"), MilkQ.Plugin_HentaiPregnancy, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("*HP Integration Script"), MilkQ.SLHP.IsIntegraged(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("SexLabProcreation"), MilkQ.Plugin_SexLabProcreation, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("*SLP Integration Script"), MilkQ.SLP.IsIntegraged(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("*SGO3 Integration Script"), MilkQ.SGO.IsIntegraged(), OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("EstrusChaurus"), MilkQ.Plugin_EstrusChaurus, OPTION_FLAG_DISABLED)
 			if MilkQ.Plugin_EstrusChaurus
-				AddTextOption("	ChaurusBreeder", (Game.GetFormFromFile(0x19121, "EstrusChaurus.esp") as Spell).GetName(), OPTION_FLAG_DISABLED)
-				AddTextOption("	zzEstrusParasite", (Game.GetFormFromFile(0x160A8, "EstrusChaurus.esp") as Keyword).GetName(), OPTION_FLAG_DISABLED)
+				AddTextOption(MMELocalization.Text("	ChaurusBreeder"), (Game.GetFormFromFile(0x19121, "EstrusChaurus.esp") as Spell).GetName(), OPTION_FLAG_DISABLED)
+				AddTextOption(MMELocalization.Text("	zzEstrusParasite"), (Game.GetFormFromFile(0x160A8, "EstrusChaurus.esp") as Keyword).GetName(), OPTION_FLAG_DISABLED)
 			endif
-		AddTextOption("EstrusSpider", MilkQ.Plugin_EstrusSpider, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("EstrusSpider"), MilkQ.Plugin_EstrusSpider, OPTION_FLAG_DISABLED)
 			if MilkQ.Plugin_EstrusSpider
-				AddTextOption("	SpiderBreeder", (Game.GetFormFromFile(0x4e255, "EstrusSpider.esp") as Spell).GetName(), OPTION_FLAG_DISABLED)
-				AddTextOption("	zzEstrusSpiderParasiteKWD", (Game.GetFormFromFile(0x4F2A3, "EstrusSpider.esp") as Keyword).GetName(), OPTION_FLAG_DISABLED)
+				AddTextOption(MMELocalization.Text("	SpiderBreeder"), (Game.GetFormFromFile(0x4e255, "EstrusSpider.esp") as Spell).GetName(), OPTION_FLAG_DISABLED)
+				AddTextOption(MMELocalization.Text("	zzEstrusSpiderParasiteKWD"), (Game.GetFormFromFile(0x4F2A3, "EstrusSpider.esp") as Keyword).GetName(), OPTION_FLAG_DISABLED)
 			endif
-		AddTextOption("EstrusDwemer", MilkQ.Plugin_EstrusDwemer, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("EstrusDwemer"), MilkQ.Plugin_EstrusDwemer, OPTION_FLAG_DISABLED)
 			if MilkQ.Plugin_EstrusDwemer
-				AddTextOption("	DwemerBreeder", (Game.GetFormFromFile(0x4e255, "EstrusDwemer.esp") as Spell).GetName(), OPTION_FLAG_DISABLED)
-				AddTextOption("	zzEstrusDwemerParasiteKWD", (Game.GetFormFromFile(0x4F2A3, "EstrusDwemer.esp") as Keyword).GetName(), OPTION_FLAG_DISABLED)
+				AddTextOption(MMELocalization.Text("	DwemerBreeder"), (Game.GetFormFromFile(0x4e255, "EstrusDwemer.esp") as Spell).GetName(), OPTION_FLAG_DISABLED)
+				AddTextOption(MMELocalization.Text("	zzEstrusDwemerParasiteKWD"), (Game.GetFormFromFile(0x4F2A3, "EstrusDwemer.esp") as Keyword).GetName(), OPTION_FLAG_DISABLED)
 			endif
-		AddTextOption("BeeingFemale", MilkQ.Plugin_BeeingFemale, OPTION_FLAG_DISABLED)
+		AddTextOption(MMELocalization.Text("BeeingFemale"), MilkQ.Plugin_BeeingFemale, OPTION_FLAG_DISABLED)
 			if MilkQ.Plugin_BeeingFemale
-				AddTextOption("	_BFStatePregnant", (Game.GetFormFromFile(0x28a0, "BeeingFemale.esm") as Spell).GetName(), OPTION_FLAG_DISABLED)
+				AddTextOption(MMELocalization.Text("	_BFStatePregnant"), (Game.GetFormFromFile(0x28a0, "BeeingFemale.esm") as Spell).GetName(), OPTION_FLAG_DISABLED)
 			endif
 		AddEmptyOption()
 
@@ -784,9 +784,9 @@ function Page_Spell_Constructor()
 	SetCursorPosition(1)
 		AddHeaderOption("$MME_MENU_PAGE_Spells_Debuffs_Header")
 			if MilkQ.MilkQC.ExhaustionMode == 300
-				Exhausion_Debuff_T = AddTextOption("$MME_MENU_PAGE_Spells_Exhaustion_Debuff timer", "5 min")
+				Exhausion_Debuff_T = AddTextOption("$MME_MENU_PAGE_Spells_Exhaustion_Debuff timer", MMELocalization.Text("5 min"))
 			else
-				Exhausion_Debuff_T = AddTextOption("$MME_MENU_PAGE_Spells_Exhaustion_Debuff timer", "1 day")
+				Exhausion_Debuff_T = AddTextOption("$MME_MENU_PAGE_Spells_Exhaustion_Debuff timer", MMELocalization.Text("1 day"))
 			endif
 			ExhaustionDebuff_T = AddToggleOption("$MME_MENU_PAGE_Spells_ExhaustionDebuff", MilkQ.MilkQC.ExhaustionDebuff)
 			Unmilked_DeBuffs_Skills_T = AddToggleOption("$MME_MENU_PAGE_Spells_Unmilked_DeBuffs_Skills", MilkQ.MilkQC.Unmilked_DeBuffs_Skills)
@@ -803,10 +803,10 @@ function Page_ArmorManagement()
 	Slots = self.FindAllArmor()
 	self.SetCursorFillMode(self.TOP_TO_BOTTOM)
 	self.SetCursorPosition(0)
-	self.AddHeaderOption("Body Slots: Items", 0)
+	self.AddHeaderOption(MMELocalization.Text("Body Slots: Items"), 0)
 ;	self.AddTextOption("Slot 30 - Head", Slots[0], 0)
 ;	self.AddTextOption("Slot 31 - Hair", Slots[1], 0)
-	self.AddTextOption("Slot 32 - Body", Slots[2], 0)
+	self.AddTextOption(MMELocalization.Text("Slot 32 - Body"), Slots[2], 0)
 ;	self.AddTextOption("Slot 33 - Hands", Slots[3], 0)
 ;	self.AddTextOption("Slot 34 - Forearms", Slots[4], 0)
 ;	self.AddTextOption("Slot 35 - Amulet", Slots[5], 0)
@@ -838,7 +838,7 @@ function Page_ArmorManagement()
 ;	self.AddTextOption("Slot 61 - FX01", Slots[31], 0)
 	self.SetCursorPosition(1)
 
-	AddMenuOptionST("ArmorSupport_Armorlist_Menu", "Armor list", Armorlist[ArmorlistIndex])
+	AddMenuOptionST("ArmorSupport_Armorlist_Menu", MMELocalization.Text("Armor list"), Armorlist[ArmorlistIndex])
 	if Slots[2] != "" 
 		if MilkQ.MilkingEquipment.find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.find(Slots[2]) == -1
 			AddTextOptionST("ArmorSupport_ArmorMode_Toggle", "", "$Add")
@@ -851,10 +851,10 @@ function Page_ArmorManagement()
 		endif
 	endif
 	
-	AddTextOptionST("ArmorSupport_PurgeList_Toggle", "ERASE LIST", Armorlist[ArmorlistIndex])
+	AddTextOptionST("ArmorSupport_PurgeList_Toggle", MMELocalization.Text("ERASE LIST"), Armorlist[ArmorlistIndex])
 	AddEmptyOption()
 	
-	AddHeaderOption("Added armors:", 0)
+	AddHeaderOption(MMELocalization.Text("Added armors:"), 0)
 		AddTextOptionST("ASA1", "1", "")
 		AddTextOptionST("ASA2", "2", "")
 		AddTextOptionST("ASA3", "3", "")
@@ -1006,10 +1006,10 @@ event OnOptionSelect(int option)
 	elseif option == Exhausion_Debuff_T
 		if !MilkQ.MilkQC.ExhaustionMode == 300
 			MilkQ.MilkQC.ExhaustionMode = 0
-			SetTextOptionValue(Exhausion_Debuff_T, "1 day")
+			SetTextOptionValue(Exhausion_Debuff_T, MMELocalization.Text("1 day"))
 		else
 			MilkQ.MilkQC.ExhaustionMode = 300
-			SetTextOptionValue(Exhausion_Debuff_T, "5 min")
+			SetTextOptionValue(Exhausion_Debuff_T, MMELocalization.Text("5 min"))
 		endif
 	elseif option == ExhaustionDebuff_T
 		if !MilkQ.MilkQC.ExhaustionDebuff
@@ -1117,7 +1117,7 @@ state ArmorSupport_PurgeList_Toggle
 	endEvent
 	
 	event OnHighlightST()
-		SetInfoText(" -- ERASES ALL LISTS")
+		SetInfoText(MMELocalization.Text(" -- ERASES ALL LISTS"))
 	endEvent
 endState
 
@@ -1581,7 +1581,7 @@ state Debug_ResetSlaves_Toggle
 		MilkQ.SlaveReset()
 	endEvent
 	event OnHighlightST()
-		SetInfoText("Milk salves are added by other mods, you probably should not reset this.")
+		SetInfoText(MMELocalization.Text("Milk salves are added by other mods, you probably should not reset this."))
 	endEvent
 endState
 
@@ -1871,7 +1871,7 @@ state ASA1
 	endEvent
 
 	event OnHighlightST()
-		SetInfoText("Change/Remove armor")
+		SetInfoText(MMELocalization.Text("Change/Remove armor"))
 	endEvent
 endState
 
@@ -1904,7 +1904,7 @@ state ASA2
 	endEvent
 
 	event OnHighlightST()
-		SetInfoText("Change/Remove armor")
+		SetInfoText(MMELocalization.Text("Change/Remove armor"))
 	endEvent
 endState
 
@@ -1937,7 +1937,7 @@ state ASA3
 	endEvent
 
 	event OnHighlightST()
-		SetInfoText("Change/Remove armor")
+		SetInfoText(MMELocalization.Text("Change/Remove armor"))
 	endEvent
 endState
 
@@ -1970,7 +1970,7 @@ state ASA4
 	endEvent
 
 	event OnHighlightST()
-		SetInfoText("Change/Remove armor")
+		SetInfoText(MMELocalization.Text("Change/Remove armor"))
 	endEvent
 endState
 
@@ -2003,7 +2003,7 @@ state ASA5
 	endEvent
 
 	event OnHighlightST()
-		SetInfoText("Change/Remove armor")
+		SetInfoText(MMELocalization.Text("Change/Remove armor"))
 	endEvent
 endState
 
@@ -2036,7 +2036,7 @@ state ASA6
 	endEvent
 
 	event OnHighlightST()
-		SetInfoText("Change/Remove armor")
+		SetInfoText(MMELocalization.Text("Change/Remove armor"))
 	endEvent
 endState
 
@@ -2069,7 +2069,7 @@ state ASA7
 	endEvent
 
 	event OnHighlightST()
-		SetInfoText("Change/Remove armor")
+		SetInfoText(MMELocalization.Text("Change/Remove armor"))
 	endEvent
 endState
 
@@ -2102,7 +2102,7 @@ state ASA8
 	endEvent
 
 	event OnHighlightST()
-		SetInfoText("Change/Remove armor")
+		SetInfoText(MMELocalization.Text("Change/Remove armor"))
 	endEvent
 endState
 
@@ -2135,7 +2135,7 @@ state ASA9
 	endEvent
 
 	event OnHighlightST()
-		SetInfoText("Change/Remove armor")
+		SetInfoText(MMELocalization.Text("Change/Remove armor"))
 	endEvent
 endState
 
@@ -2168,7 +2168,7 @@ state ASA10
 	endEvent
 
 	event OnHighlightST()
-		SetInfoText("Change/Remove armor")
+		SetInfoText(MMELocalization.Text("Change/Remove armor"))
 	endEvent
 endState
 
@@ -3223,9 +3223,9 @@ state Hotkey
 		if conflictControl != ""
 			string msg
 			if conflictName != ""
-				msg = "This key is already mapped to:\n'" + conflictControl + "'\n(" + conflictName + ")\n\n Are you sure you want to continue?"
+				msg = MMELocalization.Text("This key is already mapped to:\n'") + conflictControl + "'\n(" + conflictName + MMELocalization.Text(")\n\n Are you sure you want to continue?")
 			else
-				msg = "This key is already mapped to:\n'" + conflictControl + "'\n\n Are you sure you want to continue?"
+				msg = MMELocalization.Text("This key is already mapped to:\n'") + conflictControl + MMELocalization.Text("'\n\n Are you sure you want to continue?")
 			endIf
 			continue = ShowMessage(msg, true, "Yes", "No")
 		endIf
@@ -3240,7 +3240,7 @@ state Hotkey
 	endEvent
 
 	event OnHighlightST()
-		SetInfoText("Key ID " + MilkQ.NotificationKey + "\n Shows information about player/target milk maid: Milk, Pain, Lactacid amount. \n Holding Notification Key for 2 seconds toggles self/target milking OR pressing Notification Key with L/R Shift. \n If hold during milking - returns control to player. \n If pressed during milking and both shifts - aborts milking.")
+		SetInfoText(MMELocalization.Text("Key ID ") + MilkQ.NotificationKey + MMELocalization.Text("\n Shows information about player/target milk maid: Milk, Pain, Lactacid amount. \n Holding Notification Key for 2 seconds toggles self/target milking OR pressing Notification Key with L/R Shift. \n If hold during milking - returns control to player. \n If pressed during milking and both shifts - aborts milking."))
 	endEvent
 endState
 

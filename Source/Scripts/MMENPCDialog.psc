@@ -607,6 +607,6 @@ EndFunction
 Function Report(Bool showNotification, String reportText) Global
     MMELog.Diagnostic("[MME Extensions Dialogue] " + reportText)
     If showNotification
-        Debug.Notification("Dialogue Debug: " + reportText)
+        Debug.Notification(MMELocalization.Text("Dialogue Debug: ") + reportText)
     EndIf
 EndFunction

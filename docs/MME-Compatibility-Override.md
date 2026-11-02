@@ -242,3 +242,8 @@ or inventory changes. These metadata hooks also propagate into OStim-only and th
 isolated Estrus Unified variants. Their purpose is to keep prompt eligibility
 current without Skyrim.Net Papyrus decorator warmup. Other mods overriding these
 scripts still require a deliberate merge.
+
+
+## Russian edition text lookup
+
+The existing `MilkQUEST` and `MilkMCM` overrides now route selected display literals through `MMELocalization.Text`. These overrides are necessary because the original scripts embed notification and menu text directly. The lookup preserves the original English fallback. No actor lookup, parallel-array indexing, milk calculation, conversion, inventory or timing logic changes for localization. Generated OStim and Estrus Unified variants reuse the same facade rather than maintaining separate Russian gameplay scripts. The Russian language option does not translate the entire original MME mod; use its own translation for its remaining interface and records.

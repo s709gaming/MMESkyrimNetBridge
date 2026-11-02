@@ -218,7 +218,7 @@ Bool Function TryAddMilkArmor(Actor blacksmith)
     EndIf
     String armorName = wornArmor.GetName()
     If MMEArmorScript.GetMMEProtectedArmorReason(milkController, wornArmor, "blacksmith-add", playerActor) != ""
-        Debug.Notification("Not this one. It's already got its own milking setup.")
+        Debug.Notification(MMELocalization.Text("Not this one. It's already got its own milking setup."))
         Reject("protected armor cannot be registered", False)
         Return False
     EndIf
@@ -228,7 +228,7 @@ Bool Function TryAddMilkArmor(Actor blacksmith)
     EndIf
     Int emptyIndex = MMEArmorScript.FindMilkingEquipmentEmptySlotDirect(milkController)
     If emptyIndex < 0
-        Debug.Notification("Error: Milking Equipment is full")
+        Debug.Notification(MMELocalization.Text("Error: Milking Equipment is full"))
         Reject("MilkingEquipment has no Empty slot", False)
         Return False
     EndIf
@@ -253,7 +253,7 @@ Bool Function TryAddMilkArmor(Actor blacksmith)
         Reject("MME did not retain the added registration")
         Return False
     EndIf
-    Debug.Notification(armorName + " Added to Milking Equipment")
+    Debug.Notification(armorName + MMELocalization.Text(" Added to Milking Equipment"))
     MMELog.Diagnostic("[MME Extensions Blacksmith] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
     Bool introduced = False
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableRepeatOrdinaryArmorStories", 1) == 1
@@ -282,7 +282,7 @@ Bool Function TryRemoveMilkArmor(Actor blacksmith)
     EndIf
     String armorName = wornArmor.GetName()
     If MMEArmorScript.GetMMEProtectedArmorReason(milkController, wornArmor, "blacksmith-remove", playerActor) != ""
-        Debug.Notification("Not this one. It's already got its own milking setup.")
+        Debug.Notification(MMELocalization.Text("Not this one. It's already got its own milking setup."))
         Reject("protected armor cannot be removed", False)
         Return False
     EndIf
@@ -313,7 +313,7 @@ Bool Function TryRemoveMilkArmor(Actor blacksmith)
         Reject("MME did not retain the removed registration")
         Return False
     EndIf
-    Debug.Notification(armorName + " Removed from Milking Equipment")
+    Debug.Notification(armorName + MMELocalization.Text(" Removed from Milking Equipment"))
     MMELog.Diagnostic("[MME Extensions Blacksmith] REMOVE complete | armor=" + armorName + " | index=" + registeredIndex)
     Return True
 EndFunction
@@ -365,7 +365,7 @@ EndFunction
 
 Function Reject(String reason, Bool notifyPlayer = True)
     If notifyPlayer
-        Debug.Notification("Armor state changed; no changes made")
+        Debug.Notification(MMELocalization.Text("Armor state changed; no changes made"))
     EndIf
     MMELog.Diagnostic("[MME Extensions Blacksmith] REJECTED: " + reason, 1)
 EndFunction

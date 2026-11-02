@@ -162,7 +162,7 @@ Bool Function TryRefit(Actor blacksmith) Global
     If StorageUtil.GetIntValue(playerActor, NeedsRefitKey(), 0) != 0 \
     || StorageUtil.GetIntValue(playerActor, FittedLevelKey(), -1) != currentLevel
         Alarm("refit state did not persist | level=" + currentLevel + " | context=" + refitContext + " | armor=" + GetArmorName(wornArmor))
-        Debug.Notification("The refit failed; no changes were made")
+        Debug.Notification(MMELocalization.Text("The refit failed; no changes were made"))
         Return False
     EndIf
     Debug.Notification(MMEFlavorText.Text("refit_complete", "Your milking equipment now fits again", playerActor))

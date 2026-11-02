@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "player_instructions": {
+      "template": "Напишите краткий устный комментарий без графических изображений для {actor}.\nГоворящий – это человек, переживающий данную ситуацию, а не наблюдатель.\nВозвращайте только одну строку открытого текста от первого лица. Никаких надписей ораторов, ремарк\nпартнеры по диалогу, разметка или ответы других людей. Не придумывайте эффекты."
+    }
+  }
+}

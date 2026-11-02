@@ -1,5 +1,6 @@
 #include <SKSE/SKSE.h>
 #include "../include/LockProtection.h"
+#include "../include/Localization.h"
 
 #include <RE/P/PlayerCharacter.h>
 #include <RE/P/ProcessLists.h>
@@ -859,6 +860,12 @@ namespace
         return true; // accepted; success follows readback through the completion event
     }
 
+    RE::BSFixedString Localize(RE::StaticFunctionTag*, RE::BSFixedString english)
+    { return MME::Localization::Text(english.c_str()).c_str(); }
+    void ReloadLocalization(RE::StaticFunctionTag*) { MME::Localization::Reload(); }
+    RE::BSFixedString GetLocalizationLanguage(RE::StaticFunctionTag*) { return MME::Localization::Language().c_str(); }
+    RE::BSFixedString GetLocalizationError(RE::StaticFunctionTag*) { return MME::Localization::Error().c_str(); }
+
     bool RegisterPapyrus(RE::BSScript::IVirtualMachine* vm)
     {
         MME::LockProtection::Register(vm);
@@ -870,6 +877,10 @@ namespace
         vm->RegisterFunction("GetNarrationEditorFailure", "MMEExtensionsNative", MME::NarrationEditor::Failure);
         vm->RegisterFunction("ReloadNarrationEditor", "MMEExtensionsNative", MME::NarrationEditor::Reload);
         vm->RegisterFunction("DescribeNarrationEditorReply", "MMEExtensionsNative", MME::NarrationEditor::Describe);
+        vm->RegisterFunction("Localize", "MMEExtensionsNative", Localize);
+        vm->RegisterFunction("ReloadLocalization", "MMEExtensionsNative", ReloadLocalization);
+        vm->RegisterFunction("GetLocalizationLanguage", "MMEExtensionsNative", GetLocalizationLanguage);
+        vm->RegisterFunction("GetLocalizationError", "MMEExtensionsNative", GetLocalizationError);
         // Keep registration names synchronized with MMEExtensionsNative.psc.
         // Renaming either side is an API break for existing compiled scripts.
         vm->RegisterFunction("GetNearbyActors", "MMEExtensionsNative", GetNearbyActors);

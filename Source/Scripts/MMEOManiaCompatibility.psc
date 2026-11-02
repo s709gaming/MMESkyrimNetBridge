@@ -39,7 +39,7 @@ Function ReportUnavailableOnce() Global
         Return
     EndIf
     StorageUtil.SetIntValue(None, "MMEExtensions.OMania.UnavailableAlarmShown", 1)
-    Debug.Notification("MME/OMania compatibility is installed, but its Dragon Egg Concoction could not be resolved.")
+    Debug.Notification(MMELocalization.Text("MME/OMania compatibility is installed, but its Dragon Egg Concoction could not be resolved."))
     MMELog.Alarm("[MME Extensions OMania] COMPATIBILITY INACTIVE | marker enabled but OManiaPotionEggDragon could not be resolved; verify OMania.esp and MMEExtensions.dll are loaded")
 EndFunction
 
@@ -54,7 +54,7 @@ Function ReportBreastScalingAPIStatusOnce() Global
         Return
     EndIf
     StorageUtil.SetIntValue(None, "MMEExtensions.OMania.BreastScalingNoticeShown", 1)
-    Debug.Notification("MME/OMania: disable OMania breast morphs in OMania settings; version 4.0.3 has no setter API.")
+    Debug.Notification(MMELocalization.Text("MME/OMania: disable OMania breast morphs in OMania settings; version 4.0.3 has no setter API."))
     MMELog.Alarm("[MME Extensions OMania] breast scaling was not changed: OMania 4.0.3 exposes no supported settings setter; private OMania_Settings.json was intentionally left untouched")
 EndFunction
 
@@ -113,13 +113,13 @@ EndFunction
 ; OMania's native test consumables.
 Bool Function SpawnDragonEggPotion(Actor target) Global
     If target == None
-        Debug.Notification("MME/OMania: player reference is unavailable.")
+        Debug.Notification(MMELocalization.Text("MME/OMania: player reference is unavailable."))
         MMELog.Alarm("[MME Extensions OMania] potion spawn failed: player reference is unavailable")
         Return False
     EndIf
     Potion concoction = GetDragonEggConcoction()
     If concoction == None
-        Debug.Notification("MME/OMania: Dragon Egg Concoction could not be resolved.")
+        Debug.Notification(MMELocalization.Text("MME/OMania: Dragon Egg Concoction could not be resolved."))
         MMELog.Alarm("[MME Extensions OMania] potion spawn failed: OManiaPotionEggDragon could not be resolved")
         Return False
     EndIf
@@ -127,11 +127,11 @@ Bool Function SpawnDragonEggPotion(Actor target) Global
     target.AddItem(concoction, 1, False)
     Int countAfter = target.GetItemCount(concoction)
     If countAfter <= countBefore
-        Debug.Notification("MME/OMania: potion resolved, but AddItem did not increase its count.")
+        Debug.Notification(MMELocalization.Text("MME/OMania: potion resolved, but AddItem did not increase its count."))
         MMELog.Alarm("[MME Extensions OMania] potion spawn failed: AddItem did not increase inventory count | before=" + countBefore + " after=" + countAfter)
         Return False
     EndIf
-    Debug.Notification("MME/OMania: added one Dragon Egg Concoction.")
+    Debug.Notification(MMELocalization.Text("MME/OMania: added one Dragon Egg Concoction."))
     MMELog.Status("[MME Extensions OMania] potion spawned from Troubleshoot | before=" + countBefore + " after=" + countAfter)
     Return True
 EndFunction

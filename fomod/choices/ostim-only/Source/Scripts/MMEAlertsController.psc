@@ -118,6 +118,7 @@ EndEvent
 ; Internal MCM refreshes remain silent; true launch/load entry points request
 ; one compact engine-on status after initialization is complete.
 Function InitializeController(Bool reportStatus = False)
+    MMELocalization.Initialize()
     MMENarrationText.ReloadAll()
     MMETentacleTiers.Recover()
     UnregisterForModEvent("MMEExtensions_MaidBodyTrace")
@@ -1484,13 +1485,13 @@ Function CheckMilkmaidCreation(Actor candidate, String source, Bool ownsPendingM
     Bool diagnostic = JsonUtil.GetIntValue(SettingsFile, "enableMilkmaidCreationDiagnostic", 1) == 1
     If candidate == None
         If diagnostic
-            Debug.Notification("Milkmaid Creation: failed - actor missing")
+            Debug.Notification(MMELocalization.Text("Milkmaid Creation: failed - actor missing"))
         EndIf
         Return
     EndIf
     If StorageUtil.GetIntValue(candidate, KnownMilkmaidKey, 0) == 1
         If diagnostic
-            Debug.Notification("Milkmaid Creation: " + GetActorName(candidate) + " was already a Milkmaid")
+            Debug.Notification(MMELocalization.Text("Milkmaid Creation: ") + GetActorName(candidate) + MMELocalization.Text(" was already a Milkmaid"))
         EndIf
         Return
     EndIf
@@ -1501,7 +1502,7 @@ Function CheckMilkmaidCreation(Actor candidate, String source, Bool ownsPendingM
         StorageUtil.SetIntValue(candidate, PendingMilkmaidKey, 1)
     EndIf
     If diagnostic
-        Debug.Notification("Milkmaid Creation: detected " + source + " on " + GetActorName(candidate))
+        Debug.Notification(MMELocalization.Text("Milkmaid Creation: detected ") + source + MMELocalization.Text(" on ") + GetActorName(candidate))
     EndIf
     Utility.Wait(1.5)
     If ownsPendingMarker
@@ -1509,7 +1510,7 @@ Function CheckMilkmaidCreation(Actor candidate, String source, Bool ownsPendingM
     EndIf
     If !IsMMEMilkMaid(candidate)
         If diagnostic
-            Debug.Notification("Milkmaid Creation: conversion failed for " + GetActorName(candidate))
+            Debug.Notification(MMELocalization.Text("Milkmaid Creation: conversion failed for ") + GetActorName(candidate))
         EndIf
         Return
     EndIf
@@ -1520,7 +1521,7 @@ Function CheckMilkmaidCreation(Actor candidate, String source, Bool ownsPendingM
     ; animation start so it does not wait until that ten-second scene ends.
     MMEReactionSounds.PlayNewMilkMaidMoan(candidate)
     If diagnostic
-        Debug.Notification("MME Extensions - " + GetActorName(candidate) + " is a new Milkmaid!")
+        Debug.Notification(MMELocalization.Text("MME Extensions - ") + GetActorName(candidate) + MMELocalization.Text(" is a new Milkmaid!"))
     EndIf
     MMEAlertsSkyrimNet.SendMilkmaidCreated(candidate)
     If MMEChestMilkTrap.HasOwnedContext(candidate)
@@ -1602,7 +1603,7 @@ Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form send
     MMEMaidBodyScaling.ReconcileAll("lifecycle " + reason)
     RefreshCapacity(reason)
     If JsonUtil.GetIntValue(SettingsFile, "enableLifecycleDiagnostic", 0) == 1
-        Debug.Notification("MME Extensions: detected " + reason)
+        Debug.Notification(MMELocalization.Text("MME Extensions: detected ") + reason)
         MMELog.Diagnostic("[MME Extensions Lifecycle] detected " + reason)
         ShowDebugCapacitySnapshot()
     EndIf
@@ -1700,7 +1701,7 @@ Event OnMMEMilkingStart(Form actorForm, Int animationSpeed, Int milkingType)
     EndIf
     StorageUtil.SetIntValue(milkMaid, MilkingStateKey, 1)
     If JsonUtil.GetIntValue(SettingsFile, "enableMilkingEventDebug", 1) == 1
-        Debug.Notification("MME Alerts - MILKING START: " + GetActorName(milkMaid))
+        Debug.Notification(MMELocalization.Text("MME Alerts - MILKING START: ") + GetActorName(milkMaid))
         MMELog.Diagnostic("[MMEAlert] MILKING START: " + GetActorName(milkMaid))
     EndIf
     PlayMilkingReaction(milkMaid, True)
@@ -1768,7 +1769,7 @@ Function FinishMilking(Actor milkMaid)
     EndIf
     If IsNearbyMilkMaid(milkMaid)
         If JsonUtil.GetIntValue(SettingsFile, "enableMilkingEventDebug", 1) == 1
-            Debug.Notification("MME Alerts - MILKING END: " + GetActorName(milkMaid))
+            Debug.Notification(MMELocalization.Text("MME Alerts - MILKING END: ") + GetActorName(milkMaid))
             MMELog.Diagnostic("[MMEAlert] MILKING END: " + GetActorName(milkMaid))
         EndIf
         PlayMilkingReaction(milkMaid, False)
@@ -2325,9 +2326,9 @@ Function ShowDebugCapacitySnapshot()
         EndWhile
     EndIf
     If report == ""
-        Debug.Notification("MME Alerts DEBUG - no evaluable Milk Maids nearby.")
+        Debug.Notification(MMELocalization.Text("MME Alerts DEBUG - no evaluable Milk Maids nearby."))
     Else
-        Debug.Notification("MME Alerts DEBUG - " + report)
+        Debug.Notification(MMELocalization.Text("MME Alerts DEBUG - ") + report)
     EndIf
 EndFunction
 
@@ -2414,7 +2415,7 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     If nearbyActors.Length == 0
         MMELog.Diagnostic("[MME Extensions Native Scan] scanner returned no actors; capacity scan skipped")
         If JsonUtil.GetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0) == 1
-            Debug.Notification("Native Scan failed: no actors returned")
+            Debug.Notification(MMELocalization.Text("Native Scan failed: no actors returned"))
         EndIf
         Return
     EndIf
@@ -2455,7 +2456,7 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
         MMEAlertsSkyrimNet.NarrateMilkHalfFull(halfFullNarrationActor)
     EndIf
     If JsonUtil.GetIntValue(SettingsFile, "enableNativeScanDiagnostic", 0) == 1
-        Debug.Notification("Native Scan active: " + nearbyActors.Length + " nearby actors")
+        Debug.Notification(MMELocalization.Text("Native Scan active: ") + nearbyActors.Length + MMELocalization.Text(" nearby actors"))
     EndIf
 
     ; Phase 3: play reactions after enumeration. Delaying animation work until

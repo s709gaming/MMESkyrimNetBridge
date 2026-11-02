@@ -1,18 +1,19 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$intro = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArmorIntroduction.psc") -Raw
-$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw
-$animation = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEReactionAnimation.psc") -Raw
-$sounds = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEReactionSounds.psc") -Raw
-$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw
-$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw
+$intro = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArmorIntroduction.psc") -Raw | Remove-MMELocalizationWrappers
+$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw | Remove-MMELocalizationWrappers
+$animation = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEReactionAnimation.psc") -Raw | Remove-MMELocalizationWrappers
+$sounds = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEReactionSounds.psc") -Raw | Remove-MMELocalizationWrappers
+$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw | Remove-MMELocalizationWrappers
+$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw | Remove-MMELocalizationWrappers
 $build = Get-Content -LiteralPath (Join-Path $projectRoot "build-package.ps1") -Raw
 $stories = Get-Content -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\ArmorIntroductionStories.json") -Raw | ConvertFrom-Json
-$alchemist = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlchemistDialogue.psc") -Raw
-$mage = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEMageDialogue.psc") -Raw
-$dwemerBlacksmith = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDwemerBlacksmithDialogue.psc") -Raw
-$blacksmith = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEBlacksmithDialogue.psc") -Raw
+$alchemist = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlchemistDialogue.psc") -Raw | Remove-MMELocalizationWrappers
+$mage = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEMageDialogue.psc") -Raw | Remove-MMELocalizationWrappers
+$dwemerBlacksmith = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDwemerBlacksmithDialogue.psc") -Raw | Remove-MMELocalizationWrappers
+$blacksmith = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEBlacksmithDialogue.psc") -Raw | Remove-MMELocalizationWrappers
 
 function Assert-Contract([bool]$condition, [string]$message) {
     if (!$condition) { throw "FAIL: $message" }

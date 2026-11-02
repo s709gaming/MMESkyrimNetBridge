@@ -24,7 +24,7 @@ Bool Function TryRescueNearbyCompanions(Actor blacksmith) Global
     String vendorFailure = GetBlacksmithFailure(blacksmith)
     If vendorFailure != ""
         Trace("service rejected | " + vendorFailure)
-        Debug.Notification("Nobody nearby still needs rescuing.")
+        Debug.Notification(MMELocalization.Text("Nobody nearby still needs rescuing."))
         Return False
     EndIf
 
@@ -37,13 +37,13 @@ EndFunction
 Bool Function TryDebugRescueNearbyCompanions() Global
     If !MMEAlertsController.IsExtensionsEnabled()
         Trace("MCM NPC debug release rejected | MME Extensions disabled")
-        Debug.Notification("Nobody nearby still needs rescuing.")
+        Debug.Notification(MMELocalization.Text("Nobody nearby still needs rescuing."))
         Return False
     EndIf
     Actor playerActor = Game.GetPlayer()
     If playerActor == None
         Alarm("MCM NPC debug release could not resolve the player")
-        Debug.Notification("Nobody nearby still needs rescuing.")
+        Debug.Notification(MMELocalization.Text("Nobody nearby still needs rescuing."))
         Return False
     EndIf
     Trace("MCM NPC debug release requested")
@@ -54,13 +54,13 @@ Bool Function RescueNearbyCompanionsFromAnchor(Actor anchor, String source, Bool
     Actor playerActor = Game.GetPlayer()
     If playerActor == None || anchor == None
         Alarm(source + " could not resolve player, scan anchor, or cell")
-        Debug.Notification("Nobody nearby still needs rescuing.")
+        Debug.Notification(MMELocalization.Text("Nobody nearby still needs rescuing."))
         Return False
     EndIf
     Cell currentCell = anchor.GetParentCell()
     If currentCell == None
         Alarm(source + " could not resolve scan cell")
-        Debug.Notification("Nobody nearby still needs rescuing.")
+        Debug.Notification(MMELocalization.Text("Nobody nearby still needs rescuing."))
         Return False
     EndIf
 
@@ -100,7 +100,7 @@ Bool Function RescueNearbyCompanionsFromAnchor(Actor anchor, String source, Bool
             Debug.Notification(MMEFlavorText.Text("rescue_direct_group", rescued + " nearby companions are released from their overly affectionate armor.", None, "count", rescued as String))
         EndIf
     Else
-        Debug.Notification("Nobody nearby still needs rescuing.")
+        Debug.Notification(MMELocalization.Text("Nobody nearby still needs rescuing."))
     EndIf
     Trace("service complete | source=" + source + " | anchor=" + GetActorName(anchor) + " | rescued=" + rescued)
     Return rescued > 0

@@ -94,10 +94,10 @@ Bool Function TryShow(Actor speaker) Global
     ; The HUD measures pixels rather than characters, but 80 characters is a
     ; conservative guard for common Skyrim/SkyUI notification layouts.
     If StringUtil.GetLength(reminderText) > 80
-        reminderText = actorName + " " + GetCompactObservation(poolName) + " and nods."
+        reminderText = actorName + " " + GetCompactObservation(poolName) + MMELocalization.Text(" and nods.")
     EndIf
     If StringUtil.GetLength(reminderText) > 80
-        reminderText = "The vendor " + GetCompactObservation(poolName) + " and nods."
+        reminderText = MMELocalization.Text("The vendor ") + GetCompactObservation(poolName) + MMELocalization.Text(" and nods.")
     EndIf
 
     Debug.Notification(reminderText)
@@ -154,7 +154,7 @@ String Function ResolveActorName(Actor speaker) Global
         EndIf
     EndIf
     If actorName == ""
-        actorName = "The vendor"
+        actorName = MMELocalization.Text("The vendor")
     EndIf
     Return actorName
 EndFunction

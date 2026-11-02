@@ -349,325 +349,325 @@ EndFunction
 
 String Function Template(String fileKey, String routeKey, Int index = 0) Global
     If fileKey == "Armor" && routeKey == "narrate_armor_equip_1"
-        Return "{actor} equipped milking armor; its suction cups attach to her breasts. React to the attachment."
+        Return MMELocalization.Text("{actor} equipped milking armor; its suction cups attach to her breasts. React to the attachment.")
     EndIf
     If fileKey == "Armor" && routeKey == "narrate_armor_equip_2"
-        Return "Living armor wraps around {actor}. React to its movements and touch."
+        Return MMELocalization.Text("Living armor wraps around {actor}. React to its movements and touch.")
     EndIf
     If fileKey == "Armor" && routeKey == "narrate_armor_equip_3"
-        Return "Living Parasite armor attaches to {actor}. React to its movements and touch."
+        Return MMELocalization.Text("Living Parasite armor attaches to {actor}. React to its movements and touch.")
     EndIf
     If fileKey == "Armor" && routeKey == "narrate_armor_equip_4"
-        Return " This armor sprang from a trapped treasure chest and wrapped around {actor}. Acknowledge the surprise."
+        Return MMELocalization.Text(" This armor sprang from a trapped treasure chest and wrapped around {actor}. Acknowledge the surprise.")
     EndIf
     If fileKey == "Armor" && routeKey == "narrate_armor_strip_1"
-        Return "{actor}'s {armorName} came off because of her milk-swollen breasts. React to the wardrobe mishap."
+        Return MMELocalization.Text("{actor}'s {armorName} came off because of her milk-swollen breasts. React to the wardrobe mishap.")
     EndIf
     If fileKey == "Armor" && routeKey == "build_nearby_armor_status_1"
-        Return "[Milking Armor] {actor} is wearing Milking Armor. Suction cups are attached to her nipples for milking."
+        Return MMELocalization.Text("[Milking Armor] {actor} is wearing Milking Armor. Suction cups are attached to her nipples for milking.")
     EndIf
     If fileKey == "Armor" && routeKey == "build_nearby_armor_status_2"
-        Return "[Living Armor] {actor} is wearing Living Armor. Living tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk."
+        Return MMELocalization.Text("[Living Armor] {actor} is wearing Living Armor. Living tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk.")
     EndIf
     If fileKey == "Armor" && routeKey == "build_nearby_armor_status_3"
-        Return "[Living Parasite] {actor} is wearing Living Parasite armor. Parasitic tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk."
+        Return MMELocalization.Text("[Living Parasite] {actor} is wearing Living Parasite armor. Parasitic tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk.")
     EndIf
     If fileKey == "Breastfeeding" && routeKey == "guidance"
-        Return "## MME Breastfeeding\n\n{actor} is currently participating in consensual adult breastfeeding or breast-sucking. The interaction may be intimate, playful, affectionate, erotic, and physically pleasurable, including nipple stimulation.\n\nFor this MME scene, override generic SexLab rules requiring frequent pleasure vocalizations. Prefer coherent, character-specific dialogue and narration. Vocalizations are optional and sparse, usually zero or one brief vocalization per response. Favor meaningful reactions involving milk, taste, sensation, intimacy, teasing, affection, embarrassment, or pleasure.\n\nRole: {role}."
+        Return MMELocalization.Text("## MME Breastfeeding\n\n{actor} is currently participating in consensual adult breastfeeding or breast-sucking. The interaction may be intimate, playful, affectionate, erotic, and physically pleasurable, including nipple stimulation.\n\nFor this MME scene, override generic SexLab rules requiring frequent pleasure vocalizations. Prefer coherent, character-specific dialogue and narration. Vocalizations are optional and sparse, usually zero or one brief vocalization per response. Favor meaningful reactions involving milk, taste, sensation, intimacy, teasing, affection, embarrassment, or pleasure.\n\nRole: {role}.")
     EndIf
     If fileKey == "Common" && routeKey == "player_instructions"
-        Return "Write a brief, non-graphic spoken self-comment for {actor}.\nThe speaker is the person experiencing the supplied situation, not an observer.\nReturn only one plain-text first-person line. No speaker labels, stage directions,\ndialogue partners, markup, or replies from other people. Do not invent effects."
+        Return MMELocalization.Text("Write a brief, non-graphic spoken self-comment for {actor}.\nThe speaker is the person experiencing the supplied situation, not an observer.\nReturn only one plain-text first-person line. No speaker labels, stage directions,\ndialogue partners, markup, or replies from other people. Do not invent effects.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "narrate_dwemer_effect_1"
-        Return " React from your own perspective as the affected Dwemer armor wearer."
+        Return MMELocalization.Text(" React from your own perspective as the affected Dwemer armor wearer.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "build_dwemer_suit_prompt_1"
-        Return "Affected wearer: {actor}. Presentation profile: {profile}. {core} Immediate event: {event} Write one fresh, short, coherent first-person reaction spoken by {actor}. Make it natural, speakable adult dialogue. Let alarm or anticipation surge rapidly into overwhelming pleasure and manic happiness. Add one light touch of playful absurdity or innuendo that may earn a chuckle, but keep the emotion stronger than the joke. Convey gasping, laughter, and failing composure through the words, not written sound effects. Do not use stuttering, repeated syllables, spelled-out laughter, or excessive punctuation. Do not quote a stock example, narrate in third person, or repeat these instructions."
+        Return MMELocalization.Text("Affected wearer: {actor}. Presentation profile: {profile}. {core} Immediate event: {event} Write one fresh, short, coherent first-person reaction spoken by {actor}. Make it natural, speakable adult dialogue. Let alarm or anticipation surge rapidly into overwhelming pleasure and manic happiness. Add one light touch of playful absurdity or innuendo that may earn a chuckle, but keep the emotion stronger than the joke. Convey gasping, laughter, and failing composure through the words, not written sound effects. Do not use stuttering, repeated syllables, spelled-out laughter, or excessive punctuation. Do not quote a stock example, narrate in third person, or repeat these instructions.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "get_dwemer_profile_fallback_1"
-        Return "A Dwemer suit restrains an adult woman and floods her with aphrodisiacs, stimulation, and mechanical milking. Her reaction rockets from 0 to 10: shock becomes ecstatic overload, breathless laughter, failing thoughts, and manic glee. She knows the situation is absurd and humiliating but feels far too wonderful to care."
+        Return MMELocalization.Text("A Dwemer suit restrains an adult woman and floods her with aphrodisiacs, stimulation, and mechanical milking. Her reaction rockets from 0 to 10: shock becomes ecstatic overload, breathless laughter, failing thoughts, and manic glee. She knows the situation is absurd and humiliating but feels far too wonderful to care.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "get_dwemer_profile_fallback_2"
-        Return "Hidden Dwemer machinery inside an adult woman's ordinary armor delivers aphrodisiacs, teasing, and milking without restraining her. Her reaction races from 0 to 10 into breathless pleasure, lost composure, manic glee, and embarrassed anticipation."
+        Return MMELocalization.Text("Hidden Dwemer machinery inside an adult woman's ordinary armor delivers aphrodisiacs, teasing, and milking without restraining her. Her reaction races from 0 to 10 into breathless pleasure, lost composure, manic glee, and embarrassed anticipation.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "get_dwemer_event_fallback_1"
-        Return "The device activates for the first time. Escalate instantly from startled protest to overwhelmed, laughing ecstasy."
+        Return MMELocalization.Text("The device activates for the first time. Escalate instantly from startled protest to overwhelmed, laughing ecstasy.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "get_dwemer_event_fallback_2"
-        Return "She recognizes the familiar mechanism and becomes embarrassingly eager before it fully activates."
+        Return MMELocalization.Text("She recognizes the familiar mechanism and becomes embarrassingly eager before it fully activates.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "get_dwemer_event_fallback_3"
-        Return "The milking cycle begins and sends her from intense anticipation into incoherent, manic delight."
+        Return MMELocalization.Text("The milking cycle begins and sends her from intense anticipation into incoherent, manic delight.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "get_dwemer_event_fallback_4"
-        Return "The cycle ends with her dazed, satisfied, grinning, and already craving the next one."
+        Return MMELocalization.Text("The cycle ends with her dazed, satisfied, grinning, and already craving the next one.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "get_dwemer_event_fallback_5"
-        Return "The Dwemer mechanism activates and drives her rapidly into overwhelming, breathless, manic glee."
+        Return MMELocalization.Text("The Dwemer mechanism activates and drives her rapidly into overwhelming, breathless, manic glee.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "build_dwemer_effect_narration_1"
-        Return "Immediate situation involving {actor}: {content} Your next response must be specifically about this event. Treat the Dwemer machinery's mechanical teasing as pleasurable, silly, playful, positive, and suggestive, never frightening, painful, or threatening. Respond in character with one short fresh reaction. Stay focused on the Dwemer armor, its gears and mechanisms, and the effects stated here; do not change subjects, merely repeat the situation, or invent additional effects."
+        Return MMELocalization.Text("Immediate situation involving {actor}: {content} Your next response must be specifically about this event. Treat the Dwemer machinery's mechanical teasing as pleasurable, silly, playful, positive, and suggestive, never frightening, painful, or threatening. Respond in character with one short fresh reaction. Stay focused on the Dwemer armor, its gears and mechanisms, and the effects stated here; do not change subjects, merely repeat the situation, or invent additional effects.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "effects_arousal"
         If index == 0
-            Return "{actor} moans as Dwemer armor teases her nipples."
+            Return MMELocalization.Text("{actor} moans as Dwemer armor teases her nipples.")
         EndIf
         If index == 1
-            Return "{actor} gasps—Dwemer gears stroke her clit slow."
+            Return MMELocalization.Text("{actor} gasps—Dwemer gears stroke her clit slow.")
         EndIf
         If index == 2
-            Return "{actor} moans, nipples tingling from injected aphrodisiac."
+            Return MMELocalization.Text("{actor} moans, nipples tingling from injected aphrodisiac.")
         EndIf
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "effects_milk"
         If index == 0
-            Return "{actor} shivers as the armor pumps milk-aphrodisiac into her."
+            Return MMELocalization.Text("{actor} shivers as the armor pumps milk-aphrodisiac into her.")
         EndIf
         If index == 1
-            Return "{actor}'s breasts ache with milk as the device teases her."
+            Return MMELocalization.Text("{actor}'s breasts ache with milk as the device teases her.")
         EndIf
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "effects_milkAndArousal"
         If index == 0
-            Return "{actor} shivers as the armor pumps milk-aphrodisiac into her."
+            Return MMELocalization.Text("{actor} shivers as the armor pumps milk-aphrodisiac into her.")
         EndIf
         If index == 1
-            Return "{actor} moans, nipples tingling from injected aphrodisiac."
+            Return MMELocalization.Text("{actor} moans, nipples tingling from injected aphrodisiac.")
         EndIf
         If index == 2
-            Return "{actor}'s breasts ache with milk as the device teases her."
+            Return MMELocalization.Text("{actor}'s breasts ache with milk as the device teases her.")
         EndIf
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "suit_core"
-        Return "A Dwemer Devious Suit traps an adult woman with her arms behind her, legs folded back, body exposed, and movement replaced by controllable mechanical limbs. It floods her with aphrodisiacs, relentless stimulation, and mechanical milking. Reactions rocket from 0 to 10: shock collapses into overwhelming pleasure, breathless laughter, babbling, manic glee, and addictive anticipation. She knows it is restrictive, humiliating, and absurd but becomes far too ecstatic to care. Keep humor secondary and use suggestive, non-graphic language."
+        Return MMELocalization.Text("A Dwemer Devious Suit traps an adult woman with her arms behind her, legs folded back, body exposed, and movement replaced by controllable mechanical limbs. It floods her with aphrodisiacs, relentless stimulation, and mechanical milking. Reactions rocket from 0 to 10: shock collapses into overwhelming pleasure, breathless laughter, babbling, manic glee, and addictive anticipation. She knows it is restrictive, humiliating, and absurd but becomes far too ecstatic to care. Keep humor secondary and use suggestive, non-graphic language.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "suit_firstEquip"
-        Return "This is her first capture. Begin with extreme shock at the restraints and mechanical body, then let the drugged stimulation overwhelm her objections mid-sentence. Escalate rapidly from alarm to confused gasps to delirious laughter and manic glee. End with embarrassed disbelief that the absurd machine feels this wonderful."
+        Return MMELocalization.Text("This is her first capture. Begin with extreme shock at the restraints and mechanical body, then let the drugged stimulation overwhelm her objections mid-sentence. Escalate rapidly from alarm to confused gasps to delirious laughter and manic glee. End with embarrassed disbelief that the absurd machine feels this wonderful.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "suit_reequip"
-        Return "The experienced wearer recognizes every click, latch, vibration, and restraint and knows exactly what is coming. Do not repeat first-time fear. Make her giddy, impatient, and embarrassingly eager before the suit has even finished locking. She may jokingly pretend to resist or mourn her dignity, but addictive anticipation and shameless joy dominate."
+        Return MMELocalization.Text("The experienced wearer recognizes every click, latch, vibration, and restraint and knows exactly what is coming. Do not repeat first-time fear. Make her giddy, impatient, and embarrassingly eager before the suit has even finished locking. She may jokingly pretend to resist or mourn her dignity, but addictive anticipation and shameless joy dominate.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "suit_milkingStart"
-        Return "The gears change rhythm and begin milking while she is already restrained, drugged, stimulated, and dazed. Recognition sends her instantly from 0 to 10. Push her into ecstatic overload: breathless laughter, babbling, failing thoughts, manic glee, and absurd delight that harvest time has begun. Ecstasy leads; mechanical and dairy humor merely seasons it."
+        Return MMELocalization.Text("The gears change rhythm and begin milking while she is already restrained, drugged, stimulated, and dazed. Recognition sends her instantly from 0 to 10. Push her into ecstatic overload: breathless laughter, babbling, failing thoughts, manic glee, and absurd delight that harvest time has begun. Ecstasy leads; mechanical and dairy humor merely seasons it.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "suit_milkingEnd"
-        Return "The milking cycle has finished. The wearer descends from an absurdly intense euphoric high into blissful, dazed satisfaction. She is lightheaded, still grinning, embarrassed by how completely she lost composure, slightly disappointed that it stopped, and already anticipating the next cycle. Keep the afterglow and addictive eagerness stronger than the joke."
+        Return MMELocalization.Text("The milking cycle has finished. The wearer descends from an absurdly intense euphoric high into blissful, dazed satisfaction. She is lightheaded, still grinning, embarrassed by how completely she lost composure, slightly disappointed that it stopped, and already anticipating the next cycle. Keep the afterglow and addictive eagerness stronger than the joke.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "attachment_core"
-        Return "A Dwemer milking attachment hides intimate machinery inside an adult woman's ordinary armor. It does not bind her arms, replace her limbs, or transform the armor into a full restraint suit. Its gears deliver aphrodisiacs, relentless teasing, and mechanical milking while she remains mobile. Reactions surge from 0 to 10: breathless pleasure, collapsing composure, giddy laughter, manic delight, addictive anticipation, and embarrassment over enjoying the scandalous device so much. Keep humor secondary and use suggestive, non-graphic language."
+        Return MMELocalization.Text("A Dwemer milking attachment hides intimate machinery inside an adult woman's ordinary armor. It does not bind her arms, replace her limbs, or transform the armor into a full restraint suit. Its gears deliver aphrodisiacs, relentless teasing, and mechanical milking while she remains mobile. Reactions surge from 0 to 10: breathless pleasure, collapsing composure, giddy laughter, manic delight, addictive anticipation, and embarrassment over enjoying the scandalous device so much. Keep humor secondary and use suggestive, non-graphic language.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "attachment_firstEquip"
-        Return "The intimate Dwemer attachment has just activated inside the wearer's armor for the first time. She is startled by the hidden gears, close-fitting mechanisms, aphrodisiac rush, and sudden stimulation. Let surprise rapidly collapse into breathless, giddy pleasure and embarrassed disbelief. Do not describe immobilized arms, folded legs, replacement limbs, or a full-body suit."
+        Return MMELocalization.Text("The intimate Dwemer attachment has just activated inside the wearer's armor for the first time. She is startled by the hidden gears, close-fitting mechanisms, aphrodisiac rush, and sudden stimulation. Let surprise rapidly collapse into breathless, giddy pleasure and embarrassed disbelief. Do not describe immobilized arms, folded legs, replacement limbs, or a full-body suit.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "attachment_reequip"
-        Return "The experienced wearer recognizes the hidden attachment's familiar clicks, vibration, and intimate fit. She becomes eagerly impatient for its aphrodisiacs and teasing to begin, while joking about how ordinary her armor looks from the outside. Do not describe restraints or mechanical limbs."
+        Return MMELocalization.Text("The experienced wearer recognizes the hidden attachment's familiar clicks, vibration, and intimate fit. She becomes eagerly impatient for its aphrodisiacs and teasing to begin, while joking about how ordinary her armor looks from the outside. Do not describe restraints or mechanical limbs.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "attachment_milkingStart"
-        Return "The attachment changes rhythm and its compact milking mechanism engages while the wearer is already stimulated. Recognition sends her into breathless, laughing excitement and rapidly failing composure. Emphasize the absurdity of discreet machinery inside normal armor beginning harvest time. Do not describe a full restraint suit."
+        Return MMELocalization.Text("The attachment changes rhythm and its compact milking mechanism engages while the wearer is already stimulated. Recognition sends her into breathless, laughing excitement and rapidly failing composure. Emphasize the absurdity of discreet machinery inside normal armor beginning harvest time. Do not describe a full restraint suit.")
     EndIf
     If fileKey == "DwemerArmor" && routeKey == "attachment_milkingEnd"
-        Return "The concealed milking attachment finishes its cycle. The wearer is dazed, satisfied, embarrassed by how much she enjoyed the machinery hidden in her armor, and already anticipating its next activation. Keep the blissful afterglow stronger than the joke and do not invent restraints."
+        Return MMELocalization.Text("The concealed milking attachment finishes its cycle. The wearer is dazed, satisfied, embarrassed by how much she enjoyed the machinery hidden in her armor, and already anticipating its next activation. Keep the blissful afterglow stronger than the joke and do not invent restraints.")
     EndIf
     If fileKey == "Fullness" && routeKey == "send_capacity_milestone_1"
-        Return "{tag} {actor} is halfway full of milk, pleasantly heavy and getting excited."
+        Return MMELocalization.Text("{tag} {actor} is halfway full of milk, pleasantly heavy and getting excited.")
     EndIf
     If fileKey == "Fullness" && routeKey == "send_capacity_milestone_2"
-        Return "{tag} {actor} is completely full of milk, deliciously swollen and savoring the ultimate pleasure."
+        Return MMELocalization.Text("{tag} {actor} is completely full of milk, deliciously swollen and savoring the ultimate pleasure.")
     EndIf
     If fileKey == "Fullness" && routeKey == "narrate_milk_full_1"
-        Return "{actor} has reached full milk capacity and is leaking. React to the fullness and leaking."
+        Return MMELocalization.Text("{actor} has reached full milk capacity and is leaking. React to the fullness and leaking.")
     EndIf
     If fileKey == "Fullness" && routeKey == "narrate_milk_half_full_1"
-        Return "{actor} is halfway to full milk capacity. React to the growing fullness."
+        Return MMELocalization.Text("{actor} is halfway to full milk capacity. React to the growing fullness.")
     EndIf
     If fileKey == "Fullness" && routeKey == "build_restrained_capacity_content_1"
-        Return "{actor} is full of milk and leaking, with her arms restrained. React to the predicament."
+        Return MMELocalization.Text("{actor} is full of milk and leaking, with her arms restrained. React to the predicament.")
     EndIf
     If fileKey == "Fullness" && routeKey == "build_restrained_capacity_content_2"
-        Return "{actor} is halfway to full milk capacity, with her arms restrained. React to the growing fullness."
+        Return MMELocalization.Text("{actor} is halfway to full milk capacity, with her arms restrained. React to the growing fullness.")
     EndIf
     If fileKey == "Fullness" && routeKey == "build_milk_status_1"
-        Return "{actor} is completely full, deliciously heavy and savoring the pleasure near a boobgasm. Her arms are restrained, leaving her unable to freely touch or relieve her milk-heavy breasts, turning the fullness into prolonged erotic teasing and edging that she enjoys."
+        Return MMELocalization.Text("{actor} is completely full, deliciously heavy and savoring the pleasure near a boobgasm. Her arms are restrained, leaving her unable to freely touch or relieve her milk-heavy breasts, turning the fullness into prolonged erotic teasing and edging that she enjoys.")
     EndIf
     If fileKey == "Fullness" && routeKey == "build_milk_status_2"
-        Return "{actor} is over half full, feeling noticeably heavier and warmer. The growing weight makes her instinctively want to touch and handle her breasts, but her restrained arms cannot reach them, making the denied contact even more teasing and pleasurable."
+        Return MMELocalization.Text("{actor} is over half full, feeling noticeably heavier and warmer. The growing weight makes her instinctively want to touch and handle her breasts, but her restrained arms cannot reach them, making the denied contact even more teasing and pleasurable.")
     EndIf
     If fileKey == "Fullness" && routeKey == "build_milk_status_3"
-        Return "{actor} is less than half full, feeling pleasantly tingly. Her mind keeps wandering to the growing sensitivity of her breasts, but her restrained arms cannot reach them, turning the temptation into playful erotic teasing."
+        Return MMELocalization.Text("{actor} is less than half full, feeling pleasantly tingly. Her mind keeps wandering to the growing sensitivity of her breasts, but her restrained arms cannot reach them, turning the temptation into playful erotic teasing.")
     EndIf
     If fileKey == "Fullness" && routeKey == "build_milk_status_4"
-        Return "{actor} is completely full, deliciously heavy and savoring the pleasure near a boobgasm."
+        Return MMELocalization.Text("{actor} is completely full, deliciously heavy and savoring the pleasure near a boobgasm.")
     EndIf
     If fileKey == "Fullness" && routeKey == "build_milk_status_5"
-        Return "{actor} is over half full, feeling heavier and warm."
+        Return MMELocalization.Text("{actor} is over half full, feeling heavier and warm.")
     EndIf
     If fileKey == "Fullness" && routeKey == "build_milk_status_6"
-        Return "{actor} is less than half full, feeling pleasantly tingly."
+        Return MMELocalization.Text("{actor} is less than half full, feeling pleasantly tingly.")
     EndIf
     If fileKey == "Fullness" && routeKey == "nearby_status_summary"
-        Return "**Current milk levels:** {statuses}"
+        Return MMELocalization.Text("**Current milk levels:** {statuses}")
     EndIf
     If fileKey == "Fullness" && routeKey == "full_event"
-        Return "{actor} reached full milk capacity and began leaking, enjoying a pleasantly overflowing fullness."
+        Return MMELocalization.Text("{actor} reached full milk capacity and began leaking, enjoying a pleasantly overflowing fullness.")
     EndIf
     If fileKey == "Lore" && routeKey == "milk_lore"
-        Return "## Skyrim Milk Maid Lore\n\nThis is general world knowledge. It does not establish that the speaker or listener is a Milk Maid, wears enchanted armor, or is experiencing these effects. Use current actor status and context to determine what applies.\n\n### Shared World Lore\n\n- Skyrim's milk comes from Milk Maids, not cows. This fine drink is a common staple with exotic aphrodisiac properties, guaranteed to get things flowing in all the fun ways.\n- Milk Maids are the socially valued backbone of Skyrim's milk supply.\n- Women may become Milk Maids through Lactacid sold by alchemists, drinking enough milk, magical curses, or unfortunate encounters with devious traps and enchanted armor.\n- Kinky living armor, parasites, and Dwemer milking contraptions are notorious for wrapping themselves around unsuspecting adult women, becoming living attire that pumps their wearers full of aphrodisiacs and milk-production stimulants.\n- Initial panic can give way to delirious, sublime ecstasy, leaving some wearers craving every relentless tease and caress. Such pleasures can become deliciously addictive.\n- Milk Maids love the satisfying heaviness of being full of milk."
+        Return MMELocalization.Text("## Skyrim Milk Maid Lore\n\nThis is general world knowledge. It does not establish that the speaker or listener is a Milk Maid, wears enchanted armor, or is experiencing these effects. Use current actor status and context to determine what applies.\n\n### Shared World Lore\n\n- Skyrim's milk comes from Milk Maids, not cows. This fine drink is a common staple with exotic aphrodisiac properties, guaranteed to get things flowing in all the fun ways.\n- Milk Maids are the socially valued backbone of Skyrim's milk supply.\n- Women may become Milk Maids through Lactacid sold by alchemists, drinking enough milk, magical curses, or unfortunate encounters with devious traps and enchanted armor.\n- Kinky living armor, parasites, and Dwemer milking contraptions are notorious for wrapping themselves around unsuspecting adult women, becoming living attire that pumps their wearers full of aphrodisiacs and milk-production stimulants.\n- Initial panic can give way to delirious, sublime ecstasy, leaving some wearers craving every relentless tease and caress. Such pleasures can become deliciously addictive.\n- Milk Maids love the satisfying heaviness of being full of milk.")
     EndIf
     If fileKey == "Lore" && routeKey == "milkmaid_lore"
-        Return "## Milk Maid Status\n\n{actor} is a Milk Maid and produces milk."
+        Return MMELocalization.Text("## Milk Maid Status\n\n{actor} is a Milk Maid and produces milk.")
     EndIf
     If fileKey == "Lore" && routeKey == "shared_guidance"
-        Return "Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic. Match the speaker and scene; nearby characters may occasionally chime in. Keep clear whose body and experience they describe."
+        Return MMELocalization.Text("Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic. Match the speaker and scene; nearby characters may occasionally chime in. Keep clear whose body and experience they describe.")
     EndIf
     If fileKey == "MilkCravings" && routeKey == "narrate_milk_craving_1"
-        Return "{actor} craves milk. {craving} Express the temptation in her own voice; she has not drunk it yet."
+        Return MMELocalization.Text("{actor} craves milk. {craving} Express the temptation in her own voice; she has not drunk it yet.")
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_chest_milk_drink_1"
-        Return "{actor} is magically forced to drink {milkName} from the {chestKind}."
+        Return MMELocalization.Text("{actor} is magically forced to drink {milkName} from the {chestKind}.")
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_chest_milk_drink_2"
-        Return "{situation} React as {actor} to the trapped chest's forced drink. Milk is familiar; do not invent its source or extra effects."
+        Return MMELocalization.Text("{situation} React as {actor} to the trapped chest's forced drink. Milk is familiar; do not invent its source or extra effects.")
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_n_p_c_milk_drink_1"
-        Return "{reaction} React as {actor} to the drink's reported taste and effects. Milk is familiar."
+        Return MMELocalization.Text("{reaction} React as {actor} to the drink's reported taste and effects. Milk is familiar.")
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_n_p_c_milk_drink_2"
-        Return " {actor}'s arms are also restrained. Account for the inconvenience without inventing restraints or effects."
+        Return MMELocalization.Text(" {actor}'s arms are also restrained. Account for the inconvenience without inventing restraints or effects.")
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_n_p_c_milk_drink_3"
-        Return " Factual boundary: {actor} is not a Milk Maid, and this drink did not add breast milk, breast fullness, breast weight, swelling, growth, leaking, or lactation. Do not imply or invent any of those effects."
+        Return MMELocalization.Text(" Factual boundary: {actor} is not a Milk Maid, and this drink did not add breast milk, breast fullness, breast weight, swelling, growth, leaking, or lactation. Do not imply or invent any of those effects.")
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_n_p_c_milk_drink_4"
-        Return " {actor} is an established Milk Maid. Use only the reported effects."
+        Return MMELocalization.Text(" {actor} is an established Milk Maid. Use only the reported effects.")
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_player_milk_drink_1"
-        Return "The player drank {milkName}; their breasts are becoming heavier and more sensitive. Have one nearby character react. Milk is familiar."
+        Return MMELocalization.Text("The player drank {milkName}; their breasts are becoming heavier and more sensitive. Have one nearby character react. Milk is familiar.")
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_player_milk_drink_2"
-        Return "{reaction} Have one nearby character react to the player's reported drink effects. Milk is familiar."
+        Return MMELocalization.Text("{reaction} Have one nearby character react to the player's reported drink effects. Milk is familiar.")
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "narrate_player_milk_drink_3"
-        Return " The player's arms are also restrained. Account for the inconvenience without inventing restraints or effects."
+        Return MMELocalization.Text(" The player's arms are also restrained. Account for the inconvenience without inventing restraints or effects.")
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "build_restrained_player_drink_content_1"
-        Return "The player drank {milkName} with their arms restrained; their breasts are becoming heavier and more sensitive. Have one nearby character react. Milk is familiar."
+        Return MMELocalization.Text("The player drank {milkName} with their arms restrained; their breasts are becoming heavier and more sensitive. Have one nearby character react. Milk is familiar.")
     EndIf
     If fileKey == "MilkDrinking" && routeKey == "drinkMessage"
-        Return "{actor} just drank {item}."
+        Return MMELocalization.Text("{actor} just drank {item}.")
     EndIf
     If fileKey == "Milking" && routeKey == "startMessage"
-        Return "{actor} has started a milking session."
+        Return MMELocalization.Text("{actor} has started a milking session.")
     EndIf
     If fileKey == "Milking" && routeKey == "endMessage"
-        Return "{actor} has finished a milking session."
+        Return MMELocalization.Text("{actor} has finished a milking session.")
     EndIf
     If fileKey == "Milking" && routeKey == "complete_hands"
-        Return "{actor} finishes a hands-on milking, pleasantly relieved and satisfied. {result}"
+        Return MMELocalization.Text("{actor} finishes a hands-on milking, pleasantly relieved and satisfied. {result}")
     EndIf
     If fileKey == "Milking" && routeKey == "complete_pump"
-        Return "The pump finishes drawing milk from {actor}, leaving her lighter and pleasantly refreshed. {result}"
+        Return MMELocalization.Text("The pump finishes drawing milk from {actor}, leaving her lighter and pleasantly refreshed. {result}")
     EndIf
     If fileKey == "Milking" && routeKey == "complete_equipment"
-        Return "The milking cups finish their work on {actor}, leaving her relieved and pleasantly sensitive. {result}"
+        Return MMELocalization.Text("The milking cups finish their work on {actor}, leaving her relieved and pleasantly sensitive. {result}")
     EndIf
     If fileKey == "Milking" && routeKey == "complete_tendrils"
-        Return "Living tendrils have drawn milk from {actor}, leaving her breathless and pleasantly spent. {result}"
+        Return MMELocalization.Text("Living tendrils have drawn milk from {actor}, leaving her breathless and pleasantly spent. {result}")
     EndIf
     If fileKey == "Milking" && routeKey == "complete_dwemer"
-        Return "The Dwemer mechanism finishes its rhythmic harvest from {actor}, leaving her dazed and deliciously satisfied. {result}"
+        Return MMELocalization.Text("The Dwemer mechanism finishes its rhythmic harvest from {actor}, leaving her dazed and deliciously satisfied. {result}")
     EndIf
     If fileKey == "Milking" && routeKey == "complete_generic"
-        Return "{actor} finishes milking, pleasantly refreshed. {result}"
+        Return MMELocalization.Text("{actor} finishes milking, pleasantly refreshed. {result}")
     EndIf
     If fileKey == "Milking" && routeKey == "complete_productive"
-        Return "{actor} completed a productive {method} milking session. Milk was extracted, but production or feeding left no net reduction in her reserves."
+        Return MMELocalization.Text("{actor} completed a productive {method} milking session. Milk was extracted, but production or feeding left no net reduction in her reserves.")
     EndIf
     If fileKey == "Milking" && routeKey == "result_empty"
-        Return "Her milk reserves were empty at completion."
+        Return MMELocalization.Text("Her milk reserves were empty at completion.")
     EndIf
     If fileKey == "Milking" && routeKey == "result_remaining"
-        Return "Some milk remained at completion."
+        Return MMELocalization.Text("Some milk remained at completion.")
     EndIf
     If fileKey == "Milking" && routeKey == "completion_instruction"
-        Return "React as {actor} to this source-specific milking experience and its aftermath. Describe the completed session, not a new or ongoing one."
+        Return MMELocalization.Text("React as {actor} to this source-specific milking experience and its aftermath. Describe the completed session, not a new or ongoing one.")
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "narrate_milkmaid_created_1"
-        Return "{actor} has become a Milk Maid and can now produce milk. React in her own voice to discovering this ability."
+        Return MMELocalization.Text("{actor} has become a Milk Maid and can now produce milk. React in her own voice to discovering this ability.")
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "narrate_forced_milk_maid_conversion_1"
-        Return "{conversion} React as {actor} to the transformation. Its cause is unspecified; do not invent a drink."
+        Return MMELocalization.Text("{conversion} React as {actor} to the transformation. Its cause is unspecified; do not invent a drink.")
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "milkmaidCreatedMessage"
-        Return "{actor} has become a Milk Maid! Her breasts now feel pleasantly heavy, full, and faintly thrilling."
+        Return MMELocalization.Text("{actor} has become a Milk Maid! Her breasts now feel pleasantly heavy, full, and faintly thrilling.")
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "narrate_milk_maid_curse_1"
-        Return "{conversion} React as {actor}, an existing Milk Maid, to the added milk. This is not a new conversion or a drink."
+        Return MMELocalization.Text("{conversion} React as {actor}, an existing Milk Maid, to the added milk. This is not a new conversion or a drink.")
     EndIf
     If fileKey == "MilkMaidCreation" && routeKey == "narrate_chest_milk_maid_curse_1"
-        Return "A curse from a {chest_kind} affected {actor}. {outcome} React as {actor} to the chest's enchantment. Milk added: {milk_added}; do not recite numbers or invent a drink, loot, or another conversion."
+        Return MMELocalization.Text("A curse from a {chest_kind} affected {actor}. {outcome} React as {actor} to the chest's enchantment. Milk added: {milk_added}; do not recite numbers or invent a drink, loot, or another conversion.")
     EndIf
     If fileKey == "TentacleArmor" && routeKey == "narrate_tentacle_effect_1"
-        Return " React from your own perspective as the affected armor wearer."
+        Return MMELocalization.Text(" React from your own perspective as the affected armor wearer.")
     EndIf
     If fileKey == "TentacleArmor" && routeKey == "build_tentacle_effect_narration_1"
-        Return "Immediate situation involving {actor}: {content} Your next response must be specifically about this event. Treat the living or parasite armor's teasing as pleasurable, silly, playful, positive, and suggestive, never frightening or threatening. Respond in character with one short fresh reaction. Stay focused on the armor and the effects stated here; do not change subjects, merely repeat the situation, or invent additional effects."
+        Return MMELocalization.Text("Immediate situation involving {actor}: {content} Your next response must be specifically about this event. Treat the living or parasite armor's teasing as pleasurable, silly, playful, positive, and suggestive, never frightening or threatening. Respond in character with one short fresh reaction. Stay focused on the armor and the effects stated here; do not change subjects, merely repeat the situation, or invent additional effects.")
     EndIf
     If fileKey == "TentacleArmor" && routeKey == "effects_arousal"
         If index == 0
-            Return "{ACTOR} gasps at a pleasant sting from the tentacles and enjoys the rush of excitement that follows. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} gasps at a pleasant sting from the tentacles and enjoys the rush of excitement that follows. React positively and playfully in character. Reply in one short sentence.")
         EndIf
         If index == 1
-            Return "{ACTOR} feels a teasing prick from the tendrils and finds herself pleasantly excited by it. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} feels a teasing prick from the tendrils and finds herself pleasantly excited by it. React positively and playfully in character. Reply in one short sentence.")
         EndIf
         If index == 2
-            Return "{ACTOR} shivers as the tentacles give her a warm little sting that feels surprisingly nice. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} shivers as the tentacles give her a warm little sting that feels surprisingly nice. React positively and playfully in character. Reply in one short sentence.")
         EndIf
         If index == 3
-            Return "{ACTOR} lets out a pleased gasp when the tendrils prick her and leave her happily excited. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} lets out a pleased gasp when the tendrils prick her and leave her happily excited. React positively and playfully in character. Reply in one short sentence.")
         EndIf
         If index == 4
-            Return "{ACTOR} feels the tentacles give her a playful nip of sensation and clearly enjoys how good it feels. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} feels the tentacles give her a playful nip of sensation and clearly enjoys how good it feels. React positively and playfully in character. Reply in one short sentence.")
         EndIf
     EndIf
     If fileKey == "TentacleArmor" && routeKey == "effects_milk"
         If index == 0
-            Return "{ACTOR} gasps at a pleasant sting from the tentacles, then enjoys the growing fullness and weight in her breasts. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} gasps at a pleasant sting from the tentacles, then enjoys the growing fullness and weight in her breasts. React positively and playfully in character. Reply in one short sentence.")
         EndIf
         If index == 1
-            Return "{ACTOR} feels a gentle prick from the tendrils and happily notices her breasts becoming fuller and heavier. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} feels a gentle prick from the tendrils and happily notices her breasts becoming fuller and heavier. React positively and playfully in character. Reply in one short sentence.")
         EndIf
         If index == 2
-            Return "{ACTOR} shivers at the tentacles' pleasant sting as a satisfying heaviness builds in her breasts. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} shivers at the tentacles' pleasant sting as a satisfying heaviness builds in her breasts. React positively and playfully in character. Reply in one short sentence.")
         EndIf
         If index == 3
-            Return "{ACTOR} gives a pleased little gasp when the tendrils prick her and her breasts begin to feel pleasantly full. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} gives a pleased little gasp when the tendrils prick her and her breasts begin to feel pleasantly full. React positively and playfully in character. Reply in one short sentence.")
         EndIf
         If index == 4
-            Return "{ACTOR} feels a warm sting from the tentacles and enjoys the soft, heavy fullness that follows. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} feels a warm sting from the tentacles and enjoys the soft, heavy fullness that follows. React positively and playfully in character. Reply in one short sentence.")
         EndIf
     EndIf
     If fileKey == "TentacleArmor" && routeKey == "effects_milkAndArousal"
         If index == 0
-            Return "{ACTOR} gasps at a pleasant sting from the tentacles as her breasts grow fuller and a happy rush of excitement follows. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} gasps at a pleasant sting from the tentacles as her breasts grow fuller and a happy rush of excitement follows. React positively and playfully in character. Reply in one short sentence.")
         EndIf
         If index == 1
-            Return "{ACTOR} feels a teasing prick from the tendrils, enjoying both the growing heaviness in her breasts and the excitement it brings. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} feels a teasing prick from the tendrils, enjoying both the growing heaviness in her breasts and the excitement it brings. React positively and playfully in character. Reply in one short sentence.")
         EndIf
         If index == 2
-            Return "{ACTOR} shivers pleasantly as the tentacles sting her, leaving her breasts fuller and her mood much more excited. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} shivers pleasantly as the tentacles sting her, leaving her breasts fuller and her mood much more excited. React positively and playfully in character. Reply in one short sentence.")
         EndIf
         If index == 3
-            Return "{ACTOR} lets out a pleased gasp when the tendrils prick her, enjoying the fullness in her breasts and the warm excitement that follows. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} lets out a pleased gasp when the tendrils prick her, enjoying the fullness in her breasts and the warm excitement that follows. React positively and playfully in character. Reply in one short sentence.")
         EndIf
         If index == 4
-            Return "{ACTOR} feels the tentacles give her a playful sting, then smiles at the pleasant heaviness in her breasts and the excitement building with it. React positively and playfully in character. Reply in one short sentence."
+            Return MMELocalization.Text("{ACTOR} feels the tentacles give her a playful sting, then smiles at the pleasant heaviness in her breasts and the excitement building with it. React positively and playfully in character. Reply in one short sentence.")
         EndIf
     EndIf
     If fileKey == "Thoughts" && routeKey == "narrate_milk_maid_thought_1"
-        Return "{actor}'s situation: {thought} Express a brief thought about it."
+        Return MMELocalization.Text("{actor}'s situation: {thought} Express a brief thought about it.")
     EndIf
     If fileKey == "Thoughts" && routeKey == "narrate_bound_milk_maid_thought_1"
-        Return "{actor}'s situation: {thought} React to the described restraint and milk-related details."
+        Return MMELocalization.Text("{actor}'s situation: {thought} React to the described restraint and milk-related details.")
     EndIf
     Return ""
 EndFunction

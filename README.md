@@ -1,4 +1,17 @@
-## 📋 [Requirements & Recommended Setup](https://github.com/s709gaming/MMESkyrimNetBridge/blob/main/REQUIREMENTS.md)
+🥛 Milk Mod Economy EXTENSIONS
+
+Release status: 1.5.0 
+Main requirement: Milk Mod Economy (and its requirements)
+
+📥 Download:
+MME Extensions on LoversLab
+
+✅ The latest Skyrim SE/AE runtime (1.7.104) is supported!
+
+📚 Full Requirements & Recommended Setup:
+Requirements Guide on GitHub
+
+See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESkyrimNetBridge/blob/main/REQUIREMENTS.md) 
 
 # 🥛 How Does Milk Mod Economy Work?
 
@@ -223,7 +236,7 @@
 - Venomr - Tips on fixing Elsie Lavache
 - Thorax339 - Tips on integrating SexLab P+
 - Scrab - His many lewd mods
-- Risal - Estrus Unified patch
+- Risarei - Estrus Unified patch
 
 # 📜 License / Permissions
 

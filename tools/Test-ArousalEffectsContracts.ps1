@@ -1,14 +1,15 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$effect = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArousalEffects.psc") -Raw
-$animations = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArousalAnimations.psc") -Raw
-$reactionAnimation = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEReactionAnimation.psc") -Raw
-$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw
-$bridge = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArousalBridge.psc") -Raw
-$npcDrink = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMENPCDrinkDialogue.psc") -Raw
-$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw
-$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw
+$effect = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArousalEffects.psc") -Raw | Remove-MMELocalizationWrappers
+$animations = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArousalAnimations.psc") -Raw | Remove-MMELocalizationWrappers
+$reactionAnimation = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEReactionAnimation.psc") -Raw | Remove-MMELocalizationWrappers
+$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw | Remove-MMELocalizationWrappers
+$bridge = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEArousalBridge.psc") -Raw | Remove-MMELocalizationWrappers
+$npcDrink = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMENPCDrinkDialogue.psc") -Raw | Remove-MMELocalizationWrappers
+$controller = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsController.psc") -Raw | Remove-MMELocalizationWrappers
+$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw | Remove-MMELocalizationWrappers
 $build = Get-Content -LiteralPath (Join-Path $projectRoot "build-package.ps1") -Raw
 $fomod = Get-Content -LiteralPath (Join-Path $projectRoot "fomod\ModuleConfig.xml") -Raw
 $json = Get-Content -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\ArousalEffects.json") -Raw | ConvertFrom-Json

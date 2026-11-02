@@ -47,7 +47,7 @@ def generate():
     function('String Function RouteKey(String fileKey, Int index) Global',
         [x for file,routes in schema.items() for i,key in enumerate(routes) for x in [f'    If fileKey == "{file}" && index == {i}',f'        Return "{key}"','    EndIf']]+['    Return ""'])
     function('String Function Template(String fileKey, String routeKey, Int index = 0) Global',
-        [x for (file,key),value in values.items() for x in [f'    If fileKey == "{file}" && routeKey == "{key}"',*([f'        If index == {i}\n            Return {literal(v)}\n        EndIf' for i,v in enumerate(value)] if isinstance(value,list) else [f'        Return {literal(value)}']),'    EndIf']]+['    Return ""'])
+        [x for (file,key),value in values.items() for x in [f'    If fileKey == "{file}" && routeKey == "{key}"',*([f'        If index == {i}\n            Return MMELocalization.Text({literal(v)})\n        EndIf' for i,v in enumerate(value)] if isinstance(value,list) else [f'        Return MMELocalization.Text({literal(value)})']),'    EndIf']]+['    Return ""'])
     function('Int Function PoolCount(String fileKey, String routeKey) Global',
         [x for (file,key),value in values.items() if isinstance(value,list) for x in [f'    If fileKey == "{file}" && routeKey == "{key}"',f'        Return {len(value)}','    EndIf']]+['    Return 0'])
     function('String Function Tokens(String fileKey, String routeKey) Global',

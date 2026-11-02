@@ -424,7 +424,7 @@ Event OnUpdate()
 			GetCurrentHourOfDay()
 		endif
 	else
-		Debug.Messagebox("MilkModEconomy MilkPoll interval is 0, mod is broken, have a nice day!")
+		Debug.Messagebox(MMELocalization.Text("MilkModEconomy MilkPoll interval is 0, mod is broken, have a nice day!"))
 	endif
 EndEvent
 
@@ -439,7 +439,7 @@ Event OnUpdateGameTime()
 			ActorCheck(1)
 		endif
 	else
-		Debug.Messagebox("MilkModEconomy MilkPoll interval is 0, mod is broken, have a nice day!")
+		Debug.Messagebox(MMELocalization.Text("MilkModEconomy MilkPoll interval is 0, mod is broken, have a nice day!"))
 	endif
 EndEvent
 
@@ -594,7 +594,7 @@ Function ActorCheck(int t)
 		
 		SendModEvent( "MME_MilkCycleComplete" )
 	else
-		Debug.Messagebox("MilkModEconomy PlayerRef is None, mod is broken, have a nice day!")
+		Debug.Messagebox(MMELocalization.Text("MilkModEconomy PlayerRef is None, mod is broken, have a nice day!"))
 	endif
 EndFunction
 
@@ -651,13 +651,13 @@ Function MilkCycle(Actor akActor, int t)
 			BreastBaseMod += 0.01
 			if Utility.RandomInt(0, 100) <= 25
 				if StorageUtil.GetFloatValue(akActor, "MME.MilkMaid.MilkGen") == 0
-					debug.Notification(MaidName + "'s breasts has started lactating.")
+					debug.Notification(MaidName + MMELocalization.Text("'s breasts has started lactating."))
 					StorageUtil.AdjustFloatValue(akActor, "MME.MilkMaid.MilkGen", 1/3/10)
 					AddMilkFx(akActor, 1)
 					AddLeak(akActor)
 				else
 					StorageUtil.AdjustFloatValue(akActor, "MME.MilkMaid.MilkGen", 1/3/10)
-					debug.Notification(MaidName + "'s lactation has increased.")
+					debug.Notification(MaidName + MMELocalization.Text("'s lactation has increased."))
 					MaidMilkGen = StorageUtil.GetFloatValue(akActor,"MME.MilkMaid.MilkGen")
 				endif
 				if Utility.RandomInt(1, 100) <= MilkQC.BrestEnlargement_MultiBreast_Effect && BreastRows < 4
@@ -888,9 +888,9 @@ Function MilkCycle(Actor akActor, int t)
 		endif
 		If MilkMsgs && PlayerREF.GetDistance(akActor) < 500
 			If PlayerREF == akActor
-				Debug.Notification("Your chest hurts, maybe you should rest, some sleeping might relief your pain" )
+				Debug.Notification(MMELocalization.Text("Your chest hurts, maybe you should rest, some sleeping might relief your pain") )
 			else
-				Debug.Notification(MaidName + "'s chest hurts, maybe you should rest, some sleeping might relief her pain" )
+				Debug.Notification(MaidName + MMELocalization.Text("'s chest hurts, maybe you should rest, some sleeping might relief her pain") )
 			endif
 		endif
 	endif
@@ -956,17 +956,17 @@ Function MilkCycle(Actor akActor, int t)
 			if !(maidArmor == TITS4	|| maidArmor == TITS6 || maidArmor == TITS8 || MMEExtDDCheck(akActor, "IsMilkingBlocked_Suit"))
 				;heavy armor	
 				if MilkCnt > 4 && maidArmor.HasKeyword(Game.GetFormFromFile(0x6BBD2, "Skyrim.esm") as keyword)
-					Debug.Notification("Your breasts are too big to fit into your heavy armor")
+					Debug.Notification(MMELocalization.Text("Your breasts are too big to fit into your heavy armor"))
 					akActor.UnEquipItem(maidArmor)
 				endif
 				;light armor	
 				if MilkCnt > 8 && maidArmor.HasKeyword(Game.GetFormFromFile(0x6BBD3, "Skyrim.esm") as keyword)
-					Debug.Notification("Your breasts are too big to fit into your light armor")
+					Debug.Notification(MMELocalization.Text("Your breasts are too big to fit into your light armor"))
 					akActor.UnEquipItem(maidArmor)
 				endif
 				;clothes
 				if MilkCnt > 12
-					Debug.Notification("Your breasts are too big to fit into your clothes")
+					Debug.Notification(MMELocalization.Text("Your breasts are too big to fit into your clothes"))
 					akActor.UnEquipItem(maidArmor)
 				endif
 			endif
@@ -998,7 +998,7 @@ Function AssignSlot(Actor akActor)
 		int t = MILKmaid.Find(none,1)
 
 		If t == -1
-			Debug.notification("No more Milk Maid slots")
+			Debug.notification(MMELocalization.Text("No more Milk Maid slots"))
 			return
 		Else
 			While i < MilkMaid.Length
@@ -1011,7 +1011,7 @@ Function AssignSlot(Actor akActor)
 			;Debug.notification(MilkMaid.Length + " " + count + " " + Milklvl0fix )
 
 			If count >= Milklvl0fix()
-				Debug.notification("No more Milk Maid slots")
+				Debug.notification(MMELocalization.Text("No more Milk Maid slots"))
 				return
 			Else
 				MILKmaid[t] = akActor
@@ -1296,7 +1296,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 	
 	if akActor.HasSpell( BeingMilkedPassive )
 		;if MilkingType != 1						;prevents msg spam from aidrivenplayer bound milkpump, since its activates script endlessly,
-			Debug.notification(akActor.GetLeveledActorBase().GetName() + " already being milked, if something went wrong, remove Milking passive spell from Milk Maid debug menu")
+			Debug.notification(akActor.GetLeveledActorBase().GetName() + MMELocalization.Text(" already being milked, if something went wrong, remove Milking passive spell from Milk Maid debug menu"))
 		;endif
 		return									; prevents multiple scripts running
 	endif
@@ -1385,7 +1385,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 ;-----------------------Milking block check
 	
 	if PiercingCheck(akActor) == 2 && IsMilkingBlocked == false
-		Debug.Notification("Nipple Plugs prevents milking")
+		Debug.Notification(MMELocalization.Text("Nipple Plugs prevents milking"))
 		if mode > 0
 			akActor.RemoveSpell( BeingMilkedPassive )
 				if PlayerREF == akActor && MilkingType == 1
@@ -1402,7 +1402,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 	if Plugin_DDI && IsMilkingBlocked == false
 		if MMEExtDDCheck(akActor, "IsWearingDDMilker") == false
 			if DDBra == true && SLSDBra == false
-				Debug.Notification("Chastity Bra prevents milking")
+				Debug.Notification(MMELocalization.Text("Chastity Bra prevents milking"))
 				if mode > 0 && SLSDBra == false
 					if PlayerREF == akActor && MilkingType != 0
 						Game.EnablePlayerControls() ;(True,True,True,True,True,True,True,True,0)
@@ -1423,7 +1423,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				if akActor.HasSpell(MME_Spells_Buffs.GetAt(2) as Spell) && StopMilking != true
 					StopMilking = true
 					if MilkMsgs && PlayerREF == akActor
-						debug.Notification("Your breasts are well-milked and need more milk before they can be milked again.")
+						debug.Notification(MMELocalization.Text("Your breasts are well-milked and need more milk before they can be milked again."))
 					Endif
 				Endif
 			Endif
@@ -1440,11 +1440,11 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 		if Plugin_DDI
 			if DDArmbinder == true || DDYoke == true || DDSuit == true
 				if DDArmbinder == true
-					Debug.Messagebox("Armbinder prevents using of the device")
+					Debug.Messagebox(MMELocalization.Text("Armbinder prevents using of the device"))
 				elseif DDYoke == true
-					Debug.Messagebox("Yoke prevents using of the device")
+					Debug.Messagebox(MMELocalization.Text("Yoke prevents using of the device"))
 				elseif DDSuit == true
-					Debug.Messagebox("Bondage suit prevents using of the device")
+					Debug.Messagebox(MMELocalization.Text("Bondage suit prevents using of the device"))
 				endif
 				akActor.Setunconscious(false)
 				if PlayerREF == akActor && MilkingType != 0
@@ -1475,7 +1475,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 			Game.DisablePlayerControls()
 			bControlsDisabled = true
 			if MilkMsgs
-				debug.Notification("You feel Milk Pump secure your body, removing your ability to move.")
+				debug.Notification(MMELocalization.Text("You feel Milk Pump secure your body, removing your ability to move."))
 			endif
 		endif
 		
@@ -1485,7 +1485,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				maidArmor = akActor.GetWornForm(Armor.GetMaskForSlot(armslot[armloop]))
 				if maidArmor != None
 					if StringUtil.Find(maidArmor.getname(), armname[armorcheckloop] ) >= 0
-						Debug.Notification( maidArmor.getname() + " prevents milking")
+						Debug.Notification( maidArmor.getname() + MMELocalization.Text(" prevents milking"))
 						armf = true
 						if mode > 0 
 							akActor.RemoveSpell( BeingMilkedPassive )
@@ -1563,7 +1563,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 	elseif mode == 4 || StopMilking
 		;do nothing
 	elseif MilkCnt < 1
-		Debug.Notification(akActor.GetLeveledActorBase().GetName() + " have no milk!")
+		Debug.Notification(akActor.GetLeveledActorBase().GetName() + MMELocalization.Text(" have no milk!"))
 		akActor.RemoveSpell( BeingMilkedPassive )
 		return
 	else
@@ -1655,9 +1655,9 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 			EndIf
 		ElseIf Mode == 1
 			If akActor == PlayerRef
-				Debug.Notification("With your hands bound there is no way you can be milked without somebody's help")
+				Debug.Notification(MMELocalization.Text("With your hands bound there is no way you can be milked without somebody's help"))
 			Else
-				Debug.Notification("With hands bound there is no way " + akActor.GetLeveledActorBase().GetName() + " can be milked without somebody's help")
+				Debug.Notification(MMELocalization.Text("With hands bound there is no way ") + akActor.GetLeveledActorBase().GetName() + MMELocalization.Text(" can be milked without somebody's help"))
 			EndIf
 			IsMilkingBlocked = true
 			akActor.RemoveSpell( BeingMilkedPassive )
@@ -1932,7 +1932,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 					MilkCnt = MME_Storage.getMilkCurrent(akActor)
 					CurrentSize(akActor)
 					if PlayerREF.GetDistance(akActor) < 500 && MilkMsgs && MilkCntMsgs
-						debug.Notification(MaidName + "'s remaining capacity: " + MilkCnt + ", Milked capacity: " + bottles)
+						debug.Notification(MaidName + MMELocalization.Text("'s remaining capacity: ") + MilkCnt + MMELocalization.Text(", Milked capacity: ") + bottles)
 					endif
 					if mode == 1 || akActor.GetWornForm(Armor.GetMaskForSlot(32)) == (None || TITS4 || TITS6 || TITS8)
 						AddMilkFx(akActor, 1)
@@ -1942,7 +1942,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				
 				if StorageUtil.GetFloatValue(akActor, "MME.MilkMaid.MilkGen") == 0 
 					if Utility.RandomInt(0, 100) < 15
-						debug.Notification(MaidName + "'s breasts has started lactating.")
+						debug.Notification(MaidName + MMELocalization.Text("'s breasts has started lactating."))
 						StorageUtil.AdjustFloatValue(akActor, "MME.MilkMaid.MilkGen", MilkGenValue / 3 / 10 * gush)
 					endif
 				else
@@ -2237,7 +2237,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 							StorageUtil.AdjustFloatValue(akActor, "MME.MilkMaid.MilkingContainerMilksSUM", bottles)
 						elseif StorageUtil.GetIntValue(akActor, "MME.MilkMaid.IsSlave") == 1
 							StorageUtil.AdjustFloatValue(akActor, "MME.MilkMaid.MilkingContainerMilksSUM", bottles)
-							debug.Notification(bottles + " Milk added to container.")
+							debug.Notification(bottles + MMELocalization.Text(" Milk added to container."))
 						elseif CuirassSellsMilk == true																			;old, sells milk through milkpump or with cuirass
 							MilkE.InitiateTrade(bottles + StorageUtil.GetFloatValue(akActor,"MME.MilkMaid.MilkingContainerMilksSUM") as int, boobgasmcount, akActor, false)
 							StorageUtil.SetFloatValue(akActor, "MME.MilkMaid.MilkingContainerMilksSUM", 0)
@@ -2400,7 +2400,7 @@ Function PostMilk(Actor akActor)
 		elseif MilkCnt / MilkMax >= 0.6
 			akActor.AddSpell(MME_Spells_Buffs.GetAt(1) as Spell, false)
 			if akActor == PlayerRef && MilkMsgs
-				debug.Notification("Your breasts are getting heavy from all the milk sloshing inside.")
+				debug.Notification(MMELocalization.Text("Your breasts are getting heavy from all the milk sloshing inside."))
 			endif	
 		endif
 		
@@ -2525,16 +2525,16 @@ EndFunction
 Function MilkMsgHyper(int t, Actor akActor)
 	MilkMsgHyper = new String[11]
 		String MaidName = akActor.GetLeveledActorBase().GetName()
-		MilkMsgHyper[1] = "As a result of a series of repeated vigorous milkings, " + MaidName + "'s breasts have grown accustomed to the great demand for their precious nectar and have grown bigger in size increasing their capacity! \n [Milk Maid Level: 1]"
-		MilkMsgHyper[2] = "Due to repeated vigorous milkings, " + MaidName + "'s beautiful boobs are adjusting to the great demand for their precious nectar and have grown bigger in size increasing their capacity even further! \n [Milk Maid Level: 2]"
-		MilkMsgHyper[3] = "The repeated vigorous milkings are conditioning " + MaidName + "'s glorious globes to meet the great demand for their precious nectar. They have grown bigger in size increasing their already impressive capacity even further! \n [Milk Maid Level: 3]"
-		MilkMsgHyper[4] = "Repeated vigorous milkings have trained " + MaidName + "'s marvellous milk melons to meet the great demand for their precious nectar. They have grown bigger in size increasing their already amazing capacity even further! \n [Milk Maid Level: 4]"
-		MilkMsgHyper[5] = MaidName + "'s looking forward to these vigorous milkings. Her breasts have grown accustomed to the great demand for their luscious lactation and have grown bigger in size increasing their inhuman capacity even further! \n [Milk Maid Level: 5]"
-		MilkMsgHyper[6] = MaidName + "'s already ample breasts are adjusting to the demand for their precious nectar due to the repeated vigorous milkings. They have grown in size and capacity again! " + MaidName + " enjoys being milked! \n [Milk Maid Level: 6]"
-		MilkMsgHyper[7] = "Due to the regular, vigorous milkings, " + MaidName + "'s breasts have grown even larger and their capacity has increased. Their now bountiful breasts will work to meet the demand for their tasty milk. \n [Milk Maid Level: 7]"
-		MilkMsgHyper[8] = MaidName + " enjoys the repeated and vigorous milking. her breasts continue to grow to meet the demand for their rich nectar. Her now Gigantic Jugs can supply more milk and she enjoys it when people notice her breast size! \n [Milk Maid Level: 8]"
-		MilkMsgHyper[9] = "These regular, vigorous milking sessions turn your milkmaid's on! They now have Tremendous Tits with increased size and capacity. Their delicious milk is in demand and they feel sexy when they hear comments about their boobs. \n [Milk Maid Level: 9]"
-		MilkMsgHyper[10] = MaidName + " is now a Master of the Milkmaids with MASSIVE Mammaries! She can supply more milk than an entire herd of cows. And those tits of theirs are the talk of Tamriel. \n [Master Milk Maid]"
+		MilkMsgHyper[1] = MMELocalization.Text("As a result of a series of repeated vigorous milkings, ") + MaidName + MMELocalization.Text("'s breasts have grown accustomed to the great demand for their precious nectar and have grown bigger in size increasing their capacity! \n [Milk Maid Level: 1]")
+		MilkMsgHyper[2] = MMELocalization.Text("Due to repeated vigorous milkings, ") + MaidName + MMELocalization.Text("'s beautiful boobs are adjusting to the great demand for their precious nectar and have grown bigger in size increasing their capacity even further! \n [Milk Maid Level: 2]")
+		MilkMsgHyper[3] = MMELocalization.Text("The repeated vigorous milkings are conditioning ") + MaidName + MMELocalization.Text("'s glorious globes to meet the great demand for their precious nectar. They have grown bigger in size increasing their already impressive capacity even further! \n [Milk Maid Level: 3]")
+		MilkMsgHyper[4] = MMELocalization.Text("Repeated vigorous milkings have trained ") + MaidName + MMELocalization.Text("'s marvellous milk melons to meet the great demand for their precious nectar. They have grown bigger in size increasing their already amazing capacity even further! \n [Milk Maid Level: 4]")
+		MilkMsgHyper[5] = MaidName + MMELocalization.Text("'s looking forward to these vigorous milkings. Her breasts have grown accustomed to the great demand for their luscious lactation and have grown bigger in size increasing their inhuman capacity even further! \n [Milk Maid Level: 5]")
+		MilkMsgHyper[6] = MaidName + MMELocalization.Text("'s already ample breasts are adjusting to the demand for their precious nectar due to the repeated vigorous milkings. They have grown in size and capacity again! ") + MaidName + MMELocalization.Text(" enjoys being milked! \n [Milk Maid Level: 6]")
+		MilkMsgHyper[7] = MMELocalization.Text("Due to the regular, vigorous milkings, ") + MaidName + MMELocalization.Text("'s breasts have grown even larger and their capacity has increased. Their now bountiful breasts will work to meet the demand for their tasty milk. \n [Milk Maid Level: 7]")
+		MilkMsgHyper[8] = MaidName + MMELocalization.Text(" enjoys the repeated and vigorous milking. her breasts continue to grow to meet the demand for their rich nectar. Her now Gigantic Jugs can supply more milk and she enjoys it when people notice her breast size! \n [Milk Maid Level: 8]")
+		MilkMsgHyper[9] = MMELocalization.Text("These regular, vigorous milking sessions turn your milkmaid's on! They now have Tremendous Tits with increased size and capacity. Their delicious milk is in demand and they feel sexy when they hear comments about their boobs. \n [Milk Maid Level: 9]")
+		MilkMsgHyper[10] = MaidName + MMELocalization.Text(" is now a Master of the Milkmaids with MASSIVE Mammaries! She can supply more milk than an entire herd of cows. And those tits of theirs are the talk of Tamriel. \n [Master Milk Maid]")
 	debug.messagebox(MilkMsgHyper[t])
 EndFunction
 
@@ -2984,7 +2984,7 @@ Function DLCcheck()
 	If (MMHF != 255 && MM > MMHF)\
 	|| (MMZAZ != 255 && MM > MMZAZ)\
 	|| (MMS != 255 && MM > MMS)
-		Debug.MessageBox("MME incorrect load order: patches should go after main mod")
+		Debug.MessageBox(MMELocalization.Text("MME incorrect load order: patches should go after main mod"))
 	endif
 	
 	Int MMMP = Game.GetModbyName("MilkMod_MilkPumpsBasic.esp")
@@ -3000,7 +3000,7 @@ Function DLCcheck()
 	|| (MMMPF != 255 && MM > MMMPF)\
 	|| (MMMPFB != 255 && MM > MMMPFB)\
 	|| (MMMPFNB != 255 && MM > MMMPFNB)
-		Debug.MessageBox("MME incorrect load order: milkpumps should go after main mod")
+		Debug.MessageBox(MMELocalization.Text("MME incorrect load order: milkpumps should go after main mod"))
 	endif
 	
 	If (MMMP != 255 && MMS < MMMP)\
@@ -3009,7 +3009,7 @@ Function DLCcheck()
 	|| (MMMPF != 255 && MMS < MMMPF)\
 	|| (MMMPFB != 255 && MMS < MMMPFB)\
 	|| (MMMPFNB != 255 && MMS < MMMPFNB)
-		Debug.MessageBox("MME incorrect load order: sandbox patch should go after milkpumps")
+		Debug.MessageBox(MMELocalization.Text("MME incorrect load order: sandbox patch should go after milkpumps"))
 	endif
 	MMELog.MasterDiagnostic("MilkModEconomy DCL check done")
 	MMEfoodlistaddon()
@@ -3212,7 +3212,7 @@ EndFunction
 Function Milkmaidinfo()
 	String msg = ""
 	int i = 0
-	msg = " Milkmaids info:\n"
+	msg = MMELocalization.Text(" Milkmaids info:\n")
 	while i < MilkMaid.Length
 		if MilkMaid[i] != None
 			float MilkCnt = MME_Storage.getMilkCurrent(MILKmaid[i])
@@ -3248,7 +3248,7 @@ Function Modtoggle()
 			RegisterForSingleUpdateGameTime (MilkPoll)
 		endif
 		MilkE.RegisterForSingleUpdateGameTime (1)
-		debug.Notification("Milk Mod Enabled")
+		debug.Notification(MMELocalization.Text("Milk Mod Enabled"))
 	else
 		MilkFlag = false
 		EconFlag = false
@@ -3256,7 +3256,7 @@ Function Modtoggle()
 		UnregisterForUpdateGameTime()
 		MilkE.UnregisterForUpdateGameTime()
 		LastTimeMilked = 0
-		debug.Notification("Milk Mod Disabled")
+		debug.Notification(MMELocalization.Text("Milk Mod Disabled"))
 	endif
 EndFunction
 
@@ -3294,7 +3294,7 @@ EndFunction
 
 Function MaidRemove(Actor akActor)
     MMEActorPromptState.Invalidate(akActor, "MME maid removal")
-		debug.notification("MilkModEconomy existing maid/slave " + akActor.GetLeveledActorBase().GetName() + "resetting")
+		debug.notification(MMELocalization.Text("MilkModEconomy existing maid/slave ") + akActor.GetLeveledActorBase().GetName() + MMELocalization.Text("resetting"))
 	If akActor != None
 		MME_BodyMod BodyMod = Quest.GetQuest("MME_MilkQUEST") as MME_BodyMod
 		MMELog.MasterDiagnostic("MilkModEconomy existing maid/slave " + akActor.GetLeveledActorBase().GetName() + "resetting")
@@ -3605,7 +3605,7 @@ Function UNINSTALL()
 	;reset maids stats
 	MaidReset()
 	SlaveReset()
-	Debug.Notification("Milk Mod reset")
+	Debug.Notification(MMELocalization.Text("Milk Mod reset"))
 EndFunction
 
 
@@ -3870,20 +3870,20 @@ int Function Pain(Actor akActor, int pain)
 		who = "My"
 		how = "feels"
 	else 
-		who = akActor.GetLeveledActorBase().GetName() + "'s"
+		who = akActor.GetLeveledActorBase().GetName() + MMELocalization.Text("'s")
 		how = "looks"
 	endif
 
 	if PainCnt < (PainMax/3) as int && NState(akActor) == "Normal"
 	elseif PainCnt >= (PainMax/3) as int && NState(akActor) == "Sensitive"
 		pain += 1
-		debug.Notification(who + " nipples " + how + " very sensitive.")
+		debug.Notification(who + MMELocalization.Text(" nipples ") + how + MMELocalization.Text(" very sensitive."))
 	elseif PainCnt >= (PainMax/3*2) as int && NState(akActor) == "Irritated"
 		pain += 1
-		debug.Notification(who + " nipples " + how + " irritated and stretched.")
+		debug.Notification(who + MMELocalization.Text(" nipples ") + how + MMELocalization.Text(" irritated and stretched."))
 	elseif PainCnt >= (PainMax*0.9) as int && NState(akActor) == "Sore"
 		pain += 1
-		debug.Notification(who + " nipples jut out in pain demanding release!")
+		debug.Notification(who + MMELocalization.Text(" nipples jut out in pain demanding release!"))
 	endif
 
 	PainCnt += (pain - MaidLevel * 0.025) * (1 - SLA.GetActorArousal(akActor) / 100 * 0.25)

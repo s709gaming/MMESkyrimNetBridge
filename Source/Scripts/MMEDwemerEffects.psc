@@ -188,6 +188,6 @@ EndFunction
 Function Report(Bool showNotification, String reportText) Global
     MMELog.MasterDiagnostic("[MME Extensions Dwemer Effects] " + reportText)
     If showNotification
-        Debug.Notification("Dwemer Effects: " + reportText)
+        Debug.Notification(MMELocalization.Text("Dwemer Effects: ") + reportText)
     EndIf
 EndFunction

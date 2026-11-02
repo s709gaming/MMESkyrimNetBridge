@@ -1,9 +1,10 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$service = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDwemerBlacksmithDialogue.psc") -Raw
-$wrapper = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEBlacksmithDialogue.psc") -Raw
-$reminder = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEServiceArmorReminder.psc") -Raw
+$service = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDwemerBlacksmithDialogue.psc") -Raw | Remove-MMELocalizationWrappers
+$wrapper = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEBlacksmithDialogue.psc") -Raw | Remove-MMELocalizationWrappers
+$reminder = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEServiceArmorReminder.psc") -Raw | Remove-MMELocalizationWrappers
 $config = Get-Content -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\ArmorCheckReminders.json") -Raw | ConvertFrom-Json
 $build = Get-Content -LiteralPath (Join-Path $projectRoot "build-package.ps1") -Raw
 

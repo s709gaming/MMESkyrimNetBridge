@@ -326,7 +326,7 @@ Function ReportArmorStrip(Bool showNotification, String reportText) Global
         Return
     EndIf
     MMELog.Diagnostic("[MMEAlert Armor Stripping] " + reportText)
-    Debug.Notification("Armor Stripping: " + reportText)
+    Debug.Notification(MMELocalization.Text("Armor Stripping: ") + reportText)
 EndFunction
 
 ; Applies the override master toggle without destroying MME's own setting.
@@ -1247,7 +1247,7 @@ String Function GetArmorName(Armor equippedArmor) Global
     EndIf
     String armorName = equippedArmor.GetName()
     If armorName == ""
-        armorName = "<unnamed armor>"
+        armorName = MMELocalization.Text("<unnamed armor>")
     EndIf
     Return armorName
 EndFunction
@@ -1268,7 +1268,7 @@ Function NotifyArmorDebug(Bool diagnostic, String reportText) Global
         Return
     EndIf
     MMELog.Diagnostic("[MME Extensions Armor] " + reportText)
-    Debug.Notification("Armor Debug: " + reportText)
+    Debug.Notification(MMELocalization.Text("Armor Debug: ") + reportText)
 EndFunction
 
 Float Function GetFlatMilkThresholdForCategory(Int armorCategory) Global

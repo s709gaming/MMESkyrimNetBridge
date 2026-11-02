@@ -1,10 +1,11 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
-$standard = Get-Content -LiteralPath (Join-Path $root 'Source\Scripts\MMESexLabBreastfeedingBackend.psc') -Raw
-$pplus = Get-Content -LiteralPath (Join-Path $root 'fomod\choices\sexlab-pplus\Source\Scripts\MMESexLabBreastfeedingBackend.psc') -Raw
-$standardSdk = Get-Content -LiteralPath (Join-Path $root 'tools\mme-sdk\sslThreadModel.psc') -Raw
-$controller = Get-Content -LiteralPath (Join-Path $root 'Source\Scripts\MMEAlertsController.psc') -Raw
-$debug = Get-Content -LiteralPath (Join-Path $root 'Source\Scripts\MMEDebug.psc') -Raw
+$standard = Get-Content -LiteralPath (Join-Path $root 'Source\Scripts\MMESexLabBreastfeedingBackend.psc') -Raw | Remove-MMELocalizationWrappers
+$pplus = Get-Content -LiteralPath (Join-Path $root 'fomod\choices\sexlab-pplus\Source\Scripts\MMESexLabBreastfeedingBackend.psc') -Raw | Remove-MMELocalizationWrappers
+$standardSdk = Get-Content -LiteralPath (Join-Path $root 'tools\mme-sdk\sslThreadModel.psc') -Raw | Remove-MMELocalizationWrappers
+$controller = Get-Content -LiteralPath (Join-Path $root 'Source\Scripts\MMEAlertsController.psc') -Raw | Remove-MMELocalizationWrappers
+$debug = Get-Content -LiteralPath (Join-Path $root 'Source\Scripts\MMEDebug.psc') -Raw | Remove-MMELocalizationWrappers
 $fomod = Get-Content -LiteralPath (Join-Path $root 'fomod\ModuleConfig.xml') -Raw
 $choiceRoot = Join-Path $root 'fomod\choices\sexlab-pplus'
 $registry = Get-Content -LiteralPath (Join-Path $choiceRoot 'SKSE\SexLab\Registry\Source\3jiouBreastFeeding.slsb.json') -Raw
@@ -66,7 +67,7 @@ foreach ($eventName in $registryEvents) {
 }
 Assert-Contract (Test-Path -LiteralPath (Join-Path $root 'docs\SEXLAB-PPLUS-COMPATIBILITY.md')) 'P+ credit, permission, and installation document is present'
 
-$stageHook = Get-Content -LiteralPath (Join-Path $choiceRoot 'Source\Scripts\MilkPlayerLoadGame.psc') -Raw
+$stageHook = Get-Content -LiteralPath (Join-Path $choiceRoot 'Source\Scripts\MilkPlayerLoadGame.psc') -Raw | Remove-MMELocalizationWrappers
 $hookStart = $stageHook.Substring($stageHook.IndexOf('Event OnSexLabStart('))
 $hookStart = $hookStart.Substring(0, $hookStart.IndexOf('EndEvent'))
 Assert-Contract ($hookStart.IndexOf('actors.Length < 2') -lt $hookStart.IndexOf('actors[0]')) 'P+ hook validates participant count before actor indexing'

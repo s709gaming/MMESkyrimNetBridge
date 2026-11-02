@@ -212,6 +212,6 @@ EndFunction
 Function Report(Bool showNotification, String reportText) Global
     MMELog.Diagnostic("[MMEAlert Arousal] " + reportText)
     If showNotification
-        Debug.Notification("Arousal Debug: " + reportText)
+        Debug.Notification(MMELocalization.Text("Arousal Debug: ") + reportText)
     EndIf
 EndFunction

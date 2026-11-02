@@ -1,10 +1,11 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw
-$log = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMELog.psc") -Raw
-$debug = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDebug.psc") -Raw
-$dialogue = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMENPCDialog.psc") -Raw
-$diagnostics = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDiagnostics.psc") -Raw
+$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw | Remove-MMELocalizationWrappers
+$log = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMELog.psc") -Raw | Remove-MMELocalizationWrappers
+$debug = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDebug.psc") -Raw | Remove-MMELocalizationWrappers
+$dialogue = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMENPCDialog.psc") -Raw | Remove-MMELocalizationWrappers
+$diagnostics = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDiagnostics.psc") -Raw | Remove-MMELocalizationWrappers
 
 if ($mcm -notmatch 'AddToggleOption\("Papyrus Logging"' -or $mcm -notmatch 'AddToggleOption\("Verbose Papyrus Logging"') {
     throw "The Troubleshoot MCM does not expose the two consolidated logging levels"

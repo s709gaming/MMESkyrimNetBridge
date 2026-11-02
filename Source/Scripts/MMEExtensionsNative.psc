@@ -1,5 +1,10 @@
 Scriptname MMEExtensionsNative Hidden
 
+String Function Localize(String english) Global Native
+Function ReloadLocalization() Global Native
+String Function GetLocalizationLanguage() Global Native
+String Function GetLocalizationError() Global Native
+
 ; Private lock service: queued game-thread work. Result: 0 pending, 1 applied,
 ; -1 failed, -2 superseded/session changed. None armor releases this actor.
 Int Function QueueLockProtection(Actor target, Armor targetArmor) Global Native

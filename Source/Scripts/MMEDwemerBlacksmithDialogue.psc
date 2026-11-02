@@ -61,7 +61,7 @@ Bool Function TryInstall(Actor blacksmith) Global
         Return False
     EndIf
     MMECustomArmorRegistry.HandleCustomArmorEquipped(playerActor, wornArmor)
-    Debug.Notification("Dwemer milking attachment installed in " + wornArmor.GetName())
+    Debug.Notification(MMELocalization.Text("Dwemer milking attachment installed in ") + wornArmor.GetName())
     Bool introduced = False
     If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableRepeatOrdinaryArmorStories", 1) == 1
         introduced = MMEExtensionsAPI.TryRepeatArmorEquipStory(playerActor, wornArmor)
@@ -99,7 +99,7 @@ Bool Function TryRemove(Actor blacksmith) Global
         Alarm("removal verification failed | armor=" + wornArmor.GetName())
         Return False
     EndIf
-    Debug.Notification("Dwemer milking attachment removed from " + wornArmor.GetName())
+    Debug.Notification(MMELocalization.Text("Dwemer milking attachment removed from ") + wornArmor.GetName())
     Trace("removal complete | armor=" + wornArmor.GetName())
     Return True
 EndFunction
@@ -146,7 +146,7 @@ String Function GetActorName(Actor target) Global
 EndFunction
 
 Function Reject(String detail) Global
-    Debug.Notification("Armor state changed; no changes made")
+    Debug.Notification(MMELocalization.Text("Armor state changed; no changes made"))
     Trace(detail)
 EndFunction
 

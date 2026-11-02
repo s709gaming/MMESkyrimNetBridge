@@ -1,8 +1,9 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$facade = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEElsieBreastfeeding.psc") -Raw
-$debug = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDebug.psc") -Raw
-$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw
+$facade = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEElsieBreastfeeding.psc") -Raw | Remove-MMELocalizationWrappers
+$debug = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDebug.psc") -Raw | Remove-MMELocalizationWrappers
+$mcm = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEAlertsMCM.psc") -Raw | Remove-MMELocalizationWrappers
 $fomod = Get-Content -LiteralPath (Join-Path $projectRoot "FOMOD\ModuleConfig.xml") -Raw
 $markerPath = Join-Path $projectRoot "fomod\choices\elsie-compatibility\ElsieCompatibility.json"
 

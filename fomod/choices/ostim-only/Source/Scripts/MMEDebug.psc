@@ -698,7 +698,7 @@ Function RecordNewMilkMaidSexLabBusStop(Int stopNumber, String busMessage, Bool 
     LastNewMilkMaidSexLabBusMessage = busMessage
     If failed
         LastNewMilkMaidSexLabBusState = "FAILED"
-        LastNewMilkMaidSexLabBusFailure = "stop " + stopNumber + ": " + busMessage
+        LastNewMilkMaidSexLabBusFailure = MMELocalization.Text("stop ") + stopNumber + ": " + busMessage
     ElseIf blocked
         LastNewMilkMaidSexLabBusState = "BLOCKED"
     ElseIf stopNumber >= 16
@@ -724,11 +724,11 @@ String Function GetNewMilkMaidSexLabBusFailure()
 EndFunction
 
 Function ShowNewMilkMaidSexLabBusReport()
-    String report = "NMM Bus " + LastNewMilkMaidSexLabBusState + " | stop " + LastNewMilkMaidSexLabBusStop + " | " + LastNewMilkMaidSexLabBusMessage
+    String report = MMELocalization.Text("NMM Bus ") + LastNewMilkMaidSexLabBusState + MMELocalization.Text(" | stop ") + LastNewMilkMaidSexLabBusStop + " | " + LastNewMilkMaidSexLabBusMessage
     If LastNewMilkMaidSexLabBusState == "FAILED"
-        report = "NMM Bus FAILED | " + LastNewMilkMaidSexLabBusFailure
+        report = MMELocalization.Text("NMM Bus FAILED | ") + LastNewMilkMaidSexLabBusFailure
     ElseIf LastNewMilkMaidSexLabBusState == "BLOCKED"
-        report = "NMM Bus BLOCKED | stop " + LastNewMilkMaidSexLabBusStop + " | " + LastNewMilkMaidSexLabBusMessage
+        report = MMELocalization.Text("NMM Bus BLOCKED | stop ") + LastNewMilkMaidSexLabBusStop + " | " + LastNewMilkMaidSexLabBusMessage
     EndIf
     Debug.Notification(report)
     ; This is a sparse, explicitly requested audit result, so it remains useful
@@ -744,7 +744,7 @@ Function RecordBlacksmithDialogueBusStop(Int stopNumber, String busMessage, Bool
     LastBlacksmithDialogueBusMessage = busMessage
     If failed
         LastBlacksmithDialogueBusState = "FAILED"
-        LastBlacksmithDialogueBusFailure = "stop " + stopNumber + "/13: " + busMessage
+        LastBlacksmithDialogueBusFailure = MMELocalization.Text("stop ") + stopNumber + "/13: " + busMessage
     ElseIf blocked
         LastBlacksmithDialogueBusState = "BLOCKED"
     ElseIf waiting
@@ -775,9 +775,9 @@ String Function GetBlacksmithDialogueBusFailure()
 EndFunction
 
 Function ShowBlacksmithDialogueBusReport(Bool useMessageBox = False)
-    String report = "Blacksmith Bus " + LastBlacksmithDialogueBusState + " | stop " + LastBlacksmithDialogueBusStop + "/13 | " + LastBlacksmithDialogueBusMessage
+    String report = MMELocalization.Text("Blacksmith Bus ") + LastBlacksmithDialogueBusState + MMELocalization.Text(" | stop ") + LastBlacksmithDialogueBusStop + "/13 | " + LastBlacksmithDialogueBusMessage
     If LastBlacksmithDialogueBusState == "FAILED"
-        report = "Blacksmith Bus FAILED | " + LastBlacksmithDialogueBusFailure
+        report = MMELocalization.Text("Blacksmith Bus FAILED | ") + LastBlacksmithDialogueBusFailure
     EndIf
     If useMessageBox
         Debug.MessageBox(report)
@@ -795,7 +795,7 @@ Function RecordAlchemistDialogueBusStop(Int stopNumber, String busMessage, Bool 
     LastAlchemistDialogueBusMessage = busMessage
     If failed
         LastAlchemistDialogueBusState = "FAILED"
-        LastAlchemistDialogueBusFailure = "stop " + stopNumber + "/13: " + busMessage
+        LastAlchemistDialogueBusFailure = MMELocalization.Text("stop ") + stopNumber + "/13: " + busMessage
     ElseIf blocked
         LastAlchemistDialogueBusState = "BLOCKED"
     ElseIf waiting
@@ -826,9 +826,9 @@ String Function GetAlchemistDialogueBusFailure()
 EndFunction
 
 Function ShowAlchemistDialogueBusReport(Bool useMessageBox = False)
-    String report = "Alchemist Bus " + LastAlchemistDialogueBusState + " | stop " + LastAlchemistDialogueBusStop + "/13 | " + LastAlchemistDialogueBusMessage
+    String report = MMELocalization.Text("Alchemist Bus ") + LastAlchemistDialogueBusState + MMELocalization.Text(" | stop ") + LastAlchemistDialogueBusStop + "/13 | " + LastAlchemistDialogueBusMessage
     If LastAlchemistDialogueBusState == "FAILED"
-        report = "Alchemist Bus FAILED | " + LastAlchemistDialogueBusFailure
+        report = MMELocalization.Text("Alchemist Bus FAILED | ") + LastAlchemistDialogueBusFailure
     EndIf
     If useMessageBox
         Debug.MessageBox(report)
@@ -846,7 +846,7 @@ Function RecordMageDialogueBusStop(Int stopNumber, String busMessage, Bool faile
     LastMageDialogueBusMessage = busMessage
     If failed
         LastMageDialogueBusState = "FAILED"
-        LastMageDialogueBusFailure = "stop " + stopNumber + "/13: " + busMessage
+        LastMageDialogueBusFailure = MMELocalization.Text("stop ") + stopNumber + "/13: " + busMessage
     ElseIf blocked
         LastMageDialogueBusState = "BLOCKED"
     ElseIf waiting
@@ -877,9 +877,9 @@ String Function GetMageDialogueBusFailure()
 EndFunction
 
 Function ShowMageDialogueBusReport(Bool useMessageBox = False)
-    String report = "Mage Bus " + LastMageDialogueBusState + " | stop " + LastMageDialogueBusStop + "/13 | " + LastMageDialogueBusMessage
+    String report = MMELocalization.Text("Mage Bus ") + LastMageDialogueBusState + MMELocalization.Text(" | stop ") + LastMageDialogueBusStop + "/13 | " + LastMageDialogueBusMessage
     If LastMageDialogueBusState == "FAILED"
-        report = "Mage Bus FAILED | " + LastMageDialogueBusFailure
+        report = MMELocalization.Text("Mage Bus FAILED | ") + LastMageDialogueBusFailure
     EndIf
     If useMessageBox
         Debug.MessageBox(report)
@@ -970,11 +970,11 @@ Bool Function CompleteBreastfeedingDrink(Actor milkSource, Actor drinker, String
     If drinker == Game.GetPlayer()
         actorLabel = "Player"
     EndIf
-    String result = actorLabel + " | milk +" + milkAdded
+    String result = actorLabel + MMELocalization.Text(" | milk +") + milkAdded
     If !isMilkMaid
-        result += " | not Milk Maid"
+        result += MMELocalization.Text(" | not Milk Maid")
     EndIf
-    result += " | arousal +" + arousalAdded
+    result += MMELocalization.Text(" | arousal +") + arousalAdded
     String renderedReaction = MMENPCDrinkDialogue.BuildBreastfeedingReaction(milkSource, drinker, isMilkMaid, milkAdded, arousalSent)
     If renderedReaction == ""
         MMELog.Alarm("[MME Extensions BF Drink] FAILURE: verified " + backend + " completion produced a blank JSON reaction")
@@ -993,9 +993,9 @@ Bool Function CompleteBreastfeedingDrink(Actor milkSource, Actor drinker, String
             MMEAlertsSkyrimNet.NarrateNPCMilkDrink(drinker, False, renderedReaction, False, isMilkMaid)
         EndIf
     EndIf
-    result += " | reaction complete | backend=" + backend + " | thread=" + threadID
+    result += MMELocalization.Text(" | reaction complete | backend=") + backend + MMELocalization.Text(" | thread=") + threadID
     If conversionRoute
-        result += " | conversion narration reserved"
+        result += MMELocalization.Text(" | conversion narration reserved")
     EndIf
     BreastfeedingDrinkReport(diagnostic, result)
     Return True
@@ -1668,7 +1668,7 @@ String Function GetActorName(Actor target) Global
         EndIf
     EndIf
     If result == ""
-        result = "Unknown actor"
+        result = MMELocalization.Text("Unknown actor")
     EndIf
     Return result
 EndFunction
@@ -1676,7 +1676,7 @@ EndFunction
 Function Report(Bool showNotification, String reportText) Global
     MMELog.Diagnostic("[MME Extensions OStim] " + reportText)
     If showNotification
-        Debug.Notification("OStim Debug: " + reportText)
+        Debug.Notification(MMELocalization.Text("OStim Debug: ") + reportText)
     EndIf
 EndFunction
 

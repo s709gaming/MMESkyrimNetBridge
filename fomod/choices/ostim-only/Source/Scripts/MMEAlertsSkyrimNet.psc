@@ -712,17 +712,17 @@ Function NarrateMilkFull(Actor milkMaid) Global
     String settingsFile = "/MMEAlerts/Settings"
     Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableMilkFullNarrationDiagnostic", 0) == 1
     If diagnostic
-        Debug.Notification("Milk Full Narration: trigger detected")
+        Debug.Notification(MMELocalization.Text("Milk Full Narration: trigger detected"))
     EndIf
     If JsonUtil.GetIntValue(settingsFile, "enableMilkFullNarration", 1) != 1
         If diagnostic
-            Debug.Notification("Milk Full Narration: skipped - feature disabled")
+            Debug.Notification(MMELocalization.Text("Milk Full Narration: skipped - feature disabled"))
         EndIf
         Return
     EndIf
     If !IsAvailable()
         If diagnostic
-            Debug.Notification("Milk Full Narration: failed - Skyrim.Net not detected")
+            Debug.Notification(MMELocalization.Text("Milk Full Narration: failed - Skyrim.Net not detected"))
         EndIf
         Return
     EndIf
@@ -737,7 +737,7 @@ Function NarrateMilkFull(Actor milkMaid) Global
     If last >= 0.0 && now - last < cooldown
         If diagnostic
             Int remaining = (cooldown - (now - last)) as Int
-            Debug.Notification("Milk Full Narration: skipped - cooldown " + remaining + "s")
+            Debug.Notification(MMELocalization.Text("Milk Full Narration: skipped - cooldown ") + remaining + MMELocalization.Text("s"))
         EndIf
         Return
     EndIf
@@ -761,18 +761,18 @@ Function NarrateMilkFull(Actor milkMaid) Global
         content = restrainedContent
     EndIf
     If diagnostic
-        Debug.Notification("Milk Full Narration: sending general Milk Maid situation")
+        Debug.Notification(MMELocalization.Text("Milk Full Narration: sending general Milk Maid situation"))
     EndIf
     content = MMEDialogueKnowledge.Append(content, None)
     Int result = SkyrimNetApi.DirectNarration(content, None, None)
     If result == 0
         StorageUtil.SetFloatValue(None, "MME.After.FullNarrationGlobal", now)
         If diagnostic
-            Debug.Notification("Milk Full Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
+            Debug.Notification(MMELocalization.Text("Milk Full Narration: accepted [0] | cooldown ") + (cooldown as Int) + MMELocalization.Text("s"))
         EndIf
     Else
         If diagnostic
-            Debug.Notification("Milk Full Narration: rejected [" + result + "]")
+            Debug.Notification(MMELocalization.Text("Milk Full Narration: rejected [") + result + "]")
         EndIf
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Milk Full DirectNarration result " + result + " | cooldown " + cooldown + " | " + content)
@@ -786,17 +786,17 @@ Function NarrateMilkHalfFull(Actor milkMaid) Global
     String settingsFile = "/MMEAlerts/Settings"
     Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableMilkHalfFullNarrationDiagnostic", 0) == 1
     If diagnostic
-        Debug.Notification("Half-Full Narration: crossing detected")
+        Debug.Notification(MMELocalization.Text("Half-Full Narration: crossing detected"))
     EndIf
     If JsonUtil.GetIntValue(settingsFile, "enableMilkHalfFullNarration", 1) != 1
         If diagnostic
-            Debug.Notification("Half-Full Narration: skipped - feature disabled")
+            Debug.Notification(MMELocalization.Text("Half-Full Narration: skipped - feature disabled"))
         EndIf
         Return
     EndIf
     If !IsAvailable()
         If diagnostic
-            Debug.Notification("Half-Full Narration: failed - Skyrim.Net not detected")
+            Debug.Notification(MMELocalization.Text("Half-Full Narration: failed - Skyrim.Net not detected"))
         EndIf
         Return
     EndIf
@@ -810,7 +810,7 @@ Function NarrateMilkHalfFull(Actor milkMaid) Global
     If last >= 0.0 && now - last < cooldown
         If diagnostic
             Int remaining = (cooldown - (now - last)) as Int
-            Debug.Notification("Half-Full Narration: skipped - cooldown " + remaining + "s")
+            Debug.Notification(MMELocalization.Text("Half-Full Narration: skipped - cooldown ") + remaining + MMELocalization.Text("s"))
         EndIf
         Return
     EndIf
@@ -827,7 +827,7 @@ Function NarrateMilkHalfFull(Actor milkMaid) Global
         content = restrainedContent
     EndIf
     If diagnostic
-        Debug.Notification("Half-Full Narration: sending general Milk Maid situation")
+        Debug.Notification(MMELocalization.Text("Half-Full Narration: sending general Milk Maid situation"))
     EndIf
     content = MMEDialogueKnowledge.Append(content, None)
     Int result = SkyrimNetApi.DirectNarration(content, None, None)
@@ -835,10 +835,10 @@ Function NarrateMilkHalfFull(Actor milkMaid) Global
         JsonUtil.SetFloatValue(settingsFile, "lastMilkHalfFullNarrationRealTime", now)
         JsonUtil.Save(settingsFile, False)
         If diagnostic
-            Debug.Notification("Half-Full Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
+            Debug.Notification(MMELocalization.Text("Half-Full Narration: accepted [0] | cooldown ") + (cooldown as Int) + MMELocalization.Text("s"))
         EndIf
     ElseIf diagnostic
-        Debug.Notification("Half-Full Narration: rejected [" + result + "]")
+        Debug.Notification(MMELocalization.Text("Half-Full Narration: rejected [") + result + "]")
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Half-Full DirectNarration result " + result + " | cooldown " + cooldown + " | " + content)
 EndFunction
@@ -864,10 +864,10 @@ Function NarrateChestMilkDrink(Actor drinker, String milkName, String chestKind)
     EndIf
     String actorName = ResolveActorName(drinker, "The drinker")
     If milkName == ""
-        milkName = "exotic milk"
+        milkName = MMELocalization.Text("exotic milk")
     EndIf
     If chestKind == ""
-        chestKind = "treasure chest"
+        chestKind = MMELocalization.Text("treasure chest")
     EndIf
     String situation = MMENarrationText.Text("MilkDrinking", "narrate_chest_milk_drink_1", "actor", actorName, "milkName", milkName, "chestKind", chestKind)
     String content = MMENarrationText.Text("MilkDrinking", "narrate_chest_milk_drink_2", "situation", situation, "actor", actorName)
@@ -974,18 +974,18 @@ Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String r
         route = "troubleshoot"
     EndIf
     If diagnostic
-        Debug.Notification("NPC Drink Narration: " + route + " drink detected | " + actorName)
+        Debug.Notification(MMELocalization.Text("NPC Drink Narration: ") + route + MMELocalization.Text(" drink detected | ") + actorName)
     EndIf
     If JsonUtil.GetIntValue(settingsFile, "enableNPCDrinkNarration", 1) != 1
         If diagnostic
-            Debug.Notification("NPC Drink Narration: skipped - narration disabled")
+            Debug.Notification(MMELocalization.Text("NPC Drink Narration: skipped - narration disabled"))
         EndIf
         ReportNPCDrinkNarrationTest(diagnosticTest, "05 SKYRIM.NET SKIPPED | NPC Drink Narration disabled")
         Return
     EndIf
     If !IsAvailable()
         If diagnostic
-            Debug.Notification("NPC Drink Narration: skipped - Skyrim.Net unavailable")
+            Debug.Notification(MMELocalization.Text("NPC Drink Narration: skipped - Skyrim.Net unavailable"))
         EndIf
         ReportNPCDrinkNarrationTest(diagnosticTest, "05 SKYRIM.NET SKIPPED | Skyrim.Net unavailable")
         Return
@@ -1000,14 +1000,14 @@ Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String r
     If !diagnosticTest && last >= 0.0 && now - last < cooldown
         If diagnostic
             Int remaining = (cooldown - (now - last)) as Int
-            Debug.Notification("NPC Drink Narration: skipped - cooldown " + remaining + "s")
+            Debug.Notification(MMELocalization.Text("NPC Drink Narration: skipped - cooldown ") + remaining + MMELocalization.Text("s"))
         EndIf
         Return
     EndIf
 
     If renderedReaction == ""
         MMELog.Alarm("[MME Extensions Drink Narration] FAILURE: verified NPC drink reached Skyrim.Net without a rendered JSON reaction; using safe fallback context")
-        renderedReaction = actorName + " drinks some milk."
+        renderedReaction = actorName + MMELocalization.Text(" drinks some milk.")
     EndIf
     String content = MMENarrationText.Text("MilkDrinking", "narrate_n_p_c_milk_drink_1", "reaction", renderedReaction, "actor", actorName)
     If MMEAlertsController.AreArmsRestrained(drinker)
@@ -1029,13 +1029,13 @@ Function NarrateNPCMilkDrink(Actor drinker, Bool dialogueDrink = False, String r
             JsonUtil.Save(settingsFile, False)
         EndIf
         If diagnostic
-            Debug.Notification("NPC Drink Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
+            Debug.Notification(MMELocalization.Text("NPC Drink Narration: accepted [0] | cooldown ") + (cooldown as Int) + MMELocalization.Text("s"))
         EndIf
         ReportNPCDrinkNarrationTest(diagnosticTest, "05 SKYRIM.NET ACCEPTED [0] | route=" + route + " | actor=" + actorName)
     Else
         MMELog.Alarm("[MME Extensions Drink Narration] FAILURE: Skyrim.Net rejected NPC drink narration [" + result + "] for " + actorName)
         If diagnostic
-            Debug.Notification("NPC Drink Narration: rejected [" + result + "]")
+            Debug.Notification(MMELocalization.Text("NPC Drink Narration: rejected [") + result + "]")
         EndIf
         ReportNPCDrinkNarrationTest(diagnosticTest, "05 SKYRIM.NET REJECTED [" + result + "] | route=" + route + " | actor=" + actorName)
     EndIf
@@ -1061,11 +1061,11 @@ Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem, String renderedRe
     String settingsFile = "/MMEAlerts/Settings"
     Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enablePlayerDrinkNarrationDiagnostic", 0) == 1
     If diagnostic
-        Debug.Notification("Player Drink Narration: drink detected")
+        Debug.Notification(MMELocalization.Text("Player Drink Narration: drink detected"))
     EndIf
     If JsonUtil.GetIntValue(settingsFile, "enablePlayerDrinkNarration", 0) != 1
         If diagnostic
-            Debug.Notification("Player Drink Narration: skipped - narration disabled")
+            Debug.Notification(MMELocalization.Text("Player Drink Narration: skipped - narration disabled"))
         EndIf
         Return
     EndIf
@@ -1077,13 +1077,13 @@ Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem, String renderedRe
     EndIf
     If chance == 0 || Utility.RandomInt(1, 100) > chance
         If diagnostic
-            Debug.Notification("Player Drink Narration: skipped - chance " + chance + "%")
+            Debug.Notification(MMELocalization.Text("Player Drink Narration: skipped - chance ") + chance + "%")
         EndIf
         Return
     EndIf
     If !IsAvailable()
         If diagnostic
-            Debug.Notification("Player Drink Narration: skipped - Skyrim.Net unavailable")
+            Debug.Notification(MMELocalization.Text("Player Drink Narration: skipped - Skyrim.Net unavailable"))
         EndIf
         Return
     EndIf
@@ -1097,14 +1097,14 @@ Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem, String renderedRe
     If last >= 0.0 && now - last < cooldown
         If diagnostic
             Int remaining = (cooldown - (now - last)) as Int
-            Debug.Notification("Player Drink Narration: skipped - cooldown " + remaining + "s")
+            Debug.Notification(MMELocalization.Text("Player Drink Narration: skipped - cooldown ") + remaining + MMELocalization.Text("s"))
         EndIf
         Return
     EndIf
 
     String drinkName = drinkItem.GetName()
     If drinkName == ""
-        drinkName = "some milk"
+        drinkName = MMELocalization.Text("some milk")
     EndIf
     String content = MMENarrationText.Text("MilkDrinking", "narrate_player_milk_drink_1", "milkName", drinkName)
     If renderedReaction != ""
@@ -1124,10 +1124,10 @@ Function NarratePlayerMilkDrink(Actor drinker, Form drinkItem, String renderedRe
         JsonUtil.SetFloatValue(settingsFile, "lastPlayerDrinkNarrationRealTime", now)
         JsonUtil.Save(settingsFile, False)
         If diagnostic
-            Debug.Notification("Player Drink Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
+            Debug.Notification(MMELocalization.Text("Player Drink Narration: accepted [0] | cooldown ") + (cooldown as Int) + MMELocalization.Text("s"))
         EndIf
     ElseIf diagnostic
-        Debug.Notification("Player Drink Narration: rejected [" + result + "]")
+        Debug.Notification(MMELocalization.Text("Player Drink Narration: rejected [") + result + "]")
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Player drink DirectNarration result " + result + " | " + content)
 EndFunction
@@ -1141,20 +1141,20 @@ Function NarrateMilkmaidCreated(Actor milkMaid) Global
     Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableMilkmaidCreatedNarrationDiagnostic", 0) == 1
     String actorName = milkMaid.GetDisplayName()
     If actorName == ""
-        actorName = "A Milk Maid"
+        actorName = MMELocalization.Text("A Milk Maid")
     EndIf
     If diagnostic
-        Debug.Notification("New Milk Maid Narration: creation detected | " + actorName)
+        Debug.Notification(MMELocalization.Text("New Milk Maid Narration: creation detected | ") + actorName)
     EndIf
     If JsonUtil.GetIntValue(settingsFile, "enableMilkmaidCreatedNarration", 1) != 1
         If diagnostic
-            Debug.Notification("New Milk Maid Narration: skipped - feature disabled")
+            Debug.Notification(MMELocalization.Text("New Milk Maid Narration: skipped - feature disabled"))
         EndIf
         Return
     EndIf
     If !IsAvailable()
         If diagnostic
-            Debug.Notification("New Milk Maid Narration: skipped - Skyrim.Net unavailable")
+            Debug.Notification(MMELocalization.Text("New Milk Maid Narration: skipped - Skyrim.Net unavailable"))
         EndIf
         Return
     EndIf
@@ -1168,7 +1168,7 @@ Function NarrateMilkmaidCreated(Actor milkMaid) Global
     If last >= 0.0 && now - last < cooldown
         If diagnostic
             Int remaining = (cooldown - (now - last)) as Int
-            Debug.Notification("New Milk Maid Narration: skipped - cooldown " + remaining + "s")
+            Debug.Notification(MMELocalization.Text("New Milk Maid Narration: skipped - cooldown ") + remaining + MMELocalization.Text("s"))
         EndIf
         Return
     EndIf
@@ -1191,13 +1191,13 @@ Function NarrateMilkmaidCreated(Actor milkMaid) Global
             JsonUtil.Save(settingsFile, False)
         EndIf
         If diagnostic
-            Debug.Notification("New Milk Maid Narration: player generation result [" + queued + "]")
+            Debug.Notification(MMELocalization.Text("New Milk Maid Narration: player generation result [") + queued + "]")
         EndIf
         Return
     EndIf
     Actor listener = Game.GetPlayer()
     If diagnostic
-        Debug.Notification("New Milk Maid Narration: sending | speaker=" + actorName + " | listener=" + ResolveActorName(listener, "everyone nearby"))
+        Debug.Notification(MMELocalization.Text("New Milk Maid Narration: sending | speaker=") + actorName + MMELocalization.Text(" | listener=") + ResolveActorName(listener, "everyone nearby"))
     EndIf
     ; Supplying an NPC as originator makes Skyrim.Net select her as speaker.
     ; Player speech uses the private generation/TTS branch above because the
@@ -1208,10 +1208,10 @@ Function NarrateMilkmaidCreated(Actor milkMaid) Global
         JsonUtil.SetFloatValue(settingsFile, "lastMilkmaidCreatedNarrationRealTime", now)
         JsonUtil.Save(settingsFile, False)
         If diagnostic
-            Debug.Notification("New Milk Maid Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
+            Debug.Notification(MMELocalization.Text("New Milk Maid Narration: accepted [0] | cooldown ") + (cooldown as Int) + MMELocalization.Text("s"))
         EndIf
     ElseIf diagnostic
-        Debug.Notification("New Milk Maid Narration: rejected [" + result + "]")
+        Debug.Notification(MMELocalization.Text("New Milk Maid Narration: rejected [") + result + "]")
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] New Milk Maid DirectNarration result " + result + " | speaker=" + actorName + " | listener=" + ResolveActorName(listener, "everyone nearby") + " | " + content)
 EndFunction
@@ -1247,7 +1247,7 @@ Function NarrateForcedMilkMaidConversion(Actor milkMaid, String conversionMessag
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnForcedMilkMaidPlayerLine")
         MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] Forced Milk Maid player generation result " + queued + " (1=queued); no NPC fallback")
         If diagnostic
-            Debug.Notification("Forced Milk Maid Narration: player generation result [" + queued + "]")
+            Debug.Notification(MMELocalization.Text("Forced Milk Maid Narration: player generation result [") + queued + "]")
         EndIf
         Return
     EndIf
@@ -1258,7 +1258,7 @@ Function NarrateForcedMilkMaidConversion(Actor milkMaid, String conversionMessag
     Int result = SkyrimNetApi.DirectNarration(prompt, milkMaid, listener)
     MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] Forced Milk Maid DirectNarration result " + result + " | speaker=" + actorName + " | listener=" + ResolveActorName(listener, "everyone nearby"))
     If diagnostic
-        Debug.Notification("Forced Milk Maid Narration: result [" + result + "]")
+        Debug.Notification(MMELocalization.Text("Forced Milk Maid Narration: result [") + result + "]")
         MMELog.Diagnostic("[MMEAlert SkyrimNet] Forced Milk Maid narration payload | " + prompt)
     EndIf
 EndFunction
@@ -1291,7 +1291,7 @@ Function NarrateMilkMaidCurse(Actor milkMaid, String conversionMessage) Global
         Int queued = SkyrimNetApi.SendCustomPromptToLLM("mme_wearer_self_comment", "dialogue", contextJson, bridge, "MMEAlertsController", "OnForcedMilkMaidPlayerLine")
         MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] Forced Milk Maid player generation result " + queued + " (1=queued); no NPC fallback")
         If diagnostic
-            Debug.Notification("Forced Milk Maid Narration: player generation result [" + queued + "]")
+            Debug.Notification(MMELocalization.Text("Forced Milk Maid Narration: player generation result [") + queued + "]")
         EndIf
         Return
     EndIf
@@ -1302,7 +1302,7 @@ Function NarrateMilkMaidCurse(Actor milkMaid, String conversionMessage) Global
     Int result = SkyrimNetApi.DirectNarration(prompt, milkMaid, listener)
     MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] Forced Milk Maid DirectNarration result " + result + " | speaker=" + actorName + " | listener=" + ResolveActorName(listener, "everyone nearby"))
     If diagnostic
-        Debug.Notification("Forced Milk Maid Narration: result [" + result + "]")
+        Debug.Notification(MMELocalization.Text("Forced Milk Maid Narration: result [") + result + "]")
         MMELog.Diagnostic("[MMEAlert SkyrimNet] Forced Milk Maid narration payload | " + prompt)
     EndIf
 EndFunction
@@ -1342,7 +1342,7 @@ Function PlayMilkMaidPlayerLine(String response, Int success, Bool forcedRoute) 
     Int result = SkyrimNetApi.TriggerPlayerTTS(response)
     MMELog.MasterDiagnostic("[MMEAlert SkyrimNet] " + routeName + " Milk Maid player TTS result " + result + " (0=accepted)")
     If diagnostic
-        Debug.Notification("New Milk Maid Player Voice: result [" + result + "]")
+        Debug.Notification(MMELocalization.Text("New Milk Maid Player Voice: result [") + result + "]")
         MMELog.Diagnostic("[MMEAlert SkyrimNet] " + routeName + " Milk Maid player line | " + response)
     EndIf
 EndFunction
@@ -1369,7 +1369,7 @@ String Function BuildNearbyArmorStatus(Actor candidate) Global
     If wornArmor != None
         armorName = wornArmor.GetName()
         If armorName == ""
-            armorName = "<unnamed armor>"
+            armorName = MMELocalization.Text("<unnamed armor>")
         EndIf
     EndIf
     Bool diagnostic = MMEArmorScript.GetArmorDiagnostic()
@@ -1404,19 +1404,19 @@ Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass, S
     Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "traceMilkMaidThoughtsLogic", 0) == 1
     If !IsExtensionsEnabled() || JsonUtil.GetIntValue(settingsFile, "enableMilkMaidThoughtNarration", 1) != 1
         If diagnostic
-            Debug.Notification("Thoughts narration: skipped - feature disabled")
+            Debug.Notification(MMELocalization.Text("Thoughts narration: skipped - feature disabled"))
         EndIf
         Return
     EndIf
     If milkMaid == None || armorClass < 0 || armorClass > 3 || renderedThought == ""
         If diagnostic
-            Debug.Notification("Thoughts narration: skipped - invalid actor, armor class, or Thought")
+            Debug.Notification(MMELocalization.Text("Thoughts narration: skipped - invalid actor, armor class, or Thought"))
         EndIf
         Return
     EndIf
     If !IsAvailable() || JsonUtil.GetIntValue("/MMEAlerts/SkyrimNet", "enabled", 1) != 1
         If diagnostic
-            Debug.Notification("Thoughts narration: skipped - Skyrim.Net unavailable or disabled")
+            Debug.Notification(MMELocalization.Text("Thoughts narration: skipped - Skyrim.Net unavailable or disabled"))
         EndIf
         Return
     EndIf
@@ -1430,7 +1430,7 @@ Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass, S
     If last >= 0.0 && now - last < cooldown
         If diagnostic
             Int remaining = (cooldown - (now - last)) as Int
-            Debug.Notification("Thoughts narration: skipped - cooldown " + remaining + "s")
+            Debug.Notification(MMELocalization.Text("Thoughts narration: skipped - cooldown ") + remaining + MMELocalization.Text("s"))
         EndIf
         Return
     EndIf
@@ -1446,7 +1446,7 @@ Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass, S
     EndIf
     String content = MMENarrationText.Text("Thoughts", "narrate_milk_maid_thought_1", "thought", renderedThought, "actor", actorName)
     If diagnostic
-        Debug.Notification("Thoughts narration: targeted DirectNarration for " + actorName)
+        Debug.Notification(MMELocalization.Text("Thoughts narration: targeted DirectNarration for ") + actorName)
         MMELog.Diagnostic("[MMEThoughts] narration target=" + actorName + " | fullness=" + fullnessState + " | armor=" + armorType + " | tone=humorous/suggestive/playful | grounding=" + renderedThought)
     EndIf
     content = MMEDialogueKnowledge.Append(content, None)
@@ -1455,10 +1455,10 @@ Function NarrateMilkMaidThought(Actor milkMaid, Bool halfPlus, Int armorClass, S
         JsonUtil.SetFloatValue(settingsFile, "lastMilkMaidThoughtNarrationRealTime", now)
         JsonUtil.Save(settingsFile, False)
         If diagnostic
-            Debug.Notification("Thoughts narration: accepted [0]")
+            Debug.Notification(MMELocalization.Text("Thoughts narration: accepted [0]"))
         EndIf
     ElseIf diagnostic
-        Debug.Notification("Thoughts narration: rejected [" + result + "]")
+        Debug.Notification(MMELocalization.Text("Thoughts narration: rejected [") + result + "]")
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Milk Maid Thought DirectNarration result " + result + " | target=" + actorName + " | " + content)
 EndFunction
@@ -1526,25 +1526,25 @@ Function SendMilkmaidCreated(Actor milkMaid) Global
         Return
     EndIf
     If diagnostic
-        Debug.Notification("Skyrim.Net Diagnostic: milkmaid_created handler reached")
+        Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: milkmaid_created handler reached"))
     EndIf
     If !IsAvailable()
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: milkmaid_created failed - SkyrimNet not detected")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: milkmaid_created failed - SkyrimNet not detected"))
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet.esp is not enabled; Milkmaid creation event skipped")
         Return
     EndIf
     If milkMaid == None
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: milkmaid_created failed - actor missing")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: milkmaid_created failed - actor missing"))
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid creation event skipped; actor was None")
         Return
     EndIf
     If JsonUtil.GetIntValue(settingsFile, "enabled", 1) != 1
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: milkmaid_created failed - bridge disabled in JSON")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: milkmaid_created failed - bridge disabled in JSON"))
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet] Milkmaid creation event skipped; JSON bridge disabled")
         Return
@@ -1552,12 +1552,12 @@ Function SendMilkmaidCreated(Actor milkMaid) Global
 
     String actorName = milkMaid.GetDisplayName()
     If actorName == ""
-        actorName = "The actor"
+        actorName = MMELocalization.Text("The actor")
     EndIf
     String template = MMENarrationText.GetRaw("MilkMaidCreation", "milkmaidCreatedMessage")
     If template == ""
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: milkmaid_created failed - message empty")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: milkmaid_created failed - message empty"))
         EndIf
         MMELog.Alarm("[MMEAlert SkyrimNet] Milkmaid creation event skipped; message was empty")
         Return
@@ -1569,23 +1569,23 @@ Function SendMilkmaidCreated(Actor milkMaid) Global
         actorUuid = "<empty>"
     EndIf
     If diagnostic
-        Debug.Notification("Skyrim.Net Diagnostic: milkmaid_created | " + actorName + " | UUID " + actorUuid)
-        Debug.Notification("Skyrim.Net Diagnostic payload: " + content)
+        Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: milkmaid_created | ") + actorName + MMELocalization.Text(" | UUID ") + actorUuid)
+        Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic payload: ") + content)
     EndIf
-    String eventData = "{\"content\":\"" + EscapeJsonString(content) + "\"}"
+    String eventData = MMELocalization.Text("{\"content\":\"") + EscapeJsonString(content) + "\"}"
     If diagnostic
-        Debug.Notification("Skyrim.Net Diagnostic event data: " + eventData)
+        Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic event data: ") + eventData)
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Calling persistent milkmaid_created | actor " + actorName + " | UUID " + actorUuid + " | " + eventData)
     Int result = SkyrimNetApi.RegisterEvent("milkmaid_created", eventData, milkMaid, None)
     If result != 0
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: persistent event rejected [" + result + "]")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: persistent event rejected [") + result + "]")
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet rejected milkmaid_created for " + actorName + " (code " + result + ")")
     Else
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: persistent event accepted [0]")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: persistent event accepted [0]"))
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet] Sent persistent milkmaid_created event: " + content)
     EndIf
@@ -1636,9 +1636,9 @@ Function EnsureMilkmaidCreatedSchema(Bool diagnostic) Global
     Int result = SkyrimNetApi.RegisterEventSchema("milkmaid_created", "milkmaid created", "An actor became an MME Milkmaid.", fieldsJson, formatsJson, False, 0)
     If diagnostic
         If result == 0
-            Debug.Notification("Skyrim.Net Diagnostic: milkmaid schema registered [0]")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: milkmaid schema registered [0]"))
         Else
-            Debug.Notification("Skyrim.Net Diagnostic: milkmaid schema rejected [" + result + "]")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: milkmaid schema rejected [") + result + "]")
         EndIf
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] milkmaid_created schema result " + result)
@@ -1658,31 +1658,31 @@ Function SendMilkDrink(Actor drinker, Form drinkItem) Global
     EndIf
     If !IsAvailable()
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: SkyrimNet not detected")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: SkyrimNet not detected"))
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet.esp is not enabled; drink event skipped")
         Return
     EndIf
     If drinker == None || drinkItem == None
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: missing drinker or item")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: missing drinker or item"))
         EndIf
         Return
     EndIf
     If JsonUtil.GetIntValue(settingsFile, "enabled", 1) != 1
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: bridge disabled in JSON")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: bridge disabled in JSON"))
         EndIf
         Return
     EndIf
 
     String itemName = drinkItem.GetName()
     If itemName == ""
-        itemName = "an unnamed milk"
+        itemName = MMELocalization.Text("an unnamed milk")
     EndIf
     String actorName = drinker.GetDisplayName()
     If actorName == ""
-        actorName = "The player"
+        actorName = MMELocalization.Text("The player")
     EndIf
 
     String template = MMENarrationText.GetRaw("MilkDrinking", "drinkMessage")
@@ -1698,19 +1698,19 @@ Function SendMilkDrink(Actor drinker, Form drinkItem) Global
         If actorUuid == ""
             actorUuid = "<empty>"
         EndIf
-        Debug.Notification("Skyrim.Net Diagnostic: v" + buildVersion + " " + buildType + " | player UUID " + actorUuid)
-        Debug.Notification("Skyrim.Net Diagnostic payload: " + content)
+        Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: v") + buildVersion + " " + buildType + MMELocalization.Text(" | player UUID ") + actorUuid)
+        Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic payload: ") + content)
     EndIf
     Int ttlMs = JsonUtil.GetIntValue(settingsFile, "drinkTtlMs", 90000)
     Int result = SkyrimNetApi.RegisterShortLivedEvent("milk_drink_player", "milk_drink", content, "{}", ttlMs, drinker, None)
     If result != 0
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: short-lived event rejected [" + result + "]")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: short-lived event rejected [") + result + "]")
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet rejected milk drink event for " + actorName + " (code " + result + ")")
     Else
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: short-lived event accepted [0]")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: short-lived event accepted [0]"))
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet] Sent 90-second milk drink event: " + content)
     EndIf
@@ -1733,11 +1733,11 @@ Function SendMilkingEvent(Actor milkMaid, String messageKey) Global
         eventType = "milking_end"
     EndIf
     If diagnostic
-        Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " handler reached")
+        Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: ") + eventType + MMELocalization.Text(" handler reached"))
     EndIf
     If !IsAvailable()
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " failed - SkyrimNet not detected")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: ") + eventType + MMELocalization.Text(" failed - SkyrimNet not detected"))
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet.esp is not enabled; milking event skipped")
         Return
@@ -1745,14 +1745,14 @@ Function SendMilkingEvent(Actor milkMaid, String messageKey) Global
     String settingsFile = "/MMEAlerts/SkyrimNet"
     If milkMaid == None
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " failed - actor missing")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: ") + eventType + MMELocalization.Text(" failed - actor missing"))
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet] " + eventType + " skipped; actor was None")
         Return
     EndIf
     If JsonUtil.GetIntValue(settingsFile, "enabled", 1) != 1
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " failed - bridge disabled in JSON")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: ") + eventType + MMELocalization.Text(" failed - bridge disabled in JSON"))
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet] " + eventType + " skipped; JSON bridge disabled")
         Return
@@ -1760,13 +1760,13 @@ Function SendMilkingEvent(Actor milkMaid, String messageKey) Global
 
     String actorName = milkMaid.GetDisplayName()
     If actorName == ""
-        actorName = "The Milk Maid"
+        actorName = MMELocalization.Text("The Milk Maid")
     EndIf
 
     String template = MMENarrationText.GetRaw("Milking", messageKey)
     If template == ""
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " failed - message empty")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: ") + eventType + MMELocalization.Text(" failed - message empty"))
         EndIf
         MMELog.Alarm("[MMEAlert SkyrimNet] Empty message for " + messageKey + "; event skipped")
         Return
@@ -1779,20 +1779,20 @@ Function SendMilkingEvent(Actor milkMaid, String messageKey) Global
         actorUuid = "<empty>"
     EndIf
     If diagnostic
-        Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " | " + actorName + " | UUID " + actorUuid + " | TTL " + ttlMs)
-        Debug.Notification("Skyrim.Net Diagnostic payload: " + content)
-        Debug.Notification("Skyrim.Net Diagnostic: calling short-lived API")
+        Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: ") + eventType + " | " + actorName + MMELocalization.Text(" | UUID ") + actorUuid + MMELocalization.Text(" | TTL ") + ttlMs)
+        Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic payload: ") + content)
+        Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: calling short-lived API"))
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet] Calling " + eventType + " | actor " + actorName + " | UUID " + actorUuid + " | TTL " + ttlMs + " | " + content)
     Int result = SkyrimNetApi.RegisterShortLivedEvent(eventId, eventType, content, "{}", ttlMs, milkMaid, None)
     If result != 0
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " rejected [" + result + "]")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: ") + eventType + MMELocalization.Text(" rejected [") + result + "]")
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet] SkyrimNet rejected " + messageKey + " for " + actorName + " (code " + result + ")")
     Else
         If diagnostic
-            Debug.Notification("Skyrim.Net Diagnostic: " + eventType + " accepted [0]")
+            Debug.Notification(MMELocalization.Text("Skyrim.Net Diagnostic: ") + eventType + MMELocalization.Text(" accepted [0]"))
         EndIf
         MMELog.Diagnostic("[MMEAlert SkyrimNet] Sent 60-second " + eventType + " event: " + content)
     EndIf

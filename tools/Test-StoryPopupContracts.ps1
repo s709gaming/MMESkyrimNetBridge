@@ -1,9 +1,10 @@
+. (Join-Path $PSScriptRoot 'LocalizationContract.ps1')
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$story = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEStoryPopup.psc") -Raw
-$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw
-$dwemer = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDwemerArmor.psc") -Raw
+$story = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEStoryPopup.psc") -Raw | Remove-MMELocalizationWrappers
+$api = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEExtensionsAPI.psc") -Raw | Remove-MMELocalizationWrappers
+$dwemer = Get-Content -LiteralPath (Join-Path $projectRoot "Source\Scripts\MMEDwemerArmor.psc") -Raw | Remove-MMELocalizationWrappers
 $build = Get-Content -LiteralPath (Join-Path $projectRoot "build-package.ps1") -Raw
 $stories = Get-Content -LiteralPath (Join-Path $projectRoot "SKSE\Plugins\StorageUtilData\MMEAlerts\DwemerArmorStories.json") -Raw | ConvertFrom-Json
 

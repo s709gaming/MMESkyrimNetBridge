@@ -290,6 +290,6 @@ EndFunction
 Function Report(Bool showNotification, String requestLabel, String reportText) Global
     MMELog.Diagnostic("[MME Extensions Reaction Animation] [" + requestLabel + "] " + reportText)
     If showNotification
-        Debug.Notification("Reaction Animation [" + requestLabel + "]: " + reportText)
+        Debug.Notification(MMELocalization.Text("Reaction Animation [") + requestLabel + "]: " + reportText)
     EndIf
 EndFunction
