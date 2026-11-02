@@ -34,13 +34,13 @@
                   },
                   {
                       "script":  "MMEAlertsController",
-                      "sourceSHA256":  "6E0FD4E5A0E249EDC3AA11D95EFA9B72F3A350CC71D193A5B08302EB760E8013",
-                      "compiledSHA256":  "F60766D620339F3DCFE77DE570AB0C0F24FBE1D6B2637370A3B0CF30B5344775"
+                      "sourceSHA256":  "11F5A07A633ED1A0A60552FFE7134268E54FBACCF5232DA7DFF540D2EB61964F",
+                      "compiledSHA256":  "5E58DA9D0919AA84E73588651EB466A197378EFB67CA0450951FFEB35CD4BB4B"
                   },
                   {
                       "script":  "MMEAlertsSkyrimNet",
-                      "sourceSHA256":  "47BE96C3E737B00496548165926E318701F3B51EF53E375BEE67470C641394E5",
-                      "compiledSHA256":  "5F2E116EA7F845AE16F74B48878D587FBC24C9B45C3A509FC08278B42072067C"
+                      "sourceSHA256":  "9EF74A9A8E6745065AA9F17747C474D8CABF3EB620123A8E0B0C840B07D09770",
+                      "compiledSHA256":  "72EFD1CBA85AE174193BF97FBF32F5CD618F9298108215050117310132D50A79"
                   },
                   {
                       "script":  "MMEAnimationSafety",
@@ -64,8 +64,8 @@
                   },
                   {
                       "script":  "MMEDwemerArmor",
-                      "sourceSHA256":  "4A33F2D5E5F216FB3514667F10890EA3862921FAE715656497B1FFF1BAE57916",
-                      "compiledSHA256":  "91DB32DA1E57BB5712799C8CF2CA86E7A0FEDB3AB4FD51EB1A61C8E08AFD6BA5"
+                      "sourceSHA256":  "9EBD5D1999F6E0F1E22E4C9742E40B0D715BEC5138244D5471A7D44BF0E948EF",
+                      "compiledSHA256":  "65CC12C3AB859FAE35762CD5F68ACC0903F684CB9D813E942A156F68395EB044"
                   },
                   {
                       "script":  "MMEElsieBreastfeeding",

@@ -5,6 +5,8 @@ if ($LASTEXITCODE) { throw "Direct prompt state contracts failed" }
 if ($LASTEXITCODE) { throw "Prompt callback diagnostics contracts failed" }
 & python -B (Join-Path $PSScriptRoot "tools/test_milking_source.py")
 if ($LASTEXITCODE) { throw "Milking source tracking contracts failed" }
+& python -B (Join-Path $PSScriptRoot "tools/test_post_milking.py")
+if ($LASTEXITCODE) { throw "Post-milking narration/history contracts failed" }
 
 # Resolve every path from this script so it works when launched by double-click.
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path

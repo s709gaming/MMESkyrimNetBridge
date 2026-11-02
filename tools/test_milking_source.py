@@ -27,11 +27,12 @@ class Store:
 
 class Tracking(unittest.TestCase):
     def setUp(self):
-        self.store=Store();self.enabled=1;self.dwemer=set();self.alarms=[]
+        self.store=Store();self.enabled=1;self.dwemer=set();self.alarms=[];self.completions=[]
         self.ns={'StorageUtil':self.store,'JsonUtil':NS(GetIntValue=lambda *a:self.enabled),
                  'Utility':NS(GetCurrentGameTime=lambda:123.0),
                  'Quest':NS(GetQuest=lambda name:NS(BeingMilkedPassive='passive')),
                  'MMEDwemerArmor':NS(IsSequenceActive=lambda actor:actor in self.dwemer),
+                 'MMEPostMilking':NS(RecordCompletion=lambda *args:self.completions.append(args)),
                  'Noop':lambda:None,'Alarm':lambda *a:self.alarms.append(a)}
         # Diagnostics are separately checked below; don't emulate Papyrus string casts.
         source=re.sub(r'(?m)^\s*Trace\(.*$', '    Noop()',SOURCE)
@@ -63,6 +64,8 @@ class Tracking(unittest.TestCase):
         self.assertEqual(self.ns['GetCurrentMethod'](npc),4)
         self.assertEqual(self.store.GetFormValue(player,'MME.Source.LastEquipment'),'pump')
         self.assertTrue(self.ns['WasMilkRemoved'](player));self.assertEqual(self.ns['GetLastNetMilkRemoved'](player),8)
+        self.assertEqual(self.store.GetFloatValue(player,'MME.Source.LastAfter'),2)
+        self.assertEqual(self.completions[-1],(player,p,2,2,8,1))
         self.ns['Complete'](npc,n,0,0,0);self.assertFalse(self.ns['WasMilkRemoved'](npc))
     def test_duplicate_late_and_interrupted(self):
         a=self.actor();old=self.ns['Begin'](a,1,None);new=self.ns['Begin'](a,3,'living')

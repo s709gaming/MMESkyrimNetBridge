@@ -1,9 +1,10 @@
 # Milking source API
 
 MMEMilkingSource.psc records actor-local current and latest completed MME
-sessions. It does not start milking, change milk/levels/slots/inventory, add a
-polling loop, or submit narration. No new plugin, quest, MCM setting or migration
-is required. Existing saves start with Generic/no completed record.
+sessions. It does not start milking, change milk/levels/slots/inventory or add a
+polling loop. After committing a completion snapshot it calls MMEPostMilking,
+which owns optional history and narration. No new plugin or quest is required.
+Existing saves start with Generic/no completed record.
 
 ## Methods
 
@@ -29,6 +30,9 @@ tentacle anatomy from that category alone.
 - WasMilkRemoved(actor): completion bottles > 0 or stored milk decreased.
 - GetLastNetMilkRemoved(actor): starting milk minus ending milk; may be negative.
 - GetLastFinishedDays(actor): in-game days at completion, not real seconds.
+
+The committed MME.Source.LastAfter value is the milk count at completion;
+MMEPostMilking receives that immutable value and the net delta directly.
 
 Always check the session ID and completion age before reacting. Last completed
 does not mean currently happening. WasMilkRemoved can be true without net
@@ -69,13 +73,50 @@ master logging toggle. Getters stay quiet for repeated future consumers.
 
 ## Narration remains separate
 
-Existing generic milking ending narration still uses the earlier stop event;
-Dwemer also has its dedicated ending narration. This implementation does not
-change either. A later narration integration must consume confirmed completion,
-check extraction/net reduction, use the matching session, and avoid duplicate
-Dwemer/generic lines. Breastfeeding is not identified as a separate method; if
+Generic stop events still finish existing sound/gameplay cleanup, but no longer
+publish the old ending context. Confirmed, productive completions record a
+source-specific persistent event. Ordinary completion speech is dispatched from
+MME_MilkingDone; Dwemer speech waits for its dedicated cleanup and replaces its
+old ending request. The publisher consumes each session once, checks snapshots,
+and applies actor-local speech cooldown/chance separately from history tracking.
+Breastfeeding is not identified as a separate method; if
 it invokes an MME milking transaction without a known source, Generic applies.
 Leaking and periodic armor teasing alone are not MME milking sessions.
+
+## History and narration settings
+
+Skyrim.Net MCM owns Track Full Capacity, Track Milking Start / Completion,
+Narrate Milking Completion (ON), Completion Cooldown (120 real seconds per
+actor), Completion Chance (100%), and Milk Full Narration Chance (100%). New
+fullness cooldown defaults are 120 seconds; saved cooldown choices are retained.
+Missing-only initialization and MCM version 172 support existing saves.
+
+Milking.json contains six editable source descriptions, result fragments, a
+productive-without-net-reduction description and a shared reaction instruction.
+Fullness.full_event is the editable historical full/leaking crossing. Event text
+contains past experience; imperative reaction instructions and shared lore/tone
+are added only to the spoken request. Persistent events do not themselves demand
+speech or expire. This does not create a timed satisfaction mechanic: the earlier
+one-game-hour suggestion remains unimplemented. Current actor status supersedes
+historical milk amounts. A persistent event is attempted once per session/crossing,
+independent of speech controls; DirectNarration can also retain its own request
+history in Skyrim.Net.
+
+First capacity observation establishes a baseline without inventing a crossing.
+All observed actors record full crossings, while scan-level selection still
+limits fullness speech. Dropping below full rearms the next crossing. No polling
+status events or new scan/timer are introduced. Master/dependency OFF suppresses
+publication; no old events are replayed later. Interrupted/untracked/no-extraction
+sessions never claim success. Extraction without net reduction never claims relief
+or emptiness. Nonempty completed results say some milk remained.
+
+Player completion speech uses the existing private prompt and a request-specific
+load/session marker, stripped before TTS. Missing, expired, stale or uncorrelated
+replies are suppressed without NPC fallback. Pending requests expire after 120 real
+seconds. A model that omits the required routing marker produces no player line.
+Combat, scenes, framework busy state and owned animations suppress speech without
+discarding the history. Sparse master traces and deduplicated alarms identify
+entry, actor/source/results, skips, request outcomes and callback cleanup.
 
 ## Verification
 

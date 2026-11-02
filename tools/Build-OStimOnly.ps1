@@ -55,7 +55,7 @@ Copy-Item -LiteralPath (Join-Path $projectRoot 'Source\Scripts\MMENarrationOverr
 # Generated backend variants win, followed by current common repository sources.
 # The isolated SDK library may contain older installed copies of common scripts;
 # those must never hide a changed facade signature from the compiler.
-$imports = "$variantSource;$(Join-Path $projectRoot 'Source\Scripts');$library"
+$imports = "$variantSource;$(Join-Path $projectRoot 'Source\Scripts');$(Join-Path $projectRoot 'tools\skyrimnet-sdk');$library"
 # Compile into a fresh folder so the assembler never reopens a previously built PEX.
 $variantCompile = Join-Path $projectRoot ('build\diagnostics\ostim-compiled-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force $variantCompile | Out-Null

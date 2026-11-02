@@ -56,7 +56,7 @@ for page, text in builders.items():
         assignments[option] = page
 for option, page in homes.items():
     assert assignments.get(option) == page, (option, assignments.get(option), page)
-assert len(assignments) == 325
+assert len(assignments) == 330
 assert 'MMESexLabBreastfeedingBackend.GetBackendName()' in MCM
 assert 'does not switch the installed' in MCM
 assert 'Milk Mastery (Maid Slots)' in FACADE and 'unlocks more Milk Maid slots' in MCM
@@ -99,5 +99,5 @@ for page, text in builders.items():
     occupied = {}
     draw(text, 0, occupied)
     print(f'PASS: {page}: {len(occupied)} drawing slots; no overlap or buffer overflow')
-print('PASS: 11 pages, 335 unique controls including Milk Leaking, feature ownership and retained Debug modes')
+print('PASS: 11 pages, 340 unique controls including Milk Leaking and completion narration, feature ownership and retained Debug modes')
 

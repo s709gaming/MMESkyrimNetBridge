@@ -263,7 +263,7 @@ Function RunDwemerMilking(Actor candidate, MilkQUEST milkController, Float start
     If endingMilk >= startingMilk
         MMELog.Alarm("[MME Extensions Dwemer Armor] MME milking returned without reducing milk | actor=" + GetActorName(candidate) + " | before=" + startingMilk + " | after=" + endingMilk)
     Else
-        MMEAlertsSkyrimNet.NarrateDwemerSuitEvent(candidate, narrationArmor, "milkingEnd")
+        MMEPostMilking.NarrateLast(candidate)
     EndIf
     Report("sequence end | actor=" + GetActorName(candidate) + " | milkBefore=" + startingMilk + " | milkAfter=" + endingMilk)
 EndFunction

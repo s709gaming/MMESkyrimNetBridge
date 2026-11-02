@@ -43,7 +43,7 @@ $shaderPreludeIndex = $dwemer.IndexOf('Utility.Wait(5.0)')
 $milkingDispatchIndex = $dwemer.IndexOf('milkController.Milking(candidate, 0, 4, 0)')
 Assert-Contract ($shaderPreludeIndex -ge 0 -and $milkingDispatchIndex -gt $shaderPreludeIndex) "Dwemer blue activation receives its full prelude before milking dispatch"
 Assert-Contract ($dwemer -match 'blue activation shader unavailable') "missing blue shader uses the smoke-alarm channel"
-Assert-Contract ($dwemer -notmatch 'SkyrimNetApi|DirectNarration' -and $dwemer -match 'NarrateDwemerSuitEvent\(candidate, narrationArmor, "milkingStart"\)' -and $dwemer -match 'NarrateDwemerSuitEvent\(candidate, narrationArmor, "milkingEnd"\)') "Dwemer milking delegates profiled start and successful end narration to the Skyrim.Net boundary"
+Assert-Contract ($dwemer -notmatch 'SkyrimNetApi|DirectNarration' -and $dwemer -match 'NarrateDwemerSuitEvent\(candidate, narrationArmor, "milkingStart"\)' -and $dwemer -match 'MMEPostMilking\.NarrateLast\(candidate\)') "Dwemer milking keeps its profiled start and delegates completed aftermath after cleanup"
 Assert-Contract ($armor -match 'If armorClass == 4[\s\S]*reaction delegated to dedicated Dwemer Armor system') "ordinary equip reactions delegate class 4"
 Assert-Contract ($skyrimNet -match 'armorClass == 0 \|\| armorClass == 4') "existing Skyrim.Net armor routes exclude class 4"
 Assert-Contract ($thoughts -match 'If armorClass == 4' -and $reminder -match 'If armorClass == 4' -and $reminder -match 'serviceRole != "Blacksmith"') "thoughts exclude class 4 while reminders reserve it for blacksmiths"

@@ -514,7 +514,8 @@ Function SendMilkingStart(Actor milkMaid) Global
 EndFunction
 
 Function SendMilkingEnd(Actor milkMaid) Global
-    SendMilkingEvent(milkMaid, "endMessage")
+    ; Saved callers retain this signature. Stop is earlier than real completion.
+    MMELog.MasterDiagnostic("[MME Post Milking] legacy stop event skipped | actor=" + milkMaid + " | awaiting authoritative completion")
 EndFunction
 
 ; Direct narration for one supported armor equip. Classification is repeated
@@ -703,7 +704,7 @@ EndFunction
 
 ; Makes at most one token-using narration request for a completed scan's full crossings.
 Function NarrateMilkFull(Actor milkMaid) Global
-    ; Phase 1: resolve toggle, dependency, and one global scan-level cooldown.
+    ; Speech selection remains scan-level; the cooldown is actor-local.
     ; The controller selects at most one full actor per scan before calling here.
     If !IsExtensionsEnabled()
         Return
@@ -726,9 +727,9 @@ Function NarrateMilkFull(Actor milkMaid) Global
         Return
     EndIf
 
-    Float cooldown = JsonUtil.GetFloatValue(settingsFile, "milkFullNarrationCooldown", 60.0)
+    Float cooldown = JsonUtil.GetFloatValue(settingsFile, "milkFullNarrationCooldown", 120.0)
     Float now = Utility.GetCurrentRealTime()
-    Float last = JsonUtil.GetFloatValue(settingsFile, "lastMilkFullNarrationRealTime", -1.0)
+    Float last = StorageUtil.GetFloatValue(milkMaid, "MME.After.FullNarrationLast", -1.0)
     ; GetCurrentRealTime restarts with Skyrim, so discard a timestamp from an older session.
     If last > now
         last = -1.0
@@ -746,6 +747,11 @@ Function NarrateMilkFull(Actor milkMaid) Global
         MMELog.MasterDiagnostic("[MME Actor Prompt] narration skipped | actor=" + milkMaid + " | fullness changed or unavailable | state=" + fullnessSnapshot)
         Return
     EndIf
+    Int chance = JsonUtil.GetIntValue(settingsFile, "milkFullNarrationChance", 100)
+    If chance <= 0 || (chance < 100 && Utility.RandomInt(1, 100) > chance)
+        MMELog.MasterDiagnostic("[MME Post Milking] full narration skip | actor=" + milkMaid + " | chance=" + chance)
+        Return
+    EndIf
     ; Phase 2: choose restraint-aware prose, submit once, and commit cooldown
     ; only on success so a rejected API call can be retried later.
     String actorName = ResolveActorName(milkMaid, "The Milk Maid")
@@ -760,8 +766,7 @@ Function NarrateMilkFull(Actor milkMaid) Global
     content = MMEDialogueKnowledge.Append(content, None)
     Int result = SkyrimNetApi.DirectNarration(content, None, None)
     If result == 0
-        JsonUtil.SetFloatValue(settingsFile, "lastMilkFullNarrationRealTime", now)
-        JsonUtil.Save(settingsFile, False)
+        StorageUtil.SetFloatValue(milkMaid, "MME.After.FullNarrationLast", now)
         If diagnostic
             Debug.Notification("Milk Full Narration: accepted [0] | cooldown " + (cooldown as Int) + "s")
         EndIf
