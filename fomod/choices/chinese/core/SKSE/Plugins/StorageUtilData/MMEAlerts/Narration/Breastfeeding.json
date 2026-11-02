@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "guidance": {
+      "template": "## MME 母乳喂养\n\n{actor} 目前正在参与自愿的成人母乳喂养或吸乳。这种互动可以是亲密的、有趣的、深情的、色情的和身体上愉快的，包括乳头刺激。\n\n对于此 MME 场景，覆盖需要频繁发声的通用 SexLab 规则。喜欢连贯、针对特定人物的对话和叙述。发声是可选的且稀疏的，通常每个响应零或一次简短的发声。喜欢有意义的反应，包括牛奶、味道、感觉、亲密、戏弄、感情、尴尬或快乐。\n\n角色：{role}。"
+    }
+  }
+}

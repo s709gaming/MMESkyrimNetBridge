@@ -1,0 +1,16 @@
+{
+  "craving": [
+    "{ActorName}无法停止思考喝牛奶。",
+    "{ActorName} 对牛奶的渴望越来越难以忽视。",
+    "{ActorName} 对牛奶的渴望变得令人尴尬。",
+    "{ActorName}一直在想再尝尝牛奶。",
+    "{ActorName} 正在努力不去想牛奶。"
+  ],
+  "give_in": [
+    "{ActorName} 屈服了。他们现在需要牛奶。",
+    "{ActorName} 再也无法抗拒对牛奶的渴望。",
+    "{ActorName}的意志力最终输给了牛奶。",
+    "{ActorName} 屈服并去寻找牛奶。",
+    "{ActorName} 认为他们已经等牛奶很久了。"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "stringList": {
+    "milking_first_equip": [
+      "挤奶盔甲紧贴在 {ActorName} 的胸前，它的魔法杯在她的皮肤上立即变暖。轻柔的振动变成了有节奏的按摩，从她的嘴唇中发出一声惊讶的小呻吟。当盔甲愉快地开始它的第一个戏弄程序时，她脸红了，然后咯咯地笑起来。",
+      "当 {ActorName} 穿上挤奶盔甲时，柔软的衬里完美贴合她的曲线。杯子在有趣的挤压声中收紧，随后发出舒缓、刺痛的嗡嗡声。她喘息着，膝盖短暂地颤抖着，然后脸上露出了高兴的微笑。这可能会成为她最喜欢的一件装备。",
+      "当 {ActorName} 扣紧最后一条带子时，挤奶盔甲就急切地焕发了活力。它的杯子开始以温暖、稳定的节奏跳动，让她完全措手不及。 “嗯！”她哼了一声，在这个装置再次热情地挤压时，她强忍住笑声。显然，设计中并没有考虑谦虚。"
+    ],
+    "living_first_equip": [
+      "铠甲抽搐了一下，然后展开。活生生的卷须缠绕在你的胸部和臀部，挤压你的乳房，挑逗你的乳头。一根卷须卷曲在你的大腿之间，带着春药般的光滑，以慵懒的方式抚摸着你的阴蒂。当它更深地推进时，你会呻吟出声，让你充满热量，而其他卷须则紧紧地抱住你，并在缓慢、脉动的波浪中榨取你的快乐。"
+    ],
+    "parasite_first_equip": [
+      "寄生虫发出脉冲，然后突然张开——触手涌出，绑住你的腰，托起你的乳房。当有人滑过你的双腿时，你尖叫起来，光滑而渴望。它会挑逗你的阴蒂，然后向内推进，将刺痛的春药注入你的腹部深处。每一次呼吸，卷须都会榨取你的身体，直到你浑身湿透、绝望。"
+    ],
+    "dwemer_first_equip": [
+      "Dwemer 装置可卡扣在您的胸部和腰部。当冰冷的金属罩住你的乳房，挑逗你的乳头时，你喘息着。温暖的嗡嗡声在你的阴蒂上振动，细针滑入你的大腿，将春药直接泵入你的血液。当机械装置以缓慢而专业的方式挤奶你的阴户时，你无助地呻吟着。"
+    ],
+    "living_trap_equip": [
+      "铠甲抽搐了一下，然后展开。活生生的卷须缠绕着{ActorName}的胸部和臀部，挤压{ActorName}的乳房并戏弄{ActorName}的乳头。一根光滑的卷须卷曲在 {ActorName} 的大腿之间，以慵懒的方式抚摸 {ActorName} 的阴蒂，然后用春药般的热量推得更深，而其余的则以缓慢、脉动的波浪方式榨取 {ActorName} 的快感。",
+      "装甲板软化成编织藤蔓，缠绕在{ActorName}的肋骨和大腿上。吸吮花蕾杯{ActorName}的乳房，拉扯{ActorName}的乳头，下部卷须在滑入{ActorName}的阴蒂之前涂上春药。藤蔓随着每一次脉冲而收紧，以滚动收缩的方式揉捏{ActorName}的身体，直到{ActorName}的臀部猛烈地抽动。",
+      "胸甲液化并沿着 {ActorName} 的躯干盘旋，用温暖的带子固定 {ActorName} 的腰部。卷须罩着 {ActorName} 的乳房，轻弹 {ActorName} 的乳头，一根卷须绕着 {ActorName} 的阴蒂，在压入之前将其弄光滑。有节奏的挤压从 {ActorName} 的大腿传到 {ActorName} 的腹部，稳定、从容地挤奶 {ActorName}笔画。"
+    ],
+    "parasite_trap_equip": [
+      "寄生虫发出脉冲，然后爆裂开来——触手涌出，绑住了 {ActorName} 的腰部，并托住了 {ActorName} 的胸部。当一个人在 {ActorName} 的双腿之间滑行时，{ActorName} 发出尖叫声，狡猾而急切；它挑逗 {ActorName} 的阴蒂，然后推入，将刺痛的春药深深注入 {ActorName} 的腹部。卷须每一次呼吸都在挤压着{ActorName}的身体，直到{ActorName}浑身淋漓、绝望。",
+      "寄生虫沿着 {ActorName} 的脊柱爬行，并在 {ActorName} 的肋骨处分裂成卷须。吸盘固定在 {ActorName} 的乳房周围，拉动 {ActorName} 的乳头，而下部卷须则包裹着 {ActorName} 的阴蒂，分泌物带有凉爽、刺痛的分泌物。它以缓慢的螺旋状进入{ActorName}，寄生虫随着{ActorName}的脉搏及时收缩，从内部榨取{ActorName}。",
+      "寄生虫在 {ActorName} 的肚脐处膨胀，然后长成 {ActorName} 腰部和大腿周围的卷须笼。一根卷须罩住 {ActorName} 的乳房，另一根卷须抓住 {ActorName} 的乳头，第三部分 {ActorName} 的卷须折叠起来挑逗 {ActorName} 的阴蒂。它带着一股温暖的春药涌入，然后以有节奏的波浪深深地跳动，让 {ActorName} 感到刺痛和过度。"
+    ],
+    "dwemer_trap_equip": [
+      "Dwemer 装置卡在 {ActorName} 的胸部和腰部。冰冷的金属罩杯 {ActorName} 的乳房，挑逗着 {ActorName} 的乳头，同时温暖的嗡嗡声在 {ActorName} 的阴蒂上振动。细细的针头滑入{ActorName}的大腿，将春药直接注入{ActorName}的血液中；当机械装置以缓慢而专业的方式挤奶 {ActorName} 的阴户时，{ActorName} 无助地呻吟着并磨碎。",
+      "铜管乐队夹住 {ActorName} 的肋骨和臀部，铰接式罩杯则揉捏 {ActorName} 的乳房。微小的活塞挑逗 {ActorName} 的乳头，振动板抵住 {ActorName} 的阴蒂，微针刺穿 {ActorName} 的大腿，散发出春药般的热量。内套筒开始以机械耐心进行测量、滚动吸力、挤奶 {ActorName}。",
+      "锻莫安全带锁住 {ActorName} 的躯干，金属花瓣托住 {ActorName} 的乳房并吸吮 {ActorName} 的乳头。当针刺入 {ActorName} 的大腿并将春药泵入 {ActorName} 的血液时，低沉的嗡嗡声在 {ActorName} 的阴蒂上颤动。下部机构以专业的节奏活塞进入 {ActorName} 的阴户，收紧和释放，直到 {ActorName} 的双腿颤抖。"
+    ],
+    "milking_repeat_equip": [
+      "挤奶盔甲紧贴在 {ActorName} 的胸前，它的魔法杯在她的皮肤上立即变暖。轻柔的振动变成了有节奏的按摩，从她的嘴唇中发出一声惊讶的小呻吟。当盔甲愉快地开始它的第一个戏弄程序时，她脸红了，然后咯咯地笑起来。",
+      "当 {ActorName} 穿上挤奶盔甲时，柔软的衬里完美贴合她的曲线。杯子在有趣的挤压声中收紧，随后发出舒缓、刺痛的嗡嗡声。她喘息着，膝盖短暂地颤抖着，然后脸上露出了高兴的微笑。这可能会成为她最喜欢的一件装备。",
+      "当 {ActorName} 扣紧最后一条带子时，挤奶盔甲就急切地焕发了活力。它的杯子开始以温暖、稳定的节奏跳动，让她完全措手不及。 “嗯！”她哼了一声，在这个装置再次热情地挤压时，她强忍住笑声。显然，设计中并没有考虑谦虚。"
+    ],
+    "living_repeat_equip": [
+      "铠甲抽搐了一下，然后展开。活生生的卷须缠绕着{ActorName}的胸部和臀部，挤压{ActorName}的乳房并戏弄{ActorName}的乳头。一根光滑的卷须卷曲在 {ActorName} 的大腿之间，以慵懒的方式抚摸 {ActorName} 的阴蒂，然后用春药般的热量推得更深，而其余的则以缓慢、脉动的波浪方式榨取 {ActorName} 的快感。",
+      "装甲板软化成编织藤蔓，缠绕在{ActorName}的肋骨和大腿上。吸吮花蕾杯{ActorName}的乳房，拉扯{ActorName}的乳头，下部卷须在滑入{ActorName}的阴蒂之前涂上春药。藤蔓随着每一次脉冲而收紧，以滚动收缩的方式揉捏{ActorName}的身体，直到{ActorName}的臀部猛烈地抽动。",
+      "胸甲液化并沿着 {ActorName} 的躯干盘旋，用温暖的带子固定 {ActorName} 的腰部。卷须罩着 {ActorName} 的乳房，轻弹 {ActorName} 的乳头，一根卷须绕着 {ActorName} 的阴蒂，在压入之前将其弄光滑。有节奏的挤压从 {ActorName} 的大腿传到 {ActorName} 的腹部，稳定、从容地挤奶 {ActorName}笔画。"
+    ],
+    "parasite_repeat_equip": [
+      "寄生虫发出脉冲，然后爆裂开来——触手涌出，绑住了 {ActorName} 的腰部，并托住了 {ActorName} 的胸部。当一个人在 {ActorName} 的双腿之间滑行时，{ActorName} 发出尖叫声，狡猾而急切；它挑逗 {ActorName} 的阴蒂，然后推入，将刺痛的春药深深注入 {ActorName} 的腹部。卷须每一次呼吸都在挤压着{ActorName}的身体，直到{ActorName}浑身淋漓、绝望。",
+      "寄生虫沿着 {ActorName} 的脊柱爬行，并在 {ActorName} 的肋骨处分裂成卷须。吸盘固定在 {ActorName} 的乳房周围，拉动 {ActorName} 的乳头，而下部卷须则包裹着 {ActorName} 的阴蒂，分泌物带有凉爽、刺痛的分泌物。它以缓慢的螺旋状进入{ActorName}，寄生虫随着{ActorName}的脉搏及时收缩，从内部榨取{ActorName}。",
+      "寄生虫在 {ActorName} 的肚脐处膨胀，然后长成 {ActorName} 腰部和大腿周围的卷须笼。一根卷须罩住 {ActorName} 的乳房，另一根卷须抓住 {ActorName} 的乳头，第三部分 {ActorName} 的卷须折叠起来挑逗 {ActorName} 的阴蒂。它带着一股温暖的春药涌入，然后以有节奏的波浪深深地跳动，让 {ActorName} 感到刺痛和过度。"
+    ],
+    "dwemer_repeat_equip": [
+      "Dwemer 装置卡在 {ActorName} 的胸部和腰部。冰冷的金属罩杯 {ActorName} 的乳房，挑逗着 {ActorName} 的乳头，同时温暖的嗡嗡声在 {ActorName} 的阴蒂上振动。细细的针头滑入{ActorName}的大腿，将春药直接注入{ActorName}的血液中；当机械装置以缓慢而专业的方式挤奶 {ActorName} 的阴户时，{ActorName} 无助地呻吟着并磨碎。",
+      "铜管乐队夹住 {ActorName} 的肋骨和臀部，铰接式罩杯则揉捏 {ActorName} 的乳房。微小的活塞挑逗 {ActorName} 的乳头，振动板抵住 {ActorName} 的阴蒂，微针刺穿 {ActorName} 的大腿，散发出春药般的热量。内套筒开始以机械耐心进行测量、滚动吸力、挤奶 {ActorName}。",
+      "锻莫安全带锁住 {ActorName} 的躯干，金属花瓣托住 {ActorName} 的乳房并吸吮 {ActorName} 的乳头。当针刺入 {ActorName} 的大腿并将春药泵入 {ActorName} 的血液时，低沉的嗡嗡声在 {ActorName} 的阴蒂上颤动。下部机构以专业的节奏活塞进入 {ActorName} 的阴户，收紧和释放，直到 {ActorName} 的双腿颤抖。"
+    ]
+  }
+}

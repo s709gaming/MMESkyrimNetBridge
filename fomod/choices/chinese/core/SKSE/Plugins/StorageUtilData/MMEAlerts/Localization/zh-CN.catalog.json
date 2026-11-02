@@ -1,0 +1,698 @@
+{
+  "Armor.narrate_armor_equip_1": "{actor}装备挤奶装甲；它的吸盘吸附在她的乳房上。对附件做出反应。",
+  "Armor.narrate_armor_equip_2": "活体盔甲包裹着{actor}。对它的动作和触摸做出反应。",
+  "Armor.narrate_armor_equip_3": "活体寄生虫装甲连接到 {actor}。对它的动作和触摸做出反应。",
+  "Armor.narrate_armor_equip_4": " 这件盔甲从一个被困的宝箱中跳出来，包裹着 {actor}。承认惊喜。",
+  "Armor.narrate_armor_strip_1": "{actor}的{armorName}因为奶肿的乳房而脱落。对衣柜事故做出反应。",
+  "Armor.build_nearby_armor_status_1": "[挤奶盔甲] {actor} 穿着挤奶盔甲。吸盘附在她的乳头上以便挤奶。",
+  "Armor.build_nearby_armor_status_2": "[生命装甲] {actor}穿着生命装甲。活生生的卷须埋入她的乳头，注入兴奋剂并愉快地排出乳汁。",
+  "Armor.build_nearby_armor_status_3": "[活体寄生虫] {actor} 穿着活体寄生虫盔甲。寄生卷须埋入她的乳头，注入兴奋剂并愉快地排出乳汁。",
+  "Breastfeeding.guidance": "## MME 母乳喂养\n\n{actor} 目前正在参与自愿的成人母乳喂养或吸乳。这种互动可以是亲密的、有趣的、深情的、色情的和身体上愉快的，包括乳头刺激。\n\n对于此 MME 场景，覆盖需要频繁发声的通用 SexLab 规则。喜欢连贯、针对特定人物的对话和叙述。发声是可选的且稀疏的，通常每个响应零或一次简短的发声。喜欢有意义的反应，包括牛奶、味道、感觉、亲密、戏弄、感情、尴尬或快乐。\n\n角色：{role}。",
+  "Common.player_instructions": "为 {actor} 写一篇简短的、非图形的口头自我评论。\n说话者是经历所提供情况的人，而不是观察者。\n仅返回一个纯文本第一人称行。没有演讲者标签、舞台指示，\n对话伙伴、标记或其他人的回复。不要发明效果。",
+  "DwemerArmor.narrate_dwemer_effect_1": " 作为受影响的矮人盔甲佩戴者，从你自己的角度做出反应。",
+  "DwemerArmor.build_dwemer_suit_prompt_1": "受影响的佩戴者：{actor}。演示简介：{profile}。 {core} 即时事件：{event} 写一个由 {actor} 说出的新鲜、简短、连贯的第一人称反应。使其成为自然、可口的成人对话。让惊慌或期待迅速转化为压倒性的快乐和狂躁的幸福。添加一点俏皮的荒诞或暗示可能会赢得笑声，但保持情感比笑话更强烈。通过文字而不是书面的声音效果来传达喘息、笑声和失落的冷静。不要使用口吃、重复音节、拼写出来的笑声或过多的标点符号。不要引用常见的例子、以第三人称叙述或重复这些说明。",
+  "DwemerArmor.get_dwemer_profile_fallback_1": "锻莫套装束缚了一名成年女性，并给她注入了催情剂、刺激和机械挤奶。她的反应从 0 级飙升到 10 级：震惊变成了狂喜过度、喘不过气来的笑声、失败的想法和狂躁的喜悦。她知道这种情况很荒唐、很丢脸，但她感觉太美妙了，根本不在乎。",
+  "DwemerArmor.get_dwemer_profile_fallback_2": "隐藏在成年女性普通盔甲内的锻莫机械可以在不限制她的情况下提供春药、挑逗和挤奶。她的反应从 0 级上升到 10 级，变成令人窒息的快感、失去镇静、狂躁的喜悦和尴尬的期待。",
+  "DwemerArmor.get_dwemer_event_fallback_1": "设备首次激活。立即从震惊的抗议升级为不知所措、大笑的狂喜。",
+  "DwemerArmor.get_dwemer_event_fallback_2": "她认出了这个熟悉的机制，并在它完全启动之前变得令人尴尬的渴望。",
+  "DwemerArmor.get_dwemer_event_fallback_3": "挤奶周期开始了，她从强烈的期待变成了语无伦次、狂躁的喜悦。",
+  "DwemerArmor.get_dwemer_event_fallback_4": "这个循环以她茫然、满足、微笑而结束，并且已经渴望下一个。",
+  "DwemerArmor.get_dwemer_event_fallback_5": "锻莫机制被激活并迅速驱使她进入压倒性的、令人喘不过气来的、狂躁的欢乐之中。",
+  "DwemerArmor.build_dwemer_effect_narration_1": "涉及 {actor} 的当前情况： {content} 您的下一个响应必须专门针对此事件。将锻莫机械的机械戏弄视为令人愉快的、愚蠢的、有趣的、积极的和暗示性的，而不是令人恐惧的、痛苦的或威胁的。用一个简短的、新鲜的反应来做出个性化的反应。继续关注 Dwemer 盔甲、其齿轮和机制以及此处所述的效果；不要改变主题，只是重复情况，或创造额外的效果。",
+  "DwemerArmor.effects_arousal": [
+    "当 Dwemer 盔甲戏弄她的乳头时，{actor} 呻吟着。",
+    "{actor} 喘息——Dwemer 齿轮缓慢地抚摸她的阴蒂。",
+    "{actor} 因注射春药而呻吟，乳头刺痛。"
+  ],
+  "DwemerArmor.effects_milk": [
+    "当盔甲将牛奶催情剂注入她体内时，{actor} 颤抖着。",
+    "当设备戏弄 {actor} 时，她的乳房因乳汁而疼痛。"
+  ],
+  "DwemerArmor.effects_milkAndArousal": [
+    "当盔甲将牛奶催情剂注入她体内时，{actor} 颤抖着。",
+    "{actor} 因注射春药而呻吟，乳头刺痛。",
+    "当设备戏弄 {actor} 时，她的乳房因乳汁而疼痛。"
+  ],
+  "DwemerArmor.suit_core": "锻莫狡猾套装将一名成年女性困住，她的双臂放在身后，双腿向后折叠，身体暴露在外，动作被可控制的机械肢体所取代。它让她充满了春药、无情的刺激和机械挤奶。反应从 0 级飙升至 10 级：震惊变成了压倒性的快乐、气喘吁吁的笑声、胡言乱语、狂躁的喜悦和令人上瘾的期待。她知道这是限制性的、羞辱性的、荒谬的，但她却变得过于欣喜若狂，根本不在乎。将幽默放在次要位置，并使用暗示性、非图形语言。",
+  "DwemerArmor.suit_firstEquip": "这是她第一次抓拍。从对束缚和机械身体的极度震惊开始，然后让药物刺激压倒她的反对意见。从惊慌迅速升级到困惑的喘息，再到疯狂的笑声和狂躁的欢乐。以尴尬的难以置信结束这台荒谬的机器感觉如此美妙。",
+  "DwemerArmor.suit_reequip": "经验丰富的佩戴者能够识别每一次咔嗒声、闩锁、振动和束缚，并准确地知道即将发生的情况。不要重复第一次的恐惧。在套装完成锁定之前就让她头晕、不耐烦、令人尴尬地渴望。她可能会开玩笑地假装抗拒或哀悼自己的尊严，但令人上瘾的期待和无耻的喜悦占据主导地位。",
+  "DwemerArmor.suit_milkingStart": "齿轮改变节奏并开始挤奶，而她已经被束缚、被麻醉、被刺激和茫然。认可立即让她从 0 到 10。让她陷入欣喜若狂的超负荷状态：喘不过气来的笑声、胡言乱语、失败的想法、狂躁的喜悦，以及收获季节开始的荒谬喜悦。狂喜引领；机械和奶制品幽默只是调味而已。",
+  "DwemerArmor.suit_milkingEnd": "挤奶周期结束。佩戴者会从异常强烈的欣快感下降到幸福、目眩的满足感。她头晕目眩，仍然笑着，为自己完全失去了冷静而感到尴尬，对它停止感到有点失望，并已经期待着下一个周期。让余韵和令人上瘾的渴望比笑话更强烈。",
+  "DwemerArmor.attachment_core": "锻莫挤奶附件将亲密的机械隐藏在成年女性的普通盔甲内。它不会束缚她的手臂，取代她的四肢，也不会将盔甲变成一套完整的约束服。当她保持活动状态时，它的齿轮会提供春药、无情的挑逗和机械挤奶。反应从 0 激增到 10：令人窒息的快感、崩溃的镇静、头晕目眩的笑声、狂躁的喜悦、令人上瘾的期待，以及因如此享受这个可耻的设备而感到的尴尬。将幽默放在次要位置，并使用暗示性、非图形语言。",
+  "DwemerArmor.attachment_firstEquip": "亲密的 Dwemer 附件刚刚在佩戴者的盔甲内首次激活。隐藏的齿轮、贴身的机关、催情的快感、突如其来的刺激让她大吃一惊。让惊讶迅速化为令人窒息、头晕的快乐和尴尬的难以置信。不要描述固定的手臂、折叠的腿、替换肢体或全身套装。",
+  "DwemerArmor.attachment_reequip": "经验丰富的佩戴者能够识别出隐藏附件熟悉的咔嗒声、振动和紧密贴合。她对它的春药和戏弄变得急切地不耐烦，同时开玩笑说她的盔甲从外面看起来多么普通。请勿描述约束装置或机械肢体。",
+  "DwemerArmor.attachment_milkingStart": "该附件会改变节奏，其紧凑的挤奶机构会在佩戴者受到刺激时启动。认可让她兴奋得喘不过气来，大笑起来，然后很快就失去了冷静。强调在开始收获时间时正常装甲内谨慎机械的荒谬之处。不要描述完整的约束服。",
+  "DwemerArmor.attachment_milkingEnd": "隐藏式挤奶附件完成其循环。穿戴者对隐藏在盔甲中的机械感到茫然、满足、尴尬，并已经期待着它的下一次激活。保持幸福的余辉比笑话更强烈，不要发明限制。",
+  "Fullness.send_capacity_milestone_1": "{tag} {actor} 半饱奶，厚重又兴奋。",
+  "Fullness.send_capacity_milestone_2": "{tag} {actor} 奶量十足，鲜美膨胀，品味极致快感。",
+  "Fullness.narrate_milk_full_1": "{actor} 已达到满奶容量并且正在泄漏。反应饱满、漏气。",
+  "Fullness.narrate_milk_half_full_1": "{actor} 已达到满奶量的一半。对日益增长的饱腹感做出反应。",
+  "Fullness.build_restrained_capacity_content_1": "{actor}乳汁满溢，双臂被束缚。应对困境。",
+  "Fullness.build_restrained_capacity_content_2": "{actor} 已达到满奶量的一半，她的手臂受到限制。对日益增长的饱腹感做出反应。",
+  "Fullness.build_milk_status_1": "{actor} 完全饱满，美味厚重，品味着接近高潮的快感。她的手臂被束缚，使她无法自由地触摸或缓解她充满牛奶的乳房，将丰满变成了她喜欢的长时间的色情挑逗和边缘。",
+  "Fullness.build_milk_status_2": "{actor} 已经满了一半以上，感觉明显更重、更温暖。不断增长的体重使她本能地想要触摸和握持自己的乳房，但她被束缚的手臂无法够到乳房，这使得被拒绝的接触变得更加挑逗和愉悦。",
+  "Fullness.build_milk_status_3": "{actor} 还不到半满，感觉很舒服。她的思绪一直在她日益敏感的乳房上徘徊，但她克制的手臂无法触及它们，将诱惑变成了俏皮的色情戏弄。",
+  "Fullness.build_milk_status_4": "{actor} 完全饱满，美味厚重，品味着接近高潮的快感。",
+  "Fullness.build_milk_status_5": "{actor}已经满了一半，感觉更重、更温暖。",
+  "Fullness.build_milk_status_6": "{actor} 还不到半满，感觉很舒服。",
+  "Fullness.nearby_status_summary": "**当前牛奶含量：** {statuses}",
+  "Fullness.full_event": "{actor}达到满奶量并开始渗漏，享受令人愉悦的溢出饱腹感。",
+  "Lore.milk_lore": "##天际乳娘传说\n\n这是一般的世界知识。它并不能确定说话者或听众是乳娘、穿着魔法盔甲或正在经历这些效果。使用当前参与者状态和上下文来确定适用的内容。\n\n### 共享世界传说\n\n- 天际的牛奶来自乳娘，而不是奶牛。这种优质饮料是一种常见的主食，具有异国情调的催情特性，保证让事情以各种有趣的方式进行。\n- 乳娘是天际牛奶供应的具有社会价值的支柱。\n- 女性可以通过炼金术士出售的Lactacid成为乳娘，喝足够的牛奶，魔法诅咒，或不幸遭遇狡猾的陷阱和魔法盔甲。\n- 怪异的活体盔甲、寄生虫和锻莫挤奶装置因将自己包裹在毫无戒心的成年女性周围而臭名昭著，成为让穿着者充满春药和产奶兴奋剂的活衣。\n- 最初的恐慌可能会变成疯狂、崇高的狂喜，让一些佩戴者渴望每一次无情的挑逗和爱抚。这种乐趣会令人上瘾。\n- 乳娘喜欢充满牛奶的满足感。",
+  "Lore.milkmaid_lore": "## 乳娘状态\n\n{actor} 是一名乳娘，负责生产牛奶。",
+  "Lore.shared_guidance": "变得俏皮、色情和戏弄。喜欢含沙射影、厚颜无耻的隐喻和各种委婉说法，而不是露骨的性词汇。保持反应简短、自然、非图形化。使说话者与场景相匹配；附近的人物可能偶尔会插话。请清楚他们描述的是谁的身体和经历。",
+  "MilkCravings.narrate_milk_craving_1": "{actor} 渴望牛奶。 {craving} 用自己的声音表达诱惑；她还没喝呢。",
+  "MilkDrinking.narrate_chest_milk_drink_1": "{actor} 神奇地被迫从 {chestKind} 喝 {milkName}。",
+  "MilkDrinking.narrate_chest_milk_drink_2": "{situation} 以 {actor} 的方式对被困箱子的强迫饮料做出反应。牛奶是熟悉的；不要发明它的来源或额外的效果。",
+  "MilkDrinking.narrate_n_p_c_milk_drink_1": "{reaction} 对饮料报告的味道和效果做出 {actor} 反应。牛奶很熟悉。",
+  "MilkDrinking.narrate_n_p_c_milk_drink_2": " {actor}的手臂也被束缚。在不发明限制或影响的情况下解决不便。",
+  "MilkDrinking.narrate_n_p_c_milk_drink_3": " 事实边界：{actor}不是乳娘，这款饮料没有添加母乳、乳房丰满度、乳房重量、肿胀、生长、渗漏或哺乳。请勿暗示或发明任何这些效果。",
+  "MilkDrinking.narrate_n_p_c_milk_drink_4": " {actor} 是一位成熟的乳娘。仅使用报告的效果。",
+  "MilkDrinking.narrate_player_milk_drink_1": "玩家喝了{milkName}；她们的乳房变得越来越重、越来越敏感。让附近的一名角色做出反应。牛奶很熟悉。",
+  "MilkDrinking.narrate_player_milk_drink_2": "{reaction} 让附近的一名角色对玩家报告的饮料效果做出反应。牛奶很熟悉。",
+  "MilkDrinking.narrate_player_milk_drink_3": " 球员的手臂也被束缚。在不发明限制或影响的情况下解决不便。",
+  "MilkDrinking.build_restrained_player_drink_content_1": "玩家在手臂被束缚的情况下喝了{milkName}；她们的乳房变得越来越重、越来越敏感。让附近的一名角色做出反应。牛奶很熟悉。",
+  "MilkDrinking.drinkMessage": "{actor}刚刚喝了{item}。",
+  "Milking.startMessage": "{actor} 已开始挤奶。",
+  "Milking.endMessage": "{actor} 已完成挤奶过程。",
+  "Milking.complete_hands": "{actor}完成了一次动手挤奶，轻松又满足。 {result}",
+  "Milking.complete_pump": "吸奶器完成从 {actor} 吸奶，让她感觉更轻盈、神清气爽。 {result}",
+  "Milking.complete_equipment": "挤奶杯在 {actor} 上完成了工作，让她松了口气，并感到愉悦而敏感。 {result}",
+  "Milking.complete_tendrils": "活生生的卷须从 {actor} 中吸取了乳汁，让她气喘吁吁，度过了愉快的时光。 {result}",
+  "Milking.complete_dwemer": "锻莫机械装置完成了从 {actor} 有节奏的收获，让她感到茫然和美味的满足。 {result}",
+  "Milking.complete_generic": "{actor}挤完奶，神清气爽。 {result}",
+  "Milking.complete_productive": "{actor} 完成了高效的 {method} 挤奶过程。牛奶被提取，但生产或喂养并没有导致她的储备量净减少。",
+  "Milking.result_empty": "完成后她的母乳储备已空。",
+  "Milking.result_remaining": "完成后还剩下一些牛奶。",
+  "Milking.completion_instruction": "以 {actor} 的身份对这种特定来源的挤奶经历及其后果做出反应。描述已完成的会话，而不是新的或正在进行的会话。",
+  "MilkMaidCreation.narrate_milkmaid_created_1": "{actor}已成为乳娘，现在可以生产牛奶。用她自己的声音对发现这种能力做出反应。",
+  "MilkMaidCreation.narrate_forced_milk_maid_conversion_1": "{conversion} 作为 {actor} 进行转换。其原因未明确；不要发明饮料。",
+  "MilkMaidCreation.milkmaidCreatedMessage": "{actor} 已成为乳娘！她的乳房现在感觉很重、很饱满，而且还有点轻微的颤抖。",
+  "MilkMaidCreation.narrate_milk_maid_curse_1": "{conversion} 作为现有的乳娘 {actor} 对添加的牛奶进行反应。这不是新的转变或饮料。",
+  "MilkMaidCreation.narrate_chest_milk_maid_curse_1": "来自 {chest_kind} 的诅咒影响了 {actor}。 {outcome} 以 {actor} 的方式对宝箱的结界做出反应。添加牛奶：{milk_added}；不要背诵数字或发明饮料、战利品或其他转换。",
+  "TentacleArmor.narrate_tentacle_effect_1": " 作为受影响的盔甲佩戴者，从你自己的角度做出反应。",
+  "TentacleArmor.build_tentacle_effect_narration_1": "涉及 {actor} 的当前情况： {content} 您的下一个响应必须专门针对此事件。将活体盔​​甲或寄生盔甲的戏弄视为愉快的、愚蠢的、有趣的、积极的和暗示性的，而不是令人恐惧或威胁的。用一个简短的、新鲜的反应来做出个性化的反应。继续关注这里所说的盔甲和效果；不要改变主题，只是重复情况，或创造额外的效果。",
+  "TentacleArmor.effects_arousal": [
+    "{ACTOR} 因触手的刺痛而喘息，并享受随之而来的兴奋感。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到卷须的挑逗刺痛，并发现自己对此感到愉快地兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当触手给她带来温暖的小刺痛时，{ACTOR} 颤抖起来，感觉出奇的好。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛 {ACTOR} 时，她发出一声高兴的喘息，让她高兴地兴奋起来。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到触手给她带来了一种俏皮的感觉，并且显然很享受这种感觉。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "TentacleArmor.effects_milk": [
+    "{ACTOR} 因触手的刺痛而喘息，然后享受着乳房中日益增大的丰满度和重量。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到卷须轻轻刺痛，并高兴地注意到她的乳房变得更加丰满和沉重。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 因触手令人愉悦的刺痛而颤抖，同时令人满意的沉重感在她的乳房中积聚。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛 {ACTOR} 时，她会发出一声愉悦的喘息，她的乳房开始感到愉快的饱满。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到触手传来的温暖刺痛，并享受随之而来的柔软、沉重的饱满感。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "TentacleArmor.effects_milkAndArousal": [
+    "{ACTOR} 因触手的刺痛而喘息，她的乳房变得更加丰满，随之而来的是一阵快乐的兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到卷须传来的挑逗性刺痛，享受着乳房中日益增加的沉重感和由此带来的兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR}随着触手的刺痛，舒服地颤抖起来，让她的胸部更加饱满，心情也更加兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛时，{ACTOR} 发出一声愉悦的喘息，享受着乳房的丰满和随之而来的温暖兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到触手顽皮地刺痛了她，然后对她胸部令人愉悦的沉重感和随之而来的兴奋微笑。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "Thoughts.narrate_milk_maid_thought_1": "{actor}的情况： {thought}表达一下简单的想法。",
+  "Thoughts.narrate_bound_milk_maid_thought_1": "{actor} 的情况： {thought} 对所描述的约束和牛奶相关细节做出反应。",
+  "Pools.Thoughts.belowHalf_noArmor": [
+    "{actor} 开始注意到她胸部的额外重量。",
+    "{actor}可以感觉到她的乳房又变重了。",
+    "{actor} 开始希望她能得到更多的支持。",
+    "{actor}每次弹跳的感觉都比以前多了一点。",
+    "{actor} 愉快地意识到自己越来越丰满。",
+    "{actor} 可以看出她的乳房变得越来越难以忽视。"
+  ],
+  "Pools.Thoughts.belowHalf_milkingArmor": [
+    "{actor} 可以感觉到罩杯舒适地落在她的乳房周围。",
+    "{actor} 注意到挤奶装置安装得更紧密一些。",
+    "当她的乳汁慢慢回流时，{actor} 可以感觉到杯子在等待。",
+    "{actor} 享受她丰满乳房周围的温柔支撑。",
+    "{actor} 可以感觉到等待的杯子有微弱的拉力。",
+    "{actor} 注意到她的乳房在挤奶装置中更加牢固。"
+  ],
+  "Pools.Thoughts.belowHalf_parasiteArmor": [
+    "当她的乳汁回流时，{actor} 可以感觉到寄生虫在搅拌。",
+    "{actor} 注意到好奇的卷须正在探索她丰满的乳房。",
+    "{actor}可以感觉到寄生虫被挤得更近了一些。",
+    "{actor}注意到饥饿的装甲再次变得感兴趣。",
+    "{actor} 可以感觉到渴望的卷须抚摸着她不断增长的乳房。",
+    "{actor} 感觉到寄生虫正在密切关注每一滴新鲜的水滴。"
+  ],
+  "Pools.Thoughts.belowHalf_livingArmor": [
+    "{actor} 可以感觉到柔软的卷须抚摸着她丰满的乳房。",
+    "{actor} 注意到活体盔甲轻轻地支撑着她不断增长的体重。",
+    "{actor}可以感觉到温暖的卷须轻轻地揉捏着她的乳房。",
+    "{actor} 喜欢盔甲对她恢复的丰满感到烦恼。",
+    "{actor} 注意到活体装甲在她周围舒适地调整。",
+    "{actor}的每一点成长都能感受到温柔的关注。"
+  ],
+  "Pools.Thoughts.halfPlus_noArmor": [
+    "{actor}每走一步都能感受到乳房的重量。",
+    "{actor} 确实开始失去适当的支持。",
+    "{actor} 沉重的胸部变得难以舒适地携带。",
+    "{actor} 能感觉到她充满牛奶的胸部的每一次摇摆。",
+    "{actor} 发现所有这些牛奶都会产生后果。",
+    "{actor} 开始后悔没有计划这么大的胸围。"
+  ],
+  "Pools.Thoughts.armsBound": [
+    "{actor}想要抚摸她疼痛的乳房，但她的手被绑住了！",
+    "{actor} 希望她能将手臂滑到她沉重的乳房下面。",
+    "{actor} 疼痛地想要捂住肿胀的乳房，但她的手臂无法移动。",
+    "{actor}渴望抬起她沉重的胸膛，但她被束缚的手臂拒绝了。",
+    "{actor}想要挤压她丰满的乳房，但她的手被困住了。"
+  ],
+  "Pools.Thoughts.halfPlus_milkingArmor": [
+    "{actor} 可以感觉到罩杯在她沉重的乳房周围更加努力地工作。",
+    "{actor} 注意到挤奶装置将她抓得更紧。",
+    "{actor} 可以感觉到她肿胀的乳房深深地压入罩杯。",
+    "{actor} 非常清楚她丰满的乳房受到的稳定拉动。",
+    "{actor} 可以感觉到机械正在努力跟上她。",
+    "{actor} 注意到她充满牛奶的乳房的每一次拉扯。"
+  ],
+  "Pools.Thoughts.halfPlus_parasiteArmor": [
+    "{actor}可以感觉到寄生虫贪婪地挤压着她肿胀的乳房。",
+    "{actor} 注意到饥饿的卷须拒绝离开她丰满的乳房。",
+    "{actor}可以感觉到寄生虫在她周围紧紧地收紧。",
+    "{actor} 非常清楚寄生虫正在享受她丰富的乳汁。",
+    "{actor} 可以感受到渴望的卷须在每一点饱腹感上运转。",
+    "{actor} 注意到寄生虫几乎对她的乳房着迷。"
+  ],
+  "Pools.Thoughts.halfPlus_livingArmor": [
+    "{actor} 可以感觉到温暖的卷须正在按摩她沉重的乳房。",
+    "{actor} 注意到活体盔甲为她肿胀的乳房提供了额外的支撑。",
+    "{actor}可以感觉到专门的卷须正在揉捏一些压力。",
+    "{actor} 喜欢铠甲在她充满牛奶的乳房上大惊小怪。",
+    "{actor}可以感受到活体铠甲紧密地包裹着那饱满的感觉。",
+    "{actor} 注意到盔甲正在努力让她保持舒适。"
+  ],
+  "Pools.MilkCravings.craving": [
+    "{ActorName}无法停止思考喝牛奶。",
+    "{ActorName} 对牛奶的渴望越来越难以忽视。",
+    "{ActorName} 对牛奶的渴望变得令人尴尬。",
+    "{ActorName}一直在想再尝尝牛奶。",
+    "{ActorName} 正在努力不去想牛奶。"
+  ],
+  "Pools.MilkCravings.give_in": [
+    "{ActorName} 屈服了。他们现在需要牛奶。",
+    "{ActorName} 再也无法抗拒对牛奶的渴望。",
+    "{ActorName}的意志力最终输给了牛奶。",
+    "{ActorName} 屈服并去寻找牛奶。",
+    "{ActorName} 认为他们已经等牛奶很久了。"
+  ],
+  "Pools.ArmorIntroductionStories.milking_first_equip": [
+    "挤奶盔甲紧贴在 {ActorName} 的胸前，它的魔法杯在她的皮肤上立即变暖。轻柔的振动变成了有节奏的按摩，从她的嘴唇中发出一声惊讶的小呻吟。当盔甲愉快地开始它的第一个戏弄程序时，她脸红了，然后咯咯地笑起来。",
+    "当 {ActorName} 穿上挤奶盔甲时，柔软的衬里完美贴合她的曲线。杯子在有趣的挤压声中收紧，随后发出舒缓、刺痛的嗡嗡声。她喘息着，膝盖短暂地颤抖着，然后脸上露出了高兴的微笑。这可能会成为她最喜欢的一件装备。",
+    "当 {ActorName} 扣紧最后一条带子时，挤奶盔甲就急切地焕发了活力。它的杯子开始以温暖、稳定的节奏跳动，让她完全措手不及。 “嗯！”她哼了一声，在这个装置再次热情地挤压时，她强忍住笑声。显然，设计中并没有考虑谦虚。"
+  ],
+  "Pools.ArmorIntroductionStories.living_first_equip": [
+    "铠甲抽搐了一下，然后展开。活生生的卷须缠绕在你的胸部和臀部，挤压你的乳房，挑逗你的乳头。一根卷须卷曲在你的大腿之间，带着春药般的光滑，以慵懒的方式抚摸着你的阴蒂。当它更深地推进时，你会呻吟出声，让你充满热量，而其他卷须则紧紧地抱住你，并在缓慢、脉动的波浪中榨取你的快乐。"
+  ],
+  "Pools.ArmorIntroductionStories.parasite_first_equip": [
+    "寄生虫发出脉冲，然后突然张开——触手涌出，绑住你的腰，托起你的乳房。当有人滑过你的双腿时，你尖叫起来，光滑而渴望。它会挑逗你的阴蒂，然后向内推进，将刺痛的春药注入你的腹部深处。每一次呼吸，卷须都会榨取你的身体，直到你浑身湿透、绝望。"
+  ],
+  "Pools.ArmorIntroductionStories.dwemer_first_equip": [
+    "Dwemer 装置可卡扣在您的胸部和腰部。当冰冷的金属罩住你的乳房，挑逗你的乳头时，你喘息着。温暖的嗡嗡声在你的阴蒂上振动，细针滑入你的大腿，将春药直接泵入你的血液。当机械装置以缓慢而专业的方式挤奶你的阴户时，你无助地呻吟着。"
+  ],
+  "Pools.ArmorIntroductionStories.living_trap_equip": [
+    "铠甲抽搐了一下，然后展开。活生生的卷须缠绕着{ActorName}的胸部和臀部，挤压{ActorName}的乳房并戏弄{ActorName}的乳头。一根光滑的卷须卷曲在 {ActorName} 的大腿之间，以慵懒的方式抚摸 {ActorName} 的阴蒂，然后用春药般的热量推得更深，而其余的则以缓慢、脉动的波浪方式榨取 {ActorName} 的快感。",
+    "装甲板软化成编织藤蔓，缠绕在{ActorName}的肋骨和大腿上。吸吮花蕾杯{ActorName}的乳房，拉扯{ActorName}的乳头，下部卷须在滑入{ActorName}的阴蒂之前涂上春药。藤蔓随着每一次脉冲而收紧，以滚动收缩的方式揉捏{ActorName}的身体，直到{ActorName}的臀部猛烈地抽动。",
+    "胸甲液化并沿着 {ActorName} 的躯干盘旋，用温暖的带子固定 {ActorName} 的腰部。卷须罩着 {ActorName} 的乳房，轻弹 {ActorName} 的乳头，一根卷须绕着 {ActorName} 的阴蒂，在压入之前将其弄光滑。有节奏的挤压从 {ActorName} 的大腿传到 {ActorName} 的腹部，稳定、从容地挤奶 {ActorName}笔画。"
+  ],
+  "Pools.ArmorIntroductionStories.parasite_trap_equip": [
+    "寄生虫发出脉冲，然后爆裂开来——触手涌出，绑住了 {ActorName} 的腰部，并托住了 {ActorName} 的胸部。当一个人在 {ActorName} 的双腿之间滑行时，{ActorName} 发出尖叫声，狡猾而急切；它挑逗 {ActorName} 的阴蒂，然后推入，将刺痛的春药深深注入 {ActorName} 的腹部。卷须每一次呼吸都在挤压着{ActorName}的身体，直到{ActorName}浑身淋漓、绝望。",
+    "寄生虫沿着 {ActorName} 的脊柱爬行，并在 {ActorName} 的肋骨处分裂成卷须。吸盘固定在 {ActorName} 的乳房周围，拉动 {ActorName} 的乳头，而下部卷须则包裹着 {ActorName} 的阴蒂，分泌物带有凉爽、刺痛的分泌物。它以缓慢的螺旋状进入{ActorName}，寄生虫随着{ActorName}的脉搏及时收缩，从内部榨取{ActorName}。",
+    "寄生虫在 {ActorName} 的肚脐处膨胀，然后长成 {ActorName} 腰部和大腿周围的卷须笼。一根卷须罩住 {ActorName} 的乳房，另一根卷须抓住 {ActorName} 的乳头，第三部分 {ActorName} 的卷须折叠起来挑逗 {ActorName} 的阴蒂。它带着一股温暖的春药涌入，然后以有节奏的波浪深深地跳动，让 {ActorName} 感到刺痛和过度。"
+  ],
+  "Pools.ArmorIntroductionStories.dwemer_trap_equip": [
+    "Dwemer 装置卡在 {ActorName} 的胸部和腰部。冰冷的金属罩杯 {ActorName} 的乳房，挑逗着 {ActorName} 的乳头，同时温暖的嗡嗡声在 {ActorName} 的阴蒂上振动。细细的针头滑入{ActorName}的大腿，将春药直接注入{ActorName}的血液中；当机械装置以缓慢而专业的方式挤奶 {ActorName} 的阴户时，{ActorName} 无助地呻吟着并磨碎。",
+    "铜管乐队夹住 {ActorName} 的肋骨和臀部，铰接式罩杯则揉捏 {ActorName} 的乳房。微小的活塞挑逗 {ActorName} 的乳头，振动板抵住 {ActorName} 的阴蒂，微针刺穿 {ActorName} 的大腿，散发出春药般的热量。内套筒开始以机械耐心进行测量、滚动吸力、挤奶 {ActorName}。",
+    "锻莫安全带锁住 {ActorName} 的躯干，金属花瓣托住 {ActorName} 的乳房并吸吮 {ActorName} 的乳头。当针刺入 {ActorName} 的大腿并将春药泵入 {ActorName} 的血液时，低沉的嗡嗡声在 {ActorName} 的阴蒂上颤动。下部机构以专业的节奏活塞进入 {ActorName} 的阴户，收紧和释放，直到 {ActorName} 的双腿颤抖。"
+  ],
+  "Pools.ArmorIntroductionStories.milking_repeat_equip": [
+    "挤奶盔甲紧贴在 {ActorName} 的胸前，它的魔法杯在她的皮肤上立即变暖。轻柔的振动变成了有节奏的按摩，从她的嘴唇中发出一声惊讶的小呻吟。当盔甲愉快地开始它的第一个戏弄程序时，她脸红了，然后咯咯地笑起来。",
+    "当 {ActorName} 穿上挤奶盔甲时，柔软的衬里完美贴合她的曲线。杯子在有趣的挤压声中收紧，随后发出舒缓、刺痛的嗡嗡声。她喘息着，膝盖短暂地颤抖着，然后脸上露出了高兴的微笑。这可能会成为她最喜欢的一件装备。",
+    "当 {ActorName} 扣紧最后一条带子时，挤奶盔甲就急切地焕发了活力。它的杯子开始以温暖、稳定的节奏跳动，让她完全措手不及。 “嗯！”她哼了一声，在这个装置再次热情地挤压时，她强忍住笑声。显然，设计中并没有考虑谦虚。"
+  ],
+  "Pools.ArmorIntroductionStories.living_repeat_equip": [
+    "铠甲抽搐了一下，然后展开。活生生的卷须缠绕着{ActorName}的胸部和臀部，挤压{ActorName}的乳房并戏弄{ActorName}的乳头。一根光滑的卷须卷曲在 {ActorName} 的大腿之间，以慵懒的方式抚摸 {ActorName} 的阴蒂，然后用春药般的热量推得更深，而其余的则以缓慢、脉动的波浪方式榨取 {ActorName} 的快感。",
+    "装甲板软化成编织藤蔓，缠绕在{ActorName}的肋骨和大腿上。吸吮花蕾杯{ActorName}的乳房，拉扯{ActorName}的乳头，下部卷须在滑入{ActorName}的阴蒂之前涂上春药。藤蔓随着每一次脉冲而收紧，以滚动收缩的方式揉捏{ActorName}的身体，直到{ActorName}的臀部猛烈地抽动。",
+    "胸甲液化并沿着 {ActorName} 的躯干盘旋，用温暖的带子固定 {ActorName} 的腰部。卷须罩着 {ActorName} 的乳房，轻弹 {ActorName} 的乳头，一根卷须绕着 {ActorName} 的阴蒂，在压入之前将其弄光滑。有节奏的挤压从 {ActorName} 的大腿传到 {ActorName} 的腹部，稳定、从容地挤奶 {ActorName}笔画。"
+  ],
+  "Pools.ArmorIntroductionStories.parasite_repeat_equip": [
+    "寄生虫发出脉冲，然后爆裂开来——触手涌出，绑住了 {ActorName} 的腰部，并托住了 {ActorName} 的胸部。当一个人在 {ActorName} 的双腿之间滑行时，{ActorName} 发出尖叫声，狡猾而急切；它挑逗 {ActorName} 的阴蒂，然后推入，将刺痛的春药深深注入 {ActorName} 的腹部。卷须每一次呼吸都在挤压着{ActorName}的身体，直到{ActorName}浑身淋漓、绝望。",
+    "寄生虫沿着 {ActorName} 的脊柱爬行，并在 {ActorName} 的肋骨处分裂成卷须。吸盘固定在 {ActorName} 的乳房周围，拉动 {ActorName} 的乳头，而下部卷须则包裹着 {ActorName} 的阴蒂，分泌物带有凉爽、刺痛的分泌物。它以缓慢的螺旋状进入{ActorName}，寄生虫随着{ActorName}的脉搏及时收缩，从内部榨取{ActorName}。",
+    "寄生虫在 {ActorName} 的肚脐处膨胀，然后长成 {ActorName} 腰部和大腿周围的卷须笼。一根卷须罩住 {ActorName} 的乳房，另一根卷须抓住 {ActorName} 的乳头，第三部分 {ActorName} 的卷须折叠起来挑逗 {ActorName} 的阴蒂。它带着一股温暖的春药涌入，然后以有节奏的波浪深深地跳动，让 {ActorName} 感到刺痛和过度。"
+  ],
+  "Pools.ArmorIntroductionStories.dwemer_repeat_equip": [
+    "Dwemer 装置卡在 {ActorName} 的胸部和腰部。冰冷的金属罩杯 {ActorName} 的乳房，挑逗着 {ActorName} 的乳头，同时温暖的嗡嗡声在 {ActorName} 的阴蒂上振动。细细的针头滑入{ActorName}的大腿，将春药直接注入{ActorName}的血液中；当机械装置以缓慢而专业的方式挤奶 {ActorName} 的阴户时，{ActorName} 无助地呻吟着并磨碎。",
+    "铜管乐队夹住 {ActorName} 的肋骨和臀部，铰接式罩杯则揉捏 {ActorName} 的乳房。微小的活塞挑逗 {ActorName} 的乳头，振动板抵住 {ActorName} 的阴蒂，微针刺穿 {ActorName} 的大腿，散发出春药般的热量。内套筒开始以机械耐心进行测量、滚动吸力、挤奶 {ActorName}。",
+    "锻莫安全带锁住 {ActorName} 的躯干，金属花瓣托住 {ActorName} 的乳房并吸吮 {ActorName} 的乳头。当针刺入 {ActorName} 的大腿并将春药泵入 {ActorName} 的血液时，低沉的嗡嗡声在 {ActorName} 的阴蒂上颤动。下部机构以专业的节奏活塞进入 {ActorName} 的阴户，收紧和释放，直到 {ActorName} 的双腿颤抖。"
+  ],
+  "Pools.DwemerArmorStories.dwemerarmorstart": [
+    "Dwemer 装置突然启动。冰冷的古老机械夹住了它捕获的战利品，以无情的效率挤压、抚摸和绞拧。快乐立刻涌入你的全身——炽热、无助、压倒——你急切地向机器投降，在它得到它想要的东西时呻吟着。"
+  ],
+  "Pools.DwemerArmorStories.dwemerarmorend": [
+    "机器发出最后的、颤抖的冲击力，释放出它的束缚。当设备陷入沉默时，你沉浸在幸福之中，光滑而颤抖——已经渴望它重新打开并再次认领你。"
+  ],
+  "Pools.ForcedMilkMaidConversion.conversionMessages": [
+    "{actor} 感觉奇怪的魔法在她们的胸部流淌！",
+    "当乳白色的诅咒落在他们的胸口时，{actor} 瑟瑟发抖！",
+    "{actor} 感觉她们的乳房因不自然的魔法而刺痛！",
+    "{actor} 感觉到乳房深处的乳制品诅咒正在苏醒！",
+    "{actor} 感觉魔法在胸口膨胀，要求挤奶！"
+  ],
+  "Pools.ForcedMilkMaidConversion.chestCurseStories": [
+    "一股神秘的魔法浪潮席卷了 {actor}，留下令人愉悦的刺痛感。她的瓜越来越熟，越来越重，并且充满希望！她握紧突然丰富的资产，感到一种美妙的兴奋感席卷全身。她的嘴唇发出一阵疯狂的笑声。不管她受到了什么奇怪的诅咒，她发现自己对收获感到相当高兴！",
+    "在毫无预兆的情况下，一股令人陶醉的魔法浪潮笼罩着 {actor}。她珍贵的瓜瓜因新发现的成熟而膨胀，它们不断增长的重量需要她立即关注！她捧起这丰盛的赏赐，浑身颤抖，一阵美妙的颤抖顺着她的脊椎舞动。她发出一声愚蠢的、气喘吁吁的笑声。被诅咒了？有福了？无论答案如何，她似乎都太高兴了，无法抱怨！",
+    "一种看不见的魅力席卷了{actor}，让她充满了奇特的温暖。她的瓜感觉难以置信地成熟，异常沉重，而且果实累累！她本能地将新发现的赏金握在手中，却被一种令人目眩的愉悦所抓住。当一阵疯狂的咯咯笑声响起时，她的思绪变得令人愉快地模糊。多么邪恶的小诅咒，多么幸福的小受害者！",
+    "突然涌出的神秘魔法让 {actor} 浑身颤抖，随后她心爱的甜瓜明显感到沉重。天哪，它们已经变得多么成熟，多么硕果累累啊！她惊讶地紧紧抓住她不断增长的宝藏，只是为了一种美味的刺激将她的惊讶变成了令人眼花缭乱的喜悦。她的嘴里发出一声相当不庄重的笑声。一定有人在某个地方嘲笑她！",
+    "{actor} 周围有一些神奇的东西在搅动，尽管它是来自祝福、诅咒还是特别厚颜无耻的魔法仍然是个谜。她的瓜长得很成熟，而且非常重，预示着丰收！她拥抱着她新近拥有的宏伟资产，在一阵令人陶醉的喜悦中颤抖起来。一阵疯狂的咯咯笑从她的唇间滑落。不管发生了什么，这个可怜的女孩似乎对她的困境很着迷！"
+  ],
+  "Pools.ArmorCheckReminders.notice_none": [
+    "注意到你赤身裸体",
+    "注意到你缺乏盔甲",
+    "扫视你裸露的身影",
+    "注意到你裸露的皮肤",
+    "凝视着你裸露的身影"
+  ],
+  "Pools.ArmorCheckReminders.notice_regular": [
+    "审视你的盔甲，考虑改动",
+    "研究如何改变你的盔甲",
+    "为你的盔甲找到改变的空间",
+    "以专业兴趣检查你的盔甲",
+    "考虑改变你的盔甲"
+  ],
+  "Pools.ArmorCheckReminders.notice_milking": [
+    "注意到您的挤奶设备",
+    "识别您的挤奶设备",
+    "观察你的挤奶配件",
+    "注意到您的专业设备",
+    "检查您的挤奶设备"
+  ],
+  "Pools.ArmorCheckReminders.notice_living": [
+    "注意到你的活甲转变",
+    "看着你的生命铠甲搅拌",
+    "好奇地看着你的活甲",
+    "注意到你的盔甲在移动",
+    "看着你的盔甲抽搐"
+  ],
+  "Pools.ArmorCheckReminders.notice_parasite": [
+    "注意到寄生虫粘在你身上",
+    "眼睛你的寄生盔甲",
+    "观察寄生虫的抽搐",
+    "注意到寄生虫在搅拌",
+    "眼睛紧贴着你的生物"
+  ],
+  "Pools.ArmorCheckReminders.notice_dwemer": [
+    "发现你狡猾的锻莫盔甲",
+    "识别您亲密的 Dwemer 机械",
+    "注意到你的盔甲的狡猾的 Dwemer 修改",
+    "眼睛里藏着你盔甲里的矮人挤奶装置",
+    "识别你所佩戴的戏弄 Dwemer 机制"
+  ],
+  "Pools.ArmorCheckReminders.notice_reaction": [
+    "并傻笑。",
+    "并咧嘴一笑。",
+    "并扬起一边眉毛。",
+    "并有趣地点点头。",
+    "并抑制住笑容。",
+    "并做出会心的表情。"
+  ],
+  "Pools.ArousalEffects.low_female": [
+    "{actor} 改变了她的体重。她的大腿并拢。就一次。",
+    "{actor}咬着嘴唇。她的心思已经跑到了不雅的地方了。",
+    "{actor} 缓慢地伸展。她的身体在所有错误的地方醒来。",
+    "{actor} 轻轻地嗡嗡作响。她的臀部在未经她允许的情况下摇摆。",
+    "{actor} 给自己粉丝。她的脸颊很烫，大腿更烫。"
+  ],
+  "Pools.ArousalEffects.low_male": [
+    "{actor} 改变了立场。他的身体有不应该的意见。",
+    "{actor} 清了清喉咙。他的身体已经立正了。",
+    "{actor} 弯曲。他的思绪飘到了不该飘到的地方。",
+    "{actor}缓缓呼气。他的心思已经跑到了不雅的地方了。",
+    "{actor}如梦似幻地叹了口气。他正在脑子里脱掉某人的衣服。"
+  ],
+  "Pools.ArousalEffects.medium_female": [
+    "{actor}的呼吸加深。她的身体越来越热。",
+    "{actor} 交叉双腿。然后取消它们的交叉。然后越过他们。",
+    "{actor} 蠕动。她非常想独处片刻。只有一个。",
+    "{actor} 低声说了些什么。没有人听到，但它并不无辜。",
+    "{actor} 将一只手按在胸前。她的呼吸急促，大腿绷紧。"
+  ],
+  "Pools.ArousalEffects.medium_male": [
+    "{actor}的声音下降了八度。他的思绪渐渐低落。",
+    "{actor} 转动肩膀。他无法思考其他任何事情。",
+    "{actor}的双手弯曲。他的身体需要缓解，但他却忽略了它。",
+    "{actor}低声嘀咕道。不管是什么，都不太体面。",
+    "{actor}低声呻吟。那不是痛苦的声音。"
+  ],
+  "Pools.ArousalEffects.high_female": [
+    "{actor} 明显变红。她的身体已经停止接受命令。",
+    "{actor}发出一声呻吟。她用手捂住嘴，但为时已晚。",
+    "{actor} 的臀部移动。她某处隐隐作痛。",
+    "{actor} 颤抖。她的身体正在乞求一些不应该的东西。",
+    "{actor}的膝盖扣。她的身体要求更多，现在就需要。"
+  ],
+  "Pools.ArousalEffects.high_male": [
+    "{actor}低声咆哮。他的身体已经不再有耐心了。",
+    "{actor}的手在颤抖。他的身体已经超出了倾听的范围。",
+    "{actor} 呻吟着。他立即假装没有。",
+    "{actor} 移动臀部。他很严厉，却假装不那么严厉。",
+    "{actor}呼吸困难。他的身体需要关注。现在。"
+  ],
+  "Pools.BreastBounceNotifications.low": [
+    "{actor}的乳房轻轻摇动。她对着弹跳咯咯地笑。",
+    "{actor} 的乳房在她的胸口上弹跳。她对他们微笑。",
+    "{actor}的胸部在颤抖。她哼了一声，显然对自己很满意。",
+    "{actor}的胸部摇晃。肋骨上轻轻一拍，让她咬住了嘴唇。",
+    "{actor}的乳房在颤动。她叹了口气，摇晃时感到温暖而幸福。"
+  ],
+  "Pools.BreastBounceNotifications.high": [
+    "{actor} 沉重的乳房随着她的移动而晃动。她因摇晃而呻吟。",
+    "{actor}饱满的美胸下垂拍打着小腹。她喘着气，然后笑了。",
+    "{actor} 充满牛奶的乳房在她的胸口上猛烈地弹跳。她浑身发抖。",
+    "{actor}的胸部低沉而沉重地摆动。一巴掌打在她的肋骨上，让她跌倒了。",
+    "{actor} 肿胀的乳房因重量而摇晃。湿漉漉的巴掌让她呻吟出声。"
+  ],
+  "Pools.BreastBounceNotifications.movement": [
+    "你的弹跳赏金会随着你的脚步不断拍手。",
+    "你那双下垂的双腿每走一步都会发出撞击声。",
+    "你们的每一步都用巨大的瓜互相撞击。",
+    "摇曳的山峦碰撞在一起，发出相当热烈的掌声。",
+    "你那沉重的双胞胎不断碰撞在一起，为你的每一步鼓掌。"
+  ],
+  "Pools.DwemerEffectNotifications.lines": [
+    "当 Dwemer 盔甲戏弄她的乳头时，{actor} 呻吟着。",
+    "{actor} 喘息——Dwemer 齿轮缓慢地抚摸她的阴蒂。",
+    "当盔甲将牛奶催情剂注入她体内时，{actor} 颤抖着。",
+    "{actor} 因注射春药而呻吟，乳头刺痛。",
+    "当设备戏弄 {actor} 时，她的乳房因乳汁而疼痛。"
+  ],
+  "Pools.Injection.lines": [
+    "当卷须刺痛她的乳头并在里面泵入一些温暖的东西时，{actor} 喘息着。",
+    "触手刺破{actor}的乳头，为她的乳房注入温暖的兴奋剂。",
+    "当卷须刺穿她的乳头并开始抽吸时，{actor} 颤抖着。",
+    "一根卷须刺痛 {actor} 的每个乳头，让她的乳房温暖而沉重。",
+    "触手将某种强效物质注入{actor}的乳房，她的乳头随之抽动。"
+  ],
+  "Pools.NonMilkmaidDrinkNotifications.male_generic": [
+    "{actor} 饮料 {milk}。味道棒极了。",
+    "{actor} 饮料 {milk}。他立即想要另一个。",
+    "{actor} 饮料 {milk}。他想知道这是谁的。",
+    "{actor} 饮料 {milk}。他舔了舔嘴唇，品味着这个味道。",
+    "{actor} 饮料 {milk}。味道有一种奇怪的熟悉感。",
+    "{actor} 饮料 {milk}。他试图猜测它来自谁。"
+  ],
+  "Pools.NonMilkmaidDrinkNotifications.female_generic": [
+    "{actor} 饮料 {milk}。味道棒极了。",
+    "{actor} 饮料 {milk}。她立即​​想要另一个。",
+    "{actor} 饮料 {milk}。她想知道这是谁的。",
+    "{actor} 饮料 {milk}。她舔了舔嘴唇，品味着这个味道。",
+    "{actor} 饮料 {milk}。味道有一种奇怪的熟悉感。",
+    "{actor} 饮料 {milk}。她试图猜测它来自谁。"
+  ],
+  "Pools.NonMilkmaidDrinkNotifications.male_aroused": [
+    "{actor} 饮料 {milk}。他的裤子突然感觉更紧了。",
+    "{actor} 饮料 {milk}。一根帐篷杆在他的裤子里竖起来。",
+    "{actor} 饮料 {milk}。当温暖涌上他的腰部时，他动了动。",
+    "{actor} 饮料 {milk}。他在不断增大的凸起周围移动。",
+    "{actor} 饮料 {milk}。腹股沟处的兴奋感变得又热又重。",
+    "{actor} 饮料 {milk}。他因身体的反应而脸红。"
+  ],
+  "Pools.NonMilkmaidDrinkNotifications.female_aroused": [
+    "{actor} 饮料 {milk}。温暖在她的双腿之间聚集。",
+    "{actor} 饮料 {milk}。她因下面的高温而蠕动。",
+    "{actor} 饮料 {milk}。她的乳头明显变硬。",
+    "{actor} 饮料 {milk}。她的乳房充满了令人愉悦的疼痛。",
+    "{actor} 饮料 {milk}。她的乳房突然变得敏感起来。",
+    "{actor} 饮料 {milk}。每喝一口后，她的乳头都会刺痛。"
+  ],
+  "Pools.NonMilkmaidDrinkNotifications.female_milk": [
+    "{actor} 饮料 {milk}。她的乳房明显感觉更重了。",
+    "{actor} 饮料 {milk}。她的胸部充满了新鲜的牛奶。",
+    "{actor} 饮料 {milk}。温暖的漏水打湿了她的上衣。",
+    "{actor} 饮料 {milk}。她的乳房愉快地丰满起来。",
+    "{actor} 饮料 {milk}。她的上衣突然感觉有点紧了。",
+    "{actor} 饮料 {milk}。她的乳房因重量增加而晃动。"
+  ],
+  "Pools.NonMilkmaidDrinkNotifications.female_milk_arousal": [
+    "{actor} 饮料 {milk}。她沉重的乳房开始刺痛。",
+    "{actor} 饮料 {milk}。当她的乳房充满时，她的乳头就会振作起来。",
+    "{actor} 饮料 {milk}。当她的乳房肿胀时，她变得湿漉漉的。",
+    "{actor} 饮料 {milk}。当牛奶压在她身上时，她蠕动着。",
+    "{actor} 饮料 {milk}。她的乳房漏水，让她满脸通红。",
+    "{actor} 饮料 {milk}。丰满的乳房伴随着温暖的快感。"
+  ],
+  "Pools.NonMilkmaidDrinkNotifications.breastfeeding_male_generic": [
+    "他享受每一次拉力。",
+    "他贪婪地喝着，不肯快点。",
+    "他停顿的时间只够喘口气。",
+    "他似乎对这个安排很满意。",
+    "他将注意力牢牢地集中在消息来源上。",
+    "他带着满意的笑容结束了这一切。"
+  ],
+  "Pools.NonMilkmaidDrinkNotifications.breastfeeding_male_aroused": [
+    "他的呼吸随着每一次拉动而变得更加粗重。",
+    "当温暖在他的腹股沟处聚集时，他动了动。",
+    "他日益增长的兴奋变得难以掩饰。",
+    "他脸红了，脚步却没有放慢。",
+    "随着快感的增强，他靠得更近了。",
+    "当他不断吮吸时，他的裤子收紧了。"
+  ],
+  "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_generic": [
+    "她享受每一次拉力。",
+    "她贪婪地喝着，不肯快点。",
+    "她停顿的时间只够喘口气。",
+    "她似乎对这个安排很满意。",
+    "她将注意力牢牢地集中在消息来源上。",
+    "她带着满意的笑容结束了这一切。"
+  ],
+  "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_aroused": [
+    "当温暖在她的双腿之间蔓延时，她蠕动着。",
+    "当她不断吸吮时，她的乳头变硬了。",
+    "随着愉悦感的增强，她靠得更近了。",
+    "每一次拉扯，她的呼吸都会变得急促。",
+    "她脸红了，脚步却没有放慢。",
+    "她靠着乳房轻声呻吟。"
+  ],
+  "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_milk": [
+    "之后她自己的乳房明显感觉更重了。",
+    "新鲜的牛奶在她的胸口里愉快地膨胀。",
+    "温暖的漏水打湿了她的上衣。",
+    "她的乳房愉快地丰满起来。",
+    "她的上衣突然感觉有点紧了。",
+    "她的乳房因重量增加而晃动。"
+  ],
+  "Pools.NonMilkmaidDrinkNotifications.breastfeeding_female_milk_arousal": [
+    "她沉重的乳房开始刺痛。",
+    "当她的乳房充满时，她的乳头就会振作起来。",
+    "当她的乳房肿胀时，她变得湿漉漉的。",
+    "新鲜牛奶压得她喘不过气来，她蠕动着。",
+    "她的乳房漏水，让她满脸通红。",
+    "丰满的乳房带来温暖的快感。"
+  ],
+  "Pools.TimedArmorNotifications.unequip_resisted": [
+    "盔甲会紧紧地挤压你，并且拒绝松开。",
+    "设备发出得意的嗡嗡声——你没那么容易逃脱。",
+    "盔甲在你的身体周围收紧，显然对你的尝试感到很有趣。",
+    "有趣的脉搏提醒您，盔甲决定何时脱落。"
+  ],
+  "Pools.Injection.tiers.low.lines": [
+    "当卷须刺痛她的乳头并在里面泵入一些温暖的东西时，{actor} 喘息着。",
+    "触手刺破{actor}的乳头，为她的乳房注入温暖的兴奋剂。",
+    "当卷须刺穿她的乳头并开始抽吸时，{actor} 颤抖着。",
+    "一根卷须刺痛 {actor} 的每个乳头，让她的乳房温暖而沉重。",
+    "触手将某种强效物质注入{actor}的乳房，她的乳头随之抽动。"
+  ],
+  "Pools.TentacleEffectNarration.tiers.low.milk": [
+    "{ACTOR} 因触手的刺痛而喘息，然后享受着乳房中日益增大的丰满度和重量。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到卷须轻轻刺痛，并高兴地注意到她的乳房变得更加丰满和沉重。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 因触手令人愉悦的刺痛而颤抖，同时令人满意的沉重感在她的乳房中积聚。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛 {ACTOR} 时，她会发出一声愉悦的喘息，她的乳房开始感到愉快的饱满。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到触手传来的温暖刺痛，并享受随之而来的柔软、沉重的饱满感。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "Pools.TentacleEffectNarration.tiers.low.arousal": [
+    "{ACTOR} 因触手的刺痛而喘息，并享受随之而来的兴奋感。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到卷须的挑逗刺痛，并发现自己对此感到愉快地兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当触手给她带来温暖的小刺痛时，{ACTOR} 颤抖起来，感觉出奇的好。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛 {ACTOR} 时，她发出一声高兴的喘息，让她高兴地兴奋起来。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到触手给她带来了一种俏皮的感觉，并且显然很享受这种感觉。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "Pools.TentacleEffectNarration.tiers.low.milkAndArousal": [
+    "{ACTOR} 因触手的刺痛而喘息，她的乳房变得更加丰满，随之而来的是一阵快乐的兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到卷须传来的挑逗性刺痛，享受着乳房中日益增加的沉重感和由此带来的兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR}随着触手的刺痛，舒服地颤抖起来，让她的胸部更加饱满，心情也更加兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛时，{ACTOR} 发出一声愉悦的喘息，享受着乳房的丰满和随之而来的温暖兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到触手顽皮地刺痛了她，然后对她胸部令人愉悦的沉重感和随之而来的兴奋微笑。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "Pools.Injection.tiers.medium.lines": [
+    "当卷须刺痛她的乳头并在里面泵入一些温暖的东西时，{actor} 喘息着。",
+    "触手刺破{actor}的乳头，为她的乳房注入温暖的兴奋剂。",
+    "当卷须刺穿她的乳头并开始抽吸时，{actor} 颤抖着。",
+    "一根卷须刺痛 {actor} 的每个乳头，让她的乳房温暖而沉重。",
+    "触手将某种强效物质注入{actor}的乳房，她的乳头随之抽动。"
+  ],
+  "Pools.TentacleEffectNarration.tiers.medium.milk": [
+    "{ACTOR} 因触手的刺痛而喘息，然后享受着乳房中日益增大的丰满度和重量。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到卷须轻轻刺痛，并高兴地注意到她的乳房变得更加丰满和沉重。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 因触手令人愉悦的刺痛而颤抖，同时令人满意的沉重感在她的乳房中积聚。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛 {ACTOR} 时，她会发出一声愉悦的喘息，她的乳房开始感到愉快的饱满。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到触手传来的温暖刺痛，并享受随之而来的柔软、沉重的饱满感。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "Pools.TentacleEffectNarration.tiers.medium.arousal": [
+    "{ACTOR} 因触手的刺痛而喘息，并享受随之而来的兴奋感。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到卷须的挑逗刺痛，并发现自己对此感到愉快地兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当触手给她带来温暖的小刺痛时，{ACTOR} 颤抖起来，感觉出奇的好。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛 {ACTOR} 时，她发出一声高兴的喘息，让她高兴地兴奋起来。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到触手给她带来了一种俏皮的感觉，并且显然很享受这种感觉。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "Pools.TentacleEffectNarration.tiers.medium.milkAndArousal": [
+    "{ACTOR} 因触手的刺痛而喘息，她的乳房变得更加丰满，随之而来的是一阵快乐的兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到卷须传来的挑逗性刺痛，享受着乳房中日益增加的沉重感和由此带来的兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR}随着触手的刺痛，舒服地颤抖起来，让她的胸部更加饱满，心情也更加兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛时，{ACTOR} 发出一声愉悦的喘息，享受着乳房的丰满和随之而来的温暖兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到触手顽皮地刺痛了她，然后对她胸部令人愉悦的沉重感和随之而来的兴奋微笑。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "Pools.Injection.tiers.high.lines": [
+    "当卷须刺痛她的乳头并在里面泵入一些温暖的东西时，{actor} 喘息着。",
+    "触手刺破{actor}的乳头，为她的乳房注入温暖的兴奋剂。",
+    "当卷须刺穿她的乳头并开始抽吸时，{actor} 颤抖着。",
+    "一根卷须刺痛 {actor} 的每个乳头，让她的乳房温暖而沉重。",
+    "触手将某种强效物质注入{actor}的乳房，她的乳头随之抽动。"
+  ],
+  "Pools.TentacleEffectNarration.tiers.high.milk": [
+    "{ACTOR} 因触手的刺痛而喘息，然后享受着乳房中日益增大的丰满度和重量。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到卷须轻轻刺痛，并高兴地注意到她的乳房变得更加丰满和沉重。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 因触手令人愉悦的刺痛而颤抖，同时令人满意的沉重感在她的乳房中积聚。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛 {ACTOR} 时，她会发出一声愉悦的喘息，她的乳房开始感到愉快的饱满。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到触手传来的温暖刺痛，并享受随之而来的柔软、沉重的饱满感。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "Pools.TentacleEffectNarration.tiers.high.arousal": [
+    "{ACTOR} 因触手的刺痛而喘息，并享受随之而来的兴奋感。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到卷须的挑逗刺痛，并发现自己对此感到愉快地兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当触手给她带来温暖的小刺痛时，{ACTOR} 颤抖起来，感觉出奇的好。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛 {ACTOR} 时，她发出一声高兴的喘息，让她高兴地兴奋起来。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到触手给她带来了一种俏皮的感觉，并且显然很享受这种感觉。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "Pools.TentacleEffectNarration.tiers.high.milkAndArousal": [
+    "{ACTOR} 因触手的刺痛而喘息，她的乳房变得更加丰满，随之而来的是一阵快乐的兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到卷须传来的挑逗性刺痛，享受着乳房中日益增加的沉重感和由此带来的兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR}随着触手的刺痛，舒服地颤抖起来，让她的胸部更加饱满，心情也更加兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛时，{ACTOR} 发出一声愉悦的喘息，享受着乳房的丰满和随之而来的温暖兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到触手顽皮地刺痛了她，然后对她胸部令人愉悦的沉重感和随之而来的兴奋微笑。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "Pools.Injection.tiers.extreme.lines": [
+    "当卷须刺痛她的乳头并在里面泵入一些温暖的东西时，{actor} 喘息着。",
+    "触手刺破{actor}的乳头，为她的乳房注入温暖的兴奋剂。",
+    "当卷须刺穿她的乳头并开始抽吸时，{actor} 颤抖着。",
+    "一根卷须刺痛 {actor} 的每个乳头，让她的乳房温暖而沉重。",
+    "触手将某种强效物质注入{actor}的乳房，她的乳头随之抽动。"
+  ],
+  "Pools.TentacleEffectNarration.tiers.extreme.milk": [
+    "{ACTOR} 因触手的刺痛而喘息，然后享受着乳房中日益增大的丰满度和重量。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到卷须轻轻刺痛，并高兴地注意到她的乳房变得更加丰满和沉重。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 因触手令人愉悦的刺痛而颤抖，同时令人满意的沉重感在她的乳房中积聚。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛 {ACTOR} 时，她会发出一声愉悦的喘息，她的乳房开始感到愉快的饱满。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到触手传来的温暖刺痛，并享受随之而来的柔软、沉重的饱满感。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "Pools.TentacleEffectNarration.tiers.extreme.arousal": [
+    "{ACTOR} 因触手的刺痛而喘息，并享受随之而来的兴奋感。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到卷须的挑逗刺痛，并发现自己对此感到愉快地兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当触手给她带来温暖的小刺痛时，{ACTOR} 颤抖起来，感觉出奇的好。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛 {ACTOR} 时，她发出一声高兴的喘息，让她高兴地兴奋起来。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到触手给她带来了一种俏皮的感觉，并且显然很享受这种感觉。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "Pools.TentacleEffectNarration.tiers.extreme.milkAndArousal": [
+    "{ACTOR} 因触手的刺痛而喘息，她的乳房变得更加丰满，随之而来的是一阵快乐的兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感受到卷须传来的挑逗性刺痛，享受着乳房中日益增加的沉重感和由此带来的兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR}随着触手的刺痛，舒服地颤抖起来，让她的胸部更加饱满，心情也更加兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "当卷须刺痛时，{ACTOR} 发出一声愉悦的喘息，享受着乳房的丰满和随之而来的温暖兴奋。性格上反应积极、顽皮。用简短的一句话回答。",
+    "{ACTOR} 感觉到触手顽皮地刺痛了她，然后对她胸部令人愉悦的沉重感和随之而来的兴奋微笑。性格上反应积极、顽皮。用简短的一句话回答。"
+  ],
+  "Pools.FlavorNotifications.capacity_half": [
+    "{actor} 的奶子已经半满了！每一步都伴随着顽皮的小弹跳！",
+    "{actor}的瓜已经熟了一半，却已经抢尽风头！",
+    "恶作剧的抖动暴露了 {actor} 的半满赏金。乖一点，姑娘们！",
+    "{actor} 不断增长的乳房顽皮地摇晃着。收获即将来临！",
+    "一滴厚颜无耻的乳汁从 {actor} 的乳房中逸出。真是不耐烦的小瓜啊！"
+  ],
+  "Pools.FlavorNotifications.capacity_full": [
+    "{actor} 的奶子饱满了！那些西瓜需要自己的马车！",
+    "{actor} 成熟的瓜子危险地摇晃。再多一步，货物就可能洒落！",
+    "温热的乳汁从 {actor} 的饱满乳房中流出。姑娘们简直等不及了！",
+    "{actor} 的满溢赏金应变自由。多么甜蜜的困境啊！",
+    "{actor} 的奶子爆乳了！连她的铠甲都显得慌乱了！"
+  ],
+  "Pools.FlavorNotifications.armor_strip": [
+    "您的 {armorName} 起飞了！你的乳房超出了​​它的额定容量！"
+  ],
+  "Pools.FlavorNotifications.refit_needed": [
+    "你的胸已经太大了！拜访铁匠！"
+  ],
+  "Pools.FlavorNotifications.refit_complete": [
+    "您的挤奶设备现在再次适合了"
+  ],
+  "Pools.FlavorNotifications.armor_lock_player": [
+    "铠甲神奇地包裹着你。在接下来的 {days} 日子里尽情享受吧！"
+  ],
+  "Pools.FlavorNotifications.armor_lock_npc": [
+    "{actor} 被困在铠甲里 {days} 天了！"
+  ],
+  "Pools.FlavorNotifications.armor_released": [
+    "{actor}从装甲中释放出来。"
+  ],
+  "Pools.FlavorNotifications.parasite_satisfied": [
+    "{actor}的装甲很满意，愿意释放它的美味！"
+  ],
+  "Pools.FlavorNotifications.rescue_blacksmith_single": [
+    "铁匠将{actor}从她过于深情的盔甲中解放出来。"
+  ],
+  "Pools.FlavorNotifications.rescue_direct_single": [
+    "{actor}从她过于深情的盔甲中释放出来。"
+  ],
+  "Pools.FlavorNotifications.rescue_blacksmith_group": [
+    "铁匠将 {count} 同伴从过于深情的盔甲中解放出来。"
+  ],
+  "Pools.FlavorNotifications.rescue_direct_group": [
+    "{count} 附近的同伴从他们过于亲密的盔甲中释放出来。"
+  ],
+  "Pools.FlavorNotifications.venue_thirst": [
+    "附近有人看起来很渴想喝一杯清凉的牛奶！"
+  ],
+  "Pools.FlavorNotifications.venue_drink_fallback": [
+    "{actor}渴了喝点牛奶！"
+  ],
+  "Pools.FlavorNotifications.chest_drink": [
+    "{actor}被神奇地强制从宝箱里喝了{milkName}！"
+  ],
+  "Pools.FlavorNotifications.custom_dwemer_equip": [
+    "{armorName} 的变态挤奶和挑逗装置连接到您最私密的地方"
+  ],
+  "Pools.FlavorNotifications.custom_rows_absorbed": [
+    "{armorName} 附着在您的乳房上，吸收多余的乳房行"
+  ],
+  "Pools.FlavorNotifications.custom_living_equip": [
+    "{armorName} 贴在您的乳房上"
+  ],
+  "Pools.FlavorNotifications.custom_cups_equip": [
+    "挤奶杯贴在您的乳房上，准备为您挤奶"
+  ],
+  "Pools.FlavorNotifications.custom_living_remove": [
+    "您已从 {armorName} 中解脱出来"
+  ],
+  "Pools.FlavorNotifications.custom_cups_remove": [
+    "挤奶杯与您的乳房分离"
+  ],
+  "Pools.FlavorNotifications.new_maid_confirmation": [
+    "{actor} 现在是乳娘。"
+  ],
+  "Pools.FlavorNotifications.reverse_level_applied": [
+    "在接下来的 {hours} 小时内，每次挤奶都会将您的乳娘等级降低 {levels}。"
+  ],
+  "Pools.FlavorNotifications.reverse_level_removed": [
+    "反向调平已删除。"
+  ],
+  "Pools.FlavorNotifications.reverse_level_decrease": [
+    "您的乳房感觉更轻盈。乳娘等级降低{levels}。"
+  ]
+}

@@ -1,6 +1,7 @@
 (function () {
   'use strict';
-  const dict = window.MMERussianStrings || {};
+  const locale = window.MMELocale || {language: 'en', strings: {}};
+  const dict = locale.strings;
   const keys = Object.keys(dict).filter(k => k.length >= 5 && k.length < 180).sort((a,b) => b.length-a.length);
   function translate(value) {
     if (!value || !/[A-Za-z]/.test(value)) return value;
@@ -27,7 +28,7 @@
     for (const child of [...root.childNodes]) visit(child);
   }
   function start() {
-    document.documentElement.lang='ru';visit(document.body);
+    document.documentElement.lang=locale.language;visit(document.body);
     new MutationObserver(changes => { for(const change of changes) {
       if(change.type==='characterData')visit(change.target);
       else for(const node of change.addedNodes)visit(node);

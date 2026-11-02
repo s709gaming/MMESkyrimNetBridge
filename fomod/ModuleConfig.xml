@@ -309,14 +309,18 @@
       <optionalFileGroups order="Explicit"><group name="In-game language" type="SelectExactlyOne"><plugins order="Explicit">
         <plugin name="English"><description>Original English text. Animation and compatibility choices are independent of language.</description><conditionFlags><flag name="mmeLanguage">en</flag></conditionFlags><typeDescriptor><type name="Recommended" /></typeDescriptor></plugin>
         <plugin name="Russian"><description>Russian MCM, messages, stories, Extensions dialogue and Magelight dashboard. Requires Skyrim fonts with Cyrillic support. Personal text and presets remain unchanged. Original MME and other mods need their own translations.</description><files><folder source="fomod/choices/russian/core" destination="" priority="100" /></files><conditionFlags><flag name="mmeLanguage">ru</flag></conditionFlags><typeDescriptor><type name="Optional" /></typeDescriptor></plugin>
+        <plugin name="Chinese (Simplified)"><description>Simplified Chinese MCM, messages, stories, Extensions dialogue and Magelight dashboard. Requires Skyrim fonts with Chinese character support. Personal text and presets remain unchanged. Original MME and other mods need their own translations.</description><files><folder source="fomod/choices/chinese/core" destination="" priority="100" /></files><conditionFlags><flag name="mmeLanguage">zh-CN</flag></conditionFlags><typeDescriptor><type name="Optional" /></typeDescriptor></plugin>
       </plugins></group></optionalFileGroups>
     </installStep>
   </installSteps>
   <conditionalFileInstalls>
     <patterns>
       <pattern><dependencies operator="And"><flagDependency flag="mmeLanguage" value="ru" /><flagDependency flag="mmeRoster" value="true" /></dependencies><files><folder source="fomod/choices/russian/roster" destination="" priority="100" /></files></pattern>
+      <pattern><dependencies operator="And"><flagDependency flag="mmeLanguage" value="zh-CN" /><flagDependency flag="mmeRoster" value="true" /></dependencies><files><folder source="fomod/choices/chinese/roster" destination="" priority="100" /></files></pattern>
       <pattern><dependencies operator="And"><flagDependency flag="mmeLanguage" value="ru" /><flagDependency flag="mmeRussianLeaks" value="true" /></dependencies><files><folder source="fomod/choices/russian/leaks" destination="" priority="100" /></files></pattern>
+      <pattern><dependencies operator="And"><flagDependency flag="mmeLanguage" value="zh-CN" /><flagDependency flag="mmeRussianLeaks" value="true" /></dependencies><files><folder source="fomod/choices/chinese/leaks" destination="" priority="100" /></files></pattern>
       <pattern><dependencies operator="And"><flagDependency flag="mmeLanguage" value="ru" /><flagDependency flag="mmeRussianElsie" value="true" /></dependencies><files><folder source="fomod/choices/russian/elsie" destination="" priority="100" /></files></pattern>
+      <pattern><dependencies operator="And"><flagDependency flag="mmeLanguage" value="zh-CN" /><flagDependency flag="mmeRussianElsie" value="true" /></dependencies><files><folder source="fomod/choices/chinese/elsie" destination="" priority="100" /></files></pattern>
 
       <pattern>
         <dependencies operator="And">

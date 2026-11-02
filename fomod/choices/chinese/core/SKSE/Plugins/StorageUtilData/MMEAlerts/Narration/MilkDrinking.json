@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
+  "routes": {
+    "narrate_chest_milk_drink_1": {
+      "template": "{actor} 神奇地被迫从 {chestKind} 喝 {milkName}。"
+    },
+    "narrate_chest_milk_drink_2": {
+      "template": "{situation} 以 {actor} 的方式对被困箱子的强迫饮料做出反应。牛奶是熟悉的；不要发明它的来源或额外的效果。"
+    },
+    "narrate_n_p_c_milk_drink_1": {
+      "template": "{reaction} 对饮料报告的味道和效果做出 {actor} 反应。牛奶很熟悉。"
+    },
+    "narrate_n_p_c_milk_drink_2": {
+      "template": " {actor}的手臂也被束缚。在不发明限制或影响的情况下解决不便。"
+    },
+    "narrate_n_p_c_milk_drink_3": {
+      "template": " 事实边界：{actor}不是乳娘，这款饮料没有添加母乳、乳房丰满度、乳房重量、肿胀、生长、渗漏或哺乳。请勿暗示或发明任何这些效果。"
+    },
+    "narrate_n_p_c_milk_drink_4": {
+      "template": " {actor} 是一位成熟的乳娘。仅使用报告的效果。"
+    },
+    "narrate_player_milk_drink_1": {
+      "template": "玩家喝了{milkName}；她们的乳房变得越来越重、越来越敏感。让附近的一名角色做出反应。牛奶很熟悉。"
+    },
+    "narrate_player_milk_drink_2": {
+      "template": "{reaction} 让附近的一名角色对玩家报告的饮料效果做出反应。牛奶很熟悉。"
+    },
+    "narrate_player_milk_drink_3": {
+      "template": " 球员的手臂也被束缚。在不发明限制或影响的情况下解决不便。"
+    },
+    "build_restrained_player_drink_content_1": {
+      "template": "玩家在手臂被束缚的情况下喝了{milkName}；她们的乳房变得越来越重、越来越敏感。让附近的一名角色做出反应。牛奶很熟悉。"
+    },
+    "drinkMessage": {
+      "template": "{actor}刚刚喝了{item}。"
+    }
+  }
+}

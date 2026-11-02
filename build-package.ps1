@@ -368,7 +368,7 @@ New-Item -ItemType Directory -Force -Path $packageScripts, $packageSources, $pac
 & (Join-Path $projectRoot "tools\Build-MaidRosterUI.ps1")
 & (Join-Path $projectRoot "tools\Build-MilkLeaks.ps1")
 & python -B (Join-Path $projectRoot 'tools/localization/generate.py')
-if ($LASTEXITCODE) { throw 'Russian language generation failed' }
+if ($LASTEXITCODE) { throw 'Language generation failed' }
 & (Join-Path $projectRoot 'tools/Test-Localization.ps1')
 
 
@@ -416,6 +416,7 @@ Copy-Item -LiteralPath (Join-Path $projectRoot "docs\MOVEMENT-SLAP-FLAT-MILK-STR
 New-Item -ItemType Directory -Force (Join-Path $stageDir 'SKSE/Plugins/StorageUtilData/MMEAlerts') | Out-Null
 Copy-Item -LiteralPath (Join-Path $projectRoot 'SKSE/Plugins/StorageUtilData/MMEAlerts/Localization') -Destination (Join-Path $stageDir 'SKSE/Plugins/StorageUtilData/MMEAlerts') -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/Russian-Edition.md') -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/Chinese-Edition.md') -Destination $packageDocs
 
 # Copy the active compiled scripts and matching sources.
 foreach ($scriptName in $scriptNames) {

@@ -1,22 +1,22 @@
-"""Build checked-in Russian data. No network access; identifiers remain English."""
+"""Build checked-in language data. No network access; identifiers remain English."""
 from common import *
 from inventory import catalog
-import xml.etree.ElementTree as ET
 import hashlib
 
 BASE=ROOT/'SKSE/Plugins/StorageUtilData/MMEAlerts'
-OUT=ROOT/'fomod/choices/russian'
+LANGUAGES={'ru':'russian','zh-CN':'chinese'}
 def write(path,obj):
  path.parent.mkdir(parents=True,exist_ok=True)
  path.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 
-def main():
- tr=json.loads((ROOT/'tools/localization/strings/ru.json').read_text(encoding='utf-8'))
- tr.update(json.loads((ROOT/'tools/localization/manual_ru.json').read_text(encoding='utf-8')))
+def generate(language,folder):
+ OUT=ROOT/'fomod/choices'/folder
+ tr=json.loads((ROOT/f'tools/localization/strings/{language}.json').read_text(encoding='utf-8'))
+ tr.update(json.loads((ROOT/f'tools/localization/manual_{language}.json').read_text(encoding='utf-8')))
  loc='SKSE/Plugins/StorageUtilData/MMEAlerts/Localization'
  write(ROOT/loc/'Active.json',dict(schemaVersion=1,language='en'))
- write(OUT/'core'/loc/'Active.json',dict(schemaVersion=1,language='ru'))
- write(OUT/'core'/loc/'ru.json',dict(schemaVersion=1,strings=tr))
+ write(OUT/'core'/loc/'Active.json',dict(schemaVersion=1,language=language))
+ write(OUT/'core'/loc/(language+'.json'),dict(schemaVersion=1,strings=tr))
  cat=catalog();defaults={};documents={}
  for id,meta in cat.items():
   value=translated_json(meta['default'],tr);defaults[id]=value
@@ -29,7 +29,7 @@ def main():
   for key in meta['path'][:-1]:node=node[key]
   node[meta['path'][-1]]=value
  for file,document in documents.items():write(OUT/'core'/'SKSE/Plugins/StorageUtilData/MMEAlerts'/file,document)
- write(OUT/'core'/loc/'ru.catalog.json',defaults)
+ write(OUT/'core'/loc/(language+'.catalog.json'),defaults)
  plugins=[('MMEAlert.esp','core'),('fomod/choices/maid-roster-ui/MME Extensions - Maid Roster.esp','roster'),('fomod/choices/milk-leaks/MME Extensions - Milk Leaks.esp','leaks'),('fomod/choices/elsie-compatibility/MME Extensions - Elsie LaVache Fix.esp','elsie')]
  for path,group in plugins:
   p=ROOT/path;out=OUT/group/p.name;out.parent.mkdir(parents=True,exist_ok=True);out.write_bytes(translate_plugin(p.read_bytes(),tr))
@@ -37,7 +37,9 @@ def main():
  # The observer changes display nodes only, never form values, actor names or edited text.
  runtime=(ROOT/'tools/localization/locale-runtime.js').read_text(encoding='utf-8')
  p=OUT/'roster'/view/'locale.js';p.parent.mkdir(parents=True,exist_ok=True)
- p.write_text('window.MMERussianStrings='+json.dumps(tr,ensure_ascii=False)+';\n'+runtime,encoding='utf-8')
- write(OUT/'BuildManifest.json',dict(language='ru',runtimeValidated=False,machineAssisted=True,files={str(p.relative_to(OUT)).replace('\\','/'):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(OUT.rglob('*')) if p.is_file() and p.name!='BuildManifest.json'}))
- print('Generated Russian option:',len(tr),'translations;',len(documents),'data files;',len(plugins),'plugins')
+ p.write_text('window.MMELocale='+json.dumps(dict(language=language,strings=tr),ensure_ascii=False)+';\n'+runtime,encoding='utf-8')
+ write(OUT/'BuildManifest.json',dict(language=language,runtimeValidated=False,machineAssisted=True,files={str(p.relative_to(OUT)).replace('\\','/'):hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(OUT.rglob('*')) if p.is_file() and p.name!='BuildManifest.json'}))
+ print('Generated',language,'option:',len(tr),'translations;',len(documents),'data files;',len(plugins),'plugins')
+def main():
+ for language,folder in LANGUAGES.items():generate(language,folder)
 if __name__=='__main__':main()

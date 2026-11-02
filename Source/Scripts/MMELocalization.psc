@@ -29,7 +29,7 @@ String Function Text(String english) Global
     If translated == "" && english != ""
         If StorageUtil.GetIntValue(None, "MME.Localization.MissingReported", 0) == 0
             StorageUtil.SetIntValue(None, "MME.Localization.MissingReported", 1)
-            Alarm("missing Russian text; using English | entry=" + StringUtil.Substring(english, 0, 80))
+            Alarm("missing translated text; using English | entry=" + StringUtil.Substring(english, 0, 80))
         EndIf
         Return english
     EndIf

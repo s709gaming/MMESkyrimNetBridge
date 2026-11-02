@@ -1,0 +1,88 @@
+{
+  "capacity_half": [
+    "{actor} 的奶子已经半满了！每一步都伴随着顽皮的小弹跳！",
+    "{actor}的瓜已经熟了一半，却已经抢尽风头！",
+    "恶作剧的抖动暴露了 {actor} 的半满赏金。乖一点，姑娘们！",
+    "{actor} 不断增长的乳房顽皮地摇晃着。收获即将来临！",
+    "一滴厚颜无耻的乳汁从 {actor} 的乳房中逸出。真是不耐烦的小瓜啊！"
+  ],
+  "capacity_full": [
+    "{actor} 的奶子饱满了！那些西瓜需要自己的马车！",
+    "{actor} 成熟的瓜子危险地摇晃。再多一步，货物就可能洒落！",
+    "温热的乳汁从 {actor} 的饱满乳房中流出。姑娘们简直等不及了！",
+    "{actor} 的满溢赏金应变自由。多么甜蜜的困境啊！",
+    "{actor} 的奶子爆乳了！连她的铠甲都显得慌乱了！"
+  ],
+  "armor_strip": [
+    "您的 {armorName} 起飞了！你的乳房超出了​​它的额定容量！"
+  ],
+  "refit_needed": [
+    "你的胸已经太大了！拜访铁匠！"
+  ],
+  "refit_complete": [
+    "您的挤奶设备现在再次适合了"
+  ],
+  "armor_lock_player": [
+    "铠甲神奇地包裹着你。在接下来的 {days} 日子里尽情享受吧！"
+  ],
+  "armor_lock_npc": [
+    "{actor} 被困在铠甲里 {days} 天了！"
+  ],
+  "armor_released": [
+    "{actor}从装甲中释放出来。"
+  ],
+  "parasite_satisfied": [
+    "{actor}的装甲很满意，愿意释放它的美味！"
+  ],
+  "rescue_blacksmith_single": [
+    "铁匠将{actor}从她过于深情的盔甲中解放出来。"
+  ],
+  "rescue_direct_single": [
+    "{actor}从她过于深情的盔甲中释放出来。"
+  ],
+  "rescue_blacksmith_group": [
+    "铁匠将 {count} 同伴从过于深情的盔甲中解放出来。"
+  ],
+  "rescue_direct_group": [
+    "{count} 附近的同伴从他们过于亲密的盔甲中释放出来。"
+  ],
+  "venue_thirst": [
+    "附近有人看起来很渴想喝一杯清凉的牛奶！"
+  ],
+  "venue_drink_fallback": [
+    "{actor}渴了喝点牛奶！"
+  ],
+  "chest_drink": [
+    "{actor}被神奇地强制从宝箱里喝了{milkName}！"
+  ],
+  "custom_dwemer_equip": [
+    "{armorName} 的变态挤奶和挑逗装置连接到您最私密的地方"
+  ],
+  "custom_rows_absorbed": [
+    "{armorName} 附着在您的乳房上，吸收多余的乳房行"
+  ],
+  "custom_living_equip": [
+    "{armorName} 贴在您的乳房上"
+  ],
+  "custom_cups_equip": [
+    "挤奶杯贴在您的乳房上，准备为您挤奶"
+  ],
+  "custom_living_remove": [
+    "您已从 {armorName} 中解脱出来"
+  ],
+  "custom_cups_remove": [
+    "挤奶杯与您的乳房分离"
+  ],
+  "new_maid_confirmation": [
+    "{actor} 现在是乳娘。"
+  ],
+  "reverse_level_applied": [
+    "在接下来的 {hours} 小时内，每次挤奶都会将您的乳娘等级降低 {levels}。"
+  ],
+  "reverse_level_removed": [
+    "反向调平已删除。"
+  ],
+  "reverse_level_decrease": [
+    "您的乳房感觉更轻盈。乳娘等级降低{levels}。"
+  ]
+}

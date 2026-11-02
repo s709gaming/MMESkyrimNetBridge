@@ -1,15 +1,17 @@
-"""One-off translation aid. Only checked-in Russian data is used by builds/runtime."""
+"""Optional shared translation drafting aid. Only checked-in Russian data is used by builds/runtime."""
 from common import *
+import os
+LANGUAGE=os.environ.get("MME_TRANSLATION_LANGUAGE","ru")
 import urllib.request,urllib.parse,concurrent.futures,time,html
 OUT=ROOT/'tools/localization/strings'
-MANUAL=json.loads((ROOT/'tools/localization/manual_ru.json').read_text(encoding='utf-8'))
+MANUAL=json.loads((ROOT/f'tools/localization/manual_{LANGUAGE}.json').read_text(encoding='utf-8'))
 PROTECTED=re.compile(r'\{\{.*?\}\}|\{[^{}]*\}|<[^>]+>|\b(?:MME Extensions|Skyrim\.Net|SkyrimNet|OStim|SexLab|SkyUI|PapyrusUtil|Magelight UI|BodySlide|RaceMenu|XPMSSE|Lactacid)\b|\$\w+',re.S)
 def prepare(text):
  saved=[]
  def mask(m):saved.append(m[0]);return f'ZXPH{len(saved)-1:04d}ZX'
  text=PROTECTED.sub(mask,text)
- text=re.sub(r'\bMilk[ -]?Maids\b','\u0434\u043e\u044f\u0440\u043a\u0438',text,flags=re.I)
- text=re.sub(r'\bMilk[ -]?Maid\b','\u0434\u043e\u044f\u0440\u043a\u0430',text,flags=re.I)
+ if LANGUAGE=='ru':text=re.sub(r'\bMilk[ -]?Maids\b','\u0434\u043e\u044f\u0440\u043a\u0438',text,flags=re.I)
+ if LANGUAGE=='ru':text=re.sub(r'\bMilk[ -]?Maid\b','\u0434\u043e\u044f\u0440\u043a\u0430',text,flags=re.I)
  return text,saved
 
 def batch(rows):
@@ -17,7 +19,7 @@ def batch(rows):
  for i,text in rows:
   value,protected=prepare(text);masked.append(f'ZXROW{i:05d}ZX\n'+value);maps[i]=(text,protected)
  payload='\n'.join(masked)
- url='https://translate.googleapis.com/translate_a/single?'+urllib.parse.urlencode({'client':'gtx','sl':'en','tl':'ru','dt':'t','q':payload})
+ url='https://translate.googleapis.com/translate_a/single?'+urllib.parse.urlencode({'client':'gtx','sl':'en','tl':LANGUAGE,'dt':'t','q':payload})
  for attempt in range(4):
   try:
    with urllib.request.urlopen(url,timeout=35) as response:d=json.load(response)
@@ -41,7 +43,7 @@ def batch(rows):
     raise
    time.sleep(attempt+1)
 def main():
- texts=json.loads((OUT/'en.json').read_text(encoding='utf-8'));path=OUT/'ru.json'
+ texts=json.loads((OUT/'en.json').read_text(encoding='utf-8'));path=OUT/(LANGUAGE+'.json')
  result=json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
  todo=[(i,t) for i,t in enumerate(texts) if t not in result and t not in MANUAL];batches=[];current=[];size=0
  for row in todo:
@@ -55,5 +57,5 @@ def main():
    print('translated batches',count,'/',len(batches),flush=True)
  result.update(MANUAL);path.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
  assert set(texts)<=set(result)
- print('PASS: Russian translations',len(result))
+ print('PASS:',LANGUAGE,'translations',len(result))
 if __name__=='__main__':main()

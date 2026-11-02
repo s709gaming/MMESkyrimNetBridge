@@ -1,0 +1,19 @@
+{
+  "openingStory": "A change courses through your body. Your breasts grow warm, and your nipples begin to tingle and harden against your clothes. Heat spreads through you, your mind goes blank, and you can barely remain on your feet. Sudden shock waves race through your body as you collapse.",
+  "closingStory": "%text1 just had a breast-induced orgasm!",
+  "conversionMessages": [
+    "{actor} 感觉奇怪的魔法在她们的胸部流淌！",
+    "当乳白色的诅咒落在他们的胸口时，{actor} 瑟瑟发抖！",
+    "{actor} 感觉她们的乳房因不自然的魔法而刺痛！",
+    "{actor} 感觉到乳房深处的乳制品诅咒正在苏醒！",
+    "{actor} 感觉魔法在胸口膨胀，要求挤奶！"
+  ],
+  "chestCurseStories": [
+    "一股神秘的魔法浪潮席卷了 {actor}，留下令人愉悦的刺痛感。她的瓜越来越熟，越来越重，并且充满希望！她握紧突然丰富的资产，感到一种美妙的兴奋感席卷全身。她的嘴唇发出一阵疯狂的笑声。不管她受到了什么奇怪的诅咒，她发现自己对收获感到相当高兴！",
+    "在毫无预兆的情况下，一股令人陶醉的魔法浪潮笼罩着 {actor}。她珍贵的瓜瓜因新发现的成熟而膨胀，它们不断增长的重量需要她立即关注！她捧起这丰盛的赏赐，浑身颤抖，一阵美妙的颤抖顺着她的脊椎舞动。她发出一声愚蠢的、气喘吁吁的笑声。被诅咒了？有福了？无论答案如何，她似乎都太高兴了，无法抱怨！",
+    "一种看不见的魅力席卷了{actor}，让她充满了奇特的温暖。她的瓜感觉难以置信地成熟，异常沉重，而且果实累累！她本能地将新发现的赏金握在手中，却被一种令人目眩的愉悦所抓住。当一阵疯狂的咯咯笑声响起时，她的思绪变得令人愉快地模糊。多么邪恶的小诅咒，多么幸福的小受害者！",
+    "突然涌出的神秘魔法让 {actor} 浑身颤抖，随后她心爱的甜瓜明显感到沉重。天哪，它们已经变得多么成熟，多么硕果累累啊！她惊讶地紧紧抓住她不断增长的宝藏，只是为了一种美味的刺激将她的惊讶变成了令人眼花缭乱的喜悦。她的嘴里发出一声相当不庄重的笑声。一定有人在某个地方嘲笑她！",
+    "{actor} 周围有一些神奇的东西在搅动，尽管它是来自祝福、诅咒还是特别厚颜无耻的魔法仍然是个谜。她的瓜长得很成熟，而且非常重，预示着丰收！她拥抱着她新近拥有的宏伟资产，在一阵令人陶醉的喜悦中颤抖起来。一阵疯狂的咯咯笑从她的唇间滑落。不管发生了什么，这个可怜的女孩似乎对她的困境很着迷！"
+  ],
+  "_help": "chestCurseStories is the canonical shared pool for Extensions forced-conversion and curse player stories. Its historical key is preserved for compatibility. openingStory and closingStory are legacy fields, no longer displayed by Extensions; native MME Lactacid stories remain separate."
+}

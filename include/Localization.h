@@ -20,12 +20,12 @@ namespace MME::Localization {
         return result;
     }
     inline void ValidateValue(const nlohmann::json& english, const nlohmann::json& translated) {
-        if (english.type() != translated.type()) throw std::runtime_error("Russian default has the wrong type");
+        if (english.type() != translated.type()) throw std::runtime_error("Localized default has the wrong type");
         if (english.is_string()) {
             const auto value = translated.get<std::string>();
-            if (value.empty() || Tokens(english.get<std::string>()) != Tokens(value)) throw std::runtime_error("Russian translation has missing or changed placeholders");
+            if (value.empty() || Tokens(english.get<std::string>()) != Tokens(value)) throw std::runtime_error("Localized translation has missing or changed placeholders");
         } else if (english.is_array()) {
-            if (english.size() != translated.size()) throw std::runtime_error("Russian pool has the wrong size");
+            if (english.size() != translated.size()) throw std::runtime_error("Localized pool has the wrong size");
             for (std::size_t i = 0; i < english.size(); ++i) ValidateValue(english[i], translated[i]);
         }
     }
@@ -51,22 +51,22 @@ namespace MME::Localization {
             if (active.value("schemaVersion", 0) != 1) throw std::runtime_error("Unsupported language configuration schema");
             const auto language = active.at("language").get<std::string>();
             if (language == "en") return data;
-            if (language != "ru") throw std::runtime_error("Unsupported MME Extensions language: " + language);
-            const auto catalog = Read(root + "ru.json");
-            if (catalog.value("schemaVersion", 0) != 1 || !catalog.at("strings").is_object()) throw std::runtime_error("Invalid Russian text catalog");
+            if (language != "ru" && language != "zh-CN") throw std::runtime_error("Unsupported MME Extensions language: " + language);
+            const auto catalog = Read(root + language + ".json");
+            if (catalog.value("schemaVersion", 0) != 1 || !catalog.at("strings").is_object()) throw std::runtime_error("Invalid Localized text catalog");
             for (const auto& [key, value] : catalog.at("strings").items()) {
-                if (!value.is_string() || value.get_ref<const std::string&>().empty()) throw std::runtime_error("Invalid Russian translation entry");
+                if (!value.is_string() || value.get_ref<const std::string&>().empty()) throw std::runtime_error("Invalid Localized translation entry");
                 ValidateValue(key, value);
                 data.strings.insert_or_assign(Fold(key), value.get<std::string>());
             }
-            data.defaults = Read(root + "ru.catalog.json");
-            if (!data.defaults.is_object()) throw std::runtime_error("Invalid Russian narration defaults");
+            data.defaults = Read(root + language + ".catalog.json");
+            if (!data.defaults.is_object()) throw std::runtime_error("Invalid Localized narration defaults");
             std::string bytes;
             for (auto part : MME::Narration::kCatalogParts) bytes += part;
             const auto entries = nlohmann::json::parse(bytes).at("entries");
-            if (entries.size() != data.defaults.size()) throw std::runtime_error("Incomplete Russian narration defaults");
+            if (entries.size() != data.defaults.size()) throw std::runtime_error("Incomplete Localized narration defaults");
             for (const auto& [id, meta] : entries.items()) ValidateValue(meta.at("default"), data.defaults.at(id));
-            data.language = "ru";
+            data.language = language;
         } catch (const std::exception& error) {
             data = Data{};
             data.error = error.what();
@@ -81,7 +81,7 @@ namespace MME::Localization {
     inline std::string Text(std::string english) {
         std::scoped_lock lock(mutex);
         const auto& data = Current();
-        if (data.language != "ru") return english;
+        if (data.language == "en") return english;
         const auto found = data.strings.find(Fold(english));
         return found == data.strings.end() ? std::string{} : found->second;
     }
