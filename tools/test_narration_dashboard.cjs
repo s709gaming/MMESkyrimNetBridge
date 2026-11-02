@@ -28,7 +28,10 @@ function backend(request){
   ++downloadChunks;const bytes=downloads.get(id);return {ok:true,requestId:id,transport:'part',index:request.index,total:Math.ceil(bytes.length/4096),data:bytes.slice(request.index*4096,(request.index+1)*4096)};
  }
  if(request.operation==='catalog')return response({protocolVersion:2,revision,entries:meta.map(m=>({...m,customized:Object.hasOwn(saved,m.id)})),path:'UserData/overrides.json'},id);
- if(request.operation==='presets')return response({presets:[]},id);
+ if(request.operation==='presets')return response({presets:['MyPreset']},id);
+ if(request.operation==='export')return response({revision},id);
+ if(request.operation==='importPreview')return response({entries:4,conflicts:1,presetRevision:'preset1',counts:{merge:{added:2,kept:3,replaced:0,reset:0},replace:{added:2,kept:1,replaced:1,reset:2}}},id);
+ if(request.operation==='importApply'){assert.equal(request.presetRevision,'preset1');return response({revision},id);}
  if(request.operation==='capture'||request.operation==='legacy')return response({changes:{'Fullness.nearby_status_summary':'CAPTURED INTERNAL {statuses}','Pools.MilkCravings.craving':['{ActorName} craves captured milk.']}},id);
  if(request.operation==='entry')return response({entryId:request.entryId,revision,value:Object.hasOwn(saved,request.entryId)?saved[request.entryId]:bases[request.entryId],baseValue:bases[request.entryId],customized:Object.hasOwn(saved,request.entryId)},id);
  if(request.operation==='saveBatch'){
@@ -117,6 +120,24 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  assert(v({family:'AI narration',poolOnly:false,required:[],allowed:[]},'x'.repeat(8193)).includes('8192'));
  assert(v({family:'AI narration',poolOnly:false,required:[],allowed:[]},['']).includes('nonblank'));
  assert(html.includes('overflow-y:scroll')&&html.includes('resize:vertical')&&html.includes('::-webkit-scrollbar-thumb'));
+ elements['editor-reload'].listeners.click();elements['confirm-accept'].listeners.click();await settle();
+ // Preset descriptions and review are understandable, accurate and non-mutating until accepted.
+ elements['editor-import-mode'].value='replace';elements['editor-import-mode'].listeners.change();
+ assert(elements['editor-import-help'].textContent.includes('Entries missing from it'));
+ elements['editor-preset-list'].value='MyPreset';
+ const beforeReview=requests.filter(x=>x==='importApply').length;
+ elements['editor-import'].listeners.click();await settle();
+ assert.equal(elements['confirm-title'].textContent,'Load "MyPreset"?');
+ assert.equal(elements['confirm-accept'].textContent,'Load Preset');
+ assert(elements['confirm-message'].textContent.includes('Add: 2 | Keep: 1 | Replace: 1 | Reset: 2'));
+ assert.equal(requests.filter(x=>x==='importApply').length,beforeReview);
+ elements['confirm-cancel'].listeners.click();
+ elements['editor-import-mode'].value='merge';elements['editor-import-mode'].listeners.change();
+ assert(elements['editor-import-help'].textContent.includes('Your existing edits are kept'));
+ elements['editor-import'].listeners.click();await settle();
+ assert(elements['confirm-message'].textContent.includes('Add: 2 | Keep: 3 | Replace: 0 | Reset: 0'));
+ elements['confirm-accept'].listeners.click();await settle();
+ assert.equal(requests.filter(x=>x==='importApply').length,beforeReview+1);
  // Reset spans BOTH player sections even under a filter and keeps internal customizations.
  saved['Fullness.nearby_status_summary']='INTERNAL {statuses}';
  saved['Pools.MilkCravings.craving']=['{ActorName} wants a drink.'];
@@ -124,13 +145,13 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  elements['editor-reload'].listeners.click();elements['confirm-accept'].listeners.click();await settle();
  assert(!elements['editor-hidden-note'].hidden,'hidden saved customizations are disclosed');
  elements['editor-search'].value='Lore.milkmaid_lore';elements['editor-search'].listeners.input();
- elements['editor-reset-all'].listeners.click();assert(elements['confirm-message'].textContent.includes('BOTH sections'));elements['confirm-accept'].listeners.click();
+ elements['editor-reset-all'].listeners.click();assert(elements['confirm-message'].textContent.includes('both Skyrim.Net Reactions & Lore and Game Messages & Stories'));elements['confirm-accept'].listeners.click();
  elements['editor-save'].listeners.click();await settle();
  assert.equal(saved['Fullness.nearby_status_summary'],'INTERNAL {statuses}','reset preserves hidden override');
  assert(!Object.hasOwn(saved,'Pools.MilkCravings.craving'),'reset includes messages despite AI search filter');
  assert(!Object.hasOwn(saved,'Lore.milk_lore'),'reset includes other AI features');
  assert(!Object.hasOwn(saved,'Pools.FlavorNotifications.custom_living_remove'),'reset includes filtered-out minor entries');
- elements['editor-capture'].listeners.click();await settle();assert(elements['confirm-message'].textContent.includes('1 editable'));
+ elements['editor-capture'].listeners.click();await settle();assert(elements['confirm-message'].textContent.includes('1 text edits'));
  elements['confirm-accept'].listeners.click();elements['editor-save'].listeners.click();await settle();
  assert.equal(saved['Fullness.nearby_status_summary'],'INTERNAL {statuses}','capture cannot overwrite hidden entry');
  assert.deepEqual(saved['Pools.MilkCravings.craving'],['{ActorName} craves captured milk.']);

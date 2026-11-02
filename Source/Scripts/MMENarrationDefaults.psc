@@ -517,7 +517,7 @@ String Function Template(String fileKey, String routeKey, Int index = 0) Global
         Return "## Milk Maid Status\n\n{actor} is a Milk Maid and produces milk."
     EndIf
     If fileKey == "Lore" && routeKey == "shared_guidance"
-        Return "Be playful, positive, silly, and strongly suggestive. Use clever innuendo without explicit vocabulary. Read the room, match the speaker's personality, and react briefly to the immediate event. Do not repeat the event or invent effects."
+        Return "Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic. Match the speaker and scene; nearby characters may occasionally chime in. Keep clear whose body and experience they describe."
     EndIf
     If fileKey == "MilkCravings" && routeKey == "narrate_milk_craving_1"
         Return "{actor} craves milk. {craving} Express the temptation in her own voice; she has not drunk it yet."

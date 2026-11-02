@@ -57,6 +57,25 @@ int main(int argc, char** argv)
         const auto defaults = root / "MMEAlerts/Narration/Lore.json";
         std::filesystem::create_directories(defaults.parent_path());
         Write(defaults, R"({"schemaVersion":1,"routes":{"milk_lore":{"template":"Default lore."}}})");
+        // Review counts include personal entries outside the current visible list.
+        Store countsStore(root / "counts/profile", defaults, "Compiled fallback.");
+        auto countInitial = Call(countsStore, {{"operation","load"}});
+        auto countSaved = Call(countsStore, {{"operation","saveBatch"},{"revision",countInitial["revision"]},
+            {"changes",{{"Lore.milk_lore","Preset lore."},{"Lore.shared_guidance","Preset style."}}}});
+        const auto countsName = "Counts_" + root.filename().string();
+        Check(Call(countsStore, {{"operation","export"},{"revision",countSaved["revision"]},{"name",countsName}})["ok"] == true,"counts fixture export");
+        auto countEdits = Call(countsStore, {{"operation","saveBatch"},{"revision",countSaved["revision"]},
+            {"changes",{{"Lore.milk_lore","My lore."},{"Lore.shared_guidance",nullptr},{"Lore.milkmaid_lore","{actor} personal."}}}});
+        Check(countEdits["ok"] == true,"counts fixture edits");
+        auto countDocument = Read(root / "counts/profile/overrides.json");
+        countDocument["overrides"]["Future.entry"]["template"] = "Keep me";
+        Write(root / "counts/profile/overrides.json",countDocument.dump());
+        Call(countsStore, {{"operation","load"}});
+        const auto beforeReview = Read(root / "counts/profile/overrides.json");
+        auto countPreview = Call(countsStore, {{"operation","importPreview"},{"name",countsName}});
+        Check(countPreview["counts"]["merge"] == Json{{"added",1},{"kept",3},{"replaced",0},{"reset",0}},"merge preview counts");
+        Check(countPreview["counts"]["replace"] == Json{{"added",1},{"kept",0},{"replaced",1},{"reset",2}},"replace counts include unseen entries");
+        Check(Read(root / "counts/profile/overrides.json") == beforeReview,"review never applies preset");
         Store store(root / "profile", defaults, "Compiled fallback.");
         auto initial = Call(store, { { "operation", "load" } });
         Check(initial["ok"] == true && initial["text"] == "Default lore.", "initial base");

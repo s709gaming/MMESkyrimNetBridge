@@ -115,3 +115,17 @@ computer-control input moved the cursor but did not activate game controls or
 the dashboard hotkey. No narration fields were changed, personal overrides were
 verified unchanged, Skyrim was closed without saving, and the temporary global
 AI setting was restored. Full dashboard runtime acceptance remains outstanding.
+
+## Presets menu clarity
+
+Presets separates saving from loading, explains merge/replace below the selector,
+and places older/manual recovery tools in a collapsed subsection. Preset review
+reports added, kept, replaced and reset counts for the selected mode across all
+saved edits, including entries not displayed by this editor. Review is read-only;
+Load Preset applies only after confirmation. Replace removes edits absent from
+the preset; Merge retains all existing edits. Saving a preset still requires saved
+text and a new valid name. Reset Edited Text stages the existing reset across both
+player sections (including hidden minor messages); Save Changes remains required.
+Personal presets and unsupported/internal entries are preserved by that reset.
+Shared Narration Guidance's supplied default was updated to the user's exact prose;
+existing personal overrides are retained.

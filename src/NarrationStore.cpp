@@ -389,6 +389,17 @@ namespace MME::Narration
                     for (const auto& [id,entry] : imported["overrides"].items())
                         if (document["overrides"].contains(id) && document["overrides"][id] != entry) ++conflicts;
                     snapshot["presetRevision"] = presetRevision; snapshot["entries"] = imported["overrides"].size(); snapshot["conflicts"] = conflicts;
+                    std::size_t added = 0, kept = 0, reset = 0;
+                    for (const auto& [id,entry] : imported["overrides"].items()) {
+                        if (!document["overrides"].contains(id)) ++added;
+                        else if (document["overrides"][id] == entry) ++kept;
+                    }
+                    for (const auto& [id,entry] : document["overrides"].items())
+                        if (!imported["overrides"].contains(id)) ++reset;
+                    snapshot["counts"] = Json{
+                        {"merge", {{"added",added},{"kept",document["overrides"].size()},{"replaced",0},{"reset",0}}},
+                        {"replace", {{"added",added},{"kept",kept},{"replaced",conflicts},{"reset",reset}}}
+                    };
                 }
             }
             Publish(document, bases, snapshot["revision"].get<std::string>());

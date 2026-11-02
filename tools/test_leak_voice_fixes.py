@@ -132,7 +132,7 @@ class Voices(unittest.TestCase):
   self.assertNotRegex(helper,r'Utility.Wait|RegisterFor|setMilk|AssignSlot|StartSex|RemoveItem')
   lore=json.loads((R/'SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Lore.json').read_text(encoding='utf-8'))['routes']
   self.assertIn('Milk Maids love the satisfying heaviness of being full of milk.',lore['milk_lore']['template'])
-  self.assertIn('positive, silly, and strongly suggestive',lore['shared_guidance']['template'])
+  self.assertEqual(lore['shared_guidance']['template'], 'Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic. Match the speaker and scene; nearby characters may occasionally chime in. Keep clear whose body and experience they describe.')
   self.assertEqual(lore['milkmaid_lore']['template'],'## Milk Maid Status\n\n{actor} is a Milk Maid and produces milk.')
 
 if __name__=='__main__':unittest.main()

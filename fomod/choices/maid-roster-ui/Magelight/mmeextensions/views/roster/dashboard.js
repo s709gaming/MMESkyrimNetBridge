@@ -33,7 +33,7 @@ function node(tag,text,kind){const n=document.createElement(tag);if(text!==undef
 function button(text,action){const n=node('button',text);n.type='button';n.addEventListener('click',action);return n;}
 let confirmAction=null,confirmOrigin=null;
 function cancelConfirm(){confirmAction=null;el('lore-confirm').hidden=true;if(confirmOrigin&&confirmOrigin.focus)confirmOrigin.focus();confirmOrigin=null;}
-function ask(message,action){confirmOrigin=document.activeElement;confirmAction=action;el('confirm-message').textContent=message;el('lore-confirm').hidden=false;if(el('confirm-cancel').focus)el('confirm-cancel').focus();}
+function ask(message,action,options={}){el('confirm-title').textContent=options.title||'Before you continue';el('confirm-cancel').textContent=options.cancel||'Keep Editing';el('confirm-accept').textContent=options.accept||'Continue';confirmOrigin=document.activeElement;confirmAction=action;el('confirm-message').textContent=message;el('lore-confirm').hidden=false;if(el('confirm-cancel').focus)el('confirm-cancel').focus();}
 el('confirm-cancel').addEventListener('click',cancelConfirm);
 el('confirm-accept').addEventListener('click',()=>{const action=confirmAction;cancelConfirm();if(action)action();});
 function finish(error,reply){
@@ -192,7 +192,7 @@ function renderList(){
  }
  list.scrollTop=position;el('editor-count').textContent=count+' / '+state.catalog.filter(m=>listed(m)&&presentation(m).section===preferences.section).length+' entries in this section';updateFooter();
 }
-function presets(){return rpc('presets').then(reply=>{const select=el('editor-preset-list');select.textContent='';for(const name of reply.presets){const option=node('option',name);option.value=name;select.appendChild(option);}});}
+function presets(){return rpc('presets').then(reply=>{const select=el('editor-preset-list');select.textContent='';if(!reply.presets.length){const empty=node('option','No saved presets yet');empty.value='';select.appendChild(empty);}for(const name of reply.presets){const option=node('option',name);option.value=name;select.appendChild(option);}});}
 function loadCatalog(discard){
  status('Loading your text library…');
  return rpc('catalog').then(reply=>{
@@ -216,20 +216,31 @@ el('editor-skyrimnet').addEventListener('click',()=>changeSection('skyrimnet'));
 el('editor-minor').addEventListener('change',()=>{preferences.features[preferences.section]=el('editor-group').value;preferences.minor=el('editor-minor').checked;remember();updateSections();renderList();});
 el('editor-up').addEventListener('click',()=>{el('editor-list').scrollTop-=el('editor-list').clientHeight||400;});
 el('editor-down').addEventListener('click',()=>{el('editor-list').scrollTop+=el('editor-list').clientHeight||400;});
-el('editor-reset-all').addEventListener('click',()=>ask('Reset all player-editable entries in BOTH sections, including minor messages hidden by filters? Internal and unknown customizations are preserved. Save Changes applies this reset.',()=>{for(const meta of state.catalog)if(visible(meta)&&(meta.customized||state.drafts.has(meta.id)))state.drafts.set(meta.id,null);updateSections();renderList();}));
+el('editor-reset-all').addEventListener('click',()=>ask("Restore the mod's supplied text in both Skyrim.Net Reactions & Lore and Game Messages & Stories, including hidden minor messages. Saved presets are kept.\n\nNothing changes until you click Save Changes.",()=>{for(const meta of state.catalog)if(visible(meta)&&(meta.customized||state.drafts.has(meta.id)))state.drafts.set(meta.id,null);updateSections();renderList();},{title:'Reset Edited Text?',cancel:'Cancel',accept:'Prepare Reset'}));
+function updateImportHelp(){el('editor-import-help').textContent=el('editor-import-mode').value==='replace'?"Replace your saved edits with this preset. Entries missing from it return to the mod's supplied text.":"Add preset text where you haven't made your own edits. Your existing edits are kept.";}
+el('editor-import-mode').addEventListener('change',updateImportHelp);
+updateImportHelp();
 el('editor-export').addEventListener('click',()=>{
- if(state.drafts.size){status('Save or discard your edits before exporting saved text.');return;}
- rpc('export',{revision:state.revision,name:el('editor-preset-name').value}).then(()=>{status('Preset exported outside installed mods.');presets();}).catch(error=>status(error.message));
+ if(state.drafts.size){status('Save or discard your pending edits before saving a preset.');return;}
+ rpc('export',{revision:state.revision,name:el('editor-preset-name').value}).then(()=>{status('Preset saved. Choose it below whenever you want to load it.');presets();}).catch(error=>status(error.message));
 });
 el('editor-import').addEventListener('click',()=>{
- if(state.drafts.size){status('Save or discard drafts before importing a preset.');return;}
+ if(state.drafts.size){status('Save or discard your pending edits before loading a preset.');return;}
  const name=el('editor-preset-list').value,mode=el('editor-import-mode').value;
- rpc('importPreview',{name}).then(preview=>ask('Import '+preview.entries+' preset entries? '+preview.conflicts+' conflicts. '+(mode==='merge'?'Merge keeps your existing personal text, including hidden customizations.':'Replace replaces all your personal text, including hidden customizations and entries this editor does not recognize.'),()=>{
-  rpc('importApply',{name,mode,presetRevision:preview.presetRevision,revision:state.revision}).then(()=>loadCatalog(true)).catch(error=>status(error.message));
- })).catch(error=>status(error.message));
+ if(!name){status('Choose a saved preset first.');return;}
+ rpc('importPreview',{name}).then(preview=>{
+  const counts=preview.counts&&preview.counts[mode];
+  if(!counts)throw Error('Preset review is unavailable. Close and reopen this menu; if it continues, check your MME Extensions installation.');
+  const summary='Add: '+counts.added+' | Keep: '+counts.kept+' | Replace: '+counts.replaced+' | Reset: '+counts.reset;
+  const explanation=mode==='merge'?'Your existing edits are kept. The preset adds entries you have not edited.':"This replaces all your saved text edits, including edits not shown here. Entries missing from the preset return to the mod's supplied text.";
+  ask(summary+'\n\n'+explanation,()=>{
+   rpc('importApply',{name,mode,presetRevision:preview.presetRevision,revision:state.revision}).then(()=>loadCatalog(true)).catch(error=>status(error.message));
+  },{title:'Load "'+name+'"?',cancel:'Cancel',accept:'Load Preset'});
+ }).catch(error=>status(error.message));
 });
-function capture(operation){rpc(operation).then(reply=>{const ids=Object.keys(reply.changes).filter(id=>state.catalog.some(m=>m.id===id&&visible(m)));ask('Prepare '+ids.length+' editable customizations? Existing personal text and hidden customizations are kept. Save Changes applies them.',()=>{for(const id of ids)if(!state.drafts.has(id))state.drafts.set(id,reply.changes[id]);renderList();});}).catch(error=>status(error.message));}
+function capture(operation){rpc(operation).then(reply=>{const ids=Object.keys(reply.changes).filter(id=>state.catalog.some(m=>m.id===id&&visible(m)));ask('Prepare '+ids.length+' text edits? Your existing personal edits are kept. Nothing changes until you click Save Changes.',()=>{for(const id of ids)if(!state.drafts.has(id))state.drafts.set(id,reply.changes[id]);renderList();},{title:operation==='capture'?'Recover JSON File Edits?':'Recover Older-Version Edits?',cancel:'Cancel',accept:'Prepare Edits'});}).catch(error=>status(error.message));}
 el('editor-capture').addEventListener('click',()=>capture('capture'));el('editor-legacy').addEventListener('click',()=>capture('legacy'));
+
 function showTab(editor){
  el('roster-tab').setAttribute('aria-selected',String(!editor));el('lore-tab').setAttribute('aria-selected',String(editor));
  el('roster-panel').hidden=editor;el('lore-panel').hidden=!editor;el('refresh').hidden=editor;
