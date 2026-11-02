@@ -13,7 +13,7 @@ This guide covers what **MME Extensions** needs to run, plus optional integratio
 
 Follow MME's own requirements, which generally include:
 
-- SKSE, SkyUI, RaceMenu, and XPMSSE
+- SKSE, SkyUI, RaceMenu, XPMSSE, and PapyrusUtil
 - A compatible body and skeleton
 - An animation behavior generator: **FNIS, Nemesis, or Pandora** (generally just one)
 - SexLab Framework for the standard SexLab-based setup
@@ -87,13 +87,26 @@ For physics, 3BA may use CBPC, FSMP, or both depending on your setup.
 
 ### SexLab Aroused / OSLAroused
 
-MME Extensions can raise a Milk Maid's arousal through drinking milk and other supported events. Other mods can then respond to that value, for example with:
+MME Extensions can raise arousal for men and women through drinking milk and other supported events. It includes its own brief arousal reactions and sounds. Other mods can respond to the same arousal value, adding effects such as:
 
 - [AI-driven events and reactions](https://discord.com/channels/1287232260617015336/1467570238546513940)
-- [Arousal-triggered animations](https://www.nexusmods.com/skyrimspecialedition/mods/103427)
+- [Arousal-triggered animations](https://www.nexusmods.com/skyrimspecialedition/mods/103427), for additional aroused standing idles
+- [Dripping When Aroused NG](https://www.loverslab.com/files/file/36788-dripping-when-aroused-ng/), for arousal-driven dripping effects
 - [Arousal Based Match Maker (ABMM)](https://www.loverslab.com/files/file/8595-arousal-based-match-maker-abmm/), for non-AI SexLab encounters
 
-The arousal ecosystem is much bigger than this short list. **MME Extensions changes arousal; what happens next depends on the other mods installed.** Without a compatible arousal framework, it skips the optional arousal effects.
+The arousal ecosystem is much bigger than this short list. **These additions are optional; you do not need them for Extensions' own brief arousal reactions.** Dripping When Aroused NG has its own requirements, including SKSE, PapyrusUtil, and SPID. Without a compatible arousal framework, Extensions skips its optional arousal effects.
+
+### Oninus Lactis NG (Milk Leaking)
+
+[Oninus Lactis NG](https://www.loverslab.com/topic/250239-oninus-lactis-ng/) supplies the visual effects used by Extensions' optional **Milk Leaks** installer option. Full Milk Maids can leak milk, with clothing-aware effects and adjustable fullness settings.
+
+Install Oninus Lactis NG and its requirements first, enable `OninusLactis.esp`, then select the Milk Leaks option when installing MME Extensions. **This feature uses Oninus Lactis NG 2.1 assets; it is not a requirement for the rest of Extensions.** Use Oninus Lactis's MCM to align the effects with your body setup.
+
+### Magelight UI (Milk Maid Dashboard & Text Editor)
+
+[Magelight UI](https://www.nexusmods.com/skyrimspecialedition/mods/193303) powers the optional Milk Maid dashboard, including milk, Lactacid and arousal meters, roster controls, and the reactions/lore/message editor with presets.
+
+Install **Magelight UI 1.5.0 or later** and select the Milk Maid roster/dashboard option in the Extensions installer. **The dashboard works without Skyrim.Net.** The regular MCM and other Extensions features remain available without Magelight UI.
 
 ### Skyrim.Net (AI Integration)
 

@@ -1,3 +1,5 @@
+See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESkyrimNetBridge/blob/main/REQUIREMENTS.md) 
+
 # 🥛 How Does Milk Mod Economy Work?
 
 ## 🍒 Overview
@@ -10,7 +12,7 @@
 
 - **🎙️ AI Girlfriends:** Talk naturally to your AI sweethearts through a microphone. Flirt, seduce, and milk them! They'll respond with dialogue and in-game actions, fully aware of MME's mechanics.
 
-*Requires Skyrim.net. Basic setup costs roughly $0.25–$0.50/hour. A private playing area is highly recommended!*
+*Requires Skyrim.net. Basic setup costs roughly $0.35–$0.50/hour. A private playing area is highly recommended!*
 
 - **🍑 Lewd Corruption:** The more you or your followers are milked, the bustier, thiccer, and more outrageously voluptuous you become!
 - **🍈 Erotic Flavor:** As your melons ripen throughout the day, expect:
@@ -202,7 +204,7 @@
 5. Deploy and sort your load order.
 6. Start Skyrim through SKSE.
 
-See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESkyrimNetBridge/blob/main/REQUIREMENTS.md) 
+
 
 # 💻 Source Code
 
