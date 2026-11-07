@@ -1,5 +1,18 @@
 {
   "schemaVersion": 1,
+  "_authoring": {
+    "purpose": "AI descriptions of a Milk Maid's milk reserves and fullness events.",
+    "player_controls": "How fullness feels and how characters react to it.",
+    "contains": "Full/half-full reaction prompts, status fragments and retained legacy text.",
+    "perspective": "The named Milk Maid owns the milk state; fullness narration leaves speaker selection to Skyrim.Net.",
+    "boundary": "Does not set capacity, fill breasts or enable leaking.",
+    "used_by": [
+      "MMEAlertsSkyrimNet.NarrateMilkFull",
+      "MMEAlertsSkyrimNet.NarrateMilkHalfFull",
+      "MMEAlertsSkyrimNet.BuildMilkStatus",
+      "MMEPostMilking.RecordFull"
+    ]
+  },
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "send_capacity_milestone_1": {

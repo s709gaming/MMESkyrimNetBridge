@@ -1,5 +1,17 @@
 {
   "schemaVersion": 1,
+  "_authoring": {
+    "purpose": "AI reactions and background descriptions for equipped or removed armor.",
+    "player_controls": "How armor changes are described.",
+    "contains": "Reaction prompts plus reusable armor-status fragments.",
+    "perspective": "The wearer owns the experience; speaker selection depends on the event.",
+    "boundary": "Does not equip, remove or modify armor.",
+    "used_by": [
+      "MMEAlertsSkyrimNet.NarrateArmorEquip",
+      "MMEAlertsSkyrimNet.NarrateArmorStrip",
+      "MMEAlertsSkyrimNet.BuildNearbyArmorStatus"
+    ]
+  },
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_armor_equip_1": {

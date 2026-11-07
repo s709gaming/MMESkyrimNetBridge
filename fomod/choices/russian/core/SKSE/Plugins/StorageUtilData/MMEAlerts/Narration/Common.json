@@ -1,8 +1,25 @@
 {
   "schemaVersion": 1,
+  "_authoring": {
+    "purpose": "Instructions for the player character speaking about her own experience.",
+    "player_controls": "Format and delivery of private player self-comments.",
+    "contains": "A shared first-person response instruction.",
+    "perspective": "The affected player speaks; no nearby character replies in this private response.",
+    "boundary": "Does not control all NPC dialogue or choose gameplay actions.",
+    "used_by": [
+      "MMEAlertsSkyrimNet player self-comment requests",
+      "MMEChestCurseNarration.Publish",
+      "MMEPostMilking.NarrateLast"
+    ]
+  },
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "player_instructions": {
+      "_authoring": {
+        "purpose": "Keep private player reactions in the affected player's own voice.",
+        "output": "One first-person spoken line.",
+        "boundary": "Private responses exclude observers, dialogue partners and extra replies."
+      },
       "template": "Напишите краткий устный комментарий без графических изображений для {actor}.\nГоворящий – это человек, переживающий данную ситуацию, а не наблюдатель.\nВозвращайте только одну строку открытого текста от первого лица. Никаких надписей ораторов, ремарк\nпартнеры по диалогу, разметка или ответы других людей. Не придумывайте эффекты."
     }
   }

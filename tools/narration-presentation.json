@@ -1,4 +1,69 @@
 {
+  "_authoring": {
+    "purpose": "Explain the text library to human authors and coding AI.",
+    "experience": "Playful erotic fantasy about Milk Maids, milk-related situations and teasing equipment.",
+    "format": "Structured shorthand: short labeled facts; one idea per field.",
+    "label_goal": "Describe what the player wants to customize and what editing it changes.",
+    "distinguish": [
+      "Instructions to AI",
+      "Finished game messages or stories",
+      "Background lore",
+      "Current actor/event context"
+    ],
+    "perspective": "Affected character, speaker and listener are separate roles.",
+    "boundary": "Internal authoring notes only. Do not display or append them to game prompts.",
+    "verification": "Read the actual caller before claiming a trigger, speaker or gameplay effect."
+  },
+  "_groups": {
+    "Lore & Background": {
+      "purpose": "Customize world knowledge and narration style.",
+      "distinguish": "General lore, confirmed actor identity and global instructions are separate entries."
+    },
+    "Your Character’s Speaking Style": {
+      "purpose": "Customize private player self-comments.",
+      "perspective": "First-person player speech, not nearby NPC conversation."
+    },
+    "Becoming a Milk Maid": {
+      "purpose": "Customize conversion and curse reactions or stories.",
+      "distinguish": "New Milk Maid, existing Milk Maid and added milk are different outcomes."
+    },
+    "Drinking Milk & Breastfeeding": {
+      "purpose": "Customize reactions to drinking and breastfeeding.",
+      "distinguish": "Drinker, milk source and observer are different characters; drink effects come from gameplay."
+    },
+    "Milking & Fullness": {
+      "purpose": "Customize reactions to stored milk and milking.",
+      "distinguish": "Becoming full, being milked and finishing milking are different events."
+    },
+    "Armor Reactions": {
+      "purpose": "Customize reactions and stories about putting on or losing armor.",
+      "distinguish": "Story popups, AI reactions and armor-status fragments are different text types."
+    },
+    "Living / Parasite Teasing": {
+      "purpose": "Customize messages and reactions to living armor effects.",
+      "distinguish": "HUD wording and AI effect descriptions use separate pools; tiers organize alternatives."
+    },
+    "Dwemer Armor": {
+      "purpose": "Customize device lore, wearer reactions and messages.",
+      "distinguish": "Full suits, installed attachments and individual device events have different context."
+    },
+    "Thoughts & Cravings": {
+      "purpose": "Customize selected thoughts, cravings and their AI expression.",
+      "distinguish": "The thought/message is separate from instructions for reacting to it."
+    },
+    "Arousal & Movement": {
+      "purpose": "Customize messages accompanying arousal, movement and body effects.",
+      "boundary": "Text describes selected effects; it does not enable or apply them."
+    },
+    "Service Reminders": {
+      "purpose": "Customize messages about equipment and available services.",
+      "boundary": "Wording does not change service availability, prices or requirements."
+    },
+    "Armor Locks": {
+      "purpose": "Customize messages about armor locks and removal attempts.",
+      "boundary": "Text does not change a lock or unlock requirement."
+    }
+  },
   "featureOrder": [
     "Lore & Background",
     "Your Character’s Speaking Style",

@@ -1,14 +1,42 @@
 {
   "schemaVersion": 1,
+  "_authoring": {
+    "purpose": "World knowledge, confirmed Milk Maid identity and global narration style.",
+    "player_controls": "What AI characters know about milk and how mod narration sounds.",
+    "contains": "Three distinct roles: general lore, actor status and global instructions.",
+    "perspective": "General knowledge applies without making its reader a Milk Maid.",
+    "boundary": "Does not convert actors or change mechanics; authoring notes are not sent to Skyrim.Net.",
+    "used_by": [
+      "MMEAlertsSkyrimNet.MilkLoreText",
+      "MMEDialogueKnowledge.ForRequest"
+    ]
+  },
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "milk_lore": {
+      "_authoring": {
+        "purpose": "General world knowledge about milk and Milk Maids.",
+        "applies_to": "Eligible actor context and mod narration requests.",
+        "boundary": "Knowledge does not establish that the reader produces milk or wears special armor."
+      },
       "template": "## Skyrim доярка Lore\n\nЭто общее мировоззрение. Не установлено, что говорящий или слушатель является дояркой, носит зачарованную броню или испытывает эти эффекты. Используйте текущий статус и контекст актера, чтобы определить, что применимо.\n\n### Общая информация о мире\n\n- Молоко в Скайриме получают от доярок, а не от коров. Этот прекрасный напиток является распространенным продуктом питания с экзотическими свойствами афродизиака, который гарантированно поможет вам во всех отношениях.\n- Доярки — это социально ценная основа поставок молока в Скайриме.\n- Женщины могут стать доярками благодаря Lactacid, проданному алхимиками, выпивке достаточного количества молока, магическим проклятиям или неудачному столкновению с коварными ловушками и зачарованной броней.\n- Странные живые доспехи, паразиты и двемерские приспособления для доения печально известны тем, что окутывают ничего не подозревающих взрослых женщин, превращаясь в живые наряды, накачивающие своих носителей афродизиаками и стимуляторами выработки молока.\n- Первоначальная паника может смениться безумным, возвышенным экстазом, в результате чего некоторые владельцы жаждут каждого безжалостного поддразнивания и ласки. Такие удовольствия могут вызвать восхитительное привыкание.\n- Доярки любят приятную тяжесть наполненности молоком."
     },
     "milkmaid_lore": {
+      "_authoring": {
+        "purpose": "Identify a confirmed Milk Maid to the AI.",
+        "applies_to": "An actor who passes the real MME Milk Maid check.",
+        "boundary": "This is actor-status text, not general lore and not a conversion command."
+      },
       "template": "## доярка Статус\n\n{actor} является дояркой и производит молоко."
     },
     "shared_guidance": {
+      "_authoring": {
+        "purpose": "Global narration instructions.",
+        "player_controls": "Tone, style and length of mod AI narration.",
+        "applies_to": "Requests composed through MMEDialogueKnowledge.ForRequest or Append.",
+        "perspective": "Event instructions still determine who speaks and whose experience is described.",
+        "boundary": "This is runtime guidance, not a finished line. The authoring metadata itself is not runtime guidance."
+      },
       "template": "Будьте игривыми, эротичными и дразнящими. Отдавайте предпочтение инсинуациям, дерзким метафорам и разнообразным эвфемизмам, а не явной сексуальной лексике. Реакции должны быть краткими, естественными и ненаглядными. Сопоставьте говорящего и сцену; Соседние персонажи могут время от времени вмешиваться. Не забывайте, чье тело и опыт они описывают."
     }
   }

@@ -1,5 +1,17 @@
 {
   "schemaVersion": 1,
+  "_authoring": {
+    "purpose": "AI context for milking events and reactions to completed milking.",
+    "player_controls": "How the method, relief and recorded outcome are described.",
+    "contains": "Start/end event descriptions, method-specific completion text and response instructions.",
+    "perspective": "The milked character owns the experience; completion narration reacts to her recorded session.",
+    "boundary": "Does not start milking or decide how much milk was removed or retained.",
+    "used_by": [
+      "MMEAlertsSkyrimNet.SendMilkingEvent",
+      "MMEPostMilking.RecordCompletion",
+      "MMEPostMilking.NarrateLast"
+    ]
+  },
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "startMessage": {

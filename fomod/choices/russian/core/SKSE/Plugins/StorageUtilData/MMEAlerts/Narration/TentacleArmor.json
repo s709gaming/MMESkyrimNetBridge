@@ -1,5 +1,16 @@
 {
   "schemaVersion": 1,
+  "_authoring": {
+    "purpose": "AI reactions to reported living/parasite armor effects.",
+    "player_controls": "How the wearer expresses the teasing and selected effects.",
+    "contains": "Wearer instructions, a prompt wrapper and alternative effect descriptions.",
+    "perspective": "The affected wearer reacts; the player uses a private first-person comment.",
+    "boundary": "Does not trigger injections, add milk or raise arousal. HUD messages use separate pools.",
+    "used_by": [
+      "MMEAlertsSkyrimNet.NarrateTentacleEffect",
+      "MMEAlertsSkyrimNet.BuildTentacleEffectNarration"
+    ]
+  },
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_tentacle_effect_1": {

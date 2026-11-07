@@ -1,5 +1,15 @@
 {
   "schemaVersion": 1,
+  "_authoring": {
+    "purpose": "AI reaction when a Milk Maid begins craving milk.",
+    "player_controls": "How the temptation is expressed aloud.",
+    "contains": "Instructions around a craving message supplied by the caller.",
+    "perspective": "The craving character speaks; the player uses a private first-person comment.",
+    "boundary": "A craving is not a completed drink. Actual craving messages are edited in MilkCravings.json outside this folder.",
+    "used_by": [
+      "MMEAlertsSkyrimNet.NarrateMilkCraving"
+    ]
+  },
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_milk_craving_1": {

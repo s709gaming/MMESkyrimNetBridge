@@ -1,5 +1,18 @@
 {
   "schemaVersion": 1,
+  "_authoring": {
+    "purpose": "AI reactions and event descriptions after a reported milk drink.",
+    "player_controls": "How drinking, restraint and confirmed drink effects are discussed.",
+    "contains": "Chest/NPC/player reaction prompts, role-specific fragments and event context.",
+    "perspective": "NPC and chest routes differ from nearby-character reactions to a player drink. The drinker owns the effects.",
+    "boundary": "Does not consume milk, apply effects or convert the drinker. Ordinary drinkers are not automatically Milk Maids.",
+    "used_by": [
+      "MMEAlertsSkyrimNet.NarrateChestMilkDrink",
+      "MMEAlertsSkyrimNet.NarrateNPCMilkDrink",
+      "MMEAlertsSkyrimNet.NarratePlayerMilkDrink",
+      "MMEAlertsSkyrimNet.SendMilkDrink"
+    ]
+  },
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_chest_milk_drink_1": {

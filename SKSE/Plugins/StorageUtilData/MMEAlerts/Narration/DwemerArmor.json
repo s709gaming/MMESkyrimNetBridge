@@ -1,5 +1,17 @@
 {
   "schemaVersion": 1,
+  "_authoring": {
+    "purpose": "AI reactions to Dwemer suits, attachments and their reported effects.",
+    "player_controls": "How the wearer describes the device and its teasing or milking.",
+    "contains": "Device background, event text, effect alternatives and fallback fragments.",
+    "perspective": "Wearer speaks in supported wearer-reaction routes; player uses a private self-comment.",
+    "boundary": "Describes an event selected by code; does not create a device or apply an effect.",
+    "used_by": [
+      "MMEAlertsSkyrimNet.NarrateDwemerEffect",
+      "MMEAlertsSkyrimNet.NarrateDwemerSuitEvent",
+      "MMEAlertsSkyrimNet.BuildDwemerSuitPrompt"
+    ]
+  },
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_dwemer_effect_1": {

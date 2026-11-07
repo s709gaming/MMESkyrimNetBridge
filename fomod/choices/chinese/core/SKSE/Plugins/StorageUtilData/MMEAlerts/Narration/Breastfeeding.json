@@ -1,5 +1,16 @@
 {
   "schemaVersion": 1,
+  "_authoring": {
+    "purpose": "AI speaking guidance during a tracked adult breastfeeding scene.",
+    "player_controls": "How participants discuss the current interaction.",
+    "contains": "Scene guidance added to participant context.",
+    "perspective": "Milk source and drinker have different roles; the actor is not automatically both.",
+    "boundary": "Does not start a scene or transfer milk.",
+    "used_by": [
+      "MMEAlertsSkyrimNet.SetBreastfeedingPromptState",
+      "MMEAlertsSkyrimNet.BreastfeedingGuidanceText"
+    ]
+  },
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "guidance": {

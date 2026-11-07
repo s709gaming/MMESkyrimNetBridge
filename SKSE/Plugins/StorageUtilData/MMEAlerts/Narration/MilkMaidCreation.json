@@ -1,5 +1,18 @@
 {
   "schemaVersion": 1,
+  "_authoring": {
+    "purpose": "AI reactions to becoming a Milk Maid or receiving a milk-related curse.",
+    "player_controls": "How discovery, transformation and curse outcomes are described.",
+    "contains": "Separate conversion, existing-maid curse, chest curse and event-context text.",
+    "perspective": "The affected character owns the change; player reaction routes use private self-comments.",
+    "boundary": "A curse affecting an existing Milk Maid is not another conversion. Text does not cause conversion.",
+    "used_by": [
+      "MMEAlertsSkyrimNet.NarrateMilkmaidCreated",
+      "MMEAlertsSkyrimNet.NarrateForcedMilkMaidConversion",
+      "MMEAlertsSkyrimNet.NarrateMilkMaidCurse",
+      "MMEChestCurseNarration.Publish"
+    ]
+  },
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_milkmaid_created_1": {

@@ -1,5 +1,16 @@
 {
   "schemaVersion": 1,
+  "_authoring": {
+    "purpose": "AI expression of a Milk Maid thought already selected by the mod.",
+    "player_controls": "How a supplied thought is expressed in a character reaction.",
+    "contains": "Prompt wrappers for ordinary and restrained Milk Maid thoughts.",
+    "perspective": "The thought belongs to the named actor; do not transfer her experience to the listener.",
+    "boundary": "Edit the underlying thought wording in Thoughts.json outside this folder; these are the surrounding AI instructions.",
+    "used_by": [
+      "MMEAlertsSkyrimNet.NarrateMilkMaidThought",
+      "MMEAlertsSkyrimNet.NarrateBoundMilkMaidThought"
+    ]
+  },
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_milk_maid_thought_1": {
