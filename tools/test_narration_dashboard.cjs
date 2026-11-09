@@ -102,12 +102,12 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  assert.equal(JSON.parse(navigation.get('mme-editor-navigation-v1')).section,'messages');
  elements['editor-skyrimnet'].listeners.click();elements['editor-messages'].listeners.click();assert.equal(elements['editor-group'].value,'Thoughts & Cravings','feature selection is retained per section');
  elements['editor-skyrimnet'].listeners.click();
- let card=await open('Lore.milk_lore'),field=descendants(card,'textarea')[0];
+ let card=await open('Lore.shared_guidance'),field=descendants(card,'textarea')[0];
  const long='MiLk ÃƒÂ©Ã¢â‚¬ÂºÃ‚Âª\n'+'x'.repeat(6000);field.value=long;field.listeners.input();assert(!elements['editor-save'].disabled);
  elements['editor-search'].value='Milking.startMessage';elements['editor-search'].listeners.input();
  card=await open('Milking.startMessage');field=descendants(card,'textarea')[0];field.value='{actor} starts milking.';field.listeners.input();
  assert(elements['editor-changes'].textContent.includes('2 unsaved'));
- elements['editor-save'].listeners.click();assert(card.children[1].disabled,'fields are locked while a save is in flight');await settle();assert.equal(commits,1);assert(uploadChunks>1,'large Save uploads in chunks');assert.equal(saved['Lore.milk_lore'],long);assert.equal(saved['Milking.startMessage'],'{actor} starts milking.');
+ elements['editor-save'].listeners.click();assert(card.children[1].disabled,'fields are locked while a save is in flight');await settle();assert.equal(commits,1);assert(uploadChunks>1,'large Save uploads in chunks');assert.equal(saved['Lore.shared_guidance'],long);assert.equal(saved['Milking.startMessage'],'{actor} starts milking.');
  elements['editor-search'].value='';elements['editor-search'].listeners.input();card=await open('Lore.milkmaid_lore');field=descendants(card,'textarea')[0];field.value='Missing required actor';field.listeners.input();assert(elements['editor-save'].disabled);assert(card.textContent.includes('Keep required placeholder'));
  field.value='{actor} produces milk.';field.listeners.input();assert(!elements['editor-save'].disabled);
  window.requestEditorClose();assert(!elements['lore-confirm'].hidden);assert(!window.closed);elements['confirm-cancel'].listeners.click();
@@ -150,7 +150,7 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  elements['editor-save'].listeners.click();await settle();
  assert.equal(saved['Fullness.nearby_status_summary'],'INTERNAL {statuses}','reset preserves hidden override');
  assert(!Object.hasOwn(saved,'Pools.MilkCravings.craving'),'reset includes messages despite AI search filter');
- assert(!Object.hasOwn(saved,'Lore.milk_lore'),'reset includes other AI features');
+ assert(!Object.hasOwn(saved,'Lore.shared_guidance'),'reset includes other AI features');
  assert(!Object.hasOwn(saved,'Pools.FlavorNotifications.custom_living_remove'),'reset includes filtered-out minor entries');
  elements['editor-capture'].listeners.click();await settle();assert(elements['confirm-message'].textContent.includes('1 text edits'));
  elements['confirm-accept'].listeners.click();elements['editor-save'].listeners.click();await settle();
@@ -187,6 +187,20 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  pencil().listeners.click({preventDefault(){},stopPropagation(){}});rename=findCard().children.find(c=>c.className==='rename-box');
  descendants(rename,'button').find(b=>b.textContent==='Reset title').listeners.click();elements['editor-save'].listeners.click();await settle();
  assert(!Object.hasOwn(savedTitles,titleId),'reset removes saved title');
+ // Native World Knowledge owns general lore. Old personal text remains copyable.
+ elements['editor-search'].value='';elements['editor-search'].listeners.input();
+ let loreCard=elements['editor-list'].children.find(c=>c.attributes['data-entry-id']==='Lore.milk_lore');
+ assert(loreCard);assert(descendants(loreCard.children[0],'button')[0].disabled);
+ loreCard.open=true;loreCard.listeners.toggle();await settle();
+ assert(loreCard.textContent.includes('World Knowledge'));
+ assert.equal(descendants(loreCard.children[1],'textarea').length,0);
+ saved['Lore.milk_lore']='My previous custom lore';
+ elements['editor-reload'].listeners.click();await settle();await settle();
+ loreCard=elements['editor-list'].children.find(c=>c.attributes['data-entry-id']==='Lore.milk_lore');
+ loreCard.open=true;loreCard.listeners.toggle();await settle();
+ const oldLore=descendants(loreCard.children[1],'textarea');
+ assert.equal(oldLore.length,1);assert.equal(oldLore[0].value,'My previous custom lore');assert(oldLore[0].readOnly);
+ assert(!descendants(loreCard.children[1],'button').some(b=>b.textContent==='Reset this entry'));
  console.log('PASS: pencil rename/cancel, staged saves, literal Unicode title, translation exclusion, search and reset');
  console.log('PASS: actual dashboard JS: 63 AI/69 normal/86 expanded message entries, minor filtering/drafts/reset, lore-first order, shared badges, persistence, atomic save and session recovery.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

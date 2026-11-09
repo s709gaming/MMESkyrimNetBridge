@@ -747,12 +747,13 @@
       "feature": "Lore & Background",
       "order": 0,
       "title": "Skyrim Milk Maid Lore",
-      "description": "Describe milk and milking armor in your version of Skyrim. Skyrim.Net uses this background when creating dialogue.",
-      "badge": "Background Lore",
+      "description": "Edit this lore in Skyrim.Net > World Knowledge > Skyrim Milk Maid Lore.",
+      "badge": "Knowledge Pack",
       "shared": false,
-      "note": "",
+      "note": "General Milk Maid lore now lives in the Skyrim.Net knowledge pack. Use its World Knowledge editor while playing; choose this playthrough or all playthroughs. Old MME personal lore is preserved for manual copying and is no longer used. Actor identity and narration instructions remain separate.",
       "tokenHelp": {},
-      "formatBadge": "Narration"
+      "formatBadge": "Knowledge Pack",
+      "readOnly": true
     },
     "Lore.milkmaid_lore": {
       "visible": true,

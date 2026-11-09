@@ -43,6 +43,7 @@ class Contracts(unittest.TestCase):
    output=Composer(milk=lore['milk_lore']['template'],guidance=guidance).Append('Event.',speaker)
    self.assertEqual(output.count(guidance),1)
    self.assertNotIn('## Milk Maid Status',output)
+   self.assertNotIn(lore['milk_lore']['template'],output)
   full=json.loads((data/'Fullness.json').read_text())['routes']
   for key in ['narrate_milk_full_1','build_restrained_capacity_content_1']:
    self.assertIn('leaking',full[key]['template'])
@@ -64,9 +65,12 @@ class Contracts(unittest.TestCase):
   self.assertEqual(c.ForRequest(None,'automatic'),c.ForRequest('Lydia','known'))
   self.assertNotIn('Hulda',c.ForRequest('Lydia','known'))
  def test_bad_lore_preserves_original_event(self):
-  for c in [Composer(milk=''),Composer(guidance='')]:
+  for c in [Composer(guidance='')]:
    self.assertEqual(c.Append('Original event.',None),'Original event.')
    self.assertEqual(len(c.alarms),1)
+ def test_legacy_general_lore_is_not_injected(self):
+  self.assertEqual(Composer(milk='old personal lore').ForRequest(None,'test'),Composer(milk='').ForRequest(None,'test'))
+  self.assertNotIn('GetRaw("Lore", "milk_lore")',HELPER)
  def test_every_direct_request_uses_its_actual_originator(self):
   count=0
   for filename in ['MMEAlertsSkyrimNet','MMEChestCurseNarration']:

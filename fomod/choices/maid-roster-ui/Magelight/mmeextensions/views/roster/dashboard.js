@@ -120,7 +120,7 @@ function validation(meta,value){
 function updateFooter(){
  let invalid=0;for(const [id,value] of state.drafts){const meta=state.catalog.find(m=>m.id===id);if(value!==null&&meta&&validation(meta,value))++invalid;}
  const busy=!!state.pending||!!state.queue.length;
- for(const card of el('editor-list').children)if(card.children[0]&&card.children[0].children[1])card.children[0].children[1].disabled=busy||!state.canRename;
+ for(const card of el('editor-list').children)if(card.children[0]&&card.children[0].children[1])card.children[0].children[1].disabled=busy||!state.canRename||presentation(state.catalog.find(m=>m.id===card.entryId)).readOnly===true;
  for(const card of el('editor-list').children)for(const field of card.children)if(field.tagName&&field.tagName.toLowerCase()==='fieldset')field.disabled=busy;
  el('editor-reload').disabled=busy;
  el('editor-size').textContent='Saved text size: '+state.documentBytes+' / 262144 bytes · size checked before saving';
@@ -175,6 +175,13 @@ function showEditor(meta,container){
   let value=clone(current===null?saved.baseValue:current);
   const display=presentation(meta);
   if(display.note)container.appendChild(node('p',display.note,'editor-hint'));
+  if(display.readOnly){
+   if(saved.customized){
+    container.appendChild(node('p','Previous personal lore is preserved below for copying into Skyrim.Net. It is no longer injected by MME Extensions.','editor-hint'));
+    const previous=node('textarea');previous.value=Array.isArray(saved.value)?saved.value.join('\n\n'):saved.value;previous.readOnly=true;previous.rows=8;previous.setAttribute('aria-label','Previous personal Milk Maid lore');container.appendChild(previous);
+   }
+   return;
+  }
   if(display.shared&&display.section==='messages')container.appendChild(node('p','Skyrim.Net can also use this message when creating character reactions.','editor-hint'));
   const hint=node('p','Keep these placeholders: '+(meta.required.length?meta.required.map(t=>'{'+t+'}').join(' '):'none required')+' · Up to 8192 bytes per version · up to 64 versions','editor-hint');container.appendChild(hint);
   for(const token of meta.allowed)container.appendChild(node('p','{'+token+'}: '+(display.tokenHelp[token]||'The game fills this in. Keep the placeholder exactly as shown.'),'editor-hint'));
@@ -219,7 +226,7 @@ function renderList(){
   if(modified&&!customized(meta)&&!hasDraft(meta.id))continue;
   ++count;const card=node('details',undefined,'editor-card'),heading=node('summary'),body=node('fieldset',undefined,'entry-body');
   const title=node('span',displayTitle(meta),'entry-title'+(customTitle(meta)?' user-title':''));heading.appendChild(title);
-  const rename=button('✎',event=>{event.preventDefault();event.stopPropagation();renameTitle(meta,card);});rename.className='rename-title';rename.setAttribute('aria-label','Rename title');rename.disabled=!state.canRename;rename.title=state.canRename?'Rename title':'Update MME Extensions to rename titles.';heading.appendChild(rename);
+  const rename=button('✎',event=>{event.preventDefault();event.stopPropagation();renameTitle(meta,card);});rename.className='rename-title';rename.setAttribute('aria-label','Rename title');rename.disabled=!state.canRename||display.readOnly===true;rename.title=state.canRename?'Rename title':'Update MME Extensions to rename titles.';heading.appendChild(rename);
   heading.appendChild(node('small',(display.formatBadge||display.badge)+' · '+display.feature+(hasDraft(meta.id)?' · Unsaved':customized(meta)?' · Personal':'')));
   heading.appendChild(node('span',display.description,'editor-description'));
   heading.addEventListener('click',event=>{if(state.pending||state.queue.length)event.preventDefault();});

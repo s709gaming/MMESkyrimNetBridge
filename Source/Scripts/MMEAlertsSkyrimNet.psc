@@ -1894,9 +1894,10 @@ String Function MilkLoreText(Actor participant) Global
     If participant == None || !IsExtensionsEnabled() || !IsAvailable()
         Return PromptCallbackReturn("MilkLoreText", participant, "", "missing actor, Extensions disabled, or Skyrim.Net absent")
     EndIf
-    String output = MMENarrationText.GetRaw("Lore", "milk_lore")
+    ; General lore is supplied by Skyrim.Net knowledge packs. Keep confirmed identity.
+    String output = ""
     If IsRealMMEMilkmaid(participant)
-        output += "\n\n" + MMENarrationText.Text("Lore", "milkmaid_lore", "actor", ResolveActorName(participant, "The Milk Maid"))
+        output = MMENarrationText.Text("Lore", "milkmaid_lore", "actor", ResolveActorName(participant, "The Milk Maid"))
     EndIf
     Return PromptCallbackReturn("MilkLoreText", participant, output, "current lore composed")
 EndFunction

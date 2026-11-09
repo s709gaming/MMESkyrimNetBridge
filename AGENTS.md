@@ -1,170 +1,100 @@
-# Repository instructions
+# Repository Instructions
 
-- Do not modify `README.md`.
-- Treat `README.md` as read-only unless the user explicitly requests changes to it.
-- Preserve unrelated user changes in the worktree.
-- Do not commit, publish, deploy to Skyrim, or modify installed MO2 mods, profiles, game-root files, or the retained Vortex installation unless the user explicitly requests it.
-- Keep temporary diagnostics, test artifacts, and failed builds out of release packages.
-- Name generated archives `MME Extensions.zip`. Leave release version numbers and versioned filenames to the user unless explicitly requested.
-- Do not add, remove, or materially reinterpret permanent repository instructions without explicit user approval. Propose architectural preferences before making them mandatory rules.
-- Investigation and planning do not authorize implementation or builds. After implementation, compile affected scripts and perform the required package verification.
+## Scope & Workflow
 
-## Development workflow
+**Context:** Develop MME Extensions in one working directory.
 
-- Use the single working directory `E:\SkyrimModDev\MMESkyrimNetBridge` on `main`.
-- Multiple chats may brainstorm or investigate, but only one session implements, builds or controls the test environment at a time.
-- Keep the current implementation status in local `TASK.md`; it is not part of release packages.
-- Create additional branches or worktrees only when the user requests them.
+**Workspace:** `E:\SkyrimModDev\MMESkyrimNetBridge`, branch `main`.
+**Concurrency:** Multiple chats may investigate; one session implements, builds or controls testing.
+**Worktrees:** Additional branches/worktrees only when requested.
+**User Work:** Preserve unrelated changes.
+**README:** Do not modify `README.md` unless explicitly requested.
+**AGENTS.md:** Do not modify `AGENTS.md` without explicit user approval.
+**Status:** Maintain local `TASK.md`; exclude from release packages.
 
-## Investigation and preflight checklist
+**Authorization:** Implement within the user’s requested scope. Commits, publishing, deployment, installed MO2/profile/game-root changes and retained Vortex changes require explicit authorization. Live-state changes require an authorized test.
+**Instructions:** Do not add, remove or materially reinterpret permanent repository rules without explicit approval.
+**Communication:** Brief findings, plans and reports; distinguish verified results from assumptions.
 
-- **Master Papyrus footprints — Yes/No:** Identify useful traces, gated behind the existing master logging toggle.
-- **Smoke alarms needed — Yes/No:** Identify genuine failures. Alarms fire when errors occur, independently of the master logging toggle. Deduplicate repeated failures; expected skips are not alarms.
-- **New script appropriate — Yes/No:** Briefly explain. If yes, name the exact filename and responsibility. If no, name the existing owner script.
-- **Communication:** Present findings, plans, and reports in brief, concise bullets.
+## Preflight
 
-## Papyrus diagnostics
+**Context:** Investigate and prepare as needed before implementation; scale depth to the change.
 
-- New or substantially changed gameplay routes must include useful Papyrus trace footprints.
-- Gate routine diagnostic traces behind the existing master Papyrus logging toggle.
-- Use a consistent trace prefix that identifies the script or subsystem.
-- At useful boundaries, trace entry, selected actor, eligibility result, action result, cleanup, and the reason for an important skip.
-- Avoid high-volume traces inside polling loops unless state changes or a dedicated verbose/deep logging option is enabled.
-- Do not expose routine diagnostic details as player-facing notifications.
+**Investigation:** Review affected code, callers and related systems. Consult original MME/third-party sources, reference material and documentation as relevant. Verify APIs, assumptions, dependencies and compatibility boundaries.
+**Plan:** Identify ownership, implementation approach, risks and applicable regression checks.
+**Required Decisions:**
 
-## Smoke alarms
+- **Master Papyrus Footprints — Yes/No:** Identify useful gated traces.
+- **Smoke Alarms — Yes/No:** Identify genuine failures needing ungated, deduplicated alarms.
+- **New Script — Yes/No:** Explain; name exact filename/responsibility or existing owner.
 
-- Add smoke alarms for genuine failures, broken prerequisites, invalid state, or conditions that should be impossible.
-- A smoke alarm should identify the subsystem, attempted operation, affected actor when applicable, and concrete failure reason.
-- Rate-limit or deduplicate failures that could otherwise repeat.
-- Expected outcomes such as a disabled feature, active cooldown, unavailable eligible target, optional dependency being absent, or an actor already being a Milk Maid are not smoke alarms. Record them only as gated traces when useful.
+**Report:** Concise findings, unresolved questions, recommended plan and readiness.
+**Boundary:** Preflight alone does not authorize implementation or builds. Do not add approval checkpoints for routine choices already authorized.
 
-## Milk Mod Economy and MilkQuest
+## MME & Integration Safety
 
-- Before modifying an interaction with `MilkQuest`, inspect the installed/original MME source and verify the exact function signature, property type, and array syntax. Do not guess from memory.
-- Treat MME actor arrays and parallel arrays as framework-specific structures. Do not assume conventional indexing, generic array behavior, or that an actor's index is stable without verifying the original implementation.
-- Verify actor lookup and bounds before every relevant parallel-array access.
-- Preserve MME's Milk Maid slot, Milk Maid level, milk-capacity, conversion, milking, and inventory semantics unless the user explicitly requests a behavior change.
-- Prefer MME's established functions and calculations over independent reimplementations.
-- Test player and NPC routes independently.
-- Specifically watch for wrong-actor targeting, stale or invalid indices, unsynchronized arrays, accidental Milk Maid conversion, and silent calls against the wrong actor.
+**Context:** Preserve framework behavior and existing saves.
 
-## Optional dependencies
+**Original Source:** Before changing MilkQuest interactions, inspect original/installed MME source. Verify exact signatures, property types and array syntax.
+**Actor Arrays:** Framework-specific; never assume conventional indexing or stable actor indices. Verify actor lookup and bounds before relevant parallel-array access.
+**Preserve:** Milk Maid slots, levels, capacity, conversion, milking and inventory semantics unless explicitly changed.
+**Reuse:** Prefer established MME functions/calculations over independent implementations.
+**Watch For:** Wrong actors, stale indices, unsynchronized arrays, accidental conversion and silent wrong-target calls.
 
-- Skyrim.Net, SexLab, SexLab P+, OStim, Devious Devices, Elsie LaVache, JUGS, and supported armor mods remain optional unless the user explicitly designates one as a hard requirement.
-- Keep optional integrations safe when dependencies are absent. Use the simplest verified approach, including guarded Papyrus calls or isolated FOMOD compatibility options. A native bridge is not required.
-- Test both dependency-present and dependency-absent behavior when changing an integration.
-- Keep compatibility overrides isolated and clearly attributable to their target mod or FOMOD option.
+**Optional Dependencies:** Skyrim.Net, SexLab/P+, OStim, Devious Devices, Elsie LaVache, JUGS and supported armor mods remain optional unless explicitly designated required. Absence must not break unrelated features.
+**Compatibility:** Keep overrides isolated and attributable to their target mod/FOMOD option. Use original/third-party script overrides only when necessary; document why in the compatibility changelog.
+**Organization:** Use focused owner scripts and reusable APIs where useful. Helper scripts are routine choices within authorized scope; avoid unnecessary layers. Native code needs concrete justification.
+**Save Safety:** Preserve MCM property names unless intentionally migrated. New settings need safe defaults and existing-save initialization/upgrade handling.
 
-## Script organization and reusable APIs
+## Diagnostics
 
-- Proactively organize functionality into focused, clearly named scripts when this makes behavior easier to locate, understand, test, and repair.
-- Give scripts a clear responsibility. Prefer reusable public functions or facade APIs when they provide a sensible boundary for current or reasonably anticipated callers.
-- Keep framework-specific details behind those interfaces where practical. Reuse original MME functions rather than duplicating its calculations or state management.
-- Creating a helper script or reusable function is a routine implementation decision within the authorized task; it does not require separate approval.
-- Scale the structure to the feature. Avoid unnecessary layers, trivial forwarding scripts, or speculative APIs that make a simple behavior harder to follow. Use native code when its concrete benefits justify the additional complexity.
+**Context:** Make failures traceable without routine player-facing noise.
 
-## Papyrus and build discipline
+**Footprints:** New/substantially changed gameplay routes require useful traces behind existing master Papyrus logging. Use consistent subsystem prefixes.
+**Boundaries:** Trace entry, selected actor, eligibility, action result, cleanup and important skips where useful.
+**Volume:** Polling traces only on state changes or dedicated verbose/deep logging. No routine diagnostic notifications.
 
-- Compile every affected `.psc` file. Do not ship source-only gameplay changes.
-- Confirm shipped `.psc` and `.pex` files represent the same revision.
-- Treat overrides of original MME or third-party scripts as invasive. Use them only when necessary and document the reason in the appropriate compatibility changelog.
-- Preserve save compatibility and existing MCM property names unless a migration is intentionally implemented.
-- New MCM settings need safe defaults plus initialization and upgrade handling for existing saves.
-- Rebuild the distributable after implementation and inspect the final mod-manager archive structure and contents for MO2 and retained Vortex compatibility.
-- Generated packages, installed MO2 files, and retained Vortex files are outputs, not the source of truth. Make source changes in the repository.
+**Smoke Alarms:** Genuine failures, broken prerequisites or invalid/impossible state; independent of master logging. Include subsystem, operation, actor where applicable and concrete reason. Deduplicate/rate-limit.
+**Expected Skips:** Disabled features, cooldowns, no eligible target, absent optional dependencies and existing Milk Maids are not alarms.
 
-## Regression testing
+## Build & Verification
 
-For each gameplay change, check all applicable cases:
+**Context:** Repository source is authoritative; packages and installed files are outputs.
 
-1. Enabled success path.
-2. Disabled MCM behavior.
-3. Player target path.
-4. NPC target path.
-5. Repeated use and cleanup.
-6. Cooldowns, delays, chance rolls, and random variation.
-7. Combat, busy-animation, scene, and movement-lock guards.
-8. Optional dependency present and absent.
-9. Existing-save initialization or upgrade behavior.
-10. Papyrus logs for errors, stack dumps, repeated noise, stale state, and wrong-actor selection.
+**Compile:** Every affected `.psc`; never ship source-only gameplay changes. Shipped `.psc`/`.pex` must represent the same revision.
+**Package:** Rebuild after implementation. Verify FOMOD source references, final archive contents and MO2/Vortex-compatible structure. Exclude temporary diagnostics, tests and failed builds.
+**Naming:** Generate `MME Extensions.zip`; release numbers/versioned filenames remain user-controlled unless delegated.
 
-## Environment
+**Regression:** Check applicable enabled/disabled behavior, player/NPC routes, repeated use/cleanup, timing/chance, combat/animation/scene/movement guards, dependencies present/absent and existing-save upgrades.
+**Logs:** Check errors, stack dumps, repeated noise, stale state and wrong actors.
+**Report:** State checks passed, failures and untested cases. Compilation/package checks do not establish live acceptance.
 
-- The user now manages Skyrim through Mod Organizer 2 (MO2), migrated from Vortex using Mod Manager Migrator. Vortex staging is retained for rollback; do not redeploy or modify it without explicit authorization.
-- Last verified MO2 executable: `E:\Mod Organizer 2\ModOrganizer.exe`.
-- Last verified active instance: `C:\Users\Donald\AppData\Local\ModOrganizer\VortexToMO2`, profile `Default`. Read `ModOrganizer.ini` to confirm the current instance, profile, mods, profiles, and overwrite paths before relying on them. Preserve the separate older `Skyrim Special Edition` MO2 instance.
-- Last verified game root: `E:\Steam\steamapps\common\Skyrim Special Edition`. Retained Vortex staging: `E:\Vortex Mods\skyrimse`.
-- Launch SKSE and modding tools through the correct MO2 instance so they see its virtual filesystem. Absence from the physical game Data folder does not prove a mod file is missing.
-- Verify both left-pane mod activation/file priorities and right-pane plugin activation/load order. A DLL can load from an enabled mod even when its required ESP is disabled. Script-only mods have no right-pane plugin.
-- Do not edit MO2 profile/configuration files externally while MO2 is open; it can overwrite those changes. Use the UI or close MO2 before authorized file edits, back up the affected files, and verify persistence after reopening.
-- Root-level SKSE files are separate from MO2's virtual Data files. Keep the runtime DLL, loader, and Papyrus scripts matched; do not assume a migration or Vortex purge preserves them. Do not regenerate FNIS/Nemesis outputs or sort plugins merely to complete a migration.
-- Repository source, generated packages, installed MO2 mod folders, the effective MO2 virtual filesystem, overwrite outputs, retained Vortex staging, and physical game-root/Data files are distinct layers. State clearly which layer was inspected or changed; inspect overwrite and unmanaged files when diagnosing conflicting assets.
+## Environment & Tools
 
-## Available Skyrim MCP tools
+**Context:** MO2 is active; retained Vortex staging is protected rollback material.
 
-### MO2 Agent Control (CLI / optional MCP)
+**Last Verified Paths:**
 
-- MO2 Agent Control 1.0.0 is installed as an MO2 application plugin at `E:\Mod Organizer 2\plugins\ApocryphaAgentControl`. It is separate from game mods and houseCARL.
-- Prefer its supported commands over asking the user to click through MO2 or externally editing live profile files. Check availability each session with the harmless `info` command and confirm the returned instance/profile before relying on it.
-- Last verified standalone client: `C:\Users\Donald\Downloads\MO2 Agent Control 196723 1.0.0 2026-10-25T04-58Z Ae46W7Qjo\mo2_ctl.py`. If moved, locate the client again. Run it with Python and `--instance "C:\Users\Donald\AppData\Local\ModOrganizer\VortexToMO2"`; this argument identifies the active instance data folder, not the MO2 executable folder.
-- The session channel lives at `<instance>\plugins\data\ApocryphaAgentControl\channel.json`. The client reads its per-session credentials automatically. Do not print or expose the token.
-- Read-only commands include `info`, `profiles`, `mods`, `plugins`, `executables`, `overwrite`, and `backups`. Use these proactively for MO2 state inspection. houseCARL remains the tool for records, scripts, assets, and conflict winners; runtime MCP remains the authority for the running game.
-- Supported changes include `set_mods`, `set_plugins`, `select_profile`, `refresh`, and `run`. Use them when the user's task authorizes the specific change or launch. Availability does not grant blanket permission to alter the modlist. Preserve the repository's installation/deployment restrictions.
-- The plugin refuses changes while MO2 is actively in use unless a confirmation note is supplied. Respect that protection; never invent approval or disable the protection. Existing explicit user authorization may support an accurate confirmation note for the authorized action.
-- This version does not directly install mod archives, select FOMOD options, sort plugins, or rearrange priorities through its base commands. `call` / `mm` require a separately registered extension; the last verified `info` reported no extensions. Check current capabilities before promising additional operations.
-- Its MCP server is optional and may not be loaded in the current chat. The verified CLI can be used without configuring MCP or restarting the chat. Do not imply MCP tools are present unless discovered.
+- MO2: `E:\Mod Organizer 2\ModOrganizer.exe`
+- Instance: `C:\Users\Donald\AppData\Local\ModOrganizer\VortexToMO2`
+- Profile: `Default`
+- Game: `E:\Steam\steamapps\common\Skyrim Special Edition`
+- Retained Vortex: `E:\Vortex Mods\skyrimse`
 
-This project may use three complementary MCP servers. Confirm that a server's tools are present in the current Codex session before relying on it. A configured server is not necessarily loaded into an already-running chat.
+**Confirm:** Read `ModOrganizer.ini` before relying on current instance/profile/mods/overwrite paths. Preserve the separate older MO2 instance.
+**VFS:** Launch SKSE/tools through the correct MO2 instance. Verify left-pane activation/file priorities and right-pane plugin activation independently; physical Data alone is insufficient.
+**Live Profiles:** Do not externally edit MO2 configuration while open. For authorized changes, use supported controls/UI or close MO2; back up and verify persistence.
+**SKSE:** Root files are separate from virtual Data; keep loader, runtime DLL and scripts matched.
+**Layers:** Distinguish source, packages, installed mods, VFS, overwrite, unmanaged game files and retained Vortex staging.
+**Generated Outputs:** Do not sort plugins or regenerate FNIS/Nemesis merely to complete migration.
 
-### houseCARL
+**Tool Selection:**
 
-Use houseCARL primarily for static Skyrim data-layer work:
+- Static records, scripts, assets and conflicts → houseCARL.
+- Skyrim.Net runtime, prompts and narration → Skyrim.Net MCP.
+- General engine/Papyrus runtime → SkyLink AI MCP.
+- MO2 management → MO2 Agent Control; prefer supported commands.
+- Visual game/MCM inspection → computer use or screenshots.
 
-- Inspect plugins, records, scripts, assets, conflicts, and the load order.
-- Inspect or author ESP/ESL records and dialogue.
-- Compile or decompile Papyrus when supported.
-- Inspect SKSE plugins and deployed asset winners.
-- Verify exact forms, properties, and record relationships instead of guessing.
-
-Use the verified active MO2 instance/profile for static winner inspection. Confirm houseCARL points to `VortexToMO2` before trusting its results; a configured older instance is not evidence of what the current game loads. Read-only inspection does not authorize patch creation, profile changes, or installation. Live runtime queries remain the authority for what the running game actually loaded.
-
-### Skyrim.Net MCP
-
-Skyrim.Net MCP is normally available only while Skyrim and Skyrim.Net are running and the MCP connection was loaded when the Codex session started.
-
-Use it for live runtime and Skyrim.Net-specific work:
-
-- Loaded plugins, quests, actors, player state, and quest script properties.
-- Skyrim.Net actions, prompts, triggers, narration, validation, and configuration.
-- Runtime confirmation of what Skyrim.Net currently sees.
-
-At the beginning of a Skyrim.Net investigation:
-
-1. Confirm tools from the `skyrimnet` MCP server are present.
-2. List several of its tools.
-3. Run one harmless read-only query.
-4. Use read-only calls by default.
-5. Do not execute console commands or mutate live game state unless the user's task authorizes that test.
-
-### SkyLink AI MCP
-
-SkyLink AI is a separate general Skyrim runtime MCP and may not yet be installed or connected. Verify availability before relying on it.
-
-When available, use it for:
-
-- Live actor, inventory, equipment, quest, cell, combat, and menu state.
-- Papyrus function discovery and carefully scoped VM calls.
-- Runtime event observation.
-- General engine inspection that Skyrim.Net MCP does not expose.
-
-Use read-only SkyLink tools by default. It exposes powerful mutation tools; do not alter quests, inventory, actors, saves, weather, position, or other live game state unless the user's request authorizes that operation.
-
-### Tool selection
-
-- Static records, assets, plugins, and conflicts: houseCARL.
-- Skyrim.Net actions, narration, prompts, and live Skyrim.Net state: Skyrim.Net MCP.
-- General live engine state and Papyrus runtime inspection: SkyLink AI MCP.
-- Source files describe intended behavior; live MCP queries establish what is loaded and happening in the current game.
-- If a tool is missing from the current session, report that clearly instead of implying it was queried.
-- These MCP servers do not inherently provide a literal visual image of SkyUI's MCM. Visual MCM inspection requires a connected computer-use surface or user-provided screenshots.
+**Tool Verification:** Confirm session availability and correct instance before relying on results. For Skyrim.Net investigations, identify available tools and run a harmless read query first.
+**Runtime Boundary:** Environment/runtime inspection is read-only by default. Source describes intent; live queries establish loaded behavior. Report unavailable tools honestly.

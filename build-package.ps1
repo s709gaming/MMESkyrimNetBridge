@@ -407,6 +407,7 @@ Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Estrus-Unified-Compatibilit
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\SkyrimNet-Actor-Status.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Milk-Leaks-Compatibility.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Milking-Source-API.md') -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Milk-Maid-Knowledge-Pack.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Editor-Proof.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Dashboard-Implementation.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Tentacle-Four-Tier-Implementation.md') -Destination $packageDocs
@@ -522,6 +523,11 @@ $skyrimNet25ActionDir = Join-Path $skyrimNet25StageDir "actions"
 $skyrimNet25PromptDir = Join-Path $skyrimNet25StageDir "prompts"
 New-Item -ItemType Directory -Force -Path $skyrimNet25ActionDir, $skyrimNet25PromptDir | Out-Null
 Copy-Item -LiteralPath $skyrimNet25ManifestPath -Destination $skyrimNet25StageDir
+# General lore is native World Knowledge, editable through Skyrim.Net's overlay.
+$knowledgeSource = Join-Path $skyrimNet25SourceDir "knowledge"
+& python -B (Join-Path $projectRoot 'tools/test_knowledge_pack.py')
+if ($LASTEXITCODE) { throw 'World knowledge pack contracts failed' }
+Copy-Item -LiteralPath $knowledgeSource -Destination $skyrimNet25StageDir -Recurse
 
 $generatedSkyrimNet25Actions = @()
 foreach ($skyrimNetAction in $skyrimNetActions) {

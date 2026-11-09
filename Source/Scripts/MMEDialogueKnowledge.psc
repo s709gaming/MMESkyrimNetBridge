@@ -4,18 +4,18 @@ Scriptname MMEDialogueKnowledge Hidden
 ; writes, temporary speaker flags, timers, JSON writes or persisted lore copies.
 String Function ForRequest(Actor speaker, String route) Global
     MMEActorPromptState.Refresh(speaker)
-    String milkLore = MMENarrationText.GetRaw("Lore", "milk_lore")
-    ; Actor identity stays in the actor decorator, not shared speaker guidance.
+    ; General lore belongs to Skyrim.Net knowledge packs, not request text.
+    ; Actor identity remains in decorators; player lore is the user's choice.
     String guidance = MMENarrationText.GetRaw("Lore", "shared_guidance")
-    If MMENarrationText.IsBlank(milkLore) || MMENarrationText.IsBlank(guidance)
-        AlarmOnce("compose shared knowledge", speaker, "required lore was empty after normal default resolution")
+    If MMENarrationText.IsBlank(guidance)
+        AlarmOnce("compose shared knowledge", speaker, "shared narration instructions were empty after normal default resolution")
         Return ""
     EndIf
     If StorageUtil.GetIntValue(None, "MMEExtensions.DialogueKnowledge.Alarm.compose shared knowledge", 0) != 0
         StorageUtil.SetIntValue(None, "MMEExtensions.DialogueKnowledge.Alarm.compose shared knowledge", 0)
     EndIf
-    String output = "[MME shared knowledge]\nBackground and instructions; do not read aloud. Actual identity and current game state remain authoritative.\n\n" + milkLore + "\n\nShared Narration Guidance:\n" + guidance + "\n[End MME shared knowledge]"
-    MMELog.MasterDiagnostic("[MME Dialogue Knowledge] compose | route=" + route + " | speaker=" + speaker + " | automatic speaker=" + (speaker == None) + " | characters=" + StringUtil.GetLength(output) + " | entries=Lore.milk_lore,Lore.shared_guidance")
+    String output = "[MME shared knowledge]\nInstructions; do not read aloud. Actual identity and current game state remain authoritative.\n\n" + "Shared Narration Guidance:\n" + guidance + "\n[End MME shared knowledge]"
+    MMELog.MasterDiagnostic("[MME Dialogue Knowledge] compose | route=" + route + " | speaker=" + speaker + " | automatic speaker=" + (speaker == None) + " | characters=" + StringUtil.GetLength(output) + " | entry=Lore.shared_guidance | general lore=Skyrim.Net knowledge pack")
     Return output
 EndFunction
 

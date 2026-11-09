@@ -1,4 +1,4 @@
-{
+﻿{
     "backend":  "OStim-only",
     "runtimeValidated":  false,
     "pairs":  [
@@ -39,8 +39,8 @@
                   },
                   {
                       "script":  "MMEAlertsSkyrimNet",
-                      "sourceSHA256":  "5205E55A2E4E84010036EE192C552D23C2EF7EF8A7759289A595C51A67AB33CA",
-                      "compiledSHA256":  "DCB41A1C5FA089FF8E318D0DB558D1821070BE5DBD81D1469C7E9BD715458B88"
+                      "sourceSHA256":  "B9DB177DAA854D785277A7A977AFE7CF27145ADD50CDC544C2A26313CB795F44",
+                      "compiledSHA256":  "4D1A38E3230CADD0F8C8EF3F6356E5169117CF49062B097BA5B3406D1105178D"
                   },
                   {
                       "script":  "MMEAnimationSafety",

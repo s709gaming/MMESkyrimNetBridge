@@ -1,0 +1,35 @@
+{
+  "skyrimnet_knowledge_pack": {
+    "name": "Skyrim Milk Maid Lore",
+    "description": "General Milk Maid world lore; no individual actor or player state.",
+    "version": "1.0.0",
+    "format_version": 3,
+    "exported_at": "2026-11-09T01:11:04.700545+00:00",
+    "entry_count": 1,
+    "npc_groups": [],
+    "entries": [
+      {
+        "key": "skyrim_milk_maid_lore",
+        "type": "KNOWLEDGE",
+        "display_name": "Skyrim Milk Maid Lore",
+        "content": "# Skyrim Milk Maid Lore\n\n**Context:** Basic lore about Milk Maids.\n\n**Tone:** Silly, sexy, humorous.\n\n**Milk:** Produced by Milk Maids rather than cows. Common drink with exotic aphrodisiac properties.\n\n**Society:** Milk Maids are valued providers of Skyrim's milk supply.\n\n**Treatment:** Respected as part of Skyrim's identity; met with playful teasing.\n\n**Becoming a Milk Maid:** Adult women may begin producing milk after taking Lactacid sold by alchemists, repeatedly drinking milk, or encountering magical curses, enchanted traps, or enchanted milking armor.\n\n**Enchanted Milking Armor:** Living armor, parasites, and Dwemer milking devices may attach to adult women, supply aphrodisiacs and milk-production stimulants, and drain their milk, bringing sublime pleasure.\n\n**New Enchanted Milking Armor Reaction:** Initial alarm may give way to sublime pleasure and cravings for the armor's continued stimulation.\n\n**Being Milked:** Eagerly desired; feels like ultimate ecstasy.\n\n**Fullness Paradox:** Empty breasts feel lighter and easier to manage, yet strangely lacking. Being heavy and full brings sublime satisfaction despite mild discomfort.",
+        "condition_expr": "",
+        "always_inject": false,
+        "importance": 0.9,
+        "emotion": "",
+        "location": "",
+        "tags": [
+          "Milk Maids",
+          "Milk Mod Economy",
+          "milk",
+          "Lactacid",
+          "milking armor",
+          "living armor",
+          "parasite armor",
+          "Dwemer"
+        ],
+        "knowledge_key": "mme_general_milk_maid_lore"
+      }
+    ]
+  }
+}
