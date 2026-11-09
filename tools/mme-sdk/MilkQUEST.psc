@@ -69,6 +69,8 @@ Function SingleMaidReset(Actor akActor)
 EndFunction
 Function Milking(Actor akActor, Int index, Int mode, Int milkingType)
 EndFunction
+Function MilkingToContainer(Actor akActor, Int index, Int mode, Int milkingType, ObjectReference MilkBarrel = None)
+EndFunction
 
 ; Original MME quick-settings surface; compile-only declarations.
 MilkECON Property MilkE Auto

@@ -31,7 +31,9 @@ Assert-Contract ($registry -match 'Return "dwemer_forms"' -and $registry -match 
 Assert-Contract ($registry -match 'While armorClass <= 4') "registry audit and lookup include class 4"
 Assert-Contract ($controller -match 'RegisterForModEvent\("MME_MilkCycleComplete", "OnMMEMilkCycleComplete"\)' -and $controller -match 'MMEDwemerArmor\.ProcessNearbyDwemerArmor\(\)') "Dwemer system is driven by MME production completion"
 Assert-Contract ($dwemer -match 'MME_Storage\.getMilkMaximum\(candidate\)' -and $dwemer -match 'maximumMilk \* 0\.90') "threshold uses MME maximum at exactly 90 percent"
-Assert-Contract ($dwemer -match 'milkController\.Milking\(candidate, 0, 4, 0\)') "core transaction uses MME external Mode 4"
+Assert-Contract ($dwemer -match 'milkController\.MilkingToContainer\(candidate, 0, 4, 0, milkDestination\)') "core transaction uses MME external Mode 4"
+Assert-Contract ($dwemer -match 'MME_MilkBarrel_Default' -and $dwemer -match 'MME_MilkBarrel_Override' -and $dwemer -match 'milkDestination = candidate') "collection honors configured destinations with wearer inventory fallback"
+Assert-Contract ($dwemer -notmatch '\.InitiateTrade|\.AddItem\(') "Dwemer leaves bottle awards inside the original transaction without a second payout"
 Assert-Contract ($dwemer -match 'standingmilkinganimations' -and $dwemer -match 'IdleForceDefaultState') "sequence reuses and cleans up MME standing animations"
 Assert-Contract ($controller -match 'MMEDwemerArmor\.HandleMMEMilkingStart\(milkMaid\)' -and $dwemer -match 'standing animation dispatched from MME start') "standing animation is dispatched after MME resets its animation state"
 Assert-Contract ($dwemer -match 'Function StoryDAS\(' -and $dwemer -match 'Function StoryDAE\(') "dedicated Dwemer start and end story functions exist"
@@ -41,7 +43,7 @@ Assert-Contract ($dwemer -match 'Game\.GetFormFromFile\(0x0005D608, "Skyrim\.esm
 Assert-Contract ($dwemer -match 'activationShader\.Play\(candidate, 5\.0\)') "Dwemer milking starts the blue activation shader before dispatch"
 Assert-Contract ($dwemer -match 'activationShader\.Stop\(candidate\)') "Dwemer sequence cleanup stops the activation shader"
 $shaderPreludeIndex = $dwemer.IndexOf('Utility.Wait(5.0)')
-$milkingDispatchIndex = $dwemer.IndexOf('milkController.Milking(candidate, 0, 4, 0)')
+$milkingDispatchIndex = $dwemer.IndexOf('milkController.MilkingToContainer(candidate, 0, 4, 0, milkDestination)')
 Assert-Contract ($shaderPreludeIndex -ge 0 -and $milkingDispatchIndex -gt $shaderPreludeIndex) "Dwemer blue activation receives its full prelude before milking dispatch"
 Assert-Contract ($dwemer -match 'blue activation shader unavailable') "missing blue shader uses the smoke-alarm channel"
 Assert-Contract ($dwemer -notmatch 'SkyrimNetApi|DirectNarration' -and $dwemer -match 'NarrateDwemerSuitEvent\(candidate, narrationArmor, "milkingStart"\)' -and $dwemer -match 'MMEPostMilking\.NarrateLast\(candidate\)') "Dwemer milking keeps its profiled start and delegates completed aftermath after cleanup"

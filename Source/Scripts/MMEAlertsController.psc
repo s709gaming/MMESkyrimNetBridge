@@ -1420,7 +1420,7 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
         Return
     EndIf
     Bool chestTrapEquip = MMEChestArmorTrap.IsTrapEquipPending(wearer, equippedArmor)
-    Bool alreadyTimedLocked = MMETimedArmorLock.IsLocked(wearer) && MMETimedArmorLock.GetLockedArmor(wearer) == equippedArmor
+    Bool alreadyTimedLocked = MMETimedArmorLock.IsLocked(wearer) && MMETimedArmorLock.GetDaysRemaining(wearer) > 0.0
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     Int armorClass = MMEArmorScript.ClassifyArmor(milkController, equippedArmor, "armor story equip", wearer)
     Bool familiarEquip = MMEArmorFamiliarity.OnEquip(wearer, equippedArmor)
@@ -1431,7 +1431,20 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
     EndIf
     MMECustomArmorRegistry.HandleCustomArmorEquipped(wearer, equippedArmor)
     MMEMilkingEquipmentRefit.HandleArmorEquipped(wearer, equippedArmor)
-    MMETimedArmorLock.TryLockRegisteredEquip(wearer, equippedArmor)
+    Bool initialLock = MMETimedArmorLock.TryLockRegisteredEquip(wearer, equippedArmor)
+    ; Chest traps establish their lock synchronously before this equip event.
+    ; Their exact, short-lived origin marker authorizes only that first story.
+    If chestTrapEquip && MMETimedArmorLock.GetLockedArmor(wearer) == equippedArmor
+        initialLock = True
+        ; Claim before either first/repeat story can wait. This also covers
+        ; first introductions when repeat trap stories are disabled.
+        MMEChestArmorTrap.ClearTrapEquip(wearer, "initial story claimed")
+    EndIf
+    If alreadyTimedLocked && !initialLock
+        MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] equip presentation suppressed: active timed armor lock | actor=" + GetActorName(wearer))
+        MMEArmorScript.HandleFamiliarArmorEquipped(wearer, equippedArmor)
+        Return
+    EndIf
     If familiarEquip && !chestTrapEquip
         ; Gameplay hooks above still run; the quiet path retains stripping checks.
         MMEArmorScript.HandleFamiliarArmorEquipped(wearer, equippedArmor)
@@ -1441,7 +1454,7 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
     If chestTrapEquip && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableRepeatTrapArmorStories", 1) == 1
         trapStoryAttempted = True
         MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] chest trap requested repeatable story | actor=" + GetActorName(wearer))
-        Bool trapStoryPlayed = MMEExtensionsAPI.TryTrapArmorEquipStory(wearer, equippedArmor)
+        Bool trapStoryPlayed = MMEArmorIntroduction.TryTrapIntroduction(wearer, equippedArmor, "Automatic Trap Equip", initialLock)
         MMEChestArmorTrap.ClearTrapEquip(wearer, "repeatable trap story handled equip")
         chestTrapEquip = False
         If trapStoryPlayed
@@ -1450,7 +1463,7 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
         EndIf
         MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] chest trap story safely rejected; ordinary introduction suppressed | actor=" + GetActorName(wearer))
     EndIf
-    If !trapStoryAttempted && (!alreadyTimedLocked || chestTrapEquip) && MMEArmorIntroduction.TryAutomatic(wearer, equippedArmor)
+    If !trapStoryAttempted && (!alreadyTimedLocked || chestTrapEquip) && MMEArmorIntroduction.TryAutomatic(wearer, equippedArmor, initialLock)
         If chestTrapEquip
             MMEChestArmorTrap.ClearTrapEquip(wearer, "first introduction consumed equip")
         EndIf

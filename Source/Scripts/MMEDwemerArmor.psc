@@ -228,11 +228,29 @@ Function RunDwemerMilking(Actor candidate, MilkQUEST milkController, Float start
         Report("standing animation skipped | actor=" + GetActorName(candidate) + " | reason=" + animationBlock)
     EndIf
 
-    ; Mode 4 is MME's external-mod route. It preserves MME's milk, bottle,
-    ; pain, progression, sound, orgasm, and MME_MilkingDone ownership while
-    ; preventing its old three-category classifier from reclassifying Dwemer.
-    Report("dispatching MME Milking Mode 4 | actor=" + GetActorName(candidate))
-    milkController.Milking(candidate, 0, 4, 0)
+    ; Mode 4 avoids upstream armor reclassification, but its no-container
+    ; Maid path does not award bottles. Supply an inventory destination so
+    ; MME itself owns the single payout, milk selection and exact yield.
+    ObjectReference milkDestination = StorageUtil.GetFormValue(candidate, "MME_MilkBarrel_Default") as ObjectReference
+    If milkDestination == None
+        milkDestination = candidate
+    EndIf
+    ObjectReference overrideDestination = StorageUtil.GetFormValue(candidate, "MME_MilkBarrel_Override") as ObjectReference
+    If overrideDestination != None
+        milkDestination = overrideDestination
+    EndIf
+    If milkController.MilkE == None || milkDestination == None
+        If StorageUtil.GetIntValue(candidate, "MMEExtensions.DwemerArmor.CollectionFailure", 0) != 1
+            StorageUtil.SetIntValue(candidate, "MMEExtensions.DwemerArmor.CollectionFailure", 1)
+            MMELog.Alarm("[MME Extensions Dwemer Armor] milk collection failed | actor=" + GetActorName(candidate) + " | missing MilkECON or destination")
+        EndIf
+        Sound.StopInstance(soundInstance)
+        CleanupSequence(candidate, milkController, animationStarted, controlsDisabled, npcUnconscious, activationShader)
+        Return
+    EndIf
+    StorageUtil.UnsetIntValue(candidate, "MMEExtensions.DwemerArmor.CollectionFailure")
+    Report("dispatching MME Milking Mode 4 | actor=" + GetActorName(candidate) + " | milk destination=" + milkDestination)
+    milkController.MilkingToContainer(candidate, 0, 4, 0, milkDestination)
     Report("MME Milking Mode 4 returned | actor=" + GetActorName(candidate))
     If animationStarted && StorageUtil.GetIntValue(candidate, GetAnimationDispatchedKey(), 0) != 1
         MMELog.Alarm("[MME Extensions Dwemer Armor] MME start callback did not dispatch the prepared animation | actor=" + GetActorName(candidate))

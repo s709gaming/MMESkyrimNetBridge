@@ -138,11 +138,11 @@ Bool Function Reset(Actor target, Int armorClass) Global
     Return True
 EndFunction
 
-Bool Function TryAutomatic(Actor target, Armor equippedArmor) Global
+Bool Function TryAutomatic(Actor target, Armor equippedArmor, Bool initialLock = False) Global
     If target != Game.GetPlayer()
         Return False
     EndIf
-    Return TryIntroduction(target, equippedArmor, "Automatic Equip")
+    Return TryPresentation(target, equippedArmor, "Automatic Equip", False, 0, initialLock)
 EndFunction
 
 ; Latent: a successful call owns the actor for the ten-second presentation.
@@ -152,8 +152,8 @@ EndFunction
 
 ; Repeatable presentation reserved for a confirmed treasure-chest trap equip.
 ; The caller owns origin validation; this facade only presents the event.
-Bool Function TryTrapIntroduction(Actor target, Armor equippedArmor, String sourceLabel = "Treasure Chest Trap") Global
-    Return TryPresentation(target, equippedArmor, sourceLabel, True, 1)
+Bool Function TryTrapIntroduction(Actor target, Armor equippedArmor, String sourceLabel = "Treasure Chest Trap", Bool initialLock = False) Global
+    Return TryPresentation(target, equippedArmor, sourceLabel, True, 1, initialLock)
 EndFunction
 
 ; Repeatable presentation for an ordinary equip or a successful artisan
@@ -163,7 +163,7 @@ Bool Function TryRepeatIntroduction(Actor target, Armor equippedArmor, String so
 EndFunction
 
 ; Latent: a successful call owns the actor for the ten-second presentation.
-Bool Function TryPresentation(Actor target, Armor equippedArmor, String sourceLabel, Bool allowRepeat, Int storyMode) Global
+Bool Function TryPresentation(Actor target, Armor equippedArmor, String sourceLabel, Bool allowRepeat, Int storyMode, Bool initialLock = False) Global
     Bool trapStory = storyMode == 1
     If target == None || equippedArmor == None
         Report("request rejected: actor or armor missing | source=" + sourceLabel)
@@ -173,6 +173,15 @@ Bool Function TryPresentation(Actor target, Armor equippedArmor, String sourceLa
         Return False
     EndIf
 
+    ; Only the equip transaction that just established this exact lock may
+    ; present its initial story. Public/repeat callers default to suppression.
+    If MMETimedArmorLock.IsLocked(target) && MMETimedArmorLock.GetDaysRemaining(target) > 0.0
+        If !initialLock || MMETimedArmorLock.GetLockedArmor(target) != equippedArmor
+            Report("skipped: active timed armor lock | actor=" + GetActorName(target) + " | source=" + sourceLabel)
+            Return False
+        EndIf
+        Report("initial lock story allowed | actor=" + GetActorName(target))
+    EndIf
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     Int armorClass = MMEArmorScript.ClassifyArmor(milkController, equippedArmor, "introduction", target)
     String armorType = MMEArmorScript.GetArmorTypeLabel(armorClass)

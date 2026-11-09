@@ -1113,8 +1113,8 @@ Function HandleArmorEquipInternal(Actor wearer, Armor equippedArmor, Bool suppre
     EndIf
     ReportArmor(diagnostic, "reaction applies | " + role + " | " + armorType)
 
-    If suppressPresentation
-        ReportArmor(diagnostic, "familiar outfit: equip story, moan, narration and animation suppressed")
+    If suppressPresentation || (MMETimedArmorLock.IsLocked(wearer) && MMETimedArmorLock.GetDaysRemaining(wearer) > 0.0)
+        ReportArmor(diagnostic, "familiar outfit or active timed lock: equip story, moan, narration and animation suppressed")
         Return
     EndIf
 

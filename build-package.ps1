@@ -414,6 +414,7 @@ Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\SkyrimNet-Actor-Status.md')
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Milk-Leaks-Compatibility.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Milking-Source-API.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Preferred-Milk-Type.md') -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Armor-Lock-And-Dwemer-Collection.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Milk-Maid-Knowledge-Pack.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Editor-Proof.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Narration-Dashboard-Implementation.md') -Destination $packageDocs
