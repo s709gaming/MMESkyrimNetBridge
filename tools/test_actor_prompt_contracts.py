@@ -21,6 +21,19 @@ class Contracts(unittest.TestCase):
   for token in ['MMEArmorScript.IsValidMilkMaid(target, milk)','ClassifyArmorQuiet(milk, worn, target)','GetDwemerPresentationProfile(worn)','MMEMilkLeakAPI.Manager() == None','MMEMilkLeakAPI.GetLeakSource(target)']:self.assertIn(token,s)
   self.assertNotRegex(s,r'StorageUtil\.(?:Set|Unset|Adjust)\w+Value\([^\n]*"MME\.MilkMaid\.')
   self.assertIn('MMELog.MasterDiagnostic',s);self.assertIn('MMELog.Alarm',s);self.assertNotIn('Debug.Notification',s)
+ def test_two_part_equipped_only_language(self):
+  source=fn(read('Source/Scripts/MMEActorPromptState.psc'),'GetActorState')
+  armor=source.split('    String armorText = ""',1)[1].split('    String leakText',1)[0]
+  for text in ['milking equipment','living attire','clinging living growths','Dwemer suit','Dwemer attachment']:
+   self.assertIn(text,armor)
+  for text in ['Item:','ordinary or unrecognized','No body armor','savors','delights','Currently milking']:
+   self.assertNotIn(text,armor)
+  template=read('SkyrimNetPrompts/0260_mme_extensions_milkmaid.prompt')
+  for text in ['Milk: {{','MME.Prompt.Leak','Milk state: unknown','Item:']:
+   self.assertNotIn(text,template)
+  self.assertIn('{# Decorator metadata:',template)
+  self.assertIn('milk_now >= milk_max',template)
+  self.assertIn("{{ actor_name }}'s breasts",template)
  def test_settings_and_quiet_classification(self):
   s=read('Source/Scripts/MMEAlertsMCM.psc');a=read('Source/Scripts/MMEArmorScript.psc')
   self.assertNotIn('skyrimNetStatusIntervalOption = Add',s)

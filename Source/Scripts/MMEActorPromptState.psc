@@ -3,6 +3,9 @@ Scriptname MMEActorPromptState Hidden
 ; Actor-local prompt data; existing scans/events supply updates, with one load bootstrap.
 ; No independent polling, MME writes, inventory changes or LLM calls.
 ; Native papyrus_util reads the milk floats again at actual template render time.
+; Decorator metadata: two parts, fullness + recognized equipment; third-person actor name.
+; Natural-language AI context, not notifications. Target 90 characters before name substitution.
+; Equipped-only prose promises sensations; never establishes active teasing or extraction.
 String Function GetActorState(Actor target) Global
     MMEAlertsSkyrimNet.TracePromptCallback("GetActorState", target, "entry")
     If target == None || target.IsDead() || target.IsDisabled()
@@ -23,29 +26,23 @@ String Function GetActorState(Actor target) Global
     If milk == None || !MMEArmorScript.IsValidMilkMaid(target, milk)
         Return MMEAlertsSkyrimNet.PromptCallbackReturn("GetActorState", target, "{\"enabled\":false}", "missing MilkQUEST or invalid Milk Maid")
     EndIf
+    String name = MMEAlertsSkyrimNet.ResolveActorName(target, "This Milk Maid")
     String armorText = ""
     If armorEnabled
         Armor worn = target.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
         Int armorClass = MMEArmorScript.ClassifyArmorQuiet(milk, worn, target)
         If armorClass == 1
-            armorText = "Wearing milking armor."
+            armorText = name + " wears milking equipment, promising sweet relief for her treasured bounty."
         ElseIf armorClass == 2
-            armorText = "Wearing living armor."
+            armorText = name + "'s living attire offers a pulsing embrace and deliciously intimate temptation."
         ElseIf armorClass == 3
-            armorText = "Wearing parasite armor."
+            armorText = name + "'s clinging living growths promise intimate teasing in exchange for her milky bounty."
         ElseIf armorClass == 4
             If MMECustomArmorRegistry.GetDwemerPresentationProfile(worn) == "deviousSuit"
-                armorText = "Wearing Dwemer milking armor."
+                armorText = name + "'s Dwemer suit promises wicked vibrations in exchange for her creamy bounty."
             Else
-                armorText = "Wearing armor with a Dwemer milking attachment; do not describe a full-body Dwemer suit."
+                armorText = name + "'s Dwemer attachment promises wicked vibrations in exchange for her creamy bounty."
             EndIf
-        ElseIf worn == None
-            armorText = "No body armor is equipped. Other clothing or equipment may still be worn."
-        Else
-            armorText = "Wearing ordinary or unrecognized body armor; no supported milking armor classification."
-        EndIf
-        If worn != None
-            armorText += " Item: " + worn.GetName() + "."
         EndIf
     EndIf
     String leakText = ""
@@ -63,7 +60,6 @@ String Function GetActorState(Actor target) Global
             EndIf
         EndIf
     EndIf
-    String name = MMEAlertsSkyrimNet.ResolveActorName(target, "This Milk Maid")
     String result = "{\"enabled\":true,\"milkEnabled\":" + BoolJson(milkEnabled) + ",\"armorEnabled\":" + BoolJson(armorEnabled) + ",\"name\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(name) + "\",\"armor\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(armorText) + "\",\"leak\":\"" + MMEAlertsSkyrimNet.EscapeJsonString(leakText) + "\"}"
     StorageUtil.SetIntValue(target, "MME.Prompt.StateEnabled", 1)
     StorageUtil.SetIntValue(target, "MME.Prompt.MilkEnabled", milkEnabled as Int)

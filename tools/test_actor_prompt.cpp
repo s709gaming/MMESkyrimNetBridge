@@ -51,8 +51,8 @@ int main(int argc,char** argv){
   auto render=[&](){return env.render(parsed,{{"actorUUID",actor["id"]},{"render_mode","full"}});};
   auto has=[](const std::string&s,const std::string&t){if(s.find(t)==std::string::npos)throw std::runtime_error("missing: "+t+"\n"+s);};
   auto lacks=[](const std::string&s,const std::string&t){if(s.find(t)!=std::string::npos)throw std::runtime_error("unexpected: "+t);};
-  lacks(env.render(parsed,{{"render_mode","full"}}),"Current MME Status");
-  lacks(env.render(parsed,{{"render_mode","full"},{"actorUUID",nullptr}}),"Current MME Status");
+  lacks(env.render(parsed,{{"render_mode","full"}}),"## Milk Maid Status");
+  lacks(env.render(parsed,{{"render_mode","full"},{"actorUUID",nullptr}}),"## Milk Maid Status");
   reset(1);
   if(source.find("MME.Prompt.Role")!=std::string::npos){
    has(render(),"Guidance.");role="drinker";has(render(),"Guidance.");role="";lacks(render(),"Guidance.");role="source";
@@ -61,28 +61,25 @@ int main(int argc,char** argv){
    guidance="Edited guidance.";has(render(),guidance);
    std::cout<<"PASS: direct breastfeeding render without Papyrus callbacks; roles/cleanup, missing/null, settings, generation and edited guidance\n";return 0;
   }
-  ready=false;lacks(render(),"Current MME Status");ready=true;
-  actorEpoch=1;lacks(render(),"Current MME Status");actorEpoch=2;
-  globalEnabled=false;lacks(render(),"Current MME Status");globalEnabled=true;
-  maid=false;recent=true;has(render(),"Milk Maid lore.");lacks(render(),"Current MME Status");recent=false;lacks(render(),"Milk Maid lore.");maid=true;
-  has(render(),"Milk state: empty.");has(render(),"0.0/8.0 (0.0%)");
-  actor["milk"]=0.25;has(render(),"below half full");
-  actor["milk"]=4.0;has(render(),"half full (at least 50%, below full)");
-  actor["milk"]=7.99;has(render(),"half full (at least 50%, below full)");
-  actor["milk"]=8.0;has(render(),"Milk state: full.");
-  actor["milk"]=10.0;has(render(),"full and over capacity");has(render(),"125.0%");
-  actor["milk"]=0.0;has(render(),"Milk state: empty.");lacks(render(),"Milk state: full.");
-  actor.erase("milk");has(render(),"Milk state: unknown");lacks(render(),"Milk state: empty.");
-  actor["milk"]=0.0;actor["max"]=0.0;has(render(),"Milk state: unknown");
-  actor["max"]=8.0;actor["milk"]=-1.0;has(render(),"Milk state: unknown");
-  actor["context"]["milkEnabled"]=false;reads=0;has(render(),"Wearing living armor.");if(reads!=0)throw std::runtime_error("disabled milk read");lacks(render(),"Milk state:");
+  ready=false;lacks(render(),"## Milk Maid Status");ready=true;
+  actorEpoch=1;lacks(render(),"## Milk Maid Status");actorEpoch=2;
+  globalEnabled=false;lacks(render(),"## Milk Maid Status");globalEnabled=true;
+  maid=false;recent=true;has(render(),"Milk Maid lore.");lacks(render(),"## Milk Maid Status");recent=false;lacks(render(),"Milk Maid lore.");maid=true;
+  has(render(),"NPC 1's breasts feel pleasantly light");lacks(render(),"0.0/8.0");lacks(render(),"Decorator metadata");
+  for(double value:{0.0,0.25,3.99}){actor["milk"]=value;has(render(),"craves their delicious");}
+  for(double value:{4.0,7.99}){actor["milk"]=value;has(render(),"room for a lovelier bounty");}
+  for(double value:{8.0,10.0}){actor["milk"]=value;has(render(),"breasts brim with milk");lacks(render(),"%");}
+  actor.erase("milk");lacks(render(),"breasts");
+  actor["milk"]=0.0;actor["max"]=0.0;lacks(render(),"breasts");
+  actor["max"]=8.0;actor["milk"]=-1.0;lacks(render(),"breasts");
+  actor["context"]["milkEnabled"]=false;reads=0;has(render(),"Wearing living armor.");if(reads!=0)throw std::runtime_error("disabled milk read");lacks(render(),"breasts");
   actor["context"]["armorEnabled"]=false;lacks(render(),"Wearing living armor.");
-  actor["context"]={{"enabled",false}};lacks(render(),"Current MME Status");
-  maid=false;lacks(render(),"Current MME Status");maid=true;
-  for(auto name:{"Wearing living armor.","Wearing parasite armor.","Wearing milking armor.","Wearing Dwemer milking armor.","Wearing armor with a Dwemer milking attachment."}){reset(2);actor["context"]["armor"]=name;has(render(),name);has(render(),"NPC 2");lacks(render(),"NPC 1");}
-  actor["context"]["leak"]="Currently leaking milk: a tracked milk-leak effect is active.";has(render(),"Currently leaking milk");has(render(),"Milk state: empty.");
-  actor["context"]["leak"]="Leaking status unavailable; do not assume leaking from fullness.";has(render(),"Leaking status unavailable");
-  auto shortText=env.render(parsed,{{"actorUUID",2},{"render_mode","short_inline"}});if(shortText.find("Current MME Status")!=std::string::npos)throw std::runtime_error("unexpected short render");
-  std::cout<<"PASS: actual Inja parser/render: player/NPC isolation, threshold edges, full-to-empty freshness, unknown/disabled, four armor families and independent leak facts\n";
+  actor["context"]={{"enabled",false}};lacks(render(),"## Milk Maid Status");
+  maid=false;lacks(render(),"## Milk Maid Status");maid=true;
+  reset(2);has(render(),"NPC 2's breasts");lacks(render(),"NPC 1");
+  actor["context"]["armor"]="";lacks(render(),"Wearing");
+  actor["context"]["leak"]="Currently leaking milk";lacks(render(),"Currently leaking milk");
+  auto shortText=env.render(parsed,{{"actorUUID",2},{"render_mode","short_inline"}});if(shortText.find("## Milk Maid Status")!=std::string::npos)throw std::runtime_error("unexpected short render");
+  std::cout<<"PASS: actual Inja parser/render: player/NPC isolation, threshold edges, full-to-empty freshness, unknown/disabled, two-part context, omitted leak facts and metadata\n";
  }catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}return 0;
 }
