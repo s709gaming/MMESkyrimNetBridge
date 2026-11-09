@@ -118,6 +118,9 @@ EndEvent
 ; Internal MCM refreshes remain silent; true launch/load entry points request
 ; one compact engine-on status after initialization is complete.
 Function InitializeController(Bool reportStatus = False)
+    If IsExtensionsEnabled()
+        MMEArmorFamiliarity.Observe(MMEExtensionsNative.GetNearbyActors(2000.0))
+    EndIf
     MMELocalization.Initialize()
     MMENarrationText.ReloadAll()
     MMETentacleTiers.Recover()
@@ -1382,6 +1385,7 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
     Bool alreadyTimedLocked = MMETimedArmorLock.IsLocked(wearer) && MMETimedArmorLock.GetLockedArmor(wearer) == equippedArmor
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     Int armorClass = MMEArmorScript.ClassifyArmor(milkController, equippedArmor, "armor story equip", wearer)
+    Bool familiarEquip = MMEArmorFamiliarity.OnEquip(wearer, equippedArmor)
     Bool dwemerEquip = armorClass == 4
     Bool dwemerSeen = False
     If dwemerEquip
@@ -1390,6 +1394,11 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
     MMECustomArmorRegistry.HandleCustomArmorEquipped(wearer, equippedArmor)
     MMEMilkingEquipmentRefit.HandleArmorEquipped(wearer, equippedArmor)
     MMETimedArmorLock.TryLockRegisteredEquip(wearer, equippedArmor)
+    If familiarEquip && !chestTrapEquip
+        ; Gameplay hooks above still run; the quiet path retains stripping checks.
+        MMEArmorScript.HandleFamiliarArmorEquipped(wearer, equippedArmor)
+        Return
+    EndIf
     Bool trapStoryAttempted = False
     If chestTrapEquip && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableRepeatTrapArmorStories", 1) == 1
         trapStoryAttempted = True
@@ -1455,6 +1464,7 @@ Event OnArmorUnequipped(String eventName, String pluginName, Float localArmorFor
         Return
     EndIf
     MMEActorPromptState.Refresh(wearer)
+    MMEArmorFamiliarity.OnUnequip(wearer, unequippedArmor)
     MMEArmorRemoval.HandleArmorUnequipped(wearer, unequippedArmor)
     If MMETimedArmorLock.HandleUnequip(wearer, unequippedArmor)
         MMELog.MasterDiagnostic("[MME Extensions Timed Armor] ordinary unequip cleanup suppressed after protected re-equip | actor=" + GetActorName(wearer))
@@ -1555,6 +1565,9 @@ EndEvent
 
 ; Receives low-cost lifecycle signals from the optional CommonLibSSE-NG DLL.
 Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form sender)
+    If IsExtensionsEnabled()
+        MMEArmorFamiliarity.Observe(MMEExtensionsNative.GetNearbyActors(2000.0))
+    EndIf
     If reason == "load"
         ; Runtime callbacks are not restored from a save. This path is required
         ; even when quest OnInit/MCM upgrades/player-effect load do not run.
@@ -2405,6 +2418,7 @@ Function ScanNearbyMilkMaids(Bool publishSkyrimNet = False, Bool processReaction
     Actor[] nearbyActors = MMEExtensionsNative.GetNearbyActors(NearbyRange)
     MMETentacleTiers.Observe(nearbyActors)
     MMEMilkLeakAPI.Observe(nearbyActors)
+    MMEArmorFamiliarity.Observe(nearbyActors)
     MMEActorPromptState.Observe(nearbyActors)
     If processArousalEffects
         MMEArousalEffects.ProcessNearbyActors(nearbyActors)

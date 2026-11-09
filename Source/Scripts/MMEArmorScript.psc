@@ -1064,6 +1064,14 @@ EndFunction
 ; One per-equip reaction path for every supported MME armor family. Armor type
 ; only selects settings and Standing/Kneeling; safety and playback stay shared.
 Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
+    HandleArmorEquipInternal(wearer, equippedArmor, False)
+EndFunction
+
+Function HandleFamiliarArmorEquipped(Actor wearer, Armor equippedArmor) Global
+    HandleArmorEquipInternal(wearer, equippedArmor, True)
+EndFunction
+
+Function HandleArmorEquipInternal(Actor wearer, Armor equippedArmor, Bool suppressPresentation) Global
     ; Phase 1: classify the exact native equip-event ARMO and reject unsupported
     ; items before resolving settings, sounds, animations, or Skyrim.Net work.
     Bool diagnostic = GetArmorDiagnostic()
@@ -1108,6 +1116,11 @@ Function HandleArmorEquipped(Actor wearer, Armor equippedArmor) Global
         Return
     EndIf
     ReportArmor(diagnostic, "reaction applies | " + role + " | " + armorType)
+
+    If suppressPresentation
+        ReportArmor(diagnostic, "familiar outfit: equip story, moan, narration and animation suppressed")
+        Return
+    EndIf
 
     ; Phase 3: resolve independent role/type settings and play the equip moan.
     ; Milking Armor uses MILD; both Living families use HIGH because their

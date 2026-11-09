@@ -444,6 +444,9 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
         Debug.Notification(MMELocalization.Text("SN OStim Trace: actors valid | detected=") + ostimDetected + MMELocalization.Text(" | toggle=") + ostimToggle)
     EndIf
 
+    MMEArmorFamiliarity.Seed(milkSource)
+    MMEArmorFamiliarity.Seed(drinker)
+
     ; Phase 2: OStim is an independent complete backend when enabled. A rejected
     ; OStim request must not silently fall through to SexLab: that would violate
     ; user framework choice and could start a second, unexpected scene.
