@@ -241,5 +241,7 @@
   "- {actor} is a Milk Maid and loves being one.\n- {actor} loves being milked and behaves as though it brings sublime ecstasy.\n- {actor} finds lighter breasts more manageable, yet they feel somehow wrong.\n- {actor} delights in heavy, milk-filled breasts despite their mild inconvenience.\n- If asked, {actor} describes being a Milk Maid as the best thing ever: pure pleasure, few downsides, and no regrets.": "- {actor}是一名乳娘，并且喜欢这个身份。\n- {actor}喜欢被挤奶，表现得仿佛这会带来至高无上的狂喜。\n- {actor}觉得乳房较轻时更便于活动，却总觉得哪里不对。\n- {actor}喜爱沉甸甸、充满乳汁的乳房，尽管这会带来些许不便。\n- {actor}被问及时，会把成为乳娘形容为最美妙的事：纯粹的愉悦，几乎没有坏处，也毫不后悔。",
   "Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic.": "俏皮、性感、爱逗弄。多用暗示、俏皮比喻和多样的委婉说法，避免露骨的性词汇。反应简短、自然，不作直白描写。",
   "Drink milk directly from this character's breast?": "要直接吸饮这位角色的乳汁吗？",
-  "Allow this character to drink directly from your breast?": "允许这位角色直接吸饮你的乳汁吗？"
+  "Allow this character to drink directly from your breast?": "允许这位角色直接吸饮你的乳汁吗？",
+  "Only Produce Preferred Milk Type": "仅产出优先类型的奶",
+  "Default on. Always produce milk matching MME's detected or forced supernatural type, then race. Priority: Succubus, Vampire, Werewolf, ordinary race. Unrecognized races use the matching Exotic variant. Uses basic variants without Maid-level quality tiers. Off restores MME's normal milk selection. Shared with original MME's Simple Milk setting; affects player and NPC Milk Maids.": "默认开启。按 MME 检测或强制指定的超自然类型，其次按种族选择奶。优先级：魅魔、吸血鬼、狼人、普通种族。未知种族使用对应的异族奶。使用基础款，不按奶妈等级提升品质。关闭恢复 MME 原有选择规则。与原版 MME 的 Simple Milk 设置共用，适用于玩家和 NPC 奶妈。"
 }

@@ -2305,5 +2305,7 @@
   "SPAWN": "СОЗДАТЬ",
   "AUTO": "АВТО",
   "MANUAL": "ВРУЧНУЮ",
-  "Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic.": "Будьте игривыми, эротичными и дразнящими. Предпочитайте намёки, озорные метафоры и разнообразные эвфемизмы откровенной сексуальной лексике. Реакции должны быть краткими, естественными и без графических подробностей."
+  "Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic.": "Будьте игривыми, эротичными и дразнящими. Предпочитайте намёки, озорные метафоры и разнообразные эвфемизмы откровенной сексуальной лексике. Реакции должны быть краткими, естественными и без графических подробностей.",
+  "Only Produce Preferred Milk Type": "Производить только предпочтительный тип молока",
+  "Default on. Always produce milk matching MME's detected or forced supernatural type, then race. Priority: Succubus, Vampire, Werewolf, ordinary race. Unrecognized races use the matching Exotic variant. Uses basic variants without Maid-level quality tiers. Off restores MME's normal milk selection. Shared with original MME's Simple Milk setting; affects player and NPC Milk Maids.": "По умолчанию включено. Тип молока определяется распознанной или принудительно заданной в MME сверхъестественной природой, затем расой. Приоритет: суккуб, вампир, оборотень, обычная раса. Для неизвестных рас используется соответствующее экзотическое молоко. Используются базовые варианты без уровней качества доярки. Выключение возвращает обычный выбор MME. Это настройка Simple Milk исходного MME; действует на игрока и доярок-NPC."
 }

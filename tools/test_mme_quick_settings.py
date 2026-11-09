@@ -17,7 +17,7 @@ assert hashlib.sha256(restored.encode()).hexdigest() == '6794ee1ce55782e804ccbaa
 facade = unlocalize((ROOT / 'Source/Scripts/MMEOriginalSettings.psc').read_text())
 mcm = unlocalize((ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text())
 states = set(re.findall(r'Add\w+OptionST\("(OG\w+)"', facade))
-assert len(states) == 13
+assert len(states) == 14
 for state in states:
     assert re.search(r'(?m)^State ' + state + r'\s*$', mcm), state
 assert 'JsonUtil.Set' not in facade, 'MME values must not acquire a second authority'
@@ -34,4 +34,4 @@ assert "variants['MilkMCM'] = (ROOT / 'Source/MMECompatibilityOverrides/MilkMCM.
 build = unlocalize((ROOT / 'build-package.ps1').read_text())
 assert '$scriptNames += "MMEOriginalSettings"' in build
 assert {"MilkQUEST", "MilkMCM"} <= set(re.findall(r'"([^"\n]+)"', re.search(r'\$mmeCompatibilityOverrideNames = @\(([^\n]+)\)', build).group(1)))
-print('PASS: 13 mirrored controls; original MCM only has reviewed sync/bonus-preview changes; single authority, safe refresh boundaries and backend packaging wired')
+print('PASS: 14 mirrored controls; original MCM only has reviewed sync/bonus-preview changes; single authority, safe refresh boundaries and backend packaging wired')

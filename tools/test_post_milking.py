@@ -157,7 +157,7 @@ class Integration(unittest.TestCase):
   self.assertNotIn('SetFloatValue(settings, "milkFullNarrationCooldown"',defaults)
   self.assertIn('MMELog.MasterDiagnostic',SOURCE);self.assertIn('MMELog.Alarm',SOURCE)
   self.assertNotRegex(SOURCE,r'Utility.Wait|RegisterForUpdate|AssignSlot|setMilkCurrent|Debug.Notification')
-  mcm=(R/'Source/Scripts/MMEAlertsMCM.psc').read_text();self.assertIn('Return 172',mcm)
+  mcm=(R/'Source/Scripts/MMEAlertsMCM.psc').read_text();self.assertIn('Return 173',mcm)
   page=mcm.split('Function DrawSkyrimNetPage()',1)[1].split('EndFunction',1)[0]
   for option in ['postMilkingNarrationOption','postMilkingCooldownOption','postMilkingChanceOption','fullHistoryOption','milkFullNarrationChanceOption']:self.assertIn(option,page)
   bridge=(R/'Source/Scripts/MMEAlertsSkyrimNet.psc').read_text()

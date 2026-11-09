@@ -349,7 +349,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 172
+    Return 173
 EndFunction
 
 Function SetPageNames()
@@ -419,6 +419,7 @@ EndFunction
 
 ; Seeds new settings and runs one-time migrations without overriding later choices.
 Function EnsureDefaults()
+    MMEOriginalSettings.EnsurePreferredMilkDefault()
     MMEPostMilking.EnsureDefaults()
     MMEFixedLactacid.EnsureDefaults()
     MMEMilkLeakAPI.EnsureDefaults()
@@ -5125,6 +5126,15 @@ State OGProduction
 EndState
 
 ; Original MME shortcut; no duplicate saved setting.
+State OGPreferredMilk
+    Event OnSelectST()
+        MMEOriginalSettings.Toggle(Self, "PreferredMilk")
+    EndEvent
+    Event OnHighlightST()
+        SetInfoText(MMELocalization.Text("Default on. Always produce milk matching MME's detected or forced supernatural type, then race. Priority: Succubus, Vampire, Werewolf, ordinary race. Unrecognized races use the matching Exotic variant. Uses basic variants without Maid-level quality tiers. Off restores MME's normal milk selection. Shared with original MME's Simple Milk setting; affects player and NPC Milk Maids."))
+    EndEvent
+EndState
+
 State OGFixed
     Event OnSelectST()
         MMEOriginalSettings.Toggle(Self, "Fixed")

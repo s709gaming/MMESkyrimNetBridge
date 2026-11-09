@@ -8,3 +8,6 @@ Int Property MME_FreeMaidSlots Auto Conditional
 Float Property MME_SubjectMilk Auto Conditional
 Float Property MME_TargetMilk Auto Conditional
 Bool Property Buffs Auto
+
+; Original MME selection setting; compile-only declaration.
+Bool Property MME_SimpleMilkPotions = False Auto Conditional

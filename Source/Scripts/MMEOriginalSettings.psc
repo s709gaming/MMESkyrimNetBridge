@@ -63,7 +63,7 @@ Bool Function SetMilkingMode(Actor candidate, Int requestedMode) Global
 EndFunction
 
 ; Thin MME facade: the original quest, StorageUtil mastery and player spells
-; remain authoritative. No settings copies, defaults migration or polling.
+; remain authoritative. Preferred milk has a one-time default marker, not a settings copy.
 MilkQUEST Function Resolve() Global
     MilkQUEST milk = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     Failure("quest", milk == None, "resolve settings", None, "MME_MilkQUEST script unavailable")
@@ -80,6 +80,35 @@ Function Failure(String settingName, Bool failed, String operation, Actor target
     ElseIf StorageUtil.GetIntValue(None, alarmKey, 0) != 0
         StorageUtil.SetIntValue(None, alarmKey, 0)
     EndIf
+EndFunction
+
+Bool Function EnsurePreferredMilkDefault() Global
+    ; A per-save latch only: the original MilkQC property remains authoritative.
+    ; VarSetup resets it to False; wait until original MME initialization is done.
+    String defaultKey = "MMEExtensions.PreferredMilk.DefaultApplied"
+    If StorageUtil.GetIntValue(None, defaultKey, 0) == 1
+        Return True
+    EndIf
+    If !MMEAlertsController.IsExtensionsEnabled()
+        Return False
+    EndIf
+    MilkQUEST milk = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If milk == None
+        Return False
+    EndIf
+    If milk.MilkQC == None || !milk.MilkFlag
+        Return False
+    EndIf
+    Bool previous = milk.MilkQC.MME_SimpleMilkPotions
+    milk.MilkQC.MME_SimpleMilkPotions = True
+    Bool applied = milk.MilkQC.MME_SimpleMilkPotions
+    Failure("preferredMilkDefault", !applied, "initialize preferred milk", None, "original MME setting did not retain True")
+    If !applied
+        Return False
+    EndIf
+    StorageUtil.SetIntValue(None, defaultKey, 1)
+    MMELog.MasterDiagnostic("[MME Original Settings] preferred milk default applied | old=" + previous + " | actual=" + applied)
+    Return True
 EndFunction
 
 Function DrawGeneral(SKI_ConfigBase menu) Global
@@ -126,10 +155,22 @@ Function DrawGeneralAt(SKI_ConfigBase menu, Int firstRow) Global
         bonusFlags = 1
     EndIf
     menu.AddSliderOptionST("FixedLactacidPercent", MMELocalization.Text("Lactacid Production Bonus"), MMEFixedLactacid.BonusPercent(), "+{0}%", bonusFlags)
+    Int preferredMilkFlags = 0
+    Bool preferredMilk = False
+    If milk.MilkQC == None
+        preferredMilkFlags = 1
+    Else
+        preferredMilk = milk.MilkQC.MME_SimpleMilkPotions
+        If !milk.MilkFlag
+            preferredMilkFlags = 1
+        EndIf
+    EndIf
+    Failure("preferredMilkConditions", milk.MilkQC == None, "display preferred milk", None, "MilkQC unavailable")
+    menu.AddToggleOptionST("OGPreferredMilk", MMELocalization.Text("Only Produce Preferred Milk Type"), preferredMilk, preferredMilkFlags)
     menu.AddHeaderOption(MMELocalization.Text("Economy"))
     menu.AddSliderOptionST("OGPrices", MMELocalization.Text("Milk Price Multiplier"), milk.MilkPriceMod, "x{0}")
     ; Both columns finish before the existing General controls begin.
-    menu.SetCursorPosition((firstRow + 10) * 2)
+    menu.SetCursorPosition((firstRow + 11) * 2)
 EndFunction
 
 Function DrawBody(SKI_ConfigBase menu) Global
@@ -364,6 +405,22 @@ Function Toggle(SKI_ConfigBase menu, String settingName) Global
     If settingName == "Fixed"
         milk.FixedMilkGen = !milk.FixedMilkGen
         result = milk.FixedMilkGen
+    ElseIf settingName == "PreferredMilk"
+        Failure("preferredMilkConditions", milk.MilkQC == None, "toggle preferred milk", None, "MilkQC unavailable")
+        If milk.MilkQC == None
+            Return
+        EndIf
+        If !milk.MilkFlag
+            MMELog.MasterDiagnostic("[MME Original Settings] preferred milk skipped | original MME initialization pending")
+            Return
+        EndIf
+        Bool desiredMilk = !milk.MilkQC.MME_SimpleMilkPotions
+        milk.MilkQC.MME_SimpleMilkPotions = desiredMilk
+        result = milk.MilkQC.MME_SimpleMilkPotions
+        Failure("preferredMilkResult", result != desiredMilk, "toggle preferred milk", None, "original MME setting did not retain requested value")
+        If result == desiredMilk
+            StorageUtil.SetIntValue(None, "MMEExtensions.PreferredMilk.DefaultApplied", 1)
+        EndIf
     ElseIf settingName == "Debuffs"
         Failure("conditions", milk.MilkQC == None, "toggle original effects", None, "MilkQC unavailable")
         If milk.MilkQC == None

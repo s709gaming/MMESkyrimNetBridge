@@ -7,6 +7,7 @@ Actor[] Property MilkSlave Auto
 Faction Property MilkMaidFaction Auto
 Faction Property MilkSlaveFaction Auto
 MilkQUEST_Conditions Property MilkQC Auto
+Bool Property MilkFlag Auto
 FormList Property MME_Milk_Basic Auto
 FormList Property MME_Milk_Race Auto
 FormList Property MME_Milk_Special Auto

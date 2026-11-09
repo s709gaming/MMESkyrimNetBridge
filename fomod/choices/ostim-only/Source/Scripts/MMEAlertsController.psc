@@ -123,6 +123,7 @@ Function InitializeController(Bool reportStatus = False)
     EndIf
     MMELocalization.Initialize()
     MMENarrationText.ReloadAll()
+    MMEOriginalSettings.EnsurePreferredMilkDefault()
     MMETentacleTiers.Recover()
     UnregisterForModEvent("MMEExtensions_MaidBodyTrace")
     RegisterForModEvent("MMEExtensions_MaidBodyTrace", "OnMaidBodyTrace")
@@ -2125,6 +2126,7 @@ Event OnUpdate()
         MMEArmorScript.CancelPlayerArmorCheck(Game.GetPlayer())
         Return
     EndIf
+    MMEOriginalSettings.EnsurePreferredMilkDefault()
     Float now = Utility.GetCurrentRealTime()
     Float armorRemovalDeadline = MMEArmorRemoval.GetNextVerificationDeadline()
     Bool armorRemovalDue = armorRemovalDeadline > 0.0 && now >= armorRemovalDeadline
