@@ -1,4 +1,9 @@
 {
+  "Knowledge Pack": "Пакет знаний",
+  "Previous personal Milk Maid lore": "Прежние личные сведения о доярках",
+  "Edit this lore in Skyrim.Net > World Knowledge > Skyrim Milk Maid Lore.": "Редактируйте эти сведения в Skyrim.Net > World Knowledge > Skyrim Milk Maid Lore.",
+  "Previous personal lore is preserved below for copying into Skyrim.Net. It is no longer injected by MME Extensions.": "Прежний личный текст сохранён ниже для копирования в Skyrim.Net. MME Extensions больше не добавляет его в запросы.",
+  "General Milk Maid lore now lives in the Skyrim.Net knowledge pack. Use its World Knowledge editor while playing; choose this playthrough or all playthroughs. Old MME personal lore is preserved for manual copying and is no longer used. Actor identity and narration instructions remain separate.": "Общие сведения о доярках теперь находятся в пакете знаний Skyrim.Net. Во время игры используйте редактор World Knowledge и выберите текущее или все прохождения. Прежний личный текст MME сохранён для ручного копирования и больше не используется. Сведения о персонаже и инструкции для повествования остаются отдельными.",
   "\nTitles — Add: ": "\nНазвания — добавить: ",
   "Enter a title of 1 to 80 characters.": "Введите название от 1 до 80 символов.",
   "Invalid personal title map.": "Неверный формат личных названий.",
@@ -248,5 +253,6 @@
   "A Vendor Notices Your Parasite Armor": "Торговец замечает броню-паразита",
   "A Vendor Notices Your Dwemer Armor": "Торговец замечает двемерскую броню",
   "The Vendor's Reaction": "Реакция торговца",
-  "Someone Nearby Drinks Milk": "Кто-то рядом пьёт молоко"
+  "Someone Nearby Drinks Milk": "Кто-то рядом пьёт молоко",
+  "- {actor} is a Milk Maid and loves being one.\n- {actor} loves being milked and behaves as though it brings sublime ecstasy.\n- {actor} finds lighter breasts more manageable, yet they feel somehow wrong.\n- {actor} delights in heavy, milk-filled breasts despite their mild inconvenience.\n- If asked, {actor} describes being a Milk Maid as the best thing ever: pure pleasure, few downsides, and no regrets.": "- {actor} — доярка и обожает ею быть.\n- {actor} обожает доение и ведёт себя так, словно оно приносит неземной экстаз.\n- {actor} считает лёгкую грудь более удобной, но всё же ощущает, что это неправильно.\n- {actor} наслаждается тяжёлой, полной молока грудью, несмотря на небольшие неудобства.\n- Если спросить, {actor} описывает жизнь доярки как лучшее, что может быть: чистое удовольствие, почти никаких недостатков и никаких сожалений."
 }

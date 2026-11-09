@@ -2319,6 +2319,11 @@
     "Magelight UI": "Magelight UI",
     "RUN": "运行",
     "RESET": "重置",
+    "Knowledge Pack": "知识包",
+    "Previous personal Milk Maid lore": "先前的自定义乳娘背景",
+    "Edit this lore in Skyrim.Net > World Knowledge > Skyrim Milk Maid Lore.": "请在 Skyrim.Net > World Knowledge > Skyrim Milk Maid Lore 中编辑此背景。",
+    "Previous personal lore is preserved below for copying into Skyrim.Net. It is no longer injected by MME Extensions.": "先前的自定义背景保留在下方，可复制到Skyrim.Net。MME Extensions不再将其加入请求。",
+    "General Milk Maid lore now lives in the Skyrim.Net knowledge pack. Use its World Knowledge editor while playing; choose this playthrough or all playthroughs. Old MME personal lore is preserved for manual copying and is no longer used. Actor identity and narration instructions remain separate.": "乳娘通用背景现已移至Skyrim.Net知识包。游戏时请使用World Knowledge编辑器，选择仅用于当前流程或所有流程。旧版MME自定义背景保留供手动复制，不再使用。角色身份与叙述指令仍独立管理。",
     "\nTitles — Add: ": "\n标题 — 添加：",
     "Enter a title of 1 to 80 characters.": "请输入1至80个字符的标题。",
     "Invalid personal title map.": "自定义标题数据格式无效。",
@@ -2491,6 +2496,7 @@
     "A Vendor Notices Your Parasite Armor": "商人注意到你的寄生护甲",
     "A Vendor Notices Your Dwemer Armor": "商人注意到你的矮人护甲",
     "The Vendor's Reaction": "商人的反应",
-    "Someone Nearby Drinks Milk": "附近有人在饮奶"
+    "Someone Nearby Drinks Milk": "附近有人在饮奶",
+    "- {actor} is a Milk Maid and loves being one.\n- {actor} loves being milked and behaves as though it brings sublime ecstasy.\n- {actor} finds lighter breasts more manageable, yet they feel somehow wrong.\n- {actor} delights in heavy, milk-filled breasts despite their mild inconvenience.\n- If asked, {actor} describes being a Milk Maid as the best thing ever: pure pleasure, few downsides, and no regrets.": "- {actor}是一名乳娘，并且喜欢这个身份。\n- {actor}喜欢被挤奶，表现得仿佛这会带来至高无上的狂喜。\n- {actor}觉得乳房较轻时更便于活动，却总觉得哪里不对。\n- {actor}喜爱沉甸甸、充满乳汁的乳房，尽管这会带来些许不便。\n- {actor}被问及时，会把成为乳娘形容为最美妙的事：纯粹的愉悦，几乎没有坏处，也毫不后悔。"
   }
 }

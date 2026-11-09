@@ -23,9 +23,9 @@
     "milkmaid_lore": {
       "_authoring": {
         "format": "Narration. Background or event context used by AI-generated narration.",
-        "intent": "Tell the AI that the named character is a confirmed Milk Maid who produces milk."
+        "intent": "Describe a confirmed Milk Maid's love of her identity, milking and milk-heavy breasts."
       },
-      "template": "## 乳娘状态\n\n{actor} 是一名乳娘，负责生产牛奶。"
+      "template": "- {actor}是一名乳娘，并且喜欢这个身份。\n- {actor}喜欢被挤奶，表现得仿佛这会带来至高无上的狂喜。\n- {actor}觉得乳房较轻时更便于活动，却总觉得哪里不对。\n- {actor}喜爱沉甸甸、充满乳汁的乳房，尽管这会带来些许不便。\n- {actor}被问及时，会把成为乳娘形容为最美妙的事：纯粹的愉悦，几乎没有坏处，也毫不后悔。"
     },
     "shared_guidance": {
       "_authoring": {

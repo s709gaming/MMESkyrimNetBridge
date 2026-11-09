@@ -23,9 +23,9 @@
     "milkmaid_lore": {
       "_authoring": {
         "format": "Narration. Background or event context used by AI-generated narration.",
-        "intent": "Tell the AI that the named character is a confirmed Milk Maid who produces milk."
+        "intent": "Describe a confirmed Milk Maid's love of her identity, milking and milk-heavy breasts."
       },
-      "template": "## Milk Maid Status\n\n{actor} is a Milk Maid and produces milk."
+      "template": "- {actor} is a Milk Maid and loves being one.\n- {actor} loves being milked and behaves as though it brings sublime ecstasy.\n- {actor} finds lighter breasts more manageable, yet they feel somehow wrong.\n- {actor} delights in heavy, milk-filled breasts despite their mild inconvenience.\n- If asked, {actor} describes being a Milk Maid as the best thing ever: pure pleasure, few downsides, and no regrets."
     },
     "shared_guidance": {
       "_authoring": {
