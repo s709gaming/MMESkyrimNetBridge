@@ -1,4 +1,6 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
+& python -B (Join-Path $PSScriptRoot 'tools/test_breastfeeding_confirmation.py')
+if ($LASTEXITCODE) { throw 'Player breastfeeding confirmation regressions failed' }
 & python -B (Join-Path $PSScriptRoot "tools/test_direct_prompt_state.py")
 if ($LASTEXITCODE) { throw "Direct prompt state contracts failed" }
 & python -B (Join-Path $PSScriptRoot "tools/test_prompt_callback_diagnostics.py")

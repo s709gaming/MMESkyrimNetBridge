@@ -132,7 +132,7 @@ class Voices(unittest.TestCase):
   self.assertNotRegex(helper,r'Utility.Wait|RegisterFor|setMilk|AssignSlot|StartSex|RemoveItem')
   lore=json.loads((R/'SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Lore.json').read_text(encoding='utf-8'))['routes']
   self.assertIn('Milk Maids love the satisfying heaviness of being full of milk.',lore['milk_lore']['template'])
-  self.assertEqual(lore['shared_guidance']['template'], 'Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic. Match the speaker and scene; nearby characters may occasionally chime in. Keep clear whose body and experience they describe.')
-  self.assertEqual(lore['milkmaid_lore']['template'],'## Milk Maid Status\n\n{actor} is a Milk Maid and produces milk.')
+  self.assertEqual(lore['shared_guidance']['template'], 'Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic.')
+  self.assertEqual(lore['milkmaid_lore']['template'],'- {actor} is a Milk Maid and loves being one.\n- {actor} loves being milked and behaves as though it brings sublime ecstasy.\n- {actor} finds lighter breasts more manageable, yet they feel somehow wrong.\n- {actor} delights in heavy, milk-filled breasts despite their mild inconvenience.\n- If asked, {actor} describes being a Milk Maid as the best thing ever: pure pleasure, few downsides, and no regrets.')
 
 if __name__=='__main__':unittest.main()

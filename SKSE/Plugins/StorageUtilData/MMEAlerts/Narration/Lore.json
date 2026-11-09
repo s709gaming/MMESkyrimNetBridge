@@ -32,7 +32,7 @@
         "format": "Narration. Instructions for AI-generated narration.",
         "intent": "Guide tone, style and response length across mod narration requests that include the global instructions."
       },
-      "template": "Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic. Match the speaker and scene; nearby characters may occasionally chime in. Keep clear whose body and experience they describe."
+      "template": "Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic."
     }
   }
 }

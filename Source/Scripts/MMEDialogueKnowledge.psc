@@ -14,7 +14,7 @@ String Function ForRequest(Actor speaker, String route) Global
     If StorageUtil.GetIntValue(None, "MMEExtensions.DialogueKnowledge.Alarm.compose shared knowledge", 0) != 0
         StorageUtil.SetIntValue(None, "MMEExtensions.DialogueKnowledge.Alarm.compose shared knowledge", 0)
     EndIf
-    String output = "[MME shared knowledge]\nInstructions; do not read aloud. Actual identity and current game state remain authoritative.\n\n" + "Shared Narration Guidance:\n" + guidance + "\n[End MME shared knowledge]"
+    String output = "Narration instructions:\n" + guidance
     MMELog.MasterDiagnostic("[MME Dialogue Knowledge] compose | route=" + route + " | speaker=" + speaker + " | automatic speaker=" + (speaker == None) + " | characters=" + StringUtil.GetLength(output) + " | entry=Lore.shared_guidance | general lore=Skyrim.Net knowledge pack")
     Return output
 EndFunction
@@ -25,7 +25,7 @@ String Function Append(String content, Actor speaker) Global
         MMELog.MasterDiagnostic("[MME Dialogue Knowledge] skip | speaker=" + speaker + " | reason=empty narration")
         Return content
     EndIf
-    If StringUtil.Find(content, "[MME shared knowledge]") >= 0
+    If StringUtil.Find(content, "Narration instructions:") >= 0
         MMELog.MasterDiagnostic("[MME Dialogue Knowledge] skip | speaker=" + speaker + " | reason=knowledge already included")
         Return content
     EndIf

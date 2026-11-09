@@ -517,7 +517,7 @@ String Function Template(String fileKey, String routeKey, Int index = 0) Global
         Return MMELocalization.Text("- {actor} is a Milk Maid and loves being one.\n- {actor} loves being milked and behaves as though it brings sublime ecstasy.\n- {actor} finds lighter breasts more manageable, yet they feel somehow wrong.\n- {actor} delights in heavy, milk-filled breasts despite their mild inconvenience.\n- If asked, {actor} describes being a Milk Maid as the best thing ever: pure pleasure, few downsides, and no regrets.")
     EndIf
     If fileKey == "Lore" && routeKey == "shared_guidance"
-        Return MMELocalization.Text("Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic. Match the speaker and scene; nearby characters may occasionally chime in. Keep clear whose body and experience they describe.")
+        Return MMELocalization.Text("Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic.")
     EndIf
     If fileKey == "MilkCravings" && routeKey == "narrate_milk_craving_1"
         Return MMELocalization.Text("{actor} craves milk. {craving} Express the temptation in her own voice; she has not drunk it yet.")

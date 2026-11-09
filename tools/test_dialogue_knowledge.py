@@ -55,7 +55,8 @@ class Contracts(unittest.TestCase):
   self.assertTrue(output.startswith('Lydia drinks milk.'))
   self.assertEqual(output.count('Shared test guidance.'),1)
   self.assertNotIn('Lydia is a Milk Maid',output)
-  self.assertIn('Actual identity and current game state remain authoritative',output)
+  self.assertEqual(output,'Lydia drinks milk.\n\nNarration instructions:\nShared test guidance.')
+  self.assertNotIn('[MME shared knowledge]',output)
   c.guidance='EDITED shared guidance.'
   self.assertIn('EDITED shared guidance',c.Append('Another event.',None))
  def test_no_duplicate_empty_or_cross_request_state(self):

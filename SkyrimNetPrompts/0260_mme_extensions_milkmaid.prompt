@@ -32,7 +32,6 @@
 {% if papyrus_util("GetIntValue", actorUUID, "MME.Prompt.ArmorEnabled", 0) == 1 %}
 {{ papyrus_util("GetStringValue", actorUUID, "MME.Prompt.Armor", "") }}
 {% endif %}
-These details describe her current condition; past events may describe a different state.
 {% endif %}
 {% endif %}
 {% endif %}

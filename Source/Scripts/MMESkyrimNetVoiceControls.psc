@@ -425,6 +425,15 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
         EndIf
         Return
     EndIf
+    ; One player confirmation protects both normalized directions and backends.
+    ; No scene locks, animation, stripping or milk effects exist before approval.
+    If !ConfirmPlayerBreastfeeding(milkSource, drinker)
+        Return
+    EndIf
+    If !CanCommitConfirmedBreastfeeding(milkSource, drinker)
+        MMELog.MasterDiagnostic("[MME BF Consent] skipped | eligibility changed before dispatch | source=" + milkSource + " | drinker=" + drinker)
+        Return
+    EndIf
     If routeDiagnostic
         Debug.Notification(MMELocalization.Text("Skyrim.Net BF: source=") + milkSourceName + MMELocalization.Text(" | drinker=") + drinkerName)
     EndIf
@@ -500,4 +509,89 @@ Function StartBreastfeedingMilkShare(Actor milkSource, Actor target, String sema
         MarkBreastfeedingActionCooldown()
     EndIf
     MMELog.Diagnostic("[MMEAlert SkyrimNet BF] defensive SexLab result=" + sexLabStarted + " | milk source=" + milkSourceName + " | drinker=" + drinkerName)
+EndFunction
+
+; Skyrim.Net-only confirmation. Vanilla Message.Show returns zero for Yes,
+; one for No, and a negative value on failure. Missing UI always fails closed.
+Bool Function CanCommitConfirmedBreastfeeding(Actor milkSource, Actor drinker) Global
+    If !MMEAlertsController.IsExtensionsEnabled() || JsonUtil.GetIntValue("/MMEAlerts/Settings", "enablePairedMilkingAction", 1) != 1 || GetBreastfeedingActionCooldownRemaining() > 0.0
+        Return False
+    EndIf
+    If !MMEOStimBreastfeeding.IsBreastfeedingEnabled()
+        MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+        If !MMESexLabBreastfeedingBackend.IsAvailable(milkController)
+            Return False
+        EndIf
+    EndIf
+    Actor[] participants = new Actor[2]
+    participants[0] = milkSource
+    participants[1] = drinker
+    Return MMEOStimIntegration.ValidatePairForCommit(participants, False, False, "Skyrim.Net confirmation: ")
+EndFunction
+
+Bool Function ConfirmPlayerBreastfeeding(Actor milkSource, Actor drinker) Global
+    Actor playerActor = Game.GetPlayer()
+    If milkSource != playerActor && drinker != playerActor
+        Return True
+    EndIf
+    If !CanCommitConfirmedBreastfeeding(milkSource, drinker)
+        MMELog.MasterDiagnostic("[MME BF Consent] skipped | invalid player pair | source=" + milkSource + " | drinker=" + drinker)
+        Return False
+    EndIf
+    Int generation = MMEExtensionsNative.GetMovementSlapSession()
+    Float now = Utility.GetCurrentRealTime()
+    Float refusedAt = StorageUtil.GetFloatValue(playerActor, "MME.BF.Consent.RefusedAt", -1.0)
+    If StorageUtil.GetIntValue(playerActor, "MME.BF.Consent.RefusedGeneration", -1) == generation && now >= refusedAt && now - refusedAt < 15.0
+        MMELog.MasterDiagnostic("[MME BF Consent] skipped | refusal backoff")
+        Return False
+    EndIf
+    String pendingKey = "MME.BF.Consent.Pending." + generation
+    If StorageUtil.AdjustIntValue(None, pendingKey, 1) != 1
+        StorageUtil.AdjustIntValue(None, pendingKey, -1)
+        MMELog.MasterDiagnostic("[MME BF Consent] skipped | another player confirmation pending")
+        Return False
+    EndIf
+    String oldKey = StorageUtil.GetStringValue(None, "MME.BF.Consent.LastKey", "")
+    If oldKey != "" && oldKey != pendingKey
+        StorageUtil.UnsetIntValue(None, oldKey)
+    EndIf
+    StorageUtil.SetStringValue(None, "MME.BF.Consent.LastKey", pendingKey)
+    Message question = Game.GetFormFromFile(0x0008D1, "MMEAlert.esp") as Message
+    If milkSource == playerActor
+        question = Game.GetFormFromFile(0x0008D2, "MMEAlert.esp") as Message
+    EndIf
+    If question == None
+        StorageUtil.AdjustIntValue(None, pendingKey, -1)
+        ConsentAlarm("required Yes/No message missing", milkSource, drinker)
+        Return False
+    EndIf
+    MMELog.MasterDiagnostic("[MME BF Consent] menu entry | source=" + milkSource + " | drinker=" + drinker)
+    Int answer = question.Show()
+    ; A restored old stack cannot clear a newer load's pending gate.
+    If generation != MMEExtensionsNative.GetMovementSlapSession()
+        MMELog.MasterDiagnostic("[MME BF Consent] cleanup | old-load approval discarded")
+        Return False
+    EndIf
+    StorageUtil.AdjustIntValue(None, pendingKey, -1)
+    If answer != 0
+        StorageUtil.SetFloatValue(playerActor, "MME.BF.Consent.RefusedAt", Utility.GetCurrentRealTime())
+        StorageUtil.SetIntValue(playerActor, "MME.BF.Consent.RefusedGeneration", generation)
+        If answer < 0
+            ConsentAlarm("Yes/No message returned no valid choice", milkSource, drinker)
+        Else
+            MMELog.MasterDiagnostic("[MME BF Consent] declined | source=" + milkSource + " | drinker=" + drinker)
+        EndIf
+        Return False
+    EndIf
+    Bool eligible = CanCommitConfirmedBreastfeeding(milkSource, drinker)
+    MMELog.MasterDiagnostic("[MME BF Consent] accepted | source=" + milkSource + " | drinker=" + drinker + " | still eligible=" + eligible)
+    Return eligible
+EndFunction
+
+Function ConsentAlarm(String reason, Actor milkSource, Actor drinker) Global
+    Int generation = MMEExtensionsNative.GetMovementSlapSession()
+    If StorageUtil.GetIntValue(None, "MME.BF.Consent.AlarmGeneration", -1) != generation
+        StorageUtil.SetIntValue(None, "MME.BF.Consent.AlarmGeneration", generation)
+        MMELog.Alarm("[MME BF Consent] operation=player confirmation | source=" + milkSource + " | drinker=" + drinker + " | failure=" + reason)
+    EndIf
 EndFunction
