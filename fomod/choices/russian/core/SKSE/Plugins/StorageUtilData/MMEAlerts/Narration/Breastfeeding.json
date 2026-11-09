@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI speaking guidance during a tracked adult breastfeeding scene.",
     "player_controls": "How participants discuss the current interaction.",
@@ -11,10 +10,15 @@
       "MMEAlertsSkyrimNet.BreastfeedingGuidanceText"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "guidance": {
-      "template": "## ММЕ Грудное вскармливание\n\n{actor} в настоящее время участвует в грудном вскармливании или сосании груди взрослым по обоюдному согласию. Взаимодействие может быть интимным, игривым, нежным, эротичным и физически приятным, включая стимуляцию сосков.\n\nДля этой сцены MME переопределите общие правила SexLab, требующие частых звуков удовольствия. Предпочитайте связные, специфичные для персонажей диалоги и повествование. Вокализации необязательны и редки, обычно ноль или одна короткая вокализация на ответ. Отдавайте предпочтение значимым реакциям, включающим молоко, вкус, ощущения, близость, поддразнивание, привязанность, смущение или удовольствие.\n\nРоль: {role}."
+      "template": "## ММЕ Грудное вскармливание\n\n{actor} в настоящее время участвует в грудном вскармливании или сосании груди взрослым по обоюдному согласию. Взаимодействие может быть интимным, игривым, нежным, эротичным и физически приятным, включая стимуляцию сосков.\n\nДля этой сцены MME переопределите общие правила SexLab, требующие частых звуков удовольствия. Предпочитайте связные, специфичные для персонажей диалоги и повествование. Вокализации необязательны и редки, обычно ноль или одна короткая вокализация на ответ. Отдавайте предпочтение значимым реакциям, включающим молоко, вкус, ощущения, близость, поддразнивание, привязанность, смущение или удовольствие.\n\nРоль: {role}.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Guide participants to speak naturally about their tracked breastfeeding interaction, keeping source and drinker roles distinct."
+      }
     }
   }
 }

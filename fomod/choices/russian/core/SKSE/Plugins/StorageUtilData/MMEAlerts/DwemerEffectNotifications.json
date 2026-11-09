@@ -1,4 +1,12 @@
 {
+  "_authoring": {
+    "entries": {
+      "lines": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor after Dwemer armor successfully affects its wearer."
+      }
+    }
+  },
   "lines": [
     "{actor} стонет, когда двемерская броня дразнит ее соски.",
     "{actor} задыхается — двемерские шестеренки медленно поглаживают ее клитор.",

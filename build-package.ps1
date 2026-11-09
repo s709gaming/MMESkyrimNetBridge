@@ -66,6 +66,8 @@ if ($LASTEXITCODE) { throw 'Narration JSON/default generation failed' }
 if ($LASTEXITCODE) { throw 'Narration JSON contracts failed' }
 & python -B (Join-Path $projectRoot 'tools\test_narration_dashboard_contracts.py')
 if ($LASTEXITCODE) { throw 'Narration dashboard contracts failed' }
+& python -B (Join-Path $projectRoot 'tools/test_authoring_metadata.py')
+if ($LASTEXITCODE) { throw 'Internal authoring metadata contracts failed' }
 & python -B (Join-Path $projectRoot 'tools\test_flavor_notifications.py')
 if ($LASTEXITCODE) { throw 'Flavor notification contracts failed' }
 $mmeCompatibilityOverrideSource = Join-Path $projectRoot "Source\MMECompatibilityOverrides"
@@ -417,6 +419,7 @@ New-Item -ItemType Directory -Force (Join-Path $stageDir 'SKSE/Plugins/StorageUt
 Copy-Item -LiteralPath (Join-Path $projectRoot 'SKSE/Plugins/StorageUtilData/MMEAlerts/Localization') -Destination (Join-Path $stageDir 'SKSE/Plugins/StorageUtilData/MMEAlerts') -Recurse -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/Russian-Edition.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/Chinese-Edition.md') -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/Personal-Entry-Titles.md') -Destination $packageDocs
 
 # Copy the active compiled scripts and matching sources.
 foreach ($scriptName in $scriptNames) {

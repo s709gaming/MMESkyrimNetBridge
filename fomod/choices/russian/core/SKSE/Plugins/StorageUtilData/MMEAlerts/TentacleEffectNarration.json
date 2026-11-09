@@ -1,4 +1,56 @@
 {
+  "_authoring": {
+    "entries": {
+      "tiers.low.milk": {
+        "format": "Narration. Alternative event descriptions used by AI-generated narration.",
+        "intent": "Add low-tier erotic flavor after a successful living or parasite armor effect, describing only the reported increase in breast milk."
+      },
+      "tiers.low.arousal": {
+        "format": "Narration. Alternative event descriptions used by AI-generated narration.",
+        "intent": "Add low-tier erotic flavor after a successful living or parasite armor effect, describing only the reported rise in arousal."
+      },
+      "tiers.low.milkAndArousal": {
+        "format": "Narration. Alternative event descriptions used by AI-generated narration.",
+        "intent": "Add low-tier erotic flavor after a successful living or parasite armor effect, describing only the reported increase in both breast milk and arousal."
+      },
+      "tiers.medium.milk": {
+        "format": "Narration. Alternative event descriptions used by AI-generated narration.",
+        "intent": "Add medium-tier erotic flavor after a successful living or parasite armor effect, describing only the reported increase in breast milk."
+      },
+      "tiers.medium.arousal": {
+        "format": "Narration. Alternative event descriptions used by AI-generated narration.",
+        "intent": "Add medium-tier erotic flavor after a successful living or parasite armor effect, describing only the reported rise in arousal."
+      },
+      "tiers.medium.milkAndArousal": {
+        "format": "Narration. Alternative event descriptions used by AI-generated narration.",
+        "intent": "Add medium-tier erotic flavor after a successful living or parasite armor effect, describing only the reported increase in both breast milk and arousal."
+      },
+      "tiers.high.milk": {
+        "format": "Narration. Alternative event descriptions used by AI-generated narration.",
+        "intent": "Add high-tier erotic flavor after a successful living or parasite armor effect, describing only the reported increase in breast milk."
+      },
+      "tiers.high.arousal": {
+        "format": "Narration. Alternative event descriptions used by AI-generated narration.",
+        "intent": "Add high-tier erotic flavor after a successful living or parasite armor effect, describing only the reported rise in arousal."
+      },
+      "tiers.high.milkAndArousal": {
+        "format": "Narration. Alternative event descriptions used by AI-generated narration.",
+        "intent": "Add high-tier erotic flavor after a successful living or parasite armor effect, describing only the reported increase in both breast milk and arousal."
+      },
+      "tiers.extreme.milk": {
+        "format": "Narration. Alternative event descriptions used by AI-generated narration.",
+        "intent": "Add extreme-tier erotic flavor after a successful living or parasite armor effect, describing only the reported increase in breast milk."
+      },
+      "tiers.extreme.arousal": {
+        "format": "Narration. Alternative event descriptions used by AI-generated narration.",
+        "intent": "Add extreme-tier erotic flavor after a successful living or parasite armor effect, describing only the reported rise in arousal."
+      },
+      "tiers.extreme.milkAndArousal": {
+        "format": "Narration. Alternative event descriptions used by AI-generated narration.",
+        "intent": "Add extreme-tier erotic flavor after a successful living or parasite armor effect, describing only the reported increase in both breast milk and arousal."
+      }
+    }
+  },
   "tiers": {
     "low": {},
     "medium": {},

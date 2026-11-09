@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "World knowledge, confirmed Milk Maid identity and global narration style.",
     "player_controls": "What AI characters know about milk and how mod narration sounds.",
@@ -11,31 +10,27 @@
       "MMEDialogueKnowledge.ForRequest"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "milk_lore": {
       "_authoring": {
-        "purpose": "General world knowledge about milk and Milk Maids.",
-        "applies_to": "Eligible actor context and mod narration requests.",
-        "boundary": "Knowledge does not establish that the reader produces milk or wears special armor."
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Explain milk and Milk Maids as world knowledge without assigning that identity or equipment to every reader."
       },
       "template": "## Skyrim Milk Maid Lore\n\nThis is general world knowledge. It does not establish that the speaker or listener is a Milk Maid, wears enchanted armor, or is experiencing these effects. Use current actor status and context to determine what applies.\n\n### Shared World Lore\n\n- Skyrim's milk comes from Milk Maids, not cows. This fine drink is a common staple with exotic aphrodisiac properties, guaranteed to get things flowing in all the fun ways.\n- Milk Maids are the socially valued backbone of Skyrim's milk supply.\n- Women may become Milk Maids through Lactacid sold by alchemists, drinking enough milk, magical curses, or unfortunate encounters with devious traps and enchanted armor.\n- Kinky living armor, parasites, and Dwemer milking contraptions are notorious for wrapping themselves around unsuspecting adult women, becoming living attire that pumps their wearers full of aphrodisiacs and milk-production stimulants.\n- Initial panic can give way to delirious, sublime ecstasy, leaving some wearers craving every relentless tease and caress. Such pleasures can become deliciously addictive.\n- Milk Maids love the satisfying heaviness of being full of milk."
     },
     "milkmaid_lore": {
       "_authoring": {
-        "purpose": "Identify a confirmed Milk Maid to the AI.",
-        "applies_to": "An actor who passes the real MME Milk Maid check.",
-        "boundary": "This is actor-status text, not general lore and not a conversion command."
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Tell the AI that the named character is a confirmed Milk Maid who produces milk."
       },
       "template": "## Milk Maid Status\n\n{actor} is a Milk Maid and produces milk."
     },
     "shared_guidance": {
       "_authoring": {
-        "purpose": "Global narration instructions.",
-        "player_controls": "Tone, style and length of mod AI narration.",
-        "applies_to": "Requests composed through MMEDialogueKnowledge.ForRequest or Append.",
-        "perspective": "Event instructions still determine who speaks and whose experience is described.",
-        "boundary": "This is runtime guidance, not a finished line. The authoring metadata itself is not runtime guidance."
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Guide tone, style and response length across mod narration requests that include the global instructions."
       },
       "template": "Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic. Match the speaker and scene; nearby characters may occasionally chime in. Keep clear whose body and experience they describe."
     }

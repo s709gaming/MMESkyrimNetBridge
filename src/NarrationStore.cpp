@@ -109,6 +109,19 @@ namespace MME::Narration
                 ValidateString(value, meta);
             }
         }
+        void ValidateTitle(const Json& value)
+        {
+            if (!value.is_string()) throw ValidationError("Title must be plain text.");
+            const auto& text = value.get_ref<const std::string&>();
+            if (text.empty() || text.size() > 320 || text.find_first_not_of(" \t\r\n") == std::string::npos)
+                throw ValidationError("Enter a title of 1 to 80 characters.");
+            std::size_t characters = 0;
+            for (unsigned char ch : text) {
+                if (ch < 32 || ch == 127) throw ValidationError("Titles must use one line of plain text.");
+                if ((ch & 0xC0) != 0x80) ++characters;
+            }
+            if (characters > 80) throw ValidationError("Titles can contain at most 80 characters.");
+        }
         void Validate(const Json& document)
         {
             if (!document.is_object() || document.value("schemaVersion", 0) != 1 ||
@@ -120,6 +133,11 @@ namespace MME::Narration
                 if (!entry.is_object() || !entry.contains("template")) throw ValidationError("Missing template: " + id);
                 try { ValidateValue(entry["template"], Catalog()[id]); }
                 catch (const ValidationError& error) { throw ValidationError(id + ": " + error.what()); }
+            }
+            if (document.contains("titles")) {
+                if (!document["titles"].is_object()) throw ValidationError("Invalid personal title map.");
+                for (const auto& [id, value] : document["titles"].items())
+                    if (Catalog().contains(id)) ValidateTitle(value);
             }
         }
         std::string Hash(std::string_view value)
@@ -204,7 +222,7 @@ namespace MME::Narration
             { "revision", Hash(document.dump() + "\n" + bases.dump() + "\n" + Catalog().dump()) }, { "customized", customized },
             { "text", customized ? document["overrides"][kEntry]["template"] : bases[kEntry] },
             { "baseText", bases[kEntry] }, { "path", std::string(path.begin(), path.end()) }, { "maxBytes", kMaxTextBytes },
-            { "documentBytes", document.dump(2).size() + 1 },
+            { "titleEditing", true }, { "documentBytes", document.dump(2).size() + 1 },
             { "maxDocumentBytes", kMaxDocumentBytes } };
     }
     Json Store::Effective(const Json& document, const Json& bases, const std::string& id, bool ignoreOwn)
@@ -347,6 +365,16 @@ namespace MME::Narration
                     const auto& changes = request.at("changes");
                     if (!changes.is_object() || changes.size() > Catalog().size()) throw ValidationError("Invalid change set.");
                     for (const auto& [id,value] : changes.items()) apply(id,value);
+                    if (request.contains("titleChanges")) {
+                        const auto& titles = request["titleChanges"];
+                        if (!titles.is_object() || titles.size() > Catalog().size()) throw ValidationError("Invalid title change set.");
+                        if (!document.contains("titles")) document["titles"] = Json::object();
+                        for (const auto& [id,value] : titles.items()) {
+                            if (!Catalog().contains(id)) throw ValidationError("Unknown title entry.");
+                            if (value.is_null()) document["titles"].erase(id);
+                            else { ValidateTitle(value); document["titles"][id] = value; }
+                        }
+                    }
                 } else apply(request.at("entryId").get<std::string>(), operation == "reset" ? Json(nullptr) : request.at("text"));
                 Validate(document); snapshot = Snapshot(document,bases); Commit(document);
             }
@@ -384,10 +412,17 @@ namespace MME::Narration
                     requireRevision();
                     if (request.at("presetRevision") != presetRevision) throw BusyError("Preset changed after preview. Preview again.");
                     const auto mode = request.value("mode", std::string("merge"));
-                    if (mode == "replace") document["overrides"] = imported["overrides"];
+                    if (mode == "replace") {
+                        document["overrides"] = imported["overrides"];
+                        document["titles"] = imported.value("titles", Json::object());
+                    }
                     else if (mode == "merge") {
                         for (const auto& [id,entry] : imported["overrides"].items())
                             if (!document["overrides"].contains(id)) document["overrides"][id] = entry;
+                        if (!document.contains("titles")) document["titles"] = Json::object();
+                        const auto incomingTitles = imported.value("titles",Json::object());
+                        for (const auto& [id,title] : incomingTitles.items())
+                            if (!document["titles"].contains(id)) document["titles"][id] = title;
                     } else throw ValidationError("Choose merge or replace.");
                     Validate(document); snapshot = Snapshot(document,bases); Commit(document);
                 } else {
@@ -406,6 +441,19 @@ namespace MME::Narration
                         {"merge", {{"added",added},{"kept",document["overrides"].size()},{"replaced",0},{"reset",0}}},
                         {"replace", {{"added",added},{"kept",kept},{"replaced",conflicts},{"reset",reset}}}
                     };
+                    const auto currentTitles = document.value("titles",Json::object());
+                    const auto presetTitles = imported.value("titles",Json::object());
+                    std::size_t titleAdded = 0, titleKept = 0, titleReplaced = 0, titleReset = 0;
+                    for (const auto& [id,title] : presetTitles.items()) {
+                        if (!currentTitles.contains(id)) ++titleAdded;
+                        else if (currentTitles[id] == title) ++titleKept;
+                        else ++titleReplaced;
+                    }
+                    for (const auto& [id,title] : currentTitles.items()) if (!presetTitles.contains(id)) ++titleReset;
+                    snapshot["titleCounts"] = Json{
+                        {"merge",{{"added",titleAdded},{"kept",currentTitles.size()},{"replaced",0},{"reset",0}}},
+                        {"replace",{{"added",titleAdded},{"kept",titleKept},{"replaced",titleReplaced},{"reset",titleReset}}}
+                    };
                 }
             }
             Publish(document, bases, snapshot["revision"].get<std::string>());
@@ -416,6 +464,7 @@ namespace MME::Narration
                     snapshot["entries"].push_back(Json{{"id",id},{"label",meta["label"]},{"group",meta["group"]},{"family",meta["family"]},
                         {"required",meta["required"]},{"allowed",meta["allowed"]},{"poolOnly",meta["poolOnly"]},
                         {"presentation",meta["presentation"]},
+                        {"customTitle",document.contains("titles") && document["titles"].contains(id) ? document["titles"][id] : Json(nullptr)},
                         {"customized",document["overrides"].contains(id)}});
                 }
             } else if (operation == "entry") {
@@ -458,6 +507,13 @@ namespace MME::Narration
             }
             snapshot["requestId"] = requestId; snapshot["operation"] = operation;
             snapshot["changedCount"] = request.contains("changes") ? request["changes"].size() : 1;
+            if (request.contains("titleChanges") && request["titleChanges"].is_object()) {
+                std::set<std::string> changedEntries;
+                if (request.contains("changes") && request["changes"].is_object())
+                    for (const auto& [id,value] : request["changes"].items()) changedEntries.insert(id);
+                for (const auto& [id,value] : request["titleChanges"].items()) changedEntries.insert(id);
+                snapshot["changedCount"] = changedEntries.size();
+            }
             snapshot["message"] = operation == "load" || operation == "entry" || operation == "catalog" ? "Loaded committed text." : "Operation completed. Changes are active for subsequent text requests.";
             return Reply(std::move(snapshot),client);
         } catch (const BusyError& error) { return errorReply("conflict",error.what()); }

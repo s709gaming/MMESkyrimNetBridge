@@ -1,4 +1,16 @@
 {
+  "_authoring": {
+    "entries": {
+      "craving": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor when a character starts craving milk; the same wording may ground an AI reaction."
+      },
+      "give_in": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Announce that the character gives in to her craving before the separate drink reaction."
+      }
+    }
+  },
   "craving": [
     "{ActorName} can't stop thinking about drinking milk.",
     "{ActorName}'s milk craving is getting harder to ignore.",

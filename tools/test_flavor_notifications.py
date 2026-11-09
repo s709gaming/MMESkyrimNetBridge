@@ -91,6 +91,7 @@ class FacadeTests(unittest.TestCase):
 class InventoryTests(unittest.TestCase):
     def test_schema_defaults_and_exact_26_bindings(self):
         config=json.loads((ROOT/'SKSE/Plugins/StorageUtilData/MMEAlerts/FlavorNotifications.json').read_text(encoding='utf-8'))
+        config={key:value for key,value in config.items() if not key.startswith('_')}
         schema=json.loads((ROOT/'tools/flavor-notification-schema.json').read_text(encoding='utf-8'))
         self.assertEqual(len(config),26)
         self.assertEqual(set(config),set(schema))

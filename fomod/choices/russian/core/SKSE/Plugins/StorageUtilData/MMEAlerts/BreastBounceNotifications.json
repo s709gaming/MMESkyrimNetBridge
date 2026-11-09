@@ -1,4 +1,20 @@
 {
+  "_authoring": {
+    "entries": {
+      "low": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add playful erotic flavor to a small breast bounce."
+      },
+      "high": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add playful erotic flavor to a strong breast bounce."
+      },
+      "movement": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add playful erotic flavor when breasts slap during movement."
+      }
+    }
+  },
   "low": [
     "Грудь {actor} мягко покачивается. Она хихикает над отскоком.",
     "Грудь {actor} подпрыгивает к ее груди. Она усмехается им.",

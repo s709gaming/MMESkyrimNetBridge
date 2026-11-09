@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI reactions to becoming a Milk Maid or receiving a milk-related curse.",
     "player_controls": "How discovery, transformation and curse outcomes are described.",
@@ -13,22 +12,43 @@
       "MMEChestCurseNarration.Publish"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_milkmaid_created_1": {
-      "template": "{actor} has become a Milk Maid and can now produce milk. React in her own voice to discovering this ability."
+      "template": "{actor} has become a Milk Maid and can now produce milk. React in her own voice to discovering this ability.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have a newly created Milk Maid react to discovering that she can produce milk."
+      }
     },
     "narrate_forced_milk_maid_conversion_1": {
-      "template": "{conversion} React as {actor} to the transformation. Its cause is unspecified; do not invent a drink."
+      "template": "{conversion} React as {actor} to the transformation. Its cause is unspecified; do not invent a drink.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have the affected character react to her reported transformation without inventing how it happened."
+      }
     },
     "milkmaidCreatedMessage": {
-      "template": "{actor} has become a Milk Maid! Her breasts now feel pleasantly heavy, full, and faintly thrilling."
+      "template": "{actor} has become a Milk Maid! Her breasts now feel pleasantly heavy, full, and faintly thrilling.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Inform Skyrim.Net that the named character has become a Milk Maid."
+      }
     },
     "narrate_milk_maid_curse_1": {
-      "template": "{conversion} React as {actor}, an existing Milk Maid, to the added milk. This is not a new conversion or a drink."
+      "template": "{conversion} React as {actor}, an existing Milk Maid, to the added milk. This is not a new conversion or a drink.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have an existing Milk Maid react to a curse adding milk to her breasts; this is not another conversion."
+      }
     },
     "narrate_chest_milk_maid_curse_1": {
-      "template": "A curse from a {chest_kind} affected {actor}. {outcome} React as {actor} to the chest's enchantment. Milk added: {milk_added}; do not recite numbers or invent a drink, loot, or another conversion."
+      "template": "A curse from a {chest_kind} affected {actor}. {outcome} React as {actor} to the chest's enchantment. Milk added: {milk_added}; do not recite numbers or invent a drink, loot, or another conversion.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have the affected character react to the reported chest curse and its actual outcome."
+      }
     }
   }
 }

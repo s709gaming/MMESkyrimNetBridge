@@ -1,4 +1,32 @@
 {
+  "_authoring": {
+    "entries": {
+      "low_female": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor to a female character's low-arousal bodily reaction."
+      },
+      "low_male": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor to a male character's low-arousal bodily reaction."
+      },
+      "medium_female": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor to a female character's medium-arousal bodily reaction."
+      },
+      "medium_male": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor to a male character's medium-arousal bodily reaction."
+      },
+      "high_female": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor to a female character's high-arousal bodily reaction."
+      },
+      "high_male": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor to a male character's high-arousal bodily reaction."
+      }
+    }
+  },
   "low_female": [
     "{actor} перемещает свой вес. Ее бедра сжимаются вместе. Всего один раз.",
     "{actor} кусает губу. Ее мысли блуждали куда-то неприличным.",

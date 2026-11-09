@@ -1,4 +1,12 @@
 {
+  "_authoring": {
+    "entries": {
+      "stringList.unequip_resisted": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick flavor when locked armor resists a removal attempt."
+      }
+    }
+  },
   "stringList": {
     "unequip_resisted": [
       "Броня дразняще сжимает вас и отказывается отпускать.",

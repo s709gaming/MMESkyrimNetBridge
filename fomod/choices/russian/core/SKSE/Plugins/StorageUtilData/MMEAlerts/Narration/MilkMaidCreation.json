@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI reactions to becoming a Milk Maid or receiving a milk-related curse.",
     "player_controls": "How discovery, transformation and curse outcomes are described.",
@@ -13,22 +12,43 @@
       "MMEChestCurseNarration.Publish"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_milkmaid_created_1": {
-      "template": "{actor} стал дояркой и теперь может производить молоко. Отреагируйте своим собственным голосом на обнаружение этой способности."
+      "template": "{actor} стал дояркой и теперь может производить молоко. Отреагируйте своим собственным голосом на обнаружение этой способности.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have a newly created Milk Maid react to discovering that she can produce milk."
+      }
     },
     "narrate_forced_milk_maid_conversion_1": {
-      "template": "{conversion} Реагирует на преобразование как {actor}. Его причина не установлена; не придумывайте напиток."
+      "template": "{conversion} Реагирует на преобразование как {actor}. Его причина не установлена; не придумывайте напиток.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have the affected character react to her reported transformation without inventing how it happened."
+      }
     },
     "milkmaidCreatedMessage": {
-      "template": "{actor} стал дояркой! Ее грудь теперь кажется приятно тяжелой, полной и слегка волнующей."
+      "template": "{actor} стал дояркой! Ее грудь теперь кажется приятно тяжелой, полной и слегка волнующей.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Inform Skyrim.Net that the named character has become a Milk Maid."
+      }
     },
     "narrate_milk_maid_curse_1": {
-      "template": "{conversion} Реагирует как существующая доярка {actor} на добавленное молоко. Это не новое обращение или напиток."
+      "template": "{conversion} Реагирует как существующая доярка {actor} на добавленное молоко. Это не новое обращение или напиток.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have an existing Milk Maid react to a curse adding milk to her breasts; this is not another conversion."
+      }
     },
     "narrate_chest_milk_maid_curse_1": {
-      "template": "Проклятие {chest_kind} затронуло {actor}. {outcome} Реагируйте как {actor} на чары сундука. Добавлено молоко: {milk_added}; не цитируйте цифры и не придумывайте выпивку, добычу или другое преобразование."
+      "template": "Проклятие {chest_kind} затронуло {actor}. {outcome} Реагируйте как {actor} на чары сундука. Добавлено молоко: {milk_added}; не цитируйте цифры и не придумывайте выпивку, добычу или другое преобразование.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have the affected character react to the reported chest curse and its actual outcome."
+      }
     }
   }
 }

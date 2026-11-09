@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI reactions to Dwemer suits, attachments and their reported effects.",
     "player_controls": "How the wearer describes the device and its teasing or milking.",
@@ -12,87 +11,180 @@
       "MMEAlertsSkyrimNet.BuildDwemerSuitPrompt"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_dwemer_effect_1": {
-      "template": " 作为受影响的矮人盔甲佩戴者，从你自己的角度做出反应。"
+      "template": " 作为受影响的矮人盔甲佩戴者，从你自己的角度做出反应。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Keep the reaction in the affected Dwemer armor wearer's own perspective."
+      }
     },
     "build_dwemer_suit_prompt_1": {
-      "template": "受影响的佩戴者：{actor}。演示简介：{profile}。 {core} 即时事件：{event} 写一个由 {actor} 说出的新鲜、简短、连贯的第一人称反应。使其成为自然、可口的成人对话。让惊慌或期待迅速转化为压倒性的快乐和狂躁的幸福。添加一点俏皮的荒诞或暗示可能会赢得笑声，但保持情感比笑话更强烈。通过文字而不是书面的声音效果来传达喘息、笑声和失落的冷静。不要使用口吃、重复音节、拼写出来的笑声或过多的标点符号。不要引用常见的例子、以第三人称叙述或重复这些说明。"
+      "template": "受影响的佩戴者：{actor}。演示简介：{profile}。 {core} 即时事件：{event} 写一个由 {actor} 说出的新鲜、简短、连贯的第一人称反应。使其成为自然、可口的成人对话。让惊慌或期待迅速转化为压倒性的快乐和狂躁的幸福。添加一点俏皮的荒诞或暗示可能会赢得笑声，但保持情感比笑话更强烈。通过文字而不是书面的声音效果来传达喘息、笑声和失落的冷静。不要使用口吃、重复音节、拼写出来的笑声或过多的标点符号。不要引用常见的例子、以第三人称叙述或重复这些说明。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Combine device background and the current event into a wearer-focused Dwemer reaction prompt."
+      }
     },
     "get_dwemer_profile_fallback_1": {
-      "template": "锻莫套装束缚了一名成年女性，并给她注入了催情剂、刺激和机械挤奶。她的反应从 0 级飙升到 10 级：震惊变成了狂喜过度、喘不过气来的笑声、失败的想法和狂躁的喜悦。她知道这种情况很荒唐、很丢脸，但她感觉太美妙了，根本不在乎。"
+      "template": "锻莫套装束缚了一名成年女性，并给她注入了催情剂、刺激和机械挤奶。她的反应从 0 级飙升到 10 级：震惊变成了狂喜过度、喘不过气来的笑声、失败的想法和狂躁的喜悦。她知道这种情况很荒唐、很丢脸，但她感觉太美妙了，根本不在乎。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply device background when the full Dwemer suit profile text is unavailable."
+      }
     },
     "get_dwemer_profile_fallback_2": {
-      "template": "隐藏在成年女性普通盔甲内的锻莫机械可以在不限制她的情况下提供春药、挑逗和挤奶。她的反应从 0 级上升到 10 级，变成令人窒息的快感、失去镇静、狂躁的喜悦和尴尬的期待。"
+      "template": "隐藏在成年女性普通盔甲内的锻莫机械可以在不限制她的情况下提供春药、挑逗和挤奶。她的反应从 0 级上升到 10 级，变成令人窒息的快感、失去镇静、狂躁的喜悦和尴尬的期待。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply device background when the Dwemer attachment profile text is unavailable."
+      }
     },
     "get_dwemer_event_fallback_1": {
-      "template": "设备首次激活。立即从震惊的抗议升级为不知所措、大笑的狂喜。"
+      "template": "设备首次激活。立即从震惊的抗议升级为不知所措、大笑的狂喜。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply fallback context for the first Dwemer equipment fitting."
+      }
     },
     "get_dwemer_event_fallback_2": {
-      "template": "她认出了这个熟悉的机制，并在它完全启动之前变得令人尴尬的渴望。"
+      "template": "她认出了这个熟悉的机制，并在它完全启动之前变得令人尴尬的渴望。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply fallback context for putting Dwemer equipment back on."
+      }
     },
     "get_dwemer_event_fallback_3": {
-      "template": "挤奶周期开始了，她从强烈的期待变成了语无伦次、狂躁的喜悦。"
+      "template": "挤奶周期开始了，她从强烈的期待变成了语无伦次、狂躁的喜悦。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply fallback context for Dwemer milking starting."
+      }
     },
     "get_dwemer_event_fallback_4": {
-      "template": "这个循环以她茫然、满足、微笑而结束，并且已经渴望下一个。"
+      "template": "这个循环以她茫然、满足、微笑而结束，并且已经渴望下一个。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply fallback context for Dwemer milking ending."
+      }
     },
     "get_dwemer_event_fallback_5": {
-      "template": "锻莫机制被激活并迅速驱使她进入压倒性的、令人喘不过气来的、狂躁的欢乐之中。"
+      "template": "锻莫机制被激活并迅速驱使她进入压倒性的、令人喘不过气来的、狂躁的欢乐之中。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply fallback context for another Dwemer device event."
+      }
     },
     "build_dwemer_effect_narration_1": {
-      "template": "涉及 {actor} 的当前情况： {content} 您的下一个响应必须专门针对此事件。将锻莫机械的机械戏弄视为令人愉快的、愚蠢的、有趣的、积极的和暗示性的，而不是令人恐惧的、痛苦的或威胁的。用一个简短的、新鲜的反应来做出个性化的反应。继续关注 Dwemer 盔甲、其齿轮和机制以及此处所述的效果；不要改变主题，只是重复情况，或创造额外的效果。"
+      "template": "涉及 {actor} 的当前情况： {content} 您的下一个响应必须专门针对此事件。将锻莫机械的机械戏弄视为令人愉快的、愚蠢的、有趣的、积极的和暗示性的，而不是令人恐惧的、痛苦的或威胁的。用一个简短的、新鲜的反应来做出个性化的反应。继续关注 Dwemer 盔甲、其齿轮和机制以及此处所述的效果；不要改变主题，只是重复情况，或创造额外的效果。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Keep the wearer's reaction focused on the reported Dwemer effect, with playful erotic flavor."
+      }
     },
     "effects_arousal": {
       "template": [
         "当 Dwemer 盔甲戏弄她的乳头时，{actor} 呻吟着。",
         "{actor} 喘息——Dwemer 齿轮缓慢地抚摸她的阴蒂。",
         "{actor} 因注射春药而呻吟，乳头刺痛。"
-      ]
+      ],
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Give the AI alternative erotic reactions to the reported rise in arousal caused by Dwemer armor."
+      }
     },
     "effects_milk": {
       "template": [
         "当盔甲将牛奶催情剂注入她体内时，{actor} 颤抖着。",
         "当设备戏弄 {actor} 时，她的乳房因乳汁而疼痛。"
-      ]
+      ],
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Give the AI alternative erotic reactions to the reported increase in breast milk caused by Dwemer armor."
+      }
     },
     "effects_milkAndArousal": {
       "template": [
         "当盔甲将牛奶催情剂注入她体内时，{actor} 颤抖着。",
         "{actor} 因注射春药而呻吟，乳头刺痛。",
         "当设备戏弄 {actor} 时，她的乳房因乳汁而疼痛。"
-      ]
+      ],
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Give the AI alternative erotic reactions to the reported increase in both breast milk and arousal caused by Dwemer armor."
+      }
     },
     "suit_core": {
-      "template": "锻莫狡猾套装将一名成年女性困住，她的双臂放在身后，双腿向后折叠，身体暴露在外，动作被可控制的机械肢体所取代。它让她充满了春药、无情的刺激和机械挤奶。反应从 0 级飙升至 10 级：震惊变成了压倒性的快乐、气喘吁吁的笑声、胡言乱语、狂躁的喜悦和令人上瘾的期待。她知道这是限制性的、羞辱性的、荒谬的，但她却变得过于欣喜若狂，根本不在乎。将幽默放在次要位置，并使用暗示性、非图形语言。"
+      "template": "锻莫狡猾套装将一名成年女性困住，她的双臂放在身后，双腿向后折叠，身体暴露在外，动作被可控制的机械肢体所取代。它让她充满了春药、无情的刺激和机械挤奶。反应从 0 级飙升至 10 级：震惊变成了压倒性的快乐、气喘吁吁的笑声、胡言乱语、狂躁的喜悦和令人上瘾的期待。她知道这是限制性的、羞辱性的、荒谬的，但她却变得过于欣喜若狂，根本不在乎。将幽默放在次要位置，并使用暗示性、非图形语言。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Explain a full Dwemer suit to the AI."
+      }
     },
     "suit_firstEquip": {
-      "template": "这是她第一次抓拍。从对束缚和机械身体的极度震惊开始，然后让药物刺激压倒她的反对意见。从惊慌迅速升级到困惑的喘息，再到疯狂的笑声和狂躁的欢乐。以尴尬的难以置信结束这台荒谬的机器感觉如此美妙。"
+      "template": "这是她第一次抓拍。从对束缚和机械身体的极度震惊开始，然后让药物刺激压倒她的反对意见。从惊慌迅速升级到困惑的喘息，再到疯狂的笑声和狂躁的欢乐。以尴尬的难以置信结束这台荒谬的机器感觉如此美妙。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the wearer's first fitting with a full Dwemer suit."
+      }
     },
     "suit_reequip": {
-      "template": "经验丰富的佩戴者能够识别每一次咔嗒声、闩锁、振动和束缚，并准确地知道即将发生的情况。不要重复第一次的恐惧。在套装完成锁定之前就让她头晕、不耐烦、令人尴尬地渴望。她可能会开玩笑地假装抗拒或哀悼自己的尊严，但令人上瘾的期待和无耻的喜悦占据主导地位。"
+      "template": "经验丰富的佩戴者能够识别每一次咔嗒声、闩锁、振动和束缚，并准确地知道即将发生的情况。不要重复第一次的恐惧。在套装完成锁定之前就让她头晕、不耐烦、令人尴尬地渴望。她可能会开玩笑地假装抗拒或哀悼自己的尊严，但令人上瘾的期待和无耻的喜悦占据主导地位。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the wearer putting a full Dwemer suit back on."
+      }
     },
     "suit_milkingStart": {
-      "template": "齿轮改变节奏并开始挤奶，而她已经被束缚、被麻醉、被刺激和茫然。认可立即让她从 0 到 10。让她陷入欣喜若狂的超负荷状态：喘不过气来的笑声、胡言乱语、失败的想法、狂躁的喜悦，以及收获季节开始的荒谬喜悦。狂喜引领；机械和奶制品幽默只是调味而已。"
+      "template": "齿轮改变节奏并开始挤奶，而她已经被束缚、被麻醉、被刺激和茫然。认可立即让她从 0 到 10。让她陷入欣喜若狂的超负荷状态：喘不过气来的笑声、胡言乱语、失败的想法、狂躁的喜悦，以及收获季节开始的荒谬喜悦。狂喜引领；机械和奶制品幽默只是调味而已。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe a full Dwemer suit beginning to milk its wearer."
+      }
     },
     "suit_milkingEnd": {
-      "template": "挤奶周期结束。佩戴者会从异常强烈的欣快感下降到幸福、目眩的满足感。她头晕目眩，仍然笑着，为自己完全失去了冷静而感到尴尬，对它停止感到有点失望，并已经期待着下一个周期。让余韵和令人上瘾的渴望比笑话更强烈。"
+      "template": "挤奶周期结束。佩戴者会从异常强烈的欣快感下降到幸福、目眩的满足感。她头晕目眩，仍然笑着，为自己完全失去了冷静而感到尴尬，对它停止感到有点失望，并已经期待着下一个周期。让余韵和令人上瘾的渴望比笑话更强烈。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe a full Dwemer suit finishing milking its wearer."
+      }
     },
     "attachment_core": {
-      "template": "锻莫挤奶附件将亲密的机械隐藏在成年女性的普通盔甲内。它不会束缚她的手臂，取代她的四肢，也不会将盔甲变成一套完整的约束服。当她保持活动状态时，它的齿轮会提供春药、无情的挑逗和机械挤奶。反应从 0 激增到 10：令人窒息的快感、崩溃的镇静、头晕目眩的笑声、狂躁的喜悦、令人上瘾的期待，以及因如此享受这个可耻的设备而感到的尴尬。将幽默放在次要位置，并使用暗示性、非图形语言。"
+      "template": "锻莫挤奶附件将亲密的机械隐藏在成年女性的普通盔甲内。它不会束缚她的手臂，取代她的四肢，也不会将盔甲变成一套完整的约束服。当她保持活动状态时，它的齿轮会提供春药、无情的挑逗和机械挤奶。反应从 0 激增到 10：令人窒息的快感、崩溃的镇静、头晕目眩的笑声、狂躁的喜悦、令人上瘾的期待，以及因如此享受这个可耻的设备而感到的尴尬。将幽默放在次要位置，并使用暗示性、非图形语言。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Explain a Dwemer attachment to the AI."
+      }
     },
     "attachment_firstEquip": {
-      "template": "亲密的 Dwemer 附件刚刚在佩戴者的盔甲内首次激活。隐藏的齿轮、贴身的机关、催情的快感、突如其来的刺激让她大吃一惊。让惊讶迅速化为令人窒息、头晕的快乐和尴尬的难以置信。不要描述固定的手臂、折叠的腿、替换肢体或全身套装。"
+      "template": "亲密的 Dwemer 附件刚刚在佩戴者的盔甲内首次激活。隐藏的齿轮、贴身的机关、催情的快感、突如其来的刺激让她大吃一惊。让惊讶迅速化为令人窒息、头晕的快乐和尴尬的难以置信。不要描述固定的手臂、折叠的腿、替换肢体或全身套装。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the wearer's first fitting with a Dwemer attachment."
+      }
     },
     "attachment_reequip": {
-      "template": "经验丰富的佩戴者能够识别出隐藏附件熟悉的咔嗒声、振动和紧密贴合。她对它的春药和戏弄变得急切地不耐烦，同时开玩笑说她的盔甲从外面看起来多么普通。请勿描述约束装置或机械肢体。"
+      "template": "经验丰富的佩戴者能够识别出隐藏附件熟悉的咔嗒声、振动和紧密贴合。她对它的春药和戏弄变得急切地不耐烦，同时开玩笑说她的盔甲从外面看起来多么普通。请勿描述约束装置或机械肢体。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the wearer putting a Dwemer attachment back on."
+      }
     },
     "attachment_milkingStart": {
-      "template": "该附件会改变节奏，其紧凑的挤奶机构会在佩戴者受到刺激时启动。认可让她兴奋得喘不过气来，大笑起来，然后很快就失去了冷静。强调在开始收获时间时正常装甲内谨慎机械的荒谬之处。不要描述完整的约束服。"
+      "template": "该附件会改变节奏，其紧凑的挤奶机构会在佩戴者受到刺激时启动。认可让她兴奋得喘不过气来，大笑起来，然后很快就失去了冷静。强调在开始收获时间时正常装甲内谨慎机械的荒谬之处。不要描述完整的约束服。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe a Dwemer attachment beginning to milk its wearer."
+      }
     },
     "attachment_milkingEnd": {
-      "template": "隐藏式挤奶附件完成其循环。穿戴者对隐藏在盔甲中的机械感到茫然、满足、尴尬，并已经期待着它的下一次激活。保持幸福的余辉比笑话更强烈，不要发明限制。"
+      "template": "隐藏式挤奶附件完成其循环。穿戴者对隐藏在盔甲中的机械感到茫然、满足、尴尬，并已经期待着它的下一次激活。保持幸福的余辉比笑话更强烈，不要发明限制。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe a Dwemer attachment finishing milking its wearer."
+      }
     }
   }
 }

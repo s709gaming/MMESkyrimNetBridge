@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI context for milking events and reactions to completed milking.",
     "player_controls": "How the method, relief and recorded outcome are described.",
@@ -12,43 +11,92 @@
       "MMEPostMilking.NarrateLast"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "startMessage": {
-      "template": "{actor} has started a milking session."
+      "template": "{actor} has started a milking session.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Inform Skyrim.Net that milking has started for the named character."
+      }
     },
     "endMessage": {
-      "template": "{actor} has finished a milking session."
+      "template": "{actor} has finished a milking session.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Inform Skyrim.Net that milking has ended for the named character."
+      }
     },
     "complete_hands": {
-      "template": "{actor} finishes a hands-on milking, pleasantly relieved and satisfied. {result}"
+      "template": "{actor} finishes a hands-on milking, pleasantly relieved and satisfied. {result}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the relief and erotic aftermath of the character finishing hand milking."
+      }
     },
     "complete_pump": {
-      "template": "The pump finishes drawing milk from {actor}, leaving her lighter and pleasantly refreshed. {result}"
+      "template": "The pump finishes drawing milk from {actor}, leaving her lighter and pleasantly refreshed. {result}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the relief and erotic aftermath of the character finishing a milk pump."
+      }
     },
     "complete_equipment": {
-      "template": "The milking cups finish their work on {actor}, leaving her relieved and pleasantly sensitive. {result}"
+      "template": "The milking cups finish their work on {actor}, leaving her relieved and pleasantly sensitive. {result}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the relief and erotic aftermath of the character finishing milking cups."
+      }
     },
     "complete_tendrils": {
-      "template": "Living tendrils have drawn milk from {actor}, leaving her breathless and pleasantly spent. {result}"
+      "template": "Living tendrils have drawn milk from {actor}, leaving her breathless and pleasantly spent. {result}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the relief and erotic aftermath of the character finishing living tendrils."
+      }
     },
     "complete_dwemer": {
-      "template": "The Dwemer mechanism finishes its rhythmic harvest from {actor}, leaving her dazed and deliciously satisfied. {result}"
+      "template": "The Dwemer mechanism finishes its rhythmic harvest from {actor}, leaving her dazed and deliciously satisfied. {result}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the relief and erotic aftermath of the character finishing a Dwemer mechanism."
+      }
     },
     "complete_generic": {
-      "template": "{actor} finishes milking, pleasantly refreshed. {result}"
+      "template": "{actor} finishes milking, pleasantly refreshed. {result}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the relief and erotic aftermath of the character finishing milking."
+      }
     },
     "complete_productive": {
-      "template": "{actor} completed a productive {method} milking session. Milk was extracted, but production or feeding left no net reduction in her reserves."
+      "template": "{actor} completed a productive {method} milking session. Milk was extracted, but production or feeding left no net reduction in her reserves.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe completed milking that extracted milk even though production or feeding prevented a net reduction."
+      }
     },
     "result_empty": {
-      "template": "Her milk reserves were empty at completion."
+      "template": "Her milk reserves were empty at completion.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Add the recorded fact that the character's milk reserves were empty when milking finished."
+      }
     },
     "result_remaining": {
-      "template": "Some milk remained at completion."
+      "template": "Some milk remained at completion.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Add the recorded fact that some milk remained when milking finished."
+      }
     },
     "completion_instruction": {
-      "template": "React as {actor} to this source-specific milking experience and its aftermath. Describe the completed session, not a new or ongoing one."
+      "template": "React as {actor} to this source-specific milking experience and its aftermath. Describe the completed session, not a new or ongoing one.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have the affected character react to her completed milking session, its method and recorded aftermath."
+      }
     }
   }
 }

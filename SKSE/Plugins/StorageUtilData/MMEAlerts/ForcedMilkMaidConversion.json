@@ -1,4 +1,16 @@
 {
+  "_authoring": {
+    "entries": {
+      "conversionMessages": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor to a Milk Maid conversion or milk curse; the wording may also ground an AI reaction."
+      },
+      "chestCurseStories": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's magical Milk Maid conversion or milk-adding curse as an erotic experience."
+      }
+    }
+  },
   "openingStory": "A change courses through your body. Your breasts grow warm, and your nipples begin to tingle and harden against your clothes. Heat spreads through you, your mind goes blank, and you can barely remain on your feet. Sudden shock waves race through your body as you collapse.",
   "closingStory": "%text1 just had a breast-induced orgasm!",
   "conversionMessages": [

@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI reactions to becoming a Milk Maid or receiving a milk-related curse.",
     "player_controls": "How discovery, transformation and curse outcomes are described.",
@@ -13,22 +12,43 @@
       "MMEChestCurseNarration.Publish"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_milkmaid_created_1": {
-      "template": "{actor}已成为乳娘，现在可以生产牛奶。用她自己的声音对发现这种能力做出反应。"
+      "template": "{actor}已成为乳娘，现在可以生产牛奶。用她自己的声音对发现这种能力做出反应。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have a newly created Milk Maid react to discovering that she can produce milk."
+      }
     },
     "narrate_forced_milk_maid_conversion_1": {
-      "template": "{conversion} 作为 {actor} 进行转换。其原因未明确；不要发明饮料。"
+      "template": "{conversion} 作为 {actor} 进行转换。其原因未明确；不要发明饮料。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have the affected character react to her reported transformation without inventing how it happened."
+      }
     },
     "milkmaidCreatedMessage": {
-      "template": "{actor} 已成为乳娘！她的乳房现在感觉很重、很饱满，而且还有点轻微的颤抖。"
+      "template": "{actor} 已成为乳娘！她的乳房现在感觉很重、很饱满，而且还有点轻微的颤抖。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Inform Skyrim.Net that the named character has become a Milk Maid."
+      }
     },
     "narrate_milk_maid_curse_1": {
-      "template": "{conversion} 作为现有的乳娘 {actor} 对添加的牛奶进行反应。这不是新的转变或饮料。"
+      "template": "{conversion} 作为现有的乳娘 {actor} 对添加的牛奶进行反应。这不是新的转变或饮料。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have an existing Milk Maid react to a curse adding milk to her breasts; this is not another conversion."
+      }
     },
     "narrate_chest_milk_maid_curse_1": {
-      "template": "来自 {chest_kind} 的诅咒影响了 {actor}。 {outcome} 以 {actor} 的方式对宝箱的结界做出反应。添加牛奶：{milk_added}；不要背诵数字或发明饮料、战利品或其他转换。"
+      "template": "来自 {chest_kind} 的诅咒影响了 {actor}。 {outcome} 以 {actor} 的方式对宝箱的结界做出反应。添加牛奶：{milk_added}；不要背诵数字或发明饮料、战利品或其他转换。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have the affected character react to the reported chest curse and its actual outcome."
+      }
     }
   }
 }

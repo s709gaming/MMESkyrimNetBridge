@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI reactions and background descriptions for equipped or removed armor.",
     "player_controls": "How armor changes are described.",
@@ -12,31 +11,64 @@
       "MMEAlertsSkyrimNet.BuildNearbyArmorStatus"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_armor_equip_1": {
-      "template": "{actor}装备挤奶装甲；它的吸盘吸附在她的乳房上。对附件做出反应。"
+      "template": "{actor}装备挤奶装甲；它的吸盘吸附在她的乳房上。对附件做出反应。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Add erotic flavor to a reaction when a character equips milking armor."
+      }
     },
     "narrate_armor_equip_2": {
-      "template": "活体盔甲包裹着{actor}。对它的动作和触摸做出反应。"
+      "template": "活体盔甲包裹着{actor}。对它的动作和触摸做出反应。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Add playful erotic flavor when a character equips living armor."
+      }
     },
     "narrate_armor_equip_3": {
-      "template": "活体寄生虫装甲连接到 {actor}。对它的动作和触摸做出反应。"
+      "template": "活体寄生虫装甲连接到 {actor}。对它的动作和触摸做出反应。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Add erotic flavor when a character equips parasite armor."
+      }
     },
     "narrate_armor_equip_4": {
-      "template": " 这件盔甲从一个被困的宝箱中跳出来，包裹着 {actor}。承认惊喜。"
+      "template": " 这件盔甲从一个被困的宝箱中跳出来，包裹着 {actor}。承认惊喜。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Describe the surprise of armor being forced onto the affected character by a trap."
+      }
     },
     "narrate_armor_strip_1": {
-      "template": "{actor}的{armorName}因为奶肿的乳房而脱落。对衣柜事故做出反应。"
+      "template": "{actor}的{armorName}因为奶肿的乳房而脱落。对衣柜事故做出反应。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have a character react to armor coming off as milk-heavy breasts outgrow it."
+      }
     },
     "build_nearby_armor_status_1": {
-      "template": "[挤奶盔甲] {actor} 穿着挤奶盔甲。吸盘附在她的乳头上以便挤奶。"
+      "template": "[挤奶盔甲] {actor} 穿着挤奶盔甲。吸盘附在她的乳头上以便挤奶。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI context about a nearby character wearing milking armor."
+      }
     },
     "build_nearby_armor_status_2": {
-      "template": "[生命装甲] {actor}穿着生命装甲。活生生的卷须埋入她的乳头，注入兴奋剂并愉快地排出乳汁。"
+      "template": "[生命装甲] {actor}穿着生命装甲。活生生的卷须埋入她的乳头，注入兴奋剂并愉快地排出乳汁。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI context about a nearby character wearing living armor."
+      }
     },
     "build_nearby_armor_status_3": {
-      "template": "[活体寄生虫] {actor} 穿着活体寄生虫盔甲。寄生卷须埋入她的乳头，注入兴奋剂并愉快地排出乳汁。"
+      "template": "[活体寄生虫] {actor} 穿着活体寄生虫盔甲。寄生卷须埋入她的乳头，注入兴奋剂并愉快地排出乳汁。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI context about a nearby character wearing parasite armor."
+      }
     }
   }
 }

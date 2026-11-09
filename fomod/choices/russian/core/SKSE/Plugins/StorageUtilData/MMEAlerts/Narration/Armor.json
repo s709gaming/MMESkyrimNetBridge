@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI reactions and background descriptions for equipped or removed armor.",
     "player_controls": "How armor changes are described.",
@@ -12,31 +11,64 @@
       "MMEAlertsSkyrimNet.BuildNearbyArmorStatus"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_armor_equip_1": {
-      "template": "{actor} оснащен доильной броней; его присоски прикрепляются к ее груди. Реагируйте на вложение."
+      "template": "{actor} оснащен доильной броней; его присоски прикрепляются к ее груди. Реагируйте на вложение.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Add erotic flavor to a reaction when a character equips milking armor."
+      }
     },
     "narrate_armor_equip_2": {
-      "template": "Живая броня окутывает {actor}. Реагируйте на его движения и прикосновения."
+      "template": "Живая броня окутывает {actor}. Реагируйте на его движения и прикосновения.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Add playful erotic flavor when a character equips living armor."
+      }
     },
     "narrate_armor_equip_3": {
-      "template": "Броня Живого Паразита прикрепляется к {actor}. Реагируйте на его движения и прикосновения."
+      "template": "Броня Живого Паразита прикрепляется к {actor}. Реагируйте на его движения и прикосновения.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Add erotic flavor when a character equips parasite armor."
+      }
     },
     "narrate_armor_equip_4": {
-      "template": " Эта броня выскочила из сундука с сокровищами и обернулась вокруг {actor}. Признайте сюрприз."
+      "template": " Эта броня выскочила из сундука с сокровищами и обернулась вокруг {actor}. Признайте сюрприз.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Describe the surprise of armor being forced onto the affected character by a trap."
+      }
     },
     "narrate_armor_strip_1": {
-      "template": "{armorName} {actor} оторвалась из-за ее набухшей от молока груди. Реагируйте на неудачу с гардеробом."
+      "template": "{armorName} {actor} оторвалась из-за ее набухшей от молока груди. Реагируйте на неудачу с гардеробом.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have a character react to armor coming off as milk-heavy breasts outgrow it."
+      }
     },
     "build_nearby_armor_status_1": {
-      "template": "[Доильная броня] {actor} носит доильную броню. Для доения к ее соскам прикреплены присоски."
+      "template": "[Доильная броня] {actor} носит доильную броню. Для доения к ее соскам прикреплены присоски.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI context about a nearby character wearing milking armor."
+      }
     },
     "build_nearby_armor_status_2": {
-      "template": "[Живая броня] {actor} носит Живую броню. Живые усики впиваются в ее соски, вводя стимуляторы и с удовольствием высасывая молоко."
+      "template": "[Живая броня] {actor} носит Живую броню. Живые усики впиваются в ее соски, вводя стимуляторы и с удовольствием высасывая молоко.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI context about a nearby character wearing living armor."
+      }
     },
     "build_nearby_armor_status_3": {
-      "template": "[Живой Паразит] {actor} носит броню Живого Паразита. Паразитические усики впиваются в ее соски, вводя стимуляторы и с удовольствием высасывая молоко."
+      "template": "[Живой Паразит] {actor} носит броню Живого Паразита. Паразитические усики впиваются в ее соски, вводя стимуляторы и с удовольствием высасывая молоко.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI context about a nearby character wearing parasite armor."
+      }
     }
   }
 }

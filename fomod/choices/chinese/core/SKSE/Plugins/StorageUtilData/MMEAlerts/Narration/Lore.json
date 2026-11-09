@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "World knowledge, confirmed Milk Maid identity and global narration style.",
     "player_controls": "What AI characters know about milk and how mod narration sounds.",
@@ -11,31 +10,27 @@
       "MMEDialogueKnowledge.ForRequest"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "milk_lore": {
       "_authoring": {
-        "purpose": "General world knowledge about milk and Milk Maids.",
-        "applies_to": "Eligible actor context and mod narration requests.",
-        "boundary": "Knowledge does not establish that the reader produces milk or wears special armor."
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Explain milk and Milk Maids as world knowledge without assigning that identity or equipment to every reader."
       },
       "template": "##天际乳娘传说\n\n这是一般的世界知识。它并不能确定说话者或听众是乳娘、穿着魔法盔甲或正在经历这些效果。使用当前参与者状态和上下文来确定适用的内容。\n\n### 共享世界传说\n\n- 天际的牛奶来自乳娘，而不是奶牛。这种优质饮料是一种常见的主食，具有异国情调的催情特性，保证让事情以各种有趣的方式进行。\n- 乳娘是天际牛奶供应的具有社会价值的支柱。\n- 女性可以通过炼金术士出售的Lactacid成为乳娘，喝足够的牛奶，魔法诅咒，或不幸遭遇狡猾的陷阱和魔法盔甲。\n- 怪异的活体盔甲、寄生虫和锻莫挤奶装置因将自己包裹在毫无戒心的成年女性周围而臭名昭著，成为让穿着者充满春药和产奶兴奋剂的活衣。\n- 最初的恐慌可能会变成疯狂、崇高的狂喜，让一些佩戴者渴望每一次无情的挑逗和爱抚。这种乐趣会令人上瘾。\n- 乳娘喜欢充满牛奶的满足感。"
     },
     "milkmaid_lore": {
       "_authoring": {
-        "purpose": "Identify a confirmed Milk Maid to the AI.",
-        "applies_to": "An actor who passes the real MME Milk Maid check.",
-        "boundary": "This is actor-status text, not general lore and not a conversion command."
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Tell the AI that the named character is a confirmed Milk Maid who produces milk."
       },
       "template": "## 乳娘状态\n\n{actor} 是一名乳娘，负责生产牛奶。"
     },
     "shared_guidance": {
       "_authoring": {
-        "purpose": "Global narration instructions.",
-        "player_controls": "Tone, style and length of mod AI narration.",
-        "applies_to": "Requests composed through MMEDialogueKnowledge.ForRequest or Append.",
-        "perspective": "Event instructions still determine who speaks and whose experience is described.",
-        "boundary": "This is runtime guidance, not a finished line. The authoring metadata itself is not runtime guidance."
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Guide tone, style and response length across mod narration requests that include the global instructions."
       },
       "template": "变得俏皮、色情和戏弄。喜欢含沙射影、厚颜无耻的隐喻和各种委婉说法，而不是露骨的性词汇。保持反应简短、自然、非图形化。使说话者与场景相匹配；附近的人物可能偶尔会插话。请清楚他们描述的是谁的身体和经历。"
     }

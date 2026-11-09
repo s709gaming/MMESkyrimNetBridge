@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI reactions to reported living/parasite armor effects.",
     "player_controls": "How the wearer expresses the teasing and selected effects.",
@@ -11,13 +10,22 @@
       "MMEAlertsSkyrimNet.BuildTentacleEffectNarration"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_tentacle_effect_1": {
-      "template": " Реагируйте со своей точки зрения как пострадавшего владельца доспехов."
+      "template": " Реагируйте со своей точки зрения как пострадавшего владельца доспехов.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Keep the reaction in the affected armor wearer's own perspective."
+      }
     },
     "build_tentacle_effect_narration_1": {
-      "template": "Непосредственная ситуация, связанная с {actor}: {content} Ваш следующий ответ должен быть конкретно об этом событии. Относитесь к дразнению живой или паразитической брони как к приятному, глупому, игривому, позитивному и наводящему на размышления, но никогда не пугающему или угрожающему. Ответьте как персонаж одной короткой свежей реакцией. Сосредоточьтесь на броне и описанных здесь эффектах; не меняйте темы, просто повторяйте ситуацию или придумывайте дополнительные эффекты."
+      "template": "Непосредственная ситуация, связанная с {actor}: {content} Ваш следующий ответ должен быть конкретно об этом событии. Относитесь к дразнению живой или паразитической брони как к приятному, глупому, игривому, позитивному и наводящему на размышления, но никогда не пугающему или угрожающему. Ответьте как персонаж одной короткой свежей реакцией. Сосредоточьтесь на броне и описанных здесь эффектах; не меняйте темы, просто повторяйте ситуацию или придумывайте дополнительные эффекты.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Keep the wearer's reaction focused on the reported living or parasite armor effect, with playful erotic flavor."
+      }
     },
     "effects_arousal": {
       "template": [
@@ -26,7 +34,11 @@
         "{ACTOR} дрожит, когда щупальца причиняют ей небольшое теплое жало, которое кажется на удивление приятным. Реагируйте позитивно и игриво по характеру. Ответ в одном коротком предложении.",
         "{ACTOR} издает радостный вздох, когда усики укалывают ее и вызывают радостное возбуждение. Реагируйте позитивно и игриво по характеру. Ответ в одном коротком предложении.",
         "{ACTOR} чувствует, как щупальца игриво прикасаются к ней, и ей явно нравится, насколько это приятно. Реагируйте позитивно и игриво по характеру. Ответ в одном коротком предложении."
-      ]
+      ],
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Give the AI alternative erotic reactions to the reported rise in arousal caused by living or parasite armor."
+      }
     },
     "effects_milk": {
       "template": [
@@ -35,7 +47,11 @@
         "{ACTOR} вздрагивает от приятного укола щупалец, когда в ее груди нарастает приятная тяжесть. Реагируйте позитивно и игриво по характеру. Ответ в одном коротком предложении.",
         "{ACTOR} издает легкий вздох удовольствия, когда усики укалывают ее, и ее грудь начинает приятно наполняться. Реагируйте позитивно и игриво по характеру. Ответ в одном коротком предложении.",
         "{ACTOR} чувствует теплое покалывание от щупалец и наслаждается последующей мягкой, тяжелой полнотой. Реагируйте позитивно и игриво по характеру. Ответ в одном коротком предложении."
-      ]
+      ],
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Give the AI alternative erotic reactions to the reported increase in breast milk caused by living or parasite armor."
+      }
     },
     "effects_milkAndArousal": {
       "template": [
@@ -44,7 +60,11 @@
         "{ACTOR} приятно дрожит, когда щупальца жалят ее, от чего ее грудь становится полнее, а настроение становится еще более возбужденным. Реагируйте позитивно и игриво по характеру. Ответ в одном коротком предложении.",
         "{ACTOR} издает радостный вздох, когда усики укалывают ее, наслаждаясь полнотой ее груди и последующим теплым возбуждением. Реагируйте позитивно и игриво по характеру. Ответ в одном коротком предложении.",
         "{ACTOR} чувствует, как щупальца игриво жалят ее, затем улыбается приятной тяжести в ее груди и нарастающему вместе с ней возбуждению. Реагируйте позитивно и игриво по характеру. Ответ в одном коротком предложении."
-      ]
+      ],
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Give the AI alternative erotic reactions to the reported increase in both breast milk and arousal caused by living or parasite armor."
+      }
     }
   }
 }

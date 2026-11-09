@@ -14,7 +14,7 @@
   function visit(root) {
     if (root.nodeType===3) {
       const parent=root.parentElement;
-      if (!parent || parent.closest('script,style,textarea,input,[contenteditable],.actor-name') || parent.matches('td:first-child')) return;
+      if (!parent || parent.closest('script,style,textarea,input,[contenteditable],.actor-name,.user-title') || parent.matches('td:first-child')) return;
       const result=translate(root.nodeValue);if (result!==root.nodeValue) root.nodeValue=result;
       return;
     }

@@ -1,4 +1,12 @@
 {
+  "_authoring": {
+    "entries": {
+      "lines": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor after Dwemer armor successfully affects its wearer."
+      }
+    }
+  },
   "lines": [
     "当 Dwemer 盔甲戏弄她的乳头时，{actor} 呻吟着。",
     "{actor} 喘息——Dwemer 齿轮缓慢地抚摸她的阴蒂。",

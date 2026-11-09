@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI reactions and event descriptions after a reported milk drink.",
     "player_controls": "How drinking, restraint and confirmed drink effects are discussed.",
@@ -13,40 +12,85 @@
       "MMEAlertsSkyrimNet.SendMilkDrink"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_chest_milk_drink_1": {
-      "template": "{actor} волшебным образом вынужден выпить {milkName} из {chestKind}."
+      "template": "{actor} волшебным образом вынужден выпить {milkName} из {chestKind}.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Describe the trapped chest forcing the named character to drink the supplied milk."
+      }
     },
     "narrate_chest_milk_drink_2": {
-      "template": "{situation} Реагируйте как {actor} на принудительный напиток из сундука-ловушки. Молоко знакомое; не изобретайте его источник или дополнительные эффекты."
+      "template": "{situation} Реагируйте как {actor} на принудительный напиток из сундука-ловушки. Молоко знакомое; не изобретайте его источник или дополнительные эффекты.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Guide a reaction to the chest-forced drink without inventing extra effects or a milk source."
+      }
     },
     "narrate_n_p_c_milk_drink_1": {
-      "template": "{reaction} Реагировать как {actor} на заявленный вкус и действие напитка. Молоко знакомое."
+      "template": "{reaction} Реагировать как {actor} на заявленный вкус и действие напитка. Молоко знакомое.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have the AI react to the NPC drinker's reported taste and effects."
+      }
     },
     "narrate_n_p_c_milk_drink_2": {
-      "template": " Руки {actor} также скованы. Учитывайте неудобства, не изобретая ограничений или эффектов."
+      "template": " Руки {actor} также скованы. Учитывайте неудобства, не изобретая ограничений или эффектов.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Account for the NPC drinker's verified arm restraints in the reaction."
+      }
     },
     "narrate_n_p_c_milk_drink_3": {
-      "template": " Фактическая граница: {actor} не является препаратом, и этот напиток не увеличивает количество грудного молока, полноту груди, ее вес, отек, рост, подтекание или лактацию. Не подразумевайте и не изобретайте какие-либо из этих эффектов."
+      "template": " Фактическая граница: {actor} не является препаратом, и этот напиток не увеличивает количество грудного молока, полноту груди, ее вес, отек, рост, подтекание или лактацию. Не подразумевайте и не изобретайте какие-либо из этих эффектов.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Keep an ordinary drinker's reaction from inventing lactation, breast milk or growth."
+      }
     },
     "narrate_n_p_c_milk_drink_4": {
-      "template": " {actor} — признанная доярка. Используйте только заявленные эффекты."
+      "template": " {actor} — признанная доярка. Используйте только заявленные эффекты.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Identify the drinker as an established Milk Maid while limiting the reaction to reported effects."
+      }
     },
     "narrate_player_milk_drink_1": {
-      "template": "Игрок выпил {milkName}; их грудь становится тяжелее и чувствительнее. Пусть один из персонажей, находящихся поблизости, отреагирует. Молоко знакомое."
+      "template": "Игрок выпил {milkName}; их грудь становится тяжелее и чувствительнее. Пусть один из персонажей, находящихся поблизости, отреагирует. Молоко знакомое.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have a nearby character react to the supplied player-drink situation."
+      }
     },
     "narrate_player_milk_drink_2": {
-      "template": "{reaction} Пусть один из персонажей поблизости отреагирует на сообщаемый игроком эффект выпитого напитка. Молоко знакомое."
+      "template": "{reaction} Пусть один из персонажей поблизости отреагирует на сообщаемый игроком эффект выпитого напитка. Молоко знакомое.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have a nearby character react to the player's reported drink effects."
+      }
     },
     "narrate_player_milk_drink_3": {
-      "template": " Руки игрока также скованы. Учитывайте неудобства, не изобретая ограничений или эффектов."
+      "template": " Руки игрока также скованы. Учитывайте неудобства, не изобретая ограничений или эффектов.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Account for the player drinker's verified arm restraints in the reaction."
+      }
     },
     "build_restrained_player_drink_content_1": {
-      "template": "Игрок выпил {milkName} со скованными руками; их грудь становится тяжелее и чувствительнее. Пусть один из персонажей, находящихся поблизости, отреагирует. Молоко знакомое."
+      "template": "Игрок выпил {milkName} со скованными руками; их грудь становится тяжелее и чувствительнее. Пусть один из персонажей, находящихся поблизости, отреагирует. Молоко знакомое.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the player drinking milk while her arms are restrained for a nearby character's reaction."
+      }
     },
     "drinkMessage": {
-      "template": "{actor} только что выпил {item}."
+      "template": "{actor} только что выпил {item}.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Inform Skyrim.Net that the named character consumed the supplied item."
+      }
     }
   }
 }

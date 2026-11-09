@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI reactions and background descriptions for equipped or removed armor.",
     "player_controls": "How armor changes are described.",
@@ -12,31 +11,64 @@
       "MMEAlertsSkyrimNet.BuildNearbyArmorStatus"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_armor_equip_1": {
-      "template": "{actor} equipped milking armor; its suction cups attach to her breasts. React to the attachment."
+      "template": "{actor} equipped milking armor; its suction cups attach to her breasts. React to the attachment.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Add erotic flavor to a reaction when a character equips milking armor."
+      }
     },
     "narrate_armor_equip_2": {
-      "template": "Living armor wraps around {actor}. React to its movements and touch."
+      "template": "Living armor wraps around {actor}. React to its movements and touch.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Add playful erotic flavor when a character equips living armor."
+      }
     },
     "narrate_armor_equip_3": {
-      "template": "Living Parasite armor attaches to {actor}. React to its movements and touch."
+      "template": "Living Parasite armor attaches to {actor}. React to its movements and touch.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Add erotic flavor when a character equips parasite armor."
+      }
     },
     "narrate_armor_equip_4": {
-      "template": " This armor sprang from a trapped treasure chest and wrapped around {actor}. Acknowledge the surprise."
+      "template": " This armor sprang from a trapped treasure chest and wrapped around {actor}. Acknowledge the surprise.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Describe the surprise of armor being forced onto the affected character by a trap."
+      }
     },
     "narrate_armor_strip_1": {
-      "template": "{actor}'s {armorName} came off because of her milk-swollen breasts. React to the wardrobe mishap."
+      "template": "{actor}'s {armorName} came off because of her milk-swollen breasts. React to the wardrobe mishap.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have a character react to armor coming off as milk-heavy breasts outgrow it."
+      }
     },
     "build_nearby_armor_status_1": {
-      "template": "[Milking Armor] {actor} is wearing Milking Armor. Suction cups are attached to her nipples for milking."
+      "template": "[Milking Armor] {actor} is wearing Milking Armor. Suction cups are attached to her nipples for milking.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI context about a nearby character wearing milking armor."
+      }
     },
     "build_nearby_armor_status_2": {
-      "template": "[Living Armor] {actor} is wearing Living Armor. Living tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk."
+      "template": "[Living Armor] {actor} is wearing Living Armor. Living tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI context about a nearby character wearing living armor."
+      }
     },
     "build_nearby_armor_status_3": {
-      "template": "[Living Parasite] {actor} is wearing Living Parasite armor. Parasitic tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk."
+      "template": "[Living Parasite] {actor} is wearing Living Parasite armor. Parasitic tendrils are buried into her nipples, injecting stimulants and pleasurably draining milk.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI context about a nearby character wearing parasite armor."
+      }
     }
   }
 }

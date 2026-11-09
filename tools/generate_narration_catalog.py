@@ -50,6 +50,7 @@ def generate():
                 aliases=not notification,poolOnly=True,default=default,optionalTier=True,fallbackEntry=fallback)
     assert len(entries)==159
     flavor=json.loads((DATA/'FlavorNotifications.json').read_text(encoding='utf-8-sig'))
+    flavor={key:value for key,value in flavor.items() if not key.startswith('_')}
     flavor_schema=json.loads((ROOT/'tools/flavor-notification-schema.json').read_text(encoding='utf-8'))
     assert set(flavor)==set(flavor_schema) and len(flavor)==26
     for key,contract in flavor_schema.items():

@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI reaction when a Milk Maid begins craving milk.",
     "player_controls": "How the temptation is expressed aloud.",
@@ -10,10 +9,15 @@
       "MMEAlertsSkyrimNet.NarrateMilkCraving"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_milk_craving_1": {
-      "template": "{actor} жаждет молока. {craving} Выразите искушение своим собственным голосом; она еще не выпила."
+      "template": "{actor} жаждет молока. {craving} Выразите искушение своим собственным голосом; она еще не выпила.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have the craving character express her temptation to drink milk; she has not drunk it yet."
+      }
     }
   }
 }

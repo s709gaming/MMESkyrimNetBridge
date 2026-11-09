@@ -1,5 +1,13 @@
 MME EXTENSIONS - EDITABLE NARRATION
 
+INTERNAL AUTHORING NOTES
+Each text entry has _authoring format and intent notes for readers and coding AI.
+Notification = quick flavor, maximum 90 characters; Narration = AI instructions
+or context; Story = an on-screen paragraph. These notes are not displayed or sent
+to Skyrim.Net. The notification limit guides writing; notes do not truncate text.
+Narration notes sit beside template. Other pools keep their arrays unchanged and
+store notes in root _authoring.entries, indexed by the existing pool path.
+
 This folder is installed under Data/SKSE/Plugins/StorageUtilData/MMEAlerts/Narration.
 In MO2, open the installed mod in Explorer to find it. Back up your edits or keep
 customized JSON files in a separate higher-priority mod so reinstalls preserve them.

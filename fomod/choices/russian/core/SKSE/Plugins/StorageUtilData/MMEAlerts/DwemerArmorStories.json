@@ -1,4 +1,16 @@
 {
+  "_authoring": {
+    "entries": {
+      "stringList.dwemerarmorstart": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic experience as Dwemer armor begins milking her."
+      },
+      "stringList.dwemerarmorend": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic relief and aftermath as Dwemer armor finishes milking her."
+      }
+    }
+  },
   "stringList": {
     "dwemerarmorstart": [
       "Двемерское устройство оживает. Холодная древняя машина сжимает захваченную добычу, сжимая, поглаживая и выжимая с безжалостной эффективностью. Удовольствие сразу же наполняет вас — горячее, беспомощное, подавляющее — и вы с готовностью отдаетесь машине, стонущей, пока она берет то, что хочет."

@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI reactions to Dwemer suits, attachments and their reported effects.",
     "player_controls": "How the wearer describes the device and its teasing or milking.",
@@ -12,87 +11,180 @@
       "MMEAlertsSkyrimNet.BuildDwemerSuitPrompt"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_dwemer_effect_1": {
-      "template": " React from your own perspective as the affected Dwemer armor wearer."
+      "template": " React from your own perspective as the affected Dwemer armor wearer.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Keep the reaction in the affected Dwemer armor wearer's own perspective."
+      }
     },
     "build_dwemer_suit_prompt_1": {
-      "template": "Affected wearer: {actor}. Presentation profile: {profile}. {core} Immediate event: {event} Write one fresh, short, coherent first-person reaction spoken by {actor}. Make it natural, speakable adult dialogue. Let alarm or anticipation surge rapidly into overwhelming pleasure and manic happiness. Add one light touch of playful absurdity or innuendo that may earn a chuckle, but keep the emotion stronger than the joke. Convey gasping, laughter, and failing composure through the words, not written sound effects. Do not use stuttering, repeated syllables, spelled-out laughter, or excessive punctuation. Do not quote a stock example, narrate in third person, or repeat these instructions."
+      "template": "Affected wearer: {actor}. Presentation profile: {profile}. {core} Immediate event: {event} Write one fresh, short, coherent first-person reaction spoken by {actor}. Make it natural, speakable adult dialogue. Let alarm or anticipation surge rapidly into overwhelming pleasure and manic happiness. Add one light touch of playful absurdity or innuendo that may earn a chuckle, but keep the emotion stronger than the joke. Convey gasping, laughter, and failing composure through the words, not written sound effects. Do not use stuttering, repeated syllables, spelled-out laughter, or excessive punctuation. Do not quote a stock example, narrate in third person, or repeat these instructions.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Combine device background and the current event into a wearer-focused Dwemer reaction prompt."
+      }
     },
     "get_dwemer_profile_fallback_1": {
-      "template": "A Dwemer suit restrains an adult woman and floods her with aphrodisiacs, stimulation, and mechanical milking. Her reaction rockets from 0 to 10: shock becomes ecstatic overload, breathless laughter, failing thoughts, and manic glee. She knows the situation is absurd and humiliating but feels far too wonderful to care."
+      "template": "A Dwemer suit restrains an adult woman and floods her with aphrodisiacs, stimulation, and mechanical milking. Her reaction rockets from 0 to 10: shock becomes ecstatic overload, breathless laughter, failing thoughts, and manic glee. She knows the situation is absurd and humiliating but feels far too wonderful to care.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply device background when the full Dwemer suit profile text is unavailable."
+      }
     },
     "get_dwemer_profile_fallback_2": {
-      "template": "Hidden Dwemer machinery inside an adult woman's ordinary armor delivers aphrodisiacs, teasing, and milking without restraining her. Her reaction races from 0 to 10 into breathless pleasure, lost composure, manic glee, and embarrassed anticipation."
+      "template": "Hidden Dwemer machinery inside an adult woman's ordinary armor delivers aphrodisiacs, teasing, and milking without restraining her. Her reaction races from 0 to 10 into breathless pleasure, lost composure, manic glee, and embarrassed anticipation.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply device background when the Dwemer attachment profile text is unavailable."
+      }
     },
     "get_dwemer_event_fallback_1": {
-      "template": "The device activates for the first time. Escalate instantly from startled protest to overwhelmed, laughing ecstasy."
+      "template": "The device activates for the first time. Escalate instantly from startled protest to overwhelmed, laughing ecstasy.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply fallback context for the first Dwemer equipment fitting."
+      }
     },
     "get_dwemer_event_fallback_2": {
-      "template": "She recognizes the familiar mechanism and becomes embarrassingly eager before it fully activates."
+      "template": "She recognizes the familiar mechanism and becomes embarrassingly eager before it fully activates.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply fallback context for putting Dwemer equipment back on."
+      }
     },
     "get_dwemer_event_fallback_3": {
-      "template": "The milking cycle begins and sends her from intense anticipation into incoherent, manic delight."
+      "template": "The milking cycle begins and sends her from intense anticipation into incoherent, manic delight.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply fallback context for Dwemer milking starting."
+      }
     },
     "get_dwemer_event_fallback_4": {
-      "template": "The cycle ends with her dazed, satisfied, grinning, and already craving the next one."
+      "template": "The cycle ends with her dazed, satisfied, grinning, and already craving the next one.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply fallback context for Dwemer milking ending."
+      }
     },
     "get_dwemer_event_fallback_5": {
-      "template": "The Dwemer mechanism activates and drives her rapidly into overwhelming, breathless, manic glee."
+      "template": "The Dwemer mechanism activates and drives her rapidly into overwhelming, breathless, manic glee.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Supply fallback context for another Dwemer device event."
+      }
     },
     "build_dwemer_effect_narration_1": {
-      "template": "Immediate situation involving {actor}: {content} Your next response must be specifically about this event. Treat the Dwemer machinery's mechanical teasing as pleasurable, silly, playful, positive, and suggestive, never frightening, painful, or threatening. Respond in character with one short fresh reaction. Stay focused on the Dwemer armor, its gears and mechanisms, and the effects stated here; do not change subjects, merely repeat the situation, or invent additional effects."
+      "template": "Immediate situation involving {actor}: {content} Your next response must be specifically about this event. Treat the Dwemer machinery's mechanical teasing as pleasurable, silly, playful, positive, and suggestive, never frightening, painful, or threatening. Respond in character with one short fresh reaction. Stay focused on the Dwemer armor, its gears and mechanisms, and the effects stated here; do not change subjects, merely repeat the situation, or invent additional effects.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Keep the wearer's reaction focused on the reported Dwemer effect, with playful erotic flavor."
+      }
     },
     "effects_arousal": {
       "template": [
         "{actor} moans as Dwemer armor teases her nipples.",
         "{actor} gasps—Dwemer gears stroke her clit slow.",
         "{actor} moans, nipples tingling from injected aphrodisiac."
-      ]
+      ],
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Give the AI alternative erotic reactions to the reported rise in arousal caused by Dwemer armor."
+      }
     },
     "effects_milk": {
       "template": [
         "{actor} shivers as the armor pumps milk-aphrodisiac into her.",
         "{actor}'s breasts ache with milk as the device teases her."
-      ]
+      ],
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Give the AI alternative erotic reactions to the reported increase in breast milk caused by Dwemer armor."
+      }
     },
     "effects_milkAndArousal": {
       "template": [
         "{actor} shivers as the armor pumps milk-aphrodisiac into her.",
         "{actor} moans, nipples tingling from injected aphrodisiac.",
         "{actor}'s breasts ache with milk as the device teases her."
-      ]
+      ],
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Give the AI alternative erotic reactions to the reported increase in both breast milk and arousal caused by Dwemer armor."
+      }
     },
     "suit_core": {
-      "template": "A Dwemer Devious Suit traps an adult woman with her arms behind her, legs folded back, body exposed, and movement replaced by controllable mechanical limbs. It floods her with aphrodisiacs, relentless stimulation, and mechanical milking. Reactions rocket from 0 to 10: shock collapses into overwhelming pleasure, breathless laughter, babbling, manic glee, and addictive anticipation. She knows it is restrictive, humiliating, and absurd but becomes far too ecstatic to care. Keep humor secondary and use suggestive, non-graphic language."
+      "template": "A Dwemer Devious Suit traps an adult woman with her arms behind her, legs folded back, body exposed, and movement replaced by controllable mechanical limbs. It floods her with aphrodisiacs, relentless stimulation, and mechanical milking. Reactions rocket from 0 to 10: shock collapses into overwhelming pleasure, breathless laughter, babbling, manic glee, and addictive anticipation. She knows it is restrictive, humiliating, and absurd but becomes far too ecstatic to care. Keep humor secondary and use suggestive, non-graphic language.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Explain a full Dwemer suit to the AI."
+      }
     },
     "suit_firstEquip": {
-      "template": "This is her first capture. Begin with extreme shock at the restraints and mechanical body, then let the drugged stimulation overwhelm her objections mid-sentence. Escalate rapidly from alarm to confused gasps to delirious laughter and manic glee. End with embarrassed disbelief that the absurd machine feels this wonderful."
+      "template": "This is her first capture. Begin with extreme shock at the restraints and mechanical body, then let the drugged stimulation overwhelm her objections mid-sentence. Escalate rapidly from alarm to confused gasps to delirious laughter and manic glee. End with embarrassed disbelief that the absurd machine feels this wonderful.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the wearer's first fitting with a full Dwemer suit."
+      }
     },
     "suit_reequip": {
-      "template": "The experienced wearer recognizes every click, latch, vibration, and restraint and knows exactly what is coming. Do not repeat first-time fear. Make her giddy, impatient, and embarrassingly eager before the suit has even finished locking. She may jokingly pretend to resist or mourn her dignity, but addictive anticipation and shameless joy dominate."
+      "template": "The experienced wearer recognizes every click, latch, vibration, and restraint and knows exactly what is coming. Do not repeat first-time fear. Make her giddy, impatient, and embarrassingly eager before the suit has even finished locking. She may jokingly pretend to resist or mourn her dignity, but addictive anticipation and shameless joy dominate.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the wearer putting a full Dwemer suit back on."
+      }
     },
     "suit_milkingStart": {
-      "template": "The gears change rhythm and begin milking while she is already restrained, drugged, stimulated, and dazed. Recognition sends her instantly from 0 to 10. Push her into ecstatic overload: breathless laughter, babbling, failing thoughts, manic glee, and absurd delight that harvest time has begun. Ecstasy leads; mechanical and dairy humor merely seasons it."
+      "template": "The gears change rhythm and begin milking while she is already restrained, drugged, stimulated, and dazed. Recognition sends her instantly from 0 to 10. Push her into ecstatic overload: breathless laughter, babbling, failing thoughts, manic glee, and absurd delight that harvest time has begun. Ecstasy leads; mechanical and dairy humor merely seasons it.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe a full Dwemer suit beginning to milk its wearer."
+      }
     },
     "suit_milkingEnd": {
-      "template": "The milking cycle has finished. The wearer descends from an absurdly intense euphoric high into blissful, dazed satisfaction. She is lightheaded, still grinning, embarrassed by how completely she lost composure, slightly disappointed that it stopped, and already anticipating the next cycle. Keep the afterglow and addictive eagerness stronger than the joke."
+      "template": "The milking cycle has finished. The wearer descends from an absurdly intense euphoric high into blissful, dazed satisfaction. She is lightheaded, still grinning, embarrassed by how completely she lost composure, slightly disappointed that it stopped, and already anticipating the next cycle. Keep the afterglow and addictive eagerness stronger than the joke.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe a full Dwemer suit finishing milking its wearer."
+      }
     },
     "attachment_core": {
-      "template": "A Dwemer milking attachment hides intimate machinery inside an adult woman's ordinary armor. It does not bind her arms, replace her limbs, or transform the armor into a full restraint suit. Its gears deliver aphrodisiacs, relentless teasing, and mechanical milking while she remains mobile. Reactions surge from 0 to 10: breathless pleasure, collapsing composure, giddy laughter, manic delight, addictive anticipation, and embarrassment over enjoying the scandalous device so much. Keep humor secondary and use suggestive, non-graphic language."
+      "template": "A Dwemer milking attachment hides intimate machinery inside an adult woman's ordinary armor. It does not bind her arms, replace her limbs, or transform the armor into a full restraint suit. Its gears deliver aphrodisiacs, relentless teasing, and mechanical milking while she remains mobile. Reactions surge from 0 to 10: breathless pleasure, collapsing composure, giddy laughter, manic delight, addictive anticipation, and embarrassment over enjoying the scandalous device so much. Keep humor secondary and use suggestive, non-graphic language.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Explain a Dwemer attachment to the AI."
+      }
     },
     "attachment_firstEquip": {
-      "template": "The intimate Dwemer attachment has just activated inside the wearer's armor for the first time. She is startled by the hidden gears, close-fitting mechanisms, aphrodisiac rush, and sudden stimulation. Let surprise rapidly collapse into breathless, giddy pleasure and embarrassed disbelief. Do not describe immobilized arms, folded legs, replacement limbs, or a full-body suit."
+      "template": "The intimate Dwemer attachment has just activated inside the wearer's armor for the first time. She is startled by the hidden gears, close-fitting mechanisms, aphrodisiac rush, and sudden stimulation. Let surprise rapidly collapse into breathless, giddy pleasure and embarrassed disbelief. Do not describe immobilized arms, folded legs, replacement limbs, or a full-body suit.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the wearer's first fitting with a Dwemer attachment."
+      }
     },
     "attachment_reequip": {
-      "template": "The experienced wearer recognizes the hidden attachment's familiar clicks, vibration, and intimate fit. She becomes eagerly impatient for its aphrodisiacs and teasing to begin, while joking about how ordinary her armor looks from the outside. Do not describe restraints or mechanical limbs."
+      "template": "The experienced wearer recognizes the hidden attachment's familiar clicks, vibration, and intimate fit. She becomes eagerly impatient for its aphrodisiacs and teasing to begin, while joking about how ordinary her armor looks from the outside. Do not describe restraints or mechanical limbs.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the wearer putting a Dwemer attachment back on."
+      }
     },
     "attachment_milkingStart": {
-      "template": "The attachment changes rhythm and its compact milking mechanism engages while the wearer is already stimulated. Recognition sends her into breathless, laughing excitement and rapidly failing composure. Emphasize the absurdity of discreet machinery inside normal armor beginning harvest time. Do not describe a full restraint suit."
+      "template": "The attachment changes rhythm and its compact milking mechanism engages while the wearer is already stimulated. Recognition sends her into breathless, laughing excitement and rapidly failing composure. Emphasize the absurdity of discreet machinery inside normal armor beginning harvest time. Do not describe a full restraint suit.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe a Dwemer attachment beginning to milk its wearer."
+      }
     },
     "attachment_milkingEnd": {
-      "template": "The concealed milking attachment finishes its cycle. The wearer is dazed, satisfied, embarrassed by how much she enjoyed the machinery hidden in her armor, and already anticipating its next activation. Keep the blissful afterglow stronger than the joke and do not invent restraints."
+      "template": "The concealed milking attachment finishes its cycle. The wearer is dazed, satisfied, embarrassed by how much she enjoyed the machinery hidden in her armor, and already anticipating its next activation. Keep the blissful afterglow stronger than the joke and do not invent restraints.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe a Dwemer attachment finishing milking its wearer."
+      }
     }
   }
 }

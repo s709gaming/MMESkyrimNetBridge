@@ -1,4 +1,56 @@
 {
+  "_authoring": {
+    "entries": {
+      "male_generic": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a male character's reaction after drinking milk, without asserting an unreported milk or arousal increase."
+      },
+      "female_generic": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a female character's reaction after drinking milk, without asserting an unreported milk or arousal increase."
+      },
+      "male_aroused": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a male character's reaction after drinking milk, acknowledging the reported arousal increase."
+      },
+      "female_aroused": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a female character's reaction after drinking milk, acknowledging the reported arousal increase."
+      },
+      "female_milk": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a female character's reaction after drinking milk, acknowledging the reported milk added to her breasts."
+      },
+      "female_milk_arousal": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a female character's reaction after drinking milk, acknowledging the reported milk and arousal increases."
+      },
+      "breastfeeding_male_generic": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a male character's reaction after breastfeeding, without asserting an unreported milk or arousal increase."
+      },
+      "breastfeeding_male_aroused": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a male character's reaction after breastfeeding, acknowledging the reported arousal increase."
+      },
+      "breastfeeding_female_generic": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a female character's reaction after breastfeeding, without asserting an unreported milk or arousal increase."
+      },
+      "breastfeeding_female_aroused": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a female character's reaction after breastfeeding, acknowledging the reported arousal increase."
+      },
+      "breastfeeding_female_milk": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a female character's reaction after breastfeeding, acknowledging the reported milk added to her breasts."
+      },
+      "breastfeeding_female_milk_arousal": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a female character's reaction after breastfeeding, acknowledging the reported milk and arousal increases."
+      }
+    }
+  },
   "male_generic": [
     "{actor} пьет {milk}. На вкус он потрясающий.",
     "{actor} пьет {milk}. Он сразу хочет другого.",

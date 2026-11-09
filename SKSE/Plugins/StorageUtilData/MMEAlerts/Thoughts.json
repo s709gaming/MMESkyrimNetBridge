@@ -1,4 +1,44 @@
 {
+  "_authoring": {
+    "entries": {
+      "belowHalf_noArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her below-half-full breasts without special armor. The selected thought may also ground an AI reaction."
+      },
+      "belowHalf_milkingArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her below-half-full breasts inside milking cups. The selected thought may also ground an AI reaction."
+      },
+      "belowHalf_parasiteArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her below-half-full breasts under parasite armor. The selected thought may also ground an AI reaction."
+      },
+      "belowHalf_livingArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her below-half-full breasts under living armor. The selected thought may also ground an AI reaction."
+      },
+      "halfPlus_noArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her half-full or fuller breasts without special armor. The selected thought may also ground an AI reaction."
+      },
+      "armsBound": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Express a Milk Maid's erotic frustration at being unable to touch her breasts with her arms restrained. The selected thought may also ground an AI reaction."
+      },
+      "halfPlus_milkingArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her half-full or fuller breasts inside milking cups. The selected thought may also ground an AI reaction."
+      },
+      "halfPlus_parasiteArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her half-full or fuller breasts under parasite armor. The selected thought may also ground an AI reaction."
+      },
+      "halfPlus_livingArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her half-full or fuller breasts under living armor. The selected thought may also ground an AI reaction."
+      }
+    }
+  },
   "belowHalf_noArmor": [
     "{actor} is starting to notice the extra weight on her chest.",
     "{actor} can feel her breasts getting heavier again.",
@@ -7,7 +47,6 @@
     "{actor} is getting pleasantly aware of her growing fullness.",
     "{actor} can tell her breasts are becoming harder to ignore."
   ],
-
   "belowHalf_milkingArmor": [
     "{actor} can feel the cups settling comfortably around her breasts.",
     "{actor} notices the milking gear fitting a little more snugly.",
@@ -16,7 +55,6 @@
     "{actor} can feel a faint pull from the waiting cups.",
     "{actor} notices her breasts sitting more firmly in the milking gear."
   ],
-
   "belowHalf_parasiteArmor": [
     "{actor} can feel the parasite stirring as her milk returns.",
     "{actor} notices curious tendrils exploring her filling breasts.",
@@ -25,7 +63,6 @@
     "{actor} can feel eager tendrils tracing her growing breasts.",
     "{actor} senses the parasite paying close attention to every fresh drop."
   ],
-
   "belowHalf_livingArmor": [
     "{actor} can feel soft tendrils tending her filling breasts.",
     "{actor} notices the living armor gently supporting her growing weight.",
@@ -34,7 +71,6 @@
     "{actor} notices the living armor adjusting comfortably around her.",
     "{actor} can feel gentle attention following every bit of growth."
   ],
-
   "halfPlus_noArmor": [
     "{actor} can feel the weight of her breasts with every step.",
     "{actor} is really starting to miss proper support.",
@@ -43,7 +79,6 @@
     "{actor} is discovering that all this milk has consequences.",
     "{actor} is starting to regret not planning for this much bust."
   ],
-
   "armsBound": [
     "{actor} wants to fondle her aching breasts, but her hands are tied!",
     "{actor} wishes she could slide her arms beneath her heavy breasts.",
@@ -51,7 +86,6 @@
     "{actor} longs to lift her heavy chest, but her bound arms refuse.",
     "{actor} wants to squeeze her full breasts, but her hands are trapped."
   ],
-
   "halfPlus_milkingArmor": [
     "{actor} can feel the cups working harder around her heavy breasts.",
     "{actor} notices the milking gear gripping her much more firmly.",
@@ -60,7 +94,6 @@
     "{actor} can feel the machinery struggling to keep up with her.",
     "{actor} notices every tug against her milk-heavy breasts."
   ],
-
   "halfPlus_parasiteArmor": [
     "{actor} can feel the parasite greedily squeezing her swollen breasts.",
     "{actor} notices hungry tendrils refusing to leave her full breasts alone.",
@@ -69,7 +102,6 @@
     "{actor} can feel eager tendrils working over every bit of fullness.",
     "{actor} notices the parasite becoming almost obsessed with her breasts."
   ],
-
   "halfPlus_livingArmor": [
     "{actor} can feel warm tendrils massaging her heavy breasts.",
     "{actor} notices the living armor giving her swollen breasts extra support.",

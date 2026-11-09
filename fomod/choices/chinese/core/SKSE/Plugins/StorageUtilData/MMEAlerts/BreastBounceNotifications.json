@@ -1,4 +1,20 @@
 {
+  "_authoring": {
+    "entries": {
+      "low": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add playful erotic flavor to a small breast bounce."
+      },
+      "high": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add playful erotic flavor to a strong breast bounce."
+      },
+      "movement": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add playful erotic flavor when breasts slap during movement."
+      }
+    }
+  },
   "low": [
     "{actor}的乳房轻轻摇动。她对着弹跳咯咯地笑。",
     "{actor} 的乳房在她的胸口上弹跳。她对他们微笑。",

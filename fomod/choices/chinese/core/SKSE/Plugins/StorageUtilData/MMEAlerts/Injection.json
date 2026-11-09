@@ -1,4 +1,28 @@
 {
+  "_authoring": {
+    "entries": {
+      "lines": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Provide the shared default erotic notification after a successful living or parasite armor effect."
+      },
+      "tiers.low.lines": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add low-tier erotic flavor after a successful living or parasite armor effect."
+      },
+      "tiers.medium.lines": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add medium-tier erotic flavor after a successful living or parasite armor effect."
+      },
+      "tiers.high.lines": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add high-tier erotic flavor after a successful living or parasite armor effect."
+      },
+      "tiers.extreme.lines": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add extreme-tier erotic flavor after a successful living or parasite armor effect."
+      }
+    }
+  },
   "tiers": {
     "low": {},
     "medium": {},

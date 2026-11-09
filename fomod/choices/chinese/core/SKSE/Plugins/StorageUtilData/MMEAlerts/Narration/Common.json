@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "Instructions for the player character speaking about her own experience.",
     "player_controls": "Format and delivery of private player self-comments.",
@@ -12,13 +11,13 @@
       "MMEPostMilking.NarrateLast"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "player_instructions": {
       "_authoring": {
-        "purpose": "Keep private player reactions in the affected player's own voice.",
-        "output": "One first-person spoken line.",
-        "boundary": "Private responses exclude observers, dialogue partners and extra replies."
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Keep the affected player's private reaction to one first-person spoken line, without other speakers."
       },
       "template": "为 {actor} 写一篇简短的、非图形的口头自我评论。\n说话者是经历所提供情况的人，而不是观察者。\n仅返回一个纯文本第一人称行。没有演讲者标签、舞台指示，\n对话伙伴、标记或其他人的回复。不要发明效果。"
     }

@@ -1,4 +1,16 @@
 {
+  "_authoring": {
+    "entries": {
+      "stringList.dwemerarmorstart": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic experience as Dwemer armor begins milking her."
+      },
+      "stringList.dwemerarmorend": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic relief and aftermath as Dwemer armor finishes milking her."
+      }
+    }
+  },
   "stringList": {
     "dwemerarmorstart": [
       "Dwemer 装置突然启动。冰冷的古老机械夹住了它捕获的战利品，以无情的效率挤压、抚摸和绞拧。快乐立刻涌入你的全身——炽热、无助、压倒——你急切地向机器投降，在它得到它想要的东西时呻吟着。"

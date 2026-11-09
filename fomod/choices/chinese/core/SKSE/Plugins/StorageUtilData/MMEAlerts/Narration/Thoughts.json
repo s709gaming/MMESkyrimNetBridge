@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI expression of a Milk Maid thought already selected by the mod.",
     "player_controls": "How a supplied thought is expressed in a character reaction.",
@@ -11,13 +10,22 @@
       "MMEAlertsSkyrimNet.NarrateBoundMilkMaidThought"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "narrate_milk_maid_thought_1": {
-      "template": "{actor}的情况： {thought}表达一下简单的想法。"
+      "template": "{actor}的情况： {thought}表达一下简单的想法。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have the AI express the named Milk Maid's supplied thought in character."
+      }
     },
     "narrate_bound_milk_maid_thought_1": {
-      "template": "{actor} 的情况： {thought} 对所描述的约束和牛奶相关细节做出反应。"
+      "template": "{actor} 的情况： {thought} 对所描述的约束和牛奶相关细节做出反应。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have the AI react to the named Milk Maid's supplied thought about restraint and her milk-related predicament."
+      }
     }
   }
 }

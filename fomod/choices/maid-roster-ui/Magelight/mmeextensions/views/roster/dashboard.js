@@ -2,7 +2,13 @@
 (function(){
 'use strict';
 const el=id=>document.getElementById(id),clone=value=>JSON.parse(JSON.stringify(value));
-const state={session:'',counter:0,pending:null,queue:[],revision:'',documentBytes:0,catalog:[],cache:new Map(),drafts:new Map(),uncertain:false};
+const state={session:'',counter:0,pending:null,queue:[],revision:'',documentBytes:0,catalog:[],cache:new Map(),drafts:new Map(),titleDrafts:new Map(),uncertain:false};
+const dirtyCount=()=>new Set([...state.drafts.keys(),...state.titleDrafts.keys()]).size;
+const hasDraft=id=>state.drafts.has(id)||state.titleDrafts.has(id);
+const customized=meta=>meta.customized||typeof meta.customTitle==='string';
+const customTitle=meta=>state.titleDrafts.has(meta.id)?state.titleDrafts.get(meta.id):(meta.customTitle||null);
+const defaultTitle=meta=>(window.MMELocale&&window.MMELocale.strings&&window.MMELocale.strings[meta.label])||meta.label;
+const displayTitle=meta=>customTitle(meta)||defaultTitle(meta);
 let preferences={section:'skyrimnet',features:{},minor:false};
 try{const saved=JSON.parse(window.localStorage.getItem('mme-editor-navigation-v1'));if(saved&&['skyrimnet','messages'].includes(saved.section)&&saved.features&&typeof saved.features==='object')preferences=saved;}catch(error){}
 const visible=meta=>meta.presentation&&meta.presentation.visible===true;
@@ -17,12 +23,12 @@ function updateSections(){
  el('editor-message-link').hidden=!ai;
  el('editor-minor-controls').hidden=ai;el('editor-minor').checked=!!preferences.minor;
  const minors=state.catalog.filter(m=>visible(m)&&presentation(m).minor);
- el('editor-minor-note').textContent=preferences.minor?minors.length+' minor messages included.':minors.length+' minor messages hidden ('+minors.filter(m=>m.customized||state.drafts.has(m.id)).length+' customized or unsaved).';
+ el('editor-minor-note').textContent=preferences.minor?minors.length+' minor messages included.':minors.length+' minor messages hidden ('+minors.filter(m=>customized(m)||hasDraft(m.id)).length+' customized or unsaved).';
  const select=el('editor-group');select.textContent='';const all=node('option','All features');all.value='';select.appendChild(all);
  const features=Array.from(new Set(orderedEntries().filter(m=>presentation(m).section===preferences.section).map(m=>presentation(m).feature)));
  for(const feature of features){const option=node('option',feature);option.value=feature;select.appendChild(option);}
  const selected=preferences.features[preferences.section];select.value=features.includes(selected)?selected:'';
- el('editor-hidden-note').hidden=!state.catalog.some(m=>!visible(m)&&m.customized);
+ el('editor-hidden-note').hidden=!state.catalog.some(m=>!visible(m)&&customized(m));
 }
 function changeSection(section){preferences.features[preferences.section]=el('editor-group').value;preferences.section=section;remember();updateSections();el('editor-list').scrollTop=0;renderList();}
 const friendly=text=>text.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/_/g,' ');
@@ -114,11 +120,12 @@ function validation(meta,value){
 function updateFooter(){
  let invalid=0;for(const [id,value] of state.drafts){const meta=state.catalog.find(m=>m.id===id);if(value!==null&&meta&&validation(meta,value))++invalid;}
  const busy=!!state.pending||!!state.queue.length;
- for(const card of el('editor-list').children)if(card.children&&card.children[1])card.children[1].disabled=busy;
+ for(const card of el('editor-list').children)if(card.children[0]&&card.children[0].children[1])card.children[0].children[1].disabled=busy||!state.canRename;
+ for(const card of el('editor-list').children)for(const field of card.children)if(field.tagName&&field.tagName.toLowerCase()==='fieldset')field.disabled=busy;
  el('editor-reload').disabled=busy;
  el('editor-size').textContent='Saved text size: '+state.documentBytes+' / 262144 bytes · size checked before saving';
- el('editor-save').disabled=!state.revision||!state.drafts.size||!!invalid||busy||state.uncertain;
- el('editor-changes').textContent=state.drafts.size+' unsaved entr'+(state.drafts.size===1?'y':'ies')+(invalid?' · '+invalid+' invalid':'')+(busy?' · working…':'');
+ el('editor-save').disabled=!state.revision||!dirtyCount()||!!invalid||busy||state.uncertain;
+ el('editor-changes').textContent=dirtyCount()+' unsaved entr'+(dirtyCount()===1?'y':'ies')+(invalid?' · '+invalid+' invalid':'')+(busy?' · working…':'');
  for(const id of ['editor-export','editor-import','editor-capture','editor-legacy','editor-reset-all'])el(id).disabled=busy||!state.revision;
 }
 function stage(meta,value){
@@ -127,6 +134,34 @@ function stage(meta,value){
  if(value!==null&&saved&&JSON.stringify(value)===JSON.stringify(saved.value))state.drafts.delete(meta.id);
  else state.drafts.set(meta.id,clone(value));
  updateFooter();
+}
+let activeRename=null;
+function focusRename(id){
+ for(const card of el('editor-list').children)if(card.entryId===id&&card.children[0].children[1].focus)card.children[0].children[1].focus();
+}
+function renameTitle(meta,card){
+ if(state.pending||state.queue.length)return;
+ if(activeRename){activeRename.input.focus();return;}
+ const box=node('fieldset',undefined,'rename-box'),label=node('label','Entry title'),input=node('input'),error=node('p','','error');
+ input.type='text';input.value=displayTitle(meta);input.maxLength=160;input.setAttribute('aria-label','Entry title');
+ label.appendChild(input);box.appendChild(label);box.appendChild(node('p','1–80 characters. Save Changes applies your title.','editor-hint'));box.appendChild(error);
+ const finish=value=>{
+  if(state.pending||state.queue.length)return;
+  const saved=meta.customTitle||null;
+  if(value===saved)state.titleDrafts.delete(meta.id);else state.titleDrafts.set(meta.id,value);
+  activeRename=null;renderList();focusRename(meta.id);
+ };
+ const apply=()=>{
+  const value=input.value.trim();
+  if(value===defaultTitle(meta)||value===meta.label){finish(null);return;}
+  if(!value||Array.from(value).length>80||/[\x00-\x1f\x7f]/.test(value)){error.textContent='Enter a single-line title of 1 to 80 characters.';return;}
+  finish(value===meta.label?null:value);
+ };
+ const cancel=()=>{activeRename=null;renderList();focusRename(meta.id);};
+ const actions=node('div',undefined,'variant-actions');
+ actions.appendChild(button('Use title',apply));actions.appendChild(button('Cancel',cancel));actions.appendChild(button('Reset title',()=>finish(null)));box.appendChild(actions);
+ input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();apply();}else if(event.key==='Escape'){event.preventDefault();event.stopPropagation();cancel();}});
+ activeRename={input,cancel};card.open=true;card.insertBefore(box,card.children[1]);input.focus();if(box.scrollIntoView)box.scrollIntoView({block:'nearest'});updateFooter();
 }
 function showEditor(meta,container){
  container.textContent='Loading…';
@@ -140,7 +175,7 @@ function showEditor(meta,container){
   let value=clone(current===null?saved.baseValue:current);
   const display=presentation(meta);
   if(display.note)container.appendChild(node('p',display.note,'editor-hint'));
-  if(display.shared)container.appendChild(node('p','Skyrim.Net can also use this message when creating character reactions.','editor-hint'));
+  if(display.shared&&display.section==='messages')container.appendChild(node('p','Skyrim.Net can also use this message when creating character reactions.','editor-hint'));
   const hint=node('p','Keep these placeholders: '+(meta.required.length?meta.required.map(t=>'{'+t+'}').join(' '):'none required')+' · Up to 8192 bytes per version · up to 64 versions','editor-hint');container.appendChild(hint);
   for(const token of meta.allowed)container.appendChild(node('p','{'+token+'}: '+(display.tokenHelp[token]||'The game fills this in. Keep the placeholder exactly as shown.'),'editor-hint'));
   const badge=node('span',state.drafts.has(meta.id)?(current===null?'Reset on Save':'Unsaved'):(saved.customized?'Personal':saved.inherited?'Using shared text':'Default'),'badge');container.appendChild(badge);
@@ -172,6 +207,7 @@ function showEditor(meta,container){
  }).catch(error=>{container.textContent=error.message;status(error.message);});
 }
 function renderList(){
+ activeRename=null;
  const list=el('editor-list'),position=list.scrollTop;list.textContent='';
  const query=el('editor-search').value.toLowerCase(),group=el('editor-group').value,modified=el('editor-modified').checked;
  let count=0;
@@ -179,14 +215,16 @@ function renderList(){
   const display=presentation(meta);
   if(display.section!==preferences.section)continue;
   if(group&&display.feature!==group)continue;
-  if(query&&[meta.label,meta.id,display.feature,display.description,display.badge].join(' ').toLowerCase().indexOf(query)<0)continue;
-  if(modified&&!meta.customized&&!state.drafts.has(meta.id))continue;
-  ++count;const card=node('details',undefined,'editor-card'),heading=node('summary',meta.label),body=node('fieldset',undefined,'entry-body');
-  heading.appendChild(node('small',display.badge+' · '+display.feature+(state.drafts.has(meta.id)?' · Unsaved':meta.customized?' · Personal':'')));
+  if(query&&[displayTitle(meta),meta.label,meta.id,display.feature,display.description,display.badge].join(' ').toLowerCase().indexOf(query)<0)continue;
+  if(modified&&!customized(meta)&&!hasDraft(meta.id))continue;
+  ++count;const card=node('details',undefined,'editor-card'),heading=node('summary'),body=node('fieldset',undefined,'entry-body');
+  const title=node('span',displayTitle(meta),'entry-title'+(customTitle(meta)?' user-title':''));heading.appendChild(title);
+  const rename=button('✎',event=>{event.preventDefault();event.stopPropagation();renameTitle(meta,card);});rename.className='rename-title';rename.setAttribute('aria-label','Rename title');rename.disabled=!state.canRename;rename.title=state.canRename?'Rename title':'Update MME Extensions to rename titles.';heading.appendChild(rename);
+  heading.appendChild(node('small',(display.formatBadge||display.badge)+' · '+display.feature+(hasDraft(meta.id)?' · Unsaved':customized(meta)?' · Personal':'')));
   heading.appendChild(node('span',display.description,'editor-description'));
   heading.addEventListener('click',event=>{if(state.pending||state.queue.length)event.preventDefault();});
   heading.addEventListener('keydown',event=>{if((state.pending||state.queue.length)&&(event.key==='Enter'||event.key===' '))event.preventDefault();});
-  card.setAttribute('data-entry-id',meta.id);card.appendChild(heading);card.appendChild(body);let loaded=false;
+  card.entryId=meta.id;card.setAttribute('data-entry-id',meta.id);card.appendChild(heading);card.appendChild(body);let loaded=false;
   card.addEventListener('toggle',()=>{if(card.open&&!loaded&&!state.pending&&!state.queue.length){loaded=true;showEditor(meta,body);}});
   list.appendChild(card);
  }
@@ -198,42 +236,44 @@ function loadCatalog(discard){
  return rpc('catalog').then(reply=>{
   if(reply.protocolVersion!==2||!Array.isArray(reply.entries))throw Error('Editor and native backend versions do not match.');
   if(reply.entries.some(m=>!m.presentation||!['skyrimnet','messages','internal'].includes(m.presentation.section)))throw Error('Editor presentation metadata is unavailable. Update the dashboard and native plugin together.');
-  state.catalog=reply.entries;state.revision=reply.revision;state.documentBytes=reply.documentBytes||0;state.uncertain=false;state.cache.clear();if(discard)state.drafts.clear();
+  state.catalog=reply.entries;state.canRename=reply.titleEditing===true;state.revision=reply.revision;state.documentBytes=reply.documentBytes||0;state.uncertain=false;state.cache.clear();if(discard){state.drafts.clear();state.titleDrafts.clear();}
   updateSections();
   el('editor-path').textContent='Personal file: '+reply.path;renderList();status('Open an entry to edit. Save Changes saves all your edits together.');
   presets().catch(error=>status(error.message));
  }).catch(error=>{status(error.message);updateFooter();});
 }
 function save(){
- const changes={};for(const [id,value] of state.drafts)changes[id]=value;
- status('Saving '+state.drafts.size+' entries…');
- return rpc('saveBatch',{revision:state.revision,changes}).then(()=>loadCatalog(true)).catch(error=>status(error.message));
+ const changes={},titleChanges={};for(const [id,value] of state.drafts)changes[id]=value;for(const [id,value] of state.titleDrafts)titleChanges[id]=value;
+ status('Saving '+dirtyCount()+' entries…');
+ return rpc('saveBatch',{revision:state.revision,changes,titleChanges}).then(()=>loadCatalog(true)).catch(error=>status(error.message));
 }
 el('editor-save').addEventListener('click',()=>{if(!el('editor-save').disabled)save();});
-el('editor-reload').addEventListener('click',()=>{if(state.drafts.size)ask('Discard your unsaved edits and reload the saved text?',()=>loadCatalog(true));else loadCatalog(false);});
+el('editor-reload').addEventListener('click',()=>{if(dirtyCount())ask('Discard your unsaved edits and reload the saved text?',()=>loadCatalog(true));else loadCatalog(false);});
 el('editor-search').addEventListener('input',renderList);el('editor-group').addEventListener('change',()=>{preferences.features[preferences.section]=el('editor-group').value;remember();renderList();});el('editor-modified').addEventListener('change',renderList);
 el('editor-skyrimnet').addEventListener('click',()=>changeSection('skyrimnet'));el('editor-messages').addEventListener('click',()=>changeSection('messages'));el('editor-message-link').addEventListener('click',()=>changeSection('messages'));
 el('editor-minor').addEventListener('change',()=>{preferences.features[preferences.section]=el('editor-group').value;preferences.minor=el('editor-minor').checked;remember();updateSections();renderList();});
 el('editor-up').addEventListener('click',()=>{el('editor-list').scrollTop-=el('editor-list').clientHeight||400;});
 el('editor-down').addEventListener('click',()=>{el('editor-list').scrollTop+=el('editor-list').clientHeight||400;});
 el('editor-reset-all').addEventListener('click',()=>ask("Restore the mod's supplied text in both Skyrim.Net Reactions & Lore and Game Messages & Stories, including hidden minor messages. Saved presets are kept.\n\nNothing changes until you click Save Changes.",()=>{for(const meta of state.catalog)if(visible(meta)&&(meta.customized||state.drafts.has(meta.id)))state.drafts.set(meta.id,null);updateSections();renderList();},{title:'Reset Edited Text?',cancel:'Cancel',accept:'Prepare Reset'}));
-function updateImportHelp(){el('editor-import-help').textContent=el('editor-import-mode').value==='replace'?"Replace your saved edits with this preset. Entries missing from it return to the mod's supplied text.":"Add preset text where you haven't made your own edits. Your existing edits are kept.";}
+function updateImportHelp(){el('editor-import-help').textContent=el('editor-import-mode').value==='replace'?"Replace your saved text and titles with this preset. Missing items return to supplied defaults.":"Add preset text and titles where you have no personal edits. Existing edits are kept.";}
 el('editor-import-mode').addEventListener('change',updateImportHelp);
 updateImportHelp();
 el('editor-export').addEventListener('click',()=>{
- if(state.drafts.size){status('Save or discard your pending edits before saving a preset.');return;}
+ if(dirtyCount()){status('Save or discard your pending edits before saving a preset.');return;}
  rpc('export',{revision:state.revision,name:el('editor-preset-name').value}).then(()=>{status('Preset saved. Choose it below whenever you want to load it.');presets();}).catch(error=>status(error.message));
 });
 el('editor-import').addEventListener('click',()=>{
- if(state.drafts.size){status('Save or discard your pending edits before loading a preset.');return;}
+ if(dirtyCount()){status('Save or discard your pending edits before loading a preset.');return;}
  const name=el('editor-preset-list').value,mode=el('editor-import-mode').value;
  if(!name){status('Choose a saved preset first.');return;}
  rpc('importPreview',{name}).then(preview=>{
   const counts=preview.counts&&preview.counts[mode];
   if(!counts)throw Error('Preset review is unavailable. Close and reopen this menu; if it continues, check your MME Extensions installation.');
-  const summary='Add: '+counts.added+' | Keep: '+counts.kept+' | Replace: '+counts.replaced+' | Reset: '+counts.reset;
-  const explanation=mode==='merge'?'Your existing edits are kept. The preset adds entries you have not edited.':"This replaces all your saved text edits, including edits not shown here. Entries missing from the preset return to the mod's supplied text.";
-  ask(summary+'\n\n'+explanation,()=>{
+  const tc=preview.titleCounts&&preview.titleCounts[mode];
+  const titleSummary=tc?'\nTitles — Add: '+tc.added+' | Keep: '+tc.kept+' | Replace: '+tc.replaced+' | Reset: '+tc.reset:'';
+  const summary='Text — Add: '+counts.added+' | Keep: '+counts.kept+' | Replace: '+counts.replaced+' | Reset: '+counts.reset;
+  const explanation=mode==='merge'?'Your existing edits are kept. The preset adds entries you have not edited.':"This replaces saved text and titles, including hidden entries. Items missing from the preset return to their supplied defaults.";
+  ask(summary+titleSummary+'\n\n'+explanation,()=>{
    rpc('importApply',{name,mode,presetRevision:preview.presetRevision,revision:state.revision}).then(()=>loadCatalog(true)).catch(error=>status(error.message));
   },{title:'Load "'+name+'"?',cancel:'Cancel',accept:'Load Preset'});
  }).catch(error=>status(error.message));
@@ -244,7 +284,7 @@ el('editor-capture').addEventListener('click',()=>capture('capture'));el('editor
 function showTab(editor){
  el('roster-tab').setAttribute('aria-selected',String(!editor));el('lore-tab').setAttribute('aria-selected',String(editor));
  el('roster-panel').hidden=editor;el('lore-panel').hidden=!editor;el('refresh').hidden=editor;
- if(editor&&(!state.catalog.length||(state.uncertain&&!state.drafts.size)))loadCatalog(false);
+ if(editor&&(!state.catalog.length||(state.uncertain&&!dirtyCount())))loadCatalog(false);
  else if(editor&&state.uncertain){
   status('Checking saved text; your edits are kept…');
   rpc('catalog').then(reply=>{if(reply.revision===state.revision){state.uncertain=false;status('Your saved text is unchanged. Your edits are ready to save.');updateFooter();}else status('Saved text changed while the window was closed. Drafts kept; copy them before Reload Saved.');}).catch(error=>status(error.message));
@@ -253,11 +293,11 @@ function showTab(editor){
 el('roster-tab').addEventListener('click',()=>showTab(false));el('lore-tab').addEventListener('click',()=>{showTab(true);applySplit();});
 window.requestEditorClose=function(){
  const close=()=>{if(typeof window.mmeRosterClose==='function')window.mmeRosterClose(state.session);};
- if(state.drafts.size||state.pending)ask('Leave with unsaved entries or a pending operation? Save before exiting Skyrim. Drafts remain in this page until it reloads.',close);else close();
+ if(dirtyCount()||state.pending)ask('Leave with unsaved entries or a pending operation? Save before exiting Skyrim. Drafts remain in this page until it reloads.',close);else close();
 };
 el('close').addEventListener('click',window.requestEditorClose);
 document.addEventListener('keydown',event=>{
- if(event.key==='Escape'){event.preventDefault();if(!el('lore-confirm').hidden)cancelConfirm();else window.requestEditorClose();}
+ if(event.key==='Escape'){event.preventDefault();if(activeRename){activeRename.cancel();return;}if(!el('lore-confirm').hidden)cancelConfirm();else window.requestEditorClose();}
  if(event.key==='Tab'&&!el('lore-confirm').hidden){event.preventDefault();const target=document.activeElement===el('confirm-cancel')?el('confirm-accept'):el('confirm-cancel');if(target.focus)target.focus();}
 });
 // One divider resizes the existing controls/list split; drafts and scrolling stay in place.

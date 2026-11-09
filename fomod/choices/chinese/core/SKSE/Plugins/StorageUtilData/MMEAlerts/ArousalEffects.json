@@ -1,4 +1,32 @@
 {
+  "_authoring": {
+    "entries": {
+      "low_female": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor to a female character's low-arousal bodily reaction."
+      },
+      "low_male": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor to a male character's low-arousal bodily reaction."
+      },
+      "medium_female": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor to a female character's medium-arousal bodily reaction."
+      },
+      "medium_male": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor to a male character's medium-arousal bodily reaction."
+      },
+      "high_female": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor to a female character's high-arousal bodily reaction."
+      },
+      "high_male": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick erotic flavor to a male character's high-arousal bodily reaction."
+      }
+    }
+  },
   "low_female": [
     "{actor} 改变了她的体重。她的大腿并拢。就一次。",
     "{actor}咬着嘴唇。她的心思已经跑到了不雅的地方了。",

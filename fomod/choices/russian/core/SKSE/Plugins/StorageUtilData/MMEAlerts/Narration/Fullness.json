@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI descriptions of a Milk Maid's milk reserves and fullness events.",
     "player_controls": "How fullness feels and how characters react to it.",
@@ -13,49 +12,106 @@
       "MMEPostMilking.RecordFull"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "send_capacity_milestone_1": {
-      "template": "{tag} {actor} наполовину наполнен молоком, он приятно тяжелый и возбужденный."
+      "template": "{tag} {actor} наполовину наполнен молоком, он приятно тяжелый и возбужденный.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Retained legacy wording for a half-full milestone; its old publisher is now a no-op."
+      }
     },
     "send_capacity_milestone_2": {
-      "template": "{tag} {actor} полностью наполнен молоком, восхитительно набухает и наслаждается максимальным удовольствием."
+      "template": "{tag} {actor} полностью наполнен молоком, восхитительно набухает и наслаждается максимальным удовольствием.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Retained legacy wording for a full milestone; its old publisher is now a no-op."
+      }
     },
     "narrate_milk_full_1": {
-      "template": "{actor} достиг полной емкости молока и протекает. Реагировать на наполненность и подтекание."
+      "template": "{actor} достиг полной емкости молока и протекает. Реагировать на наполненность и подтекание.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Guide a reaction to the named Milk Maid reaching full milk capacity."
+      }
     },
     "narrate_milk_half_full_1": {
-      "template": "{actor} находится на полпути к полной производительности по молоку. Реагируйте на растущую полноту."
+      "template": "{actor} находится на полпути к полной производительности по молоку. Реагируйте на растущую полноту.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Guide a reaction to the named Milk Maid reaching half milk capacity."
+      }
     },
     "build_restrained_capacity_content_1": {
-      "template": "{actor} полна молока и течет, ее руки связаны. Реагируйте на затруднительное положение."
+      "template": "{actor} полна молока и течет, ее руки связаны. Реагируйте на затруднительное положение.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Guide a reaction to the affected Milk Maid becoming full while her arms are restrained."
+      }
     },
     "build_restrained_capacity_content_2": {
-      "template": "{actor} находится на полпути к полной емкости молока, ее руки скованы. Реагируйте на растущую полноту."
+      "template": "{actor} находится на полпути к полной емкости молока, ее руки скованы. Реагируйте на растущую полноту.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Guide a reaction to the affected Milk Maid becoming half full while her arms are restrained."
+      }
     },
     "build_milk_status_1": {
-      "template": "{actor} полностью полон, восхитительно тяжел и наслаждается наслаждением до оргазма. Ее руки скованы, и она не может свободно прикасаться к своей тяжелой от молока груди или облегчить ее, превращая ее полноту в продолжительное эротическое поддразнивание и ласку, которая ей нравится."
+      "template": "{actor} полностью полон, восхитительно тяжел и наслаждается наслаждением до оргазма. Ее руки скованы, и она не может свободно прикасаться к своей тяжелой от молока груди или облегчить ее, превращая ее полноту в продолжительное эротическое поддразнивание и ласку, которая ей нравится.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being full with restrained arms."
+      }
     },
     "build_milk_status_2": {
-      "template": "{actor} заполнен более чем наполовину, ощущается заметно тяжелее и теплее. Растущий вес вызывает у нее инстинктивное желание прикоснуться к своей груди и потрогать ее, но ее скованные руки не могут до нее дотянуться, что делает отказ от контакта еще более дразнящим и приятным."
+      "template": "{actor} заполнен более чем наполовину, ощущается заметно тяжелее и теплее. Растущий вес вызывает у нее инстинктивное желание прикоснуться к своей груди и потрогать ее, но ее скованные руки не могут до нее дотянуться, что делает отказ от контакта еще более дразнящим и приятным.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being over half full with restrained arms."
+      }
     },
     "build_milk_status_3": {
-      "template": "{actor} заполнен менее чем наполовину, и его вызывает приятное покалывание. Ее мысли все время блуждают по растущей чувствительности ее груди, но ее сдержанные руки не могут дотянуться до них, превращая искушение в игривое эротическое поддразнивание."
+      "template": "{actor} заполнен менее чем наполовину, и его вызывает приятное покалывание. Ее мысли все время блуждают по растущей чувствительности ее груди, но ее сдержанные руки не могут дотянуться до них, превращая искушение в игривое эротическое поддразнивание.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being below half full with restrained arms."
+      }
     },
     "build_milk_status_4": {
-      "template": "{actor} полностью полон, восхитительно тяжел и наслаждается наслаждением до оргазма."
+      "template": "{actor} полностью полон, восхитительно тяжел и наслаждается наслаждением до оргазма.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being full."
+      }
     },
     "build_milk_status_5": {
-      "template": "{actor} заполнен более чем наполовину, кажется более тяжелым и теплым."
+      "template": "{actor} заполнен более чем наполовину, кажется более тяжелым и теплым.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being over half full."
+      }
     },
     "build_milk_status_6": {
-      "template": "{actor} заполнен менее чем наполовину, и его вызывает приятное покалывание."
+      "template": "{actor} заполнен менее чем наполовину, и его вызывает приятное покалывание.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being below half full."
+      }
     },
     "nearby_status_summary": {
-      "template": "**Текущий уровень молока:** {statuses}"
+      "template": "**Текущий уровень молока:** {statuses}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Introduce the collected milk-status descriptions; not a standalone spoken reaction."
+      }
     },
     "full_event": {
-      "template": "{actor} достиг полной емкости молока и начал подтекать, наслаждаясь приятной наполненностью."
+      "template": "{actor} достиг полной емкости молока и начал подтекать, наслаждаясь приятной наполненностью.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Record the character's full-capacity event as context for later narration."
+      }
     }
   }
 }

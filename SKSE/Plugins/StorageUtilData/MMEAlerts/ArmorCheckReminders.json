@@ -1,4 +1,36 @@
 {
+  "_authoring": {
+    "entries": {
+      "notice_none": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add a brief flavor fragment about the player's lack of armor to the assembled service reminder."
+      },
+      "notice_regular": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add a brief flavor fragment about the player's ordinary armor and possible alterations to the assembled service reminder."
+      },
+      "notice_milking": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add a brief flavor fragment about the player's milking equipment to the assembled service reminder."
+      },
+      "notice_living": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add a brief flavor fragment about the player's living armor to the assembled service reminder."
+      },
+      "notice_parasite": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add a brief flavor fragment about the player's parasite armor to the assembled service reminder."
+      },
+      "notice_dwemer": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add a brief flavor fragment about the player's Dwemer armor to the assembled service reminder."
+      },
+      "notice_reaction": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add a brief flavor fragment about the service NPC's concluding reaction to the assembled service reminder."
+      }
+    }
+  },
   "notice_none": [
     "notices you're bare",
     "notices your lack of armor",

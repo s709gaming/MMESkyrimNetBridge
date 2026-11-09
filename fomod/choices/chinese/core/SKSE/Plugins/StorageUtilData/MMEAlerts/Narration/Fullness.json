@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI descriptions of a Milk Maid's milk reserves and fullness events.",
     "player_controls": "How fullness feels and how characters react to it.",
@@ -13,49 +12,106 @@
       "MMEPostMilking.RecordFull"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "send_capacity_milestone_1": {
-      "template": "{tag} {actor} 半饱奶，厚重又兴奋。"
+      "template": "{tag} {actor} 半饱奶，厚重又兴奋。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Retained legacy wording for a half-full milestone; its old publisher is now a no-op."
+      }
     },
     "send_capacity_milestone_2": {
-      "template": "{tag} {actor} 奶量十足，鲜美膨胀，品味极致快感。"
+      "template": "{tag} {actor} 奶量十足，鲜美膨胀，品味极致快感。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Retained legacy wording for a full milestone; its old publisher is now a no-op."
+      }
     },
     "narrate_milk_full_1": {
-      "template": "{actor} 已达到满奶容量并且正在泄漏。反应饱满、漏气。"
+      "template": "{actor} 已达到满奶容量并且正在泄漏。反应饱满、漏气。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Guide a reaction to the named Milk Maid reaching full milk capacity."
+      }
     },
     "narrate_milk_half_full_1": {
-      "template": "{actor} 已达到满奶量的一半。对日益增长的饱腹感做出反应。"
+      "template": "{actor} 已达到满奶量的一半。对日益增长的饱腹感做出反应。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Guide a reaction to the named Milk Maid reaching half milk capacity."
+      }
     },
     "build_restrained_capacity_content_1": {
-      "template": "{actor}乳汁满溢，双臂被束缚。应对困境。"
+      "template": "{actor}乳汁满溢，双臂被束缚。应对困境。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Guide a reaction to the affected Milk Maid becoming full while her arms are restrained."
+      }
     },
     "build_restrained_capacity_content_2": {
-      "template": "{actor} 已达到满奶量的一半，她的手臂受到限制。对日益增长的饱腹感做出反应。"
+      "template": "{actor} 已达到满奶量的一半，她的手臂受到限制。对日益增长的饱腹感做出反应。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Guide a reaction to the affected Milk Maid becoming half full while her arms are restrained."
+      }
     },
     "build_milk_status_1": {
-      "template": "{actor} 完全饱满，美味厚重，品味着接近高潮的快感。她的手臂被束缚，使她无法自由地触摸或缓解她充满牛奶的乳房，将丰满变成了她喜欢的长时间的色情挑逗和边缘。"
+      "template": "{actor} 完全饱满，美味厚重，品味着接近高潮的快感。她的手臂被束缚，使她无法自由地触摸或缓解她充满牛奶的乳房，将丰满变成了她喜欢的长时间的色情挑逗和边缘。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being full with restrained arms."
+      }
     },
     "build_milk_status_2": {
-      "template": "{actor} 已经满了一半以上，感觉明显更重、更温暖。不断增长的体重使她本能地想要触摸和握持自己的乳房，但她被束缚的手臂无法够到乳房，这使得被拒绝的接触变得更加挑逗和愉悦。"
+      "template": "{actor} 已经满了一半以上，感觉明显更重、更温暖。不断增长的体重使她本能地想要触摸和握持自己的乳房，但她被束缚的手臂无法够到乳房，这使得被拒绝的接触变得更加挑逗和愉悦。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being over half full with restrained arms."
+      }
     },
     "build_milk_status_3": {
-      "template": "{actor} 还不到半满，感觉很舒服。她的思绪一直在她日益敏感的乳房上徘徊，但她克制的手臂无法触及它们，将诱惑变成了俏皮的色情戏弄。"
+      "template": "{actor} 还不到半满，感觉很舒服。她的思绪一直在她日益敏感的乳房上徘徊，但她克制的手臂无法触及它们，将诱惑变成了俏皮的色情戏弄。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being below half full with restrained arms."
+      }
     },
     "build_milk_status_4": {
-      "template": "{actor} 完全饱满，美味厚重，品味着接近高潮的快感。"
+      "template": "{actor} 完全饱满，美味厚重，品味着接近高潮的快感。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being full."
+      }
     },
     "build_milk_status_5": {
-      "template": "{actor}已经满了一半，感觉更重、更温暖。"
+      "template": "{actor}已经满了一半，感觉更重、更温暖。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being over half full."
+      }
     },
     "build_milk_status_6": {
-      "template": "{actor} 还不到半满，感觉很舒服。"
+      "template": "{actor} 还不到半满，感觉很舒服。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being below half full."
+      }
     },
     "nearby_status_summary": {
-      "template": "**当前牛奶含量：** {statuses}"
+      "template": "**当前牛奶含量：** {statuses}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Introduce the collected milk-status descriptions; not a standalone spoken reaction."
+      }
     },
     "full_event": {
-      "template": "{actor}达到满奶量并开始渗漏，享受令人愉悦的溢出饱腹感。"
+      "template": "{actor}达到满奶量并开始渗漏，享受令人愉悦的溢出饱腹感。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Record the character's full-capacity event as context for later narration."
+      }
     }
   }
 }

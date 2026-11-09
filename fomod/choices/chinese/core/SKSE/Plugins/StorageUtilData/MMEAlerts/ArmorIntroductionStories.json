@@ -1,4 +1,52 @@
 {
+  "_authoring": {
+    "entries": {
+      "stringList.milking_first_equip": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic experience of first wearing milking armor."
+      },
+      "stringList.living_first_equip": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic experience of first wearing living armor."
+      },
+      "stringList.parasite_first_equip": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic experience of first wearing parasite armor."
+      },
+      "stringList.dwemer_first_equip": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic experience of first wearing Dwemer armor."
+      },
+      "stringList.living_trap_equip": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic experience of being unexpectedly fitted with living armor by a trap."
+      },
+      "stringList.parasite_trap_equip": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic experience of being unexpectedly fitted with parasite armor by a trap."
+      },
+      "stringList.dwemer_trap_equip": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic experience of being unexpectedly fitted with Dwemer armor by a trap."
+      },
+      "stringList.milking_repeat_equip": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic experience of putting milking armor back on."
+      },
+      "stringList.living_repeat_equip": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic experience of putting living armor back on."
+      },
+      "stringList.parasite_repeat_equip": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic experience of putting parasite armor back on."
+      },
+      "stringList.dwemer_repeat_equip": {
+        "format": "Story. An on-screen paragraph.",
+        "intent": "Describe the player's erotic experience of putting Dwemer armor back on."
+      }
+    }
+  },
   "stringList": {
     "milking_first_equip": [
       "挤奶盔甲紧贴在 {ActorName} 的胸前，它的魔法杯在她的皮肤上立即变暖。轻柔的振动变成了有节奏的按摩，从她的嘴唇中发出一声惊讶的小呻吟。当盔甲愉快地开始它的第一个戏弄程序时，她脸红了，然后咯咯地笑起来。",

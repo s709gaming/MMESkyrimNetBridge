@@ -218,7 +218,52 @@ int main(int argc, char** argv)
         Check(failedWrite["ok"] == false && failedWrite["kind"] == "failure", "unwritable root fails safely");
         Store fallback(root / "missing-profile", root / "missing-base.json", "Compiled fallback.");
         Check(Call(fallback, { { "operation", "load" } })["text"] == "Compiled fallback.", "missing-base fallback");
-        std::cout << "PASS: native lore store persistence, exact UTF-8/case, conflict, backup/reset, validation, future keys/schema and locking\n";
+        Store titles(root / "title-profile", defaults, "Compiled fallback.");
+        auto titleState = Call(titles, {{"operation","load"}});
+        auto titleSave = Call(titles, {{"operation","saveBatch"},{"revision",titleState["revision"]},{"changes",Json::object()},
+            {"titleChanges",{{"Lore.milk_lore","Мой заголовок 标题 <b>literal</b>"}}}});
+        Check(titleSave["ok"] == true, "title-only save");
+        Check(titleSave["changedCount"] == 1, "title-only save has a useful diagnostic count");
+        Check(titles.Values("Lore.milk_lore").empty(), "titles never enter runtime templates");
+        Store reopenedTitles(root / "title-profile", defaults, "Compiled fallback.");
+        const auto titleDoc = Read(root / "title-profile/overrides.json");
+        Check(titleDoc["titles"]["Lore.milk_lore"] == "Мой заголовок 标题 <b>literal</b>", "Unicode title persisted exactly");
+        auto titleResetText = Call(titles, {{"operation","saveBatch"},{"revision",titleSave["revision"]},
+            {"changes",{{"Lore.milk_lore",nullptr}}}});
+        Check(titleResetText["ok"] == true && Read(root / "title-profile/overrides.json")["titles"] == titleDoc["titles"], "text reset preserves titles");
+        const auto titlePreset = "Titles_" + root.filename().string();
+        Check(Call(titles, {{"operation","export"},{"name",titlePreset},{"revision",titleResetText["revision"]}})["ok"] == true, "titles exported in presets");
+        auto changedTitle = Call(titles, {{"operation","saveBatch"},{"revision",titleResetText["revision"]},{"changes",Json::object()},
+            {"titleChanges",{{"Lore.milk_lore","My newer title"},{"Lore.shared_guidance","Keep this too"}}}});
+        auto titlePreview = Call(titles, {{"operation","importPreview"},{"name",titlePreset}});
+        Check(titlePreview["titleCounts"]["merge"]["kept"] == 2 && titlePreview["titleCounts"]["replace"]["reset"] == 1, "title preview counts");
+        auto mergeTitles = Call(titles, {{"operation","importApply"},{"name",titlePreset},{"mode","merge"},
+            {"revision",changedTitle["revision"]},{"presetRevision",titlePreview["presetRevision"]}});
+        Check(mergeTitles["ok"] == true && Read(root / "title-profile/overrides.json")["titles"]["Lore.milk_lore"] == "My newer title", "merge preserves existing title");
+        auto replaceTitles = Call(titles, {{"operation","importApply"},{"name",titlePreset},{"mode","replace"},
+            {"revision",mergeTitles["revision"]},{"presetRevision",titlePreview["presetRevision"]}});
+        Check(replaceTitles["ok"] == true && Read(root / "title-profile/overrides.json")["titles"] == titleDoc["titles"], "replace restores preset titles");
+        auto invalidTitle = Call(titles, {{"operation","saveBatch"},{"revision",replaceTitles["revision"]},{"changes",Json::object()},
+            {"titleChanges",{{"Lore.milk_lore",std::string(81,'X')}}}});
+        Check(invalidTitle["ok"] == false && Read(root / "title-profile/overrides.json")["titles"] == titleDoc["titles"], "bad title cannot change committed data");
+        auto staleTitle = Call(titles, {{"operation","saveBatch"},{"revision",titleState["revision"]},{"changes",Json::object()},
+            {"titleChanges",{{"Lore.milk_lore","Stale write"}}}});
+        Check(staleTitle["ok"] == false, "title writes respect revision conflicts");
+        auto clearTitle = Call(titles, {{"operation","saveBatch"},{"revision",replaceTitles["revision"]},{"changes",Json::object()},
+            {"titleChanges",{{"Lore.milk_lore",nullptr}}}});
+        Check(clearTitle["ok"] == true && Read(root / "title-profile/overrides.json")["titles"].empty(), "reset title removes only personal title");
+        std::string unicodeTitle;
+        for (int i = 0; i < 80; ++i) unicodeTitle += "雪";
+        const auto unicodeSaved = Call(titles, {{"operation","saveBatch"},{"revision",clearTitle["revision"]},{"changes",Json::object()},
+            {"titleChanges",{{"Lore.milk_lore",unicodeTitle}}}});
+        Check(unicodeSaved["ok"] == true, "80 Unicode characters fit the title limit");
+        const auto oldTitlePreset = "OldTitles_" + root.filename().string();
+        Write(root.parent_path() / "presets" / (oldTitlePreset + ".json"), R"({"schemaVersion":1,"profileId":"default","overrides":{}})");
+        auto oldTitlePreview = Call(titles, {{"operation","importPreview"},{"name",oldTitlePreset}});
+        auto oldTitleApply = Call(titles, {{"operation","importApply"},{"name",oldTitlePreset},{"mode","replace"},
+            {"revision",unicodeSaved["revision"]},{"presetRevision",oldTitlePreview["presetRevision"]}});
+        Check(oldTitleApply["ok"] == true && Read(root / "title-profile/overrides.json")["titles"].empty(), "old preset replacement restores default titles");
+        std::cout << "PASS: native lore store and title persistence, preset merge/replace, exact Unicode, reset, conflicts and validation\n";
         return 0;
     } catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }
 }

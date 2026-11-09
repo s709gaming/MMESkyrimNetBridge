@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI context for milking events and reactions to completed milking.",
     "player_controls": "How the method, relief and recorded outcome are described.",
@@ -12,43 +11,92 @@
       "MMEPostMilking.NarrateLast"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "startMessage": {
-      "template": "{actor} 已开始挤奶。"
+      "template": "{actor} 已开始挤奶。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Inform Skyrim.Net that milking has started for the named character."
+      }
     },
     "endMessage": {
-      "template": "{actor} 已完成挤奶过程。"
+      "template": "{actor} 已完成挤奶过程。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Inform Skyrim.Net that milking has ended for the named character."
+      }
     },
     "complete_hands": {
-      "template": "{actor}完成了一次动手挤奶，轻松又满足。 {result}"
+      "template": "{actor}完成了一次动手挤奶，轻松又满足。 {result}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the relief and erotic aftermath of the character finishing hand milking."
+      }
     },
     "complete_pump": {
-      "template": "吸奶器完成从 {actor} 吸奶，让她感觉更轻盈、神清气爽。 {result}"
+      "template": "吸奶器完成从 {actor} 吸奶，让她感觉更轻盈、神清气爽。 {result}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the relief and erotic aftermath of the character finishing a milk pump."
+      }
     },
     "complete_equipment": {
-      "template": "挤奶杯在 {actor} 上完成了工作，让她松了口气，并感到愉悦而敏感。 {result}"
+      "template": "挤奶杯在 {actor} 上完成了工作，让她松了口气，并感到愉悦而敏感。 {result}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the relief and erotic aftermath of the character finishing milking cups."
+      }
     },
     "complete_tendrils": {
-      "template": "活生生的卷须从 {actor} 中吸取了乳汁，让她气喘吁吁，度过了愉快的时光。 {result}"
+      "template": "活生生的卷须从 {actor} 中吸取了乳汁，让她气喘吁吁，度过了愉快的时光。 {result}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the relief and erotic aftermath of the character finishing living tendrils."
+      }
     },
     "complete_dwemer": {
-      "template": "锻莫机械装置完成了从 {actor} 有节奏的收获，让她感到茫然和美味的满足。 {result}"
+      "template": "锻莫机械装置完成了从 {actor} 有节奏的收获，让她感到茫然和美味的满足。 {result}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the relief and erotic aftermath of the character finishing a Dwemer mechanism."
+      }
     },
     "complete_generic": {
-      "template": "{actor}挤完奶，神清气爽。 {result}"
+      "template": "{actor}挤完奶，神清气爽。 {result}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe the relief and erotic aftermath of the character finishing milking."
+      }
     },
     "complete_productive": {
-      "template": "{actor} 完成了高效的 {method} 挤奶过程。牛奶被提取，但生产或喂养并没有导致她的储备量净减少。"
+      "template": "{actor} 完成了高效的 {method} 挤奶过程。牛奶被提取，但生产或喂养并没有导致她的储备量净减少。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Describe completed milking that extracted milk even though production or feeding prevented a net reduction."
+      }
     },
     "result_empty": {
-      "template": "完成后她的母乳储备已空。"
+      "template": "完成后她的母乳储备已空。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Add the recorded fact that the character's milk reserves were empty when milking finished."
+      }
     },
     "result_remaining": {
-      "template": "完成后还剩下一些牛奶。"
+      "template": "完成后还剩下一些牛奶。",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Add the recorded fact that some milk remained when milking finished."
+      }
     },
     "completion_instruction": {
-      "template": "以 {actor} 的身份对这种特定来源的挤奶经历及其后果做出反应。描述已完成的会话，而不是新的或正在进行的会话。"
+      "template": "以 {actor} 的身份对这种特定来源的挤奶经历及其后果做出反应。描述已完成的会话，而不是新的或正在进行的会话。",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Have the affected character react to her completed milking session, its method and recorded aftermath."
+      }
     }
   }
 }

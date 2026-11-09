@@ -49,7 +49,7 @@ def main():
  # Remaining user-facing status labels / pages and source descriptors.
  strings.update(['General','Milk Drinking','Body ','Arousal ','Armor & Stripping','Armor Effects','Armor Reactions','Traps & Curses','Skyrim.Net','Debug','Troubleshoot','On','Off','Yes','No','Unknown','None','Player','Milk Maids','Milk Maid','Save Changes','Cancel','Continue','Close','Reload Saved','All features','Modified only','Show minor messages','Presets','Milk','Lactacid','Arousal'])
  strings.update(json.loads((ROOT/'tools/localization/manual_ru.json').read_text(encoding='utf-8')))
- strings={s for s in strings if s and re.search('[A-Za-z]',s) and len(s)<8193 and not s.startswith('http') and not any(x in s for x in ['document.','function(','=>','<div','</','operation='])}
+ strings={s for s in strings if s and re.search('[A-Za-z]',s) and len(s)<8193 and s.strip() not in ('user-title',) and not s.startswith('http') and not any(x in s for x in ['document.','function(','=>','<div','</','operation='])}
  OUT.mkdir(parents=True,exist_ok=True)
  (OUT/'en.json').write_text(json.dumps(sorted(strings),ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
  (OUT/'inventory.json').write_text(json.dumps(sources,indent=2)+'\n',encoding='utf-8')

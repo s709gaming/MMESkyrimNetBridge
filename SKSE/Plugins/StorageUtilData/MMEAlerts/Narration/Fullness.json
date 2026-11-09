@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "_authoring": {
     "purpose": "AI descriptions of a Milk Maid's milk reserves and fullness events.",
     "player_controls": "How fullness feels and how characters react to it.",
@@ -13,49 +12,106 @@
       "MMEPostMilking.RecordFull"
     ]
   },
+  "schemaVersion": 1,
   "_help": "Edit template text or replace a template with a string array. Keep the documented placeholders. Use MCM Reload Narration JSON after saving.",
   "routes": {
     "send_capacity_milestone_1": {
-      "template": "{tag} {actor} is halfway full of milk, pleasantly heavy and getting excited."
+      "template": "{tag} {actor} is halfway full of milk, pleasantly heavy and getting excited.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Retained legacy wording for a half-full milestone; its old publisher is now a no-op."
+      }
     },
     "send_capacity_milestone_2": {
-      "template": "{tag} {actor} is completely full of milk, deliciously swollen and savoring the ultimate pleasure."
+      "template": "{tag} {actor} is completely full of milk, deliciously swollen and savoring the ultimate pleasure.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Retained legacy wording for a full milestone; its old publisher is now a no-op."
+      }
     },
     "narrate_milk_full_1": {
-      "template": "{actor} has reached full milk capacity and is leaking. React to the fullness and leaking."
+      "template": "{actor} has reached full milk capacity and is leaking. React to the fullness and leaking.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Guide a reaction to the named Milk Maid reaching full milk capacity."
+      }
     },
     "narrate_milk_half_full_1": {
-      "template": "{actor} is halfway to full milk capacity. React to the growing fullness."
+      "template": "{actor} is halfway to full milk capacity. React to the growing fullness.",
+      "_authoring": {
+        "format": "Narration. Instructions for AI-generated narration.",
+        "intent": "Guide a reaction to the named Milk Maid reaching half milk capacity."
+      }
     },
     "build_restrained_capacity_content_1": {
-      "template": "{actor} is full of milk and leaking, with her arms restrained. React to the predicament."
+      "template": "{actor} is full of milk and leaking, with her arms restrained. React to the predicament.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Guide a reaction to the affected Milk Maid becoming full while her arms are restrained."
+      }
     },
     "build_restrained_capacity_content_2": {
-      "template": "{actor} is halfway to full milk capacity, with her arms restrained. React to the growing fullness."
+      "template": "{actor} is halfway to full milk capacity, with her arms restrained. React to the growing fullness.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Guide a reaction to the affected Milk Maid becoming half full while her arms are restrained."
+      }
     },
     "build_milk_status_1": {
-      "template": "{actor} is completely full, deliciously heavy and savoring the pleasure near a boobgasm. Her arms are restrained, leaving her unable to freely touch or relieve her milk-heavy breasts, turning the fullness into prolonged erotic teasing and edging that she enjoys."
+      "template": "{actor} is completely full, deliciously heavy and savoring the pleasure near a boobgasm. Her arms are restrained, leaving her unable to freely touch or relieve her milk-heavy breasts, turning the fullness into prolonged erotic teasing and edging that she enjoys.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being full with restrained arms."
+      }
     },
     "build_milk_status_2": {
-      "template": "{actor} is over half full, feeling noticeably heavier and warmer. The growing weight makes her instinctively want to touch and handle her breasts, but her restrained arms cannot reach them, making the denied contact even more teasing and pleasurable."
+      "template": "{actor} is over half full, feeling noticeably heavier and warmer. The growing weight makes her instinctively want to touch and handle her breasts, but her restrained arms cannot reach them, making the denied contact even more teasing and pleasurable.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being over half full with restrained arms."
+      }
     },
     "build_milk_status_3": {
-      "template": "{actor} is less than half full, feeling pleasantly tingly. Her mind keeps wandering to the growing sensitivity of her breasts, but her restrained arms cannot reach them, turning the temptation into playful erotic teasing."
+      "template": "{actor} is less than half full, feeling pleasantly tingly. Her mind keeps wandering to the growing sensitivity of her breasts, but her restrained arms cannot reach them, turning the temptation into playful erotic teasing.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being below half full with restrained arms."
+      }
     },
     "build_milk_status_4": {
-      "template": "{actor} is completely full, deliciously heavy and savoring the pleasure near a boobgasm."
+      "template": "{actor} is completely full, deliciously heavy and savoring the pleasure near a boobgasm.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being full."
+      }
     },
     "build_milk_status_5": {
-      "template": "{actor} is over half full, feeling heavier and warm."
+      "template": "{actor} is over half full, feeling heavier and warm.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being over half full."
+      }
     },
     "build_milk_status_6": {
-      "template": "{actor} is less than half full, feeling pleasantly tingly."
+      "template": "{actor} is less than half full, feeling pleasantly tingly.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Give the AI erotic flavor about the named Milk Maid being below half full."
+      }
     },
     "nearby_status_summary": {
-      "template": "**Current milk levels:** {statuses}"
+      "template": "**Current milk levels:** {statuses}",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Introduce the collected milk-status descriptions; not a standalone spoken reaction."
+      }
     },
     "full_event": {
-      "template": "{actor} reached full milk capacity and began leaking, enjoying a pleasantly overflowing fullness."
+      "template": "{actor} reached full milk capacity and began leaking, enjoying a pleasantly overflowing fullness.",
+      "_authoring": {
+        "format": "Narration. Background or event context used by AI-generated narration.",
+        "intent": "Record the character's full-capacity event as context for later narration."
+      }
     }
   }
 }

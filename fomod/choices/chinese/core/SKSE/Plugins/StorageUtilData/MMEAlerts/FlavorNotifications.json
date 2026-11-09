@@ -1,4 +1,112 @@
 {
+  "_authoring": {
+    "entries": {
+      "capacity_half": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Playfully announce that a Milk Maid's breasts have reached half milk capacity."
+      },
+      "capacity_full": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Playfully announce that a Milk Maid's breasts have reached full milk capacity."
+      },
+      "armor_strip": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add humorous erotic flavor when milk-heavy breasts cause armor to come off."
+      },
+      "refit_needed": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Explain that the player's milking equipment came off because it needs a refit."
+      },
+      "refit_complete": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Confirm that the player's milking equipment was refitted."
+      },
+      "armor_lock_player": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add flavor when the player becomes trapped in locked armor."
+      },
+      "armor_lock_npc": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add flavor when another character becomes trapped in locked armor."
+      },
+      "armor_released": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Announce that a timed armor lock has released."
+      },
+      "parasite_satisfied": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Announce that the satisfied parasite unlocked; the armor has not automatically been removed."
+      },
+      "rescue_blacksmith_single": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Confirm a blacksmith freed one companion from armor."
+      },
+      "rescue_direct_single": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Confirm one companion was freed from armor by the direct rescue route."
+      },
+      "rescue_blacksmith_group": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Confirm a blacksmith freed several companions from armor."
+      },
+      "rescue_direct_group": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Confirm several companions were freed from armor by the direct rescue route."
+      },
+      "venue_thirst": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add social flavor when someone at an inn or palace is about to seek milk."
+      },
+      "venue_drink_fallback": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Give a brief fallback reaction after a nearby character drinks milk."
+      },
+      "chest_drink": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add quick flavor when a chest forces the affected character to drink milk."
+      },
+      "custom_dwemer_equip": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor when the player equips custom Dwemer armor."
+      },
+      "custom_rows_absorbed": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Describe custom living armor absorbing the player's extra breast rows."
+      },
+      "custom_living_equip": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor when the player equips custom living or parasite armor."
+      },
+      "custom_cups_equip": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor when the player attaches custom milking cups."
+      },
+      "custom_living_remove": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Describe the player being freed from custom living or parasite armor."
+      },
+      "custom_cups_remove": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Describe custom milking cups detaching from the player's breasts."
+      },
+      "new_maid_confirmation": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Confirm that the named character successfully became a Milk Maid."
+      },
+      "reverse_level_applied": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Explain the duration and strength of the applied or renewed Milk Maid level-reduction ability."
+      },
+      "reverse_level_removed": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Confirm that the Milk Maid level-reduction ability was removed."
+      },
+      "reverse_level_decrease": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add relief and flavor when a Milk Maid loses a level and her breasts feel lighter."
+      }
+    }
+  },
   "capacity_half": [
     "{actor} 的奶子已经半满了！每一步都伴随着顽皮的小弹跳！",
     "{actor}的瓜已经熟了一半，却已经抢尽风头！",

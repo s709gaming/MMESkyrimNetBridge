@@ -1,4 +1,44 @@
 {
+  "_authoring": {
+    "entries": {
+      "belowHalf_noArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her below-half-full breasts without special armor. The selected thought may also ground an AI reaction."
+      },
+      "belowHalf_milkingArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her below-half-full breasts inside milking cups. The selected thought may also ground an AI reaction."
+      },
+      "belowHalf_parasiteArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her below-half-full breasts under parasite armor. The selected thought may also ground an AI reaction."
+      },
+      "belowHalf_livingArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her below-half-full breasts under living armor. The selected thought may also ground an AI reaction."
+      },
+      "halfPlus_noArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her half-full or fuller breasts without special armor. The selected thought may also ground an AI reaction."
+      },
+      "armsBound": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Express a Milk Maid's erotic frustration at being unable to touch her breasts with her arms restrained. The selected thought may also ground an AI reaction."
+      },
+      "halfPlus_milkingArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her half-full or fuller breasts inside milking cups. The selected thought may also ground an AI reaction."
+      },
+      "halfPlus_parasiteArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her half-full or fuller breasts under parasite armor. The selected thought may also ground an AI reaction."
+      },
+      "halfPlus_livingArmor": {
+        "format": "Notification. Quick flavor text; maximum 90 characters.",
+        "intent": "Add erotic flavor to a Milk Maid's thoughts about her half-full or fuller breasts under living armor. The selected thought may also ground an AI reaction."
+      }
+    }
+  },
   "belowHalf_noArmor": [
     "{actor} начинает замечать лишнюю тяжесть на своей груди.",
     "{actor} чувствует, как ее грудь снова становится тяжелее.",

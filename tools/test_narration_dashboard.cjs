@@ -4,7 +4,7 @@ const root=path.resolve(__dirname,'..'),folder=path.join(root,'fomod/choices/mai
 class Element{
  constructor(tag){this.tagName=tag;this.children=[];this.listeners={};this.attributes={};this.value='';this.checked=false;this.hidden=false;this.disabled=false;this.open=false;this.scrollTop=0;this.clientHeight=400;this.style={};}
  set textContent(text){this.text=String(text);this.children=[];}get textContent(){return (this.text||'')+this.children.map(c=>c.textContent).join('');}
- appendChild(child){this.children.push(child);return child;}setAttribute(name,value){this.attributes[name]=String(value);}
+ appendChild(child){this.children.push(child);return child;}insertBefore(child,before){const i=this.children.indexOf(before);this.children.splice(i<0?this.children.length:i,0,child);return child;}setAttribute(name,value){this.attributes[name]=String(value);}
  addEventListener(name,fn){this.listeners[name]=fn;}focus(){document.activeElement=this;}
 }
 const html=fs.readFileSync(path.join(folder,'index.html'),'utf8'),elements={};
@@ -14,7 +14,7 @@ const handlers={},document={activeElement:null,getElementById:id=>elements[id],c
 const catalog=JSON.parse([...fs.readFileSync(path.join(root,'include/NarrationCatalog.h'),'utf8').matchAll(/R"MMECATALOG\((.*?)\)MMECATALOG"/gs)].map(m=>m[1]).join('')).entries;
 const meta=Object.entries(catalog).map(([id,row])=>Object.assign({id,customized:false},row));
 const bases={};for(const row of meta)bases[row.id]=row.default;
-let revision='r1',commits=0,uploadChunks=0,downloadChunks=0,failNextSave=false;const uploads=new Map(),downloads=new Map(),saved={},requests=[];
+let revision='r1',commits=0,uploadChunks=0,downloadChunks=0,failNextSave=false;const uploads=new Map(),downloads=new Map(),saved={},savedTitles={},requests=[];
 const enc=o=>Buffer.from(JSON.stringify(o),'utf8').toString('hex'),dec=h=>JSON.parse(Buffer.from(h,'hex').toString('utf8'));
 function response(reply,id){const bytes=enc(Object.assign({requestId:id,ok:true},reply));if(bytes.length>8192){downloads.set(id,bytes);return {ok:true,requestId:id,transport:'download',total:Math.ceil(bytes.length/4096)};}return dec(bytes);}
 function backend(request){
@@ -27,7 +27,7 @@ function backend(request){
  if(request.operation==='download'){
   ++downloadChunks;const bytes=downloads.get(id);return {ok:true,requestId:id,transport:'part',index:request.index,total:Math.ceil(bytes.length/4096),data:bytes.slice(request.index*4096,(request.index+1)*4096)};
  }
- if(request.operation==='catalog')return response({protocolVersion:2,revision,entries:meta.map(m=>({...m,customized:Object.hasOwn(saved,m.id)})),path:'UserData/overrides.json'},id);
+ if(request.operation==='catalog')return response({protocolVersion:2,titleEditing:true,revision,entries:meta.map(m=>({...m,customized:Object.hasOwn(saved,m.id),customTitle:savedTitles[m.id]||null})),path:'UserData/overrides.json'},id);
  if(request.operation==='presets')return response({presets:['MyPreset']},id);
  if(request.operation==='export')return response({revision},id);
  if(request.operation==='importPreview')return response({entries:4,conflicts:1,presetRevision:'preset1',counts:{merge:{added:2,kept:3,replaced:0,reset:0},replace:{added:2,kept:1,replaced:1,reset:2}}},id);
@@ -37,6 +37,7 @@ function backend(request){
  if(request.operation==='saveBatch'){
   if(failNextSave){failNextSave=false;return {ok:false,kind:'conflict',requestId:id,message:'Changed elsewhere; reload.'};}
   assert.equal(request.revision,revision);for(const [key,value] of Object.entries(request.changes))if(value===null)delete saved[key];else saved[key]=value;
+  for(const [key,value] of Object.entries(request.titleChanges||{}))if(value===null)delete savedTitles[key];else savedTitles[key]=value;
   ++commits;revision='r'+(commits+1);return response({revision},id);
  }
  throw Error('Unexpected fake server operation: '+request.operation);
@@ -90,7 +91,7 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  elements['editor-reload'].listeners.click();elements['confirm-accept'].listeners.click();await settle();
  elements['editor-minor'].checked=false;elements['editor-minor'].listeners.change();
  assert(elements['editor-intro'].textContent.includes('without Skyrim.Net'));
- let shared=await open('Pools.MilkCravings.craving');assert(shared.textContent.includes('Also used by Skyrim.Net'));
+ let shared=await open('Pools.MilkCravings.craving');assert(shared.textContent.includes('Notification')&&shared.textContent.includes('Skyrim.Net can also use'));
  const sharedField=descendants(shared,'textarea')[0];sharedField.value='{ActorName} would love some milk.';sharedField.listeners.input();
  elements['editor-skyrimnet'].listeners.click();assert(elements['editor-changes'].textContent.includes('1 unsaved'));
  elements['editor-messages'].listeners.click();shared=await open('Pools.MilkCravings.craving');assert.equal(descendants(shared,'textarea')[0].value,'{ActorName} would love some milk.','section changes keep drafts');
@@ -123,7 +124,7 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  elements['editor-reload'].listeners.click();elements['confirm-accept'].listeners.click();await settle();
  // Preset descriptions and review are understandable, accurate and non-mutating until accepted.
  elements['editor-import-mode'].value='replace';elements['editor-import-mode'].listeners.change();
- assert(elements['editor-import-help'].textContent.includes('Entries missing from it'));
+ assert(elements['editor-import-help'].textContent.includes('Missing items return'));
  elements['editor-preset-list'].value='MyPreset';
  const beforeReview=requests.filter(x=>x==='importApply').length;
  elements['editor-import'].listeners.click();await settle();
@@ -133,7 +134,7 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  assert.equal(requests.filter(x=>x==='importApply').length,beforeReview);
  elements['confirm-cancel'].listeners.click();
  elements['editor-import-mode'].value='merge';elements['editor-import-mode'].listeners.change();
- assert(elements['editor-import-help'].textContent.includes('Your existing edits are kept'));
+ assert(elements['editor-import-help'].textContent.includes('Existing edits are kept'));
  elements['editor-import'].listeners.click();await settle();
  assert(elements['confirm-message'].textContent.includes('Add: 2 | Keep: 3 | Replace: 0 | Reset: 0'));
  elements['confirm-accept'].listeners.click();await settle();
@@ -163,5 +164,29 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  assert.equal(elements['editor-messages'].attributes['aria-pressed'],'true','reopened page restores message section');
  assert.equal(elements['editor-group'].value,'Thoughts & Cravings','reopened page restores feature');
  assert(elements['editor-minor'].checked,'reopened page restores minor-message preference');
+ // Title drafts share Save Changes but never overwrite runtime text.
+ elements['editor-skyrimnet'].listeners.click();elements['editor-group'].value='';elements['editor-search'].value='';elements['editor-search'].listeners.input();
+ const titleId='Lore.shared_guidance';
+ const findCard=()=>elements['editor-list'].children.find(c=>c.attributes['data-entry-id']===titleId);
+ const pencil=()=>findCard().children[0].children.find(c=>c.tagName==='button');
+ await settle();await settle();
+ assert(!pencil().disabled);
+ pencil().listeners.click({preventDefault(){},stopPropagation(){}});
+ let rename=findCard().children.find(c=>c.className==='rename-box');assert(rename);
+ let titleInput=descendants(rename,'input')[0];titleInput.value='My title <b>literal</b> 雪';
+ descendants(rename,'button').find(b=>b.textContent==='Cancel').listeners.click();
+ assert(!Object.hasOwn(savedTitles,titleId),'cancel leaves saved title alone');
+ pencil().listeners.click({preventDefault(){},stopPropagation(){}});rename=findCard().children.find(c=>c.className==='rename-box');
+ titleInput=descendants(rename,'input')[0];titleInput.value='My title <b>literal</b> 雪';
+ descendants(rename,'button').find(b=>b.textContent==='Use title').listeners.click();
+ assert(!Object.hasOwn(savedTitles,titleId),'title remains staged before Save Changes');
+ assert(findCard().children[0].children[0].className.includes('user-title'),'custom title opts out of translation');
+ elements['editor-save'].listeners.click();await settle();
+ assert.equal(savedTitles[titleId],'My title <b>literal</b> 雪');assert(!Object.hasOwn(saved,titleId),'title does not become narration');
+ elements['editor-search'].value='My title';elements['editor-search'].listeners.input();assert(findCard(),'search matches custom title');
+ pencil().listeners.click({preventDefault(){},stopPropagation(){}});rename=findCard().children.find(c=>c.className==='rename-box');
+ descendants(rename,'button').find(b=>b.textContent==='Reset title').listeners.click();elements['editor-save'].listeners.click();await settle();
+ assert(!Object.hasOwn(savedTitles,titleId),'reset removes saved title');
+ console.log('PASS: pencil rename/cancel, staged saves, literal Unicode title, translation exclusion, search and reset');
  console.log('PASS: actual dashboard JS: 63 AI/69 normal/86 expanded message entries, minor filtering/drafts/reset, lore-first order, shared badges, persistence, atomic save and session recovery.');
 })().catch(error=>{console.error(error);process.exitCode=1;});
