@@ -138,11 +138,17 @@ Bool Function Reset(Actor target, Int armorClass) Global
     Return True
 EndFunction
 
-Bool Function TryAutomatic(Actor target, Armor equippedArmor, Bool initialLock = False) Global
+; Retain original call arities: saved Papyrus stacks do not insert defaults.
+Bool Function TryAutomatic(Actor target, Armor equippedArmor) Global
+    Report("legacy automatic entry | actor=" + target)
+    Return TryAutomaticEquipContext(target, equippedArmor, False)
+EndFunction
+
+Bool Function TryAutomaticEquipContext(Actor target, Armor equippedArmor, Bool initialLock) Global
     If target != Game.GetPlayer()
         Return False
     EndIf
-    Return TryPresentation(target, equippedArmor, "Automatic Equip", False, 0, initialLock)
+    Return TryPresentationContext(target, equippedArmor, "Automatic Equip", False, 0, initialLock)
 EndFunction
 
 ; Latent: a successful call owns the actor for the ten-second presentation.
@@ -152,8 +158,12 @@ EndFunction
 
 ; Repeatable presentation reserved for a confirmed treasure-chest trap equip.
 ; The caller owns origin validation; this facade only presents the event.
-Bool Function TryTrapIntroduction(Actor target, Armor equippedArmor, String sourceLabel = "Treasure Chest Trap", Bool initialLock = False) Global
-    Return TryPresentation(target, equippedArmor, sourceLabel, True, 1, initialLock)
+Bool Function TryTrapIntroduction(Actor target, Armor equippedArmor, String sourceLabel = "Treasure Chest Trap") Global
+    Return TryPresentation(target, equippedArmor, sourceLabel, True, 1)
+EndFunction
+
+Bool Function TryTrapEquipContext(Actor target, Armor equippedArmor, String sourceLabel, Bool initialLock) Global
+    Return TryPresentationContext(target, equippedArmor, sourceLabel, True, 1, initialLock)
 EndFunction
 
 ; Repeatable presentation for an ordinary equip or a successful artisan
@@ -163,7 +173,12 @@ Bool Function TryRepeatIntroduction(Actor target, Armor equippedArmor, String so
 EndFunction
 
 ; Latent: a successful call owns the actor for the ten-second presentation.
-Bool Function TryPresentation(Actor target, Armor equippedArmor, String sourceLabel, Bool allowRepeat, Int storyMode, Bool initialLock = False) Global
+Bool Function TryPresentation(Actor target, Armor equippedArmor, String sourceLabel, Bool allowRepeat, Int storyMode) Global
+    Return TryPresentationContext(target, equippedArmor, sourceLabel, allowRepeat, storyMode, False)
+EndFunction
+
+Bool Function TryPresentationContext(Actor target, Armor equippedArmor, String sourceLabel, Bool allowRepeat, Int storyMode, Bool initialLock) Global
+    Report("presentation entry | actor=" + target + " | initial lock=" + initialLock + " | source=" + sourceLabel)
     Bool trapStory = storyMode == 1
     If target == None || equippedArmor == None
         Report("request rejected: actor or armor missing | source=" + sourceLabel)

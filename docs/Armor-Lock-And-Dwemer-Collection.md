@@ -7,6 +7,15 @@ The transaction that first establishes a lock may show its initial story. Chest
 origin is consumed before the latent story to prevent restoration events from
 reusing it. Existing saves need no migration; expired locks do not suppress stories.
 
+The original `TryAutomatic` (2 arguments), `TryTrapIntroduction` (3 arguments)
+and `TryPresentation` (5 arguments) signatures are retained for saved calls.
+Initial-lock context uses separately named entry points. Optional Papyrus
+parameters are compiled into callers and cannot repair an older saved call's
+argument count. Legacy entry points use the same lock guard without granting
+an initial-lock exception. Saved calls from the interim incompatible release
+with additional arguments cannot also match the original signatures; existing-save
+log checks remain necessary after upgrading.
+
 Dwemer milking uses original MME's `MilkingToContainer(actor, 0, 4, 0, destination)`.
 The destination is the actor's configured default collection container, falling
 back to the wearer's inventory; MME's explicit override destination takes priority.

@@ -1417,7 +1417,7 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
     If chestTrapEquip && JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableRepeatTrapArmorStories", 1) == 1
         trapStoryAttempted = True
         MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] chest trap requested repeatable story | actor=" + GetActorName(wearer))
-        Bool trapStoryPlayed = MMEArmorIntroduction.TryTrapIntroduction(wearer, equippedArmor, "Automatic Trap Equip", initialLock)
+        Bool trapStoryPlayed = MMEArmorIntroduction.TryTrapEquipContext(wearer, equippedArmor, "Automatic Trap Equip", initialLock)
         MMEChestArmorTrap.ClearTrapEquip(wearer, "repeatable trap story handled equip")
         chestTrapEquip = False
         If trapStoryPlayed
@@ -1426,7 +1426,7 @@ Event OnArmorEquipped(String eventName, String pluginName, Float localArmorForm,
         EndIf
         MMELog.MasterDiagnostic("[MME Extensions Armor Introduction] chest trap story safely rejected; ordinary introduction suppressed | actor=" + GetActorName(wearer))
     EndIf
-    If !trapStoryAttempted && (!alreadyTimedLocked || chestTrapEquip) && MMEArmorIntroduction.TryAutomatic(wearer, equippedArmor, initialLock)
+    If !trapStoryAttempted && (!alreadyTimedLocked || chestTrapEquip) && MMEArmorIntroduction.TryAutomaticEquipContext(wearer, equippedArmor, initialLock)
         If chestTrapEquip
             MMEChestArmorTrap.ClearTrapEquip(wearer, "first introduction consumed equip")
         EndIf
