@@ -16,6 +16,7 @@ class Native:
  def GetMovementSlapSession(self):return CastInt(42)
  def GetDwemerItemIdentity(self,*a):return self.identity
  def HasWornDwemerAttachment(self,*a):return self.installed
+ def DwemerLabelNeedsUpdate(self,*a):return getattr(self,'labelPending',False)
  def GetDwemerRefitLevel(self,*a):return 3
  def GetDwemerAttachmentTag(self,*a):return '7' if self.installed else ''
 class Store(Memory):pass
@@ -49,6 +50,14 @@ class Facade(unittest.TestCase):
   self.native.installed=False;self.assertFalse(self.ns['NeedsRefit'](self.actor,'armor'));self.native.installed=True;self.assertTrue(self.ns['NeedsRefit'](self.actor,'armor'));self.assertEqual(self.ns['Tag'](self.actor,'armor'),'7')
  def test_no_identity_never_commits(self):
   self.assertFalse(self.ns['Install'](self.actor,'armor',''));self.assertFalse(self.ns['Remove'](self.actor,'armor','ordinary'));self.assertEqual(self.native.calls,[])
+ def test_existing_attachment_label_uses_exact_item_and_master_gate(self):
+  self.native.installed=True;self.native.identity='42/1:100:1';self.native.labelPending=True
+  self.assertTrue(self.ns['Has'](self.actor,'armor'));self.assertEqual(self.native.calls[-1][2:5],(4,'42/1:100:1',True))
+  self.native.calls.clear();self.enabled=False;self.assertTrue(self.ns['Has'](self.actor,'armor'));self.assertEqual(self.native.calls,[])
+ def test_stable_label_does_not_queue_repeated_work(self):
+  self.native.installed=True;self.native.identity='42/1:100:1'
+  for _ in range(5):self.assertTrue(self.ns['Has'](self.actor,'armor'))
+  self.assertEqual(self.native.calls,[])
  def test_global_artisan_branch_is_retired(self):
   registry=(R/'Source/Scripts/MMECustomArmorRegistry.psc').read_text();body=registry.split('Int Function ClassifyCustomArmor(',1)[1].split('EndFunction',1)[0]
   self.assertNotIn('IsArtisanDwemerArmor',body);self.assertIn('Function ClassifyForActor',registry)

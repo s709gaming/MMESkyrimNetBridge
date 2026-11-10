@@ -1,7 +1,7 @@
 Scriptname MMEDwemerAttachment Hidden
 
 ; Exact inventory item facade. Built-in Dwemer suits remain base-form compatibility.
-; Operations: -1 read/resolve, 0 capture identity, 1 install, 2 remove.
+; Operations: -1 read/resolve, 0 capture, 1 install, 2 remove, 3 refit, 4 label.
 String Function Request(Actor wearer, Armor item, Int operation, String expected = "", Int fittedLevel = 0) Global
     If wearer == None || item == None || !MMEAlertsController.IsExtensionsEnabled()
         Return "skip|feature disabled or target missing"
@@ -52,8 +52,14 @@ String Function Identity(Actor wearer, Armor item) Global
 EndFunction
 
 Bool Function Has(Actor wearer, Armor item) Global
-    If Identity(wearer, item) == ""
+    String identity = Identity(wearer, item)
+    If identity == ""
         Return False
+    EndIf
+    ; Startup/equip consumers already resolve worn items. Reconcile only when the
+    ; cached snapshot needs it: no new polling, replayed story or inventory scan.
+    If MMEExtensionsNative.HasWornDwemerAttachment(wearer, item) && MMEExtensionsNative.DwemerLabelNeedsUpdate(wearer, item)
+        Request(wearer, item, 4, identity)
     EndIf
     Return MMEExtensionsNative.HasWornDwemerAttachment(wearer, item)
 EndFunction

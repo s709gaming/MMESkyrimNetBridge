@@ -1,6 +1,7 @@
 #include <SKSE/SKSE.h>
 #include <RE/Skyrim.h>
 #include <RE/N/NativeFunction.h>
+#include <RE/S/SendUIMessage.h>
 #include <nlohmann/json.hpp>
 #include <map>
 #include <set>
@@ -12,7 +13,7 @@
 namespace MME::DwemerAttachments {
 namespace {
 using ID=RE::FormID;
-struct View { ID armor=0; Key key; };
+struct View { ID armor=0; Key key; bool labelPending=false; };
 struct Request { ID actor,armor; int op,level; std::string expected,result; std::uint64_t generation; bool trace; };
 std::recursive_mutex mutex;
 State state;
@@ -30,8 +31,61 @@ void Alarm(const std::string& text) {
  if(failures.insert(text).second) SKSE::log::error("[MME Dwemer Instance] {}",text);
 }
 void Trace(bool enabled,const std::string& text) { if(enabled) SKSE::log::info("[MME Dwemer Instance] {}",text); }
+// The engine caches temper text inside displayName. Compare only the custom-name
+// prefix, so tempering doesn't look like a player rename or duplicate '(Fine)'.
+NameSnapshot ReadName(RE::ExtraDataList* list) {
+ NameSnapshot snapshot;
+ if(auto* text=list->GetByType<RE::ExtraTextDisplayData>()) {
+  snapshot.present=true;snapshot.kind=static_cast<int>(text->ownerInstance.underlying());
+  const auto* name=text->displayName.c_str();snapshot.text=name?name:"";snapshot.temper=text->temperFactor;snapshot.length=text->customNameLength;
+  if(snapshot.kind==-2) {snapshot.text=snapshot.text.substr(0,snapshot.length);snapshot.temper=1.0F;}
+ }
+ return snapshot;
+}
+bool ProtectedName(RE::ExtraDataList* list) {
+ auto* local=list->GetByType<RE::ExtraTextDisplayData>();
+ // Original dropped-reference and quest/alias names have another owner.
+ if(list->GetExtraTextDisplayData()!=local)return true;
+ return local && (local->ownerQuest || local->displayNameText ||
+  (local->ownerInstance.underlying()!=-1 && local->ownerInstance.underlying()!=-2));
+}
+void NameChanged(RE::Actor* wearer,RE::TESObjectARMO* armor) {
+ if(auto* inventory=wearer->GetInventoryChanges())inventory->changed=true;
+ wearer->AddChange(RE::TESObjectREFR::ChangeFlags::kInventory | RE::TESObjectREFR::ChangeFlags::kItemExtraData);
+ RE::SendUIMessage::SendInventoryUpdateMessage(wearer,armor);
+}
+std::string Label(RE::Actor* wearer,RE::TESObjectARMO* armor,RE::ExtraDataList* list,Attachment& record,bool trace) {
+ auto& label=record.label;const auto before=ReadName(list);const bool protectedName=ProtectedName(list);
+ const auto context=" actor="+std::to_string(wearer->GetFormID())+" armor="+std::to_string(armor->GetFormID())+" serial="+std::to_string(record.serial);
+ if(protectedName && label.examined)label.owns=false;
+ const auto* baseName=armor->GetName();
+ if(!label.Plan(before,protectedName,baseName?baseName:"")) {
+  const std::string reason=protectedName?"protected name":label.Matches(before)?"already labelled":"existing/player name preserved";
+  Trace(trace,"label skip"+context+" reason="+reason);return "ok|label skipped: "+reason;
+ }
+ list->SetOverrideName(label.applied.c_str());
+ if(!label.Matches(ReadName(list))) {
+  // Do not roll back a valid gameplay attachment for a cosmetic failure.
+  label=LabelState{};Alarm("label apply readback failed"+context);return "error|label apply readback failed";
+ }
+ NameChanged(wearer,armor);Trace(trace,"label applied"+context);return "ok|label applied";
+}
+bool RestoreName(RE::Actor* wearer,RE::TESObjectARMO* armor,RE::ExtraDataList* list,const Attachment& record,bool trace) {
+ const auto& label=record.label;
+ const auto context=" actor="+std::to_string(wearer->GetFormID())+" armor="+std::to_string(armor->GetFormID())+" serial="+std::to_string(record.serial);
+ if(ProtectedName(list) || !label.Matches(ReadName(list))) {Trace(trace,"label removal preserves external/unowned name"+context);return true;}
+ if(label.previous.present) {
+  auto* text=list->GetByType<RE::ExtraTextDisplayData>();
+  text->displayName=label.previous.text;text->ownerInstance=static_cast<RE::ExtraTextDisplayData::DisplayDataType>(label.previous.kind);
+  text->temperFactor=label.previous.temper;text->customNameLength=label.previous.length;
+ } else if(!list->RemoveByType(RE::ExtraDataType::kTextDisplayData)) {
+  Alarm("label restore removal failed"+context);return false;
+ }
+ NameChanged(wearer,armor);Trace(trace,"label restored"+context);return true;
+}
 // Only called on the game thread. Never retain inventory pointers across tasks.
-View Inspect(RE::Actor* actor,bool assign) {
+View Inspect(RE::Actor* actor,bool assign,RE::ExtraDataList** selectedOut=nullptr) {
+ if(selectedOut)*selectedOut=nullptr;
  if(!actor || actor->IsDeleted()) return {};
  auto* armor=actor->GetWornArmor(RE::BIPED_MODEL::BipedObjectSlot::kBody);
  if(!armor) return {};
@@ -45,6 +99,7 @@ View Inspect(RE::Actor* actor,bool assign) {
   }
  }
  if(!selected || selected->GetCount()!=1) return {}; // never modify an ambiguous stack
+ if(selectedOut)*selectedOut=selected;
  auto* unique=selected->GetByType<RE::ExtraUniqueID>();
  if(!unique && assign) {
   for(std::uint32_t n=0;n<65535;++n) {
@@ -59,6 +114,10 @@ View Inspect(RE::Actor* actor,bool assign) {
  }
  View view; view.armor=armor->GetFormID();
  if(unique) view.key={unique->baseID,armor->GetFormID(),unique->uniqueID};
+ if(const auto r=records.find(view.key);r!=records.end()) {
+  const auto& label=r->second.label;
+  view.labelPending=!label.examined || (label.owns && (ProtectedName(selected) || !label.Matches(ReadName(selected))));
+ }
  return view;
 }
 void Refresh(ID actorID) {
@@ -98,8 +157,13 @@ std::string Tag(RE::StaticFunctionTag*,RE::Actor* actor,RE::TESObjectARMO* armor
  if(!usable || v==views.end() || v->second.armor!=armor->GetFormID()) return "";
  auto r=records.find(v->second.key);return r==records.end()?"":std::to_string(r->second.serial);
 }
+bool LabelPending(RE::StaticFunctionTag*,RE::Actor* actor,RE::TESObjectARMO* armor) {
+ if(!actor || !armor)return false;
+ std::scoped_lock lock(mutex);const auto view=views.find(actor->GetFormID());
+ return usable && view!=views.end() && view->second.armor==armor->GetFormID() && view->second.labelPending;
+}
 int Queue(RE::StaticFunctionTag*,RE::Actor* actor,RE::TESObjectARMO* armor,int op,std::string expected,bool trace,int level) {
- if(!actor || !armor || op < -1 || op > 3) return -1;
+ if(!actor || !armor || op < -1 || op > 4) return -1;
  std::scoped_lock lock(mutex);
  if(requests.size()>=128 || nextRequest==INT_MAX) {Alarm("request capacity exhausted");return -1;}
  const int token=++nextRequest;
@@ -110,7 +174,9 @@ int Queue(RE::StaticFunctionTag*,RE::Actor* actor,RE::TESObjectARMO* armor,int o
   if(it==requests.end() || it->second.generation!=generation) return;
   auto& r=it->second;
   auto* wearer=RE::TESForm::LookupByID<RE::Actor>(r.actor);
-  auto view=Inspect(wearer,r.op==0);
+  RE::ExtraDataList* selected=nullptr;
+  auto view=Inspect(wearer,r.op==0,&selected);
+  auto* item=RE::TESForm::LookupByID<RE::TESObjectARMO>(r.armor);
   views[r.actor]=view;
   if(!usable) r.result="error|registry unavailable";
   else if(!wearer || wearer->IsDead() || view.armor!=r.armor) r.result="skip|worn item changed or unavailable";
@@ -122,15 +188,24 @@ int Queue(RE::StaticFunctionTag*,RE::Actor* actor,RE::TESObjectARMO* armor,int o
    if(records.contains(view.key)) r.result="skip|attachment already installed";
    else if(nextSerial==UINT64_MAX || r.level<0) r.result="error|invalid installation metadata";
    else if(!state.Install(view.key,r.level)) r.result="error|registry insertion failed or limit reached";
-   else r.result="ok|"+std::to_string(generation)+"/"+view.key.Text();
+   else {
+    Label(wearer,item,selected,records.at(view.key),r.trace);
+    r.result="ok|"+std::to_string(generation)+"/"+view.key.Text();
+   }
   } else if(r.op==2) {
-   if(state.Remove(view.key)) r.result="ok|"+std::to_string(generation)+"/"+view.key.Text();
-   else r.result="skip|attachment not installed on this item";
+   auto found=records.find(view.key);
+   if(found==records.end())r.result="skip|attachment not installed on this item";
+   else if(!RestoreName(wearer,item,selected,found->second,r.trace))r.result="error|label restoration failed; attachment retained";
+   else {state.Remove(view.key);r.result="ok|"+std::to_string(generation)+"/"+view.key.Text();}
+  } else if(r.op==4) {
+   auto found=records.find(view.key);
+   r.result=found==records.end()?"skip|attachment not installed on this item":Label(wearer,item,selected,found->second,r.trace);
   } else {
    auto found=records.find(view.key);
    if(found==records.end() || r.level<0) r.result="skip|attachment/refit level unavailable";
-   else {state.Refit(view.key,r.level);r.result="ok|"+std::to_string(generation)+"/"+view.key.Text();}
+   else {state.Refit(view.key,r.level);Label(wearer,item,selected,found->second,r.trace);r.result="ok|"+std::to_string(generation)+"/"+view.key.Text();}
   }
+  views[r.actor]=Inspect(wearer,false); // label state and cached identity agree after commit
   if(r.result.starts_with("error|")) Alarm("transaction actor="+std::to_string(r.actor)+" armor="+std::to_string(r.armor)+" "+r.result);
   Trace(r.trace,"request="+std::to_string(token)+" actor="+std::to_string(r.actor)+" armor="+std::to_string(r.armor)+" operation="+std::to_string(r.op)+" "+r.result);
  });
@@ -150,14 +225,14 @@ void Clear() {
 void Save(SKSE::SerializationInterface* io) {
  std::scoped_lock lock(mutex);
  const auto text=state.Encode();
- if(text.size()>4*1024*1024 || !io->WriteRecord(signature,1,text.data(),static_cast<std::uint32_t>(text.size()))) Alarm("save failed for attachment registry");
+ if(text.size()>4*1024*1024 || !io->WriteRecord(signature,2,text.data(),static_cast<std::uint32_t>(text.size()))) Alarm("save failed for attachment registry");
 }
 void Load(SKSE::SerializationInterface* io) {
  Clear();std::scoped_lock lock(mutex);
  std::uint32_t type=0,version=0,size=0;
  while(io->GetNextRecordInfo(type,version,size)) {
   if(type!=signature) continue;
-  if(version!=1 || size>4*1024*1024) {usable=false;Alarm("unsupported or oversized attachment save record");continue;}
+  if((version!=1 && version!=2) || size>4*1024*1024) {usable=false;Alarm("unsupported or oversized attachment save record");continue;}
   std::string text(size,'\0');
   if(io->ReadRecordData(text.data(),size)!=size) {usable=false;Alarm("truncated attachment save record");continue;}
   try {
@@ -206,6 +281,7 @@ void Cancel(RE::StaticFunctionTag*) {Invalidate();}
 void Register(RE::BSScript::IVirtualMachine* vm) {
  vm->RegisterFunction("CancelDwemerRequests","MMEExtensionsNative",Cancel);
  vm->RegisterFunction("GetDwemerAttachmentTag","MMEExtensionsNative",Tag);
+ vm->RegisterFunction("DwemerLabelNeedsUpdate","MMEExtensionsNative",LabelPending);
  vm->RegisterFunction("GetDwemerRefitLevel","MMEExtensionsNative",Fitted);
  vm->RegisterFunction("GetDwemerItemIdentity","MMEExtensionsNative",Identity);
  vm->RegisterFunction("HasWornDwemerAttachment","MMEExtensionsNative",Has);

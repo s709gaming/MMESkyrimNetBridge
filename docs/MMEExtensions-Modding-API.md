@@ -287,7 +287,9 @@ an Armor form cannot distinguish identical inventory copies. Legacy
 `HasDwemerAttachment(Armor)` / `RemoveDwemerAttachment(Armor)` inspect or retire
 old broad artisan markers only; they do not query/remove new item instances.
 Built-in suits and explicit global compatibility definitions remain separate.
-See `Dwemer-Instance-Attachments.md` for persistence, migration and limitations.
+Fitted copies receive a presentation-only ` (Dwemer)` suffix where name ownership permits.
+Names never determine attachment identity. See `Dwemer-Instance-Attachments.md`
+for persistence, name restoration, migration and limitations.
 
 On equip, a custom entry follows its matching behavior: it can
 register the wearer as a Milk Maid, and Living/Parasite armor applies MME's
