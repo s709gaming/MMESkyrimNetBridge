@@ -3327,6 +3327,8 @@ Event OnOptionSelect(Int option)
     ElseIf option == papyrusTraceOption
         Int value = 1 - JsonUtil.GetIntValue(SettingsFile, "enablePapyrusTrace", 0)
         JsonUtil.SetIntValue(SettingsFile, "enablePapyrusTrace", value)
+        ; Emit an ON-only marker independently of verbose logging.
+        MMELog.MasterDiagnostic("[MME Extensions DEBUG] Master Papyrus Logging ON")
         SetToggleOptionValue(option, value == 1)
         ForcePageReset()
     ElseIf option == verbosePapyrusTraceOption

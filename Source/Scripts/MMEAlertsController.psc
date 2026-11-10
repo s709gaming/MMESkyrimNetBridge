@@ -1622,6 +1622,8 @@ Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form send
         MMEArmorFamiliarity.Observe(MMEExtensionsNative.GetNearbyActors(2000.0))
     EndIf
     If reason == "load"
+        ; Confirm the master logging flag in each enabled save-load log.
+        MMELog.MasterDiagnostic("[MME Extensions DEBUG] Master Papyrus Logging ON")
         ; Runtime callbacks are not restored from a save. This path is required
         ; even when quest OnInit/MCM upgrades/player-effect load do not run.
         ; Keep it before the master-off return; disabled callbacks render empty.
