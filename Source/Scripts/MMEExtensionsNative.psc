@@ -69,3 +69,14 @@ Bool Function ApplyMaidBodyMorphs(Actor target, String[] names, Float[] values, 
 
 ; Actor/token-specific native rejection or readback failure detail.
 String Function GetMaidBodyFailureReason(Actor target, Int token) Global Native
+
+; Individual artisan Dwemer attachments. Inventory access is queued to the game thread.
+String Function GetDwemerItemIdentity(Actor wearer, Armor item) Global Native
+Bool Function HasWornDwemerAttachment(Actor wearer, Armor item) Global Native
+Int Function QueueDwemerAttachment(Actor wearer, Armor item, Int operation, String expectedIdentity, Bool diagnostic = False, Int fittedLevel = 0) Global Native
+String Function GetDwemerAttachmentResult(Int request, Bool cancel = False) Global Native
+
+Int Function GetDwemerRefitLevel(Actor wearer, Armor item) Global Native
+String Function GetDwemerAttachmentTag(Actor wearer, Armor item) Global Native
+
+Function CancelDwemerRequests() Global Native

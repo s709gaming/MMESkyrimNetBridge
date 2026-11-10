@@ -44,7 +44,7 @@ add_commonlibsse_plugin(
     AUTHOR "MMEAlert contributors"
     VERSION ${PROJECT_VERSION}
     USE_ADDRESS_LIBRARY
-    SOURCES src/Plugin.cpp src/NarrationStore.cpp src/LockProtection.cpp
+    SOURCES src/Plugin.cpp src/NarrationStore.cpp src/LockProtection.cpp src/DwemerAttachmentRegistry.cpp
 )
 
 target_compile_features(MMEExtensions PRIVATE cxx_std_23)

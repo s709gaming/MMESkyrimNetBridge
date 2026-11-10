@@ -1,7 +1,7 @@
 Scriptname MMEExtensionsAPI Hidden
 
 ; =============================================================================
-; MME Extensions public Papyrus API (version 19)
+; MME Extensions public Papyrus API (version 20)
 ; =============================================================================
 ; This is the stable entry point for other mods. Call these wrappers instead
 ; of MMEDebug, MMENewMilkMaid, MMEOStimBreastfeeding, or other internal scripts.
@@ -15,7 +15,7 @@ Scriptname MMEExtensionsAPI Hidden
 ; transaction finishes. Listen for the documented ModEvents to observe results.
 
 Int Function GetAPIVersion() Global
-    Return 19
+    Return 20
 EndFunction
 
 ; Version 17: commits the gameplay effects for one externally owned,
@@ -203,9 +203,9 @@ Bool Function UnregisterCustomArmorName(String armorName, Int armorClass) Global
     Return MMECustomArmorRegistry.UnregisterArmorName(armorName, armorClass)
 EndFunction
 
-; Form-oriented Dwemer attachment helpers introduced in API version 11. These
-; use a dedicated display-name list so removal can never delete a built-in or
-; third-party exact-form Dwemer registration.
+; Deprecated armor-only Dwemer APIs: installation fails closed. Has/Remove
+; inspect/retire legacy broad markers only. Use the actor-aware facade for
+; physical-item attachment transactions; intrinsic compatibility stays separate.
 Bool Function InstallDwemerAttachment(Armor targetArmor) Global
     If targetArmor == None || GetArmorClass(targetArmor) != 0
         Return False
@@ -412,4 +412,12 @@ EndFunction
 ; True means the milk operation committed; presentation may later be interrupted.
 Bool Function TryApplyMilkMaidCurse(Actor target, Float percentage = 50.0) Global
     Return MMEMilkCurse.ApplySurge(target, percentage, "")
+EndFunction
+
+; Instance-aware replacement for legacy armor-only artisan registration queries.
+Bool Function HasWornDwemerAttachment(Actor wearer) Global
+    If wearer == None
+        Return False
+    EndIf
+    Return MMEDwemerAttachment.Has(wearer, wearer.GetWornForm(Armor.GetMaskForSlot(32)) as Armor)
 EndFunction

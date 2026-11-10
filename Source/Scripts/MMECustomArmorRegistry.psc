@@ -91,10 +91,6 @@ Int Function ClassifyCustomArmor(Armor targetArmor, Bool traceMatch = False) Glo
         armorClass = MatchNameClass(targetArmor, 4)
         source = "name fallback"
     EndIf
-    If armorClass == 0 && IsArtisanDwemerArmor(targetArmor)
-        armorClass = 4
-        source = "blacksmith attachment"
-    EndIf
     If armorClass == 0
         armorClass = MatchNameClass(targetArmor, 2)
     EndIf
@@ -146,25 +142,9 @@ String Function GetDwemerPresentationProfile(Armor targetArmor) Global
 EndFunction
 
 Bool Function RegisterArtisanDwemerArmor(Armor targetArmor) Global
-    If targetArmor == None
-        Trace("artisan register rejected | missing armor")
-        Return False
-    EndIf
-    String armorName = GetArmorName(targetArmor)
-    If ClassifyCustomArmor(targetArmor) > 0
-        Trace("artisan register skipped | armor already has a custom class | " + armorName)
-        Return False
-    EndIf
-    If StorageUtil.FormListAdd(None, GetDwemerArtisanKey(), targetArmor, False) < 0
-        Alarm("artisan exact-form register failed | " + armorName)
-        Return False
-    EndIf
-    If !IsArtisanDwemerArmor(targetArmor) || ClassifyCustomArmor(targetArmor) != 4
-        Alarm("artisan register saved but Dwemer classification verification failed | " + armorName)
-        Return False
-    EndIf
-    Trace("artisan Dwemer attachment registered | armor=" + armorName)
-    Return True
+    ; Deprecated armor-only API cannot identify a physical copy. Never broaden a service.
+    Trace("legacy artisan registration rejected: use MMEDwemerAttachment with wearer/item identity")
+    Return False
 EndFunction
 
 Bool Function UnregisterArtisanDwemerArmor(Armor targetArmor) Global
@@ -273,7 +253,7 @@ Function HandleCustomArmorEquipped(Actor wearer, Armor equippedArmor) Global
     If wearer == None || equippedArmor == None || milkController == None
         Return
     EndIf
-    Int armorClass = ClassifyCustomArmor(equippedArmor, True)
+    Int armorClass = ClassifyForActor(wearer, equippedArmor, True)
     If armorClass == 0
         Return
     EndIf
@@ -505,4 +485,13 @@ Bool Function UnregisterArmorName(String armorName, Int armorClass) Global
     EndIf
     Trace("name unregister complete | class=" + GetClassLabel(armorClass) + " | " + armorName)
     Return True
+EndFunction
+
+; Actor-aware overlay. Base-only callers retain static compatibility, never artisan instances.
+Int Function ClassifyForActor(Actor wearer, Armor item, Bool diagnostic = False) Global
+    Int intrinsic = ClassifyCustomArmor(item, diagnostic)
+    If intrinsic == 0 && MMEDwemerAttachment.Has(wearer, item)
+        Return 4
+    EndIf
+    Return intrinsic
 EndFunction

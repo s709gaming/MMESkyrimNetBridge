@@ -13,7 +13,7 @@ Int Function GetLiveServiceState(Actor alchemist) Global
     If !IsManageableArmorIdentity(wornArmor)
         Return 0
     EndIf
-    If MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != ""
+    If (MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor))
         Return 3
     EndIf
     String armorName = wornArmor.GetName()
@@ -44,7 +44,7 @@ Bool Function TryAddLivingArmor(Actor alchemist, GlobalVariable stateGlobal) Glo
         Return False
     EndIf
     String armorName = wornArmor.GetName()
-    If MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != ""
+    If (MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor))
         Debug.Notification(MMELocalization.Text("That armor is already bound to another MME system."))
         Reject("protected armor cannot be registered", False)
         Return False
@@ -62,7 +62,7 @@ Bool Function TryAddLivingArmor(Actor alchemist, GlobalVariable stateGlobal) Glo
     If GetWornBodyArmor(playerActor) != wornArmor \
         || !ValidateParticipants(alchemist, playerActor, milkController) \
         || !MMEArmorScript.IsBasicLivingArmorRegistrySafeForManagement(milkController) \
-        || MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != "" \
+        || (MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor)) \
         || MMEArmorScript.CountBasicLivingArmorMatchesDirect(milkController, armorName) != 0 \
         || emptyIndex >= milkController.BasicLivingArmor.Length \
         || milkController.BasicLivingArmor[emptyIndex] != "Empty"
@@ -102,7 +102,7 @@ Bool Function TryRemoveLivingArmor(Actor alchemist, GlobalVariable stateGlobal) 
         Return False
     EndIf
     String armorName = wornArmor.GetName()
-    If MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != ""
+    If (MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor))
         Debug.Notification(MMELocalization.Text("That armor is bound to another MME system."))
         Reject("protected armor cannot be removed", False)
         Return False
@@ -119,7 +119,7 @@ Bool Function TryRemoveLivingArmor(Actor alchemist, GlobalVariable stateGlobal) 
     If GetWornBodyArmor(playerActor) != wornArmor \
         || !ValidateParticipants(alchemist, playerActor, milkController) \
         || !MMEArmorScript.IsBasicLivingArmorRegistrySafeForManagement(milkController) \
-        || MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != "" \
+        || (MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor)) \
         || MMEArmorScript.CountBasicLivingArmorMatchesDirect(milkController, armorName) != 1 \
         || registeredIndex >= milkController.BasicLivingArmor.Length \
         || milkController.BasicLivingArmor[registeredIndex] != armorName

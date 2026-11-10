@@ -15,7 +15,7 @@ Int Function GetLiveServiceState(Actor blacksmith) Global
     If wornArmor == None
         Return 0
     EndIf
-    If MMECustomArmorRegistry.IsArtisanDwemerArmor(wornArmor)
+    If MMEDwemerAttachment.Has(playerActor, wornArmor)
         Return 2
     EndIf
     If MMETimedArmorLock.IsLocked(playerActor) && MMETimedArmorLock.GetLockedArmor(playerActor) == wornArmor
@@ -51,14 +51,24 @@ Bool Function TryInstall(Actor blacksmith) Global
         Return False
     EndIf
     Trace("install starting | blacksmith=" + GetActorName(blacksmith) + " | armor=" + wornArmor.GetName())
-    If !MMECustomArmorRegistry.RegisterArtisanDwemerArmor(wornArmor)
-        Alarm("attachment registration failed | armor=" + wornArmor.GetName())
+    If MMECustomArmorRegistry.IsArtisanDwemerArmor(wornArmor)
+        Debug.Notification(MMELocalization.Text("Legacy Dwemer attachment: rebinding only the currently worn item."))
+    EndIf
+    String itemIdentity = MMEDwemerAttachment.Capture(playerActor, wornArmor)
+    If !MMEDwemerAttachment.Install(playerActor, wornArmor, itemIdentity)
+        Reject("individual attachment installation skipped or failed; see instance diagnostics")
         Return False
     EndIf
-    If GetWornBodyArmor(playerActor) != wornArmor || MMEArmorScript.ClassifyArmor(milkController, wornArmor, "dwemer-blacksmith-install-verify", playerActor) != 4
+    ; Native commit verified the captured physical item atomically. A later outfit
+    ; swap does not undo a successfully installed attachment on the original item.
+    If MMECustomArmorRegistry.IsArtisanDwemerArmor(wornArmor)
+        ; Explicit blacksmith installation is the reviewed rebind of this legacy base entry.
         MMECustomArmorRegistry.UnregisterArtisanDwemerArmor(wornArmor)
-        Alarm("installation verification failed; registration rolled back | armor=" + wornArmor.GetName())
-        Return False
+        Trace("legacy artisan entry retired after exact-item installation")
+    EndIf
+    If MMEDwemerAttachment.Identity(playerActor, wornArmor) != itemIdentity
+        Trace("installation committed on captured garment; later outfit change skips presentation")
+        Return True
     EndIf
     MMECustomArmorRegistry.HandleCustomArmorEquipped(playerActor, wornArmor)
     Debug.Notification(MMELocalization.Text("Dwemer milking attachment installed in ") + wornArmor.GetName())
@@ -82,7 +92,7 @@ Bool Function TryRemove(Actor blacksmith) Global
         Return False
     EndIf
     Armor wornArmor = GetWornBodyArmor(playerActor)
-    If wornArmor == None || !MMECustomArmorRegistry.IsArtisanDwemerArmor(wornArmor)
+    If wornArmor == None || !MMEDwemerAttachment.Has(playerActor, wornArmor)
         Reject("removal rejected | equipped armor has no artisan attachment")
         Return False
     EndIf
@@ -90,13 +100,10 @@ Bool Function TryRemove(Actor blacksmith) Global
         Reject("removal rejected | equipped armor has an active timed bond")
         Return False
     EndIf
+    String itemIdentity = MMEDwemerAttachment.Capture(playerActor, wornArmor)
     Trace("removal starting | blacksmith=" + GetActorName(blacksmith) + " | armor=" + wornArmor.GetName())
-    If !MMECustomArmorRegistry.UnregisterArtisanDwemerArmor(wornArmor)
-        Alarm("attachment removal failed | armor=" + wornArmor.GetName())
-        Return False
-    EndIf
-    If MMECustomArmorRegistry.IsArtisanDwemerArmor(wornArmor)
-        Alarm("removal verification failed | armor=" + wornArmor.GetName())
+    If !MMEDwemerAttachment.Remove(playerActor, wornArmor, itemIdentity)
+        Reject("individual attachment removal skipped or failed; see instance diagnostics")
         Return False
     EndIf
     Debug.Notification(MMELocalization.Text("Dwemer milking attachment removed from ") + wornArmor.GetName())
@@ -105,6 +112,9 @@ Bool Function TryRemove(Actor blacksmith) Global
 EndFunction
 
 String Function GetEligibilityFailure(Actor blacksmith, Actor playerActor, MilkQUEST milkController) Global
+    If playerActor != None && StorageUtil.GetIntValue(playerActor, MMEDwemerArmor.GetSequenceKey(), 0) == 1
+        Return "Dwemer milking sequence is active"
+    EndIf
     If !MMEAlertsController.IsExtensionsEnabled()
         Return "MME Extensions disabled"
     ElseIf blacksmith == None || playerActor == None || milkController == None

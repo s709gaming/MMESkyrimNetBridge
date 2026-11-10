@@ -194,6 +194,7 @@ Function InitializeController(Bool reportStatus = False)
     UnregisterForModEvent("MMEExtensions_ArmorUnequipped")
     RegisterForModEvent("MMEExtensions_ArmorUnequipped", "OnArmorUnequipped")
     MMECustomArmorRegistry.AuditRegistry()
+    MMEDwemerAttachment.ReportLegacy()
     MMEMaidWeightScaling.ReconcileAll("controller initialized")
     MMEBodyEffects.Reconcile("controller initialized")
     MMEMilkingEquipmentRefit.Reconcile("controller initialized")
@@ -391,6 +392,7 @@ EndFunction
 
 ; Stops scheduled work and event subscriptions without removing saved state.
 Function DisableController()
+    MMEExtensionsNative.CancelDwemerRequests()
     ; Runtime compatibility tags stop with observation; saved lock data survives.
     MMEExtensionsNative.ResetLockProtection()
     MMEMaidBodyScaling.ReconcileAll("Extensions disabled")
@@ -1485,7 +1487,7 @@ Event OnArmorUnequipped(String eventName, String pluginName, Float localArmorFor
         Return
     EndIf
     MMECustomArmorRegistry.HandleCustomArmorUnequipped(wearer, unequippedArmor)
-    If MMECustomArmorRegistry.ClassifyCustomArmor(unequippedArmor) == 4
+    If MMECustomArmorRegistry.ClassifyCustomArmor(unequippedArmor) == 4 || (MMEArmorFamiliarity.IsBodyArmor(unequippedArmor) && !MMEDwemerAttachment.Has(wearer, wearer.GetWornForm(Armor.GetMaskForSlot(32)) as Armor))
         MMEDwemerArmor.HandleArmorRemoved(wearer)
     EndIf
 EndEvent
@@ -1611,6 +1613,7 @@ Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form send
         Return
     EndIf
     If reason == "load"
+        MMEDwemerAttachment.ReportLegacy()
         ; Loading inside a venue establishes a baseline rather than pretending
         ; the player just entered. Any pre-save real-time deadline is discarded.
         CancelInnPalaceDrink("save loaded")

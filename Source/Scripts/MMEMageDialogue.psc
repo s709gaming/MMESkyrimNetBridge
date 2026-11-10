@@ -32,7 +32,7 @@ Int Function GetLiveServiceState(Actor mage) Global
     If !IsManageableArmorIdentity(wornArmor)
         Return 0
     EndIf
-    If MMEArmorScript.GetMMEProtectedForParasiteLivingArmorReason(milkController, wornArmor) != ""
+    If (MMEArmorScript.GetMMEProtectedForParasiteLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor))
         Return 3
     EndIf
     String armorName = wornArmor.GetName()
@@ -63,7 +63,7 @@ Bool Function TryAddParasiteArmor(Actor mage, GlobalVariable stateGlobal) Global
         Return False
     EndIf
     String armorName = wornArmor.GetName()
-    If MMEArmorScript.GetMMEProtectedForParasiteLivingArmorReason(milkController, wornArmor) != ""
+    If (MMEArmorScript.GetMMEProtectedForParasiteLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor))
         Debug.Notification(MMELocalization.Text("That armor is already bound to another MME system."))
         Reject("protected armor cannot be registered", False)
         Return False
@@ -81,7 +81,7 @@ Bool Function TryAddParasiteArmor(Actor mage, GlobalVariable stateGlobal) Global
     If GetWornBodyArmor(playerActor) != wornArmor \
         || !ValidateParticipants(mage, playerActor, milkController) \
         || !MMEArmorScript.IsParasiteLivingArmorRegistrySafeForManagement(milkController) \
-        || MMEArmorScript.GetMMEProtectedForParasiteLivingArmorReason(milkController, wornArmor) != "" \
+        || (MMEArmorScript.GetMMEProtectedForParasiteLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor)) \
         || MMEArmorScript.CountParasiteLivingArmorMatchesDirect(milkController, armorName) != 0 \
         || emptyIndex >= milkController.ParasiteLivingArmor.Length \
         || milkController.ParasiteLivingArmor[emptyIndex] != "Empty"
@@ -121,7 +121,7 @@ Bool Function TryRemoveParasiteArmor(Actor mage, GlobalVariable stateGlobal) Glo
         Return False
     EndIf
     String armorName = wornArmor.GetName()
-    If MMEArmorScript.GetMMEProtectedForParasiteLivingArmorReason(milkController, wornArmor) != ""
+    If (MMEArmorScript.GetMMEProtectedForParasiteLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor))
         Debug.Notification(MMELocalization.Text("That armor is bound to another MME system."))
         Reject("protected armor cannot be removed", False)
         Return False
@@ -138,7 +138,7 @@ Bool Function TryRemoveParasiteArmor(Actor mage, GlobalVariable stateGlobal) Glo
     If GetWornBodyArmor(playerActor) != wornArmor \
         || !ValidateParticipants(mage, playerActor, milkController) \
         || !MMEArmorScript.IsParasiteLivingArmorRegistrySafeForManagement(milkController) \
-        || MMEArmorScript.GetMMEProtectedForParasiteLivingArmorReason(milkController, wornArmor) != "" \
+        || (MMEArmorScript.GetMMEProtectedForParasiteLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor)) \
         || MMEArmorScript.CountParasiteLivingArmorMatchesDirect(milkController, armorName) != 1 \
         || registeredIndex >= milkController.ParasiteLivingArmor.Length \
         || milkController.ParasiteLivingArmor[registeredIndex] != armorName

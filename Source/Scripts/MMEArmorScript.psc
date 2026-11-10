@@ -495,7 +495,7 @@ String Function ResolveArmorProtectionReason(MilkQUEST milkController, Armor slo
     Int milkingIndex = FindMilkingEquipmentNameDirect(milkController, armorName)
     Int basicIndex = FindBasicLivingArmorNameDirect(milkController, armorName)
     Int parasiteIndex = FindParasiteLivingArmorNameDirect(milkController, armorName)
-    Int customClass = MMECustomArmorRegistry.ClassifyCustomArmor(slotArmor)
+    Int customClass = MMECustomArmorRegistry.ClassifyForActor(wearer, slotArmor)
     ; Native arrays and MME's established name rules always outrank the
     ; user-managed MilkingEquipment registry.
     String reason = ""
@@ -928,7 +928,7 @@ EndFunction
 Int Function ClassifyArmor(MilkQUEST milkController, Armor equippedArmor, String source = "unknown", Actor wearer = None) Global
     Int armorClass = ClassifyOriginalArmor(milkController, equippedArmor, source, wearer)
     If armorClass == 0
-        armorClass = MMECustomArmorRegistry.ClassifyCustomArmor(equippedArmor, GetArmorLookupDiagnostic())
+        armorClass = MMECustomArmorRegistry.ClassifyForActor(wearer, equippedArmor, GetArmorLookupDiagnostic())
     EndIf
     Return armorClass
 EndFunction
@@ -937,7 +937,7 @@ EndFunction
 Int Function ClassifyArmorQuiet(MilkQUEST milkController, Armor equippedArmor, Actor wearer = None) Global
     Int armorClass = ClassifyOriginalArmorInternal(milkController, equippedArmor, "actor prompt", wearer, True)
     If armorClass == 0
-        armorClass = MMECustomArmorRegistry.ClassifyCustomArmor(equippedArmor, False)
+        armorClass = MMECustomArmorRegistry.ClassifyForActor(wearer, equippedArmor, False)
     EndIf
     Return armorClass
 EndFunction

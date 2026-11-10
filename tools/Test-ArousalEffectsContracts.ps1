@@ -36,7 +36,7 @@ Assert-Contract ($animations -match 'Return 3\.0' -and $animations -match 'MMEEx
 Assert-Contract ($animations -match 'StartCustomEvent' -and $reactionAnimation -match 'Bool Function StartCustomEvent' -and $reactionAnimation -match 'GetStartBlockReason' -and $reactionAnimation -match 'LockMovement') "custom arousal clips reuse combat-safe ownership and movement locking"
 Assert-Contract ([int]([regex]::Match($mcm, '(?s)Int Function GetVersion\(\)\s+Return (\d+)').Groups[1].Value) -ge 152 -and $mcm -match 'arousalAnimationsMigration152' -and $mcm -match 'Play Arousal Animations') "MCM version 152 or later retains the default-on animation toggle"
 Assert-Contract ([int]([regex]::Match($mcm, '(?s)Int Function GetVersion\(\)\s+Return (\d+)').Groups[1].Value) -ge 154 -and $mcm -match 'arousalEligibilityMigration154' -and $mcm -match 'Always React for Milk Maids' -and $mcm -match 'React After Milk Drinking' -and $mcm -match 'Include Everyone Else') "MCM version 154 or later retains the three OR-based eligibility routes"
-Assert-Contract ($api -match 'Return 1[5-9]' -and $api -match 'TryPlayArousalAnimation') "API version 15 or later exposes guarded arousal animation playback"
+Assert-Contract ($api -match 'Return (1[5-9]|[2-9][0-9])' -and $api -match 'TryPlayArousalAnimation') "API version 15 or later exposes guarded arousal animation playback"
 foreach ($eventName in @('MMEExt_Arousal_F_L1', 'MMEExt_Arousal_F_L2', 'MMEExt_Arousal_F_L3', 'MMEExt_Arousal_M_L1', 'MMEExt_Arousal_M_L2')) {
     Assert-Contract ($behaviorList -match [regex]::Escape($eventName)) "behavior list declares $eventName"
 }

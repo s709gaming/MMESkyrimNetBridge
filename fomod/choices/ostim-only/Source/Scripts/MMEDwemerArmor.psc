@@ -104,7 +104,7 @@ Bool Function TryCandidate(Actor candidate, MilkQUEST milkController) Global
     EndIf
 
     Armor wornArmor = candidate.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
-    If MMECustomArmorRegistry.ClassifyCustomArmor(wornArmor) != 4
+    If MMECustomArmorRegistry.ClassifyForActor(candidate, wornArmor) != 4
         Report("candidate skipped | slot32 is not Dwemer | actor=" + candidate + " | armor=" + wornArmor)
         If StorageUtil.GetIntValue(candidate, GetThresholdLatchKey(), 0) == 1
             StorageUtil.UnsetIntValue(candidate, GetThresholdLatchKey())
@@ -178,6 +178,8 @@ Function RunDwemerMilking(Actor candidate, MilkQUEST milkController, Float start
     Bool controlsDisabled = False
     Bool npcUnconscious = False
     Int soundInstance = -1
+    Armor sequenceArmor = candidate.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
+    String sequenceItem = MMEDwemerAttachment.Tag(candidate, sequenceArmor)
     EffectShader activationShader = GetActivationShader()
 
     Report("sequence start | actor=" + GetActorName(candidate))
@@ -190,6 +192,11 @@ Function RunDwemerMilking(Actor candidate, MilkQUEST milkController, Float start
         Report("blue activation prelude complete | actor=" + GetActorName(candidate) + " | dispatching milking sequence")
     Else
         MMELog.Alarm("[MME Extensions Dwemer Armor] blue activation shader unavailable | Skyrim.esm:0005D608 | actor=" + GetActorName(candidate))
+    EndIf
+    If !MMEAlertsController.IsExtensionsEnabled() || candidate.GetWornForm(Armor.GetMaskForSlot(32)) != sequenceArmor || MMECustomArmorRegistry.ClassifyForActor(candidate, sequenceArmor) != 4 || (sequenceItem != "" && MMEDwemerAttachment.Tag(candidate, sequenceArmor) != sequenceItem)
+        Report("sequence cancelled: exact Dwemer item changed during activation")
+        CleanupSequence(candidate, milkController, animationStarted, controlsDisabled, npcUnconscious, activationShader)
+        Return
     EndIf
     ; MilkQUEST.TakeHoldSound is not populated in every MME installation.
     ; Use the bridge's authored, sex-aware sound marker so this presentation

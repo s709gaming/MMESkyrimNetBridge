@@ -7,8 +7,10 @@ String QuickStartMilkCuirassGrantKey = "MMEExtensions.QuickStart.MilkCuirassGran
 String QuickStartTentacleMeatGrantKey = "MMEExtensions.QuickStart.TentacleMeatGranted"
 String QuickStartDDOpenStraitjacketGrantKey = "MMEExtensions.QuickStart.DDOpenStraitjacketGranted"
 String QuickStartDwarvenDeviousCuirassGrantKey = "MMEExtensions.QuickStart.DwarvenDeviousCuirassGranted"
+String QuickStartClothingCopyGrantKey = "MMEExtensions.QuickStart.ClothingCopyGranted"
 Bool milkVarietyGranted = False
 Bool quickStartScheduled = False
+Bool clothingCopyInProgress = False
 
 Event OnInit()
     ScheduleTestSetup()
@@ -26,7 +28,8 @@ Function ScheduleTestSetup()
     && StorageUtil.GetIntValue(None, QuickStartMilkCuirassGrantKey, 0) != 0 \
     && StorageUtil.GetIntValue(None, QuickStartTentacleMeatGrantKey, 0) != 0 \
     && StorageUtil.GetIntValue(None, QuickStartDDOpenStraitjacketGrantKey, 0) != 0 \
-    && StorageUtil.GetIntValue(None, QuickStartDwarvenDeviousCuirassGrantKey, 0) != 0
+    && StorageUtil.GetIntValue(None, QuickStartDwarvenDeviousCuirassGrantKey, 0) != 0 \
+    && StorageUtil.GetIntValue(None, QuickStartClothingCopyGrantKey, 0) != 0
         Return
     EndIf
     quickStartScheduled = True
@@ -47,6 +50,7 @@ Function ApplyTestSetup()
     If playerActor == None
         Return
     EndIf
+    GrantClothingCopyOnce(playerActor)
     GrantMilkCuirassOnce(playerActor)
     GrantOptionalArmorBonuses(playerActor)
     GrantDwarvenDeviousCuirassOnce(playerActor)
@@ -66,6 +70,39 @@ Function ApplyTestSetup()
     Potion succubusMilk = Game.GetFormFromFile(0x0394C2, "MilkModNEW.esp") as Potion
 
     GrantMilkVariety(playerActor, lactacid, regularMilk, bretonMilk, succubusMilk)
+EndFunction
+
+; One fresh base-item copy of the worn ordinary outfit for identical-copy tests.
+; Never clone the worn item's enchantment, inventory identity or attachment.
+; A separate latch supports existing QuickStart saves without repeating milk grants.
+Function GrantClothingCopyOnce(Actor playerActor)
+    If playerActor == None || clothingCopyInProgress || StorageUtil.GetIntValue(None, QuickStartClothingCopyGrantKey, 0) != 0
+        Return
+    EndIf
+    clothingCopyInProgress = True
+    Armor clothing = playerActor.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
+    MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
+    If clothing == None || milkController == None
+        MMELog.MasterDiagnostic("[MME Extensions QuickStart] clothing copy skipped | actor=" + playerActor + " | no worn body item or MME not initialized; retry on later startup")
+        clothingCopyInProgress = False
+        Return
+    EndIf
+    If MMEArmorScript.ClassifyArmorQuiet(milkController, clothing, playerActor) > 0 || MMEArmorScript.GetMMEArmorProtectionReason(milkController, clothing, "quickstart-clothing-copy", playerActor) != ""
+        MMELog.MasterDiagnostic("[MME Extensions QuickStart] clothing copy skipped | actor=" + playerActor + " | managed/protected armor=" + clothing)
+        clothingCopyInProgress = False
+        Return
+    EndIf
+    Int countBefore = playerActor.GetItemCount(clothing)
+    MMELog.MasterDiagnostic("[MME Extensions QuickStart] clothing copy entry | actor=" + playerActor + " | armor=" + clothing + " | count=" + countBefore)
+    playerActor.AddItem(clothing, 1, False)
+    If playerActor.GetItemCount(clothing) > countBefore
+        StorageUtil.SetIntValue(None, QuickStartClothingCopyGrantKey, 1)
+        MMELog.MasterDiagnostic("[MME Extensions QuickStart] clothing copy granted/cleanup | actor=" + playerActor + " | armor=" + clothing)
+    ElseIf StorageUtil.GetIntValue(None, "MMEExtensions.QuickStart.ClothingCopyAlarm", 0) == 0
+        StorageUtil.SetIntValue(None, "MMEExtensions.QuickStart.ClothingCopyAlarm", 1)
+        MMELog.Alarm("[MME Extensions QuickStart] clothing copy failed | actor=" + playerActor + " | armor=" + clothing + " | inventory count did not increase; grant remains pending")
+    EndIf
+    clothingCopyInProgress = False
 EndFunction
 
 ; These plugins remain completely optional: their load-order index is checked

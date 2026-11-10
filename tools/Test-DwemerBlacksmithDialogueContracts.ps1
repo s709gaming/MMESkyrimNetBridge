@@ -14,7 +14,7 @@ function Assert-Contract([bool]$condition, [string]$message) {
 }
 
 Assert-Contract ($service -match 'JobBlacksmithFaction|0x05091D' -and $service -match 'JobMerchantFaction|0x051596') "service requires a merchant blacksmith"
-Assert-Contract ($service -match 'IsArtisanDwemerArmor' -and $service -match 'RegisterArtisanDwemerArmor' -and $service -match 'UnregisterArtisanDwemerArmor') "service manages only the dedicated artisan registry"
+Assert-Contract ($service -match 'MMEDwemerAttachment.Capture' -and $service -match 'MMEDwemerAttachment.Install' -and $service -match 'MMEDwemerAttachment.Remove' -and $service -notmatch '(?<!Un)RegisterArtisanDwemerArmor\(') "service captures and commits a physical item; legacy markers are removal-only"
 Assert-Contract ($service -match 'MMETimedArmorLock\.IsLocked' -and $service -match 'GetLockedArmor') "active timed armor is protected"
 Assert-Contract ($service -match 'MMELog\.MasterDiagnostic' -and $service -match 'MMELog\.Alarm') "master footprints and smoke alarms are present"
 Assert-Contract ($wrapper -match 'MMEExt_DwemerBlacksmithArmorState' -and $wrapper -match 'Fragment_InstallDwemerAttachment' -and $wrapper -match 'Fragment_RemoveDwemerAttachment') "Hey there wrapper exposes Dwemer state and fragments"

@@ -30,7 +30,12 @@ Bool Function IsFeatureEnabled() Global
 EndFunction
 
 Bool Function NeedsRefit() Global
-    Return IsFeatureEnabled() && StorageUtil.GetIntValue(Game.GetPlayer(), NeedsRefitKey(), 0) == 1
+    Actor playerActor = Game.GetPlayer()
+    Armor worn = playerActor.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
+    If IsFeatureEnabled() && MMEDwemerAttachment.Has(playerActor, worn)
+        Return MMEDwemerAttachment.NeedsRefit(playerActor, worn)
+    EndIf
+    Return IsFeatureEnabled() && StorageUtil.GetIntValue(playerActor, NeedsRefitKey(), 0) == 1
 EndFunction
 
 Function Reconcile(String source = "unspecified") Global
@@ -87,7 +92,7 @@ Bool Function ShouldBypassMilkingEquipmentProtection(Actor wearer, Armor wornArm
     EndIf
     Bool eligible = IsEligibleOrdinaryMilkingEquipment(wornArmor, milkController)
     If eligible
-        Int customClass = MMECustomArmorRegistry.ClassifyCustomArmor(wornArmor)
+        Int customClass = MMECustomArmorRegistry.ClassifyForActor(Game.GetPlayer(), wornArmor)
         If customClass == 4
             Trace("unlocked Dwemer Armor protection bypass permitted | armor=" + GetArmorName(wornArmor))
         Else
@@ -117,7 +122,7 @@ Bool Function IsEligibleOrdinaryMilkingEquipment(Armor wornArmor, MilkQUEST milk
     || MMEArmorScript.FindParasiteLivingArmorNameDirect(milkController, armorName) >= 0
         Return False
     EndIf
-    Int customClass = MMECustomArmorRegistry.ClassifyCustomArmor(wornArmor)
+    Int customClass = MMECustomArmorRegistry.ClassifyForActor(Game.GetPlayer(), wornArmor)
     If customClass == 4
         Return True
     ElseIf customClass > 0
@@ -148,11 +153,16 @@ Bool Function TryRefit(Actor blacksmith) Global
     Armor wornArmor = playerActor.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
     String refitContext = "off-body"
     If IsEligibleOrdinaryMilkingEquipment(wornArmor, milkController)
-        If MMECustomArmorRegistry.ClassifyCustomArmor(wornArmor) == 4
+        If MMECustomArmorRegistry.ClassifyForActor(Game.GetPlayer(), wornArmor) == 4
             refitContext = "equipped Dwemer Armor"
         Else
             refitContext = "equipped Milking Equipment"
         EndIf
+    EndIf
+    If MMEDwemerAttachment.Has(playerActor, wornArmor)
+        Bool refitted = MMEDwemerAttachment.Refit(playerActor, wornArmor)
+        Trace("individual Dwemer refit result=" + refitted + " | armor=" + wornArmor)
+        Return refitted
     EndIf
     Int currentLevel = MME_Storage.getMaidLevel(playerActor)
     StorageUtil.SetIntValue(playerActor, FittedLevelKey(), currentLevel)

@@ -1,7 +1,7 @@
 # MME Extensions Modding API
 
 This document describes the stable Papyrus entry points and ModEvents intended
-for other Skyrim mods. The current API version is **19**.
+for other Skyrim mods. The current API version is **20**.
 
 Use `MMEExtensionsAPI.psc`. Do not call `MMEDebug`, `MMENewMilkMaid`,
 `MMEOStimBreastfeeding`, or the Skyrim.Net bridge scripts directly. Those are
@@ -275,20 +275,19 @@ Bool removed = MMEExtensionsAPI.UnregisterCustomArmorName("Example Living Armor"
 Exact-form registration is strongly preferred. A display name can be shared
 by unrelated records or changed by another mod or translation.
 
-API version 11 adds reversible, form-oriented Dwemer attachment helpers:
+API version 20 queries the physical garment currently worn by an actor:
 
 ```papyrus
-Bool installed = MMEExtensionsAPI.InstallDwemerAttachment(targetArmor)
-Bool attached = MMEExtensionsAPI.HasDwemerAttachment(targetArmor)
-Bool removed = MMEExtensionsAPI.RemoveDwemerAttachment(targetArmor)
+Bool attached = MMEExtensionsAPI.HasWornDwemerAttachment(wearer)
 ```
 
-These helpers use the dedicated `dwemer_artisan_names` list. Removal can only
-delete entries installed through this attachment API; it cannot unregister
-built-in or third-party exact-form Dwemer support. Identity is based on the
-armor's display name, so unrelated records with the same translated name are
-treated as one attachment. `InstallDwemerAttachment` rejects armor already
-recognized by any MME Extensions armor category.
+Installation/removal are offered through the blacksmith service. The old
+armor-only `InstallDwemerAttachment(Armor)` is deprecated and returns false:
+an Armor form cannot distinguish identical inventory copies. Legacy
+`HasDwemerAttachment(Armor)` / `RemoveDwemerAttachment(Armor)` inspect or retire
+old broad artisan markers only; they do not query/remove new item instances.
+Built-in suits and explicit global compatibility definitions remain separate.
+See `Dwemer-Instance-Attachments.md` for persistence, migration and limitations.
 
 On equip, a custom entry follows its matching behavior: it can
 register the wearer as a Milk Maid, and Living/Parasite armor applies MME's

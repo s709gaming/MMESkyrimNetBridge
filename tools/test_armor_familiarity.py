@@ -8,6 +8,8 @@ SOURCE=(R/'Source/Scripts/MMEArmorFamiliarity.psc').read_text()
 class Store(Memory):
  def GetFormValue(self,a,k,default=None):return self.values.get((a,k),default)
  SetFormValue=Memory.SetFloatValue
+ def GetStringValue(self,a,k,default=""):return self.values.get((a,k),default)
+ SetStringValue=Memory.SetFloatValue
 class Item:
  def __init__(self,name='clothes',mask=4):self.name=name;self.mask=mask
  def GetSlotMask(self):return self.mask
@@ -20,7 +22,7 @@ class Actor:
 class Familiarity(unittest.TestCase):
  def setUp(self):
   self.now=10.;self.store=Store();self.actor=Actor();self.item=Item();self.actor.worn=self.item
-  self.ns={'Audit':lambda *a:None,'StorageUtil':self.store,'Utility':NS(GetCurrentGameTime=lambda:self.now),'Armor':NS(GetMaskForSlot=lambda _:4),'Math':NS(LogicalAnd=lambda a,b:a&b),'Game':NS(GetPlayer=lambda:self.actor)}
+  self.ns={'MMEDwemerAttachment':NS(Tag=lambda a,i:getattr(i,'tag','')),'Audit':lambda *a:None,'StorageUtil':self.store,'Utility':NS(GetCurrentGameTime=lambda:self.now),'Armor':NS(GetMaskForSlot=lambda _:4),'Math':NS(LogicalAnd=lambda a,b:a&b),'Game':NS(GetPlayer=lambda:self.actor)}
   for name,args in [('IsBodyArmor','item'),('Seed','target'),('Observe','actors'),('OnEquip','target, item'),('OnUnequip','target, item')]:exec(translate(name,args,re.sub(r"(?m)^([ \t]*)Armor (\w+) =",r"\1Actor \2 =",SOURCE.replace("Trace(","Audit("))),self.ns)
  def equip(self,item=None,actor=None):
   actor=actor or self.actor;item=item or self.item;actor.worn=item;return self.ns['OnEquip'](actor,item)
@@ -38,6 +40,8 @@ class Familiarity(unittest.TestCase):
   self.equip();self.assertFalse(self.equip(Item()));self.assertFalse(self.equip())
  def test_boots_do_not_replace(self):
   self.equip();self.assertFalse(self.ns['OnEquip'](self.actor,Item('boots',128)));self.assertTrue(self.equip())
+ def test_same_base_different_dwemer_instance(self):
+  self.item.tag='1';self.equip();self.item.tag='2';self.assertFalse(self.equip());self.assertTrue(self.equip())
  def test_actor_isolation(self):self.equip();other=Actor();self.assertFalse(self.equip(actor=other));self.assertTrue(self.equip())
  def test_stale_unequip_after_redress_ignored(self):
   self.equip();self.ns['OnUnequip'](self.actor,self.item);self.now+=1;self.assertTrue(self.equip())
