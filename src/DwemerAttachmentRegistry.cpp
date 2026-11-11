@@ -14,7 +14,7 @@ namespace MME::DwemerAttachments {
 namespace {
 using ID=RE::FormID;
 struct View { ID armor=0; Key key; bool labelPending=false; };
-struct Request { ID actor,armor; int op,level; std::string expected,result; std::uint64_t generation; bool trace; };
+struct Request { ID actor,armor; int op,level; std::string expected,result; std::uint64_t generation; bool trace; int category; };
 std::recursive_mutex mutex;
 State state;
 auto& records=state.records;
@@ -28,9 +28,9 @@ int nextRequest=0;
 auto& usable=state.usable;
 constexpr std::uint32_t signature=0x44454D4D; // MMED; plugin-specific SKSE serialization signature
 void Alarm(const std::string& text) {
- if(failures.insert(text).second) SKSE::log::error("[MME Dwemer Instance] {}",text);
+ if(failures.insert(text).second) SKSE::log::error("[MME Item Attachments] {}",text);
 }
-void Trace(bool enabled,const std::string& text) { if(enabled) SKSE::log::info("[MME Dwemer Instance] {}",text); }
+void Trace(bool enabled,const std::string& text) { if(enabled) SKSE::log::info("[MME Item Attachments] {}",text); }
 // The engine caches temper text inside displayName. Compare only the custom-name
 // prefix, so tempering doesn't look like a player rename or duplicate '(Fine)'.
 NameSnapshot ReadName(RE::ExtraDataList* list) {
@@ -59,7 +59,7 @@ std::string Label(RE::Actor* wearer,RE::TESObjectARMO* armor,RE::ExtraDataList* 
  const auto context=" actor="+std::to_string(wearer->GetFormID())+" armor="+std::to_string(armor->GetFormID())+" serial="+std::to_string(record.serial);
  if(protectedName && label.examined)label.owns=false;
  const auto* baseName=armor->GetName();
- if(!label.Plan(before,protectedName,baseName?baseName:"")) {
+ if(!label.Plan(before,protectedName,baseName?baseName:"",record.category)) {
   const std::string reason=protectedName?"protected name":label.Matches(before)?"already labelled":"existing/player name preserved";
   Trace(trace,"label skip"+context+" reason="+reason);return "ok|label skipped: "+reason;
  }
@@ -143,7 +143,7 @@ bool Has(RE::StaticFunctionTag*,RE::Actor* actor,RE::TESObjectARMO* armor) {
  std::scoped_lock lock(mutex);
  auto it=views.find(actor->GetFormID());
  if(it==views.end()) {Refresh(actor->GetFormID());return false;}
- return usable && it->second.armor==armor->GetFormID() && records.contains(it->second.key);
+ return usable && it->second.armor==armor->GetFormID() && records.contains(it->second.key) && records.at(it->second.key).category==4;
 }
 int Fitted(RE::StaticFunctionTag*,RE::Actor* actor,RE::TESObjectARMO* armor) {
  if(!actor || !armor) return -1;
@@ -162,12 +162,19 @@ bool LabelPending(RE::StaticFunctionTag*,RE::Actor* actor,RE::TESObjectARMO* arm
  std::scoped_lock lock(mutex);const auto view=views.find(actor->GetFormID());
  return usable && view!=views.end() && view->second.armor==armor->GetFormID() && view->second.labelPending;
 }
-int Queue(RE::StaticFunctionTag*,RE::Actor* actor,RE::TESObjectARMO* armor,int op,std::string expected,bool trace,int level) {
- if(!actor || !armor || op < -1 || op > 4) return -1;
+int ItemClass(RE::StaticFunctionTag*,RE::Actor* actor,RE::TESObjectARMO* armor) {
+ if(!actor || !armor)return 0;
+ std::scoped_lock lock(mutex);const auto id=actor->GetFormID();auto view=views.find(id);
+ if(view==views.end() || view->second.armor!=armor->GetFormID()){Refresh(id);return 0;}
+ auto found=records.find(view->second.key);
+ return usable && found!=records.end()?found->second.category:0;
+}
+int QueueClass(RE::StaticFunctionTag*,RE::Actor* actor,RE::TESObjectARMO* armor,int op,std::string expected,bool trace,int level,int category) {
+ if(!actor || !armor || op < -1 || op > 4 || category<1 || category>4) return -1;
  std::scoped_lock lock(mutex);
  if(requests.size()>=128 || nextRequest==INT_MAX) {Alarm("request capacity exhausted");return -1;}
  const int token=++nextRequest;
- requests.emplace(token,Request{actor->GetFormID(),armor->GetFormID(),op,level,std::move(expected),"",generation,trace});
+ requests.emplace(token,Request{actor->GetFormID(),armor->GetFormID(),op,level,std::move(expected),"",generation,trace,category});
  SKSE::GetTaskInterface()->AddTask([token]{
   std::scoped_lock taskLock(mutex);
   auto it=requests.find(token);
@@ -187,11 +194,13 @@ int Queue(RE::StaticFunctionTag*,RE::Actor* actor,RE::TESObjectARMO* armor,int o
   else if(r.op==1) {
    if(records.contains(view.key)) r.result="skip|attachment already installed";
    else if(nextSerial==UINT64_MAX || r.level<0) r.result="error|invalid installation metadata";
-   else if(!state.Install(view.key,r.level)) r.result="error|registry insertion failed or limit reached";
+   else if(!state.Install(view.key,r.level,r.category)) r.result="error|registry insertion failed or limit reached";
    else {
     Label(wearer,item,selected,records.at(view.key),r.trace);
     r.result="ok|"+std::to_string(generation)+"/"+view.key.Text();
    }
+  } else if(records.contains(view.key) && records.at(view.key).category!=r.category) {
+   r.result="skip|attachment belongs to another class";
   } else if(r.op==2) {
    auto found=records.find(view.key);
    if(found==records.end())r.result="skip|attachment not installed on this item";
@@ -207,9 +216,12 @@ int Queue(RE::StaticFunctionTag*,RE::Actor* actor,RE::TESObjectARMO* armor,int o
   }
   views[r.actor]=Inspect(wearer,false); // label state and cached identity agree after commit
   if(r.result.starts_with("error|")) Alarm("transaction actor="+std::to_string(r.actor)+" armor="+std::to_string(r.armor)+" "+r.result);
-  Trace(r.trace,"request="+std::to_string(token)+" actor="+std::to_string(r.actor)+" armor="+std::to_string(r.armor)+" operation="+std::to_string(r.op)+" "+r.result);
+  Trace(r.trace,"request="+std::to_string(token)+" actor="+std::to_string(r.actor)+" armor="+std::to_string(r.armor)+" class="+std::to_string(r.category)+" operation="+std::to_string(r.op)+" "+r.result);
  });
  return token;
+}
+int Queue(RE::StaticFunctionTag* tag,RE::Actor* actor,RE::TESObjectARMO* armor,int op,std::string expected,bool trace,int level) {
+ return QueueClass(tag,actor,armor,op,std::move(expected),trace,level,4);
 }
 std::string Result(RE::StaticFunctionTag*,int token,bool cancel) {
  std::scoped_lock lock(mutex);
@@ -225,14 +237,14 @@ void Clear() {
 void Save(SKSE::SerializationInterface* io) {
  std::scoped_lock lock(mutex);
  const auto text=state.Encode();
- if(text.size()>4*1024*1024 || !io->WriteRecord(signature,2,text.data(),static_cast<std::uint32_t>(text.size()))) Alarm("save failed for attachment registry");
+ if(text.size()>4*1024*1024 || !io->WriteRecord(signature,3,text.data(),static_cast<std::uint32_t>(text.size()))) Alarm("save failed for attachment registry");
 }
 void Load(SKSE::SerializationInterface* io) {
  Clear();std::scoped_lock lock(mutex);
  std::uint32_t type=0,version=0,size=0;
  while(io->GetNextRecordInfo(type,version,size)) {
   if(type!=signature) continue;
-  if((version!=1 && version!=2) || size>4*1024*1024) {usable=false;Alarm("unsupported or oversized attachment save record");continue;}
+  if((version!=1 && version!=2 && version!=3) || size>4*1024*1024) {usable=false;Alarm("unsupported or oversized attachment save record");continue;}
   std::string text(size,'\0');
   if(io->ReadRecordData(text.data(),size)!=size) {usable=false;Alarm("truncated attachment save record");continue;}
   try {
@@ -279,6 +291,8 @@ Events sink;
 }
 void Cancel(RE::StaticFunctionTag*) {Invalidate();}
 void Register(RE::BSScript::IVirtualMachine* vm) {
+ vm->RegisterFunction("GetWornItemAttachmentClass","MMEExtensionsNative",ItemClass);
+ vm->RegisterFunction("QueueItemAttachment","MMEExtensionsNative",QueueClass);
  vm->RegisterFunction("CancelDwemerRequests","MMEExtensionsNative",Cancel);
  vm->RegisterFunction("GetDwemerAttachmentTag","MMEExtensionsNative",Tag);
  vm->RegisterFunction("DwemerLabelNeedsUpdate","MMEExtensionsNative",LabelPending);

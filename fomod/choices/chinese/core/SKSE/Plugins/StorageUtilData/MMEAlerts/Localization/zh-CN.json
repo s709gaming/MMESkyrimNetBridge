@@ -2504,6 +2504,9 @@
     "Drink milk directly from this character's breast?": "要直接吸饮这位角色的乳汁吗？",
     "Allow this character to drink directly from your breast?": "允许这位角色直接吸饮你的乳汁吗？",
     "Legacy Dwemer attachment: rebinding only the currently worn item.": "旧版锻莫装置：仅重新绑定当前穿戴的物品。",
-    "Old Dwemer attachments need individual reinstallation at a blacksmith.": "旧版锻莫装置需要由铁匠重新安装到单件物品上。"
+    "Old Dwemer attachments need individual reinstallation at a blacksmith.": "旧版锻莫装置需要由铁匠重新安装到单件物品上。",
+    "MME: clear old armor lists and refit desired individual items.": "MME：请清空旧护甲列表，并为需要的单件装备重新安装改装。",
+    "Legacy armor lists (read-only):": "旧护甲列表（只读）：",
+    "Legacy slots are read-only. Use the worn-item fitting control or a vendor.": "旧列表栏位仅供查看。请使用当前穿戴物品的改装按钮，或寻求商人的服务。"
   }
 }

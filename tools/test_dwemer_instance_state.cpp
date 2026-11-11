@@ -36,6 +36,18 @@ int main(){
  assert(!legacy.records.at(a).label.examined && legacy.records.at(a).serial==1);
  auto badLabel=nlohmann::json::parse(s.Encode());badLabel["items"][0][5]["examined"]=false;badLabel["items"][0][5]["owns"]=true;
  State invalidLabel;try{invalidLabel.Decode(badLabel.dump(),[](auto x,auto& y){y=x;return true;});assert(false);}catch(...){assert(!invalidLabel.usable && invalidLabel.records.empty());}
+ for(int category=1;category<=4;++category){
+  State mixed;assert(mixed.Install(a,2,category));assert(!mixed.records.contains(b));
+  auto& fitted=mixed.records.at(a);assert(fitted.label.Plan(NameSnapshot{},false,"Clothes",category));
+  assert(fitted.label.applied=="Clothes"+Suffix(category));
+  State restored;restored.Decode(mixed.Encode(),[](auto x,auto& y){y=x;return true;});
+  assert(restored.records.at(a).category==category && restored.records.at(a).label.applied==fitted.label.applied);
+  assert(restored.Remap(a,moved)==1 && restored.records.at(moved).category==category);
+ }
+ auto oldTwo=nlohmann::json::parse(s.Encode());for(auto& row:oldTwo["items"])row.erase(row.end()-1);
+ State upgradedTwo;upgradedTwo.Decode(oldTwo.dump(),[](auto x,auto& y){y=x;return true;});
+ assert(upgradedTwo.records.at(a).category==4 && upgradedTwo.records.at(a).label.applied==s.records.at(a).label.applied);
+ State invalidClass;assert(!invalidClass.Install(a,1,0));assert(!invalidClass.Install(a,1,5));
  for(const auto& bad:{std::string("{}"),std::string("garbage"),std::string(R"({"next":1,"items":[[1,100,0,1,0]]})"),std::string(R"({"next":1,"items":[[1,100,1,1,0],[1,100,2,1,0]]})")}){
   State invalid;try{invalid.Decode(bad,[](auto x,auto& y){y=x;return true;});assert(false);}catch(...){assert(!invalid.usable && invalid.records.empty());}
  }

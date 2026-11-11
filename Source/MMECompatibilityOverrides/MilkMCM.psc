@@ -169,17 +169,8 @@ event OnPageReset(string page)
 endEvent
 
 function ArmorRefresh()
-		if Slots[2] != "" 
-			if MilkQ.MilkingEquipment.find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.find(Slots[2]) == -1
-				SetTextOptionValueST("$Add", false, "ArmorSupport_ArmorMode_Toggle")
-			elseif MilkQ.MilkingEquipment.find(Slots[2]) == -1
-				SetTextOptionValueST("$Remove", false, "ArmorSupport_ArmorMode_Toggle")
-			elseif MilkQ.BasicLivingArmor.find(Slots[2]) == -1
-				SetTextOptionValueST("$Remove", false, "ArmorSupport_ArmorMode_Toggle")
-			elseif MilkQ.ParasiteLivingArmor.find(Slots[2]) == -1
-				SetTextOptionValueST("$Remove", false, "ArmorSupport_ArmorMode_Toggle")
-			endif
-		endif
+        SetTextOptionValueST(MMEExtItemActionLabel(), false, "ArmorSupport_ArmorMode_Toggle")
+
 		
 		SetTextOptionValueST(Armorlist[ArmorlistIndex], false, "ArmorSupport_PurgeList_Toggle")
 
@@ -839,22 +830,12 @@ function Page_ArmorManagement()
 	self.SetCursorPosition(1)
 
 	AddMenuOptionST("ArmorSupport_Armorlist_Menu", MMELocalization.Text("Armor list"), Armorlist[ArmorlistIndex])
-	if Slots[2] != "" 
-		if MilkQ.MilkingEquipment.find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.find(Slots[2]) == -1
-			AddTextOptionST("ArmorSupport_ArmorMode_Toggle", "", "$Add")
-		elseif MilkQ.MilkingEquipment.find(Slots[2]) == -1
-			AddTextOptionST("ArmorSupport_ArmorMode_Toggle", "", "$Remove")
-		elseif MilkQ.BasicLivingArmor.find(Slots[2]) == -1
-			AddTextOptionST("ArmorSupport_ArmorMode_Toggle", "", "$Remove")
-		elseif MilkQ.ParasiteLivingArmor.find(Slots[2]) == -1
-			AddTextOptionST("ArmorSupport_ArmorMode_Toggle", "", "$Remove")
-		endif
-	endif
-	
+    AddTextOptionST("ArmorSupport_ArmorMode_Toggle", "", MMEExtItemActionLabel())
+
 	AddTextOptionST("ArmorSupport_PurgeList_Toggle", MMELocalization.Text("ERASE LIST"), Armorlist[ArmorlistIndex])
 	AddEmptyOption()
 	
-	AddHeaderOption(MMELocalization.Text("Added armors:"), 0)
+	AddHeaderOption(MMELocalization.Text("Legacy armor lists (read-only):"), 0)
 		AddTextOptionST("ASA1", "1", "")
 		AddTextOptionST("ASA2", "2", "")
 		AddTextOptionST("ASA3", "3", "")
@@ -1051,37 +1032,10 @@ event OnOptionSelect(int option)
 endevent
 
 state ArmorSupport_ArmorMode_Toggle
-	event OnSelectST()
-		string toggleVal
-		If Slots[2] != "" 
-			If MilkQ.MilkingEquipment.Find("") != -1 || MilkQ.MilkingEquipment.Length < 10 || MilkQ.BasicLivingArmor.Find("") != -1 || MilkQ.BasicLivingArmor.Length < 10 || MilkQ.ParasiteLivingArmor.Find("") != -1 || MilkQ.ParasiteLivingArmor.Length < 10
-				MilkQ.Armor_Purge()
-			EndIf
-		
-			if ArmorlistIndex == 1
-				if MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1
-					MilkQ.MilkingEquipment[MilkQ.MilkingEquipment.Find("Empty")] = Slots[2]
-				elseif MilkQ.MilkingEquipment.Find(Slots[2]) != -1
-					MilkQ.MilkingEquipment[MilkQ.MilkingEquipment.Find(Slots[2])] = "Empty"
-				endif
-				
-			elseif ArmorlistIndex == 2
-				if MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1
-					MilkQ.BasicLivingArmor[MilkQ.BasicLivingArmor.Find("Empty")] = Slots[2]
-				elseif MilkQ.BasicLivingArmor.Find(Slots[2]) != -1
-					MilkQ.BasicLivingArmor[MilkQ.BasicLivingArmor.Find(Slots[2])] = "Empty"
-				endif
-
-			elseif ArmorlistIndex == 3
-				if MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1
-					MilkQ.ParasiteLivingArmor[MilkQ.ParasiteLivingArmor.Find("Empty")] = Slots[2]
-				elseif MilkQ.ParasiteLivingArmor.Find(Slots[2]) != -1
-					MilkQ.ParasiteLivingArmor[MilkQ.ParasiteLivingArmor.Find(Slots[2])] = "Empty"
-				endif
-			endif
-		endif
-		ArmorRefresh()
-	endEvent
+    event OnSelectST()
+        MMEItemAttachments.ToggleWorn(MilkQ.PlayerREF, ArmorlistIndex)
+        ArmorRefresh()
+    endEvent
 endState
 
 state ArmorSupport_PurgeList_Toggle
@@ -1844,331 +1798,111 @@ endState
 
 state ASA1
 	event OnSelectST()
-		int i = 0
-		If MilkQ.MilkingEquipment.Find("") != -1 || MilkQ.MilkingEquipment.Length < 10 || MilkQ.BasicLivingArmor.Find("") != -1 || MilkQ.BasicLivingArmor.Length < 10 || MilkQ.ParasiteLivingArmor.Find("") != -1 || MilkQ.ParasiteLivingArmor.Length < 10
-			MilkQ.Armor_Purge()
-		EndIf
-		if ArmorlistIndex == 1 
-			if MilkQ.MilkingEquipment[i] == Slots[2]
-				MilkQ.MilkingEquipment[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.MilkingEquipment[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 2
-			if MilkQ.BasicLivingArmor[i] == Slots[2]
-				MilkQ.BasicLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.BasicLivingArmor[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 3
-			if MilkQ.ParasiteLivingArmor[i] == Slots[2]
-				MilkQ.ParasiteLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.ParasiteLivingArmor[i] = Slots[2]
-			endif
-		endif
-		ArmorRefresh()
-	endEvent
+        MMELog.MasterDiagnostic("[MME Item Attachments] legacy list edit skipped; use worn-item fitting control")
+        ArmorRefresh()
+    endEvent
 
 	event OnHighlightST()
-		SetInfoText(MMELocalization.Text("Change/Remove armor"))
+		SetInfoText(MMELocalization.Text("Legacy slots are read-only. Use the worn-item fitting control or a vendor."))
 	endEvent
 endState
 
 state ASA2
 	event OnSelectST()
-		int i = 1
-		If MilkQ.MilkingEquipment.Find("") != -1 || MilkQ.MilkingEquipment.Length < 10 || MilkQ.BasicLivingArmor.Find("") != -1 || MilkQ.BasicLivingArmor.Length < 10 || MilkQ.ParasiteLivingArmor.Find("") != -1 || MilkQ.ParasiteLivingArmor.Length < 10
-			MilkQ.Armor_Purge()
-		EndIf
-		if ArmorlistIndex == 1 
-			if MilkQ.MilkingEquipment[i] == Slots[2]
-				MilkQ.MilkingEquipment[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.MilkingEquipment[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 2
-			if MilkQ.BasicLivingArmor[i] == Slots[2]
-				MilkQ.BasicLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.BasicLivingArmor[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 3
-			if MilkQ.ParasiteLivingArmor[i] == Slots[2]
-				MilkQ.ParasiteLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.ParasiteLivingArmor[i] = Slots[2]
-			endif
-		endif
-		ArmorRefresh()
-	endEvent
+        MMELog.MasterDiagnostic("[MME Item Attachments] legacy list edit skipped; use worn-item fitting control")
+        ArmorRefresh()
+    endEvent
 
 	event OnHighlightST()
-		SetInfoText(MMELocalization.Text("Change/Remove armor"))
+		SetInfoText(MMELocalization.Text("Legacy slots are read-only. Use the worn-item fitting control or a vendor."))
 	endEvent
 endState
 
 state ASA3
 	event OnSelectST()
-		int i = 2
-		If MilkQ.MilkingEquipment.Find("") != -1 || MilkQ.MilkingEquipment.Length < 10 || MilkQ.BasicLivingArmor.Find("") != -1 || MilkQ.BasicLivingArmor.Length < 10 || MilkQ.ParasiteLivingArmor.Find("") != -1 || MilkQ.ParasiteLivingArmor.Length < 10
-			MilkQ.Armor_Purge()
-		EndIf
-		if ArmorlistIndex == 1 
-			if MilkQ.MilkingEquipment[i] == Slots[2]
-				MilkQ.MilkingEquipment[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.MilkingEquipment[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 2
-			if MilkQ.BasicLivingArmor[i] == Slots[2]
-				MilkQ.BasicLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.BasicLivingArmor[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 3
-			if MilkQ.ParasiteLivingArmor[i] == Slots[2]
-				MilkQ.ParasiteLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.ParasiteLivingArmor[i] = Slots[2]
-			endif
-		endif
-		ArmorRefresh()
-	endEvent
+        MMELog.MasterDiagnostic("[MME Item Attachments] legacy list edit skipped; use worn-item fitting control")
+        ArmorRefresh()
+    endEvent
 
 	event OnHighlightST()
-		SetInfoText(MMELocalization.Text("Change/Remove armor"))
+		SetInfoText(MMELocalization.Text("Legacy slots are read-only. Use the worn-item fitting control or a vendor."))
 	endEvent
 endState
 
 state ASA4
 	event OnSelectST()
-		int i = 3
-		If MilkQ.MilkingEquipment.Find("") != -1 || MilkQ.MilkingEquipment.Length < 10 || MilkQ.BasicLivingArmor.Find("") != -1 || MilkQ.BasicLivingArmor.Length < 10 || MilkQ.ParasiteLivingArmor.Find("") != -1 || MilkQ.ParasiteLivingArmor.Length < 10
-			MilkQ.Armor_Purge()
-		EndIf
-		if ArmorlistIndex == 1 
-			if MilkQ.MilkingEquipment[i] == Slots[2]
-				MilkQ.MilkingEquipment[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.MilkingEquipment[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 2
-			if MilkQ.BasicLivingArmor[i] == Slots[2]
-				MilkQ.BasicLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.BasicLivingArmor[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 3
-			if MilkQ.ParasiteLivingArmor[i] == Slots[2]
-				MilkQ.ParasiteLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.ParasiteLivingArmor[i] = Slots[2]
-			endif
-		endif
-		ArmorRefresh()
-	endEvent
+        MMELog.MasterDiagnostic("[MME Item Attachments] legacy list edit skipped; use worn-item fitting control")
+        ArmorRefresh()
+    endEvent
 
 	event OnHighlightST()
-		SetInfoText(MMELocalization.Text("Change/Remove armor"))
+		SetInfoText(MMELocalization.Text("Legacy slots are read-only. Use the worn-item fitting control or a vendor."))
 	endEvent
 endState
 
 state ASA5
 	event OnSelectST()
-		int i = 4
-		If MilkQ.MilkingEquipment.Find("") != -1 || MilkQ.MilkingEquipment.Length < 10 || MilkQ.BasicLivingArmor.Find("") != -1 || MilkQ.BasicLivingArmor.Length < 10 || MilkQ.ParasiteLivingArmor.Find("") != -1 || MilkQ.ParasiteLivingArmor.Length < 10
-			MilkQ.Armor_Purge()
-		EndIf
-		if ArmorlistIndex == 1 
-			if MilkQ.MilkingEquipment[i] == Slots[2]
-				MilkQ.MilkingEquipment[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.MilkingEquipment[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 2
-			if MilkQ.BasicLivingArmor[i] == Slots[2]
-				MilkQ.BasicLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.BasicLivingArmor[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 3
-			if MilkQ.ParasiteLivingArmor[i] == Slots[2]
-				MilkQ.ParasiteLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.ParasiteLivingArmor[i] = Slots[2]
-			endif
-		endif
-		ArmorRefresh()
-	endEvent
+        MMELog.MasterDiagnostic("[MME Item Attachments] legacy list edit skipped; use worn-item fitting control")
+        ArmorRefresh()
+    endEvent
 
 	event OnHighlightST()
-		SetInfoText(MMELocalization.Text("Change/Remove armor"))
+		SetInfoText(MMELocalization.Text("Legacy slots are read-only. Use the worn-item fitting control or a vendor."))
 	endEvent
 endState
 
 state ASA6
 	event OnSelectST()
-		int i = 5
-		If MilkQ.MilkingEquipment.Find("") != -1 || MilkQ.MilkingEquipment.Length < 10 || MilkQ.BasicLivingArmor.Find("") != -1 || MilkQ.BasicLivingArmor.Length < 10 || MilkQ.ParasiteLivingArmor.Find("") != -1 || MilkQ.ParasiteLivingArmor.Length < 10
-			MilkQ.Armor_Purge()
-		EndIf
-		if ArmorlistIndex == 1 
-			if MilkQ.MilkingEquipment[i] == Slots[2]
-				MilkQ.MilkingEquipment[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.MilkingEquipment[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 2
-			if MilkQ.BasicLivingArmor[i] == Slots[2]
-				MilkQ.BasicLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.BasicLivingArmor[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 3
-			if MilkQ.ParasiteLivingArmor[i] == Slots[2]
-				MilkQ.ParasiteLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.ParasiteLivingArmor[i] = Slots[2]
-			endif
-		endif
-		ArmorRefresh()
-	endEvent
+        MMELog.MasterDiagnostic("[MME Item Attachments] legacy list edit skipped; use worn-item fitting control")
+        ArmorRefresh()
+    endEvent
 
 	event OnHighlightST()
-		SetInfoText(MMELocalization.Text("Change/Remove armor"))
+		SetInfoText(MMELocalization.Text("Legacy slots are read-only. Use the worn-item fitting control or a vendor."))
 	endEvent
 endState
 
 state ASA7
 	event OnSelectST()
-		int i = 6
-		If MilkQ.MilkingEquipment.Find("") != -1 || MilkQ.MilkingEquipment.Length < 10 || MilkQ.BasicLivingArmor.Find("") != -1 || MilkQ.BasicLivingArmor.Length < 10 || MilkQ.ParasiteLivingArmor.Find("") != -1 || MilkQ.ParasiteLivingArmor.Length < 10
-			MilkQ.Armor_Purge()
-		EndIf
-		if ArmorlistIndex == 1 
-			if MilkQ.MilkingEquipment[i] == Slots[2]
-				MilkQ.MilkingEquipment[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.MilkingEquipment[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 2
-			if MilkQ.BasicLivingArmor[i] == Slots[2]
-				MilkQ.BasicLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.BasicLivingArmor[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 3
-			if MilkQ.ParasiteLivingArmor[i] == Slots[2]
-				MilkQ.ParasiteLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.ParasiteLivingArmor[i] = Slots[2]
-			endif
-		endif
-		ArmorRefresh()
-	endEvent
+        MMELog.MasterDiagnostic("[MME Item Attachments] legacy list edit skipped; use worn-item fitting control")
+        ArmorRefresh()
+    endEvent
 
 	event OnHighlightST()
-		SetInfoText(MMELocalization.Text("Change/Remove armor"))
+		SetInfoText(MMELocalization.Text("Legacy slots are read-only. Use the worn-item fitting control or a vendor."))
 	endEvent
 endState
 
 state ASA8
 	event OnSelectST()
-		int i = 7
-		If MilkQ.MilkingEquipment.Find("") != -1 || MilkQ.MilkingEquipment.Length < 10 || MilkQ.BasicLivingArmor.Find("") != -1 || MilkQ.BasicLivingArmor.Length < 10 || MilkQ.ParasiteLivingArmor.Find("") != -1 || MilkQ.ParasiteLivingArmor.Length < 10
-			MilkQ.Armor_Purge()
-		EndIf
-		if ArmorlistIndex == 1 
-			if MilkQ.MilkingEquipment[i] == Slots[2]
-				MilkQ.MilkingEquipment[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.MilkingEquipment[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 2
-			if MilkQ.BasicLivingArmor[i] == Slots[2]
-				MilkQ.BasicLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.BasicLivingArmor[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 3
-			if MilkQ.ParasiteLivingArmor[i] == Slots[2]
-				MilkQ.ParasiteLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.ParasiteLivingArmor[i] = Slots[2]
-			endif
-		endif
-		ArmorRefresh()
-	endEvent
+        MMELog.MasterDiagnostic("[MME Item Attachments] legacy list edit skipped; use worn-item fitting control")
+        ArmorRefresh()
+    endEvent
 
 	event OnHighlightST()
-		SetInfoText(MMELocalization.Text("Change/Remove armor"))
+		SetInfoText(MMELocalization.Text("Legacy slots are read-only. Use the worn-item fitting control or a vendor."))
 	endEvent
 endState
 
 state ASA9
 	event OnSelectST()
-		int i = 8
-		If MilkQ.MilkingEquipment.Find("") != -1 || MilkQ.MilkingEquipment.Length < 10 || MilkQ.BasicLivingArmor.Find("") != -1 || MilkQ.BasicLivingArmor.Length < 10 || MilkQ.ParasiteLivingArmor.Find("") != -1 || MilkQ.ParasiteLivingArmor.Length < 10
-			MilkQ.Armor_Purge()
-		EndIf
-		if ArmorlistIndex == 1 
-			if MilkQ.MilkingEquipment[i] == Slots[2]
-				MilkQ.MilkingEquipment[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.MilkingEquipment[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 2
-			if MilkQ.BasicLivingArmor[i] == Slots[2]
-				MilkQ.BasicLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.BasicLivingArmor[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 3
-			if MilkQ.ParasiteLivingArmor[i] == Slots[2]
-				MilkQ.ParasiteLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.ParasiteLivingArmor[i] = Slots[2]
-			endif
-		endif
-		ArmorRefresh()
-	endEvent
+        MMELog.MasterDiagnostic("[MME Item Attachments] legacy list edit skipped; use worn-item fitting control")
+        ArmorRefresh()
+    endEvent
 
 	event OnHighlightST()
-		SetInfoText(MMELocalization.Text("Change/Remove armor"))
+		SetInfoText(MMELocalization.Text("Legacy slots are read-only. Use the worn-item fitting control or a vendor."))
 	endEvent
 endState
 
 state ASA10
 	event OnSelectST()
-		int i = 9
-		If MilkQ.MilkingEquipment.Find("") != -1 || MilkQ.MilkingEquipment.Length < 10 || MilkQ.BasicLivingArmor.Find("") != -1 || MilkQ.BasicLivingArmor.Length < 10 || MilkQ.ParasiteLivingArmor.Find("") != -1 || MilkQ.ParasiteLivingArmor.Length < 10
-			MilkQ.Armor_Purge()
-		EndIf
-		if ArmorlistIndex == 1 
-			if MilkQ.MilkingEquipment[i] == Slots[2]
-				MilkQ.MilkingEquipment[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.MilkingEquipment[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 2
-			if MilkQ.BasicLivingArmor[i] == Slots[2]
-				MilkQ.BasicLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.BasicLivingArmor[i] = Slots[2]
-			endif
-		elseif ArmorlistIndex == 3
-			if MilkQ.ParasiteLivingArmor[i] == Slots[2]
-				MilkQ.ParasiteLivingArmor[i] = "Empty"
-			elseif MilkQ.MilkingEquipment.Find(Slots[2]) == -1 && MilkQ.BasicLivingArmor.Find(Slots[2]) == -1 && MilkQ.ParasiteLivingArmor.Find(Slots[2]) == -1 && Slots[2] != "" 
-				MilkQ.ParasiteLivingArmor[i] = Slots[2]
-			endif
-		endif
-		ArmorRefresh()
-	endEvent
+        MMELog.MasterDiagnostic("[MME Item Attachments] legacy list edit skipped; use worn-item fitting control")
+        ArmorRefresh()
+    endEvent
 
 	event OnHighlightST()
-		SetInfoText(MMELocalization.Text("Change/Remove armor"))
+		SetInfoText(MMELocalization.Text("Legacy slots are read-only. Use the worn-item fitting control or a vendor."))
 	endEvent
 endState
 
@@ -3255,4 +2989,17 @@ String Function MMEExtDifficultyLabel()
         Return "Custom (" + MilkQ.TimesMilkedMult + ")"
     EndIf
     Return Preset[PresetIndex]
+EndFunction
+
+String Function MMEExtItemActionLabel()
+    If ArmorlistIndex < 1 || ArmorlistIndex > 3
+        Return "-"
+    EndIf
+    Int serviceState = MMEItemAttachments.ServiceState(MilkQ.PlayerREF, ArmorlistIndex)
+    If serviceState == 2
+        Return "$Remove"
+    ElseIf serviceState == 1
+        Return "$Add"
+    EndIf
+    Return MMELocalization.Text("Unavailable")
 EndFunction

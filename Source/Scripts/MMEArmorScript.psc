@@ -492,9 +492,9 @@ String Function ResolveArmorProtectionReason(MilkQUEST milkController, Armor slo
     ; OG MME accesses each MilkQUEST array property directly. Passing one of
     ; these cross-script arrays as a String[] argument can produce None in some
     ; MME builds, so every lookup below deliberately preserves OG's access form.
-    Int milkingIndex = FindMilkingEquipmentNameDirect(milkController, armorName)
-    Int basicIndex = FindBasicLivingArmorNameDirect(milkController, armorName)
-    Int parasiteIndex = FindParasiteLivingArmorNameDirect(milkController, armorName)
+    Int milkingIndex = -1 ; Legacy global names are migration-only
+    Int basicIndex = -1 ; Legacy global names are migration-only
+    Int parasiteIndex = -1 ; Legacy global names are migration-only
     Int customClass = MMECustomArmorRegistry.ClassifyForActor(wearer, slotArmor)
     ; Native arrays and MME's established name rules always outrank the
     ; user-managed MilkingEquipment registry.
@@ -964,9 +964,9 @@ Int Function ClassifyOriginalArmorInternal(MilkQUEST milkController, Armor equip
     If armorName == "" || armorName == "Empty" || armorName == "empty"
         Return 0
     EndIf
-    Int milkingIndex = FindMilkingEquipmentNameDirect(milkController, armorName)
-    Int basicIndex = FindBasicLivingArmorNameDirect(milkController, armorName)
-    Int parasiteIndex = FindParasiteLivingArmorNameDirect(milkController, armorName)
+    Int milkingIndex = -1 ; Legacy global names are migration-only
+    Int basicIndex = -1 ; Legacy global names are migration-only
+    Int parasiteIndex = -1 ; Legacy global names are migration-only
     Int armorClass = 0
     If basicIndex >= 0
         armorClass = 2

@@ -788,7 +788,7 @@ Function MilkCycle(Actor akActor, int t)
 	endif
 
 	if maidArmor != None
-		if MilkingEquipment.Find(maidArmor.getname()) != -1\
+		if MMEItemAttachments.GetClassFast(akActor, maidArmor as Armor) == 1\
 		|| maidArmor == MilkCuirass\
 		|| maidArmor == MilkCuirassFuta\
 		|| StringUtil.Find(maidArmor.getname(), "Milk" ) >= 0\
@@ -922,8 +922,8 @@ Function MilkCycle(Actor akActor, int t)
 		|| StringUtil.Find(maidArmor.getname(), "HM Priestess" ) >= 0\
 		|| StringUtil.Find(maidArmor.getname(), "Tentacle Armor" ) >= 0\
 		|| StringUtil.Find(maidArmor.getname(), "Tentacle Parasite" ) >= 0\
-		|| BasicLivingArmor.find(maidArmor.getname()) >= 0\
-		|| ParasiteLivingArmor.find(maidArmor.getname()) >= 0
+		|| MMEItemAttachments.GetClassFast(akActor, maidArmor as Armor) == 2\
+		|| MMEItemAttachments.GetClassFast(akActor, maidArmor as Armor) == 3
 			if LactacidCnt < 1 && MilkCnt <= 1
 				MME_Storage.changeLactacidCurrent(akActor, t)
 			endif
@@ -933,7 +933,7 @@ Function MilkCycle(Actor akActor, int t)
 			int random = Utility.RandomInt((0-MilkCnt) as int, (MilkMax-MilkCnt) as int)
 			if (random == MilkMax || random < 0) && (akActor.GetLeveledActorBase().GetSex() == 1 || MaleMaids == true) && akActor.IsNearPlayer() && !MMEFrameworkBackend.IsActorActive(akActor)
 				;Estrus Chaurus+  
-				if (StringUtil.Find(maidArmor.getname(), "Tentacle Armor" ) >= 0 || StringUtil.Find(maidArmor.getname(), "Tentacle Parasite" ) >= 0 || ParasiteLivingArmor.find(maidArmor.getname()) >= 0)\
+				if (StringUtil.Find(maidArmor.getname(), "Tentacle Armor" ) >= 0 || StringUtil.Find(maidArmor.getname(), "Tentacle Parasite" ) >= 0 || MMEItemAttachments.GetClassFast(akActor, maidArmor as Armor) == 3)\
 				&& Plugin_EstrusChaurus && ECTrigger
 					int ECTrap = ModEvent.Create("ECStartAnimation")  					; Int  Does not have to be named "ECTrap" any name would do
 					if (ECTrap) && !akActor.IsInCombat() && !akActor.IsOnMount()
@@ -1336,6 +1336,8 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 	Armor Shield = akActor.GetEquippedShield()
 	Form maidArmor
 	Form cuirass = akActor.GetWornForm(Armor.GetMaskForSlot(32))
+	; Preserve the verified starting fitting through MME's intentional clothing removal.
+	Int MMEExtMilkingClass = MMEItemAttachments.GetClass(akActor, cuirass as Armor)
 	String CuirassName
 	
 	if cuirass != None
@@ -1514,7 +1516,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 					;do nothing
 				elseif cuirass != None && !(cuirass == TITS4 || cuirass == TITS6 || cuirass == TITS8)
 					if !(cuirass == MilkCuirass || cuirass == MilkCuirassFuta)\
-					&& !((StringUtil.Find(CuirassName, "Milk" ) >= 0) || (MilkingEquipment.find(CuirassName) >= 0))
+					&& !((StringUtil.Find(CuirassName, "Milk" ) >= 0) || (MMEExtMilkingClass == 1))
 						akActor.UnequipItem(cuirass, false, true)
 					endif
 					if MilkNaked == false
@@ -1572,7 +1574,7 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				Mode = 1
 			ElseIf StringUtil.Find(CuirassName, "Milk" ) >= 0 \
 			|| StringUtil.Find(CuirassName, "Cow" ) >= 0 \
-			|| MilkingEquipment.find(CuirassName) >= 0 \
+			|| MMEExtMilkingClass == 1 \
 			|| SLSDBra == true \
 			|| MMEExtDDCheck(akActor, "IsWearingDDMilker") == true
 				Mode = 2
@@ -1580,8 +1582,8 @@ Function MilkingCycle(Actor akActor, int i, int Mode, int MilkingType, objectref
 				|| StringUtil.Find(CuirassName, "Living Arm" ) >= 0 \
 				|| StringUtil.Find(CuirassName, "HM Priestess" ) >= 0 \
 				|| StringUtil.Find(CuirassName, "Hermaeus Mora" ) >= 0 \
-				|| BasicLivingArmor.find(CuirassName) >= 0 \
-				|| ParasiteLivingArmor.find(CuirassName) >= 0
+				|| MMEExtMilkingClass == 2 \
+				|| MMEExtMilkingClass == 3
 				Mode = 3
 				int soundInstance02 = TakeHoldSound.Play(akActor)
 				Utility.Wait( 5.0 )													;wait for possession sound to play

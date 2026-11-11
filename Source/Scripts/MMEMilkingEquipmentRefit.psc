@@ -32,8 +32,12 @@ EndFunction
 Bool Function NeedsRefit() Global
     Actor playerActor = Game.GetPlayer()
     Armor worn = playerActor.GetWornForm(Armor.GetMaskForSlot(32)) as Armor
-    If IsFeatureEnabled() && MMEDwemerAttachment.Has(playerActor, worn)
-        Return MMEDwemerAttachment.NeedsRefit(playerActor, worn)
+    Int itemClass = MMEItemAttachments.GetClass(playerActor, worn)
+    If itemClass == 2 || itemClass == 3
+        Return False
+    EndIf
+    If IsFeatureEnabled() && MMEItemAttachments.Has(playerActor, worn)
+        Return MMEItemAttachments.NeedsRefit(playerActor, worn)
     EndIf
     Return IsFeatureEnabled() && StorageUtil.GetIntValue(playerActor, NeedsRefitKey(), 0) == 1
 EndFunction
@@ -123,12 +127,12 @@ Bool Function IsEligibleOrdinaryMilkingEquipment(Armor wornArmor, MilkQUEST milk
         Return False
     EndIf
     Int customClass = MMECustomArmorRegistry.ClassifyForActor(Game.GetPlayer(), wornArmor)
-    If customClass == 4
+    If customClass == 4 || (customClass == 1 && MMEItemAttachments.GetClass(Game.GetPlayer(), wornArmor) == 1)
         Return True
     ElseIf customClass > 0
         Return False
     EndIf
-    Return MMEArmorScript.CountMilkingEquipmentMatchesDirect(milkController, armorName) == 1
+    Return customClass == 1 && MMEItemAttachments.GetClass(Game.GetPlayer(), wornArmor) == 1
 EndFunction
 
 Int Function GetLiveServiceState(Actor blacksmith) Global
@@ -159,8 +163,8 @@ Bool Function TryRefit(Actor blacksmith) Global
             refitContext = "equipped Milking Equipment"
         EndIf
     EndIf
-    If MMEDwemerAttachment.Has(playerActor, wornArmor)
-        Bool refitted = MMEDwemerAttachment.Refit(playerActor, wornArmor)
+    If MMEItemAttachments.Has(playerActor, wornArmor)
+        Bool refitted = MMEItemAttachments.Refit(playerActor, wornArmor)
         Trace("individual Dwemer refit result=" + refitted + " | armor=" + wornArmor)
         Return refitted
     EndIf

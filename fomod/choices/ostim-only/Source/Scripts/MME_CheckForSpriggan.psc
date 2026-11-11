@@ -16,9 +16,9 @@ Event OnObjectEquipped( Form akBaseObject, ObjectReference akReference)
 	|| 	StringUtil.Find(akArmorName, "Cow Harness" ) >= 0\
 	|| 	StringUtil.Find(akArmorName, "Milking Cuirass" ) >= 0\
 	|| 	StringUtil.Find(akArmorName, "Milker" ) >= 0\
-	|| 	MilkQ.MilkingEquipment.find(akArmorName) >= 0\
-	|| 	MilkQ.BasicLivingArmor.find(akArmorName) >= 0\
-	|| 	MilkQ.ParasiteLivingArmor.find(akArmorName) >= 0)
+	|| 	False\
+	|| 	False\
+	|| 	False)
 
 		If MilkQ.MILKmaid.find(akActor) == -1
 			MilkQ.AssignSlotMaid(akActor)
@@ -32,8 +32,8 @@ Event OnObjectEquipped( Form akBaseObject, ObjectReference akReference)
 			|| StringUtil.Find(akArmorName, "HM Priestess" ) >= 0\
 			|| StringUtil.Find(akArmorName, "Tentacle Parasite" ) >= 0\
 			|| StringUtil.Find(akArmorName, "Tentacle Armor" ) >= 0\
-			|| MilkQ.BasicLivingArmor.find(akArmorName) >= 0)\
-			|| MilkQ.ParasiteLivingArmor.find(akArmorName) >= 0
+			|| False)\
+			|| False
 				if akActor == MilkQ.PlayerREf && MME_Storage.getBreastRows(akActor) > 1 && akActor.GetWornForm(Armor.GetMaskForSlot(32)) == akBaseObject
 					Debug.Notification(akArmorName + " attaches to your breasts, absorbing your additional breast rows")
 					MME_Storage.setBreastRows(akActor, 1)
@@ -91,8 +91,8 @@ Event OnObjectUnequipped( Form akBaseObject, ObjectReference akReference )
 		|| StringUtil.Find(akArmorName, "HM Priestess" ) >= 0\
 		|| StringUtil.Find(akArmorName, "Tentacle Parasite" ) >= 0\
 		|| StringUtil.Find(akArmorName, "Tentacle Armor" ) >= 0\
-		|| MilkQ.BasicLivingArmor.find(akArmorName) >= 0\
-		|| MilkQ.ParasiteLivingArmor.find(akArmorName) >= 0
+		|| False\
+		|| False
 			if akActor == MilkQ.PlayerREf
 				Debug.Notification( "You are free from " + akArmorName )
 			endif
@@ -101,7 +101,7 @@ Event OnObjectUnequipped( Form akBaseObject, ObjectReference akReference )
 			|| StringUtil.Find(akArmorName, "Cow Harness" ) >= 0\
 			|| StringUtil.Find(akArmorName, "Milking Cuirass" ) >= 0\
 			|| StringUtil.Find(akArmorName, "Milker" ) >= 0\
-			|| MilkQ.MilkingEquipment.find(akArmorName) >= 0
+			|| False
 			if akActor == MilkQ.PlayerREf
 				Debug.Notification( "The milking cups detach from your breasts" )
 			endif

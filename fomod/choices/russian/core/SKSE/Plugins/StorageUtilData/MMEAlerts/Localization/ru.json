@@ -2503,6 +2503,9 @@
     "Drink milk directly from this character's breast?": "Пить молоко прямо из груди этого персонажа?",
     "Allow this character to drink directly from your breast?": "Позволить этому персонажу пить молоко прямо из вашей груди?",
     "Legacy Dwemer attachment: rebinding only the currently worn item.": "Старое двемерское устройство: привязка только к надетому предмету.",
-    "Old Dwemer attachments need individual reinstallation at a blacksmith.": "Старые двемерские устройства нужно заново установить у кузнеца на отдельный предмет."
+    "Old Dwemer attachments need individual reinstallation at a blacksmith.": "Старые двемерские устройства нужно заново установить у кузнеца на отдельный предмет.",
+    "MME: clear old armor lists and refit desired individual items.": "MME: очистите старые списки брони и заново модифицируйте нужные отдельные предметы.",
+    "Legacy armor lists (read-only):": "Старые списки брони (только просмотр):",
+    "Legacy slots are read-only. Use the worn-item fitting control or a vendor.": "Старые ячейки доступны только для просмотра. Используйте настройку надетого предмета или услуги торговца."
   }
 }

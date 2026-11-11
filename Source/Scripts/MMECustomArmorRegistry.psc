@@ -312,6 +312,9 @@ Function HandleCustomArmorEquipped(Actor wearer, Armor equippedArmor) Global
         EndIf
         If milkController.MilkForSprigganPassive != None
             wearer.AddSpell(milkController.MilkForSprigganPassive, False)
+            If MMEItemAttachments.GetClassFast(wearer, equippedArmor) > 0
+                StorageUtil.SetIntValue(wearer, "MME.ItemAttachment.OwnsPassive", 1)
+            EndIf
             Trace("Living passive added | actor=" + MMEArmorScript.GetActorName(wearer))
         Else
             Alarm("MME MilkForSprigganPassive property is unavailable")
@@ -331,6 +334,7 @@ Function HandleCustomArmorUnequipped(Actor wearer, Armor unequippedArmor) Global
     If wearer == None || unequippedArmor == None || milkController == None
         Return
     EndIf
+    MMEItemAttachments.Cleanup(wearer)
     Int armorClass = ClassifyCustomArmor(unequippedArmor, True)
     If armorClass == 0 || MMEArmorScript.ClassifyOriginalArmor(milkController, unequippedArmor) != 0
         Return
@@ -490,8 +494,8 @@ EndFunction
 ; Actor-aware overlay. Base-only callers retain static compatibility, never artisan instances.
 Int Function ClassifyForActor(Actor wearer, Armor item, Bool diagnostic = False) Global
     Int intrinsic = ClassifyCustomArmor(item, diagnostic)
-    If intrinsic == 0 && MMEDwemerAttachment.Has(wearer, item)
-        Return 4
+    If intrinsic == 0
+        Return MMEItemAttachments.GetClass(wearer, item)
     EndIf
     Return intrinsic
 EndFunction

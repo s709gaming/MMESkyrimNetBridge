@@ -245,5 +245,8 @@
   "Only Produce Preferred Milk Type": "仅产出优先类型的奶",
   "Default on. Always produce milk matching MME's detected or forced supernatural type, then race. Priority: Succubus, Vampire, Werewolf, ordinary race. Unrecognized races use the matching Exotic variant. Uses basic variants without Maid-level quality tiers. Off restores MME's normal milk selection. Shared with original MME's Simple Milk setting; affects player and NPC Milk Maids.": "默认开启。按 MME 检测或强制指定的超自然类型，其次按种族选择奶。优先级：魅魔、吸血鬼、狼人、普通种族。未知种族使用对应的异族奶。使用基础款，不按奶妈等级提升品质。关闭恢复 MME 原有选择规则。与原版 MME 的 Simple Milk 设置共用，适用于玩家和 NPC 奶妈。",
   "Legacy Dwemer attachment: rebinding only the currently worn item.": "旧版锻莫装置：仅重新绑定当前穿戴的物品。",
-  "Old Dwemer attachments need individual reinstallation at a blacksmith.": "旧版锻莫装置需要由铁匠重新安装到单件物品上。"
+  "Old Dwemer attachments need individual reinstallation at a blacksmith.": "旧版锻莫装置需要由铁匠重新安装到单件物品上。",
+  "MME: clear old armor lists and refit desired individual items.": "MME：请清空旧护甲列表，并为需要的单件装备重新安装改装。",
+  "Legacy armor lists (read-only):": "旧护甲列表（只读）：",
+  "Legacy slots are read-only. Use the worn-item fitting control or a vendor.": "旧列表栏位仅供查看。请使用当前穿戴物品的改装按钮，或寻求商人的服务。"
 }

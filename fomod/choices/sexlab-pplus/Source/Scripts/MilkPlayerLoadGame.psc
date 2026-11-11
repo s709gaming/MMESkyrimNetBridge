@@ -247,29 +247,29 @@ Function Orgasm(Actor akActor, String _args)
 				|| animation.HasTag("Vaginal")\
 				|| animation.HasTag("Masturbation")\
 				|| animation.HasTag("Fisting"))\
-				&& !MilkQ.DDI.IsWearingBelt(akActor))\
+				&& !MilkQ.MMEExtDDCheck(akActor, "IsWearingBelt"))\
 			|| (animation.HasTag("Breast")\ 
-				&& ((!MilkQ.DDi.IsMilkingBlocked_Bra(akActor) && !MilkQ.SLSD.IsMilkingBlocked_Bra_SLSD(akActor))\
-				|| (MilkQ.DDi.IsMilkingBlocked_Bra(akActor) && MilkQ.SLSD.IsMilkingBlocked_Bra_SLSD(akActor))))
+				&& ((!MilkQ.MMEExtDDCheck(akActor, "IsMilkingBlocked_Bra") && !MilkQ.MMEExtSLSDCheck(akActor))\
+				|| (MilkQ.MMEExtDDCheck(akActor, "IsMilkingBlocked_Bra") && MilkQ.MMEExtSLSDCheck(akActor))))
 				
-				If ((!MilkQ.DDi.IsMilkingBlocked_Bra(akActor) && !MilkQ.SLSD.IsMilkingBlocked_Bra_SLSD(akActor))\
-				|| (MilkQ.DDi.IsMilkingBlocked_Bra(akActor) && MilkQ.SLSD.IsMilkingBlocked_Bra_SLSD(akActor)))
+				If ((!MilkQ.MMEExtDDCheck(akActor, "IsMilkingBlocked_Bra") && !MilkQ.MMEExtSLSDCheck(akActor))\
+				|| (MilkQ.MMEExtDDCheck(akActor, "IsMilkingBlocked_Bra") && MilkQ.MMEExtSLSDCheck(akActor)))
 				
 					Form maidArmor = akActor.GetWornForm(Armor.GetMaskForSlot(32))
-					if maidArmor != none && MilkQ.MilkingEquipment.Find(maidArmor.getname()) != -1\
+					if maidArmor != none && MMEItemAttachments.GetClassFast(akActor, maidArmor as Armor) == 1\
 					|| maidArmor == MilkQ.MilkCuirass\
 					|| maidArmor == MilkQ.MilkCuirassFuta\
 					|| StringUtil.Find(maidArmor.getname(), "Milk" ) >= 0\
 					|| StringUtil.Find(maidArmor.getname(), "Cow" ) >=0\
-					|| MilkQ.SLSD.IsMilkingBlocked_Bra_SLSD(akActor)
+					|| MilkQ.MMEExtSLSDCheck(akActor)
 						if StorageUtil.GetIntValue(akActor, "MME.MilkMaid.IsSlave") == 1
 							StorageUtil.AdjustFloatValue(akActor, "MME.MilkMaid.MilkingContainerMilksSUM", 1)
 						else
 							MilkQ.MilkE.InitiateTrade(1, 1, akActor, true)
 						endif
 						MME_Storage.changeMilkCurrent(akActor, -1, MilkQ.BreastScaleLimit)
-					elseif maidArmor != none && MilkQ.BasicLivingArmor.find(maidArmor.getname()) >= 0\
-					|| MilkQ.ParasiteLivingArmor.find(maidArmor.getname()) >= 0\
+					elseif maidArmor != none && MMEItemAttachments.GetClassFast(akActor, maidArmor as Armor) == 2\
+					|| MMEItemAttachments.GetClassFast(akActor, maidArmor as Armor) == 3\
 					|| StringUtil.Find(maidArmor.getname(), "Spriggan" ) >= 0\
 					|| StringUtil.Find(maidArmor.getname(), "Living Arm" ) >= 0\
 					|| StringUtil.Find(maidArmor.getname(), "Hermaeus Mora" ) >= 0\
@@ -292,8 +292,8 @@ Function Orgasm(Actor akActor, String _args)
 				EndIf
 				
 				if (animation.HasTag("Breast")\
-				&& ((!MilkQ.DDi.IsMilkingBlocked_Bra(akActor) && !MilkQ.SLSD.IsMilkingBlocked_Bra_SLSD(akActor))\
-				|| (MilkQ.DDi.IsMilkingBlocked_Bra(akActor) && MilkQ.SLSD.IsMilkingBlocked_Bra_SLSD(akActor))))
+				&& ((!MilkQ.MMEExtDDCheck(akActor, "IsMilkingBlocked_Bra") && !MilkQ.MMEExtSLSDCheck(akActor))\
+				|| (MilkQ.MMEExtDDCheck(akActor, "IsMilkingBlocked_Bra") && MilkQ.MMEExtSLSDCheck(akActor))))
 					float MilkCnt = MME_Storage.getMilkCurrent(akActor)
 					int gush = (MilkCnt*MilkQ.GushPct/100) as int
 					String MaidName = akActor.GetLeveledActorBase().getname()
@@ -314,9 +314,9 @@ Function Orgasm(Actor akActor, String _args)
 	Actor PlayerRef = Game.Getplayer()
 	if  MilkQ.CumProduction && (akActor == PlayerREF || MilkQ.MILKmaid.Find(akActor) != -1) && !(MilkQ.isSuccubus(akActor) || MilkQ.isVampire(akActor))
 		if animation.HasTag("Masturbation")\
-		&& !(MilkQ.DDi.IsWearingBelt(akActor)\
-		|| MilkQ.DDi.IsMilkingBlocked_Armbinder(akActor)\
-		|| MilkQ.DDi.IsMilkingBlocked_Yoke(akActor))
+		&& !(MilkQ.MMEExtDDCheck(akActor, "IsWearingBelt")\
+		|| MilkQ.MMEExtDDCheck(akActor, "IsMilkingBlocked_Armbinder")\
+		|| MilkQ.MMEExtDDCheck(akActor, "IsMilkingBlocked_Yoke"))
 
 			if MilkQ.akActorSex(akActor) == "Male" 
 				akActor.AddItem(MilkQ.MME_Cums.GetAt(1), 1)

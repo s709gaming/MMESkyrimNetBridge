@@ -65,3 +65,9 @@ bool Function isVampire(Actor akActor)
 EndFunction
 bool Function isSuccubus(Actor akActor)
 EndFunction
+
+; Exact guarded helpers from the repository MilkQUEST compatibility source.
+Bool Function MMEExtDDCheck(Actor target, String checkName)
+EndFunction
+Bool Function MMEExtSLSDCheck(Actor target)
+EndFunction

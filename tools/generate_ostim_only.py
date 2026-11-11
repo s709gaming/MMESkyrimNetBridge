@@ -116,12 +116,13 @@ EndFunction
     variants['MME_DDi'] = s
 
     for name in ['MilkLactacidScr', 'MilkPUMP', 'MilkPUMP_milkbarrel_example', 'MME_StartMilking', 'MME_CheckForSpriggan']:
-        source = (ROOT / 'Source/MMECompatibilityOverrides/MilkLactacidScr.psc').read_text() if name == 'MilkLactacidScr' else (args.mme_source / (name + '.psc')).read_text()
+        override = ROOT / 'Source/MMECompatibilityOverrides' / (name + '.psc')
+        source = override.read_text() if override.exists() else (args.mme_source / (name + '.psc')).read_text()
         if name == 'MilkLactacidScr':
             source = replace_body(source, 'MMEExtPlayVoiceSafe', '    MMEFrameworkBackend.PresentationSkipped(akTarget)')
         variants[name] = common_calls(source)
 
-    s = (args.mme_source / 'MilkPlayerLoadGame.psc').read_text()
+    s = (ROOT / 'Source/MMECompatibilityOverrides/MilkPlayerLoadGame.psc').read_text()
     for name, result in [('OnSexLabStart', None), ('OnSexLabEnd', None), ('OnSexLabOrgasm', None), ('OnSexLabOrgasmSeparate', None), ('getAnimName', '""')]:
         s = skip(s, name, result)
     # Preserve MME's gameplay calculations, replacing only framework metadata.

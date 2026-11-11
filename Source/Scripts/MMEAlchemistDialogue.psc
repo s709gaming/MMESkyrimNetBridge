@@ -5,136 +5,30 @@ Scriptname MMEAlchemistDialogue Hidden
 Int Function GetLiveServiceState(Actor alchemist) Global
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     Actor playerActor = Game.GetPlayer()
-    If !ValidateParticipants(alchemist, playerActor, milkController) \
-        || !MMEArmorScript.IsBasicLivingArmorRegistrySafeForManagement(milkController)
+    If !ValidateParticipants(alchemist, playerActor, milkController)
         Return 0
     EndIf
-    Armor wornArmor = GetWornBodyArmor(playerActor)
-    If !IsManageableArmorIdentity(wornArmor)
-        Return 0
-    EndIf
-    If (MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor))
-        Return 3
-    EndIf
-    String armorName = wornArmor.GetName()
-    Int matches = MMEArmorScript.CountBasicLivingArmorMatchesDirect(milkController, armorName)
-    If matches == 1
-        Return 2
-    ElseIf matches != 0
-        Return 0
-    EndIf
-    If MMEArmorScript.FindBasicLivingArmorEmptySlotDirect(milkController) >= 0
-        Return 1
-    EndIf
-    Return 4
+    Return MMEItemAttachments.ServiceState(playerActor, 2)
 EndFunction
 
 Bool Function TryAddLivingArmor(Actor alchemist, GlobalVariable stateGlobal) Global
-    SetDialogueState(stateGlobal, 0)
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     Actor playerActor = Game.GetPlayer()
-    If !ValidateParticipants(alchemist, playerActor, milkController) \
-        || !MMEArmorScript.IsBasicLivingArmorRegistrySafeForManagement(milkController)
-        Reject("participants or BasicLivingArmor registry changed")
+    SetDialogueState(stateGlobal, 0)
+    If !ValidateParticipants(alchemist, playerActor, milkController)
         Return False
     EndIf
-    Armor wornArmor = GetWornBodyArmor(playerActor)
-    If !IsManageableArmorIdentity(wornArmor)
-        Reject("no usable slot-32 armor is equipped")
-        Return False
-    EndIf
-    String armorName = wornArmor.GetName()
-    If (MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor))
-        Debug.Notification(MMELocalization.Text("That armor is already bound to another MME system."))
-        Reject("protected armor cannot be registered", False)
-        Return False
-    EndIf
-    If MMEArmorScript.CountBasicLivingArmorMatchesDirect(milkController, armorName) != 0
-        Reject("armor is already registered or registration data is ambiguous")
-        Return False
-    EndIf
-    Int emptyIndex = MMEArmorScript.FindBasicLivingArmorEmptySlotDirect(milkController)
-    If emptyIndex < 0
-        Debug.Notification(MMELocalization.Text("Error: Basic Living Armor is full"))
-        Reject("BasicLivingArmor has no Empty slot", False)
-        Return False
-    EndIf
-    If GetWornBodyArmor(playerActor) != wornArmor \
-        || !ValidateParticipants(alchemist, playerActor, milkController) \
-        || !MMEArmorScript.IsBasicLivingArmorRegistrySafeForManagement(milkController) \
-        || (MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor)) \
-        || MMEArmorScript.CountBasicLivingArmorMatchesDirect(milkController, armorName) != 0 \
-        || emptyIndex >= milkController.BasicLivingArmor.Length \
-        || milkController.BasicLivingArmor[emptyIndex] != "Empty"
-        Reject("live participants, armor, or registry changed before Add")
-        Return False
-    EndIf
-    milkController.BasicLivingArmor[emptyIndex] = armorName
-    If milkController.BasicLivingArmor[emptyIndex] != armorName \
-        || MMEArmorScript.CountBasicLivingArmorMatchesDirect(milkController, armorName) != 1
-        Reject("MME did not retain the added registration")
-        Return False
-    EndIf
-    Debug.Notification(armorName + MMELocalization.Text(" Added to Basic Living Armor"))
-    MMELog.Diagnostic("[MME Extensions Alchemist] ADD complete | armor=" + armorName + " | index=" + emptyIndex)
-    Bool introduced = False
-    If JsonUtil.GetIntValue("/MMEAlerts/Settings", "enableRepeatOrdinaryArmorStories", 1) == 1
-        introduced = MMEExtensionsAPI.TryRepeatArmorEquipStory(playerActor, wornArmor)
-    Else
-        introduced = MMEArmorIntroduction.TryIntroduction(playerActor, wornArmor, "Alchemist Living Armor service")
-    EndIf
-    MMELog.MasterDiagnostic("[MME Extensions Alchemist] immediate Living introduction result=" + introduced + " | armor=" + armorName)
-    Return True
+    Return MMEItemAttachments.ApplyService(playerActor, 2, True)
 EndFunction
 
 Bool Function TryRemoveLivingArmor(Actor alchemist, GlobalVariable stateGlobal) Global
-    SetDialogueState(stateGlobal, 0)
     MilkQUEST milkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     Actor playerActor = Game.GetPlayer()
-    If !ValidateParticipants(alchemist, playerActor, milkController) \
-        || !MMEArmorScript.IsBasicLivingArmorRegistrySafeForManagement(milkController)
-        Reject("participants or BasicLivingArmor registry changed")
+    SetDialogueState(stateGlobal, 0)
+    If !ValidateParticipants(alchemist, playerActor, milkController)
         Return False
     EndIf
-    Armor wornArmor = GetWornBodyArmor(playerActor)
-    If !IsManageableArmorIdentity(wornArmor)
-        Reject("no usable slot-32 armor is equipped")
-        Return False
-    EndIf
-    String armorName = wornArmor.GetName()
-    If (MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor))
-        Debug.Notification(MMELocalization.Text("That armor is bound to another MME system."))
-        Reject("protected armor cannot be removed", False)
-        Return False
-    EndIf
-    If MMEArmorScript.CountBasicLivingArmorMatchesDirect(milkController, armorName) != 1
-        Reject("armor is not registered exactly once")
-        Return False
-    EndIf
-    Int registeredIndex = MMEArmorScript.FindBasicLivingArmorNameDirect(milkController, armorName)
-    If registeredIndex < 0
-        Reject("exact registration index was unavailable")
-        Return False
-    EndIf
-    If GetWornBodyArmor(playerActor) != wornArmor \
-        || !ValidateParticipants(alchemist, playerActor, milkController) \
-        || !MMEArmorScript.IsBasicLivingArmorRegistrySafeForManagement(milkController) \
-        || (MMEArmorScript.GetMMEProtectedForBasicLivingArmorReason(milkController, wornArmor) != "" || MMEDwemerAttachment.Has(playerActor, wornArmor)) \
-        || MMEArmorScript.CountBasicLivingArmorMatchesDirect(milkController, armorName) != 1 \
-        || registeredIndex >= milkController.BasicLivingArmor.Length \
-        || milkController.BasicLivingArmor[registeredIndex] != armorName
-        Reject("live participants, armor, or registry changed before Remove")
-        Return False
-    EndIf
-    milkController.BasicLivingArmor[registeredIndex] = "Empty"
-    If milkController.BasicLivingArmor[registeredIndex] != "Empty" \
-        || MMEArmorScript.CountBasicLivingArmorMatchesDirect(milkController, armorName) != 0
-        Reject("MME did not retain the removed registration")
-        Return False
-    EndIf
-    Debug.Notification(armorName + MMELocalization.Text(" Removed from Basic Living Armor"))
-    MMELog.Diagnostic("[MME Extensions Alchemist] REMOVE complete | armor=" + armorName + " | index=" + registeredIndex)
-    Return True
+    Return MMEItemAttachments.ApplyService(playerActor, 2, False)
 EndFunction
 
 Bool Function ValidateParticipants(Actor alchemist, Actor playerActor, MilkQUEST milkController) Global

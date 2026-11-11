@@ -177,7 +177,7 @@ Function Orgasm(Actor akActor, String _args)
 				|| (MilkQ.MMEExtDDCheck(akActor, "IsMilkingBlocked_Bra") && MilkQ.MMEExtSLSDCheck(akActor)))
 				
 					Form maidArmor = akActor.GetWornForm(Armor.GetMaskForSlot(32))
-					if maidArmor != none && MilkQ.MilkingEquipment.Find(maidArmor.getname()) != -1\
+					if maidArmor != none && MMEItemAttachments.GetClassFast(akActor, maidArmor as Armor) == 1\
 					|| maidArmor == MilkQ.MilkCuirass\
 					|| maidArmor == MilkQ.MilkCuirassFuta\
 					|| StringUtil.Find(maidArmor.getname(), "Milk" ) >= 0\
@@ -189,8 +189,8 @@ Function Orgasm(Actor akActor, String _args)
 							MilkQ.MilkE.InitiateTrade(1, 1, akActor, true)
 						endif
 						MME_Storage.changeMilkCurrent(akActor, -1, MilkQ.BreastScaleLimit)
-					elseif maidArmor != none && MilkQ.BasicLivingArmor.find(maidArmor.getname()) >= 0\
-					|| MilkQ.ParasiteLivingArmor.find(maidArmor.getname()) >= 0\
+					elseif maidArmor != none && MMEItemAttachments.GetClassFast(akActor, maidArmor as Armor) == 2\
+					|| MMEItemAttachments.GetClassFast(akActor, maidArmor as Armor) == 3\
 					|| StringUtil.Find(maidArmor.getname(), "Spriggan" ) >= 0\
 					|| StringUtil.Find(maidArmor.getname(), "Living Arm" ) >= 0\
 					|| StringUtil.Find(maidArmor.getname(), "Hermaeus Mora" ) >= 0\

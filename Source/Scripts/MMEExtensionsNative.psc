@@ -81,3 +81,7 @@ Int Function GetDwemerRefitLevel(Actor wearer, Armor item) Global Native
 String Function GetDwemerAttachmentTag(Actor wearer, Armor item) Global Native
 
 Function CancelDwemerRequests() Global Native
+
+; Generic instance class: 0 none, 1 Milking, 2 Living, 3 Tentacle, 4 Dwemer.
+Int Function GetWornItemAttachmentClass(Actor wearer, Armor item) Global Native
+Int Function QueueItemAttachment(Actor wearer, Armor item, Int operation, String expectedIdentity, Bool diagnostic, Int fittedLevel, Int armorClass) Global Native

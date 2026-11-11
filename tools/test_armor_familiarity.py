@@ -22,7 +22,7 @@ class Actor:
 class Familiarity(unittest.TestCase):
  def setUp(self):
   self.now=10.;self.store=Store();self.actor=Actor();self.item=Item();self.actor.worn=self.item
-  self.ns={'MMEDwemerAttachment':NS(Tag=lambda a,i:getattr(i,'tag','')),'Audit':lambda *a:None,'StorageUtil':self.store,'Utility':NS(GetCurrentGameTime=lambda:self.now),'Armor':NS(GetMaskForSlot=lambda _:4),'Math':NS(LogicalAnd=lambda a,b:a&b),'Game':NS(GetPlayer=lambda:self.actor)}
+  self.ns={'MMEItemAttachments':NS(Tag=lambda a,i:getattr(i,'tag',''),Reconcile=lambda a:None),'Audit':lambda *a:None,'StorageUtil':self.store,'Utility':NS(GetCurrentGameTime=lambda:self.now),'Armor':NS(GetMaskForSlot=lambda _:4),'Math':NS(LogicalAnd=lambda a,b:a&b),'Game':NS(GetPlayer=lambda:self.actor)}
   for name,args in [('IsBodyArmor','item'),('Seed','target'),('Observe','actors'),('OnEquip','target, item'),('OnUnequip','target, item')]:exec(translate(name,args,re.sub(r"(?m)^([ \t]*)Armor (\w+) =",r"\1Actor \2 =",SOURCE.replace("Trace(","Audit("))),self.ns)
  def equip(self,item=None,actor=None):
   actor=actor or self.actor;item=item or self.item;actor.worn=item;return self.ns['OnEquip'](actor,item)

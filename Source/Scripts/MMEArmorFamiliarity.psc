@@ -15,6 +15,7 @@ Function Seed(Actor target) Global
     If target == None
         Return
     EndIf
+    MMEItemAttachments.Reconcile(target)
     If StorageUtil.GetFormValue(target, "MME.ArmorFamiliarity.Last") != None
         Return
     EndIf
@@ -25,7 +26,7 @@ Function Seed(Actor target) Global
     If worn != None
         StorageUtil.SetFormValue(target, "MME.ArmorFamiliarity.Last", worn)
         StorageUtil.SetFloatValue(target, "MME.ArmorFamiliarity.Removed", -1.0)
-        StorageUtil.SetStringValue(target, "MME.ArmorFamiliarity.DwemerItem", MMEDwemerAttachment.Tag(target, worn))
+        StorageUtil.SetStringValue(target, "MME.ArmorFamiliarity.DwemerItem", MMEItemAttachments.Tag(target, worn))
         Trace(target, "seeded currently worn outfit")
     EndIf
 EndFunction
@@ -53,7 +54,7 @@ Bool Function OnEquip(Actor target, Armor item) Global
     Float removed = StorageUtil.GetFloatValue(target, "MME.ArmorFamiliarity.Removed", -1.0)
     Float now = Utility.GetCurrentGameTime()
     String lastInstance = StorageUtil.GetStringValue(target, "MME.ArmorFamiliarity.DwemerItem", "")
-    String instance = MMEDwemerAttachment.Tag(target, item)
+    String instance = MMEItemAttachments.Tag(target, item)
     Bool familiar = last == item && lastInstance == instance && (removed < 0.0 || now < removed || now - removed < (8.0 / 24.0))
     StorageUtil.SetFormValue(target, "MME.ArmorFamiliarity.Last", item)
     StorageUtil.SetStringValue(target, "MME.ArmorFamiliarity.DwemerItem", instance)

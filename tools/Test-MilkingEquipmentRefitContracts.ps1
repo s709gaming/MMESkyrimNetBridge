@@ -22,7 +22,7 @@ Assert-Contract ($service -match 'wearer != Game\.GetPlayer\(\)') "refit strippi
 Assert-Contract ($service -match 'wornArmor == milkController\.MilkCuirass' -and $service -match 'wornArmor == milkController\.MilkCuirassFuta') "original MME cuirasses are always excluded"
 Assert-Contract ($service -match 'FindBasicLivingArmorNameDirect' -and $service -match 'FindParasiteLivingArmorNameDirect') "Living and Parasite armor remain excluded"
 Assert-Contract ($service -match 'customClass == 4[\s\S]*Return True' -and $service -match 'unlocked Dwemer Armor protection bypass permitted') "independent Dwemer Armor joins refit eligibility"
-Assert-Contract ($service -match 'CountMilkingEquipmentMatchesDirect\(milkController, armorName\) == 1') "only an exact ordinary MilkingEquipment registration qualifies"
+Assert-Contract ($service -match 'MMEItemAttachments.GetClass\(Game.GetPlayer\(\), wornArmor\) == 1') "only an individual ordinary Milking attachment qualifies"
 Assert-Contract ($service -match 'The pending fit state is the service ticket' -and $service -match 'String refitContext = "off-body"') "pending refit can be serviced without wearing the undersized equipment"
 Assert-Contract ($service -notmatch 'eligible registered Milking Equipment is no longer worn') "refit completion has no circular worn-armor requirement"
 Assert-Contract ($armor -match 'MMEMilkingEquipmentRefit\.ShouldBypassMilkingEquipmentProtection' -and $armor -match 'IsMilkingBlocked_Suit' -and $armor -match 'IsStripSafeByFramework') "narrow exception retains framework safety gates"

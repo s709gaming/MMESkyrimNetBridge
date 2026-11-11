@@ -1,0 +1,1 @@
+Compile-only standard SexLab 1.66d HookActors/HookAnimation/GetVersion and sslBaseObject Name/HasTag declarations, verified against retained MO2 SexLabFrameworkAE_v166d sources. Never ship these SDK scripts. Other dependencies reuse the original MME pplus-hook SDK.

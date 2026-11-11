@@ -2,6 +2,8 @@
 & (Join-Path $PSScriptRoot "tools/Test-DwemerInstanceNative.ps1")
 & python -B (Join-Path $PSScriptRoot "tools/test_dwemer_instance_facade.py")
 if ($LASTEXITCODE) { throw "Dwemer instance facade regression checks failed" }
+& python -B (Join-Path $PSScriptRoot "tools/test_item_attachments.py")
+if ($LASTEXITCODE) { throw "Shared item attachment regressions failed" }
 & python -B (Join-Path $PSScriptRoot "tools/test_preferred_milk.py")
 if ($LASTEXITCODE) { throw "Preferred milk setting regressions failed" }
 & python -B (Join-Path $PSScriptRoot 'tools/test_armor_familiarity.py')
@@ -57,6 +59,7 @@ $pluginPath = Join-Path $projectRoot "MMEAlert.esp"
 $seqPath = Join-Path $projectRoot "SEQ\MMEAlert.seq"
 $scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "MMEDiagnostics", "MMEThoughts", "MMEMilkCravings", "MMESelfMilking", "MMEMaidWeightScaling", "MMEMilkingEquipmentRefit", "MMETentacleEffects", "MMEDwemerEffects", "MMEBreastBounceEffects", "MMEServiceArmorReminder", "MMEDrinkTracker", "MMEAlertsPlayerEffect", "MMEAlertsQuickTest", "MMEAlertsFlatRateDefaults", "MMEAlertsSkyrimNet", "MMESkyrimNetVoiceControls", "MMEActorDrinkTransaction", "MMEAvailableMilkTransaction", "MMEForcedMilkDrink", "MMEChestTrapTargets", "MMEChestArmorTrap", "MMEChestMilkTrap", "MMEInnPalaceMilkEvent", "MMEMilkBoost", "MMEArousalBridge", "MMEArousalEffects", "MMEArousalAnimations", "MMEMilkDrinkEffects", "MMEMinorAnimations", "MMEDrinkAnimation", "MMEAnimationSafety", "MMEReactionAnimation", "MMEReactionSounds", "MMEStoryPopup", "MMEArmorIntroduction", "MMEArmorFamiliarity", "MMECustomArmorRegistry", "MMEDwemerArmor", "MMEDwemerAttachment", "MMETimedArmorLock", "MMEArmorRemoval", "MMETrapArmorDialogue", "MMEFollowerArmorRescue", "TIF_MMEExtFollowerArmorRescue", "MMEDwemerBlacksmithDialogue", "MMEArmorScript", "MMEBlacksmithDialogue", "MMEAlchemistDialogue", "MMEMageDialogue", "MMEReverseLevel", "MMEReverseLevelEffect", "MMENPCDialog", "MMENPCDrinkDialogue", "MMEOStimIntegration", "MMEOStimBreastfeeding", "MMENewMilkMaid", "MMEDungeonChestConversion", "MMEOManiaCompatibility", "MMESexLabBreastfeedingBackend", "MMEElsieBreastfeeding", "MMEExtensionsAPI", "MMEExtensionsNative")
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
+$scriptNames += "MMEItemAttachments"
 $scriptNames += "MMEOriginalSettings"
 $scriptNames += "MMELocalization"
 $scriptNames += "MMEMilkingSource"
@@ -80,7 +83,7 @@ if ($LASTEXITCODE) { throw 'Internal authoring metadata contracts failed' }
 & python -B (Join-Path $projectRoot 'tools\test_flavor_notifications.py')
 if ($LASTEXITCODE) { throw 'Flavor notification contracts failed' }
 $mmeCompatibilityOverrideSource = Join-Path $projectRoot "Source\MMECompatibilityOverrides"
-$mmeCompatibilityOverrideNames = @("MilkQUEST", "MilkMCM", "MilkLactacidScr")
+$mmeCompatibilityOverrideNames = @("MilkQUEST", "MilkMCM", "MilkLactacidScr", "MilkPlayerLoadGame", "MME_CheckForSpriggan", "MilkAMMEScr", "MilkAMBLAScr", "MilkAMPLAScr")
 $diagnosticSdk = Join-Path $projectRoot "tools\mme-diagnostic-sdk"
 $scriptNames += "MMEMilkingDiagnostics"
 $scriptNames += "MMEMilkCurse"
@@ -230,7 +233,9 @@ foreach ($scriptName in $scriptNames) {
 # Compile the narrow base-MME compatibility override against the full installed
 # framework sources, not the deliberately minimal SDK declarations.
 foreach ($overrideName in $mmeCompatibilityOverrideNames) {
-    & $compiler (Join-Path $mmeCompatibilityOverrideSource "$overrideName.psc") "-f=$flags" "-i=$mmeCompatibilityOverrideSource;$diagnosticSdk;$imports" "-o=$compiledDir"
+    $overrideImports = "$mmeCompatibilityOverrideSource;$diagnosticSdk;$imports"
+    if ($overrideName -eq 'MilkPlayerLoadGame') { $overrideImports = "$(Join-Path $projectRoot 'tools/mme-load-sdk');$(Join-Path $projectRoot 'tools/pplus-hook-sdk');$imports" }
+    & $compiler (Join-Path $mmeCompatibilityOverrideSource "$overrideName.psc") "-f=$flags" "-i=$overrideImports" "-o=$compiledDir"
     if ($LASTEXITCODE -ne 0) { throw "Compilation failed for MME compatibility override $overrideName" }
 }
 & (Join-Path $projectRoot "tools\Test-ScanArrayContracts.ps1") -CompiledDirectory $compiledDir -Assembler (Join-Path (Split-Path -Parent $compiler) "PapyrusAssembler.exe")
@@ -417,6 +422,7 @@ Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\SkyrimNet-Actor-Status.md')
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Milk-Leaks-Compatibility.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Milking-Source-API.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Dwemer-Instance-Attachments.md') -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Individual-Armor-Fittings.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Preferred-Milk-Type.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Armor-Lock-And-Dwemer-Collection.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Milk-Maid-Knowledge-Pack.md') -Destination $packageDocs

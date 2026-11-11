@@ -194,6 +194,7 @@ Function InitializeController(Bool reportStatus = False)
     RegisterForModEvent("MMEExtensions_ArmorUnequipped", "OnArmorUnequipped")
     MMECustomArmorRegistry.AuditRegistry()
     MMEDwemerAttachment.ReportLegacy()
+    MMEItemAttachments.ReportMigration()
     MMEMaidWeightScaling.ReconcileAll("controller initialized")
     MMEBodyEffects.Reconcile("controller initialized")
     MMEMilkingEquipmentRefit.Reconcile("controller initialized")
@@ -429,6 +430,7 @@ EndFunction
 
 ; Stops scheduled work and event subscriptions without removing saved state.
 Function DisableController()
+    MMEItemAttachments.Observe(MMEExtensionsNative.GetNearbyActors(2000.0))
     MMEExtensionsNative.CancelDwemerRequests()
     ; Runtime compatibility tags stop with observation; saved lock data survives.
     MMEExtensionsNative.ResetLockProtection()
@@ -1653,6 +1655,7 @@ Event OnNativeLifecycle(String eventName, String reason, Float numArg, Form send
     EndIf
     If reason == "load"
         MMEDwemerAttachment.ReportLegacy()
+    MMEItemAttachments.ReportMigration()
         ; Loading inside a venue establishes a baseline rather than pretending
         ; the player just entered. Any pre-save real-time deadline is discarded.
         CancelInnPalaceDrink("save loaded")

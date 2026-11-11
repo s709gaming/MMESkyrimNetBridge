@@ -1,6 +1,6 @@
 # Individual Dwemer attachments
 
-Scope: blacksmith-installed Dwemer attachments only. Dedicated Dwemer suits/static compatibility remain intrinsic base-form definitions. Other vendor categories retain their existing registrations, with guards preventing services being applied over an individual Dwemer attachment.
+The Dwemer pilot is now part of the shared individual-item fitting system. See Individual-Armor-Fittings.md for all four classes and existing-save migration. Dedicated Dwemer suits/static compatibility remain intrinsic base-form definitions.
 
 ## Identity and threading
 The native DLL resolves the actual slot-32 worn inventory extra-data list. It requires exactly one worn list with count one, preserves any existing engine ExtraUniqueID, and assigns one using the engine allocator when capture requires it. Ambiguous inventory state fails closed. No item cloning or enchantment replacement; the fitted copy receives a presentation-only name suffix. Engine-owned identity remains after attachment removal; never delete metadata other mods may use.
@@ -12,12 +12,12 @@ Only game-thread tasks access inventory. Papyrus gets cached snapshots and queue
 Install/remove are atomic native commits against the captured item. A later outfit change cannot undo an already successful service or redirect it to an identical copy. Equip presentation is skipped when the captured item is no longer worn. Automatic Dwemer milking rechecks the same physical attachment after the five-second prelude.
 
 ## Persistence and lifecycle
-Version-two records (with version-one read compatibility) live in the MMEExtensions section of the selected SKSE co-save, beside the ordinary save. Store serial counter, identity fields, stable attachment serial, fitted level and label ownership/original-name metadata. Load resolves FormIDs, validates bounds/duplicates/versions, and fails closed for corrupt state. Missing referenced forms are skipped with diagnostics. No shared global JSON holds item-instance service state. Keep the .ess and .skse save pair together; absent data is not reconstructed from names or enchantments.
+Version-three class-aware records (with version-one/two read compatibility) live in the MMEExtensions section of the selected SKSE co-save, beside the ordinary save. Store serial counter, identity fields, stable attachment serial, fitted level and label ownership/original-name metadata. Load resolves FormIDs, validates bounds/duplicates/versions, and fails closed for corrupt state. Missing referenced forms are skipped with diagnostics. No shared global JSON holds item-instance service state. Keep the .ess and .skse save pair together; absent data is not reconstructed from names or enchantments.
 
 Unique-ID change events remap records; container events invalidate affected snapshots and retire consumed items when identified. Form deletion removes records referring to that deleted context/base. Collision retires conflicting records rather than granting an attachment to an unrelated copy. There is no continuous inventory scan.
 
 ## Individual display labels
-Only artisan-fitted copies receive ` (Dwemer)`. An ordinary `Clothes` remains unchanged while its fitted twin becomes `Clothes (Dwemer)`. Existing custom names retain their text with the suffix appended. This distinguishes ordinary and fitted inventory rows; identically named fitted copies may still group. Names never grant, identify or transfer attachments. Dedicated suits and the other vendor categories are not automatically renamed.
+Only artisan-fitted copies receive ` (Dwemer)`. An ordinary `Clothes` remains unchanged while its fitted twin becomes `Clothes (Dwemer)`. Existing custom names retain their text with the suffix appended. This distinguishes ordinary and fitted inventory rows; identically named fitted copies may still group. Names never grant, identify or transfer attachments. Dedicated suits remain intrinsic. The other ordinary vendor fittings use their own class suffix through the shared registry.
 
 The existing verified worn-item transaction changes only that extra-data list and refreshes the inventory UI. Quest/alias/original-reference controlled names are preserved. Ambiguous worn stacks remain rejected rather than cloned or broadly modified. Name data is written on the game thread, with engine save-change flags; enchantment, temper, ownership, count and ExtraUniqueID are untouched. Temper-generated display text is excluded from custom-name comparisons.
 

@@ -12,7 +12,7 @@ restored = restored.replace('\n\tMMEExtSyncDifficulty()', '', 1)
 restored = restored.replace('\n\t\tMMEExtSyncDifficulty()', '', 1)
 restored = restored.replace('MMEExtDifficultyLabel())', 'Preset[PresetIndex])', 1)
 restored = restored.replace('\t\tIf index < 0 || index > 5\n\t\t\tReturn\n\t\tEndIf\n', '', 1)
-assert hashlib.sha256(restored.encode()).hexdigest() == '6794ee1ce55782e804ccbaa8e44f5170858267cf4f57a2bfc922bbd45e101a62', 'Original MCM changed beyond the reviewed sync patch'
+assert hashlib.sha256(restored.encode()).hexdigest() == '79f65ac8cf92da385ce91bb628856d9d96274217edf52879cf16a7f4535a84bb', 'Original MCM changed beyond the reviewed sync and item-fitting migration'
 
 facade = unlocalize((ROOT / 'Source/Scripts/MMEOriginalSettings.psc').read_text())
 mcm = unlocalize((ROOT / 'Source/Scripts/MMEAlertsMCM.psc').read_text())
@@ -34,4 +34,4 @@ assert "variants['MilkMCM'] = (ROOT / 'Source/MMECompatibilityOverrides/MilkMCM.
 build = unlocalize((ROOT / 'build-package.ps1').read_text())
 assert '$scriptNames += "MMEOriginalSettings"' in build
 assert {"MilkQUEST", "MilkMCM"} <= set(re.findall(r'"([^"\n]+)"', re.search(r'\$mmeCompatibilityOverrideNames = @\(([^\n]+)\)', build).group(1)))
-print('PASS: 14 mirrored controls; original MCM only has reviewed sync/bonus-preview changes; single authority, safe refresh boundaries and backend packaging wired')
+print('PASS: 14 mirrored controls; original MCM has reviewed sync/bonus-preview and instance-fitting migration changes; single authority, safe refresh boundaries and backend packaging wired')
