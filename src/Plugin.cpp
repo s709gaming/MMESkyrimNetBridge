@@ -17,6 +17,7 @@
 #include <RE/N/NativeFunction.h>
 #include <RE/F/FunctionArguments.h>
 #include <RE/I/IStackCallbackFunctor.h>
+#include <RE/O/ObjectTypeInfo.h>
 #include <cmath>
 #include <mutex>
 #include "NarrationEditor.h"
@@ -71,6 +72,33 @@ namespace
     std::int32_t GetMovementSlapSession(RE::StaticFunctionTag*)
     {
         return static_cast<std::int32_t>(gMovementSlapSession.load() & 0x7FFFFFFFU);
+    }
+
+    // Read-only VM metadata query. Papyrus casts can select another script on
+    // the same quest (OSL attaches both names), so they cannot identify the API
+    // implementation's actual parent chain. No faction properties are mutated.
+    std::int32_t GetArousalFrameworkKind(RE::StaticFunctionTag*, RE::TESQuest* quest)
+    {
+        auto* vm = RE::BSScript::Internal::VirtualMachine::GetSingleton();
+        auto* policy = vm ? vm->GetObjectHandlePolicy() : nullptr;
+        if (!quest || !policy) {
+            return -1;
+        }
+        const auto handle = policy->GetHandleForObject(RE::FormType::Quest, quest);
+        RE::BSTSmartPointer<RE::BSScript::Object> framework;
+        if (!vm->FindBoundObject(handle, "slaFrameworkScr", framework) || !framework) {
+            return -1;
+        }
+        const auto* type = framework->GetTypeInfo();
+        if (!type || _stricmp(type->GetName(), "slaFrameworkScr") != 0) {
+            return -1;
+        }
+        for (auto* parent = type->GetParent(); parent; parent = parent->GetParent()) {
+            if (_stricmp(parent->GetName(), "slaUtilScr") == 0) {
+                return 1;
+            }
+        }
+        return 0;
     }
 
     enum class SocialVenueKind : std::uint32_t
@@ -896,6 +924,7 @@ namespace
         vm->RegisterFunction("GetParentTopic", "MMEExtensionsNative", GetParentTopic);
         vm->RegisterFunction("IsPlayerMovingOnFoot", "MMEExtensionsNative", IsPlayerMovingOnFoot);
         vm->RegisterFunction("GetMovementSlapSession", "MMEExtensionsNative", GetMovementSlapSession);
+        vm->RegisterFunction("GetArousalFrameworkKind", "MMEExtensionsNative", GetArousalFrameworkKind);
         vm->RegisterFunction("GetMaidBodyFailureReason", "MMEExtensionsNative", GetMaidBodyFailureReason);
         vm->RegisterFunction("IsBodyMorphAvailable", "MMEExtensionsNative", IsBodyMorphAvailable);
         vm->RegisterFunction("ApplyMaidBodyMorphs", "MMEExtensionsNative", ApplyMaidBodyMorphs);

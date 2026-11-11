@@ -173,6 +173,12 @@ Bool Function ProcessNearbyActors(Actor[] scannedActors) Global
                         ClearPendingReaction(candidate)
                     EndIf
                 EndIf
+            Else
+                ; Unknown arousal must not become zero or replay an old crossing
+                ; after the framework recovers. Rebaseline on the next valid read.
+                ClearPendingReaction(candidate)
+                StorageUtil.UnsetIntValue(candidate, "MMEExtensions.ArousalEffects.Generation")
+                StorageUtil.UnsetIntValue(candidate, "MMEExtensions.ArousalEffects.Tier")
             EndIf
         EndIf
         index += 1

@@ -8,6 +8,9 @@ EndFunction
 Bool Function IsDetected() Global
     ; Elsie 3.4 owns this stable controller quest. The form probe also remains
     ; valid if a user later ESL-flags the plugin, unlike a regular-index test.
+    If !Game.IsPluginInstalled("CP_Elsie.esp")
+        Return False
+    EndIf
     Return Game.GetFormFromFile(0x005E57, "CP_Elsie.esp") != None
 EndFunction
 

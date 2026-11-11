@@ -53,3 +53,7 @@ Enable the MME Extensions master Papyrus logging option to record successful lif
 ```
 
 Messages containing `ROUTE CLOG` identify missing bindings that prevent a repair path from operating.
+
+## Optional detection safety
+
+The shared Extensions facade now checks whether CP_Elsie.esp is loaded before resolving its controller form. Missing Elsie is an expected quiet skip; no original Elsie scripts are changed for this detection guard.

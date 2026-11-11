@@ -1,7 +1,7 @@
 Scriptname MMEArousalBridge Hidden
 
-; Optional SexLab Aroused boundary. Event-based writes avoid compiling against a
-; specific SLA script version while faction/rank reads provide diagnostics.
+; Optional SexLab Aroused boundary. Validate known legacy prerequisites before
+; calling third-party code; never repair or populate another framework's properties.
 
 String Function GetSettingsFile() Global
     Return "/MMEAlerts/Settings"
@@ -9,10 +9,73 @@ EndFunction
 
 ; SexLab Aroused Redux and OSLAroused both expose this compatibility master.
 Bool Function IsAvailable() Global
-    Return Game.GetModByName("SexLabAroused.esm") != 255
+    Return Game.IsPluginInstalled("SexLabAroused.esm")
 EndFunction
 
-; Raises arousal through SLA's public event without creating a script dependency.
+; Legacy Redux puts its faction-based API on the slaUtilScr parent. Modern
+; OSL/NG compatibility quests extend Quest directly and use native-backed reads.
+; Failure backoff is session-scoped; existing callers drive retries (no new timer).
+Bool Function IsReady(Actor actorRef = None) Global
+    If !IsAvailable()
+        Return False
+    EndIf
+    String healthKey = "MMEExtensions.ArousalBridge.Health"
+    Int session = MMEExtensionsNative.GetMovementSlapSession()
+    If StorageUtil.GetIntValue(None, healthKey + ".Session", -1) != session
+        StorageUtil.SetIntValue(None, healthKey + ".Session", session)
+        StorageUtil.SetIntValue(None, healthKey, 0)
+        StorageUtil.UnsetFloatValue(None, healthKey + ".Retry")
+        StorageUtil.UnsetFloatValue(None, healthKey + ".FailedAt")
+        StorageUtil.UnsetIntValue(None, healthKey + ".Alarm")
+    EndIf
+    Float now = Utility.GetCurrentRealTime()
+    If now < StorageUtil.GetFloatValue(None, healthKey + ".Retry", -1.0)
+        Return False
+    EndIf
+    slaFrameworkScr framework = Game.GetFormFromFile(0x04290F, "SexLabAroused.esm") as slaFrameworkScr
+    String reason = ""
+    If framework == None
+        reason = "compatibility quest/script unavailable"
+    Else
+        ; Native metadata avoids selecting OSL's separate utility script sibling.
+        Int frameworkKind = MMEExtensionsNative.GetArousalFrameworkKind(framework as Quest)
+        If frameworkKind < 0
+            reason = "compatibility script hierarchy unavailable or ambiguous"
+        ElseIf frameworkKind == 1
+            slaUtilScr legacy = (framework as Quest) as slaUtilScr
+            If legacy == None
+                reason = "legacy API parent could not resolve"
+            ElseIf legacy.slaArousalBlocked == None
+                reason = "legacy slaArousalBlocked property is None"
+            ElseIf legacy.slaArousal == None || legacy.slaExposure == None
+                reason = "legacy arousal/exposure faction property is None"
+            EndIf
+        EndIf
+    EndIf
+    If reason != ""
+        If StorageUtil.GetIntValue(None, healthKey, 0) != -1
+            StorageUtil.SetFloatValue(None, healthKey + ".FailedAt", now)
+            MMELog.MasterDiagnostic("[MME Arousal Bridge] suspended | actor=" + actorRef + " | reason=" + reason)
+        EndIf
+        StorageUtil.SetIntValue(None, healthKey, -1)
+        StorageUtil.SetFloatValue(None, healthKey + ".Retry", now + 5.0)
+        ; Give startup initialization a grace period before raising a genuine alarm.
+        If now - StorageUtil.GetFloatValue(None, healthKey + ".FailedAt", now) >= 30.0 && StorageUtil.GetIntValue(None, healthKey + ".Alarm", 0) == 0
+            StorageUtil.SetIntValue(None, healthKey + ".Alarm", 1)
+            MMELog.Alarm("[MME Arousal Bridge] unavailable | operation=read/write | actor=" + actorRef + " | reason=" + reason + ", calls suspended, retrying prerequisites")
+        EndIf
+        Return False
+    EndIf
+    If StorageUtil.GetIntValue(None, healthKey, 0) != 1
+        MMELog.MasterDiagnostic("[MME Arousal Bridge] ready | actor=" + actorRef + " | previous state=" + StorageUtil.GetIntValue(None, healthKey, 0))
+        StorageUtil.SetIntValue(None, healthKey, 1)
+        StorageUtil.UnsetFloatValue(None, healthKey + ".Retry")
+        StorageUtil.UnsetIntValue(None, healthKey + ".Alarm")
+    EndIf
+    Return True
+EndFunction
+
+; Player drink wrapper around the checked compatibility API.
 Function ApplyMilkDrinkArousal(Actor drinker, Form drinkItem) Global
     String settingsFile = GetSettingsFile()
     Bool diagnostic = JsonUtil.GetIntValue(settingsFile, "enableArousalDiagnostic", 0) == 1
@@ -24,7 +87,7 @@ Function ApplyMilkDrinkArousal(Actor drinker, Form drinkItem) Global
 EndFunction
 
 ; Drink-facing compatibility wrapper. The neutral implementation below lets
-; non-drink systems reuse the same MCM amount, cap, and SLA event contract
+; non-drink systems reuse the same MCM amount, cap, and checked SLA API
 ; without writing false drink wording to the Papyrus log.
 Bool Function ApplyMilkDrinkArousalForActor(Actor drinker, Form drinkItem, Bool showDiagnostic = False) Global
     String itemName = "<unnamed milk>"
@@ -39,9 +102,8 @@ Bool Function ApplyMilkDrinkArousalForActor(Actor drinker, Form drinkItem, Bool 
 EndFunction
 
 ; Shared completion boundary for the configured Milk Maid route and the
-; sex-specific ordinary-adult milk route. Older SLA event fallbacks can update
-; asynchronously, so use the bounded requested result when the immediate read
-; has not caught up yet.
+; sex-specific ordinary-adult milk route. Retain the existing bounded requested
+; result when the framework read has not caught up yet.
 Function RecordMilkDrinkResult(Actor target, Int arousalBefore, Float requestedAmount, Bool sent) Global
     If target == None || !sent
         Return
@@ -102,6 +164,9 @@ Bool Function ApplyArousalAmountForActor(Actor target, Float configuredAmount, S
     ElseIf configuredAmount > 100.0
         configuredAmount = 100.0
     EndIf
+    If !IsReady(target)
+        Return False
+    EndIf
     Int arousalBefore = GetCurrentArousal(target)
     Float amountToSend = configuredAmount
     If arousalBefore >= 0 && arousalBefore as Float + amountToSend > 100.0
@@ -132,35 +197,14 @@ Bool Function ApplyArousalAmountForActor(Actor target, Float configuredAmount, S
         Return True
     EndIf
 
-    ; Older or incomplete compatibility installs retain the public ModEvent as
-    ; a fallback. The event owns the state change; reads are diagnostic only.
-    Int handle = ModEvent.Create("slaUpdateExposure")
-    If handle == 0
-        Report(showDiagnostic, "failed: framework quest unavailable and slaUpdateExposure event creation returned 0")
-        Return False
-    EndIf
-    ModEvent.PushForm(handle, target)
-    ModEvent.PushFloat(handle, amountToSend)
-    Bool sent = ModEvent.Send(handle)
-    If sent
-        If showDiagnostic
-            ; ModEvents are asynchronous; allow SLA to consume the event before reading its faction value.
-            Utility.Wait(0.25)
-            Int arousalAfter = GetCurrentArousal(target)
-            Report(True, "slaUpdateExposure sent: " + actorName + " " + arousalBefore + " -> " + arousalAfter + " | source=" + sourceLabel)
-        Else
-            Report(False, "slaUpdateExposure sent for " + actorName + " (+" + amountToSend + ") | source=" + sourceLabel)
-        EndIf
-        Return True
-    Else
-        Report(showDiagnostic, "failed: slaUpdateExposure send returned false")
-        Return False
-    EndIf
+    ; Readiness may change between validation and dispatch. Do not send an
+    ; asynchronous event into an unavailable or incomplete framework.
+    Return False
 EndFunction
 
-; Reads SLA's public compatibility faction without importing any SLA scripts.
+; Prefer the framework's authoritative read after known prerequisites are ready.
 Int Function GetCurrentArousal(Actor actorRef) Global
-    If actorRef == None || !IsAvailable()
+    If actorRef == None || !IsReady(actorRef)
         Return -1
     EndIf
     ; Every supported SLA/OSL fork implements this legacy compatibility quest.

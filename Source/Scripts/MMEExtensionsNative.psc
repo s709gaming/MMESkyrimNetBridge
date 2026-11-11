@@ -29,6 +29,9 @@ Bool Function IsPlayerMovingOnFoot() Global Native
 ; Session token for rejecting audio instance IDs restored from another load.
 Int Function GetMovementSlapSession() Global Native
 
+; -1: unavailable/ambiguous script, 0: modern API, 1: legacy slaUtilScr parent.
+Int Function GetArousalFrameworkKind(Quest frameworkQuest) Global Native
+
 ; Papyrus declarations for the SKSE/CommonLib native bridge. Keep every name and
 ; signature synchronized with RegisterPapyrus in src/Plugin.cpp; compiled callers
 ; depend on this ABI. Morph functions edit only our owned runtime morph key; records are never edited.

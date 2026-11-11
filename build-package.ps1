@@ -1,4 +1,6 @@
 ﻿$ErrorActionPreference = "Stop"
+& python -B (Join-Path $PSScriptRoot "tools/test_optional_framework_guards.py")
+if ($LASTEXITCODE) { throw "Optional framework guard regressions failed" }
 & (Join-Path $PSScriptRoot "tools/Test-DwemerInstanceNative.ps1")
 & python -B (Join-Path $PSScriptRoot "tools/test_dwemer_instance_facade.py")
 if ($LASTEXITCODE) { throw "Dwemer instance facade regression checks failed" }

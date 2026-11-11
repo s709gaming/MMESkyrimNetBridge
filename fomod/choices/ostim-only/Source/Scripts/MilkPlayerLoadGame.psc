@@ -177,11 +177,17 @@ Function Orgasm(Actor akActor, String _args)
 				|| (MilkQ.MMEExtDDCheck(akActor, "IsMilkingBlocked_Bra") && MilkQ.MMEExtSLSDCheck(akActor)))
 				
 					Form maidArmor = akActor.GetWornForm(Armor.GetMaskForSlot(32))
+					String maidArmorName = ""
+					If maidArmor != None
+						maidArmorName = maidArmor.GetName()
+					Else
+						MMELog.MasterDiagnostic("[MME Orgasm] no body armor | actor=" + akActor + " | continuing normal milking")
+					EndIf
 					if maidArmor != none && MMEItemAttachments.GetClassFast(akActor, maidArmor as Armor) == 1\
 					|| maidArmor == MilkQ.MilkCuirass\
 					|| maidArmor == MilkQ.MilkCuirassFuta\
-					|| StringUtil.Find(maidArmor.getname(), "Milk" ) >= 0\
-					|| StringUtil.Find(maidArmor.getname(), "Cow" ) >=0\
+					|| StringUtil.Find(maidArmorName, "Milk" ) >= 0\
+					|| StringUtil.Find(maidArmorName, "Cow" ) >=0\
 					|| MilkQ.MMEExtSLSDCheck(akActor)
 						if StorageUtil.GetIntValue(akActor, "MME.MilkMaid.IsSlave") == 1
 							StorageUtil.AdjustFloatValue(akActor, "MME.MilkMaid.MilkingContainerMilksSUM", 1)
@@ -191,12 +197,12 @@ Function Orgasm(Actor akActor, String _args)
 						MME_Storage.changeMilkCurrent(akActor, -1, MilkQ.BreastScaleLimit)
 					elseif maidArmor != none && MMEItemAttachments.GetClassFast(akActor, maidArmor as Armor) == 2\
 					|| MMEItemAttachments.GetClassFast(akActor, maidArmor as Armor) == 3\
-					|| StringUtil.Find(maidArmor.getname(), "Spriggan" ) >= 0\
-					|| StringUtil.Find(maidArmor.getname(), "Living Arm" ) >= 0\
-					|| StringUtil.Find(maidArmor.getname(), "Hermaeus Mora" ) >= 0\
-					|| StringUtil.Find(maidArmor.getname(), "HM Priestess" ) >= 0\
-					|| StringUtil.Find(maidArmor.getname(), "Tentacle Armor" ) >= 0\
-					|| StringUtil.Find(maidArmor.getname(), "Tentacle Parasite" ) >= 0
+					|| StringUtil.Find(maidArmorName, "Spriggan" ) >= 0\
+					|| StringUtil.Find(maidArmorName, "Living Arm" ) >= 0\
+					|| StringUtil.Find(maidArmorName, "Hermaeus Mora" ) >= 0\
+					|| StringUtil.Find(maidArmorName, "HM Priestess" ) >= 0\
+					|| StringUtil.Find(maidArmorName, "Tentacle Armor" ) >= 0\
+					|| StringUtil.Find(maidArmorName, "Tentacle Parasite" ) >= 0
 						MME_Storage.changeMilkCurrent(akActor, -1, MilkQ.BreastScaleLimit)
 					else
 						MME_Storage.changeMilkCurrent(akActor, -1, MilkQ.BreastScaleLimit)
