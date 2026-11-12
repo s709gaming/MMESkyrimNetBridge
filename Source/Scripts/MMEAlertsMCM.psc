@@ -72,6 +72,9 @@ Int forcedMilkMaidLactacidStoryOption
 Int forcedMilkMaidNarrationOption
 Int forcedMilkMaidDiagnosticOption
 Int movementSlapOption
+Int[] movementSoundMenus
+Int[] movementSoundVolumes
+Int movementSneakVolumeOption = -1
 Int movementSlapVolumeOption
 Int movementSlapNotificationsOption
 Int movementSlapNotificationCooldownOption
@@ -1841,6 +1844,15 @@ Event OnPageReset(String page)
     NormalizeArousalThresholdSettings()
     movementSlapOption = -1
     movementSlapVolumeOption = -1
+    movementSoundMenus = new Int[4]
+    movementSoundVolumes = new Int[4]
+    Int movementReset = 0
+    While movementReset < 4
+        movementSoundMenus[movementReset] = -1
+        movementSoundVolumes[movementReset] = -1
+        movementReset += 1
+    EndWhile
+    movementSneakVolumeOption = -1
     movementSlapNotificationsOption = -1
     movementSlapNotificationCooldownOption = -1
     flatMilkStrippingOption = -1
@@ -2140,6 +2152,11 @@ EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
+    If MovementOptionRoute(option, True) >= 0 || MovementOptionRoute(option, False) >= 0 || (option == movementSneakVolumeOption && option >= 0)
+        SetInfoText(MMELocalization.Text("Choose a loop or None for each fullness and movement route. Sneaking uses the walking selection. Volumes and the sneak multiplier use 5% steps, 0-200%; combined output caps at 200%. Also affected by the existing sound master volume."))
+        Return
+    EndIf
+
     If option == postMilkingNarrationOption
         SetInfoText(MMELocalization.Text("Speak after successful milking, with a reaction matching hands, pump, equipment, tendrils or Dwemer machinery. Turning speech off still allows tracked history."))
         Return
@@ -2198,7 +2215,7 @@ Event OnOptionHighlight(Int option)
         SetInfoText(MMELocalization.Text("Minimum in-game hours between movement slap notifications. Default 8, range 0-48. Zero removes the cooldown; messages still occur only on eligible playback starts. Saved across reloads."))
         Return
     ElseIf option == movementSlapOption
-        SetInfoText(MMELocalization.Text("Loop the slap sound while the player moves on foot above 50% milk fullness. Stops in menus, on mounts, swimming, or during incompatible scenes. Uses the sound master and volume."))
+        SetInfoText(MMELocalization.Text("Play the selected movement loop while walking, running or sneaking. Below 50% uses the low-fullness selections; 50% or higher uses the high-fullness selections. Respects sound masters and scene guards."))
         Return
     ElseIf option == movementSlapVolumeOption
         SetInfoText(MMELocalization.Text("Movement slap only. 0% mutes, 100% is the original level, 200% doubles amplitude (+6 dB). Default 100%. Also scaled by Moaning Sound Volume."))
@@ -3938,6 +3955,25 @@ EndFunction
 
 ; Configures the shared sound-volume and capacity-interval slider dialogs.
 Event OnOptionSliderOpen(Int option)
+    Int movementRoute = MovementOptionRoute(option, False)
+    If movementRoute >= 0 || (option == movementSneakVolumeOption && option >= 0)
+        Float initial = 50.0
+        String movementVolumeKey = "movementSoundSneakVolume"
+        If movementRoute >= 0
+            movementVolumeKey = MMEMovementSounds.Key(movementRoute, "Volume")
+            initial = JsonUtil.GetFloatValue(SettingsFile, "movementSlapVolume", 100.0)
+        EndIf
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, movementVolumeKey, initial))
+        Float resetVolume = 100.0
+        If movementRoute < 0
+            resetVolume = 50.0
+        EndIf
+        SetSliderDialogDefaultValue(resetVolume)
+        SetSliderDialogRange(0.0, 200.0)
+        SetSliderDialogInterval(5.0)
+        Return
+    EndIf
+
     If option == milkFullNarrationChanceOption
         SetSliderDialogStartValue(JsonUtil.GetIntValue(SettingsFile, "milkFullNarrationChance", 100))
         SetSliderDialogDefaultValue(100)
@@ -4504,6 +4540,19 @@ EndEvent
 
 ; Saves accepted slider values and reschedules polling when its interval changes.
 Event OnOptionSliderAccept(Int option, Float value)
+    Int movementRoute = MovementOptionRoute(option, False)
+    If movementRoute >= 0 || (option == movementSneakVolumeOption && option >= 0)
+        String movementVolumeKey = "movementSoundSneakVolume"
+        If movementRoute >= 0
+            movementVolumeKey = MMEMovementSounds.Key(movementRoute, "Volume")
+        EndIf
+        JsonUtil.SetFloatValue(SettingsFile, movementVolumeKey, value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        RefreshMovementSlapSettings()
+        Return
+    EndIf
+
     If option == milkFullNarrationChanceOption
         JsonUtil.SetIntValue(SettingsFile, "milkFullNarrationChance", value as Int)
         JsonUtil.Save(SettingsFile, False)
@@ -5257,13 +5306,23 @@ Function DrawBodyPage()
     breastBounceIntervalOption = AddSliderOption(MMELocalization.Text("Reaction Interval"), JsonUtil.GetFloatValue(SettingsFile, "breastBounceIntervalHours", 24.0), MMELocalization.Text("{0} game hours"))
     breastBounceVariationOption = AddSliderOption(MMELocalization.Text("Interval Variation"), JsonUtil.GetFloatValue(SettingsFile, "breastBounceVariationHours", 4.0), MMELocalization.Text("+/- {0} game hours"))
     breastBounceDelayOption = AddSliderOption(MMELocalization.Text("Maximum Reaction Delay"), JsonUtil.GetFloatValue(SettingsFile, "breastBounceMaximumDelaySeconds", 30.0), MMELocalization.Text("{0} seconds"))
-    AddHeaderOption(MMELocalization.Text("Movement Slap"))
-    movementSlapOption = AddToggleOption(MMELocalization.Text("Movement Slap Sounds"), JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1) == 1)
+    AddHeaderOption(MMELocalization.Text("Movement Sounds"))
+    movementSlapOption = AddToggleOption(MMELocalization.Text("Enable Movement Sounds"), JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1) == 1)
     Int movementSoundFlags = OPTION_FLAG_NONE
     If JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1) != 1 || JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1) != 1
         movementSoundFlags = OPTION_FLAG_DISABLED
     EndIf
-    movementSlapVolumeOption = AddSliderOption(MMELocalization.Text("Movement Slap Volume"), JsonUtil.GetFloatValue(SettingsFile, "movementSlapVolume", 100.0), "{0}%", movementSoundFlags)
+    movementSoundMenus = new Int[4]
+    movementSoundVolumes = new Int[4]
+    Int movementRoute = 0
+    While movementRoute < 4
+        String routeLabel = MovementRouteLabel(movementRoute)
+        movementSoundMenus[movementRoute] = AddMenuOption(routeLabel, MMEMovementSounds.Name(MMEMovementSounds.Selection(movementRoute)), movementSoundFlags)
+        Float legacyVolume = JsonUtil.GetFloatValue(SettingsFile, "movementSlapVolume", 100.0)
+        movementSoundVolumes[movementRoute] = AddSliderOption(routeLabel + MMELocalization.Text(" Volume"), JsonUtil.GetFloatValue(SettingsFile, MMEMovementSounds.Key(movementRoute, "Volume"), legacyVolume), "{0}%", movementSoundFlags)
+        movementRoute += 1
+    EndWhile
+    movementSneakVolumeOption = AddSliderOption(MMELocalization.Text("Sneak Volume Multiplier"), JsonUtil.GetFloatValue(SettingsFile, "movementSoundSneakVolume", 50.0), "{0}%", movementSoundFlags)
     movementSlapNotificationsOption = AddToggleOption(MMELocalization.Text("Movement Slap Notifications"), JsonUtil.GetIntValue(SettingsFile, "enableMovementSlapNotifications", 1) == 1)
     Int movementNotificationFlags = movementSoundFlags
     If JsonUtil.GetIntValue(SettingsFile, "enableMovementSlapNotifications", 1) != 1
@@ -5981,4 +6040,64 @@ EndState
 Event OnConfigClose()
     ; Publish final toggles after the paused menu closes, including master OFF.
     MMEActorPromptState.Initialize()
+EndEvent
+
+; Movement options are page-local handles; never retain stale option IDs.
+Int Function MovementOptionRoute(Int option, Bool menu)
+    If option < 0
+        Return -1
+    EndIf
+    Int[] options = movementSoundVolumes
+    If menu
+        options = movementSoundMenus
+    EndIf
+    If !(options as Bool)
+        Return -1
+    EndIf
+    Int i = 0
+    While i < options.Length
+        If options[i] == option
+            Return i
+        EndIf
+        i += 1
+    EndWhile
+    Return -1
+EndFunction
+
+String Function MovementRouteLabel(Int route)
+    If route == 0
+        Return MMELocalization.Text("Below 50% - Walking")
+    ElseIf route == 1
+        Return MMELocalization.Text("Below 50% - Running")
+    ElseIf route == 2
+        Return MMELocalization.Text("50%+ - Walking")
+    EndIf
+    Return MMELocalization.Text("50%+ - Running")
+EndFunction
+
+Event OnOptionMenuOpen(Int option)
+    Int route = MovementOptionRoute(option, True)
+    If route < 0
+        Return
+    EndIf
+    String[] choices = new String[5]
+    Int i = 0
+    While i < 5
+        choices[i] = MMEMovementSounds.Name(i)
+        i += 1
+    EndWhile
+    SetMenuDialogOptions(choices)
+    SetMenuDialogStartIndex(MMEMovementSounds.Selection(route))
+    SetMenuDialogDefaultIndex(route + 1)
+EndEvent
+
+Event OnOptionMenuAccept(Int option, Int index)
+    Int route = MovementOptionRoute(option, True)
+    If route < 0 || index < 0 || index > 4
+        Return
+    EndIf
+    JsonUtil.SetIntValue(SettingsFile, MMEMovementSounds.Key(route, "Selection"), index)
+    JsonUtil.Save(SettingsFile, False)
+    SetMenuOptionValue(option, MMEMovementSounds.Name(index))
+    RefreshMovementSlapSettings()
 EndEvent

@@ -1,3 +1,5 @@
+Movement audio update: the movement-sound description below is historical. See [Movement-Sounds.md](Movement-Sounds.md) for the current four-loop controls, fullness rules and volume behavior. The flat milk stripping section remains applicable.
+
 Movement slap sounds and flat milk stripping
 ===========================================
 

@@ -68,6 +68,8 @@ String MovementSlapLastBlockReason = "<not checked>"
 Actor MovementSlapPlayer = None
 MilkQUEST MovementSlapMilkController = None
 Sound MovementSlapSound = None
+Int MovementSoundChoice = -1
+Int MovementSoundRoute = -1
 Float NextSkyrimNetUpdate = 0.0
 Float NextDebugUpdate = 0.0
 Float NextThoughtDebugUpdate = 0.0
@@ -133,7 +135,9 @@ Function InitializeController(Bool reportStatus = False)
     StopMovementSlap("controller initialization")
     MovementSlapPlayer = Game.GetPlayer()
     MovementSlapMilkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    MovementSlapSound = Game.GetFormFromFile(0x0008C5, "MMEAlert.esp") as Sound
+    MovementSlapSound = None
+    MovementSoundChoice = -1
+    MovementSoundRoute = -1
     UnregisterForModEvent("MMEExtensions_MovementSlapPause")
     RegisterForModEvent("MMEExtensions_MovementSlapPause", "OnMovementSlapPause")
     ; Phase 1: refresh conditional forms and recover legacy animation state
@@ -2565,7 +2569,7 @@ String Function GetMovementSlapBlockReason()
     If !IsMovementSlapEnabled()
         Return "sound setting disabled"
     EndIf
-    If JsonUtil.GetFloatValue(SettingsFile, "movementSlapVolume", 100.0) <= 0.0 || JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0) <= 0.0
+    If JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0) <= 0.0
         Return "muted"
     EndIf
     If Utility.IsInMenuMode() || !Game.IsMovementControlsEnabled() || !MMEExtensionsNative.IsPlayerMovingOnFoot()
@@ -2585,8 +2589,8 @@ String Function GetMovementSlapBlockReason()
     EndIf
     Float maximum = StorageUtil.GetFloatValue(MovementSlapPlayer, "MME.MilkMaid.MilkMaximum", 0.0)
     Float current = StorageUtil.GetFloatValue(MovementSlapPlayer, "MME.MilkMaid.MilkCount", 0.0)
-    If maximum <= 0.0 || current <= maximum * 0.5
-        Return "fullness is not above 50 percent"
+    If maximum <= 0.0
+        Return "milk capacity unavailable"
     EndIf
     If IsDhlpSuspended() || MMEAnimationSafety.GetOwner(MovementSlapPlayer) != "" || MMEAnimationSafety.IsMMEMilking(MovementSlapPlayer, MovementSlapMilkController)
         Return "player animation or milking owns actor"
@@ -2615,9 +2619,26 @@ Function UpdateMovementSlap()
         MovementSlapUpdating = False
         Return
     EndIf
+    Float currentMilk = StorageUtil.GetFloatValue(MovementSlapPlayer, "MME.MilkMaid.MilkCount", 0.0)
+    Float maximumMilk = StorageUtil.GetFloatValue(MovementSlapPlayer, "MME.MilkMaid.MilkMaximum", 0.0)
+    Int route = MMEMovementSounds.Route(MovementSlapPlayer, currentMilk, maximumMilk)
+    Int choice = MMEMovementSounds.Selection(route)
+    Float selectedGain = MMEMovementSounds.Gain(route, MovementSlapPlayer.IsSneaking())
+    If choice == 0 || selectedGain <= 0.0
+        StopMovementSlap("selected None or route muted")
+        MovementSlapUpdating = False
+        Return
+    EndIf
+    If choice != MovementSoundChoice || route != MovementSoundRoute
+        StopMovementSlap("movement/fullness selection changed")
+        MovementSoundChoice = choice
+        MovementSoundRoute = route
+        MovementSlapSound = MMEMovementSounds.Resolve(choice)
+        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] selection | actor=PLAYER | route=" + route + " | sound=" + choice)
+    EndIf
     If MovementSlapSound == None
         If !MovementSlapAlarmActive
-            MMELog.Alarm("[MME Extensions Movement Slap] cannot start player loop: MMEAlert SOUN 0008C5 unavailable")
+            MMELog.Alarm("[MME Extensions Movement Slap] cannot start player loop: selected movement SOUN unavailable")
             MovementSlapAlarmActive = True
         EndIf
         MovementSlapUpdating = False
@@ -2655,18 +2676,9 @@ Function UpdateMovementSlap()
         MovementSlapAlarmActive = False
         notifyOnStart = True
         notificationGeneration = MovementSlapGeneration
-        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] start | actor=PLAYER | fullness above 50 percent | instance=" + instance)
+        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] start | actor=PLAYER | movement loop | instance=" + instance)
     EndIf
-    ; The movement-only WAV has exactly 2x gain. 0.5 restores the original;
-    ; 1.0 gives 200%, without asking Papyrus to exceed its 0..1 clamp.
-    Float volume = JsonUtil.GetFloatValue(SettingsFile, "movementSlapVolume", 100.0) / 200.0
-    If volume < 0.0
-        volume = 0.0
-    ElseIf volume > 1.0
-        volume = 1.0
-    EndIf
-    volume *= JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0) / 100.0
-    Sound.SetInstanceVolume(MovementSlapInstance, volume)
+    Sound.SetInstanceVolume(MovementSlapInstance, selectedGain)
     If notifyOnStart && notificationGeneration == MovementSlapGeneration && MovementSlapInstance >= 0
         TryMovementSlapNotification()
     EndIf
@@ -2698,7 +2710,9 @@ Function ResetMovementSlapAfterLoad()
     MovementSlapLastBlockReason = "<not checked>"
     MovementSlapPlayer = Game.GetPlayer()
     MovementSlapMilkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
-    MovementSlapSound = Game.GetFormFromFile(0x0008C5, "MMEAlert.esp") as Sound
+    MovementSlapSound = None
+    MovementSoundChoice = -1
+    MovementSoundRoute = -1
     MMELog.MasterDiagnostic("[MME Extensions Movement Slap] reset session handles after load | actor=PLAYER")
 EndFunction
 
@@ -2706,6 +2720,11 @@ EndFunction
 ; The player-scoped StorageUtil timestamp survives loads. Cooldown and toggle
 ; affect HUD flavor only and never stop, delay or gate the sound loop.
 Function TryMovementSlapNotification()
+    Float milkMaximum = StorageUtil.GetFloatValue(MovementSlapPlayer, "MME.MilkMaid.MilkMaximum", 0.0)
+    If milkMaximum <= 0.0 || StorageUtil.GetFloatValue(MovementSlapPlayer, "MME.MilkMaid.MilkCount", 0.0) <= milkMaximum * 0.5
+        Return
+    EndIf
+
     Int generation = MovementSlapGeneration
     Int instance = MovementSlapInstance
     MMELog.MasterDiagnostic("[MME Extensions Movement Slap] notification entry | actor=PLAYER | instance=" + instance)

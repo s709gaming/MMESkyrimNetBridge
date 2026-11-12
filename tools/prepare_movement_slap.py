@@ -110,22 +110,13 @@ def build_plugin(data):
 
 
 def main():
-    folder = ROOT / "assets/sounds/Tit Slap Sounds"
-    with wave.open(str(folder / "tit slap sound loop.wav"), "rb") as original:
-        params = original.getparams()
-        assert params.sampwidth == 2 and params.nchannels == 1
-        samples = array.array("h", original.readframes(params.nframes))
-    assert max(abs(sample) for sample in samples) * 2 <= 32767, "2x gain would clip"
-    boosted = array.array("h", (sample * 2 for sample in samples))
-    with wave.open(str(folder / "movement slap 2x.wav"), "wb") as output:
-        output.setparams(params)
-        output.writeframes(boosted.tobytes())
+    # Legacy command retained; current gameplay uses the four-route records.
+    from prepare_movement_routes import build
     plugin = ROOT / "MMEAlert.esp"
-    before = plugin.read_bytes()
-    after = build_plugin(before)
-    assert build_plugin(after) == after
-    plugin.write_bytes(after)
-    print("Prepared movement-only loop SNDR 0008C4 / SOUN 0008C5 and unclipped 2x WAV")
+    result = build(plugin.read_bytes())
+    assert build(result) == result
+    plugin.write_bytes(result)
+    print("Prepared current four-route movement sounds; legacy WAV not recreated")
 
 
 if __name__ == "__main__":

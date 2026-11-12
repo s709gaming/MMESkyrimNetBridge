@@ -2506,6 +2506,20 @@
     "Old Dwemer attachments need individual reinstallation at a blacksmith.": "Старые двемерские устройства нужно заново установить у кузнеца на отдельный предмет.",
     "MME: clear old armor lists and refit desired individual items.": "MME: очистите старые списки брони и заново модифицируйте нужные отдельные предметы.",
     "Legacy armor lists (read-only):": "Старые списки брони (только просмотр):",
-    "Legacy slots are read-only. Use the worn-item fitting control or a vendor.": "Старые ячейки доступны только для просмотра. Используйте настройку надетого предмета или услуги торговца."
+    "Legacy slots are read-only. Use the worn-item fitting control or a vendor.": "Старые ячейки доступны только для просмотра. Используйте настройку надетого предмета или услуги торговца.",
+    " Volume": " — громкость",
+    "50%+ - Running": "50% и выше — бег",
+    "50%+ - Walking": "50% и выше — ходьба",
+    "Below 50% - Running": "Ниже 50% — бег",
+    "Below 50% - Walking": "Ниже 50% — ходьба",
+    "Enable Movement Sounds": "Звуки движения",
+    "Movement Sounds": "Звуки движения",
+    "Fast flops": "Быстрые шлепки",
+    "Slow flops": "Медленные шлепки",
+    "Fast slaps": "Быстрые хлопки",
+    "Slow slaps": "Медленные хлопки",
+    "Sneak Volume Multiplier": "Множитель громкости в скрытности",
+    "Choose a loop or None for each fullness and movement route. Sneaking uses the walking selection. Volumes and the sneak multiplier use 5% steps, 0-200%; combined output caps at 200%. Also affected by the existing sound master volume.": "Выберите звук или «Нет» для каждого уровня наполненности и типа движения. В скрытности используется звук ходьбы. Громкость и множитель скрытности: 0–200% с шагом 5%; итог ограничен 200%. Также применяется общая громкость звуков.",
+    "Play the selected movement loop while walking, running or sneaking. Below 50% uses the low-fullness selections; 50% or higher uses the high-fullness selections. Respects sound masters and scene guards.": "Воспроизводить выбранный звук при ходьбе, беге или скрытном движении. Ниже 50% используются звуки низкой наполненности, от 50% — высокой. Учитываются общие переключатели звуков и ограничения сцен."
   }
 }
