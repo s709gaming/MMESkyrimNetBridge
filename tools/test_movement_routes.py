@@ -14,7 +14,7 @@ class MovementRoutes(unittest.TestCase):
   for name,args in [('Key','route,suffix'),('Route','player,current,maximum'),('Selection','route'),('Gain','route,sneaking')]:exec(translate(name,args,src),self.ns)
  def test_fullness_and_motion_matrix(self):
   for milk,base in [(0,0),(49.99,0),(50,2),(100,2),(110,2)]:
-   for run,sprint,sneak,offset in [(False,False,False,0),(True,False,False,1),(False,True,False,1),(True,True,True,0)]:
+   for run,sprint,sneak,offset in [(False,False,False,0),(True,False,False,0),(False,True,False,1),(True,True,True,0)]:
     actor=NS(IsSneaking=lambda:sneak,IsRunning=lambda:run,IsSprinting=lambda:sprint)
     self.assertEqual(self.ns['Route'](actor,milk,100),base+offset)
  def test_selections_defaults_none_and_corruption(self):

@@ -239,8 +239,23 @@ foreach ($scriptName in $scriptNames) {
 # framework sources, not the deliberately minimal SDK declarations.
 foreach ($overrideName in $mmeCompatibilityOverrideNames) {
     $overrideImports = "$mmeCompatibilityOverrideSource;$diagnosticSdk;$imports"
-    if ($overrideName -eq 'MilkPlayerLoadGame') { $overrideImports = "$(Join-Path $projectRoot 'tools/mme-load-sdk');$(Join-Path $projectRoot 'tools/pplus-hook-sdk');$imports" }
-    & $compiler (Join-Path $mmeCompatibilityOverrideSource "$overrideName.psc") "-f=$flags" "-i=$overrideImports" "-o=$compiledDir"
+    if ($overrideName -eq 'MilkPlayerLoadGame') {
+        # The compiler resolves script names by import priority even with an absolute
+        # input path. Isolate the real target ahead of the same-name SDK declaration.
+        $startupScratch = Join-Path $projectRoot ("build/diagnostics/startup-compile-" + [guid]::NewGuid().ToString('N'))
+        $startupSource = Join-Path $startupScratch 'source'
+        $startupOutput = Join-Path $startupScratch 'output'
+        New-Item -ItemType Directory -Force -Path $startupSource,$startupOutput | Out-Null
+        Copy-Item -LiteralPath (Join-Path $mmeCompatibilityOverrideSource 'MilkPlayerLoadGame.psc') -Destination $startupSource
+        $overrideImports = "$startupSource;$(Join-Path $projectRoot 'tools/mme-load-sdk');$(Join-Path $projectRoot 'tools/pplus-hook-sdk');$imports"
+        & $compiler (Join-Path $startupSource 'MilkPlayerLoadGame.psc') "-f=$flags" "-i=$overrideImports" "-o=$startupOutput"
+        if ($LASTEXITCODE) { throw 'Real MME startup compilation failed' }
+        & python -B (Join-Path $projectRoot 'tools/check_mme_startup.py') (Join-Path $startupOutput 'MilkPlayerLoadGame.pex')
+        if ($LASTEXITCODE) { throw 'MME startup output failed semantic validation' }
+        Copy-Item -LiteralPath (Join-Path $startupOutput 'MilkPlayerLoadGame.pex') -Destination $compiledDir -Force
+    } else {
+        & $compiler (Join-Path $mmeCompatibilityOverrideSource "$overrideName.psc") "-f=$flags" "-i=$overrideImports" "-o=$compiledDir"
+    }
     if ($LASTEXITCODE -ne 0) { throw "Compilation failed for MME compatibility override $overrideName" }
 }
 & (Join-Path $projectRoot "tools\Test-ScanArrayContracts.ps1") -CompiledDirectory $compiledDir -Assembler (Join-Path (Split-Path -Parent $compiler) "PapyrusAssembler.exe")
@@ -370,6 +385,9 @@ finally {
 & (Join-Path $projectRoot "tools\Test-OStimOnly.ps1")
 & (Join-Path $projectRoot "tools\Build-EstrusUnified.ps1")
 & (Join-Path $projectRoot "tools\Test-EstrusUnifiedContracts.ps1")
+
+# Validate after every compiler has finished, before staging any startup PEX.
+& (Join-Path $projectRoot 'tools/Test-MMEStartupContracts.ps1')
 
 # Recreate a clean staging directory with Skyrim/Vortex-compatible paths.
 if (Test-Path -LiteralPath $stageDir) {
@@ -822,6 +840,8 @@ if (Test-Path -LiteralPath $zipPath) {
     Remove-Item -LiteralPath $zipPath -Force
 }
 Compress-Archive -Path (Join-Path $stageDir "*") -DestinationPath $zipPath -CompressionLevel Optimal
+& python -B (Join-Path $projectRoot 'tools/check_mme_startup.py') $zipPath
+if ($LASTEXITCODE) { throw 'Archive startup-script semantic validation failed' }
 & python -B (Join-Path $projectRoot 'tools\verify_fomod_sources.py') $zipPath
 if ($LASTEXITCODE) { throw 'FOMOD archive contains missing installer sources' }
 & (Join-Path $projectRoot "tools\Test-FomodXmlEncoding.ps1") -ArchivePath $zipPath

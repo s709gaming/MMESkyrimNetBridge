@@ -2215,7 +2215,7 @@ Event OnOptionHighlight(Int option)
         SetInfoText(MMELocalization.Text("Minimum in-game hours between movement slap notifications. Default 8, range 0-48. Zero removes the cooldown; messages still occur only on eligible playback starts. Saved across reloads."))
         Return
     ElseIf option == movementSlapOption
-        SetInfoText(MMELocalization.Text("Play the selected movement loop while walking, running or sneaking. Below 50% uses the low-fullness selections; 50% or higher uses the high-fullness selections. Respects sound masters and scene guards."))
+        SetInfoText(MMELocalization.Text("Walking, normal running and sneaking use the slow route; stamina-consuming sprinting uses the fast route. Below 50% uses low-fullness selections; 50% or higher uses high-fullness selections. Respects sound masters and scene guards."))
         Return
     ElseIf option == movementSlapVolumeOption
         SetInfoText(MMELocalization.Text("Movement slap only. 0% mutes, 100% is the original level, 200% doubles amplitude (+6 dB). Default 100%. Also scaled by Moaning Sound Volume."))
@@ -6068,11 +6068,11 @@ String Function MovementRouteLabel(Int route)
     If route == 0
         Return MMELocalization.Text("Below 50% - Walking")
     ElseIf route == 1
-        Return MMELocalization.Text("Below 50% - Running")
+        Return MMELocalization.Text("Below 50% - Sprinting")
     ElseIf route == 2
         Return MMELocalization.Text("50%+ - Walking")
     EndIf
-    Return MMELocalization.Text("50%+ - Running")
+    Return MMELocalization.Text("50%+ - Sprinting")
 EndFunction
 
 Event OnOptionMenuOpen(Int option)

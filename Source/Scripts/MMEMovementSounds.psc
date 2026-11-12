@@ -1,6 +1,6 @@
 Scriptname MMEMovementSounds Hidden
 
-; Four routes: low walking, low running, full walking, full running.
+; Four routes: low normal movement, low sprinting, full normal movement, full sprinting.
 ; Sound IDs: 0 None, 1 slow slaps, 2 fast slaps, 3 slow flops, 4 fast flops.
 String Function Key(Int route, String suffix) Global
     Return "movementSound" + route + suffix
@@ -11,7 +11,7 @@ Int Function Route(Actor player, Float current, Float maximum) Global
     If current >= maximum * 0.5
         result = 2
     EndIf
-    If !player.IsSneaking() && (player.IsRunning() || player.IsSprinting())
+    If !player.IsSneaking() && player.IsSprinting()
         result += 1
     EndIf
     Return result

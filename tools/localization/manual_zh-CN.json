@@ -262,5 +262,8 @@
   "Slow slaps": "慢速拍打声",
   "Sneak Volume Multiplier": "潜行音量倍率",
   "Choose a loop or None for each fullness and movement route. Sneaking uses the walking selection. Volumes and the sneak multiplier use 5% steps, 0-200%; combined output caps at 200%. Also affected by the existing sound master volume.": "为每种充盈程度与移动状态选择循环音效或无。潜行使用行走音效。音量与潜行倍率范围为0–200%，步长5%；最终音量上限为200%。同时受现有总音量设置影响。",
-  "Play the selected movement loop while walking, running or sneaking. Below 50% uses the low-fullness selections; 50% or higher uses the high-fullness selections. Respects sound masters and scene guards.": "在行走、跑步或潜行时播放所选循环音效。低于50%使用低充盈音效，50%及以上使用高充盈音效。遵循总音效开关与场景保护。"
+  "Play the selected movement loop while walking, running or sneaking. Below 50% uses the low-fullness selections; 50% or higher uses the high-fullness selections. Respects sound masters and scene guards.": "在行走、跑步或潜行时播放所选循环音效。低于50%使用低充盈音效，50%及以上使用高充盈音效。遵循总音效开关与场景保护。",
+  "Below 50% - Sprinting": "低于50% — 冲刺",
+  "50%+ - Sprinting": "50%及以上 — 冲刺",
+  "Walking, normal running and sneaking use the slow route; stamina-consuming sprinting uses the fast route. Below 50% uses low-fullness selections; 50% or higher uses high-fullness selections. Respects sound masters and scene guards.": "行走、普通跑步和潜行使用慢速音效；消耗耐力的冲刺使用快速音效。低于50%使用低充盈音效，50%及以上使用高充盈音效。遵循总音效开关与场景保护。"
 }
