@@ -1,4 +1,6 @@
 {
+  "Movement Polling Fallback": "移动轮询后备",
+  "Checks movement to recover missed footstep events. Default on. Off uses footsteps and a short inactivity timeout only. Applies to player and NPC movement sounds; other monitoring is unchanged.": "检查移动以补偿遗漏的脚步事件，默认开启。关闭后仅使用脚步事件和短暂的停止计时。适用于玩家和NPC的移动音效，不影响其他监测。",
   "Knowledge Pack": "知识包",
   "Previous personal Milk Maid lore": "先前的自定义乳娘背景",
   "Edit this lore in Skyrim.Net > World Knowledge > Skyrim Milk Maid Lore.": "请在 Skyrim.Net > World Knowledge > Skyrim Milk Maid Lore 中编辑此背景。",
@@ -265,5 +267,11 @@
   "Play the selected movement loop while walking, running or sneaking. Below 50% uses the low-fullness selections; 50% or higher uses the high-fullness selections. Respects sound masters and scene guards.": "在行走、跑步或潜行时播放所选循环音效。低于50%使用低充盈音效，50%及以上使用高充盈音效。遵循总音效开关与场景保护。",
   "Below 50% - Sprinting": "低于50% — 冲刺",
   "50%+ - Sprinting": "50%及以上 — 冲刺",
-  "Walking, normal running and sneaking use the slow route; stamina-consuming sprinting uses the fast route. Below 50% uses low-fullness selections; 50% or higher uses high-fullness selections. Respects sound masters and scene guards.": "行走、普通跑步和潜行使用慢速音效；消耗耐力的冲刺使用快速音效。低于50%使用低充盈音效，50%及以上使用高充盈音效。遵循总音效开关与场景保护。"
+  "Walking, normal running and sneaking use the slow route; stamina-consuming sprinting uses the fast route. Below 50% uses low-fullness selections; 50% or higher uses high-fullness selections. Respects sound masters and scene guards.": "行走、普通跑步和潜行使用慢速音效；消耗耐力的冲刺使用快速音效。低于50%使用低充盈音效，50%及以上使用高充盈音效。遵循总音效开关与场景保护。",
+  "NPC Movement Sounds": "NPC移动音效",
+  "NPC Volume Multiplier": "NPC音量倍率",
+  "Nearby Milk Maids share the movement sound routes, volumes and sneak settings. NPC volume is an extra multiplier; combined output caps at 200%.": "附近乳娘共用移动音效、音量和潜行设置。NPC音量为额外倍率；合计输出上限为200%。",
+  "{actor}'s bouncing bounty claps along to her footsteps.": "{actor}跃动的丰盈随着脚步轻拍。",
+  "{actor}'s heavy pair keeps time with every stride.": "{actor}沉甸甸的双峰为每一步打着节拍。",
+  "{actor}'s swinging treasures applaud her every step.": "{actor}摇摆的宝藏为每一步鼓掌。"
 }

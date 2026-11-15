@@ -1761,6 +1761,21 @@
       },
       "formatBadge": "Notification"
     },
+    "Pools.BreastBounceNotifications.movement_npc": {
+      "visible": true,
+      "section": "messages",
+      "feature": "Arousal & Movement",
+      "order": 115,
+      "title": "NPC movement sounds",
+      "description": "Actor-named flavor when a nearby Milk Maid starts moving.",
+      "badge": "On-Screen Message",
+      "shared": false,
+      "note": "",
+      "tokenHelp": {
+        "actor": "The nearby Milk Maid's name."
+      },
+      "formatBadge": "Notification"
+    },
     "Pools.BreastBounceNotifications.movement": {
       "visible": true,
       "section": "messages",

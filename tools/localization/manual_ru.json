@@ -1,4 +1,6 @@
 {
+  "Movement Polling Fallback": "Резервная проверка движения",
+  "Checks movement to recover missed footstep events. Default on. Off uses footsteps and a short inactivity timeout only. Applies to player and NPC movement sounds; other monitoring is unchanged.": "Проверяет движение, если событие шага пропущено. По умолчанию включено. При отключении используются только шаги и короткий таймер остановки. Для игрока и NPC; другие проверки не меняются.",
   "Knowledge Pack": "Пакет знаний",
   "Previous personal Milk Maid lore": "Прежние личные сведения о доярках",
   "Edit this lore in Skyrim.Net > World Knowledge > Skyrim Milk Maid Lore.": "Редактируйте эти сведения в Skyrim.Net > World Knowledge > Skyrim Milk Maid Lore.",
@@ -281,5 +283,11 @@
   "Play the selected movement loop while walking, running or sneaking. Below 50% uses the low-fullness selections; 50% or higher uses the high-fullness selections. Respects sound masters and scene guards.": "Воспроизводить выбранный звук при ходьбе, беге или скрытном движении. Ниже 50% используются звуки низкой наполненности, от 50% — высокой. Учитываются общие переключатели звуков и ограничения сцен.",
   "Below 50% - Sprinting": "Ниже 50% — спринт",
   "50%+ - Sprinting": "50% и выше — спринт",
-  "Walking, normal running and sneaking use the slow route; stamina-consuming sprinting uses the fast route. Below 50% uses low-fullness selections; 50% or higher uses high-fullness selections. Respects sound masters and scene guards.": "Ходьба, обычный бег и скрытность используют медленный звук; спринт с расходом запаса сил — быстрый. Ниже 50% — низкая наполненность, от 50% — высокая. Учитываются общие переключатели звуков и ограничения сцен."
+  "Walking, normal running and sneaking use the slow route; stamina-consuming sprinting uses the fast route. Below 50% uses low-fullness selections; 50% or higher uses high-fullness selections. Respects sound masters and scene guards.": "Ходьба, обычный бег и скрытность используют медленный звук; спринт с расходом запаса сил — быстрый. Ниже 50% — низкая наполненность, от 50% — высокая. Учитываются общие переключатели звуков и ограничения сцен.",
+  "NPC Movement Sounds": "Звуки движения NPC",
+  "NPC Volume Multiplier": "Множитель громкости NPC",
+  "Nearby Milk Maids share the movement sound routes, volumes and sneak settings. NPC volume is an extra multiplier; combined output caps at 200%.": "Ближайшие молочницы используют общие звуки, громкость и настройки скрытности. Громкость NPC — дополнительный множитель; общий предел 200%.",
+  "{actor}'s bouncing bounty claps along to her footsteps.": "Пышные сокровища {actor} хлопают в такт её шагам。",
+  "{actor}'s heavy pair keeps time with every stride.": "Тяжёлая парочка {actor} отбивает ритм каждого шага。",
+  "{actor}'s swinging treasures applaud her every step.": "Колышущиеся сокровища {actor} аплодируют каждому шагу。"
 }

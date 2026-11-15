@@ -1,3 +1,4 @@
+#include "../include/MovementSoundPlayback.h"
 #include "../include/DwemerAttachmentRegistry.h"
 #include <SKSE/SKSE.h>
 #include "../include/LockProtection.h"
@@ -666,9 +667,8 @@ namespace
         return info ? info->parentTopic : nullptr;
     }
 
-    bool IsPlayerMovingOnFoot(RE::StaticFunctionTag*)
+    bool IsActorMovingOnFoot(RE::StaticFunctionTag*, RE::Actor* player)
     {
-        auto* player = RE::PlayerCharacter::GetSingleton();
         auto* ui = RE::UI::GetSingleton();
         if (!player || !ui || ui->GameIsPaused() ||
             ui->IsMenuOpen("Dialogue Menu") || player->IsDead() || player->IsDisabled() ||
@@ -687,6 +687,11 @@ namespace
         const auto& movement = state->actorState1;
         return movement.movingForward || movement.movingBack ||
                movement.movingLeft || movement.movingRight;
+    }
+
+    bool IsPlayerMovingOnFoot(RE::StaticFunctionTag* tag)
+    {
+        return IsActorMovingOnFoot(tag, RE::PlayerCharacter::GetSingleton());
     }
 
     // Optional RaceMenu bridge. No NiOverride script or plugin master is shipped.
@@ -923,6 +928,10 @@ namespace
         vm->RegisterFunction("GetFormSourceFiles", "MMEExtensionsNative", GetFormSourceFiles);
         vm->RegisterFunction("GetParentTopic", "MMEExtensionsNative", GetParentTopic);
         vm->RegisterFunction("IsPlayerMovingOnFoot", "MMEExtensionsNative", IsPlayerMovingOnFoot);
+        vm->RegisterFunction("IsActorMovingOnFoot", "MMEExtensionsNative", IsActorMovingOnFoot);
+        vm->RegisterFunction("ConfigureMovementAudio", "MMEExtensionsNative", MME::MovementPlayback::Configure);
+        vm->RegisterFunction("RemoveMovementAudio", "MMEExtensionsNative", MME::MovementPlayback::Remove);
+        vm->RegisterFunction("GetMovementAudioInstance", "MMEExtensionsNative", MME::MovementPlayback::Instance);
         vm->RegisterFunction("GetMovementSlapSession", "MMEExtensionsNative", GetMovementSlapSession);
         vm->RegisterFunction("GetArousalFrameworkKind", "MMEExtensionsNative", GetArousalFrameworkKind);
         vm->RegisterFunction("GetMaidBodyFailureReason", "MMEExtensionsNative", GetMaidBodyFailureReason);
@@ -1233,6 +1242,7 @@ namespace
             // Papyrus OnUpdate pauses with the game. Publish menu entry so the
             // owned movement loop is stopped even while its watchdog is paused.
             if (event && event->opening) {
+                SKSE::GetTaskInterface()->AddTask([] { MME::MovementPlayback::Pause(); });
                 if (auto* source = SKSE::GetModCallbackEventSource()) {
                     const SKSE::ModCallbackEvent pauseEvent{
                         "MMEExtensions_MovementSlapPause", event->menuName, 0.0F, nullptr };
@@ -1271,6 +1281,7 @@ namespace
     {
         if (message->type == SKSE::MessagingInterface::kPreLoadGame ||
             message->type == SKSE::MessagingInterface::kNewGame) {
+            MME::MovementPlayback::Reset();
             MME::DwemerAttachments::Invalidate();
             gMovementSlapSession.fetch_add(1);
             MME::LockProtection::ResetSession();
@@ -1282,6 +1293,7 @@ namespace
         if (message->type == SKSE::MessagingInterface::kDataLoaded) {
             MME::NarrationEditor::Invalidate();
             InitializeSocialVenueForms();
+            MME::MovementPlayback::Initialize();
             LifecycleEventSink::GetSingleton()->Register();
             MME::DwemerAttachments::Initialize();
         }

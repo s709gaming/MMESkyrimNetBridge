@@ -12,6 +12,10 @@
       "movement": {
         "format": "Notification. Quick flavor text; maximum 90 characters.",
         "intent": "Add playful erotic flavor when breasts slap during movement."
+      },
+      "movement_npc": {
+        "format": "Notification. Actor-named movement flavor; maximum 90 characters.",
+        "intent": "Describe a nearby Milk Maid’s movement without addressing the player."
       }
     }
   },
@@ -35,5 +39,10 @@
     "Ваши здоровенные дыни сытно чмокают друг друга при каждом шаге.",
     "Ваши качающиеся холмы сталкиваются с довольно восторженным хлопком.",
     "Ваши увесистые близнецы продолжают сталкиваться друг с другом, аплодируя каждому вашему шагу."
+  ],
+  "movement_npc": [
+    "Пышные сокровища {actor} хлопают в такт её шагам。",
+    "Тяжёлая парочка {actor} отбивает ритм каждого шага。",
+    "Колышущиеся сокровища {actor} аплодируют каждому шагу。"
   ]
 }

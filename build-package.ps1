@@ -1,4 +1,5 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
+& (Join-Path $PSScriptRoot "tools/Test-MovementPlayback.ps1")
 & python -B (Join-Path $PSScriptRoot "tools/test_movement_routes.py")
 if ($LASTEXITCODE) { throw "Movement sound regression checks failed" }
 & python -B (Join-Path $PSScriptRoot "tools/test_optional_framework_guards.py")
@@ -65,6 +66,9 @@ $scriptNames = @("MMELog", "MMEDebug", "MMEAlertsController", "MMEAlertsMCM", "M
 $quickStartSourceDir = Join-Path $projectRoot "fomod\choices\recommended-quickstart\Source\Scripts"
 $scriptNames += "MMEItemAttachments"
 $scriptNames += "MMEMovementSounds"
+$scriptNames += "MMEMovementSoundPlayback"
+& python -B (Join-Path $projectRoot 'tools/test_npc_movement.py')
+if ($LASTEXITCODE) { throw 'NPC movement playback regressions failed' }
 $scriptNames += "MMEOriginalSettings"
 $scriptNames += "MMELocalization"
 $scriptNames += "MMEMilkingSource"
@@ -447,6 +451,7 @@ Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Milking-Source-API.md') -De
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Dwemer-Instance-Attachments.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Individual-Armor-Fittings.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Movement-Sounds.md') -Destination $packageDocs
+Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\NPC-Movement-Sounds.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Preferred-Milk-Type.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Armor-Lock-And-Dwemer-Collection.md') -Destination $packageDocs
 Copy-Item -LiteralPath (Join-Path $projectRoot 'docs\Milk-Maid-Knowledge-Pack.md') -Destination $packageDocs

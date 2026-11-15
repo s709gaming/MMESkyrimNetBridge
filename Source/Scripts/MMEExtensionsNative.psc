@@ -25,6 +25,8 @@ String Function DescribeNarrationEditorReply(String payload) Global Native
 
 ; Read-only player movement state; keyboard, controller and auto-move aware.
 Bool Function IsPlayerMovingOnFoot() Global Native
+; Actor-scoped companion; the original player signature remains unchanged.
+Bool Function IsActorMovingOnFoot(Actor target) Global Native
 
 ; Session token for rejecting audio instance IDs restored from another load.
 Int Function GetMovementSlapSession() Global Native
@@ -88,3 +90,8 @@ Function CancelDwemerRequests() Global Native
 ; Generic instance class: 0 none, 1 Milking, 2 Living, 3 Tentacle, 4 Dwemer.
 Int Function GetWornItemAttachmentClass(Actor wearer, Armor item) Global Native
 Int Function QueueItemAttachment(Actor wearer, Armor item, Int operation, String expectedIdentity, Bool diagnostic, Int fittedLevel, Int armorClass) Global Native
+
+; Native actor-owned playback. Configure renews eligibility; it never converts actors.
+Function ConfigureMovementAudio(Actor target, Int[] choices, Float[] gains, Float[] sneakGains, Int baseRoute, Bool polling, Bool traceEnabled) Global Native
+Function RemoveMovementAudio(Actor target) Global Native
+Int Function GetMovementAudioInstance(Actor target) Global Native

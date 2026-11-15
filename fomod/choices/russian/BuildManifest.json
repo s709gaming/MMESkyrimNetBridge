@@ -7,15 +7,15 @@
     "core/SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorCheckReminders.json": "7ccfd6de17498c97a4b1bd13ee5268f900e5b3fa0f9d10252f07f0b65af128f9",
     "core/SKSE/Plugins/StorageUtilData/MMEAlerts/ArmorIntroductionStories.json": "e3ba31c99202e8e7784d7963c29e803585364a1198b6e08b321fe2e20079e65f",
     "core/SKSE/Plugins/StorageUtilData/MMEAlerts/ArousalEffects.json": "ea340ab20a64c0c2f320090455ae51f65b3c0e6ad08400ac67c127ab2e4b8650",
-    "core/SKSE/Plugins/StorageUtilData/MMEAlerts/BreastBounceNotifications.json": "f3298875cc9b27f4896984eeeef000d9d64cba53d420f8742547001f7f2b3a62",
+    "core/SKSE/Plugins/StorageUtilData/MMEAlerts/BreastBounceNotifications.json": "dc981930b6d7f4d7ea87cb2bcaa455dc7bec2d0abece3f21b3c79a519e71a4be",
     "core/SKSE/Plugins/StorageUtilData/MMEAlerts/DwemerArmorStories.json": "cea07c855bf8e12bcb715c134712691c9d0938964de6b0393c2c851c6a13ee2f",
     "core/SKSE/Plugins/StorageUtilData/MMEAlerts/DwemerEffectNotifications.json": "0723aac2094d1baf305e7c35ddefacb7dac29924646f6e641d6a05b249042479",
     "core/SKSE/Plugins/StorageUtilData/MMEAlerts/FlavorNotifications.json": "b101ae899056a81beafcfc3d40234337d903a864f071399795408ace918aa0f4",
     "core/SKSE/Plugins/StorageUtilData/MMEAlerts/ForcedMilkMaidConversion.json": "0bb1a7d8490ec181738649963ca815ea23d970cf85623bf2b752853a3417126d",
     "core/SKSE/Plugins/StorageUtilData/MMEAlerts/Injection.json": "23bce4654d10efc46aae35e8846099857255616c9af64283806c4526fc60121c",
     "core/SKSE/Plugins/StorageUtilData/MMEAlerts/Localization/Active.json": "9d055f8583f68a9d8817c1fc7ddfeb3975b68eea3dfc4cfee0807476919b0aad",
-    "core/SKSE/Plugins/StorageUtilData/MMEAlerts/Localization/ru.catalog.json": "7ec9a87b322f64dae969382aaddcd0774147a7431b5721e6ef15c090261551f2",
-    "core/SKSE/Plugins/StorageUtilData/MMEAlerts/Localization/ru.json": "cf2e97a522f13de8b8bf0ff86544fab43d47defd9fa61b41e39f4122e8623791",
+    "core/SKSE/Plugins/StorageUtilData/MMEAlerts/Localization/ru.catalog.json": "a5f49d920afe5f2792d61d939291548d72dec1d4110bdf2519bf07b4195aa0fa",
+    "core/SKSE/Plugins/StorageUtilData/MMEAlerts/Localization/ru.json": "8c4b97719e798ffe5eacb37624efa6f34f6a72fcfece3acdc9ce9062bd72a7a1",
     "core/SKSE/Plugins/StorageUtilData/MMEAlerts/MilkCravings.json": "c2a281ddb7bc90ce00b1921b8ed39abb05d6f819c8f2dc324606c35b6594ff2c",
     "core/SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Armor.json": "c2250a2b0c71f56ef41e1ec8a0a3f65ad956d14cd3670ce22047d41c10b4874f",
     "core/SKSE/Plugins/StorageUtilData/MMEAlerts/Narration/Breastfeeding.json": "3be7f4ef5701764540107c2bc1b0baad0df588ba1366fb941cba8d52d5bdd21f",
@@ -35,7 +35,7 @@
     "core/SKSE/Plugins/StorageUtilData/MMEAlerts/TimedArmorNotifications.json": "79ad172cb7f0d2183a9ac204a4dc8fdfaf8c67d1a4fdb4d748b10da1066241bd",
     "elsie/MME Extensions - Elsie LaVache Fix.esp": "11e6b1880d6a70644c121ef25f2065d801c62c171cdfb11e8e2fe5c14e76e679",
     "leaks/MME Extensions - Milk Leaks.esp": "a1ed0f896a5fd5d27e2eedb5b163b7226dd3a21b7a9df1cde303c4c8355aa12a",
-    "roster/Magelight/mmeextensions/views/roster/locale.js": "cf4ff77992ed280758bfde4ba6a06f753bffd0e1c2890a73401422950d300cc9",
+    "roster/Magelight/mmeextensions/views/roster/locale.js": "633dd5d692772aa7077a3f98f7c2e97f0dcbff30efa0e353ec67f369ff033a75",
     "roster/MME Extensions - Maid Roster.esp": "278d47914d5a7938c5ee8f529810cbd6d69fbeb6153f9333952632ee453c1f88"
   }
 }

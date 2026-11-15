@@ -81,11 +81,11 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  assert.equal(elements['editor-list'].children[1].attributes['data-entry-id'],'Lore.shared_guidance');
  assert(!elements['editor-list'].children.some(c=>c.attributes['data-entry-id']==='Fullness.nearby_status_summary'),'internal assembly is hidden');
 
- elements['editor-messages'].listeners.click();assert.equal(elements['editor-list'].children.length,69);
+ elements['editor-messages'].listeners.click();assert.equal(elements['editor-list'].children.length,70);
  assert(elements['editor-minor-note'].textContent.includes('17 minor messages hidden'));
- elements['editor-minor'].checked=true;elements['editor-minor'].listeners.change();assert.equal(elements['editor-list'].children.length,86);
+ elements['editor-minor'].checked=true;elements['editor-minor'].listeners.change();assert.equal(elements['editor-list'].children.length,87);
  let minor=await open('Pools.FlavorNotifications.custom_living_remove');let minorField=descendants(minor,'textarea')[0];minorField.value='You escape {armorName}.';minorField.listeners.input();
- elements['editor-minor'].checked=false;elements['editor-minor'].listeners.change();assert.equal(elements['editor-list'].children.length,69);
+ elements['editor-minor'].checked=false;elements['editor-minor'].listeners.change();assert.equal(elements['editor-list'].children.length,70);
  assert(elements['editor-changes'].textContent.includes('1 unsaved'),'hidden minor draft remains staged');
  elements['editor-minor'].checked=true;elements['editor-minor'].listeners.change();minor=await open('Pools.FlavorNotifications.custom_living_remove');assert.equal(descendants(minor,'textarea')[0].value,'You escape {armorName}.');
  elements['editor-reload'].listeners.click();elements['confirm-accept'].listeners.click();await settle();
@@ -202,5 +202,5 @@ async function open(id){const card=elements['editor-list'].children.find(c=>c.at
  assert.equal(oldLore.length,1);assert.equal(oldLore[0].value,'My previous custom lore');assert(oldLore[0].readOnly);
  assert(!descendants(loreCard.children[1],'button').some(b=>b.textContent==='Reset this entry'));
  console.log('PASS: pencil rename/cancel, staged saves, literal Unicode title, translation exclusion, search and reset');
- console.log('PASS: actual dashboard JS: 63 AI/69 normal/86 expanded message entries, minor filtering/drafts/reset, lore-first order, shared badges, persistence, atomic save and session recovery.');
+ console.log('PASS: actual dashboard JS: 63 AI/70 normal/87 expanded message entries, minor filtering/drafts/reset, lore-first order, shared badges, persistence, atomic save and session recovery.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

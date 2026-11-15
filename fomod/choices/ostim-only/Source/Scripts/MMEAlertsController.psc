@@ -133,6 +133,7 @@ Function InitializeController(Bool reportStatus = False)
     RegisterForModEvent("MMEExtensions_MaidBodyComplete", "OnMaidBodyComplete")
     MMEMaidBodyScaling.ReconcileAll("controller initialized", True)
     StopMovementSlap("controller initialization")
+    MMEMovementSoundPlayback.Reset("controller initialization")
     MovementSlapPlayer = Game.GetPlayer()
     MovementSlapMilkController = Quest.GetQuest("MME_MilkQUEST") as MilkQUEST
     MovementSlapSound = None
@@ -140,6 +141,8 @@ Function InitializeController(Bool reportStatus = False)
     MovementSoundRoute = -1
     UnregisterForModEvent("MMEExtensions_MovementSlapPause")
     RegisterForModEvent("MMEExtensions_MovementSlapPause", "OnMovementSlapPause")
+    RegisterForModEvent("MMEExtensions_MovementAudioTrace", "OnMovementAudioTrace")
+    RegisterForModEvent("MMEExtensions_MovementAudioAlarm", "OnMovementAudioAlarm")
     ; Phase 1: refresh conditional forms and recover legacy animation state
     ; before honoring the master toggle. The OStim Global must also be correct
     ; while disabled so Skyrim cannot retain a stale dialogue choice.
@@ -403,6 +406,7 @@ Function DisableController()
     MMEExtensionsNative.ResetLockProtection()
     MMEMaidBodyScaling.ReconcileAll("Extensions disabled")
     StopMovementSlap("Extensions disabled")
+    MMEMovementSoundPlayback.Reset("Extensions disabled")
     NextMovementSlapUpdate = 0.0
     UnregisterForModEvent("MMEExtensions_MovementSlapPause")
     ; Symmetric teardown for every registration and deadline owned by this quest.
@@ -1856,8 +1860,10 @@ EndFunction
 
 ; Synchronizes optional capacity polling with its persisted MCM toggle.
 Function UpdatePolling()
+    MMEMovementSounds.Invalidate()
     MovementSlapLastBlockReason = "<not checked>"
     StopMovementSlap("scheduler settings changed")
+    MMEMovementSoundPlayback.Reset("scheduler settings changed")
     NextMovementSlapUpdate = 0.0
     ; Rebuild absolute deadlines from MCM settings. This function owns the only
     ; recurring capacity/Skyrim.Net/debug schedules; armor checks remain
@@ -2130,6 +2136,7 @@ Event OnUpdate()
     MMEActorPromptState.ExpireRecent()
     If !IsExtensionsEnabled()
         StopMovementSlap("Extensions disabled")
+        MMEMovementSoundPlayback.Reset("Extensions disabled during update")
         NextMovementSlapUpdate = 0.0
     EndIf
     MMEMilkingDiagnostics.CheckWatchdogs()
@@ -2572,7 +2579,7 @@ String Function GetMovementSlapBlockReason()
     If JsonUtil.GetFloatValue(SettingsFile, "reactionSoundVolume", 100.0) <= 0.0
         Return "muted"
     EndIf
-    If Utility.IsInMenuMode() || !Game.IsMovementControlsEnabled() || !MMEExtensionsNative.IsPlayerMovingOnFoot()
+    If Utility.IsInMenuMode() || !Game.IsMovementControlsEnabled()
         Return "player not moving on foot or controls/menu blocked"
     EndIf
     If MovementSlapPlayer == None || MovementSlapMilkController == None
@@ -2605,13 +2612,14 @@ String Function GetMovementSlapBlockReason()
 EndFunction
 
 Function UpdateMovementSlap()
+    MMEMovementSoundPlayback.Update()
     If MovementSlapUpdating
         Return
     EndIf
     MovementSlapUpdating = True
     String reason = GetMovementSlapBlockReason()
     If reason != MovementSlapLastBlockReason
-        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] eligibility changed | actor=PLAYER | eligible=" + (reason == "") + " | reason=" + reason)
+        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] eligibility changed | actor=PLAYER | reason=" + reason)
         MovementSlapLastBlockReason = reason
     EndIf
     If reason != ""
@@ -2621,71 +2629,23 @@ Function UpdateMovementSlap()
     EndIf
     Float currentMilk = StorageUtil.GetFloatValue(MovementSlapPlayer, "MME.MilkMaid.MilkCount", 0.0)
     Float maximumMilk = StorageUtil.GetFloatValue(MovementSlapPlayer, "MME.MilkMaid.MilkMaximum", 0.0)
-    Int route = MMEMovementSounds.Route(MovementSlapPlayer, currentMilk, maximumMilk)
-    Int choice = MMEMovementSounds.Selection(route)
-    Float selectedGain = MMEMovementSounds.Gain(route, MovementSlapPlayer.IsSneaking())
-    If choice == 0 || selectedGain <= 0.0
-        StopMovementSlap("selected None or route muted")
-        MovementSlapUpdating = False
-        Return
+    Int baseRoute = 0
+    If currentMilk >= maximumMilk * 0.5
+        baseRoute = 2
     EndIf
-    If choice != MovementSoundChoice || route != MovementSoundRoute
-        StopMovementSlap("movement/fullness selection changed")
-        MovementSoundChoice = choice
-        MovementSoundRoute = route
-        MovementSlapSound = MMEMovementSounds.Resolve(choice)
-        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] selection | actor=PLAYER | route=" + route + " | sound=" + choice)
-    EndIf
-    If MovementSlapSound == None
-        If !MovementSlapAlarmActive
-            MMELog.Alarm("[MME Extensions Movement Slap] cannot start player loop: selected movement SOUN unavailable")
-            MovementSlapAlarmActive = True
-        EndIf
-        MovementSlapUpdating = False
-        Return
-    EndIf
-    Bool notifyOnStart = False
-    Int notificationGeneration = MovementSlapGeneration
-    If MovementSlapInstance < 0
-        MovementSlapSession = MMEExtensionsNative.GetMovementSlapSession()
-        Int generation = MovementSlapGeneration
-        Int instance = MovementSlapSound.Play(MovementSlapPlayer)
-        If instance < 0
-            If !MovementSlapAlarmActive
-                MMELog.Alarm("[MME Extensions Movement Slap] cannot start player loop: Sound.Play failed")
-                MovementSlapAlarmActive = True
-            EndIf
-            MovementSlapUpdating = False
-            Return
-        EndIf
-        If generation != MovementSlapGeneration || GetMovementSlapBlockReason() != ""
-            If MovementSlapSession == MMEExtensionsNative.GetMovementSlapSession()
-                Sound.StopInstance(instance)
-            EndIf
-            MovementSlapUpdating = False
-            Return
-        EndIf
-        MovementSlapInstance = instance
-        ; Publish ownership before the final generation check so an interleaved
-        ; menu/load callback either sees the handle or invalidates this start.
-        If generation != MovementSlapGeneration
-            StopMovementSlap("start interrupted")
-            MovementSlapUpdating = False
-            Return
-        EndIf
-        MovementSlapAlarmActive = False
-        notifyOnStart = True
-        notificationGeneration = MovementSlapGeneration
-        MMELog.MasterDiagnostic("[MME Extensions Movement Slap] start | actor=PLAYER | movement loop | instance=" + instance)
-    EndIf
-    Sound.SetInstanceVolume(MovementSlapInstance, selectedGain)
-    If notifyOnStart && notificationGeneration == MovementSlapGeneration && MovementSlapInstance >= 0
+    MMEMovementSounds.Configure(MovementSlapPlayer, baseRoute, False)
+    Int instance = MMEExtensionsNative.GetMovementAudioInstance(MovementSlapPlayer)
+    Bool started = instance >= 0 && instance != MovementSlapInstance
+    MovementSlapInstance = instance
+    MovementSlapSession = MMEExtensionsNative.GetMovementSlapSession()
+    If started
         TryMovementSlapNotification()
     EndIf
     MovementSlapUpdating = False
 EndFunction
 
 Function StopMovementSlap(String reason)
+    MMEExtensionsNative.RemoveMovementAudio(Game.GetPlayer())
     MovementSlapGeneration += 1
     Int instance = MovementSlapInstance
     MovementSlapInstance = -1
@@ -2697,12 +2657,17 @@ EndFunction
 
 Event OnMovementSlapPause(String eventName, String menuName, Float unusedValue, Form sender)
     StopMovementSlap("menu opened: " + menuName)
+    MMEMovementSoundPlayback.StopAll("menu opened: " + menuName)
 EndEvent
 
 Function ResetMovementSlapAfterLoad()
+    RegisterForModEvent("MMEExtensions_MovementAudioTrace", "OnMovementAudioTrace")
+    RegisterForModEvent("MMEExtensions_MovementAudioAlarm", "OnMovementAudioAlarm")
+    MMEMovementSounds.Invalidate()
     ; Audio handles are session-local. Skyrim clears audio on load; never stop
     ; a saved numeric handle that may now belong to an unrelated sound.
     StopMovementSlap("load callback")
+    MMEMovementSoundPlayback.Reset("load callback")
     MovementSlapSession = MMEExtensionsNative.GetMovementSlapSession()
     MovementSlapUpdating = False
     MovementSlapAlarmActive = False
@@ -2781,4 +2746,12 @@ EndFunction
 Event OnPromptLoreEdited(String eventName, String reply, Float numArg, Form sender)
     ; Editor completion is infrequent; resolve the current personal text again.
     MMEActorPromptState.Initialize()
+EndEvent
+
+Event OnMovementAudioTrace(String eventName, String detail, Float unused, Form sender)
+    MMELog.MasterDiagnostic("[MME Movement Native] " + detail)
+EndEvent
+
+Event OnMovementAudioAlarm(String eventName, String detail, Float unused, Form sender)
+    MMELog.Alarm("[MME Movement Native] " + detail)
 EndEvent

@@ -8,7 +8,7 @@ class AuthoringMetadata(unittest.TestCase):
   source=(ROOT/'include/NarrationCatalog.h').read_text(encoding='utf-8')
   self.catalog=json.loads(''.join(re.findall(r'R"MMECATALOG\((.*?)\)MMECATALOG"',source,re.S)))['entries']
  def test_every_entry_has_only_format_and_intent(self):
-  self.assertEqual(len(self.catalog),185)
+  self.assertEqual(len(self.catalog),186)
   for id,meta in self.catalog.items():
    with self.subTest(id=id):
     document=json.loads((DATA/meta['file']).read_text(encoding='utf-8-sig'))

@@ -11,7 +11,7 @@ class MovementRoutes(unittest.TestCase):
  def setUp(self):
   self.settings={};self.ns={'JsonUtil':NS(GetFloatValue=lambda f,k,d:self.settings.get(k,d),GetIntValue=lambda f,k,d:self.settings.get(k,d))}
   src=SOURCE.replace('+ route +','+ str(route) +')
-  for name,args in [('Key','route,suffix'),('Route','player,current,maximum'),('Selection','route'),('Gain','route,sneaking')]:exec(translate(name,args,src),self.ns)
+  for name,args in [('Key','route,suffix'),('Route','player,current,maximum'),('Selection','route'),('GainForActor','route,sneaking,npc'),('Gain','route,sneaking')]:exec(translate(name,args,src),self.ns)
  def test_fullness_and_motion_matrix(self):
   for milk,base in [(0,0),(49.99,0),(50,2),(100,2),(110,2)]:
    for run,sprint,sneak,offset in [(False,False,False,0),(True,False,False,0),(False,True,False,1),(True,True,True,0)]:
@@ -38,6 +38,16 @@ class MovementRoutes(unittest.TestCase):
    if struct.unpack('<I',key)[0]&0xffffff!=0x8C4:self.assertEqual(current[key],value)
   collision=now.replace(b'MMEAlerts_SNDR_SlowSlaps',b'MMEAlerts_SNDR_WrongName');self.assertEqual(len(collision),len(now))
   with self.assertRaisesRegex(AssertionError,'collision'):build(collision)
+ def test_npc_multiplier_before_final_cap(self):
+  self.settings['movementSoundNPCVolume']=50
+  self.assertEqual(self.ns['GainForActor'](0,False,True),.25)
+  self.assertEqual(self.ns['Gain'](0,False),.5)
+  self.settings.update(movementSound0Volume=200,reactionSoundVolume=200)
+  self.assertEqual(self.ns['GainForActor'](0,False,True),1)
+  self.settings['movementSoundNPCVolume']=0
+  self.assertEqual(self.ns['GainForActor'](0,False,True),0)
+  self.settings['movementSoundNPCVolume']=200
+  self.assertEqual(self.ns['GainForActor'](0,True,True),1)
  def test_four_assets_and_marker_links(self):
   local={struct.unpack_from('<I',r,12)[0]&0xffffff:r for r in records((ROOT/'MMEAlert.esp').read_bytes())}
   for descriptor,marker,label,filename in ROUTES:
@@ -59,8 +69,8 @@ class MovementRoutes(unittest.TestCase):
   old=groups(subprocess.check_output(['git','show','HEAD:MMEAlert.esp'],cwd=ROOT));now=groups((ROOT/'MMEAlert.esp').read_bytes());self.assertEqual(set(old),set(now))
   for signature in set(old)-{b'SNDR',b'SOUN'}:self.assertEqual(now[signature],old[signature])
  def test_existing_guards_and_notifications_remain(self):
-  s=(ROOT/'Source/Scripts/MMEAlertsController.psc').read_text();self.assertIn('StopMovementSlap("movement/fullness selection changed")',s);self.assertIn('MMEMovementSounds.Gain(route, MovementSlapPlayer.IsSneaking())',s)
-  for guard in ['IsPlayerMovingOnFoot','IsDhlpSuspended','IsMMEMilking','IsActorActive','IsActorInScene','MovementSlapGeneration','MovementSlapSession']:self.assertIn(guard,s)
+  s=(ROOT/'Source/Scripts/MMEAlertsController.psc').read_text();self.assertIn('MMEMovementSounds.Configure(MovementSlapPlayer, baseRoute, False)',s);self.assertIn('GetMovementAudioInstance',s)
+  for guard in ['IsDhlpSuspended','IsMMEMilking','IsActorActive','IsActorInScene','MovementSlapGeneration','MovementSlapSession']:self.assertIn(guard,s)
   notification=s.split('Function TryMovementSlapNotification()')[1];self.assertIn('<= milkMaximum * 0.5',notification)
   m=(ROOT/'Source/Scripts/MMEAlertsMCM.psc').read_text();self.assertIn('SetSliderDialogInterval(5.0)',m);self.assertIn('Event OnOptionMenuAccept(Int option, Int index)',m);self.assertIn('index > 4',m)
 if __name__=='__main__':unittest.main()

@@ -57,7 +57,10 @@ for page, text in builders.items():
         assignments[option] = page
 for option, page in homes.items():
     assert assignments.get(option) == page, (option, assignments.get(option), page)
-assert len(assignments) == 330
+assert len(assignments) == 333
+assert assignments['movementPollingOption'] == 'DrawBodyPage'
+assert assignments['movementNPCOption'] == 'DrawBodyPage'
+assert assignments['movementNPCVolumeOption'] == 'DrawBodyPage'
 assert 'MMESexLabBreastfeedingBackend.GetBackendName()' in MCM
 assert 'does not switch the installed' in MCM
 assert 'Milk Mastery (Maid Slots)' in FACADE and 'unlocks more Milk Maid slots' in MCM

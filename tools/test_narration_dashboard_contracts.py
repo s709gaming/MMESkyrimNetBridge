@@ -6,13 +6,13 @@ class DashboardContracts(unittest.TestCase):
     def test_catalog_covers_authored_sources(self):
         header=(ROOT/'include/NarrationCatalog.h').read_text(encoding='utf-8')
         catalog=json.loads(''.join(re.findall(r'R"MMECATALOG\((.*?)\)MMECATALOG"',header,re.S)))['entries']
-        self.assertEqual(len(catalog),185)
-        self.assertEqual(sum(k.startswith('Pools.') for k in catalog),99)
+        self.assertEqual(len(catalog),186)
+        self.assertEqual(sum(k.startswith('Pools.') for k in catalog),100)
         presentation=json.loads((ROOT/'tools/narration-presentation.json').read_text(encoding='utf-8'))
         self.assertEqual(set(presentation['entries']),set(catalog))
         visible=[m['presentation'] for m in catalog.values() if m['presentation']['visible']]
         self.assertEqual(sum(m['section']=='skyrimnet' for m in visible),63)
-        self.assertEqual(sum(m['section']=='messages' for m in visible),86)
+        self.assertEqual(sum(m['section']=='messages' for m in visible),87)
         self.assertFalse(catalog['Fullness.nearby_status_summary']['presentation']['visible'])
         self.assertFalse(catalog['MilkDrinking.narrate_n_p_c_milk_drink_3']['presentation']['visible'])
         self.assertEqual(catalog['Pools.MilkCravings.craving']['presentation']['section'],'messages')

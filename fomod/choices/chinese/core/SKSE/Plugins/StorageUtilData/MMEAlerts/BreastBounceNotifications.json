@@ -12,6 +12,10 @@
       "movement": {
         "format": "Notification. Quick flavor text; maximum 90 characters.",
         "intent": "Add playful erotic flavor when breasts slap during movement."
+      },
+      "movement_npc": {
+        "format": "Notification. Actor-named movement flavor; maximum 90 characters.",
+        "intent": "Describe a nearby Milk Maid’s movement without addressing the player."
       }
     }
   },
@@ -35,5 +39,10 @@
     "你们的每一步都用巨大的瓜互相撞击。",
     "摇曳的山峦碰撞在一起，发出相当热烈的掌声。",
     "你那沉重的双胞胎不断碰撞在一起，为你的每一步鼓掌。"
+  ],
+  "movement_npc": [
+    "{actor}跃动的丰盈随着脚步轻拍。",
+    "{actor}沉甸甸的双峰为每一步打着节拍。",
+    "{actor}摇摆的宝藏为每一步鼓掌。"
   ]
 }

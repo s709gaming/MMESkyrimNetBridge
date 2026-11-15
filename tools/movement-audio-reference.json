@@ -1,0 +1,10 @@
+{
+  "gain": 1.75,
+  "baselineComparisonPassed": true,
+  "sha256": {
+    "slow flops loop.wav": "fe53b3db825989b21bfd103452618a69c7cc55c6dd031c2aa1471bbac6b43cf1",
+    "fast flops loop.wav": "fd559ed0872ea2241904579c2bd61c216b3eac0532c8c2ec838f949cb3786aaf",
+    "slow slaps loop.wav": "99ae60d6bf6cd8b8e61eefeffca27d4d415fa74e80466c4dbeecb5736409aa13",
+    "fast slaps loop.wav": "67e96bbfad66c900ca7dbe23041d8b9de35f27495cd8c479048f5031c18f5e64"
+  }
+}

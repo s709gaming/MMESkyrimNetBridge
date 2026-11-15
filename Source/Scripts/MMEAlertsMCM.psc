@@ -72,6 +72,9 @@ Int forcedMilkMaidLactacidStoryOption
 Int forcedMilkMaidNarrationOption
 Int forcedMilkMaidDiagnosticOption
 Int movementSlapOption
+Int movementPollingOption = -1
+Int movementNPCOption = -1
+Int movementNPCVolumeOption = -1
 Int[] movementSoundMenus
 Int[] movementSoundVolumes
 Int movementSneakVolumeOption = -1
@@ -352,7 +355,7 @@ Int diagnosticMageBusFailureOption
 
 ; SkyUI uses this version to run settings migrations on existing saves.
 Int Function GetVersion()
-    Return 173
+    Return 175
 EndFunction
 
 Function SetPageNames()
@@ -1716,6 +1719,18 @@ Function EnsureDefaults()
         JsonUtil.SetIntValue(SettingsFile, "movementSlapFlatStripMigration156", 1)
         JsonUtil.Save(SettingsFile, False)
     EndIf
+    If !JsonUtil.HasIntValue(SettingsFile, "enableMovementSoundPolling")
+        JsonUtil.SetIntValue(SettingsFile, "enableMovementSoundPolling", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If !JsonUtil.HasIntValue(SettingsFile, "enableMovementSoundNPC")
+        JsonUtil.SetIntValue(SettingsFile, "enableMovementSoundNPC", 1)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
+    If !JsonUtil.HasFloatValue(SettingsFile, "movementSoundNPCVolume")
+        JsonUtil.SetFloatValue(SettingsFile, "movementSoundNPCVolume", 100.0)
+        JsonUtil.Save(SettingsFile, False)
+    EndIf
     If JsonUtil.GetIntValue(SettingsFile, "movementSlapNotificationsMigration157", 0) == 0
         JsonUtil.SetIntValue(SettingsFile, "enableMovementSlapNotifications", 1)
         JsonUtil.SetFloatValue(SettingsFile, "movementSlapNotificationCooldownHours", 8.0)
@@ -1842,7 +1857,10 @@ Event OnPageReset(String page)
     ; never be persisted. Runtime values are always reread from JsonUtil.
     EnsureDefaults()
     NormalizeArousalThresholdSettings()
+    movementPollingOption = -1
     movementSlapOption = -1
+    movementNPCOption = -1
+    movementNPCVolumeOption = -1
     movementSlapVolumeOption = -1
     movementSoundMenus = new Int[4]
     movementSoundVolumes = new Int[4]
@@ -2152,6 +2170,10 @@ EndEvent
 
 ; Gives every visible setting a short explanation for players and screen readers.
 Event OnOptionHighlight(Int option)
+    If (option == movementNPCOption || option == movementNPCVolumeOption) && option >= 0
+        SetInfoText(MMELocalization.Text("Nearby Milk Maids share the movement sound routes, volumes and sneak settings. NPC volume is an extra multiplier; combined output caps at 200%."))
+        Return
+    EndIf
     If MovementOptionRoute(option, True) >= 0 || MovementOptionRoute(option, False) >= 0 || (option == movementSneakVolumeOption && option >= 0)
         SetInfoText(MMELocalization.Text("Choose a loop or None for each fullness and movement route. Sneaking uses the walking selection. Volumes and the sneak multiplier use 5% steps, 0-200%; combined output caps at 200%. Also affected by the existing sound master volume."))
         Return
@@ -2206,6 +2228,10 @@ Event OnOptionHighlight(Int option)
     EndIf
     If option == narrationReloadOption || option == narrationImportOption
         SetInfoText(MMELocalization.Text("Edit SKSE/Plugins/StorageUtilData/MMEAlerts/Narration JSON in a text editor. Reload reads your edits without saving over them. Import copies recognized legacy text only into unchanged defaults; customized entries are kept. Back up presets before updating the mod."))
+        Return
+    EndIf
+    If option == movementPollingOption && option >= 0
+        SetInfoText(MMELocalization.Text("Checks movement to recover missed footstep events. Default on. Off uses footsteps and a short inactivity timeout only. Applies to player and NPC movement sounds; other monitoring is unchanged."))
         Return
     EndIf
     If option == movementSlapNotificationsOption
@@ -2946,6 +2972,23 @@ Event OnOptionSelect(Int option)
         JsonUtil.SetIntValue(SettingsFile, "enableMovementSlapNotifications", enabled)
         JsonUtil.Save(SettingsFile, False)
         MMELog.MasterDiagnostic("[MME Extensions Movement Slap] notification setting changed | enabled=" + enabled)
+        ForcePageReset()
+        Return
+    EndIf
+    If option == movementPollingOption && option >= 0
+        Int enabledPolling = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMovementSoundPolling", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMovementSoundPolling", enabledPolling)
+        JsonUtil.Save(SettingsFile, False)
+        MMELog.MasterDiagnostic("[MME Movement Native] polling fallback changed | enabled=" + enabledPolling)
+        RefreshMovementSlapSettings()
+        ForcePageReset()
+        Return
+    EndIf
+    If option == movementNPCOption && option >= 0
+        Int enabledNPC = 1 - JsonUtil.GetIntValue(SettingsFile, "enableMovementSoundNPC", 1)
+        JsonUtil.SetIntValue(SettingsFile, "enableMovementSoundNPC", enabledNPC)
+        JsonUtil.Save(SettingsFile, False)
+        RefreshMovementSlapSettings()
         ForcePageReset()
         Return
     EndIf
@@ -3955,6 +3998,13 @@ EndFunction
 
 ; Configures the shared sound-volume and capacity-interval slider dialogs.
 Event OnOptionSliderOpen(Int option)
+    If option == movementNPCVolumeOption && option >= 0
+        SetSliderDialogStartValue(JsonUtil.GetFloatValue(SettingsFile, "movementSoundNPCVolume", 100.0))
+        SetSliderDialogDefaultValue(100.0)
+        SetSliderDialogRange(0.0, 200.0)
+        SetSliderDialogInterval(5.0)
+        Return
+    EndIf
     Int movementRoute = MovementOptionRoute(option, False)
     If movementRoute >= 0 || (option == movementSneakVolumeOption && option >= 0)
         Float initial = 50.0
@@ -4540,6 +4590,18 @@ EndEvent
 
 ; Saves accepted slider values and reschedules polling when its interval changes.
 Event OnOptionSliderAccept(Int option, Float value)
+    If option == movementNPCVolumeOption && option >= 0
+        If value < 0.0
+            value = 0.0
+        ElseIf value > 200.0
+            value = 200.0
+        EndIf
+        JsonUtil.SetFloatValue(SettingsFile, "movementSoundNPCVolume", value)
+        JsonUtil.Save(SettingsFile, False)
+        SetSliderOptionValue(option, value, "{0}%")
+        RefreshMovementSlapSettings()
+        Return
+    EndIf
     Int movementRoute = MovementOptionRoute(option, False)
     If movementRoute >= 0 || (option == movementSneakVolumeOption && option >= 0)
         String movementVolumeKey = "movementSoundSneakVolume"
@@ -5308,6 +5370,13 @@ Function DrawBodyPage()
     breastBounceDelayOption = AddSliderOption(MMELocalization.Text("Maximum Reaction Delay"), JsonUtil.GetFloatValue(SettingsFile, "breastBounceMaximumDelaySeconds", 30.0), MMELocalization.Text("{0} seconds"))
     AddHeaderOption(MMELocalization.Text("Movement Sounds"))
     movementSlapOption = AddToggleOption(MMELocalization.Text("Enable Movement Sounds"), JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1) == 1)
+    Int movementPollingFlags = OPTION_FLAG_NONE
+    If JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1) != 1 || JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1) != 1
+        movementPollingFlags = OPTION_FLAG_DISABLED
+    EndIf
+    movementPollingOption = AddToggleOption(MMELocalization.Text("Movement Polling Fallback"), JsonUtil.GetIntValue(SettingsFile, "enableMovementSoundPolling", 1) == 1, movementPollingFlags)
+    movementNPCOption = AddToggleOption(MMELocalization.Text("NPC Movement Sounds"), JsonUtil.GetIntValue(SettingsFile, "enableMovementSoundNPC", 1) == 1)
+    movementNPCVolumeOption = AddSliderOption(MMELocalization.Text("NPC Volume Multiplier"), JsonUtil.GetFloatValue(SettingsFile, "movementSoundNPCVolume", 100.0), "{0}%")
     Int movementSoundFlags = OPTION_FLAG_NONE
     If JsonUtil.GetIntValue(SettingsFile, "enableMovementSlap", 1) != 1 || JsonUtil.GetIntValue(SettingsFile, "enableReactionSounds", 1) != 1
         movementSoundFlags = OPTION_FLAG_DISABLED

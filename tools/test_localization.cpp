@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     const auto localized = L::Load(root);
     require(localized.language == language && localized.error.empty());
     require(localized.strings.at(L::Fold("General")) != "General");
-    require(localized.defaults.size() == 185);
+    require(localized.defaults.size() == 186);
     L::Current() = localized;
     MME::Narration::Store store(fixture / "personal", fs::path(root).parent_path().parent_path() / "Narration/Lore.json", "English fallback");
     auto call = [&](nlohmann::json request) {

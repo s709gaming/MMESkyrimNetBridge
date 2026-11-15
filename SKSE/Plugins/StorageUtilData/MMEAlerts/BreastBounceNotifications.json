@@ -12,6 +12,10 @@
       "movement": {
         "format": "Notification. Quick flavor text; maximum 90 characters.",
         "intent": "Add playful erotic flavor when breasts slap during movement."
+      },
+      "movement_npc": {
+        "format": "Notification. Actor-named movement flavor; maximum 90 characters.",
+        "intent": "Describe a nearby Milk Maid’s movement without addressing the player."
       }
     }
   },
@@ -35,5 +39,10 @@
     "Your hefty melons give each other a hearty smack with every stride.",
     "Your swinging hills collide with a rather enthusiastic clap.",
     "Your weighty twins keep bumping together, applauding your every step."
+  ],
+  "movement_npc": [
+    "{actor}'s bouncing bounty claps along to her footsteps.",
+    "{actor}'s heavy pair keeps time with every stride.",
+    "{actor}'s swinging treasures applaud her every step."
   ]
 }

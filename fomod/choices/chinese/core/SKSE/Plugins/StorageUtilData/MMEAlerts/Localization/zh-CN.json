@@ -2322,6 +2322,8 @@
     "Be playful, erotic, and teasing. Favor innuendo, cheeky metaphors, and varied euphemisms over explicit sexual vocabulary. Keep reactions brief, natural, and non-graphic.": "俏皮、性感、爱逗弄。多用暗示、俏皮比喻和多样的委婉说法，避免露骨的性词汇。反应简短、自然，不作直白描写。",
     "Only Produce Preferred Milk Type": "仅产出优先类型的奶",
     "Default on. Always produce milk matching MME's detected or forced supernatural type, then race. Priority: Succubus, Vampire, Werewolf, ordinary race. Unrecognized races use the matching Exotic variant. Uses basic variants without Maid-level quality tiers. Off restores MME's normal milk selection. Shared with original MME's Simple Milk setting; affects player and NPC Milk Maids.": "默认开启。按 MME 检测或强制指定的超自然类型，其次按种族选择奶。优先级：魅魔、吸血鬼、狼人、普通种族。未知种族使用对应的异族奶。使用基础款，不按奶妈等级提升品质。关闭恢复 MME 原有选择规则。与原版 MME 的 Simple Milk 设置共用，适用于玩家和 NPC 奶妈。",
+    "Movement Polling Fallback": "移动轮询后备",
+    "Checks movement to recover missed footstep events. Default on. Off uses footsteps and a short inactivity timeout only. Applies to player and NPC movement sounds; other monitoring is unchanged.": "检查移动以补偿遗漏的脚步事件，默认开启。关闭后仅使用脚步事件和短暂的停止计时。适用于玩家和NPC的移动音效，不影响其他监测。",
     "Knowledge Pack": "知识包",
     "Previous personal Milk Maid lore": "先前的自定义乳娘背景",
     "Edit this lore in Skyrim.Net > World Knowledge > Skyrim Milk Maid Lore.": "请在 Skyrim.Net > World Knowledge > Skyrim Milk Maid Lore 中编辑此背景。",
@@ -2524,6 +2526,12 @@
     "Play the selected movement loop while walking, running or sneaking. Below 50% uses the low-fullness selections; 50% or higher uses the high-fullness selections. Respects sound masters and scene guards.": "在行走、跑步或潜行时播放所选循环音效。低于50%使用低充盈音效，50%及以上使用高充盈音效。遵循总音效开关与场景保护。",
     "Below 50% - Sprinting": "低于50% — 冲刺",
     "50%+ - Sprinting": "50%及以上 — 冲刺",
-    "Walking, normal running and sneaking use the slow route; stamina-consuming sprinting uses the fast route. Below 50% uses low-fullness selections; 50% or higher uses high-fullness selections. Respects sound masters and scene guards.": "行走、普通跑步和潜行使用慢速音效；消耗耐力的冲刺使用快速音效。低于50%使用低充盈音效，50%及以上使用高充盈音效。遵循总音效开关与场景保护。"
+    "Walking, normal running and sneaking use the slow route; stamina-consuming sprinting uses the fast route. Below 50% uses low-fullness selections; 50% or higher uses high-fullness selections. Respects sound masters and scene guards.": "行走、普通跑步和潜行使用慢速音效；消耗耐力的冲刺使用快速音效。低于50%使用低充盈音效，50%及以上使用高充盈音效。遵循总音效开关与场景保护。",
+    "NPC Movement Sounds": "NPC移动音效",
+    "NPC Volume Multiplier": "NPC音量倍率",
+    "Nearby Milk Maids share the movement sound routes, volumes and sneak settings. NPC volume is an extra multiplier; combined output caps at 200%.": "附近乳娘共用移动音效、音量和潜行设置。NPC音量为额外倍率；合计输出上限为200%。",
+    "{actor}'s bouncing bounty claps along to her footsteps.": "{actor}跃动的丰盈随着脚步轻拍。",
+    "{actor}'s heavy pair keeps time with every stride.": "{actor}沉甸甸的双峰为每一步打着节拍。",
+    "{actor}'s swinging treasures applaud her every step.": "{actor}摇摆的宝藏为每一步鼓掌。"
   }
 }
