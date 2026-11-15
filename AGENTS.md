@@ -75,6 +75,15 @@
 - **Results:** Report passed, failed and untested checks.
 - **Commit:** Use structured shorthand. Summarize the main change and purpose; omit minor implementation details.
 
+## Player Facing Changelog
+
+- **Context:** Short, silly summaries of player-visible changes.
+- **Style:** Always review [example-changelog.md](docs/example-changelog.md) before writing entries.
+  - **Tone:** Silly.
+  - **Emojis:** Yes.
+- **Update:** [CHANGELOG-dev.md](docs/CHANGELOG-dev.md).
+  - One short, humorous bullet per change under Added, Improved or Fixed.
+
 ## Install in MO2
 
 - **When:** Installation, full testing or gameplay testing is requested.
