@@ -24,7 +24,8 @@
 ## MME Compatibility
 
 - **Context:** Built on original MME. Read its implementation before changing dependent behavior.
-- **Original Source:** Inspect original/installed MME before MilkQuest changes; verify signatures, property types and array syntax.
+- **Original Source:** Inspect original/installed MME before MilkQuest changes.
+  - Verify signatures, property types and array syntax.
 - **Actors:** Verify actor lookup and bounds before parallel-array access.
   - Never assume conventional or stable indices.
   - Prevent wrong targets, stale/unsynchronized arrays and accidental conversion.
@@ -34,18 +35,34 @@
 
 ## General Mod Techniques
 
-- **Optional Integrations:** Keep integrations optional unless designated required; absence must not break unrelated features.
+- **Optional Integrations:** Keep integrations optional unless designated required.
+  - Absence must not break unrelated features.
   - Skyrim.Net, SexLab/P+, OStim, DD, Elsie LaVache, JUGS and supported armor mods.
 - **Overrides:** Use only when necessary; isolate by target/FOMOD option.
 - **Ownership:** Prefer focused scripts and reusable APIs.
+- **Metadata and Comments:** Maintain existing authoring context and Magelight descriptions.
+  - **Context:** Metadata helps humans and AI understand notifications and narrations.
+  - **Reference:** Follow [narration-presentation.json](tools/narration-presentation.json).
+  - **Type:** Distinguish notifications, narration prompts, stories, lore and actor context.
+  - **Description:** Explain what the player edits and what the text should convey.
 
 ## Diagnostics
 
-- **Traces:** Gate new/changed gameplay traces behind master Papyrus logging; use consistent subsystem prefixes.
+- **Traces:** Gate new/changed gameplay traces behind master Papyrus logging.
+  - Use consistent subsystem prefixes.
   - Cover entry, actor, eligibility, result, cleanup and useful skips.
 - **Alarms:** Log genuine failures, broken prerequisites and impossible states regardless of master logging.
   - Include subsystem, operation, relevant actor and reason.
   - Deduplicate or rate-limit.
+
+## Player Facing Changelog
+
+- **Context:** Short, silly summaries of player-visible changes.
+- **Style:** Always review [example-changelog.md](docs/example-changelog.md) and [CHANGELOG-dev.md](docs/CHANGELOG-dev.md) before writing entries.
+  - **Tone:** Silly.
+  - **Emojis:** Yes.
+- **Draft:** One short, humorous bullet per change under Added, Improved or Fixed.
+- **Approval:** Show drafts in chat; update `CHANGELOG-dev.md` after approval.
 
 ---
 
@@ -72,29 +89,40 @@
 ## Verification
 
 - **Checks:** Compile affected scripts and rebuild the package.
-- **Results:** Report passed, failed and untested checks.
-- **Commit:** Use structured shorthand. Summarize the main change and purpose; omit minor implementation details.
-
-## Player Facing Changelog
-
-- **Context:** Short, silly summaries of player-visible changes.
-- **Style:** Always review [example-changelog.md](docs/example-changelog.md) before writing entries.
-  - **Tone:** Silly.
-  - **Emojis:** Yes.
-- **Update:** [CHANGELOG-dev.md](docs/CHANGELOG-dev.md).
-  - One short, humorous bullet per change under Added, Improved or Fixed.
+- **Results:** Record passed, failed and untested checks.
 
 ## Install in MO2
 
-- **When:** Installation, full testing or gameplay testing is requested.
-- **Install:** Use a separate test mod; verify the correct instance/profile, enabled state and file priority.
+- **When:** After every implementation, once verification passes.
+- **Install:** Use a separate test mod.
+  - Verify the correct instance/profile, enabled state and file priority.
+
+## Commit
+
+- **Style:** Follow [structured shorthand](docs/structured-shorthand-markdown.md).
+  - Summarize the main change and purpose.
+  - Omit minor implementation details.
+
+## Post-installation Report
+
+- **Summary:** Concisely describe what was implemented.
+- **Verification:** Report passed, failed and untested checks.
+- **Status:** State whether commit and installation succeeded.
+- **Changelog:** Include a player-facing draft for approval.
 
 ## In-game Testing
 
 - **When:** Only when full testing or gameplay testing is requested.
+- **Time Limit:** Stop gameplay testing at 20 minutes.
+  - Report incomplete checks.
 - **Coverage:** Run the smallest test covering changed behavior and likely regressions.
 - **Data:** Gather necessary runtime data through MCP.
 - **Cleanup:** Close the game if launched for testing.
 - **Logs:** Review relevant logs for errors and unexpected behavior.
-- **Report:** State coverage, results, relevant errors and remaining issues.
-  - **Status:** Pass, Fail or Needs attention.
+
+## Post-test Report
+
+- **Coverage:** State what was tested and for how long.
+- **Results:** Report in-game results and relevant MME Papyrus errors.
+- **Status:** Pass, Fail or Needs attention.
+- **Changelog:** Draft revisions in chat for approval if test results warrant changes.
