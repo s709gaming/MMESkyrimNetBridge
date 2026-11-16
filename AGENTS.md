@@ -20,6 +20,7 @@
   - Claim active work in local `TASK.md` before editing.
   - Review recent commits and local changes affecting the task.
 - **Boundaries:** Edit `AGENTS.md` and `README.md` only when requested.
+- **Changelog:** A separate changelog agent handles drafts and updates.
 
 ## MME Compatibility
 
@@ -54,15 +55,6 @@
 - **Alarms:** Log genuine failures, broken prerequisites and impossible states regardless of master logging.
   - Include subsystem, operation, relevant actor and reason.
   - Deduplicate or rate-limit.
-
-## Player Facing Changelog
-
-- **Context:** Short, silly summaries of player-visible changes.
-- **Style:** Always review [example-changelog.md](docs/example-changelog.md) and [CHANGELOG-dev.md](docs/CHANGELOG-dev.md) before writing entries.
-  - **Tone:** Silly.
-  - **Emojis:** Yes.
-- **Draft:** One short, humorous bullet per change under Added, Improved or Fixed.
-- **Approval:** Show drafts in chat; update `CHANGELOG-dev.md` after approval.
 
 ---
 
@@ -108,7 +100,6 @@
 - **Summary:** Concisely describe what was implemented.
 - **Verification:** Report passed, failed and untested checks.
 - **Status:** State whether commit and installation succeeded.
-- **Changelog:** Include a player-facing draft for approval.
 
 ## In-game Testing
 
@@ -125,4 +116,3 @@
 - **Coverage:** State what was tested and for how long.
 - **Results:** Report in-game results and relevant MME Papyrus errors.
 - **Status:** Pass, Fail or Needs attention.
-- **Changelog:** Draft revisions in chat for approval if test results warrant changes.
