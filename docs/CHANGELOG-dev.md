@@ -3,11 +3,10 @@
 ## 🌟 Major Features
 
 - 👙 **Individual Armor Modifications:** Erotic upgrades are now tracked per armor item instead of by armor name like the original MME. Every outfit remembers its own naughty little secrets!
+- 🐄 **Breastfeeding Shout:** Unleash the mighty voice of dairy! Player Milk Maids learn this shout by drinking milk, triggering milk-drinking effects and optional Skyrim.Net reactions. Adjustable through the MCM.
 
 ## 🔧 Minor Features
 
-- 🐄 **[Shadowman's Breastfeeding Shout](https://www.nexusmods.com/skyrimspecialedition/mods/90938):** Added milk-drinking effects and optional Skyrim.Net reactions. Unleash the mighty voice of the dairy!
-- 📣 **Milk Maid Shout Learning:** Player Milk Maids can automatically learn the Breastfeeding Shout, with a toggle enabled by default. Your thirst has found its voice!
 - 👏 **NPC Movement Sounds:** Nearby Milk Maids now slap and flop too, with their own toggle and volume control. Skyrim's dairy orchestra has expanded!
 - 🍼 **Consensual Breastfeeding:** AI Milk Maids now ask for consent before breastfeeding. No more surprise milk deliveries!
 - 🌐 **MCM Translations:** Added Chinese and Russian translations, selectable during FOMOD installation. Skyrim's dairy business goes international!
