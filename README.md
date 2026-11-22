@@ -4,7 +4,7 @@ Release status: 1.7.0\
 Main requirement: Milk Mod Economy (and its requirements)
 
 📥 Download:\
-MME Extensions on LoversLab
+[MME Extensions on LoversLab](https://www.loverslab.com/files/file/50820-mme-milk-mod-economy-extensions/)
 
 ✅ Skyrim SE/AE runtime 1.7.104 is supported!
 
