@@ -1,17 +1,17 @@
 🥛 Milk Mod Economy EXTENSIONS
 
-Release status: 1.5.0 
+Release status: 1.7.0\
 Main requirement: Milk Mod Economy (and its requirements)
 
-📥 Download:
+📥 Download:\
 MME Extensions on LoversLab
 
-✅ The latest Skyrim SE/AE runtime (1.7.104) is supported!
+✅ Skyrim SE/AE runtime 1.7.104 is supported!
 
-📚 Full Requirements & Recommended Setup:
+📚 Full Requirements & Recommended Setup:\
 Requirements Guide on GitHub
 
-See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESkyrimNetBridge/blob/main/REQUIREMENTS.md) 
+See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESkyrimNetBridge/blob/main/REQUIREMENTS.md)
 
 # 🥛 How Does Milk Mod Economy Work?
 
@@ -65,6 +65,7 @@ See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESky
 - **(OG)** Use the Debug menu's Milk Self or Milk Friend spells.
 - **(OG)** Ask someone to milk you, or offer to milk them.
 - **(NEW)** With Skyrim.net and a microphone, ask her to milk herself or breastfeed someone lucky nearby.
+- **(NEW)** Use [**Breastfeeding Seduction**](#-breastfeeding-seduction) to offer a thirsty patron a drink.
 - **(NEW)** Dwemer and tentacle armor attachments milk you automatically!
 - **(NEW)** Automatic milking occurs roughly 2 hours after reaching 100% capacity.
 
@@ -89,7 +90,7 @@ See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESky
 
 - AI-powered lewd NPC dialogue and actions! Party chat time!
 - Flirt, give milk, breastfeed, milk, or recruit new Milk Maids through natural conversation!
-- NPCs recognize MME mechanics and naughty situations. They WILL notice!
+- NPCs recognize MME mechanics and naughty situations. Clearer narration helps them react in character.
 - Free NPC voices through PocketTTS, including otherwise unvoiced mod dialogue!
 - Paid AI roleplay costs approximately $0.30–$0.50/hour with basic, adjustable settings.
 
@@ -106,9 +107,19 @@ See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESky
 > Open through the MCM or press Numpad Minus (default hotkey).
 
 - See how horny and milky your busty livestock are in one dashboard.
-- Shortcuts to milk, make NPCs drink milk, or enable automatic milking.
+- Shortcuts to milk, make NPCs drink milk, enable automatic milking, or send a Milk Maid looking for **Thirsty Patrons**.
 - Customize how lewd your Milk Maids behave with editable instructions.
 - Edit lewd in-game messages to your liking.
+
+## 🥛 Breastfeeding Seduction
+
+- **Thirsty Patrons:** Use this button in [Magelight UI](https://www.nexusmods.com/skyrimspecialedition/mods/193303) to send a Milk Maid looking for a random nearby patron. This shortcut requires Magelight UI.
+- **Hey There:** Pick a specific target and make them a flirtatious offer through dialogue.
+- **Spontaneous Offers:** A full Milk Maid who needs relief may offer a thirsty patron a drink on her own.
+
+## 📣 Breastfeeding Shout
+
+- Drink any milk to learn the shout, then use the power of your voice to start a breastfeeding orgy. Fuz Roh Dairy!
 
 ## 🍈 Milk Makes Your Melons & Cucumbers Grow!
 
@@ -124,6 +135,12 @@ See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESky
 - Milk Maids react to fullness, milking, restraints, and erotic armor.
 - Sensual moaning and tit-slapping sound effects.
 
+### 🙈 Breast-Covering Animations
+
+> Requires [Open Animation Replacer (OAR)](https://www.nexusmods.com/skyrimspecialedition/mods/92109).
+
+- Milk Maids cup their breasts when they're over half full. Can't let them leak!
+
 ## 📦 Trapped Treasure Chests
 
 > [Tentacle Armor](https://www.nexusmods.com/skyrimspecialedition/mods/62644?tab=files) | [Devious Dwemer Cuirass](https://www.loverslab.com/files/file/23018-dwarven-devious-cuirass-3ba-seae/)
@@ -133,12 +150,19 @@ See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESky
 - Magical curses can turn innocent adventurers into busty, milky ladies!
 - Unfortunate victims may be forced to drink milk, with scandalous consequences.
 
+### 🪱 Mimics & Dungeon Worms
+
+> Requires an FNIS-compatible animation loader, such as Pandora or Nemesis.
+
+- Open a treasure chest and a mimic or dungeon worm might drain your milk. The fuller you are, the higher the odds. Lucky you! ...Right?
+
 ## 🐙 Erotic Armor Modifications
 
 - 💉 Tentacle and Dwemer attachments tease you, inject aphrodisiacs, stimulate milk production, and drain your delicious bounty.
 - 🔨 Blacksmiths modify armor to accommodate generous curves or conceal milking attachments.
 - ⚙️ Install Dwemer devices that tease and milk their wearers.
 - 🧪 Alchemists and Court Wizards can fit devious tentacles beneath ordinary armor.
+- 👙 Treasure chests can corrupt the chest armor you're wearing with milk-thirsty tentacles or devious Dwemer attachments. Time to see the blacksmith!
 
 ## 🍈 Breast Growth & Weight
 
@@ -146,7 +170,7 @@ See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESky
 
 - 🍑 BodySlide scaling makes Milk Maids progressively more voluptuous as they level up.
 - 🍈 Optional movement speed and carry-weight penalties reflect the burden of your growing assets.
-- 👏 Above 50% milk capacity, movement can trigger playful breast-slapping sounds.
+- 👏 Above 50% milk capacity, movement can trigger playful breast-slapping sounds. Pick your favorites in the MCM!
 
 ## 👙 Armor Stripping
 
@@ -212,12 +236,10 @@ See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESky
 
 1. Install Milk Mod Economy and its required dependencies.
 2. Install `MME Extensions.zip` through Vortex or Mod Organizer 2.
-3. Choose your preferred options during FOMOD installation.
+3. Choose your preferred options during FOMOD installation. MCM translations include Chinese, Russian, and Korean.
 4. Enable `MMEAlert.esp`.
 5. Deploy and sort your load order.
 6. Start Skyrim through SKSE.
-
-
 
 # 💻 Source Code
 
@@ -237,6 +259,11 @@ See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESky
 - Thorax339 - Tips on integrating SexLab P+
 - Scrab - His many lewd mods
 - Risarei - Estrus Unified patch
+- shadowman2777 - Breastfeeding Shout idea
+- BakaFactory - TrapNTR animations
+- Gunslicer - Sexy pose animations
+- Kahvipannu84 - References on OAR breast cover animations
+- cotnoyounoyume - Estrus exhaustion animations
 
 # 📜 License / Permissions
 
