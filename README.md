@@ -120,6 +120,7 @@ See [Full Requirements & Recommended Setup](https://github.com/s709gaming/MMESky
 ## 📣 Breastfeeding Shout
 
 - Drink any milk to learn the shout, then use the power of your voice to start a breastfeeding orgy. Fuz Roh Dairy!
+- Unlock one additional word at Milk Maid level 5 and another at level 10.
 
 ## 🍈 Milk Makes Your Melons & Cucumbers Grow!
 
